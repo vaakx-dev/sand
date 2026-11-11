@@ -9,6 +9,7 @@ import { models, modelsChange, projects, projectsChange, threads } from '@sand/w
 import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { automationsScreen } from './automations/page'
+import { conversations } from './chat/conversations'
 import { jobNote } from './chat/job'
 import { inject } from './context'
 import { openNewBot } from './create/sheet'
@@ -49,6 +50,7 @@ export default definePlugin({
     const parts: Parts = {
       ctx,
       store: botStore(ctx),
+      chats: conversations(ctx),
       work: work(tabSources),
       projects: owned(ctx, () => known.read(() => ctx.get(projects)?.groups({ hidden: true }) ?? [])),
       defaults: owned(ctx, () => pulse(ctx, [modelsChange], [models]).read(() => effective({}, ctx.get(models)?.defaults() ?? {}))),

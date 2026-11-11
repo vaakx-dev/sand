@@ -7,7 +7,7 @@ import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { botBrief, offered } from './brief'
-import { botInterrupt, botLive, botPending, botPendingWire, botSend, botStreamWire, botTurns } from './contract'
+import { botInterrupt, botOpen, botPendingWire, botSend, botStreamWire, botTurns } from './contract'
 import { conversationOf } from './conversation'
 import { createLive } from './live'
 import { finalReply } from './reply'
@@ -54,8 +54,11 @@ export default definePlugin({
       return joinDisposers(
         found.handle(botSend, ({ bot, prompt, clientRequestId }) => runner.send(open(bot), { prompt, clientRequestId })),
         found.handle(botInterrupt, ({ bot }) => runner.interrupt(open(bot))),
-        found.handle(botLive, ({ bot }) => live.snapshot(bot)),
-        found.handle(botPending, ({ bot }) => runner.pending(open(bot))),
+        found.handle(botOpen, ({ bot, after }) => ({
+          ...ctx.bots.conversation(bot).page({ after }),
+          live: live.snapshot(bot),
+          pending: runner.pending(open(bot)),
+        })),
       )
     })
   },

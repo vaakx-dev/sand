@@ -1,11 +1,11 @@
-import type { LiveBlock } from '@sand/accounts/contract'
-import { botInterrupt, botLive, botPending, botPendingWire, botSend, botStreamWire } from '@sand/bot-turns/contract'
-import { botConversation, botEntryWire, chatPath, type BotEntry } from '@sand/bots/contract'
+import type { LiveBlock, LiveEvent } from '@sand/accounts/contract'
+import { botInterrupt, botOpen, botSend, type BotSnapshot } from '@sand/bot-turns/contract'
+import { botConversation, chatPath, type BotEntry } from '@sand/bots/contract'
 import { promptContent, saidText, textOf, type Message, type Prompt } from '@sand/chats/contract'
-import { wireHello } from '@sand/devices-contract'
 import { applyLiveEvent } from '@sand/server/contract'
 import { errorMessage, isRecord } from '@sand/util'
-import { derive, sig } from '@vaakx-dev/vrui'
+import type { DeviceRecords } from '@sand/web-client/contract'
+import { derive, effect, sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 
 export interface Pending {
@@ -14,11 +14,16 @@ export interface Pending {
   at: number
 }
 
-const pageSize = 50
+const TAIL_ENTRIES = 60
 
 const merged = (list: BotEntry[], added: BotEntry[]) => {
-  const known = new Set(list.map(entry => entry.id))
-  return [...list, ...added.filter(entry => !known.has(entry.id))].sort((a, b) => a.seq - b.seq)
+  const known = new Set(list.map(entry => entry.seq))
+  return [...list, ...added.filter(entry => !known.has(entry.seq))].sort((a, b) => a.seq - b.seq)
+}
+
+const replaced = (list: BotEntry[], fresh: BotEntry[]) => {
+  const last = fresh.at(-1)?.seq ?? 0
+  return [...fresh, ...list.filter(entry => entry.seq > last)]
 }
 
 const isMessage = (data: unknown): data is Message =>
@@ -42,62 +47,78 @@ const withoutDelivered = (pending: Pending[], entry: BotEntry) => {
   return index < 0 ? pending : pending.filter((_, at) => at !== index)
 }
 
-export const conversation = (ctx: BotsContext, bot: string) => {
+export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRecords<BotSnapshot> | undefined) => {
   const entries = sig<BotEntry[] | undefined>(undefined)
-  const queued = sig<Pending[]>([])
+  const queued = sig<BotSnapshot['pending']>([])
   const sending = sig<Pending[]>([])
-  const pending = derive(() => [...queued.get(), ...sending.get()])
+  const pending = derive((): Pending[] => [...queued.get(), ...sending.get()])
   const live = sig<LiveBlock[]>([])
   const more = sig(false)
   const loading = sig(false)
   const failure = sig<string | undefined>(undefined)
   const path = derive(() => chatPath(entries.get() ?? []))
 
-  const add = (added: BotEntry[]) => entries.update(list => merged(list ?? [], added))
-
-  const arrived = (entry: BotEntry) => {
-    add([entry])
-    sending.update(list => withoutDelivered(list, entry))
-    if (isReply(entry)) live.set([])
+  const shown = (snapshot: BotSnapshot) => {
+    live.set(snapshot.live)
+    queued.set(snapshot.pending)
   }
 
-  const fetch = async (before?: number) => {
-    const first = entries.get() === undefined
-    loading.set(true)
+  const restored = (snapshot: BotSnapshot | undefined) => {
+    if (!snapshot || entries.get() !== undefined) return
+    entries.set(snapshot.entries)
+    more.set(snapshot.more)
+    shown(snapshot)
+  }
+
+  const caughtUp = (snapshot: BotSnapshot, after: number | undefined) => {
+    const list = entries.get() ?? []
+    const fresh = after === undefined || snapshot.more
+    entries.set(fresh ? replaced(list, snapshot.entries) : merged(list, snapshot.entries))
+    if (fresh) more.set(snapshot.more)
+    shown(snapshot)
+  }
+
+  const sync = async () => {
+    const after = entries.get()?.at(-1)?.seq
     try {
-      const page = await ctx.wire.call(botConversation, { bot, limit: pageSize, ...(before !== undefined && { before }) })
-      add(page.entries)
-      if (first || before !== undefined) more.set(page.more)
+      caughtUp(await ctx.wire.call(botOpen, { bot, ...(after !== undefined && { after }) }), after)
       failure.set(undefined)
     } catch (error) {
       failure.set(errorMessage(error))
+    }
+  }
+
+  const load = async () => {
+    restored(await kept()?.read(bot))
+    if (ctx.wire.ready()) await sync()
+  }
+
+  const older = async () => {
+    const oldest = entries.get()?.[0]
+    if (!oldest || !more.get() || loading.get()) return
+    loading.set(true)
+    try {
+      const page = await ctx.wire.call(botConversation, { bot, before: oldest.seq })
+      entries.update(list => merged(list ?? [], page.entries))
+      more.set(page.more)
+    } catch (error) {
+      ctx.report(error)
     } finally {
       loading.set(false)
     }
   }
 
-  const catchUp = () =>
-    ctx.wire.call(botLive, { bot }).then(
-      blocks => live.set(blocks),
-      error => ctx.report(error),
-    )
-
-  const waiting = () =>
-    ctx.wire.call(botPending, { bot }).then(
-      items => queued.set(items),
-      error => ctx.report(error),
-    )
-
-  const refresh = () => {
-    void fetch()
-    void catchUp()
-    void waiting()
+  const tail = (): BotSnapshot | undefined => {
+    const list = entries.get()
+    if (!list) return undefined
+    return { entries: list.slice(-TAIL_ENTRIES), more: more.get() || list.length > TAIL_ENTRIES, live: live.get(), pending: queued.get() }
   }
 
-  const older = () => {
-    const oldest = entries.get()?.[0]
-    if (!oldest || !more.get() || loading.get()) return Promise.resolve()
-    return fetch(oldest.seq)
+  const release = () => {
+    const snapshot = tail()
+    if (!snapshot || snapshot.entries.length === entries.get()?.length) return
+    entries.set(snapshot.entries)
+    more.set(true)
   }
 
   const send = async (prompt: Prompt, id: string) => {
@@ -109,19 +130,10 @@ export const conversation = (ctx: BotsContext, bot: string) => {
     }
   }
 
-  const stops = [
-    ctx.wire.on(botEntryWire, entry => {
-      if (entry.bot === bot) arrived(entry)
-    }),
-    ctx.wire.on(botPendingWire, ([from, items]) => {
-      if (from === bot) queued.set(items)
-    }),
-    ctx.wire.on(botStreamWire, ([from, event]) => {
-      if (from === bot) live.update(blocks => applyLiveEvent(blocks, event))
-    }),
-    ctx.on(wireHello, refresh),
-  ]
-  refresh()
+  effect(() => {
+    const snapshot = tail()
+    if (snapshot) kept()?.write(bot, snapshot)
+  })
 
   return {
     bot,
@@ -132,13 +144,20 @@ export const conversation = (ctx: BotsContext, bot: string) => {
     more,
     loading,
     failure,
+    load,
+    sync,
     older,
     send,
-    interrupt: () => ctx.wire.call(botInterrupt, { bot }).then(() => undefined),
-    retry: () => void fetch(),
-    stop: () => {
-      for (const stop of stops) void stop()
+    release,
+    arrived(entry: BotEntry) {
+      entries.update(list => list && merged(list, [entry]))
+      sending.update(list => withoutDelivered(list, entry))
+      if (isReply(entry)) live.set([])
     },
+    queue: (items: BotSnapshot['pending']) => queued.set(items),
+    stream: (event: LiveEvent) => live.update(blocks => applyLiveEvent(blocks, event)),
+    interrupt: () => ctx.wire.call(botInterrupt, { bot }).then(() => undefined),
+    retry: () => void sync(),
   }
 }
 

@@ -2,7 +2,7 @@ import type { Database } from 'bun:sqlite'
 import { uuid } from '@sand/util'
 import type { UsageRecord } from '@sand/accounts/contract'
 import type { AppendMeta } from '@sand/chats/contract'
-import type { BotEntry, EntryPage } from './contract'
+import type { BotEntry, EntryPage, EntryRange } from './contract'
 
 type Row = {
   id: string
@@ -14,18 +14,26 @@ type Row = {
   turn: string | null
 }
 
-const pageSize = 100
+const pageSize = 60
+const pageBytes = 160_000
 
 const toEntry = ({ data, turn, ...row }: Row): BotEntry => ({ ...row, data: JSON.parse(data), ...(turn ? { turn } : {}) })
+
+const withinBytes = (newestFirst: Row[]) => {
+  let bytes = 0
+  const over = newestFirst.findIndex((row, index) => (bytes += row.data.length) > pageBytes && index > 0)
+  return over < 0 ? newestFirst : newestFirst.slice(0, over)
+}
 
 export const createEntries = (db: Database) => {
   const last = db.query<{ seq: number }, { bot: string }>('select coalesce(max(seq), 0) as seq from bot_entries where bot = $bot')
   const insert = db.query<unknown, Row>('insert into bot_entries (id, bot, seq, at, type, data, turn) values ($id, $bot, $seq, $at, $type, $data, $turn)')
   const removed = db.query<unknown, { bot: string }>('delete from bot_entries where bot = $bot')
   const all = db.query<Row, { bot: string }>('select * from bot_entries where bot = $bot order by seq')
-  const before = db.query<Row, { bot: string; seq: number; limit: number }>(
-    'select * from bot_entries where bot = $bot and seq < $seq order by seq desc limit $limit',
+  const between = db.query<Row, { bot: string; before: number; after: number; limit: number }>(
+    'select * from bot_entries where bot = $bot and seq < $before and seq > $after order by seq desc limit $limit',
   )
+  const byId = db.query<Row, { bot: string; id: string }>('select * from bot_entries where bot = $bot and id = $id')
   const newest = db.query<Row, { bot: string; type: string; limit: number }>(
     'select * from bot_entries where bot = $bot and type = $type order by seq desc limit $limit',
   )
@@ -48,9 +56,14 @@ export const createEntries = (db: Database) => {
       return toEntry(row)
     },
     entries: (bot: string) => all.all({ bot }).map(toEntry),
-    page(bot: string, seq = Number.MAX_SAFE_INTEGER, limit = pageSize): EntryPage {
-      const rows = before.all({ bot, seq, limit: limit + 1 })
-      return { entries: rows.slice(0, limit).reverse().map(toEntry), more: rows.length > limit }
+    page(bot: string, { before = Number.MAX_SAFE_INTEGER, after = 0, limit = pageSize }: EntryRange = {}): EntryPage {
+      const rows = between.all({ bot, before, after, limit: limit + 1 })
+      const kept = withinBytes(rows.slice(0, limit))
+      return { entries: kept.reverse().map(toEntry), more: rows.length > kept.length }
+    },
+    entry(bot: string, id: string) {
+      const row = byId.get({ bot, id })
+      return row ? toEntry(row) : undefined
     },
     remove: (bot: string) => void removed.run({ bot }),
     newest: (bot: string, type: string, limit: number) => newest.all({ bot, type, limit }).map(toEntry),

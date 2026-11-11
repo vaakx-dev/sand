@@ -6,7 +6,6 @@ import { definePlugin } from 'drydock'
 import { askGist } from './ask'
 
 const deadline = 20_000
-const scanned = 20
 
 export default definePlugin({
   name: 'bot-gist',
@@ -18,7 +17,7 @@ export default definePlugin({
     const asked = new Set<string>()
 
     const replyOf = (bot: string, entry: string) =>
-      ctx.bots.conversation(bot).page(undefined, scanned).entries.find(found => found.id === entry)?.data as Message | undefined
+      ctx.bots.conversation(bot).entry(entry)?.data as Message | undefined
 
     const sum = async (bot: string, entry: string, signal: AbortSignal) => {
       const sub = ctx.get(subModel)

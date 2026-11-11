@@ -2,6 +2,7 @@ import { pcs, threadPcs, wire } from '@sand/devices-contract'
 import { definePlugin } from 'drydock'
 import { createCache } from './cache/service'
 import {
+  deviceCache,
   fileIndex,
   limits,
   models as modelsService,
@@ -32,20 +33,22 @@ import { createTurns, markStarted } from './threads/turns'
 export default definePlugin({
   name: 'web-client',
   description:
-    "Keeps the threads, turns, models, limits, files, skills and projects of your PCs on the page, cached in this browser by PC, and holds messages for PCs that can't be reached until they're back, on top of the wire and the page's PCs",
+    "Keeps the threads, turns, models, limits, files, skills and projects of your PCs on the page, cached in this browser by PC with room for other plugins' records, and holds messages for PCs that can't be reached until they're back, on top of the wire and the page's PCs",
   inject: { wire, pcs },
   apply(ctx) {
     const store = new Store(ctx, ctx.pcs.here().id)
     ctx.effect(() => () => store.dispose())
     ctx.provide(threadPcs, threadPcsOf(store))
     const cache = createCache(ctx, store, ctx.wire, ctx.pcs)
+    ctx.provide(deviceCache, cache.device)
+    const keptProjects = cache.device.records<unknown>('projects')
     const projects = createProjects(ctx, ctx.wire, ctx.pcs, store)
     const threads = createThreads(ctx, ctx.wire, ctx.pcs, store, cache.hydrate)
-    void cache.ready.then(() => {
-      projects.restore(cache.saved('projects'), store.devices())
+    void Promise.all([keptProjects.read('lists'), cache.ready]).then(([kept]) => {
+      projects.restore(kept, store.devices())
       threads.restored()
     })
-    ctx.on(projectsChange, () => cache.keep('projects', projects.kept()))
+    ctx.on(projectsChange, () => keptProjects.write('lists', projects.kept()))
     const models = createModels(ctx, ctx.wire, ctx.pcs, threads, store)
     forgetRemovedPcs(ctx, store, ctx.pcs, { projects, models })
     ctx.effect(() => listenThreads(ctx.wire, store, id => void threads.load(id)))

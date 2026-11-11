@@ -1,10 +1,9 @@
-import { listen } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { after } from '../detached'
 import { onIdle } from '../integrations/idle'
 import { askPersistence } from '../integrations/storage'
-import { owned } from '@sand/reactive'
 import type { Store } from '../threads/store'
+import { onLeave } from './leave'
 import { trimMemory } from './memory'
 import { otherScopes, wipeScope } from './scope'
 import type { Writer } from './writer'
@@ -47,10 +46,6 @@ export const autosave = (ctx: Context, store: Store, writer: Writer) => {
     void write()
   }
 
-  const hidden = () => {
-    if (document.visibilityState === 'hidden') flushNow()
-  }
-
   const unwatch = store.watch({
     changed(id) {
       writer.changed(id)
@@ -62,10 +57,7 @@ export const autosave = (ctx: Context, store: Store, writer: Writer) => {
     },
   })
 
-  owned(ctx, () => {
-    listen(window, 'visibilitychange', hidden)
-    listen(window, 'pagehide', flushNow)
-  })
+  onLeave(ctx, flushNow)
   ctx.effect(() => () => {
     pending?.()
     unwatch()

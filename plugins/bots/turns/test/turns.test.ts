@@ -1,6 +1,6 @@
 import { memoryWrite } from '@sand/bot-memory/contract'
 import { botConversation, botCreate, botDelete, botGet, type BotEntry, type BotStatus } from '@sand/bots/contract'
-import { botInterrupt, botLive, botSend } from '@sand/bot-turns/contract'
+import { botInterrupt, botOpen, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
 import { media } from '@sand/media/contract'
@@ -69,17 +69,24 @@ test('a failed turn marks the bot failed, and deleting a bot forgets its turns',
   await expect(ask(botSend, { bot: bot.id, prompt: 'Still there?', clientRequestId: 'two' })).rejects.toThrow(`No bot ${bot.id}`)
 })
 
-test('a page that opens mid-reply gets the reply streamed so far, and nothing once the turn ends', async () => {
+test('a page that opens mid-reply gets the history and the reply streamed so far in one snapshot, catches up after its last entry, and sees nothing live once the turn ends', async () => {
   const { ask } = await start([[said('Half a '), said('thought'), { type: 'hold' }]])
   const bot = await ask(botCreate, { name: 'Researcher', models: { main: { model: 'fake/m' }, quick: {} } })
   await ask(botSend, { bot: bot.id, prompt: 'Think', clientRequestId: 'one' })
-  const streamed = async () => (await ask(botLive, { bot: bot.id })).flatMap(block => (block.type === 'text' ? [block.text] : [])).join('')
+  const streamed = async () => (await ask(botOpen, { bot: bot.id })).live.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('')
   for (let tries = 0; tries < 200 && (await streamed()) !== 'Half a thought'; tries++) await Bun.sleep(10)
 
+  const opened = await ask(botOpen, { bot: bot.id })
+  expect(messages(opened.entries)).toMatchObject([{ role: 'user', content: [{ type: 'text', text: 'Think' }] }])
   expect(await streamed()).toBe('Half a thought')
+  const last = opened.entries.at(-1)!.seq
+  expect(await ask(botOpen, { bot: bot.id, after: last })).toMatchObject({ entries: [], more: false })
+
   expect(await ask(botInterrupt, { bot: bot.id })).toBe(true)
-  for (let tries = 0; tries < 200 && (await ask(botLive, { bot: bot.id })).length; tries++) await Bun.sleep(10)
-  expect(await ask(botLive, { bot: bot.id })).toEqual([])
+  for (let tries = 0; tries < 200 && (await ask(botOpen, { bot: bot.id })).live.length; tries++) await Bun.sleep(10)
+  const ended = await ask(botOpen, { bot: bot.id, after: last })
+  expect(ended.live).toEqual([])
+  expect(ended.entries.every(entry => entry.seq > last)).toBe(true)
 })
 
 test('a bot whose tool waits on the user is waiting until it answers', async () => {
