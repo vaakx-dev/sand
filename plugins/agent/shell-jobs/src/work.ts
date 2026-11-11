@@ -1,4 +1,4 @@
-import { jobNote, type JobWork } from '@sand/jobs/contract'
+import { jobNote, jobOutput, type JobWork } from '@sand/jobs/contract'
 import { shellReady, type ShellRunner } from '@sand/shell/contract'
 import type { Context } from 'drydock'
 import type { OutputTail } from './output'
@@ -27,6 +27,7 @@ export const commandWork =
       cwd,
       onText(text) {
         output.write(text)
+        ctx.emit(jobOutput, job.id, text)
         if (!signal.aborted) timer ??= setTimeout(note, noteEvery)
       },
     })

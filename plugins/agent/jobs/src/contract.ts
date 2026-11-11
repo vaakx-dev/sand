@@ -31,6 +31,7 @@ export interface JobSpec {
   model?: string
   work: JobWork
   read?(cursor?: number): string | Promise<string>
+  output?(length: number): string
   send?(message: string, job: Job): string | Promise<string>
 }
 
@@ -53,6 +54,7 @@ export const backgroundJobs = service<BackgroundJobs>('backgroundJobs')
 export const jobStart = event<(job: Job) => void>('job.start')
 export const jobEnd = event<(job: Job, output: string) => void>('job.end')
 export const jobNote = event<(note: JobNote) => void>('job.note')
+export const jobOutput = event<(id: string, text: string) => void>('job.output')
 
 export const jobStartWire = wireEvent<WireJob>('job.start')
 export const jobEndWire = wireEvent<[job: WireJob, output: string]>('job.end')
