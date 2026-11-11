@@ -9,7 +9,7 @@
 - Every visible part of the web UI is a browser extension. Depend on roles, never on another plugin's name: `inject` for hard dependencies, `ctx.watch` with a fallback for soft ones.
 - `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
 - vrui (`@vaakx-dev/vrui`) and drydock come from GitHub (`vaakx-dev/vrui`, `vaakx-dev/drydock`), pinned to release tags and used from source. Read their `AGENTS.md` and `docs/` in `node_modules/@vaakx-dev/vrui` and `plugins/host/hub/node_modules/drydock`. Change them in their own repos and release a new tag, then move the pin here.
-- The check command is `bun run check`. It also runs `vrui-check`; fix everything it reports. List classes sand defines in its own CSS, and extra theme color roles, under `vrui` in the root `package.json`.
+- The check command is `bun run check`. It also runs `vrui-check`; fix everything it reports. While you work, run `bunx tsc` and `bun test <the plugin folders you changed>`, and save long output to a file to grep instead of rerunning; run `bun run check` once, before you commit. CI runs `check` and `test:phone` on every push, so wait for it with `pr_checks` instead of running `test:phone` yourself unless you changed the phone layout. List classes sand defines in its own CSS, and extra theme color roles, under `vrui` in the root `package.json`.
 - Tests live in each plugin's `test/` folder and run with `bun run test` (part of `check`). `startSand` from `@sand/harness` (`packages/harness`) runs sand in-process on a temp home, with `replay` model sources that play scripted replies.
 - `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
 

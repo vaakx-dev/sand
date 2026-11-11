@@ -1,7 +1,7 @@
 {
   "name": "@sand/github",
   "version": "0.0.0",
-  "description": "GitHub's API through this PC's gh sign-in or GH_TOKEN, and each thread's pull requests on its row",
+  "description": "GitHub's API through this PC's gh sign-in or GH_TOKEN, each thread's pull requests on its row, and a tool that waits for a pull request's checks",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -15,11 +15,14 @@
     "summary": "Reaches GitHub with this PC's sign-in, and shows each thread's pull requests"
   },
   "dependencies": {
+    "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/git-runner": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/threads-home": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

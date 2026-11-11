@@ -4,6 +4,7 @@ import type { Catalog } from './catalog'
 import { qualify } from './catalog/build'
 import { cached } from './catalog/cached'
 import { viewOf } from './catalog/view'
+import { watchIdle } from './idle'
 import type { LocalLLM } from './local'
 import type { Peers, Pin } from './peers/peers'
 import { remoteSources } from './peers/sources'
@@ -25,7 +26,7 @@ const pinOf = (pc: string | undefined, request: LLMRequest): Pin | undefined => 
   return native ? { pc: native, native: true } : undefined
 }
 
-export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog) => {
+export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog, idleMs: number) => {
   const remotes = cached(() => remoteIndex(peers, accounts))
   const view = viewOf(() => [...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))])
 
@@ -57,8 +58,8 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
       await Promise.all([accounts.ready, catalog.ready, peers.ready])
       const model = view.resolve(request.model)
       if (!model?.source) throw view.missing(request.model)
-      if (model.via) yield* remote(model, request, signal)
-      else yield* local.stream({ ...request, model: model.id }, signal)
+      const source = (attempt: AbortSignal) => (model.via ? remote(model, request, attempt) : local.stream({ ...request, model: model.id }, attempt))
+      yield* watchIdle(model.id, idleMs, source, signal)
     },
     provider,
     limits: () => local.limits() ?? borrowed()[0],

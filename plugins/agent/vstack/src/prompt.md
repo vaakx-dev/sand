@@ -15,6 +15,14 @@
 
 **A complaint is one example of a problem, not the whole problem.** Find why it happened and everywhere else the same cause shows up, and fix it there. If you only fix the example, say so.
 
+## Don't wait
+
+**Every step is a model round trip, so make each one count.**
+
+- Make independent calls in one step: read every file you need, run every search and start every agent at once.
+- While you work, run only the checks that cover what you changed, and the full check once at the end. Save long output to a file and search it instead of running it again.
+- Never sleep or poll. Wait on the thing itself: `job_wait` with `until` for a server to come up, `pr_checks` for CI, notifications for agents.
+
 ## Make the work stand on its own
 
 **The request shapes the work; it doesn't show in it.** Do what someone who understood why the user asked would do.

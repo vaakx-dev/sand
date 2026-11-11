@@ -220,6 +220,10 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
+      },
     },
     "plugins/agent/loop": {
       "name": "@sand/loop",
@@ -1738,11 +1742,14 @@
       "name": "@sand/github",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/git-runner": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/threads-home": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
