@@ -1,3 +1,5 @@
-const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumSignificantDigits: 3 })
+import { lazy } from '../cache/lazy'
 
-export const tokens = (value: number) => compact.format(value).replace('K', 'k')
+const compact = lazy(() => new Intl.NumberFormat('en', { notation: 'compact', maximumSignificantDigits: 3 }))
+
+export const tokens = (value: number) => compact().format(value).replace('K', 'k')

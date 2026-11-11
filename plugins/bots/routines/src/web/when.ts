@@ -1,4 +1,5 @@
 import type { When } from '@sand/schedules/contract'
+import { lazy } from '@sand/util'
 
 const custom = 'Custom schedule'
 
@@ -10,16 +11,16 @@ const dayNames = days.map(day => day.slice(0, 3).toLowerCase())
 
 const suffixes: Partial<Record<Intl.LDMLPluralRule, string>> = { one: 'st', two: 'nd', few: 'rd' }
 
-const ordinals = new Intl.PluralRules('en', { type: 'ordinal' })
+const ordinals = lazy(() => new Intl.PluralRules('en', { type: 'ordinal' }))
 
-const moment = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+const moment = lazy(() => new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))
 
 const numberIn = (text: string, min: number, max: number) => {
   const value = /^\d+$/.test(text) ? Number(text) : NaN
   return value >= min && value <= max ? value : undefined
 }
 
-const nth = (day: number) => `${day}${suffixes[ordinals.select(day)] ?? 'th'}`
+const nth = (day: number) => `${day}${suffixes[ordinals().select(day)] ?? 'th'}`
 
 const weekday = (text: string) => {
   const named = dayNames.indexOf(text.toLowerCase())
@@ -67,4 +68,4 @@ const cronWords = (cron: string) => {
   return date !== undefined && weekdays === '*' ? `Monthly on the ${nth(date)}, ${time}` : custom
 }
 
-export const describe = (when: When) => (when.kind === 'once' ? `Once, ${moment.format(when.at)}` : cronWords(when.cron))
+export const describe = (when: When) => (when.kind === 'once' ? `Once, ${moment().format(when.at)}` : cronWords(when.cron))

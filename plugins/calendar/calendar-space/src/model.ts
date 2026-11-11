@@ -67,7 +67,9 @@ export const calendarModel = (ctx: CalendarContext) => {
   const failure = sig<string | undefined>(undefined)
 
   let asked = 0
+  let opened = false
   const load = () => {
+    if (!opened) return
     const ask = ++asked
     const { from, to } = untrack(() => range.get())
     const showing = untrack(() => mode.get())
@@ -80,7 +82,9 @@ export const calendarModel = (ctx: CalendarContext) => {
       (error: unknown) => failure.set(errorMessage(error)),
     )
   }
-  const loadCalendars = () => void ctx.wire.call(calendarList, {}).then(list => calendars.set(list), (error: unknown) => ctx.report(error))
+  const loadCalendars = () => {
+    if (opened) void ctx.wire.call(calendarList, {}).then(list => calendars.set(list), (error: unknown) => ctx.report(error))
+  }
   const refresh = () => {
     loadCalendars()
     load()
@@ -89,16 +93,22 @@ export const calendarModel = (ctx: CalendarContext) => {
   owned(ctx, () =>
     effect(() => {
       range.get()
-      load()
+      if (ctx.wire.ready()) load()
     }),
   )
   ctx.on(wireHello, refresh)
-  if (ctx.wire.ready()) loadCalendars()
   ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, load), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
 
   const step = (direction: 1 | -1) => anchor.update(at => addDays(span.get().first(at), direction * span.get().step))
 
+  const open = () => {
+    if (opened) return
+    opened = true
+    if (ctx.wire.ready()) refresh()
+  }
+
   return {
+    open,
     calendars,
     writable: derive(() => calendars.get().filter(calendar => calendar.capabilities.includes('write'))),
     mode,

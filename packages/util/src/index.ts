@@ -1,5 +1,6 @@
 export { untilAborted } from './abort/until'
 export { keyedSerial, serial } from './async/serial'
+export { lazy } from './cache/lazy'
 export { type TtlCache, type TtlCacheOptions, ttlCache } from './cache/ttl'
 export { grouped } from './collections/grouped'
 export { byOrder } from './collections/order'

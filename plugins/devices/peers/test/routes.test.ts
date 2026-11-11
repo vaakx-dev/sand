@@ -20,9 +20,9 @@ const fakePc = () => {
   const id = deviceIdOf(keys.publicKey)
   const announced: unknown[] = []
 
-  const identity = (url: URL) => {
+  const identity = async (url: URL) => {
     const nonce = newNonce()
-    const signature = sign(identityProof(url.searchParams.get(deviceParams.nonce) ?? '', nonce, id), keys.secretKey)
+    const signature = await sign(identityProof(url.searchParams.get(deviceParams.nonce) ?? '', nonce, id), keys.secretKey)
     return Response.json({ id, name: 'Box', platform: 'linux', publicKey: keys.publicKey, nonce, signature })
   }
 

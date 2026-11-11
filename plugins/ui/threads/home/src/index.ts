@@ -17,6 +17,7 @@ import { threadRows, type RowPart } from './contract'
 import { chipSources } from './chips'
 import { pageSize, threadGroups } from './groups'
 import { threadEntries } from './items/items'
+import { RowLooks } from './items/looks'
 import { launch, newThread } from './launch/launch'
 import { questionNeeds, reviewNeeds, secretNeeds } from './needs'
 import { sessionSource } from './palette/source'
@@ -34,6 +35,7 @@ export default definePlugin({
     const more = () => limit.update(shown => shown + pageSize)
     const trail = sig<RowPart[]>([])
     const botThreads = stored('sand.threads.bot-threads', true)
+    const looks = new RowLooks()
     ctx.watch(settings, found =>
       found?.section({
         page: 'features',
@@ -57,7 +59,7 @@ export default definePlugin({
     })
     const launched = { ...parts, pulse: events }
     launch(launched)
-    const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get() }, botThreads.get()), limit.get(), more, () => newThread(parts))))
+    const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get(), looks }, botThreads.get()), limit.get(), more, () => newThread(parts))))
     const now = owned(ctx, () => clock(1000))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))

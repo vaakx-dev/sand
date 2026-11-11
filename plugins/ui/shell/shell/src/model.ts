@@ -93,13 +93,13 @@ export const shellModel = (kit: Kit) => {
 
   const routeOf = (key: string) => (phone.get() ? pushed.get() : [current.get()]).find(route => screenKey(route) === key)
   const screens = screenCache(specFor, routeOf, text => kit.barTitle(text))
-  const screen = derive(() => screens.get(current.get()))
+  const screen = () => screens.get(current.get())
   const alive = derive(() => new Set((phone.get() ? [...pushed.get(), ...leaving.get()] : [current.get()]).map(screenKey)))
 
   const state = derive<ShellState>(() => {
     const size = width.get()
     if (size < phoneWidth) return 'phone'
-    const built = screen.get()
+    const built = screen()
     return size < deskWidth && (openPanel.get() || built?.split) ? 'drawer' : 'wide'
   })
 

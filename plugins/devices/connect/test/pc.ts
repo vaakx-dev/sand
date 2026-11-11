@@ -19,10 +19,10 @@ export const fakePc = () => {
   const answers = new Map<string, Answer>()
   const probed: string[] = []
 
-  const identity = (path: string) => {
+  const identity = async (path: string) => {
     const clientNonce = new URL(path, 'http://pc').searchParams.get(deviceParams.nonce) ?? ''
     const nonce = newNonce()
-    const signature = sign(identityProof(clientNonce, nonce, pcId), pcKeys.secretKey)
+    const signature = await sign(identityProof(clientNonce, nonce, pcId), pcKeys.secretKey)
     return Response.json({ id: pcId, name: 'Desk', platform: 'linux', publicKey: pcKeys.publicKey, nonce, signature })
   }
 

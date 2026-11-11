@@ -5,13 +5,14 @@ import type { ShellRow, Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { Thread } from '@sand/web-client/contract'
 import { changeStatus, type Changes } from '../changes'
-import type { RowPart, RowThread } from '../contract'
+import type { RowPart } from '../contract'
 import { projectLookup, quick, type ProjectInfo, type ProjectLookup } from '../contract'
 import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import { backLabel } from '../snooze/when'
 import { runningJobs, type JobsOf } from './jobs'
+import type { RowLooks } from './looks'
 import { draftMenu, threadMenu, type MenuParts } from './menu'
 
 export interface Entry {
@@ -35,21 +36,20 @@ const statusOf = (thread: Thread, jobs: number, change: ThreadChanges | undefine
 export interface RowSources {
   changes: Changes
   trail: RowPart[]
+  looks: RowLooks
 }
 
-const projectPlaceOf = (parts: MenuParts, project: ProjectInfo) => ({
+const projectPlaceOf = (parts: MenuParts, looks: RowLooks, project: ProjectInfo) => ({
   label: project.quick ? 'No project' : project.name,
-  mark: () => parts.kit.projectIcon(project.name, project.icon, 14),
+  mark: looks.mark(parts.kit, project),
 })
 
-const placeOf = (parts: MenuParts, project: ProjectInfo, device: string) => ({
-  ...projectPlaceOf(parts, project),
-  label: [projectPlaceOf(parts, project).label, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
-})
+const placeOf = (parts: MenuParts, looks: RowLooks, project: ProjectInfo, device: string) => {
+  const place = projectPlaceOf(parts, looks, project)
+  return { ...place, label: [place.label, awayPcName(parts.ctx, device)].filter(Boolean).join(' · ') }
+}
 
-const trailOf = (trail: RowPart[], folder: RowThread) => (trail.length ? () => trail.map(part => part.render(folder)) : undefined)
-
-const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jobsOf: JobsOf, { changes, trail }: RowSources): Entry => {
+const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jobsOf: JobsOf, { changes, trail, looks }: RowSources): Entry => {
   const change = changes.get(thread.id)
   const project = thread.info.kind === 'quick' ? quick(thread.device) : lookup(thread.info.cwd, thread.device, thread.info.project)
   const { jobs, since } = jobsOf(thread.id)
@@ -59,8 +59,8 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jo
     row: {
       id: thread.id,
       label: thread.info.title || (project.quick ? project.name : 'Untitled thread'),
-      place: placeOf(parts, project, thread.device),
-      trail: trailOf(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
+      place: placeOf(parts, looks, project, thread.device),
+      trail: looks.trail(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
       ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
       status: statusOf(thread, jobs, change),
       to: { kind: threadRoute, id: thread.id },
@@ -75,12 +75,12 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jo
 
 const draftTitle = (draft: ThreadDraft) => draft.text.trim().split('\n', 1)[0]?.trim() || plural(draft.attachments, 'attachment')
 
-const draftEntry = (parts: MenuParts, saved: Drafts, draft: ThreadDraft, lookup: ProjectLookup): Entry => ({
+const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: ThreadDraft, lookup: ProjectLookup): Entry => ({
   row: {
     id: `draft:${draft.id}`,
     label: draftTitle(draft),
     end: 'Draft',
-    place: projectPlaceOf(parts, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device)),
+    place: projectPlaceOf(parts, looks, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device)),
     at: draft.updated,
     to: { kind: draftRoute, id: draft.id },
     menu: () => draftMenu(saved, draft.id),
@@ -91,7 +91,7 @@ const draftEntry = (parts: MenuParts, saved: Drafts, draft: ThreadDraft, lookup:
 export const threadEntries = (parts: MenuParts, sources: RowSources, withOwned: boolean): Entry[] => {
   const lookup = projectLookup(parts.ctx)
   const saved = parts.ctx.get(drafts)
-  const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, saved, draft, lookup)) : []
+  const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, sources.looks, saved, draft, lookup)) : []
   const jobsOf = runningJobs(parts.ctx, parts.threads)
   const listed = visibleThreads(parts.threads.list()).filter(thread => withOwned || !owned(parts.ctx, thread.id))
   return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, jobsOf, sources))]

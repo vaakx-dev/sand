@@ -5,6 +5,7 @@ import { isRecord } from '@sand/util'
 import { decodeBase64url, encodeBase64url } from './base64url'
 
 const deviceIdLength = 22
+const keyBytes = 32
 
 export const generateKeyPair = (): KeyPair => {
   const secret = ed25519.utils.randomSecretKey()
@@ -15,11 +16,15 @@ export const publicKeyOf = (secretKey: string) => encodeBase64url(ed25519.getPub
 
 export const deviceIdOf = (publicKey: string) => encodeBase64url(sha256(decodeBase64url(publicKey))).slice(0, deviceIdLength)
 
-export const isKeyPair = (value: unknown): value is KeyPair => {
-  if (!isRecord(value) || typeof value.publicKey !== 'string' || typeof value.secretKey !== 'string') return false
+const isKey = (value: unknown) => {
+  if (typeof value !== 'string') return false
   try {
-    return publicKeyOf(value.secretKey) === value.publicKey
+    return decodeBase64url(value).length === keyBytes
   } catch {
     return false
   }
 }
+
+export const isKeyPair = (value: unknown): value is KeyPair => isRecord(value) && isKey(value.publicKey) && isKey(value.secretKey)
+
+export const keysMatch = ({ publicKey, secretKey }: KeyPair) => publicKeyOf(secretKey) === publicKey

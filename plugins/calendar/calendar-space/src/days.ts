@@ -1,4 +1,5 @@
 import type { When } from '@sand/calendar/contract'
+import { lazy } from '@sand/util'
 
 export const dayMs = 86_400_000
 
@@ -39,11 +40,10 @@ export const fromInputs = (date: string, time: string) => new Date(`${date}T${ti
 
 export const isAllDay = (when: When) => 'date' in when
 
-const format = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(undefined, options)
+const format = (options: Intl.DateTimeFormatOptions) => lazy(() => new Intl.DateTimeFormat(undefined, options))
 
 const formats = {
   day: format({ weekday: 'long', day: 'numeric', month: 'long' }),
-  short: format({ weekday: 'short', day: 'numeric' }),
   weekday: format({ weekday: 'short' }),
   month: format({ month: 'long', year: 'numeric' }),
   shortMonth: format({ month: 'short', year: 'numeric' }),
@@ -53,26 +53,26 @@ const formats = {
   hour: format({ hour: 'numeric' }),
 }
 
-export const dayLabel = (at: number) => formats.day.format(at)
+export const dayLabel = (at: number) => formats.day().format(at)
 
 const nearDays = ['Today', 'Tomorrow']
 
 export const dayHeading = (day: number) => nearDays[Math.round((day - startOfDay(Date.now())) / dayMs)] ?? dayLabel(day)
 
-export const weekdayLabel = (at: number) => formats.weekday.format(at)
+export const weekdayLabel = (at: number) => formats.weekday().format(at)
 
 const sameMonth = (from: number, to: number) => new Date(from).getMonth() === new Date(to - 1).getMonth()
 
 export const monthsLabel = (from: number, to: number, short: boolean) => {
-  if (sameMonth(from, to)) return (short ? formats.shortMonth : formats.month).format(from)
-  return formats.shortMonth.formatRange(from, to - 1)
+  if (sameMonth(from, to)) return (short ? formats.shortMonth() : formats.month()).format(from)
+  return formats.shortMonth().formatRange(from, to - 1)
 }
 
-export const clockLabel = (at: number) => formats.clock.format(at)
+export const clockLabel = (at: number) => formats.clock().format(at)
 
-export const hourLabel = (at: number) => formats.hour.format(at)
+export const hourLabel = (at: number) => formats.hour().format(at)
 
 export const spanLabel = ({ start, from, to }: { start: When; from: number; to: number }) => {
-  if (isAllDay(start)) return to - from > dayMs ? `${formats.range.formatRange(from, to - 1)} · all day` : `${dayLabel(from)} · all day`
-  return startOfDay(from) === startOfDay(to - 1) ? `${dayLabel(from)} · ${formats.clock.formatRange(from, to)}` : formats.moment.formatRange(from, to)
+  if (isAllDay(start)) return to - from > dayMs ? `${formats.range().formatRange(from, to - 1)} · all day` : `${dayLabel(from)} · all day`
+  return startOfDay(from) === startOfDay(to - 1) ? `${dayLabel(from)} · ${formats.clock().formatRange(from, to)}` : formats.moment().formatRange(from, to)
 }

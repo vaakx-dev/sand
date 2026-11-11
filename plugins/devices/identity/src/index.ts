@@ -1,4 +1,5 @@
 export { decodeBase64url, encodeBase64url } from './base64url'
-export { deviceIdOf, generateKeyPair, isKeyPair, publicKeyOf } from './keys'
+export { deviceIdOf, generateKeyPair, isKeyPair, keysMatch, publicKeyOf } from './keys'
 export { identityProof, ticketProof } from './payloads'
+export { isIdentityReply, provesIdentity } from './reply'
 export { newNonce, sign, signerOf, verify } from './sign'

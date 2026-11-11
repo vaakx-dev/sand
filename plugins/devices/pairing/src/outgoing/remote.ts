@@ -1,7 +1,6 @@
 import {
   deviceParams,
   devicePaths,
-  type IdentityReply,
   type JoinBody,
   type JoinStatus,
   type JoinTicket,
@@ -10,7 +9,7 @@ import {
   type PairReply,
   type PcIdentity,
 } from '@sand/devices-contract'
-import { deviceIdOf, identityProof, newNonce, verify } from '@sand/devices-identity'
+import { isIdentityReply, newNonce, provesIdentity } from '@sand/devices-identity'
 import { isRecord } from '@sand/util'
 
 const timeout = 10_000
@@ -39,18 +38,10 @@ const call = async <T>(base: string, path: string, body?: unknown): Promise<T> =
   return (await response.json()) as T
 }
 
-const checks = (reply: IdentityReply, nonce: string) => {
-  try {
-    return deviceIdOf(reply.publicKey) === reply.id && verify(identityProof(nonce, reply.nonce, reply.id), reply.signature, reply.publicKey)
-  } catch {
-    return false
-  }
-}
-
 export const fetchIdentity = async (base: string): Promise<PcIdentity> => {
   const nonce = newNonce()
-  const reply = await call<IdentityReply>(base, `${devicePaths.identity}?${deviceParams.nonce}=${encodeURIComponent(nonce)}`)
-  if (!isRecord(reply) || !checks(reply, nonce)) throw new Error(`${base} is not a sand PC`)
+  const reply = await call<unknown>(base, `${devicePaths.identity}?${deviceParams.nonce}=${encodeURIComponent(nonce)}`)
+  if (!isIdentityReply(reply) || !(await provesIdentity(reply, nonce))) throw new Error(`${base} is not a sand PC`)
   const { id, name, platform, publicKey, build } = reply
   return { id, name, platform, publicKey, ...(build && { build }) }
 }

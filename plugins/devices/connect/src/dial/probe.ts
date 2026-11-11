@@ -1,9 +1,9 @@
 import { type AttemptResult, deviceParams, devicePaths, type PcIdentity, type Route, type Transport } from '@sand/devices-contract'
-import { newNonce } from '@sand/devices-identity'
+import { isIdentityReply, newNonce } from '@sand/devices-identity'
 import { errorMessage } from '@sand/util'
 import { probeTimeout } from '../timing'
 import { attemptResultOf } from './classify'
-import { type ExpectedPc, identityOf, isIdentityReply, provesPc } from './proof'
+import { type ExpectedPc, identityOf, provesPc } from './proof'
 
 export interface PassedProbe {
   route: Route
@@ -36,7 +36,7 @@ export const probeRoute = async (route: Route, transportOf: (route: Route) => Tr
     const reply: unknown = await response.json()
     if (!isIdentityReply(reply)) return failed('error', `${devicePaths.identity} didn't answer with a PC identity`)
     if (reply.id !== expected.id) return failed('wrong-pc', `reached ${reply.name}, a different PC`)
-    if (!provesPc(reply, expected, clientNonce)) return failed('wrong-pc', `${reply.name} couldn't prove it holds the paired key`)
+    if (!(await provesPc(reply, expected, clientNonce))) return failed('wrong-pc', `${reply.name} couldn't prove it holds the paired key`)
     return { route, ok: true, identity: identityOf(reply), nonce: reply.nonce, ms: Date.now() - started }
   } catch (error) {
     return failed(attemptResultOf(error), errorMessage(error))
