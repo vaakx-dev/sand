@@ -9,4 +9,4 @@ export { isMediaBlock, mediaBlocks, unavailableText, type MediaBlock } from './m
 export { textOf } from './text'
 export { hasToolResult, isPrompt, toolCalls } from './tools'
 export { quickTitle } from './title'
-export { promptText, saidText, userParts } from './user'
+export { promptText, saidText, typedByPerson, userParts } from './user'

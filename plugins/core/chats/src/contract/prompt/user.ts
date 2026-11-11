@@ -1,4 +1,5 @@
 import type { Block, Message, UserPart } from '..'
+import { notificationTag } from '../notification'
 import { readFeedback } from './feedback'
 import { isImageLabel } from './image'
 
@@ -26,3 +27,9 @@ export const promptText = (message: Message, separator = '\n') =>
 
 export const saidText = (message: Message, separator = '\n') =>
   promptText(message, separator).trim() || userParts(message).flatMap(part => ('block' in part ? [part.block.name ?? part.kind] : [])).join(', ')
+
+const relayed = (message: Message) => message.content.some(block => block.type === 'context' && block.records.some(record => record.data.sent === true))
+
+const notified = (message: Message) => promptText(message).trimStart().startsWith(`<${notificationTag}>`)
+
+export const typedByPerson = (message: Message) => message.role === 'user' && !relayed(message) && !notified(message)

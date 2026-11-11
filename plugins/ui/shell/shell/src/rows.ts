@@ -67,10 +67,6 @@ const quietNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
     },
     span({ class: 'inline-flex shrink-0 text-neutral-400 group-hover:text-neutral-200 group-aria-current:text-neutral-100' }, icon(item.get().icon)),
     span({ class: 'min-w-0 flex-1 truncate text-left text-sm font-normal text-neutral-200 group-hover:text-neutral-100 group-aria-current:text-neutral-100' }, () => item.get().label),
-    dynamicChild(
-      () => item.get().detail?.(),
-      detail => (detail ? span({ class: 'shrink-0 truncate text-xs text-neutral-500' }, detail) : null),
-    ),
   )
 }
 

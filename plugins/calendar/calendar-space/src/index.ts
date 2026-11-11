@@ -9,7 +9,6 @@ import { detailSheet } from './detail'
 import { formSheet, type FormParts } from './form'
 import { headView } from './head'
 import { calendarModel } from './model'
-import { nextToday } from './next'
 import { calendarKind } from './section'
 import { subscribeSheet } from './subscribe'
 import { weekView } from './week'
@@ -27,7 +26,6 @@ export default definePlugin({
   apply(ctx) {
     const { kit } = ctx
     const model = calendarModel(ctx)
-    const next = nextToday(ctx)
     const report = (error: unknown) => ctx.report(error)
 
     const leaveEvent = (found: Shell, key: string) => {
@@ -99,7 +97,7 @@ export default definePlugin({
     ctx.watch(shell, found =>
       found
         ? joinDisposers(
-            found.nav({ id: 'calendar', label: 'Calendar', icon: 'calendar', order: 20, place: 'nav', detail: next, to: { kind: calendarKind } }),
+            found.nav({ id: 'calendar', label: 'Calendar', icon: 'calendar', order: 20, place: 'nav', to: { kind: calendarKind } }),
             found.route({ kind: calendarKind, render: route => screen(found, route) }),
             found.route({ kind: homeRoute, order: homeOrder, render: route => screen(found, route) }),
           )

@@ -1,4 +1,4 @@
-import { type Message, saidText, textOf } from '@sand/chats/contract'
+import { type Message, saidText, textOf, typedByPerson } from '@sand/chats/contract'
 import { oneLine } from '@sand/util'
 import type { BotEntry, LastLine } from './contract'
 
@@ -10,12 +10,14 @@ const plain = (markdown: string) =>
     .replace(/^\s*(?:#{1,6}|[-*+]|\d+\.|>)\s+/gm, '')
     .replace(/\*\*|__|~~|[*`]/g, '')
 
-export const lastLine = (entries: BotEntry[]): LastLine | undefined => {
-  for (const entry of entries) {
-    const message = entry.data as Message
-    const said = message.role === 'user' ? saidText(message) : textOf(message.content, '\n')
-    const text = oneLine(plain(said), maxLength)
-    if (text) return { role: message.role, text, at: entry.at }
-  }
-  return undefined
+const shown = (message: Message) => message.role === 'assistant' || typedByPerson(message)
+
+const lineOf = ({ data, at }: BotEntry): LastLine | undefined => {
+  const message = data as Message
+  if (!shown(message)) return undefined
+  const said = message.role === 'user' ? saidText(message) : textOf(message.content, '\n')
+  const text = oneLine(plain(said), maxLength)
+  return text ? { role: message.role, text, at } : undefined
 }
+
+export const lastLine = (entries: BotEntry[]) => entries.map(lineOf).find(Boolean)
