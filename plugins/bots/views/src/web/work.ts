@@ -22,7 +22,7 @@ const statusLineOf = (list: (bot: string) => BotTab[], leadOf: (bot: string) => 
     return { text: step || 'Working', waiting: false }
   }
   if (bot.status === 'waiting' || bot.status === 'failed') return { text: 'Waiting on you', waiting: true }
-  const last = bot.last?.text?.trim()
+  const last = (bot.last?.gist ?? bot.last?.text)?.trim()
   if (last) return { text: last, waiting: false }
   if (lead?.note?.trim()) return { text: lead.note.trim(), waiting: false }
   return undefined

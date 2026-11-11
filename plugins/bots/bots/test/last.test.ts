@@ -12,5 +12,12 @@ test('the preview skips notifications and relayed messages for the newest line a
     entry(3, { role: 'user', content: [{ type: 'text', text: 'Status?' }, { type: 'context', records: [{ v: 1, id: 'r1', kind: 'thread', label: 'Build', data: { id: 't1', sent: true } }] }] }),
     entry(2, { role: 'assistant', content: [{ type: 'text', text: 'The **east bed** is dry.' }] }),
   ]
-  expect(lastLine(entries)).toEqual({ role: 'assistant', text: 'The east bed is dry.', at: 2 })
+  expect(lastLine(entries, [])).toEqual({ entry: 'e2', role: 'assistant', text: 'The east bed is dry.', at: 2 })
+})
+
+test('the preview carries the gist kept for its own reply and ignores one kept for an older reply', () => {
+  const reply = entry(2, { role: 'assistant', content: [{ type: 'text', text: 'Watered the east bed and logged it.' }] })
+  const gist = (seq: number, of: string) => ({ ...entry(seq, { entry: of, text: 'Watered the east bed' }), type: 'bot-gist' })
+  expect(lastLine([reply], [gist(3, 'e2')])?.gist).toBe('Watered the east bed')
+  expect(lastLine([reply], [gist(3, 'e1')])?.gist).toBeUndefined()
 })

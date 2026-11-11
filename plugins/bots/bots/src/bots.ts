@@ -7,7 +7,7 @@ import { dollars, uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { type Bot, botChange, botEntry, type BotHold, botName, botRemove, type Bots, type BotStatus, type BotSummary, freshColor, type ModelChoice, type NewBot } from './contract'
+import { type Bot, botChange, botEntry, type BotHold, botName, botRemove, type Bots, type BotStatus, type BotSummary, freshColor, gistEntry, type ModelChoice, type NewBot } from './contract'
 import { createEntries } from './entries'
 import { createJobs } from './jobs'
 import { lastLine } from './last'
@@ -37,7 +37,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
   const statuses = new Map<string, BotStatus>()
 
   const summary = (bot: Bot): BotSummary => {
-    const last = lastLine(entries.newest(bot.id, 'message', scanned))
+    const last = lastLine(entries.newest(bot.id, 'message', scanned), entries.newest(bot.id, gistEntry, 1))
     const spent = billedCost(entries.usage(bot.id, monthStart()), llm)
     const hold = holdOf(bot, spent)
     return { ...bot, status: statuses.get(bot.id) ?? 'idle', spent, ...(hold && { hold }), ...(last ? { last } : {}) }
@@ -65,7 +65,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
     const before = type === 'usage' ? summary(known(bot)).hold : undefined
     const entry = entries.append(known(bot).id, type, data, meta)
     ctx.emit(botEntry, entry)
-    if (type !== 'message' && type !== 'usage') return entry
+    if (type !== 'message' && type !== 'usage' && type !== gistEntry) return entry
     const after = changed(bot)
     if (type === 'usage' && after.hold === 'limit' && before !== 'limit') reached(after)
     return entry
