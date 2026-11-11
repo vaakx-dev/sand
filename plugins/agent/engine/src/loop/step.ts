@@ -1,7 +1,7 @@
 import type { LLMEvent } from '@sand/accounts/contract'
 import { type Message, noteBlock, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
-import type { Conversation, Step } from '../contract'
+import type { Conversation, Step, TurnOrigin } from '../contract'
 import type { EngineContext } from '../context'
 import { expand } from '../lifecycle/start'
 import type { Owned } from '../owned'
@@ -9,6 +9,8 @@ import { streamStep } from './stream'
 import { runTools } from './tools'
 import type { TurnHooks, TurnRun } from './turn'
 import { createWaiting } from './waiting'
+
+const noticeOrigins = new Set<TurnOrigin>(['job', 'wake', 'routine'])
 
 type Done = Extract<LLMEvent, { type: 'done' }>
 
@@ -83,7 +85,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     return taken
   }
 
-  let nudged = false
+  let nudged = noticeOrigins.has(info.origin)
   const nudge = () => {
     if (nudged) return false
     nudged = true
