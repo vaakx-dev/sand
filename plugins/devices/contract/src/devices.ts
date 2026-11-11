@@ -4,18 +4,18 @@ import type { IdentityReply, Resume, TicketRefusal } from './http/identity'
 import type { DeviceRecord, PcIdentity } from './records'
 import { deviceRecordSchema, pcIconSchema } from './schemas'
 
-export const devicesList = request('devices.list', { input: z.object({}), output: type<DeviceRecord[]>() })
+export const devicesList = request('devices.list', { input: () => z.object({}), output: type<DeviceRecord[]>() })
 export const devicesRename = request('devices.rename', {
-  input: z.object({ device: z.string().min(1), name: z.string().trim().min(1) }),
+  input: () => z.object({ device: z.string().min(1), name: z.string().trim().min(1) }),
   output: type<DeviceRecord>(),
 })
 export const devicesIcon = request('devices.icon', {
-  input: z.object({ device: z.string().min(1), icon: pcIconSchema }),
+  input: () => z.object({ device: z.string().min(1), icon: pcIconSchema() }),
   output: type<DeviceRecord>(),
 })
-export const devicesRemove = request('devices.remove', { input: z.object({ device: z.string().min(1) }), output: type<void>() })
+export const devicesRemove = request('devices.remove', { input: () => z.object({ device: z.string().min(1) }), output: type<void>() })
 export const devicesSync = request('devices.sync', {
-  input: z.object({ records: z.array(deviceRecordSchema) }),
+  input: () => z.object({ records: z.array(deviceRecordSchema()) }),
   output: type<DeviceRecord[]>(),
   callers: 'pc',
 })
@@ -27,9 +27,9 @@ export interface DeviceSeen {
   at: number
 }
 
-export const devicesSeen = request('devices.seen', { input: z.object({}), output: type<DeviceSeen[]>() })
+export const devicesSeen = request('devices.seen', { input: () => z.object({}), output: type<DeviceSeen[]>() })
 
-export const pcRename = request('pc.rename', { input: z.object({ name: z.string().trim().min(1) }), output: type<PcIdentity>() })
+export const pcRename = request('pc.rename', { input: () => z.object({ name: z.string().trim().min(1) }), output: type<PcIdentity>() })
 
 export const helloPc = helloField<PcIdentity>('pc')
 export const helloDevice = helloField<DeviceRecord>('device')

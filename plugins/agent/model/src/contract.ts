@@ -2,6 +2,7 @@ import { efforts, type Effort, type EffortLevel, type ModelInfo, type SourceInfo
 import type { Session } from '@sand/chats/contract'
 import type { CliFlags } from '@sand/config/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -69,15 +70,15 @@ export const helloSources = helloField<SourceInfo[]>('sources')
 export const helloDefaults = helloField<SessionSettings>('defaults')
 export const helloLevels = helloField<EffortLevel[]>('levels')
 
-const effort = z.enum(efforts)
-const speed = z.enum(['normal', 'fast'])
-export const sessionSettings = z.object({ model: z.string().optional(), effort: effort.optional(), speed: speed.optional() })
-const patch = z.object({ model: z.string().nullish(), effort: effort.nullish(), speed: speed.nullish() })
+const effort = lazy(() => z.enum(efforts))
+const speed = lazy(() => z.enum(['normal', 'fast']))
+export const sessionSettings = lazy(() => z.object({ model: z.string().optional(), effort: effort().optional(), speed: speed().optional() }))
+const patch = lazy(() => z.object({ model: z.string().nullish(), effort: effort().nullish(), speed: speed().nullish() }))
 
 export const settingsGet = request('settings.get', {
-  input: z.object({ session: z.string().optional(), settings: sessionSettings.optional() }),
+  input: () => z.object({ session: z.string().optional(), settings: sessionSettings().optional() }),
   output: type<SettingsState>(),
   place: 'thread',
 })
-export const settingsSet = request('settings.set', { input: z.object({ session: z.string(), patch }), output: type<void>(), place: 'thread' })
-export const defaultsSet = request('defaults.set', { input: z.object({ patch }), output: type<void>(), place: 'thread' })
+export const settingsSet = request('settings.set', { input: () => z.object({ session: z.string(), patch: patch() }), output: type<void>(), place: 'thread' })
+export const defaultsSet = request('defaults.set', { input: () => z.object({ patch: patch() }), output: type<void>(), place: 'thread' })

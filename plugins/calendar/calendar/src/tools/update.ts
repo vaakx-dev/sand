@@ -9,7 +9,7 @@ const input = z.object({
   title: z.string().min(1).optional(),
   start: moment.optional().describe('New start. Without an end the event keeps its length, so this moves it'),
   end: moment.optional(),
-  zone: timeZone.optional().describe("Time zone of start and end (default: the event's, or the user's)"),
+  zone: timeZone().optional().describe("Time zone of start and end (default: the event's, or the user's)"),
   repeat: z.string().optional().describe('New RRULE for the series, or an empty text to stop repeating'),
   ...eventFields,
 })

@@ -1,5 +1,6 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { pluginName } from '@sand/host-plugin-library/contract'
+import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -55,13 +56,13 @@ export interface HostPluginSync {
 
 export const hostPluginSync = service<HostPluginSync>('hostPluginSync')
 
-const choice = z.object({ peer: z.string().min(1), plugins: z.array(pluginName).min(1) })
+const choice = lazy(() => z.object({ peer: z.string().min(1), plugins: z.array(pluginName()).min(1) }))
 
-export const pluginsState = request('plugins.state', { input: z.object({}), output: type<PluginSyncState>() })
+export const pluginsState = request('plugins.state', { input: () => z.object({}), output: type<PluginSyncState>() })
 export const pluginsApply = request('plugins.apply', { input: choice, output: type<PluginSyncState>() })
 export const pluginsSkip = request('plugins.skip', { input: choice, output: type<PluginSyncState>() })
-export const pluginsLocal = request('plugins.local', { input: z.object({ plugin: pluginName, local: z.boolean() }), output: type<PluginSyncState>() })
-export const pluginsExchange = request('plugins.exchange', { input: z.object({ manifest: z.unknown() }), output: type<unknown>(), callers: 'pc' })
-export const pluginsFiles = request('plugins.files', { input: z.object({ plugin: pluginName }), output: type<unknown>(), callers: 'pc' })
+export const pluginsLocal = request('plugins.local', { input: () => z.object({ plugin: pluginName(), local: z.boolean() }), output: type<PluginSyncState>() })
+export const pluginsExchange = request('plugins.exchange', { input: () => z.object({ manifest: z.unknown() }), output: type<unknown>(), callers: 'pc' })
+export const pluginsFiles = request('plugins.files', { input: () => z.object({ plugin: pluginName() }), output: type<unknown>(), callers: 'pc' })
 
 export const pluginsChange = wireEvent<PluginSyncState>('plugins.change')

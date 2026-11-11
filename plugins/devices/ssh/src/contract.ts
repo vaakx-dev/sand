@@ -1,4 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -56,23 +57,23 @@ export interface SshAsk extends SshPrompt {
   id: string
 }
 
-const attempt = z.string().min(1).max(100)
+const attempt = lazy(() => z.string().min(1).max(100))
 
-export const sshState = request('ssh.state', { input: z.object({}), output: type<SshState>() })
+export const sshState = request('ssh.state', { input: () => z.object({}), output: type<SshState>() })
 
 export const sshConnect = request('ssh.connect', {
-  input: z.object({ host: z.string().trim().min(1).max(500), attempt }),
+  input: () => z.object({ host: z.string().trim().min(1).max(500), attempt: attempt() }),
   output: type<{ pc: string }>(),
 })
 
-export const sshReconnect = request('ssh.reconnect', { input: z.object({ pc: z.string().min(1), attempt }), output: type<void>() })
+export const sshReconnect = request('ssh.reconnect', { input: () => z.object({ pc: z.string().min(1), attempt: attempt() }), output: type<void>() })
 
 export const sshAnswer = request('ssh.answer', {
-  input: z.object({ attempt, id: z.string().min(1), value: z.string().max(4000).nullable() }),
+  input: () => z.object({ attempt: attempt(), id: z.string().min(1), value: z.string().max(4000).nullable() }),
   output: type<void>(),
 })
 
-export const sshCancel = request('ssh.cancel', { input: z.object({ attempt }), output: type<void>() })
+export const sshCancel = request('ssh.cancel', { input: () => z.object({ attempt: attempt() }), output: type<void>() })
 
 export const sshStateChange = wireEvent<SshState>('ssh.state')
 

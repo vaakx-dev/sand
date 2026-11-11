@@ -1,8 +1,8 @@
-import { afterAll, beforeAll, test } from 'bun:test'
+import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { chromium, type Browser } from 'playwright'
+import { chromium, type Browser, type BrowserContext } from 'playwright'
 
 const main = join(import.meta.dir, '../../../../../apps/sand/src/main.ts')
 
@@ -42,8 +42,16 @@ const printed = (out: string, pattern: RegExp) => {
 }
 
 let box: string
-let url: string
+let origin: string
 let browser: Browser
+let paired: BrowserContext
+
+const pair = async (url: string) => {
+  const page = await paired.newPage()
+  await page.goto(url)
+  await page.getByRole('button', { name: 'New thread' }).first().waitFor()
+  await page.close()
+}
 
 beforeAll(async () => {
   const home = mkdtempSync(join(tmpdir(), 'sand-hello-'))
@@ -58,8 +66,11 @@ beforeAll(async () => {
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
   box = printed(out, /throwaway sand \(pid \d+\) in (.+)$/m)
-  url = printed(out, /open it paired: (\S+)/)
+  const url = printed(out, /open it paired: (\S+)/)
+  origin = new URL(url).origin
   browser = await chromium.launch()
+  paired = await browser.newContext()
+  await pair(url)
 }, 60_000)
 
 afterAll(async () => {
@@ -69,9 +80,21 @@ afterAll(async () => {
   rmSync(box, { recursive: true, force: true })
 })
 
+test('the page boots without breaking its own content security policy', async () => {
+  const page = await paired.newPage()
+  const violations: string[] = []
+  page.on('console', message => message.text().startsWith('csp ') && violations.push(message.text()))
+  await page.addInitScript(() => new ReportingObserver(reports => reports.forEach(report => console.log(`csp ${report.url}`)), { types: ['csp-violation'], buffered: true }).observe())
+  await page.goto(origin)
+  await page.getByRole('button', { name: 'New thread' }).first().waitFor()
+  await page.waitForLoadState('networkidle')
+  expect(violations).toEqual([])
+  await page.close()
+}, 60_000)
+
 test('the page works while a plugin never answers its part of the hello, or throws', async () => {
-  const page = await browser.newPage()
-  await page.goto(url)
+  const page = await paired.newPage()
+  await page.goto(origin)
   await page.getByRole('button', { name: 'New thread' }).first().click()
   await page.getByRole('dialog', { name: 'New thread' }).getByText('No project', { exact: true }).click()
   await page.getByRole('textbox').first().waitFor()

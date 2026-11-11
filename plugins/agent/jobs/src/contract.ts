@@ -62,7 +62,7 @@ export const jobNoteWire = wireEvent<JobNote>('job.note')
 
 export const helloJobs = helloField<WireJob[]>('jobs')
 
-export const jobCancel = request('job.cancel', { input: z.object({ job: z.string() }), output: type<boolean>() })
+export const jobCancel = request('job.cancel', { input: () => z.object({ job: z.string() }), output: type<boolean>() })
 
 export interface Jobs {
   list(parent?: string): WireJob[]

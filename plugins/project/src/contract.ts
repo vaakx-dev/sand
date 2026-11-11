@@ -1,5 +1,6 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import type { OfferedPath } from '@sand/transfers/contract'
+import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -153,66 +154,66 @@ export interface BringStep {
   step: string
 }
 
-const iconInput = z.object({
+const iconInput = lazy(() => z.object({
   shape: z.number().int().positive().optional(),
   hue: z.number().min(0).lt(360).optional(),
-})
+}))
 
-const patchInput = z.object({
+const patchInput = lazy(() => z.object({
   name: z.string().optional(),
   hidden: z.boolean().optional(),
-  icon: iconInput.nullable().optional(),
-})
+  icon: iconInput().nullable().optional(),
+}))
 
-const pathInput = z.object({ path: z.string() })
+const pathInput = lazy(() => z.object({ path: z.string() }))
 
-const bringHow = z.enum(['clone', 'copy'])
+const bringHow = lazy(() => z.enum(['clone', 'copy']))
 
-const bringInput = z.object({ project: z.string(), from: z.string().min(1), path: z.string().trim().min(1), how: bringHow, files: z.array(z.string()) })
+const bringInput = lazy(() => z.object({ project: z.string(), from: z.string().min(1), path: z.string().trim().min(1), how: bringHow(), files: z.array(z.string()) }))
 
-export type BringInput = z.infer<typeof bringInput>
+export type BringInput = z.infer<ReturnType<typeof bringInput>>
 
-const offerInput = z.object({ project: z.string(), how: bringHow, files: z.array(z.string()) })
+const offerInput = lazy(() => z.object({ project: z.string(), how: bringHow(), files: z.array(z.string()) }))
 
-export type ProjectOffer = z.infer<typeof offerInput>
+export type ProjectOffer = z.infer<ReturnType<typeof offerInput>>
 
-export const projectsList = request('projects.list', { input: z.object({}), output: type<ProjectList>() })
+export const projectsList = request('projects.list', { input: () => z.object({}), output: type<ProjectList>() })
 export const helloProjects = helloField<ProjectList>('projects')
 export const projectsInspect = request('projects.inspect', { input: pathInput, output: type<ProjectFolder>() })
-export const projectsAdd = request('projects.add', { input: z.object({ path: z.string(), project: z.string().optional() }), output: type<Project>() })
-export const projectsUpdate = request('projects.update', { input: z.object({ project: z.string(), patch: patchInput }), output: type<Project>() })
-export const projectsRemove = request('projects.remove', { input: z.object({ project: z.string(), device: z.string().optional() }), output: type<void>() })
-export const projectsRoot = request('projects.root', { input: z.object({ root: z.string() }), output: type<ProjectList>() })
-export const projectsCreate = request('projects.create', { input: z.object({ name: z.string() }), output: type<Project>() })
-export const projectsSync = request('projects.sync', { input: z.object({ projects: z.array(z.unknown()) }), output: type<Project[]>(), callers: 'pc' })
+export const projectsAdd = request('projects.add', { input: () => z.object({ path: z.string(), project: z.string().optional() }), output: type<Project>() })
+export const projectsUpdate = request('projects.update', { input: () => z.object({ project: z.string(), patch: patchInput() }), output: type<Project>() })
+export const projectsRemove = request('projects.remove', { input: () => z.object({ project: z.string(), device: z.string().optional() }), output: type<void>() })
+export const projectsRoot = request('projects.root', { input: () => z.object({ root: z.string() }), output: type<ProjectList>() })
+export const projectsCreate = request('projects.create', { input: () => z.object({ name: z.string() }), output: type<Project>() })
+export const projectsSync = request('projects.sync', { input: () => z.object({ projects: z.array(z.unknown()) }), output: type<Project[]>(), callers: 'pc' })
 
-export const createInput = z.object({
+export const createInput = lazy(() => z.object({
   folder: z.string().trim().min(1).optional(),
   name: z.string().trim().min(1).optional(),
   git: z.boolean().optional(),
   copyOf: z.string().min(1).optional(),
-})
-export const updateInput = z.object({
+}))
+export const updateInput = lazy(() => z.object({
   project: z.string(),
   name: z.string().trim().min(1).optional(),
   hidden: z.boolean().optional(),
-  icon: iconInput.nullable().optional(),
-})
-export const removeInput = z.object({ project: z.string(), pc: z.string().min(1).optional() })
-export const rootInput = z.object({ folder: z.string().trim().min(1).optional() })
+  icon: iconInput().nullable().optional(),
+}))
+export const removeInput = lazy(() => z.object({ project: z.string(), pc: z.string().min(1).optional() }))
+export const rootInput = lazy(() => z.object({ folder: z.string().trim().min(1).optional() }))
 
 const runtime = 'runtime'
 
-export const runtimeProjectRows = request('projects.runtime.rows', { input: z.object({}), output: type<ProjectRow[]>(), callers: runtime })
-export const runtimeProjectRow = request('projects.runtime.row', { input: z.object({ project: z.string() }), output: type<ProjectRow>(), callers: runtime })
+export const runtimeProjectRows = request('projects.runtime.rows', { input: () => z.object({}), output: type<ProjectRow[]>(), callers: runtime })
+export const runtimeProjectRow = request('projects.runtime.row', { input: () => z.object({ project: z.string() }), output: type<ProjectRow>(), callers: runtime })
 export const runtimeProjectCreate = request('projects.runtime.create', { input: createInput, output: type<CreatedProject>(), callers: runtime })
 export const runtimeProjectUpdate = request('projects.runtime.update', { input: updateInput, output: type<ProjectRow>(), callers: runtime })
 export const runtimeProjectRemove = request('projects.runtime.remove', { input: removeInput, output: type<ProjectRow | RemovedProject>(), callers: runtime })
 export const runtimeProjectRoot = request('projects.runtime.root', { input: rootInput, output: type<{ root: string }>(), callers: runtime })
 
-export const filesList = request('files.list', { input: z.object({ cwd: z.string().optional() }), output: type<string[]>(), place: 'thread' })
-export const filesGrep = request('files.grep', { input: z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>(), place: 'thread' })
-export const filesRead = request('files.read', { input: z.object({ cwd: z.string(), path: z.string() }), output: type<FileContent>(), place: 'thread' })
+export const filesList = request('files.list', { input: () => z.object({ cwd: z.string().optional() }), output: type<string[]>(), place: 'thread' })
+export const filesGrep = request('files.grep', { input: () => z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>(), place: 'thread' })
+export const filesRead = request('files.read', { input: () => z.object({ cwd: z.string(), path: z.string() }), output: type<FileContent>(), place: 'thread' })
 export const fsBrowse = request('fs.browse', { input: pathInput, output: type<FolderListing>() })
 export const fsMkdir = request('fs.mkdir', { input: pathInput, output: type<void>() })
 export const projectsIgnored = request('projects.ignored', { input: pathInput, output: type<IgnoredFiles>() })

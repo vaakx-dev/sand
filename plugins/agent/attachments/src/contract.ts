@@ -18,6 +18,6 @@ export const attachments = service<Attachments>('attachments')
 export const helloAttachments = helloField<AttachmentLimits>('attachments')
 
 export const attachmentsFinish = request('attachments.finish', {
-  input: z.object({ transfer: z.string(), name: z.string(), chunks: z.number().int(), size: z.number().int() }),
+  input: () => z.object({ transfer: z.string(), name: z.string(), chunks: z.number().int(), size: z.number().int() }),
   output: type<UserContent>(),
 })

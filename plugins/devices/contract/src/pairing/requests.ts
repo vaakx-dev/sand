@@ -1,30 +1,31 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { z } from 'zod'
 import type { DeviceRecord } from '../records'
 import { agentAccessSchema } from '../schemas'
 import type { PairLink } from './links'
 import type { AgentPairing, JoinRequest, OutgoingJoin, PairJoined, PairJoinResult, PairSettled } from './types'
 
-const target = { id: z.string().min(1), pc: z.string().min(1).optional() }
+const target = lazy(() => ({ id: z.string().min(1), pc: z.string().min(1).optional() }))
 
-export const pairLink = request('pair.link', { input: z.object({ kind: z.enum(['device', 'pc']) }), output: type<PairLink>() })
-export const pairCancel = request('pair.cancel', { input: z.object({ token: z.string().min(1) }), output: type<void>() })
-export const pairHandoff = request('pair.handoff', { input: z.object({}), output: type<PairLink>() })
+export const pairLink = request('pair.link', { input: () => z.object({ kind: z.enum(['device', 'pc']) }), output: type<PairLink>() })
+export const pairCancel = request('pair.cancel', { input: () => z.object({ token: z.string().min(1) }), output: type<void>() })
+export const pairHandoff = request('pair.handoff', { input: () => z.object({}), output: type<PairLink>() })
 export const pairAgent = request('pair.agent', {
-  input: z.object({ name: z.string().trim().min(1).max(80), access: agentAccessSchema }),
+  input: () => z.object({ name: z.string().trim().min(1).max(80), access: agentAccessSchema() }),
   output: type<AgentPairing>(),
 })
 
-export const pairRequests = request('pair.requests', { input: z.object({}), output: type<JoinRequest[]>() })
-export const pairApprove = request('pair.approve', { input: z.object(target), output: type<DeviceRecord>() })
-export const pairDeny = request('pair.deny', { input: z.object(target), output: type<void>() })
+export const pairRequests = request('pair.requests', { input: () => z.object({}), output: type<JoinRequest[]>() })
+export const pairApprove = request('pair.approve', { input: () => z.object(target()), output: type<DeviceRecord>() })
+export const pairDeny = request('pair.deny', { input: () => z.object(target()), output: type<void>() })
 
 export const pairJoin = request('pair.join', {
-  input: z.object({ url: z.string().min(1), pc: z.string().min(1).optional() }),
+  input: () => z.object({ url: z.string().min(1), pc: z.string().min(1).optional() }),
   output: type<OutgoingJoin>(),
 })
-export const pairJoins = request('pair.joins', { input: z.object({}), output: type<OutgoingJoin[]>() })
-export const pairCancelJoin = request('pair.cancelJoin', { input: z.object({ id: z.string().min(1) }), output: type<void>() })
+export const pairJoins = request('pair.joins', { input: () => z.object({}), output: type<OutgoingJoin[]>() })
+export const pairCancelJoin = request('pair.cancelJoin', { input: () => z.object({ id: z.string().min(1) }), output: type<void>() })
 
 export const pairJoined = wireEvent<PairJoined>('pair.joined')
 export const pairRequested = wireEvent<JoinRequest>('pair.requested')

@@ -17,7 +17,7 @@ const isPublicKey = (value: string) => {
 const device = {
   publicKey: z.string().max(128).refine(isPublicKey, 'not an ed25519 public key'),
   name: z.string().max(200),
-  kind: joinKindSchema,
+  kind: joinKindSchema(),
   platform: z.string().max(80),
 }
 

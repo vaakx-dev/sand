@@ -1,5 +1,6 @@
 import type { ConversationRef } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -86,62 +87,62 @@ export interface LoginsState {
 
 export const loginsWire = wireEvent<LoginsState>('logins.state')
 
-const id = z.string().min(1)
-const name = z.string().trim().min(1).max(100)
-const site = z.string().trim().min(1).max(253)
-const secret = z.string().min(1).max(4000)
+const id = lazy(() => z.string().min(1))
+const name = lazy(() => z.string().trim().min(1).max(100))
+const site = lazy(() => z.string().trim().min(1).max(253))
+const secret = lazy(() => z.string().min(1).max(4000))
 
-export const loginsState = request('logins.state', { input: z.object({}), output: type<LoginsState>() })
+export const loginsState = request('logins.state', { input: () => z.object({}), output: type<LoginsState>() })
 
 export const loginAdd = request('logins.add', {
-  input: z.discriminatedUnion('kind', [
-    z.object({ kind: z.literal('website'), name, site, username: secret, password: secret, totp: secret.optional() }),
-    z.object({ kind: z.literal('key'), name, value: secret }),
+  input: () => z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('website'), name: name(), site: site(), username: secret(), password: secret(), totp: secret().optional() }),
+    z.object({ kind: z.literal('key'), name: name(), value: secret() }),
   ]),
   output: type<Login>(),
 })
 
 export const loginChange = request('logins.change', {
-  input: z.object({
-    id,
-    name: name.optional(),
-    site: site.optional(),
-    username: secret.optional(),
-    password: secret.optional(),
-    value: secret.optional(),
-    totp: secret.nullable().optional(),
-    bots: z.array(id).optional(),
-    threads: z.array(id).optional(),
+  input: () => z.object({
+    id: id(),
+    name: name().optional(),
+    site: site().optional(),
+    username: secret().optional(),
+    password: secret().optional(),
+    value: secret().optional(),
+    totp: secret().nullable().optional(),
+    bots: z.array(id()).optional(),
+    threads: z.array(id()).optional(),
     ask: z.boolean().optional(),
   }),
   output: type<Login>(),
 })
 
-const external = z.enum(externalSources)
-const ref = z.string().regex(/^[A-Za-z0-9][\w.@-]{0,199}$/, 'Not an item id')
-const picked = { name: name.optional(), site: site.optional(), kind: z.enum(loginKinds).optional() }
+const external = lazy(() => z.enum(externalSources))
+const ref = lazy(() => z.string().regex(/^[A-Za-z0-9][\w.@-]{0,199}$/, 'Not an item id'))
+const picked = lazy(() => ({ name: name().optional(), site: site().optional(), kind: z.enum(loginKinds).optional() }))
 
-export const sourceConnect = request('logins.connect', { input: z.object({ source: external, secret }), output: type<LoginsState>() })
+export const sourceConnect = request('logins.connect', { input: () => z.object({ source: external(), secret: secret() }), output: type<LoginsState>() })
 
-export const sourceDisconnect = request('logins.disconnect', { input: z.object({ source: external }), output: type<LoginsState>() })
+export const sourceDisconnect = request('logins.disconnect', { input: () => z.object({ source: external() }), output: type<LoginsState>() })
 
 export const sourceSearch = request('logins.search', {
-  input: z.object({ source: external, query: z.string().trim().max(200) }),
+  input: () => z.object({ source: external(), query: z.string().trim().max(200) }),
   output: type<SourceItem[]>(),
 })
 
 export const loginPick = request('logins.pick', {
-  input: z.discriminatedUnion('source', [
-    z.object({ source: z.literal('bitwarden'), item: ref, ...picked }),
-    z.object({ source: z.literal('bitwarden-secrets'), item: ref, ...picked }),
-    z.object({ source: z.literal('1password'), item: ref, vault: ref, account: ref.optional(), ...picked }),
+  input: () => z.discriminatedUnion('source', [
+    z.object({ source: z.literal('bitwarden'), item: ref(), ...picked() }),
+    z.object({ source: z.literal('bitwarden-secrets'), item: ref(), ...picked() }),
+    z.object({ source: z.literal('1password'), item: ref(), vault: ref(), account: ref().optional(), ...picked() }),
   ]),
   output: type<Login>(),
 })
 
-export const loginRemove = request('logins.remove', { input: z.object({ id }), output: type<LoginsState>() })
+export const loginRemove = request('logins.remove', { input: () => z.object({ id: id() }), output: type<LoginsState>() })
 
-export const loginUses = request('logins.uses', { input: z.object({ id }), output: type<Use[]>() })
+export const loginUses = request('logins.uses', { input: () => z.object({ id: id() }), output: type<Use[]>() })
 
 export type AskStatus = 'saved' | 'held' | 'filled' | 'approved' | 'declined' | 'timed_out' | 'cancelled'
 
@@ -172,17 +173,17 @@ export const secretEntry = 'secret-request'
 export const codeEntry = 'login-code'
 export const answerEntry = 'secret-answer'
 
-const target = { session: id, id }
+const target = lazy(() => ({ session: id(), id: id() }))
 
-export const askWaiting = request('logins.waiting', { input: z.object(target), output: type<boolean>(), place: 'thread' })
-export const askDecline = request('logins.decline', { input: z.object(target), output: type<void>(), place: 'thread' })
+export const askWaiting = request('logins.waiting', { input: () => z.object(target()), output: type<boolean>(), place: 'thread' })
+export const askDecline = request('logins.decline', { input: () => z.object(target()), output: type<void>(), place: 'thread' })
 export const secretSave = request('logins.secret', {
-  input: z.union([z.object({ ...target, save: z.boolean(), value: secret }), z.object({ ...target, save: z.boolean(), username: secret, password: secret })]),
+  input: () => z.union([z.object({ ...target(), save: z.boolean(), value: secret() }), z.object({ ...target(), save: z.boolean(), username: secret(), password: secret() })]),
   output: type<void>(),
   place: 'thread',
 })
 export const codeAnswer = request('logins.code', {
-  input: z.union([z.object({ ...target, code: z.string().trim().min(1).max(64) }), z.object({ ...target, approved: z.literal(true) })]),
+  input: () => z.union([z.object({ ...target(), code: z.string().trim().min(1).max(64) }), z.object({ ...target(), approved: z.literal(true) })]),
   output: type<void>(),
   place: 'thread',
 })

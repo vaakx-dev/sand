@@ -49,7 +49,7 @@ export interface Daemon {
 
 export const daemon = service<Daemon>('daemon')
 
-export const daemonStop = request('daemon.stop', { input: z.object({}), output: type<void>() })
+export const daemonStop = request('daemon.stop', { input: () => z.object({}), output: type<void>() })
 export const hostOptions = service<HostOptions>('hostOptions')
 export const hostApp = service<HostApp>('hostApp')
 

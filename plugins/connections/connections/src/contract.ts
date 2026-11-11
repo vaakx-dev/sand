@@ -1,4 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { event, service, type ContextCore, type Dispose } from 'drydock'
 import { z } from 'zod'
 
@@ -125,20 +126,20 @@ export interface FlowEnd {
 export const connectionsWire = wireEvent<ConnectionState>('connections.state')
 export const connectionFlowWire = wireEvent<FlowEnd>('connection.flow')
 
-const kind = z.string().min(1)
+const kind = lazy(() => z.string().min(1))
 
-export const connectionState = request('connections.state', { input: z.object({}), output: type<ConnectionState>() })
+export const connectionState = request('connections.state', { input: () => z.object({}), output: type<ConnectionState>() })
 export const connectionClient = request('connections.client', {
-  input: z.object({ kind, id: z.string().trim().min(1).max(500), secret: z.string().trim().max(500).optional() }),
+  input: () => z.object({ kind: kind(), id: z.string().trim().min(1).max(500), secret: z.string().trim().max(500).optional() }),
   output: type<ConnectionState>(),
 })
 export const connectionStart = request('connections.start', {
-  input: z.object({ kind, readOnly: z.boolean().optional() }),
+  input: () => z.object({ kind: kind(), readOnly: z.boolean().optional() }),
   output: type<{ flow: string; url: string }>(),
 })
-export const connectionCancel = request('connections.cancel', { input: z.object({ flow: z.string() }), output: type<boolean>() })
+export const connectionCancel = request('connections.cancel', { input: () => z.object({ flow: z.string() }), output: type<boolean>() })
 export const connectionSave = request('connections.save', {
-  input: z.object({ kind, values: z.record(z.string(), z.string().max(4000)) }),
+  input: () => z.object({ kind: kind(), values: z.record(z.string(), z.string().max(4000)) }),
   output: type<Account>(),
 })
-export const connectionRemove = request('connections.remove', { input: z.object({ account: z.string() }), output: type<ConnectionState>() })
+export const connectionRemove = request('connections.remove', { input: () => z.object({ account: z.string() }), output: type<ConnectionState>() })

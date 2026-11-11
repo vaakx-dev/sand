@@ -21,7 +21,7 @@ export const subscribe = async (key: string) => {
   const { pushManager } = await navigator.serviceWorker.ready
   await (await pushManager.getSubscription())?.unsubscribe()
   const subscription = await pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: new Uint8Array(decodeBase64url(key)) })
-  return pushTargetSchema.parse(subscription.toJSON())
+  return pushTargetSchema().parse(subscription.toJSON())
 }
 
 export const unsubscribe = async () => {

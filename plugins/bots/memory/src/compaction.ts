@@ -82,7 +82,7 @@ export const compactionOf = (memory: BotMemory, bot: string): CompactionBrief =>
 
   const problemsOf = (reply: string, notes: Note[]) => {
     const kept = tagged(reply, 'memory') ?? ''
-    const named = notes.filter(note => !noteName.safeParse(note.name).success)
+    const named = notes.filter(note => !noteName().safeParse(note.name).success)
     const long = notes.filter(note => note.text.length > noteLimit)
     return [
       ...(kept.length > memoryLimit
@@ -95,7 +95,7 @@ export const compactionOf = (memory: BotMemory, bot: string): CompactionBrief =>
 
   const saved = (note: Note): Note | undefined => {
     const before = known.get(note.name)?.trim()
-    if (!noteName.safeParse(note.name).success || note.text === (before ?? '')) return undefined
+    if (!noteName().safeParse(note.name).success || note.text === (before ?? '')) return undefined
     if (before === undefined || shown.has(note.name)) return { name: note.name, text: `${note.text}\n` }
     return note.text ? { name: note.name, text: `${before}\n\n${note.text}\n` } : undefined
   }

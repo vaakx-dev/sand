@@ -9,6 +9,6 @@ export interface ServerState {
   status: ServerStatus
 }
 
-export const mcpServers = request('mcp.servers', { input: z.object({}), output: type<ServerState[]>() })
+export const mcpServers = request('mcp.servers', { input: () => z.object({}), output: type<ServerState[]>() })
 
 export const mcpServersWire = wireEvent<ServerState[]>('mcp.servers')

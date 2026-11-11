@@ -2,7 +2,7 @@ import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type History
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
-import { errorMessage } from '@sand/util'
+import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -133,16 +133,16 @@ export const readLimit = 200
 
 const place = 'thread'
 const callers = 'any'
-const session = z.object({ session: z.string() })
-const prompt = z.string().min(1)
-const origin = z.enum(outsideOrigins)
-const clientRequestId = z.string().min(1)
+const session = lazy(() => z.object({ session: z.string() }))
+const prompt = lazy(() => z.string().min(1))
+const origin = lazy(() => z.enum(outsideOrigins))
+const clientRequestId = lazy(() => z.string().min(1))
 
 export const threadStart = request('thread.start', {
-  input: z.object({
+  input: () => z.object({
     cwd: z.string().optional(),
     project: z.string().optional(),
-    prompt,
+    prompt: prompt(),
     title: z.string().optional(),
     model: z.string().optional(),
     effort: z.string().optional(),
@@ -150,36 +150,36 @@ export const threadStart = request('thread.start', {
     branch: z.string().min(1).optional(),
     base: z.string().min(1).optional(),
     pc: z.string().min(1).optional(),
-    origin,
-    clientRequestId,
+    origin: origin(),
+    clientRequestId: clientRequestId(),
   }),
   output: type<Sent>(),
   callers,
   place,
 })
 export const threadSend = request('thread.send', {
-  input: session.extend({ prompt, mode: z.enum(sendModes).optional(), origin, clientRequestId }),
+  input: () => session().extend({ prompt: prompt(), mode: z.enum(sendModes).optional(), origin: origin(), clientRequestId: clientRequestId() }),
   output: type<Sent>(),
   callers,
   place,
 })
 export const threadWait = request('thread.wait', {
-  input: session.extend({ until: z.enum(['end', 'attention']).optional(), timeoutMs: z.number().int().min(0).max(waitLimit).optional() }),
+  input: () => session().extend({ until: z.enum(['end', 'attention']).optional(), timeoutMs: z.number().int().min(0).max(waitLimit).optional() }),
   output: type<ThreadState>(),
   callers,
   place,
 })
-const conversation = z.object({ session: z.string().optional(), bot: z.string().optional() })
+const conversation = lazy(() => z.object({ session: z.string().optional(), bot: z.string().optional() }))
 
-export const historyRead = request('history.read', { input: historyReading.extend(conversation.shape), output: type<HistoryRead>(), callers, place })
+export const historyRead = request('history.read', { input: () => historyReading().extend(conversation().shape), output: type<HistoryRead>(), callers, place })
 export const itemRead = request('history.item', {
-  input: conversation.extend({ item: z.string().min(1), offset: z.number().int().min(0).optional() }),
+  input: () => conversation().extend({ item: z.string().min(1), offset: z.number().int().min(0).optional() }),
   output: type<ItemRead>(),
   callers,
   place,
 })
 export const threadList = request('thread.list', {
-  input: z.object({
+  input: () => z.object({
     cwd: z.string().optional(),
     project: z.string().optional(),
     mine: z.boolean().optional(),
@@ -191,7 +191,7 @@ export const threadList = request('thread.list', {
 })
 export const threadStop = request('thread.stop', { input: session, output: type<boolean>(), callers, place })
 export const threadUpdate = request('thread.update', {
-  input: session.extend({
+  input: () => session().extend({
     title: z.string().min(1).optional(),
     pinned: z.boolean().optional(),
     snoozed: z.number().int().positive().nullable().optional(),

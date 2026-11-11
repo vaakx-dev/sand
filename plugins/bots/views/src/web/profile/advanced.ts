@@ -92,7 +92,7 @@ const limitRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void) => {
   const draft = sig(shownLimit(bot()?.budget))
   const commit = () => {
     const budget = limitOf(draft.get())
-    if (budget !== (bot()?.budget ?? null) && botPatch.safeParse({ budget }).success) save({ budget })
+    if (budget !== (bot()?.budget ?? null) && botPatch().safeParse({ budget }).success) save({ budget })
     else draft.set(shownLimit(bot()?.budget))
   }
   return kit.settingsRow(

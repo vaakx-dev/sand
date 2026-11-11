@@ -1,3 +1,4 @@
+import { lazy } from '@sand/util'
 import { type Dispose, event, service, type StandardSchemaV1 } from 'drydock'
 import { z } from 'zod'
 
@@ -19,14 +20,14 @@ export type RequestPlace = 'home' | 'thread'
 export interface Request<I, O> {
   readonly kind: 'request'
   readonly id: string
-  readonly input: StandardSchemaV1<I, unknown>
+  readonly input: () => StandardSchemaV1<I, unknown>
   readonly callers: RequestCallers
   readonly place: RequestPlace
   readonly [phantom]?: O
 }
 
 export interface RequestSpec<S extends StandardSchemaV1, O> {
-  input: S
+  input: () => S
   output: O
   callers?: RequestCallers
   place?: RequestPlace
@@ -52,7 +53,7 @@ export type ValueOf<F> = F extends HelloField<infer T> ? T : never
 export const type = <T>() => undefined as unknown as T
 
 export const request = <S extends StandardSchemaV1, O>(id: string, spec: RequestSpec<S, O>): Request<InferInput<S>, O> =>
-  Object.freeze({ kind: 'request', id, input: spec.input, callers: spec.callers ?? 'user', place: spec.place ?? 'home' })
+  Object.freeze({ kind: 'request', id, input: lazy(spec.input), callers: spec.callers ?? 'user', place: spec.place ?? 'home' })
 
 export const wireEvent = <P>(id: string): WireEvent<P> => Object.freeze({ kind: 'wireEvent', id })
 
@@ -91,7 +92,7 @@ export type ServerMessage =
   | { type: 'event'; name: string; payload: unknown }
 
 export const hello = request('hello', {
-  input: z.object({ since: z.string().nullable(), known: z.string().optional() }),
+  input: () => z.object({ since: z.string().nullable(), known: z.string().optional() }),
   output: type<Hello>(),
   callers: 'any',
 })

@@ -5,7 +5,7 @@ import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { z } from 'zod'
 
-const fileSchema = z.array(deviceRecordSchema)
+const fileSchema = z.array(deviceRecordSchema())
 
 export const devicesFile = (home: string) => join(home, 'devices', 'devices.json')
 

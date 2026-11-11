@@ -23,7 +23,7 @@ export const skillsChange = wireEvent<void>('skills.change')
 export const helloSkills = helloField<SkillSummary[]>('skills')
 
 export const skillsList = request('skills.list', {
-  input: z.object({ session: z.string().optional(), bot: z.string().optional(), cwd: z.string().optional() }),
+  input: () => z.object({ session: z.string().optional(), bot: z.string().optional(), cwd: z.string().optional() }),
   output: type<SkillSummary[]>(),
   place: 'thread',
 })

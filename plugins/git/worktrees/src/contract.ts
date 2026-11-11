@@ -1,5 +1,6 @@
 import type { SessionInfo } from '@sand/chats/contract'
 import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 
@@ -61,10 +62,10 @@ export interface WorktreeStatus {
   check: RemoveCheck
 }
 
-const cwd = z.string()
-const kind = z.enum(['checkout', 'worktree'])
+const cwd = lazy(() => z.string())
+const kind = lazy(() => z.enum(['checkout', 'worktree']))
 
-export const worktreesList = request('worktrees.list', { input: z.object({ cwd }), output: type<Worktree[]>(), place: 'thread' })
+export const worktreesList = request('worktrees.list', { input: () => z.object({ cwd: cwd() }), output: type<Worktree[]>(), place: 'thread' })
 
 export interface WorktreeThreadInput {
   cwd: string
@@ -81,48 +82,48 @@ export interface Worktrees {
 export const worktrees = service<Worktrees>('worktrees')
 
 export const worktreesThread = request('worktrees.thread', {
-  input: z.object({ cwd, branch: z.string().optional(), from: z.string().optional(), existing: z.string().optional() }),
+  input: () => z.object({ cwd: cwd(), branch: z.string().optional(), from: z.string().optional(), existing: z.string().optional() }),
   output: type<SessionInfo>(),
   place: 'thread',
 })
 
 export const worktreesMove = request('worktrees.move', {
-  input: z.object({ session: z.string(), branch: z.string().optional(), carry: z.boolean() }),
+  input: () => z.object({ session: z.string(), branch: z.string().optional(), carry: z.boolean() }),
   output: type<SessionInfo>(),
 })
 
 export const worktreesRemove = request('worktrees.remove', {
-  input: z.object({ path: z.string(), force: z.boolean().optional() }),
+  input: () => z.object({ path: z.string(), force: z.boolean().optional() }),
   output: type<RemoveResult>(),
   place: 'thread',
 })
 
 export const worktreesRestore = request('worktrees.restore', {
-  input: z.object({ path: z.string() }),
+  input: () => z.object({ path: z.string() }),
   output: type<Worktree>(),
   place: 'thread',
 })
 
 export const worktreesSetup = request('worktrees.setup', {
-  input: z.object({ path: z.string(), retry: z.boolean().optional(), skip: z.boolean().optional() }),
+  input: () => z.object({ path: z.string(), retry: z.boolean().optional(), skip: z.boolean().optional() }),
   output: type<WorktreeSetup | null>(),
   place: 'thread',
 })
 
 export const worktreesDefaults = request('worktrees.defaults', {
-  input: z.object({ cwd, set: z.object({ kind }).optional() }),
+  input: () => z.object({ cwd: cwd(), set: z.object({ kind: kind() }).optional() }),
   output: type<WorkspaceDefaults>(),
   place: 'thread',
 })
 
 export const worktreesGlobal = request('worktrees.global', {
-  input: z.object({ set: z.object({ kind }).optional() }),
+  input: () => z.object({ set: z.object({ kind: kind() }).optional() }),
   output: type<GlobalDefault>(),
 })
 
-export const worktreesStatus = request('worktrees.status', { input: z.object({}), output: type<WorktreeStatus[]>(), place: 'thread' })
+export const worktreesStatus = request('worktrees.status', { input: () => z.object({}), output: type<WorktreeStatus[]>(), place: 'thread' })
 
-export const worktreesSizes = request('worktrees.sizes', { input: z.object({}), output: type<Record<string, number>>(), place: 'thread' })
+export const worktreesSizes = request('worktrees.sizes', { input: () => z.object({}), output: type<Record<string, number>>(), place: 'thread' })
 
 export interface SetupLines {
   copy: string[]
@@ -140,7 +141,7 @@ export interface SetupProposal {
 }
 
 export const worktreesProposal = request('worktrees.proposal', {
-  input: z.object({ path: z.string(), answer: z.enum(setupAnswers).optional() }),
+  input: () => z.object({ path: z.string(), answer: z.enum(setupAnswers).optional() }),
   output: type<SetupLines | null>(),
   place: 'thread',
 })

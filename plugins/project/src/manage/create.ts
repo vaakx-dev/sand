@@ -6,7 +6,7 @@ import { createFolder } from '../registry/folder/create'
 import { fullPath } from '../registry/paths'
 import type { Registry } from '../registry/registry'
 
-type CreateInput = z.output<typeof createInput>
+type CreateInput = z.output<ReturnType<typeof createInput>>
 
 interface CreateDeps {
   registry: Registry

@@ -1,4 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -17,16 +18,16 @@ export interface BotMemory {
 export const memoryLimit = 4_000
 export const noteLimit = 6_000
 
-export const noteName = z
+export const noteName = lazy(() => z
   .string()
   .max(80)
-  .regex(/^[\p{L}\p{N}](?:[\p{L}\p{N} ._-]*[\p{L}\p{N}])?$/u, 'A note name is letters, numbers, spaces, dots, dashes and underscores')
+  .regex(/^[\p{L}\p{N}](?:[\p{L}\p{N} ._-]*[\p{L}\p{N}])?$/u, 'A note name is letters, numbers, spaces, dots, dashes and underscores'))
 
 export const noteAbout = ({ text }: Note) => text.trim().split('\n', 1)[0]?.replace(/^#+\s*/, '') ?? ''
 
 export const botMemory = service<BotMemory>('botMemory')
 
-const one = z.object({ bot: z.string() })
+const one = lazy(() => z.object({ bot: z.string() }))
 
 export const memoryChange = event<(bot: string, text: string) => void>('botMemory.change')
 export const noteChange = event<(bot: string, note: Note) => void>('botMemory.note')
@@ -35,6 +36,6 @@ export const memoryChangeWire = wireEvent<[bot: string, text: string]>('botMemor
 export const noteChangeWire = wireEvent<[bot: string, note: Note]>('botMemory.note')
 
 export const memoryRead = request('botMemory.read', { input: one, output: type<string>() })
-export const memoryWrite = request('botMemory.write', { input: one.extend({ text: z.string().max(1_000_000) }), output: type<void>() })
+export const memoryWrite = request('botMemory.write', { input: () => one().extend({ text: z.string().max(1_000_000) }), output: type<void>() })
 export const notesRead = request('botMemory.notes', { input: one, output: type<Note[]>() })
-export const noteWrite = request('botMemory.writeNote', { input: one.extend({ name: noteName, text: z.string().max(1_000_000) }), output: type<void>() })
+export const noteWrite = request('botMemory.writeNote', { input: () => one().extend({ name: noteName(), text: z.string().max(1_000_000) }), output: type<void>() })

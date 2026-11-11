@@ -11,11 +11,11 @@ export interface Editor {
 }
 
 export const editorsList = request('editors.list', {
-  input: z.object({}),
+  input: () => z.object({}),
   output: type<Editor[]>(),
 })
 
 export const editorOpen = request('editor.open', {
-  input: z.object({ cwd: z.string().min(1), editor: z.enum(editorIds) }),
+  input: () => z.object({ cwd: z.string().min(1), editor: z.enum(editorIds) }),
   output: type<void>(),
 })

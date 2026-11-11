@@ -2,6 +2,7 @@ import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
 import type { MenuAction, Status } from '@sand/ui-shell/contract'
+import { lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -110,31 +111,31 @@ export interface Conversation {
   entry(id: string): BotEntry | undefined
 }
 
-const modelChoice = sessionSettings.pick({ model: true, effort: true })
+const modelChoice = lazy(() => sessionSettings().pick({ model: true, effort: true }))
 
-const computer = z.union([z.enum(['none', 'own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])])
+const computer = lazy(() => z.union([z.enum(['none', 'own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])]))
 
-export const projectIds = z.array(z.string().min(1)).transform(ids => [...new Set(ids)])
+export const projectIds = lazy(() => z.array(z.string().min(1)).transform(ids => [...new Set(ids)]))
 
-const botFields = z.object({
+const botFields = lazy(() => z.object({
   name: z.string().trim().min(1).max(60),
   initial: z.string().trim().min(1).max(2),
   color: z.enum(botColors),
   job: z.string().max(20_000),
-  models: z.object({ main: modelChoice, quick: modelChoice }),
-  computer,
-  projects: projectIds,
+  models: z.object({ main: modelChoice(), quick: modelChoice() }),
+  computer: computer(),
+  projects: projectIds(),
   paused: z.boolean(),
   budget: z.number().positive().max(1_000_000).nullable(),
-})
+}))
 
-export const newBot = botFields.partial().extend({ id: z.uuid().optional() })
+export const newBot = lazy(() => botFields().partial().extend({ id: z.uuid().optional() }))
 
-export const botPatch = botFields.partial()
+export const botPatch = lazy(() => botFields().partial())
 
-export type NewBot = z.infer<typeof newBot>
+export type NewBot = z.infer<ReturnType<typeof newBot>>
 
-export type BotPatch = z.infer<typeof botPatch>
+export type BotPatch = z.infer<ReturnType<typeof botPatch>>
 
 export interface Bots {
   list(): BotSummary[]
@@ -225,15 +226,15 @@ export const botEntryWire = wireEvent<BotEntry>('bot.entry')
 
 export const helloBots = helloField<BotSummary[]>('bots')
 
-const one = z.object({ bot: z.string() })
+const one = lazy(() => z.object({ bot: z.string() }))
 
-export const botList = request('bot.list', { input: z.object({}), output: type<BotSummary[]>() })
+export const botList = request('bot.list', { input: () => z.object({}), output: type<BotSummary[]>() })
 export const botGet = request('bot.get', { input: one, output: type<BotSummary | null>() })
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>() })
-export const botUpdate = request('bot.update', { input: one.extend({ patch: botPatch }), output: type<BotSummary>() })
+export const botUpdate = request('bot.update', { input: () => one().extend({ patch: botPatch() }), output: type<BotSummary>() })
 export const botJobs = request('bot.jobs', { input: one, output: type<JobVersion[]>() })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>() })
 export const botConversation = request('bot.conversation', {
-  input: one.extend({ before: z.number().int().optional(), after: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),
+  input: () => one().extend({ before: z.number().int().optional(), after: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),
   output: type<EntryPage>(),
 })
