@@ -30,10 +30,12 @@ export async function* read(stream: AsyncIterable<ClaudeEvent>): AsyncIterable<L
   const json: string[] = []
   const usage: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
   let stopReason: StopReason = 'end_turn'
+  let generation: string | undefined
   for await (const event of stream) {
     switch (event.type) {
       case 'message_start':
         merge(usage, event.message.usage)
+        generation = event.message.id
         yield { type: 'start', model: event.message.model }
         break
       case 'content_block_start': {
@@ -77,7 +79,7 @@ export async function* read(stream: AsyncIterable<ClaudeEvent>): AsyncIterable<L
         break
       case 'message_stop':
         const cacheTtlMs = writtenTtl(usage, cacheLifetimes.anthropic)
-        yield { type: 'done', message: { role: 'assistant', content: blocks.filter(Boolean) }, stopReason, usage, ...(cacheTtlMs && { cacheTtlMs }) }
+        yield { type: 'done', message: { role: 'assistant', content: blocks.filter(Boolean) }, stopReason, usage, ...(cacheTtlMs && { cacheTtlMs }), finish: { reason: stopReason, ...(generation && { generation }) } }
         return
       case 'error':
         throw new ApiError(undefined, event.error?.type ?? 'api_error', event.error?.message ?? 'stream error')

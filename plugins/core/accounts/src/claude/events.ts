@@ -25,7 +25,7 @@ type Delta =
   | { type: 'input_json_delta'; partial_json: string }
 
 export type ClaudeEvent =
-  | { type: 'message_start'; message: { model: string; usage?: RawUsage } }
+  | { type: 'message_start'; message: { id?: string; model: string; usage?: RawUsage } }
   | { type: 'content_block_start'; index: number; content_block: RawBlock }
   | { type: 'content_block_delta'; index: number; delta: Delta }
   | { type: 'content_block_stop'; index: number }

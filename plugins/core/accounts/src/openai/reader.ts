@@ -45,6 +45,11 @@ const stopOf = (response: OpenAIResponse | undefined, calls: boolean): StopReaso
   return reason ?? 'incomplete'
 }
 
+const finishOf = (response: OpenAIResponse | undefined) => {
+  const reason = [response?.status ?? 'completed', response?.incomplete_details?.reason].filter(Boolean).join(': ')
+  return { reason, ...(response?.id && { generation: response.id }) }
+}
+
 const failure = (event: OpenAIEvent) => {
   const error = event.response?.error ?? event.error ?? event
   return new Error(`OpenAI error: ${error?.message ?? error?.code ?? JSON.stringify(event)}`)
@@ -146,7 +151,7 @@ export async function* readOpenAI(stream: AsyncIterable<OpenAIEvent>, model: str
         const calls = blocks.some(block => block.type === 'tool_call')
         const usage = usageOf(event.response?.usage)
         const cacheTtlMs = writtenTtl(usage, cacheLifetimes.openai)
-        yield { type: 'done', message: { role: 'assistant', content: blocks }, stopReason: stopOf(event.response, calls), usage, ...(cacheTtlMs && { cacheTtlMs }) }
+        yield { type: 'done', message: { role: 'assistant', content: blocks }, stopReason: stopOf(event.response, calls), usage, ...(cacheTtlMs && { cacheTtlMs }), finish: finishOf(event.response) }
         return
       }
       case 'response.failed':

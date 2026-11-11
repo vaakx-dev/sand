@@ -26,7 +26,8 @@ const inputSchema = (ctx: AgentsContext) =>
 
 const report = (result: TurnResult) => {
   if (result.stopReason === 'interrupted') return 'The subagent was interrupted before finishing.'
-  return result.text || 'The subagent finished without a final report.'
+  if (result.stopReason === 'error') return `The subagent failed after ${result.steps} steps: ${result.error ?? 'unknown error'}`
+  return result.text || `The subagent's model ended with an empty reply after ${result.steps} steps.`
 }
 
 export type OpenAgent = (request: AgentRequest) => Promise<OpenedAgent>

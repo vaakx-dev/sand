@@ -112,7 +112,7 @@ const noticeIn = async (texts: () => string[] | Promise<string[]>) => {
 const noticeFor = (bot: string) => noticeIn(() => botTexts(bot))
 
 test('a thread hands a bot a task without waiting and hears its reply, and an @ mention hands the message to the bot with its reply as a card', async () => {
-  await start([said('Dentist noted.'), [], said('README fixed.')], [said('Tomorrow: dentist at 9.'), said('Noted.'), said('Booked.')])
+  await start([said('Dentist noted.'), [], [], said('README fixed.')], [said('Tomorrow: dentist at 9.'), said('Noted.'), said('Booked.')])
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
@@ -136,7 +136,7 @@ test('a thread hands a bot a task without waiting and hears its reply, and an @ 
 
   await sendAndSettle(thread, mentioning(bot.id, '', ' book Friday, and fix the README'))
   expect(lastReply(thread)).toBe('README fixed.')
-  expect(seenIn(sand.requests('fake')[2]!)).toContain('Calendar replied to the user:\n\nNoted.')
+  expect(seenIn(sand.requests('fake')[3]!)).toContain('Calendar replied to the user:\n\nNoted.')
   const second = await cardAt(thread, 1)
   expect(await sand.ask(botAwait, { bot: bot.id, turn: second.turn!, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Booked.' })
 })

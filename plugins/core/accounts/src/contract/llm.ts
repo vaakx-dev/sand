@@ -95,10 +95,15 @@ export interface LLMRequest {
   handoff?: HandoffBlock
 }
 
+export interface Finish {
+  reason: string
+  generation?: string
+}
+
 export type LLMEvent =
   | Exclude<LiveEvent, { type: 'block' | 'done' }>
   | { type: 'block'; index: number; block: Block }
-  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; cacheTtlMs?: number; source?: SourceRef; native?: NativeRef; delivered?: Delivery }
+  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; cacheTtlMs?: number; source?: SourceRef; native?: NativeRef; delivered?: Delivery; finish?: Finish }
 
 export interface Limits {
   source: string

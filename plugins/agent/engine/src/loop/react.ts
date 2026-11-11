@@ -1,9 +1,9 @@
-import { callsOf, type Message, refused, skip, type StopReason, truncated } from '@sand/chats/contract'
+import { callsOf, type Message, refused, skip, type StopReason, textOf, truncated } from '@sand/chats/contract'
 import type { Resumption, Turn, TurnOutcome } from './turn'
 
 const answerCalls = async (turn: Turn, message: Message, stopReason: StopReason) => {
   const pending = callsOf(message)
-  if (!pending.length) return stopReason === 'pause_turn' || turn.hooks.steer()
+  if (!pending.length) return stopReason === 'pause_turn' || (await turn.hooks.steer()) || (stopReason === 'end_turn' && !textOf(message.content).trim() && turn.hooks.nudge())
   if (stopReason === 'refusal') turn.hooks.answer(skip(pending, refused))
   else if (stopReason === 'max_tokens') turn.hooks.answer(skip(pending, truncated))
   else await turn.hooks.tools(pending)

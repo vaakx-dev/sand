@@ -22,6 +22,7 @@ const resultOf = <C extends Conversation>(run: TurnRun<C>, stopReason: TurnResul
     stopReason,
     usage: run.usage,
     text: run.reply,
+    steps: run.steps,
     ...(failure && { error: errorMessage(failure.error) }),
     ...(detail && { detail }),
   }
@@ -75,7 +76,7 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     const controller = new AbortController()
     const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal
     const partial = createPartial(message => stores.turns.partial(info.id, message))
-    const run: TurnRun<C> = { info, conversation, signal, partial, usage: info.usage, reply: '' }
+    const run: TurnRun<C> = { info, conversation, signal, partial, usage: info.usage, reply: '', steps: info.step }
     const hooks = createHooks(ctx, owned, run)
     const parked = movable ? hooks.parked : () => false
     const release = joinDisposers(leases.hold(info.id, { controller, parked }), ctx.busy(), ctx.effect(() => run.partial.stop))
