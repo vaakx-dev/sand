@@ -3,25 +3,18 @@ import { threadChange, type Threads } from '@sand/web-client/contract'
 import { sig, untrack, type Child } from '@vaakx-dev/vrui'
 import { service, type Context, type Dispose } from 'drydock'
 
-/** The thread a row shows, as much as a part needs to look up its own facts. */
 export interface RowThread {
   id: string
   cwd: string
   device: string
 }
 
-/**
- * Something a feature adds to the right of a thread row's second line, such as its branch or pull requests.
- * `render` runs in the row's scope each time the row redraws; read signals for anything that changes.
- * Return nothing when the thread has nothing to show. Parts sort by `order`.
- */
 export interface RowPart {
   id: string
   order?: number
   render(thread: RowThread): Child
 }
 
-/** Thread rows in the sidebar and the phone home list. Provided by threads home, so absent with threads off. */
 export interface ThreadRows {
   part(part: RowPart): Dispose
 }
@@ -30,10 +23,6 @@ export const threadRows = service<ThreadRows>('threadRows')
 
 const keyOf = ({ cwd, device }: RowThread) => `${device}\0${cwd}`
 
-/**
- * Facts about a thread's folder that a row part shows, such as its branch. A folder is loaded the first time a
- * row asks for it, again when its PC connects or a turn in it ends, and on `reload`. A load that fails shows as nothing.
- */
 export const folderFacts = <T>(ctx: Context, threads: Threads, load: (folder: RowThread) => Promise<T>) => {
   const facts = sig<ReadonlyMap<string, T>>(new Map())
   const asked = new Map<string, RowThread>()

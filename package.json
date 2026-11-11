@@ -23,7 +23,7 @@
     "apps/*"
   ],
   "scripts": {
-    "check": "tsc && bun --bun vrui-check && bun scripts/deps.ts && bun run test",
+    "check": "tsc && bun --bun vrui-check && bun scripts/deps.ts && bun scripts/comments.ts && bun run test",
     "sand": "bun apps/sand/src/main.ts",
     "bench:computer": "bun plugins/computer/tools/bench/main.ts",
     "bench:finders": "bun plugins/computer/finders/bench/main.ts",

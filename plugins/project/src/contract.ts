@@ -107,13 +107,10 @@ export interface AddedProject {
 }
 
 export interface ProjectAddOptions {
-  /** A project id: brings that project to another PC by git clone or a file copy, instead of adding a folder. */
   project?: string
-  /** Runs once the project is added. Without it, a new chat opens in the project. */
   added?(project: AddedProject): unknown
 }
 
-/** Opens the Add project sheet: the PC to add it on (asked only with several PCs), then its folder or how to bring it there. Missing while the shell is off. */
 export interface ProjectAdd {
   open(options?: ProjectAddOptions): void
 }
