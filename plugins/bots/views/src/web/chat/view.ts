@@ -4,13 +4,14 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 import { applyChoice, effective } from '../models'
-import { conversation, type Conversation } from './conversation'
+import type { Conversation } from './conversation'
 import { holdSlot } from './hold'
 import { chatRows } from './rows'
 
 export interface ChatParts {
   ctx: BotsContext
   id: string
+  talk: Conversation
   bot: () => BotSummary | undefined
   profile(): void
   resume(): void
@@ -54,9 +55,8 @@ const waiting = (kit: Kit, talk: Conversation, state: 'loading' | 'failed') =>
   state === 'loading' ? kit.loadingState() : kit.errorState({ text: () => talk.failure.get() ?? '', retry: talk.retry })
 
 export const chatView = (parts: ChatParts) => {
-  const { ctx, id, bot } = parts
+  const { ctx, id, talk, bot } = parts
   const { kit } = ctx
-  const talk = conversation(ctx, id)
   const status = () => bot()?.status
   const busy = () => working(status())
   const menu = kit.contextMenu()
@@ -122,7 +122,7 @@ export const chatView = (parts: ChatParts) => {
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
   return div(
-    { class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: () => talk.stop },
+    { class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: () => talk.release },
     div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view()),
     dock.view,
   )

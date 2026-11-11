@@ -1,6 +1,7 @@
 import type { BotAutomation, BotAutomationSource, BotProfileSection, ModelChoice } from '@sand/bots/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import type { Derive } from '@vaakx-dev/vrui'
+import type { Conversations } from './chat/conversations'
 import type { BotsContext } from './context'
 import type { Registry } from './registry'
 import type { BotStore } from './store'
@@ -9,6 +10,7 @@ import type { Work } from './work'
 export interface Parts {
   ctx: BotsContext
   store: BotStore
+  chats: Conversations
   work: Work
   projects: Derive<ProjectGroup[]>
   advanced: Derive<boolean>

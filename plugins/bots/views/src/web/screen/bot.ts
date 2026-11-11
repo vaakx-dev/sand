@@ -36,22 +36,21 @@ const headerOf = (parts: Parts, id: string) => {
 export const botScreen = (parts: Parts, route: () => Route): Screen => {
   const id = untrack(route).id ?? ''
   const known = () => Boolean(parts.store.find(id))
+  const gone = () => parts.store.bots.get() !== undefined && !known()
   const save = (patch: BotPatch) => void parts.store.update(id, patch).catch(error => parts.ctx.report(error))
   return {
     head: () => headerOf(parts, id),
     main: () =>
       div(
         { class: fill },
-        show(
-          () => !known(),
-          () => missing(parts),
-        ),
+        show(gone, () => missing(parts)),
         show(known, () =>
           div(
             { class: fill },
             chatView({
               ctx: parts.ctx,
               id,
+              talk: parts.chats.get(id),
               bot: () => parts.store.find(id),
               profile: () => parts.profile(id),
               resume: () => save({ paused: false }),

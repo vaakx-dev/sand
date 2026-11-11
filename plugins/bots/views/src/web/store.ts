@@ -1,8 +1,12 @@
-import { botChangeWire, botCreate, botDelete, botList, botRemoveWire, botUpdate, type BotPatch, type BotSummary, type NewBot } from '@sand/bots/contract'
+import { botChangeWire, botCreate, botDelete, botRemoveWire, botUpdate, helloBots, type BotPatch, type BotSummary, type NewBot } from '@sand/bots/contract'
 import { wireHello } from '@sand/devices-contract'
+import { owned } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
-import { derive, sig } from '@vaakx-dev/vrui'
+import { deviceCache, type DeviceRecords } from '@sand/web-client/contract'
+import { derive, effect, sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from './context'
+
+const LIST_KEY = 'list'
 
 const byCreated = (list: BotSummary[]) => [...list].sort((a, b) => a.created - b.created)
 
@@ -12,6 +16,7 @@ export const botStore = (ctx: BotsContext) => {
     const list = loaded.get()
     return list && byCreated(list)
   })
+  const kept = sig<DeviceRecords<BotSummary[]> | undefined>(undefined)
 
   const keep = (bot: BotSummary) => {
     loaded.update(list => list && [...list.filter(other => other.id !== bot.id), bot])
@@ -19,9 +24,26 @@ export const botStore = (ctx: BotsContext) => {
   }
   const drop = (id: string) => loaded.update(list => list?.filter(other => other.id !== id))
 
-  const load = () => ctx.wire.call(botList, {}).then(list => loaded.set(list), error => ctx.report(error))
-  ctx.on(wireHello, () => void load())
-  if (ctx.wire.ready()) void load()
+  const restore = async (records: DeviceRecords<BotSummary[]>) => {
+    const list = await records.read(LIST_KEY)
+    if (list && loaded.get() === undefined) loaded.set(list)
+  }
+
+  ctx.watch(deviceCache, found => {
+    const records = found?.records<BotSummary[]>('bots')
+    kept.set(records)
+    if (records) void restore(records)
+  })
+  owned(ctx, () =>
+    effect(() => {
+      const list = loaded.get()
+      if (list) kept.get()?.write(LIST_KEY, list)
+    }),
+  )
+
+  const greeted = () => loaded.set(ctx.wire.hello(helloBots) ?? [])
+  ctx.on(wireHello, greeted)
+  if (ctx.wire.ready()) greeted()
   ctx.effect(() => joinDisposers(ctx.wire.on(botChangeWire, keep), ctx.wire.on(botRemoveWire, drop)))
 
   return {

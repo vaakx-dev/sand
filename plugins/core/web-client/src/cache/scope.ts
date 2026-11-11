@@ -4,7 +4,7 @@ export const wipeScope = (scope: string) =>
   transact('readwrite', pick => {
     pick('meta').delete(scope)
     pick('meta').delete(under(scope))
-    for (const store of ['threads', 'tails', 'entries'] as const) pick(store).delete(under(scope))
+    for (const store of ['threads', 'tails', 'entries', 'records'] as const) pick(store).delete(under(scope))
     return () => undefined
   })
 

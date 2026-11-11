@@ -1,5 +1,5 @@
 import type { UsageRecord } from '@sand/accounts/contract'
-import { botLive, botPending, botSend } from '@sand/bot-turns/contract'
+import { botOpen, botSend } from '@sand/bot-turns/contract'
 import { botCreate, botGet, bots, type BotSummary, botUpdate } from '@sand/bots/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -42,19 +42,19 @@ test('pausing a bot stops its turn, and what is sent to it meanwhile waits until
   await start([[said('Half'), { type: 'hold' }], [said('Done.')]])
   const bot = await sand.ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
   await sand.ask(botSend, { bot: bot.id, prompt: 'Think', clientRequestId: 'one' })
-  for (let tries = 0; tries < 500 && !(await sand.ask(botLive, { bot: bot.id })).length; tries++) await Bun.sleep(10)
+  for (let tries = 0; tries < 500 && !(await sand.ask(botOpen, { bot: bot.id })).live.length; tries++) await Bun.sleep(10)
 
   expect(await sand.ask(botUpdate, { bot: bot.id, patch: { paused: true } })).toMatchObject({ paused: true, hold: 'paused' })
   await until(bot.id, found => found.status === 'idle')
   expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Then this', clientRequestId: 'two' })).toMatchObject({ disposition: 'queued' })
   await Bun.sleep(sweep)
   expect(sand.requests('fake')).toHaveLength(1)
-  expect(await sand.ask(botPending, { bot: bot.id })).toEqual([expect.objectContaining({ kind: 'queue', prompt: 'Then this' })])
+  expect((await sand.ask(botOpen, { bot: bot.id })).pending).toEqual([expect.objectContaining({ kind: 'queue', prompt: 'Then this' })])
 
   await sand.ask(botUpdate, { bot: bot.id, patch: { paused: false } })
   await until(bot.id, answered('Done.'))
   expect(sand.requests('fake')).toHaveLength(2)
-  expect(await sand.ask(botPending, { bot: bot.id })).toEqual([])
+  expect((await sand.ask(botOpen, { bot: bot.id })).pending).toEqual([])
 })
 
 test('a bot that spends its monthly limit in API money holds new work and says so once, and a higher limit lets it go on; plan usage costs nothing', async () => {

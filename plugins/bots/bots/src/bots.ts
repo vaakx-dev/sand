@@ -129,7 +129,8 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
     conversation: id => ({
       append: (type, data, meta) => append(id, type, data, meta),
       entries: () => entries.entries(known(id).id),
-      page: (before, limit) => entries.page(known(id).id, before, limit),
+      page: range => entries.page(known(id).id, range),
+      entry: entry => entries.entry(known(id).id, entry),
     }),
     folder: id => join(root, id),
   }

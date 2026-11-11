@@ -6,7 +6,7 @@ import { onPcHello } from '../greeted'
 import { requestedSession } from '../threads/address'
 import type { Store } from '../threads/store'
 import { autosave } from './autosave'
-import { createKeep } from './keep'
+import { createDevice } from './device'
 import { readScope, readThread } from './reads'
 import { fillThread, restoreScope } from './restore'
 import { wipeScope } from './scope'
@@ -21,9 +21,9 @@ const unpaired = (pcs: Pcs) => {
 
 export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) => {
   const writer = createWriter(store)
-  const kept = createKeep(writer.scope)
   const schedule = autosave(ctx, store, writer)
   const scope = store.here()
+  const device = createDevice(ctx, scope, writer.scope)
   let settled = false
   let forgotten = false
 
@@ -32,7 +32,6 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
     const cached = await readScope(scope, asked)
     if (settled) return
     restoreScope(store, cached)
-    kept.restore(cached.saved)
     const thread = asked ? store.threads.get(asked) : undefined
     if (thread && cached.asked) fillThread(thread, cached.asked)
     writer.adopt(scope, cached.meta)
@@ -46,7 +45,7 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
   const forget = () => {
     settled = true
     writer.use(undefined)
-    kept.forget()
+    device.forget()
     for (const id of [...store.threads.keys()]) store.remove(id)
     store.synced.clear()
     void wipeScope(scope).catch(() => {})
@@ -75,7 +74,7 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
     settled = true
     forgotten = false
     writer.use(scope)
-    kept.flush()
+    device.resume()
     schedule()
   })
 
@@ -88,8 +87,7 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
   return {
     ready,
     hydrate,
-    saved: kept.saved,
-    keep: kept.keep,
+    device: device.cache,
   }
 }
 

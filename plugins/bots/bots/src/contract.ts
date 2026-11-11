@@ -1,5 +1,5 @@
 import type { AppendMeta, Entry } from '@sand/chats/contract'
-import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
 import type { MenuAction, Status } from '@sand/ui-shell/contract'
 import { type Dispose, event, service } from 'drydock'
@@ -97,10 +97,17 @@ export interface EntryPage {
   more: boolean
 }
 
+export interface EntryRange {
+  before?: number
+  after?: number
+  limit?: number
+}
+
 export interface Conversation {
   append(type: string, data: unknown, meta?: AppendMeta): BotEntry
   entries(): BotEntry[]
-  page(before?: number, limit?: number): EntryPage
+  page(range?: EntryRange): EntryPage
+  entry(id: string): BotEntry | undefined
 }
 
 const modelChoice = sessionSettings.pick({ model: true, effort: true })
@@ -216,6 +223,8 @@ export const botChangeWire = wireEvent<BotSummary>('bot.change')
 export const botRemoveWire = wireEvent<string>('bot.remove')
 export const botEntryWire = wireEvent<BotEntry>('bot.entry')
 
+export const helloBots = helloField<BotSummary[]>('bots')
+
 const one = z.object({ bot: z.string() })
 
 export const botList = request('bot.list', { input: z.object({}), output: type<BotSummary[]>() })
@@ -225,6 +234,6 @@ export const botUpdate = request('bot.update', { input: one.extend({ patch: botP
 export const botJobs = request('bot.jobs', { input: one, output: type<JobVersion[]>() })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>() })
 export const botConversation = request('bot.conversation', {
-  input: one.extend({ before: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),
+  input: one.extend({ before: z.number().int().optional(), after: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),
   output: type<EntryPage>(),
 })

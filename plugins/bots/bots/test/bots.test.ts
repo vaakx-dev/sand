@@ -41,7 +41,7 @@ test('a bot is created with defaults, listed, updated and deleted along with its
   expect(await ask(botDelete, { bot: bot.id })).toBe(false)
 })
 
-test("a bot's messages land in its own conversation, page from the newest and show as its last line", async () => {
+test("a bot's messages land in its own conversation, page from the newest or catch up after an entry, and show as its last line", async () => {
   const { ask, app } = await start()
   const first = await ask(botCreate, { name: 'Researcher' })
   const second = await ask(botCreate, { name: 'Errands' })
@@ -58,6 +58,11 @@ test("a bot's messages land in its own conversation, page from the newest and sh
   const older = await ask(botConversation, { bot: first.id, before: 3 })
   expect(older).toEqual({ entries: [expect.objectContaining({ seq: 1, data: { role: 'user', content: [{ type: 'text', text: 'one' }] } }), expect.objectContaining({ seq: 2 })], more: false })
   expect((await ask(botConversation, { bot: second.id })).entries).toEqual([])
+
+  const caughtUp = await ask(botConversation, { bot: first.id, after: 2 })
+  expect({ seqs: caughtUp.entries.map(entry => entry.seq), more: caughtUp.more }).toEqual({ seqs: [3, 4], more: false })
+  const gapped = await ask(botConversation, { bot: first.id, after: 1, limit: 2 })
+  expect({ seqs: gapped.entries.map(entry => entry.seq), more: gapped.more }).toEqual({ seqs: [3, 4], more: true })
 })
 
 test('bots and their conversations survive a restart', async () => {
