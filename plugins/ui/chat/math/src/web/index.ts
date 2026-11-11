@@ -1,7 +1,7 @@
 import { kit } from '@sand/ui-kit/contract'
+import { onIdle } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { math, type MathRenderer } from '../contract'
-import { onIdle } from './integrations/idle'
 import { mathCss } from './style'
 import { loadRenderer, typeset } from './typeset'
 

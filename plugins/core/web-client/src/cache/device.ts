@@ -1,7 +1,7 @@
+import { onIdle } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { DeviceCache, DeviceRecords } from '../contract'
 import { after } from '../detached'
-import { onIdle } from '../integrations/idle'
 import { transact } from '../integrations/indexed-db'
 import { onLeave } from './leave'
 
