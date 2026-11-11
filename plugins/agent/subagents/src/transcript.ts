@@ -1,5 +1,5 @@
 import { type Block, type Message, type Session, textOf } from '@sand/chats/contract'
-import { oneLine } from '@sand/util'
+import { oneLine, tail } from '@sand/util'
 
 const limit = 30_000
 
@@ -19,6 +19,6 @@ export const readThread = (session: Session, cursor = 0) => {
     .slice(cursor)
     .map((message, offset) => messageText(message, cursor + offset))
     .join('\n\n')
-  const shown = text.length > limit ? `… ${text.length - limit} earlier characters omitted\n${text.slice(-limit)}` : text
+  const shown = text.length > limit ? `… ${text.length - limit} earlier characters omitted\n${tail(text, limit)}` : text
   return `Thread ${session.id}\n\n${shown || '(no new messages)'}\n\n[cursor ${messages.length}]`
 }

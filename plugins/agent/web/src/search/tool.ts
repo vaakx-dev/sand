@@ -1,4 +1,5 @@
 import type { Tool } from '@sand/tools/contract'
+import { clip } from '@sand/util'
 import { z } from 'zod'
 import type { Hit } from './hit'
 import { providers, search } from './providers'
@@ -10,10 +11,9 @@ const input = z.object({
   count: z.number().int().min(1).max(10).default(8).describe('How many results to return, up to 10'),
 })
 
-const snippetOf = (text: string) => (text.length > snippetLength ? `${text.slice(0, snippetLength)}…` : text)
 
 const hitText = ({ title, url, snippet }: Hit, index: number) =>
-  [`${index + 1}. ${title || url}`, `   ${url}`, snippet && `   ${snippetOf(snippet)}`].filter(Boolean).join('\n')
+  [`${index + 1}. ${title || url}`, `   ${url}`, snippet && `   ${clip(snippet, snippetLength)}`].filter(Boolean).join('\n')
 
 export const searchTool = (exaApiKey?: string): Tool<typeof input> => {
   const chain = providers(exaApiKey)

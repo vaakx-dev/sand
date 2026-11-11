@@ -1,5 +1,6 @@
 import { type Block, type Entry, fileText, type Message, textOf, type ToolReferenceBlock, type ToolResultBlock } from '@sand/chats/contract'
 import type { TurnEnding } from '@sand/engine/contract'
+import { clip } from '@sand/util'
 import type { Path } from '../view/path'
 import { resetOf } from '../view/path'
 import type { Producers } from '../view/producers'
@@ -22,8 +23,6 @@ const notes: Partial<Record<TurnEnding['stopReason'], string>> = {
   interrupted: 'The user interrupted this turn.',
   lost: 'Sand stopped while this turn ran; it did not finish.',
 }
-
-const clip = (text: string, limit: number) => (text.length > limit ? `${text.slice(0, limit)}…` : text)
 
 const blockText = (block: Block | ToolReferenceBlock): string | undefined => {
   switch (block.type) {

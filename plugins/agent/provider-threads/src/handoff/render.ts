@@ -1,4 +1,5 @@
 import type { HandoffItem } from '@sand/accounts/contract'
+import { head } from '@sand/util'
 import type { Item } from './items'
 
 const outputLimit = 2_000
@@ -16,7 +17,7 @@ export interface Coverage {
 const header = ({ role, kind, id, seq, model }: Item) => `[Historical ${role}; ${kind}; item=${id}; seq=${seq}${model ? `; model=${model}` : ''}]`
 
 const clip = (text: string, limit: number, id: string) =>
-  text.length > limit ? `${text.slice(0, limit)}\n[… ${text.length - limit} more; history_read item=${id}]` : text
+  text.length > limit ? `${head(text, limit)}\n[… ${text.length - limit} more; history_read item=${id}]` : text
 
 export const renderItem = (item: Item): Rendered => ({
   id: item.id,

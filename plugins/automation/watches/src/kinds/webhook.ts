@@ -1,6 +1,6 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
 import type { Server } from '@sand/server/contract'
-import { bytes, isRecord, oneLine } from '@sand/util'
+import { bytes, clip, isRecord, oneLine } from '@sand/util'
 import { randomSecret } from '@sand/util/fs'
 import { z } from 'zod'
 import type { Change, Kind, KindContext } from '../contract'
@@ -50,11 +50,10 @@ const summaryOf = (request: Request, value: unknown, text: string) => {
   return text.trim() ? `${request.method} of ${bytes(text.length)}` : `${request.method} with an empty body`
 }
 
-const clip = (text: string) => (text.length > detailMost ? `${text.slice(0, detailMost)}…` : text)
 
 const changeOf = (request: Request, caller: RouteCaller | undefined, text: string): Change => {
   const value = parse(request, text)
-  const detail = clip(value === undefined ? text : JSON.stringify(value, null, 2))
+  const detail = clip(value === undefined ? text : JSON.stringify(value, null, 2), detailMost)
   return { at: Date.now(), from: senderOf(request, caller), summary: summaryOf(request, value, text), ...(detail.trim() ? { detail } : {}) }
 }
 

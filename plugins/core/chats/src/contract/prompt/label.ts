@@ -1,6 +1,6 @@
 import type { Prompt, UserContent } from '..'
 import { isContextLink, textPieces } from './context'
-import { oneLine } from '@sand/util'
+import { head, oneLine } from '@sand/util'
 import { promptContent } from './content'
 
 export const linkLabels = (text: string) =>
@@ -13,4 +13,4 @@ const blockLabel = (block: UserContent) => {
   return block.type === 'context' ? [] : [block.name ?? block.type]
 }
 
-export const promptLabel = (prompt: Prompt) => oneLine(promptContent(prompt).flatMap(blockLabel).join(' ')).slice(0, 120)
+export const promptLabel = (prompt: Prompt) => head(oneLine(promptContent(prompt).flatMap(blockLabel).join(' ')), 120)

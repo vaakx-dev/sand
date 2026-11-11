@@ -1,3 +1,4 @@
+import { clip } from '@sand/util'
 import { onRaf, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { elementAt } from './integrations/spot'
 import { adoptTitles, tipOf } from './integrations/titles'
@@ -16,7 +17,6 @@ const delay = 500
 const warm = 300
 const longest = 400
 
-const clip = (text: string) => (text.length > longest ? `${text.slice(0, longest)}…` : text)
 
 const inside = (node: Element | undefined, target: EventTarget | null) => Boolean(node && target instanceof Node && node.contains(target))
 
@@ -40,7 +40,7 @@ export const tooltipModel = () => {
     const text = anchor?.isConnected ? tipOf(anchor) : ''
     if (!anchor || !text) return tip.set(undefined)
     if (fresh) rounds++
-    tip.set({ anchor, text: clip(text), round: rounds })
+    tip.set({ anchor, text: clip(text, longest), round: rounds })
   }
 
   const close = () => {

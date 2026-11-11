@@ -1,4 +1,4 @@
-import { serial } from '@sand/util'
+import { clip, serial } from '@sand/util'
 import { expandHome, isFolder } from '@sand/util/fs'
 import type { Watcher } from '@sand/watch/contract'
 import { readdir, stat } from 'node:fs/promises'
@@ -56,7 +56,6 @@ type Difference = ReturnType<typeof compare>
 const verbs = ['added', 'changed', 'removed'] as const
 const marks: Record<(typeof verbs)[number], string> = { added: '+', changed: '~', removed: '-' }
 
-const clip = (text: string) => (text.length > detailMost ? `${text.slice(0, detailMost)}…` : text)
 
 const changeOf = (root: string, difference: Difference, after: Snapshot): Change | undefined => {
   const groups = verbs.map(verb => ({ verb, names: difference[verb] })).filter(group => group.names.length)
@@ -68,7 +67,7 @@ const changeOf = (root: string, difference: Difference, after: Snapshot): Change
     at: latest || Date.now(),
     from: root,
     summary: single ? `${only.verb} ${only.names[0]}` : `${groups.map(group => `${group.names.length} ${group.verb}`).join(', ')} in ${basename(root)}`,
-    detail: clip(groups.flatMap(group => group.names.map(name => `${marks[group.verb]} ${name}`)).join('\n')),
+    detail: clip(groups.flatMap(group => group.names.map(name => `${marks[group.verb]} ${name}`)).join('\n'), detailMost),
   }
 }
 

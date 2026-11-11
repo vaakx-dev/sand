@@ -1,3 +1,4 @@
+import { wellFormed } from '@sand/util'
 import type { EffortLevel, LLMEvent, LLMRequest, ModelInfo, ModelPrice } from './contract'
 import type { Bridges } from './apps/bridges'
 import type { Accounts } from './auth/accounts'
@@ -57,7 +58,7 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
 
   const route = async function* (meta: SourceMeta, model: ModelInfo, request: LLMRequest, signal?: AbortSignal, caller?: string): AsyncIterable<LLMEvent> {
     const name = model.name ?? model.id
-    const sent = { ...request, model: name }
+    const sent = { ...wellFormed(request), model: name }
     const app = plans.app(meta.id)
     if (app) yield* bridges.stream(app, sent, signal, caller)
     else if (meta.api === 'anthropic') yield* claude.stream(meta.id, sent, model, signal)

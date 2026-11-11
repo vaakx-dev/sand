@@ -1,4 +1,4 @@
-import { timestamp } from '@sand/util'
+import { head, timestamp } from '@sand/util'
 
 export const notificationTag = 'task-notification'
 
@@ -14,7 +14,7 @@ export interface Notification {
 
 const resultLimit = 30_000
 
-export const clipResult = (text: string) => (text.length > resultLimit ? `${text.slice(0, resultLimit)}\n… ${text.length - resultLimit} characters truncated` : text)
+export const clipResult = (text: string) => (text.length > resultLimit ? `${head(text, resultLimit)}\n… ${text.length - resultLimit} characters truncated` : text)
 
 export const notificationText = ({ from, id, kind, label, status, at, result }: Notification) =>
   [

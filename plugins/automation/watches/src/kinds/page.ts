@@ -1,3 +1,4 @@
+import { head } from '@sand/util'
 import { z } from 'zod'
 import type { Kind } from '../contract'
 import { poll } from './poll'
@@ -33,7 +34,7 @@ export const page: Kind<typeof input> = {
       const seen = context.state
       if (seen === hash) return
       context.save(hash)
-      if (seen !== undefined) context.emit({ at: Date.now(), from: url, summary: `${url} changed`, detail: text.slice(0, shownLength) })
+      if (seen !== undefined) context.emit({ at: Date.now(), from: url, summary: `${url} changed`, detail: head(text, shownLength) })
     })
   },
 }

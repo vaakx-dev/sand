@@ -24,6 +24,7 @@
     "@sand/cdp": "workspace:*",
     "@sand/harness": "workspace:*",
     "@sand/report": "workspace:*",
-    "@sand/usage": "workspace:*"
+    "@sand/usage": "workspace:*",
+    "@sand/util": "workspace:*"
   }
 }

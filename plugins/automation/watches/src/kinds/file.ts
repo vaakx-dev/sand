@@ -1,4 +1,4 @@
-import { oneLine, plural, serial } from '@sand/util'
+import { oneLine, plural, serial, tail } from '@sand/util'
 import { expandHome, isFolder } from '@sand/util/fs'
 import type { Watcher } from '@sand/watch/contract'
 import { stat } from 'node:fs/promises'
@@ -40,7 +40,7 @@ const readLines = async (path: string, from: number, size: number) => {
   return { lines, next: start + end }
 }
 
-const clipTail = (text: string) => (text.length > detailMost ? `…${text.slice(-detailMost)}` : text)
+const clipTail = (text: string) => (text.length > detailMost ? `…${tail(text, detailMost)}` : text)
 
 const changeOf = (path: string, lines: string[], matching: boolean, at: number): Change => {
   const last = lines.at(-1) ?? ''

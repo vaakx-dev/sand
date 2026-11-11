@@ -1,4 +1,4 @@
-import { oneLine, timestamp } from '@sand/util'
+import { charStart, head, oneLine, timestamp } from '@sand/util'
 import { z } from 'zod'
 import type { Entry } from './entry'
 import type { Block, Message } from './message'
@@ -53,7 +53,7 @@ export type HistoryEntry = Pick<Entry, 'id' | 'seq' | 'at' | 'type' | 'data' | '
 
 type Said = HistoryEntry & { data: Message }
 
-const clip = (text: string) => (text.length > resultLimit ? `${text.slice(0, resultLimit)}… ${text.length - resultLimit} more characters` : text)
+const clip = (text: string) => (text.length > resultLimit ? `${head(text, resultLimit)}… ${text.length - resultLimit} more characters` : text)
 
 const isSaid = (entry: HistoryEntry): entry is Said => entry.type === 'message'
 
@@ -102,6 +102,6 @@ export const readItem = (entries: HistoryEntry[], item: string, offset = 0): His
   const entry = said.find(found => (/^\d+$/.test(id) ? found.seq === Number(id) : found.id === id))
   const text = entry ? blocksOf(said, entry, call).map(activity(namesOf(said), true)).filter(Boolean).join('\n') : ''
   if (!entry || !text) throw new Error(`No item ${item}`)
-  const end = offset + itemChars
-  return { item, seq: entry.seq, at: timestamp(entry.at), role: entry.data.role, text: text.slice(offset, end), ...(end < text.length && { nextOffset: end }) }
+  const end = charStart(text, offset + itemChars)
+  return { item, seq: entry.seq, at: timestamp(entry.at), role: entry.data.role, text: text.slice(charStart(text, offset), end), ...(end < text.length && { nextOffset: end }) }
 }

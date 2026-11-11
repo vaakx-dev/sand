@@ -1,5 +1,6 @@
 import type { Logins } from '@sand/logins/contract'
 import type { Tool } from '@sand/tools/contract'
+import { head, tail } from '@sand/util'
 import type { Context } from 'drydock'
 import { z } from 'zod'
 import { shellReady } from './contract'
@@ -51,7 +52,7 @@ const stopReasons: Record<Stop, (timeouts: Timeouts) => string> = {
 }
 
 const truncate = (text: string, max: number) =>
-  text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted; filter with grep, head or tail …\n${text.slice(-max / 2)}`
+  text.length <= max ? text : `${head(text, max / 2)}\n… ${text.length - max} characters omitted; filter with grep, head or tail …\n${tail(text, max / 2)}`
 
 const unchanged = (text: string) => text
 

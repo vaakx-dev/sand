@@ -1,9 +1,9 @@
 import type { Block, Message, ToolResultContent } from '@sand/chats/contract'
+import { clip } from '@sand/util'
 
 const callLength = 240
 const resultLength = 600
 
-const clip = (text: string, length: number) => (text.length > length ? `${text.slice(0, length)}…` : text)
 
 const partText = (part: ToolResultContent) => {
   if (part.type === 'text') return part.text
