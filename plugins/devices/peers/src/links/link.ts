@@ -1,5 +1,5 @@
 import { connect, directTransport, type ViaRelay, viaTransport } from '@sand/devices-connect'
-import type { DeviceRecord, PcConnection, Route, RouteStore, Signer, WakeSource } from '@sand/devices-contract'
+import type { DeviceRecord, PcConnection, ResumeStore, Route, RouteStore, Signer, WakeSource } from '@sand/devices-contract'
 import type { Hello } from '@sand/host-hub/contract'
 import { pinnedKey } from './seeds'
 
@@ -15,6 +15,7 @@ export interface LinkSetup {
   signer: Signer
   wake: WakeSource
   store: RouteStore
+  resume: ResumeStore
   relay(through: string): ViaRelay
   event(pc: string, name: string, payload: unknown): void
   opened(pc: string): void
@@ -33,6 +34,7 @@ export const openPeerLink = (record: DeviceRecord, seeds: Route[], key: string, 
     transports: { direct: directTransport, via: through => viaTransport(setup.relay(through), record.id) },
     wake: setup.wake,
     store: setup.store,
+    resume: setup.resume,
     secure: false,
     onPc: true,
     visible: () => true,

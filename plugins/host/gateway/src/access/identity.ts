@@ -6,11 +6,15 @@ import type { Nonces } from './keys'
 
 const nonceLimit = 256
 
+export const tooLong = (nonce: string) => nonce.length > nonceLimit
+
+export const identityReply = async (thisPc: ThisPc, clientNonce: string, nonce: string): Promise<IdentityReply> => {
+  const identity = await thisPc.identity()
+  return { ...identity, nonce, signature: await thisPc.signer.sign(identityProof(clientNonce, nonce, identity.id)), signedSocket: true }
+}
+
 export const createIdentityRoute = (thisPc: ThisPc, nonces: Nonces) => async (request: Request) => {
   const clientNonce = new URL(request.url).searchParams.get(deviceParams.nonce)
-  if (!clientNonce || clientNonce.length > nonceLimit) return textReply(`expected ?${deviceParams.nonce}=`, 400)
-  const { secret: nonce } = nonces.issue(true)
-  const identity = await thisPc.identity()
-  const reply: IdentityReply = { ...identity, nonce, signature: await thisPc.signer.sign(identityProof(clientNonce, nonce, identity.id)) }
-  return json(reply)
+  if (!clientNonce || tooLong(clientNonce)) return textReply(`expected ?${deviceParams.nonce}=`, 400)
+  return json(await identityReply(thisPc, clientNonce, nonces.issue(true).secret))
 }

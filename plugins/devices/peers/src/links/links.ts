@@ -1,4 +1,4 @@
-import { directRoute, type ViaRelay } from '@sand/devices-connect'
+import { directRoute, memoryResumeStore, type ViaRelay } from '@sand/devices-connect'
 import { pcWake } from '@sand/devices-connect/pc'
 import { type CallOptions, type DeviceRecord, PcUnavailable, type Route, type RouteStore, type Signer, viaFrame } from '@sand/devices-contract'
 import type { Request } from '@sand/host-hub/contract'
@@ -51,6 +51,7 @@ export const createPeerLinks = ({ signer, store, events, opened, changed }: Link
   const setup: LinkSetup = {
     signer,
     store,
+    resume: memoryResumeStore(),
     wake: pcWake(),
     relay,
     event: (pc, name, payload) => events.emit(name, payload, pc),

@@ -12,6 +12,9 @@ export const devicePaths = {
 export const deviceParams = {
   nonce: 'nonce',
   ticket: 'ticket',
+  key: 'key',
+  signature: 'signature',
+  challenge: 'challenge',
 } as const
 
 export const joinRequestPath = (id: string) => `${devicePaths.joinRequest}/${encodeURIComponent(id)}`
