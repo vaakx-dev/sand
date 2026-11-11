@@ -46,7 +46,7 @@ export const createResponder = ({ routes, registry, caller, proxy }: ResponderOp
   return (request: Request, peer: Peer): Reply => {
     try {
       const reply = respond(request, peer)
-      if (reply instanceof Promise) return reply.catch(failed).then(withCors)
+      if (reply instanceof Promise) return reply.catch(failed).then(found => found && withCors(found))
       return reply && withCors(reply)
     } catch (error) {
       return withCors(failed(error))

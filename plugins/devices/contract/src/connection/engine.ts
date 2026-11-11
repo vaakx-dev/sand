@@ -1,5 +1,6 @@
 import type { Hello, hello, InputOf, Request } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
+import type { Resume } from '../http/identity'
 import type { PcIdentity } from '../records'
 import type { PcRoutes, Route, RoutePrefs } from './routes'
 import type { ConnectionStatus, Diagnosis, Freshness } from './status'
@@ -53,6 +54,17 @@ export interface RouteStore {
   save(pc: string, routes: PcRoutes): void
 }
 
+export interface SavedResume extends Resume {
+  route: string
+  signature: string
+}
+
+export interface ResumeStore {
+  load(pc: string): SavedResume | undefined
+  save(pc: string, resume: SavedResume): void
+  forget(pc: string): void
+}
+
 export interface ConnectOptions {
   target: ConnectTarget
   seeds: Route[]
@@ -60,6 +72,7 @@ export interface ConnectOptions {
   transports: Transports
   wake: WakeSource
   store: RouteStore
+  resume: ResumeStore
   secure: boolean
   onPc: boolean
   visible(): boolean

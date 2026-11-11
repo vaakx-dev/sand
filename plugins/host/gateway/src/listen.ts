@@ -1,14 +1,14 @@
-import type { Caller, Hub } from '@sand/host-hub/contract'
-import type { Server } from 'bun'
+import { type IdentityReply, socketRefused, type TicketRefusal } from '@sand/devices-contract'
+import type { Caller, Hub, ServerMessage } from '@sand/host-hub/contract'
+import type { Server, ServerWebSocket } from 'bun'
+import type { Proofs } from './access/proofs'
 import type { Sessions } from './access/sessions'
 import type { Respond } from './http/respond'
 
 const maxPayloadLength = 64 * 1024 * 1024
+const refusedClose = 4401
 
-export interface SocketData {
-  caller: Caller
-  session: string
-}
+export type SocketData = { ok: true; caller: Caller; session: string; proof?: IdentityReply } | { ok: false; refusal: TicketRefusal }
 
 export type Listen = (hostname: string, port: number) => Server<SocketData>
 
@@ -16,10 +16,17 @@ interface ListenOptions {
   respond: Respond
   hub: Hub
   sessions: Pick<Sessions, 'attach' | 'detach'>
+  proofs: Pick<Proofs, 'attach'>
+}
+
+const refuse = (ws: ServerWebSocket<SocketData>, refusal: TicketRefusal) => {
+  const frame: ServerMessage = { type: 'event', name: socketRefused.id, payload: refusal }
+  ws.send(JSON.stringify(frame))
+  ws.close(refusedClose, refusal.reason)
 }
 
 export const createListen =
-  ({ respond, hub, sessions }: ListenOptions): Listen =>
+  ({ respond, hub, sessions, proofs }: ListenOptions): Listen =>
   (hostname, port) =>
     Bun.serve({
       port,
@@ -30,8 +37,11 @@ export const createListen =
         maxPayloadLength,
         perMessageDeflate: true,
         open: ws => {
-          sessions.attach(ws.data.session, ws)
-          hub.open(ws, ws.data.caller)
+          const { data } = ws
+          if (!data.ok) return refuse(ws, data.refusal)
+          sessions.attach(data.session, ws)
+          proofs.attach(ws, data.proof)
+          hub.open(ws, data.caller)
         },
         message: (ws, data) => hub.message(ws, String(data)),
         close: ws => {

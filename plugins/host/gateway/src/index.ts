@@ -1,11 +1,13 @@
-import { auth, helloSession, thisPc } from '@sand/devices-contract'
+import { auth, helloProof, helloResume, helloSession, thisPc } from '@sand/devices-contract'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hub } from '@sand/host-hub/contract'
 import { runtimes } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { createBearer } from './access/bearer'
 import { createIdentityRoute } from './access/identity'
-import { createNonces, createTickets } from './access/keys'
+import { createAdmit } from './access/admit'
+import { createNonces, createResumes, createTickets } from './access/keys'
+import { createProofs } from './access/proofs'
 import { createSessions } from './access/sessions'
 import { createSocketRoute } from './access/socket'
 import { createTicketRoute } from './access/ticket'
@@ -26,15 +28,18 @@ export default definePlugin({
     const registry = createHttpRegistry()
     const nonces = createNonces()
     const tickets = createTickets()
+    const resumes = createResumes()
     const sessions = createSessions()
+    const proofs = createProofs()
     const caller = createBearer(sessions)
+    const admit = createAdmit({ thisPc: ctx.thisPc, auth: ctx.auth, nonces, resumes })
     const routes = createRoutes({
       identity: createIdentityRoute(ctx.thisPc, nonces),
-      ticket: createTicketRoute({ thisPc: ctx.thisPc, auth: ctx.auth, nonces, tickets }),
-      socket: createSocketRoute(tickets, sessions),
+      ticket: createTicketRoute(admit, tickets),
+      socket: createSocketRoute({ thisPc: ctx.thisPc, admit, tickets, sessions }),
     })
     const respond = createResponder({ routes, registry, caller, proxy: createProxy(ctx.runtimes) })
-    const listener = createListener(createListen({ respond, hub: ctx.hub, sessions }), port)
+    const listener = createListener(createListen({ respond, hub: ctx.hub, sessions, proofs }), port)
     ctx.effect(() => () => void listener.stop())
     ctx.effect(() => () => removeServerInfo(home))
 
@@ -52,9 +57,12 @@ export default definePlugin({
     })
 
     ctx.effect(() => ctx.hub.greet(helloSession, (_, socket) => sessions.of(socket)))
+    ctx.effect(() => ctx.hub.greet(helloResume, (caller, socket) => resumes.forSocket(socket, caller.device)))
+    ctx.effect(() => ctx.hub.greet(helloProof, (_, socket) => proofs.of(socket)))
     ctx.effect(() =>
       ctx.auth.onRevoke(device => {
         tickets.drop(ticket => ticket.device === device)
+        resumes.drop(device)
         sessions.drop(device)
         ctx.hub.disconnect(device)
       }),

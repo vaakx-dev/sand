@@ -10,4 +10,4 @@ export interface Visitor extends Peer {
   source: Source
 }
 
-export type Reply = Response | Promise<Response> | undefined
+export type Reply = Response | Promise<Response | undefined> | undefined

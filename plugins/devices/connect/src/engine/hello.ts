@@ -1,5 +1,7 @@
-import { helloRoutes, helloSession } from '@sand/devices-contract'
+import { helloProof, helloResume, helloRoutes, helloSession } from '@sand/devices-contract'
+import { isIdentityReply } from '@sand/devices-identity'
 import type { Hello, HelloField } from '@sand/host-hub/contract'
+import { isResume } from '../resume/valid'
 import { isPublishedRoutes } from '../routes/valid'
 
 const helloValue = <T>(reply: Hello, field: HelloField<T>): unknown => reply.fresh[field.id] ?? reply.shared?.[field.id]
@@ -12,4 +14,14 @@ export const sessionOf = (reply: Hello) => {
 export const publishedOf = (reply: Hello) => {
   const routes = helloValue(reply, helloRoutes)
   return isPublishedRoutes(routes) ? routes : undefined
+}
+
+export const proofOf = (reply: Hello) => {
+  const proof = helloValue(reply, helloProof)
+  return isIdentityReply(proof) ? proof : undefined
+}
+
+export const resumeOf = (reply: Hello) => {
+  const resume = helloValue(reply, helloResume)
+  return isResume(resume) ? resume : undefined
 }

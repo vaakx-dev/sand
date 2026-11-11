@@ -79,6 +79,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
     greeting: options.greeting,
     identified: next => learn(next),
     listener,
+    resume: options.resume,
   }
 
   const dialRoutes = (routes: Route[], run: DialRun) => dial(routes, context, run, attempts.add)

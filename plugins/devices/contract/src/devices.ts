@@ -1,5 +1,6 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { z } from 'zod'
+import type { IdentityReply, Resume, TicketRefusal } from './http/identity'
 import type { DeviceRecord, PcIdentity } from './records'
 import { deviceRecordSchema, pcIconSchema } from './schemas'
 
@@ -33,3 +34,6 @@ export const pcRename = request('pc.rename', { input: z.object({ name: z.string(
 export const helloPc = helloField<PcIdentity>('pc')
 export const helloDevice = helloField<DeviceRecord>('device')
 export const helloSession = helloField<string>('session')
+export const helloResume = helloField<Resume>('resume')
+export const helloProof = helloField<IdentityReply>('proof')
+export const socketRefused = wireEvent<TicketRefusal>('socket.refused')

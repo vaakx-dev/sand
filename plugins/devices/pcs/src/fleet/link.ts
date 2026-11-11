@@ -1,5 +1,5 @@
 import { connect, directTransport, type ViaRelay, viaTransport } from '@sand/devices-connect'
-import { browserRouteStore, browserWake, pageVisible } from '@sand/devices-connect/browser'
+import { browserResumeStore, browserRouteStore, browserWake, pageVisible } from '@sand/devices-connect/browser'
 import type { PcConnection, PcIdentity, Route, Signer } from '@sand/devices-contract'
 import { hello, hubResync } from '@sand/host-hub/contract'
 import { runtimeChanged } from '@sand/host-runtimes/contract'
@@ -27,6 +27,7 @@ export interface LinkOptions {
 }
 
 const routes = browserRouteStore()
+const resumes = browserResumeStore()
 const wake = browserWake()
 
 export const openPcLink = (options: LinkOptions): PcLink => {
@@ -46,6 +47,7 @@ export const openPcLink = (options: LinkOptions): PcLink => {
     transports: { direct: directTransport, via: through => viaTransport(options.relay(through), options.pc) },
     wake,
     store: routes,
+    resume: resumes,
     secure: securePage(),
     onPc: options.onPc,
     visible: pageVisible,

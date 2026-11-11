@@ -3,6 +3,12 @@ import type { PcIdentity } from '../records'
 export interface IdentityReply extends PcIdentity {
   nonce: string
   signature: string
+  signedSocket?: boolean
+}
+
+export interface Resume {
+  nonce: string
+  expires: number
 }
 
 export interface TicketBody {
