@@ -25,7 +25,7 @@ export interface Thread {
   failed?: string
   running: boolean
   turn: boolean
-  jobs: Set<string>
+  jobs: Map<string, number>
   started?: number
   waiting?: WaitReason
   live: LiveBlock[]

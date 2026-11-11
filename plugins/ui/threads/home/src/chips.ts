@@ -19,6 +19,8 @@ export interface ChipParts {
   changes: Changes
 }
 
+const startOf = (thread: Thread) => thread.started ?? (thread.jobs.size ? Math.min(...thread.jobs.values()) : undefined)
+
 const titleOf = (thread: Thread) => thread.info.title || 'Untitled thread'
 
 const scoped = ({ ctx, threads, pulse }: ChipParts, scope: ChipScope) => {
@@ -80,7 +82,7 @@ const working = (parts: ChipParts): ChipSource => ({
   items: scope =>
     scoped(parts, scope)
       .filter(thread => thread.running && !thread.waiting)
-      .map(thread => item(parts, thread, { status: 'running', meta: () => duration(Math.max(0, parts.now() - (thread.started ?? parts.now()))) })),
+      .map(thread => item(parts, thread, { status: 'running', meta: () => duration(Math.max(0, parts.now() - (startOf(thread) ?? parts.now()))) })),
 })
 
 export const chipSources = (parts: ChipParts) => [waiting(parts), ready(parts), working(parts)]

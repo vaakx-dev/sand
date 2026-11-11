@@ -33,7 +33,7 @@ const blank = (info: SessionSummary, device: string): Thread => ({
   loaded: false,
   running: false,
   turn: false,
-  jobs: new Set(),
+  jobs: new Map(),
   live: [],
   tools: { running: new Set(), results: new Map(), logs: new Map() },
   pending: [],

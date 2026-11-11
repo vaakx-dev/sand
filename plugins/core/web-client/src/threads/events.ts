@@ -82,7 +82,7 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
       job => {
         const found = known(job.parent)
         if (!found) return
-        found.jobs.add(job.id)
+        found.jobs.set(job.id, job.started)
         store.changed(found.id)
       },
       everyPc,

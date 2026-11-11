@@ -56,7 +56,7 @@ const countView = (kit: Kit, chip: Sig<Chip>, scope: ChipScope) => {
         div(
           { class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1' },
           kit.dropdown({
-            placement: 'below-left',
+            placement: 'auto-left',
             flat: true,
             menuClass: 'w-80 max-h-80 overflow-y-auto *:first:pt-1.5',
             trigger: (press, open) =>
