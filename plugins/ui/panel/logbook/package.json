@@ -4,7 +4,7 @@
   "description": "The side panel's Logbook tab: the dated record of finished work for the chat's project, searchable, with each entry editable",
   "type": "module",
   "sand": {
-    "feature": "threads",
+    "feature": "logbook-tab",
     "web": "./src/index.ts",
     "label": "Logbook tab",
     "summary": "Shows the Logbook in the side panel, where you can search, edit and remove entries"

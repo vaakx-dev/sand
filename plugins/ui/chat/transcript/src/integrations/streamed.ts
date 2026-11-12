@@ -8,7 +8,7 @@ export const streamedMarkdown = (node: Node, markdown: Markdown, image?: Markdow
   const whole = (source: string) => {
     prefix = ''
     count = 0
-    morph(node, markdown.nodes(source, image))
+    morph(node, markdown.nodes(source, { image }))
   }
 
   return (source: string, streaming: boolean) => {

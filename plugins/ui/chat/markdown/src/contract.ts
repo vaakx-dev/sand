@@ -8,8 +8,15 @@ export interface SettledMarkdown {
 
 export type MarkdownImage = (src: string, alt: string) => Node | undefined
 
+export type MarkdownSize = 'reading' | 'compact'
+
+export interface NodeOptions {
+  image?: MarkdownImage
+  size?: MarkdownSize
+}
+
 export interface Markdown {
-  nodes(source: string, image?: MarkdownImage): Node[]
+  nodes(source: string, options?: NodeOptions): Node[]
   settle(source: string, image?: MarkdownImage): SettledMarkdown | undefined
   inline(source: string): (Node | string)[]
   highlight(code: string, language: string): (Node | string)[]

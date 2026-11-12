@@ -14,6 +14,11 @@ export interface MemoryRef {
   id: string
 }
 
+export interface MemoryFiles {
+  text: string
+  notes: Note[]
+}
+
 export interface MemorySpace {
   name: string
   title: string
@@ -52,7 +57,11 @@ export const memoryChange = event<(ref: MemoryRef, text: string) => void>('memor
 
 export const memoryStore = event<(ref: MemoryRef) => void>('memory.store')
 
-export const memoryChangeWire = wireEvent<[ref: MemoryRef, text: string]>('memory.change')
+export const memoryChangeWire = wireEvent<[ref: MemoryRef, files: MemoryFiles]>('memory.change')
 
-export const memoryRead = request('memory.read', { input: ref, output: type<string>() })
+export const memoryRead = request('memory.read', { input: ref, output: type<MemoryFiles>() })
 export const memoryWrite = request('memory.write', { input: () => ref().extend({ text: z.string().max(memoryLimit) }), output: type<void>() })
+export const memoryNoteWrite = request('memory.note.write', {
+  input: () => ref().extend({ name: noteName(), text: z.string().max(noteLimit) }),
+  output: type<void>(),
+})

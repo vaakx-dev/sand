@@ -8,7 +8,7 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { memoryCheck } from './check'
 import { memoryCompaction } from './compaction'
-import { memory, memoryChange, memoryStore, memoryChangeWire, memoryRead, type MemoryRef, type MemorySpace, memoryWrite } from './contract'
+import { memory, memoryChange, memoryChangeWire, memoryNoteWrite, memoryRead, type MemoryFiles, type MemoryRef, type MemorySpace, memoryStore, memoryWrite } from './contract'
 import { createStore } from './files'
 import { memorySection } from './prompt'
 import { memoryTool } from './tool'
@@ -36,6 +36,10 @@ export default definePlugin({
         return id === undefined ? [] : [{ space, ref: { space: space.name, id } satisfies MemoryRef }]
       })[0]
     const of = (conversation: Conversation) => placed(conversation)?.ref
+    const filesOf = async (ref: MemoryRef): Promise<MemoryFiles> => {
+      const [text, notes] = await Promise.all([store.read(ref), store.notes(ref)])
+      return { text, notes }
+    }
 
     ctx.provide(memory, {
       ...store,
@@ -58,9 +62,15 @@ export default definePlugin({
     ctx.watch(server, found => {
       if (!found) return
       return joinDisposers(
-        found.handle(memoryRead, ref => store.read(ref)),
+        found.handle(memoryRead, filesOf),
         found.handle(memoryWrite, ({ text, ...ref }) => store.write(ref, text)),
-        ctx.on(memoryChange, (ref, text) => found.broadcast(memoryChangeWire, [ref, text])),
+        found.handle(memoryNoteWrite, ({ name, text, ...ref }) => store.writeNote(ref, { name, text })),
+        ctx.on(memoryStore, ref =>
+          void filesOf(ref).then(
+            files => found.broadcast(memoryChangeWire, [ref, files]),
+            error => ctx.report(error),
+          ),
+        ),
       )
     })
   },

@@ -28,7 +28,7 @@ export default definePlugin({
         { class: 'p-4' },
         ctx.kit.editable({
           text,
-          view: plan => div({ class: 'flex flex-col gap-2' }, ...ctx.markdown.nodes(plan)),
+          view: plan => div(...ctx.markdown.nodes(plan, { size: 'compact' })),
           empty: 'No plan yet.',
           save: plan => ctx.wire.call(planWrite, { bot, text: plan }),
           rows: 16,

@@ -1,7 +1,7 @@
 {
   "name": "@sand/project-memory",
   "version": "0.0.0",
-  "description": "One memory per project that every thread in it shares, kept the same on all your PCs: it loads into each thread's prompt, threads write it with the memory tool and tidy it when they compact, and the thread's Details show it for the user to read and edit",
+  "description": "One memory per project that every thread in it shares, kept the same on all your PCs: it loads into each thread's prompt, and threads write it with the memory tool and tidy it when they compact",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,7 +10,6 @@
     "feature": "threads",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
-    "web": "./src/web/index.ts",
     "label": "Project memory",
     "summary": "Gives the threads in each project a memory they share, which you can read and edit"
   },
@@ -18,16 +17,10 @@
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/inspector": "workspace:*",
-    "@sand/markdown": "workspace:*",
     "@sand/memory": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/ui-kit": "workspace:*",
-    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
-    "@sand/web-client": "workspace:*",
-    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   },

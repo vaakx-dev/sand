@@ -9,7 +9,7 @@ export interface SectionProps {
 
 const sectionHead = ({ title, note, action }: SectionProps) =>
   div(
-    { class: 'mb-2 flex min-w-0 items-center gap-2' },
+    { class: ['flex min-w-0 items-center gap-2', note ? 'mb-3' : 'mb-2'] },
     div({ class: 'flex min-w-0 flex-1 flex-col gap-1' }, title ? sectionTitle(title) : null, note ? p({ class: metaLook }, note) : null),
     action ? span({ class: 'flex shrink-0 items-center gap-2' }, action) : null,
   )

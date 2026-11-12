@@ -2,7 +2,7 @@ import { botMemorySpace } from '@sand/bot-memory/contract'
 import { botCreate, botDelete, botList } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { memory as memoryService, memoryLimit, memoryRead, memoryWrite } from '@sand/memory/contract'
+import { memory as memoryService, memoryLimit, memoryNoteWrite, memoryRead, memoryWrite } from '@sand/memory/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync } from 'node:fs'
@@ -44,17 +44,23 @@ const remembered = '## The user\n- Lives in Lisbon.\n\n## Preferences and rules\
 
 const compacted = (memory: string, notes = '') => said(`<summary>\n${summary}\n</summary>\n<memory>\n${memory}\n</memory>\n<notes>\n${notes}\n</notes>`)
 
-test("a bot's memory is one Markdown file in its folder that the user can read and write", async () => {
+test("a bot's memory and notes are Markdown files in its folder that the user can read and write", async () => {
   sand = await start([])
   const bot = await sand.ask(botCreate, { name: 'Calendar' })
-  expect(await sand.ask(memoryRead, mine(bot.id))).toBe('')
+  expect((await sand.ask(memoryRead, mine(bot.id))).text).toBe('')
 
   await sand.ask(memoryWrite, { ...mine(bot.id), text: '## People\n- Ana likes early meetings.\n' })
   const path = join(sand.home, 'bots', bot.id, 'memory.md')
   expect(await Bun.file(path).text()).toBe('## People\n- Ana likes early meetings.\n')
-  expect(await sand.ask(memoryRead, mine(bot.id))).toBe('## People\n- Ana likes early meetings.\n')
+  expect((await sand.ask(memoryRead, mine(bot.id))).text).toBe('## People\n- Ana likes early meetings.\n')
   await expect(sand.ask(memoryRead, mine('nobody'))).rejects.toThrow('No bot nobody')
   await expect(memory().write(mine(bot.id), 'x'.repeat(memoryLimit + 1))).rejects.toThrow(`over its ${memoryLimit} limit`)
+
+  await sand.ask(memoryNoteWrite, { ...mine(bot.id), name: 'ana', text: 'Ana prefers mornings.' })
+  expect(await Bun.file(join(sand.home, 'bots', bot.id, 'notes', 'ana.md')).text()).toBe('Ana prefers mornings.')
+  expect((await sand.ask(memoryRead, mine(bot.id))).notes).toEqual([{ name: 'ana', text: 'Ana prefers mornings.' }])
+  await sand.ask(memoryNoteWrite, { ...mine(bot.id), name: 'ana', text: '' })
+  expect((await sand.ask(memoryRead, mine(bot.id))).notes).toEqual([])
 
   await sand.ask(botDelete, { bot: bot.id })
   expect(existsSync(path)).toBe(false)
@@ -71,7 +77,7 @@ test('when a bot compacts, it rewrites its memory from all it drops and summariz
   const [, , compaction, next] = bodies()
   expect(firstText(compaction)).toContain('[User]: Remember: no meetings before 10.')
   expect(firstText(compaction)).toContain('<current-memory>\n## The user\n- Lives in Lisbon.\n</current-memory>')
-  expect(await sand.ask(memoryRead, mine(bot.id))).toBe(`${remembered}\n`)
+  expect((await sand.ask(memoryRead, mine(bot.id))).text).toBe(`${remembered}\n`)
   expect(next.system[0].text).toContain(`<memory>\n${remembered}\n</memory>`)
   expect(firstText(next)).toContain(summary)
   expect(firstText(next)).not.toContain('<memory>')
@@ -88,7 +94,7 @@ test('near its context limit, a bot checks its memory in the same cached chat, t
 
   await talk(bot.id, `Remember: no meetings before 10.\n${notes}`)
   await talk(bot.id, `More notes.\n${notes}`)
-  for (let tries = 0; tries < 300 && (await sand.ask(memoryRead, mine(bot.id))) !== `${remembered}\n`; tries++) await Bun.sleep(10)
+  for (let tries = 0; tries < 300 && (await sand.ask(memoryRead, mine(bot.id))).text !== `${remembered}\n`; tries++) await Bun.sleep(10)
   await talk(bot.id, 'Book lunch with Ana on Friday')
 
   const [, last, check, , compaction, next] = bodies()
@@ -112,7 +118,7 @@ test('a memory over the size limit is sent back once to be cut to fit', async ()
 
   const retry = bodies()[3]
   expect(retry.messages.at(-1).content[0].text).toContain(`over the ${memoryLimit} limit`)
-  expect(await sand.ask(memoryRead, mine(bot.id))).toBe(`${remembered}\n`)
+  expect((await sand.ask(memoryRead, mine(bot.id))).text).toBe(`${remembered}\n`)
 })
 
 test("a bot's notes are Markdown files in its notes folder, removed when emptied", async () => {
@@ -177,7 +183,7 @@ test('a bot writes its memory with the memory tool mid-chat; the prompt it is se
   await talk(bot.id, 'And dinner')
 
   const [first, , second, , compaction, next] = bodies()
-  expect(await sand.ask(memoryRead, mine(bot.id))).toBe(remembered)
+  expect((await sand.ask(memoryRead, mine(bot.id))).text).toBe(remembered)
   expect(second.system).toEqual(first.system)
   expect(second.system[0].text).not.toContain('No meetings before 10.')
   expect(firstText(compaction)).toContain(`<current-memory>

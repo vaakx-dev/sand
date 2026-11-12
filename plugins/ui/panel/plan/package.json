@@ -4,7 +4,7 @@
   "description": "The side panel's plan tab: a bot's plan, live, with its thread links showing each thread's state, and editable",
   "type": "module",
   "sand": {
-    "feature": "bots",
+    "feature": "plan-tab",
     "web": "./src/index.ts",
     "label": "Plan tab",
     "summary": "Shows a bot's plan in the side panel, where you can edit it"
