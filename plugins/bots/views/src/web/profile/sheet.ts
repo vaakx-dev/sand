@@ -5,7 +5,6 @@ import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/
 import { automationRow } from '../automations/row'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
 import { advancedBlock } from './advanced'
-import { editable } from './editable'
 import { createProject, projectChecklist } from './projects'
 
 type Bot = () => BotSummary | undefined
@@ -44,7 +43,7 @@ const nameField = (parts: Parts, id: string, bot: Bot) => {
 }
 
 const jobBlock = (parts: Parts, id: string, bot: Bot) =>
-  editable(parts.ctx.kit, {
+  parts.ctx.kit.editable({
     title: 'Job',
     text: () => bot()?.job ?? '',
     view: () =>
@@ -144,7 +143,7 @@ const memoryBlock = (parts: Parts, id: string, bot: Bot) => {
   })
   return div(
     { class: 'contents', onMount: () => stop },
-    editable(kit, {
+    kit.editable({
       title: 'Memory',
       text: () => text.get(),
       view: () =>

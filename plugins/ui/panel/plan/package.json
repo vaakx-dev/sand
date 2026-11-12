@@ -1,0 +1,23 @@
+{
+  "name": "@sand/panel-plan",
+  "version": "0.0.0",
+  "description": "The side panel's plan tab: a bot's plan, live, with its thread links showing each thread's state, and editable",
+  "type": "module",
+  "sand": {
+    "feature": "bots",
+    "web": "./src/index.ts",
+    "label": "Plan tab",
+    "summary": "Shows a bot's plan in the side panel, where you can edit it"
+  },
+  "dependencies": {
+    "@sand/bot-plan": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

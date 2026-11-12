@@ -1,16 +1,14 @@
-import { sessions, type Session } from '@sand/chats/contract'
+import { engine, type Conversation } from '@sand/engine/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
 import { contextChange, contextGet, contextUsage, type ContextUsage } from './contract'
 
-export const serveUsage = (ctx: Context, server: Server, read: (session: Session) => Promise<ContextUsage | undefined>) =>
+export const serveUsage = (ctx: Context, server: Server, read: (conversation: Conversation) => Promise<ContextUsage | undefined>) =>
   joinDisposers(
-    server.handle(contextGet, request => {
-      const session = ctx.get(sessions)?.open(request.session)
-      return session ? read(session) : undefined
+    server.handle(contextGet, ({ session, owner }) => {
+      const conversation = ctx.get(engine)?.open({ owner, id: session })
+      return conversation ? read(conversation) : undefined
     }),
-    ctx.on(contextUsage, (conversation, usage) => {
-      if (conversation.owner === 'thread') server.broadcast(contextChange, [conversation.id, usage])
-    }),
+    ctx.on(contextUsage, (conversation, usage) => server.broadcast(contextChange, [conversation.id, usage])),
   )

@@ -1,8 +1,6 @@
 import { llm } from '@sand/accounts/contract'
-import type { Session } from '@sand/chats/contract'
-import { entryViews } from '@sand/engine/contract'
+import { entryViews, type Conversation } from '@sand/engine/contract'
 import { media } from '@sand/media/contract'
-import { modelSettings } from '@sand/model/contract'
 import { providerThreads, stepSettle } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
 import { tokensOf } from '@sand/usage/contract'
@@ -28,7 +26,6 @@ export default definePlugin({
     idleCompact(ctx, compactor, tracker)
     ctx.effect(() => ctx.entryViews.register(compactionView))
     ctx.provide(contextLimits, { limit: model => budgetOf(ctx.llm, config, model).limit })
-    const budget = (session: Session) => budgetOf(ctx.llm, config, ctx.get(modelSettings)?.effective(session).model)
 
     ctx.on(stepSettle, (request, conversation, _turn, usage) => {
       const used = tokensOf(usage)
@@ -36,9 +33,9 @@ export default definePlugin({
       ctx.emit(contextUsage, conversation, usageOf(compactor.budget(request), request, used))
     })
 
-    const read = async (session: Session) => {
-      const request = await ctx.get(providerThreads)?.view(session)
-      return request && usageOf(budget(session), request, tracker.project(session.id, request))
+    const read = async (conversation: Conversation) => {
+      const request = await ctx.get(providerThreads)?.view(conversation)
+      return request && usageOf(compactor.budget(request), request, tracker.project(conversation.id, request))
     }
     ctx.watch(server, found => (found ? serveUsage(ctx, found, read) : undefined))
   },

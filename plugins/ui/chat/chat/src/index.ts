@@ -41,14 +41,14 @@ export default definePlugin({
       found?.subject(({ kind, id }) => {
         changes.version.get()
         const thread = kind === threadRoute && id ? ctx.threads.get(id) : undefined
-        return thread && { session: thread.id, device: thread.device, ...(thread.info.cwd && { cwd: thread.info.cwd }) }
+        return thread && { session: thread.id, owner: 'thread', device: thread.device, ...(thread.info.cwd && { cwd: thread.info.cwd }) }
       }),
     )
     ctx.watch(shell, found =>
       found?.subject(({ kind, id }) => {
         changes.version.get()
         const draft = ctx.threads.drafting()
-        return kind === draftRoute && draft && draft.id === id ? { session: draft.id, device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
+        return kind === draftRoute && draft && draft.id === id ? { session: draft.id, owner: 'thread', device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
       }),
     )
     ctx.watch(modelTargets, targets =>

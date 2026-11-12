@@ -1,15 +1,10 @@
 import { threadScheme, type ThreadLive, type ThreadView } from '@sand/chat/contract'
 import type { LinkScheme } from '@sand/markdown/contract'
-import type { Kit, WorkState } from '@sand/ui-kit/contract'
-import type { Status } from '@sand/ui-shell/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { ago } from '@sand/util'
 import { clock, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 
 type Live = () => ThreadLive | undefined
-
-const looks: Record<Status, WorkState> = { waiting: 'waiting', ready: 'ready', merging: 'running', running: 'running', merged: 'settled', done: 'settled' }
-
-const urgent = new Set<Status>(['waiting', 'ready', 'merging'])
 
 const textOf = (label: (Node | string)[]) => label.map(part => (typeof part === 'string' ? part : part.textContent)).join('')
 
@@ -21,7 +16,7 @@ const standsAlone = (link: Node) => {
 const stateMark = (kit: Kit, live: Live) =>
   dynamicChild(
     () => live()?.status,
-    status => (status ? kit.stateIcon(looks[status], 'sm', urgent.has(status)) : kit.stateIcon('idle')),
+    status => (status ? kit.statusIcon(status) : kit.stateIcon('idle')),
   )
 
 const age = (live: Live) => {

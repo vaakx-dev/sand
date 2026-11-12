@@ -1,7 +1,9 @@
-import type { ContextParts, ContextUsage } from '@sand/compaction/contract'
+import { contextChange, contextGet, type ContextParts, type ContextUsage } from '@sand/compaction/contract'
+import { wire } from '@sand/devices-contract'
 import { inspector } from '@sand/inspector/contract'
-import { pulse } from '@sand/reactive'
+import { pulse, wireValues } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
+import type { Subject } from '@sand/ui-shell/contract'
 import { tokens } from '@sand/util'
 import { threadChange, threads, threadsChange } from '@sand/web-client/contract'
 import { derive, div, list, show, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
@@ -35,21 +37,28 @@ const percent = (size: number, window: number) => `${window ? (size / window) * 
 
 export default definePlugin({
   name: 'inspector-context',
-  description: "The inspector's context row: how full a thread's context window is and what fills it",
-  inject: { inspector, kit, threads },
+  description: "The inspector's context row: how full a thread's or bot's context window is and what fills it",
+  inject: { inspector, kit, threads, wire },
   apply(ctx) {
     const changes = pulse(ctx, [threadChange, threadsChange])
-    const usageOf = (session: string) => {
+    const served = wireValues(ctx, ctx.wire, {
+      key: ({ session }: Subject) => session,
+      read: ({ session, owner }: Subject) => ctx.wire.call(contextGet, { session, owner }),
+      change: contextChange,
+      changed: payload => payload,
+    })
+    const usageOf = (subject: Subject) => {
+      if (subject.owner !== 'thread') return served(subject)
       changes.version.get()
-      return ctx.threads.get(session)?.context
+      return ctx.threads.get(subject.session)?.context
     }
 
     const breakdownLine = (swatch: string, name: string, size: Child) =>
       div({ class: 'flex items-center gap-2 py-px' }, span({ class: ['h-1 w-2 shrink-0 rounded-full', swatch] }), span(name), span({ class: 'ml-auto text-neutral-500 tabular-nums' }, size))
 
-    const render = (session: () => string) => {
+    const render = (subject: () => Subject) => {
       const open = sig(false)
-      const usage = () => usageOf(session()) ?? empty
+      const usage = () => usageOf(subject()) ?? empty
       const parts = derive(() => partsOf(usage()))
       const segment = (part: Sig<Part>) =>
         span({ class: () => ['h-full shrink-0 bg-neutral-600 transition-colors', part.get().segment], style: () => `width:${percent(part.get().size, usage().window)}` })
@@ -89,8 +98,8 @@ export default definePlugin({
         id: 'context',
         group: 'context',
         order: 70,
-        shows: subject => (usageOf(subject.session)?.used ?? 0) > 0,
-        render: subject => render(() => subject().session),
+        shows: subject => (usageOf(subject)?.used ?? 0) > 0,
+        render,
       }),
     )
   },

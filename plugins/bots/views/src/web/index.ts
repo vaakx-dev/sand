@@ -78,7 +78,7 @@ export default definePlugin({
         const device = ctx.get(threads)?.device()
         if (kind !== botRoute || !id || !device) return undefined
         const folder = parts.store.find(id)?.folder
-        return { session: id, device, ...(folder && { cwd: folder }) }
+        return { session: id, owner: 'bot', device, ...(folder && { cwd: folder }) }
       }),
     )
     ctx.watch(modelTargets, targets =>

@@ -80,6 +80,8 @@
       "name": "@sand/reactive",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -141,7 +143,6 @@
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/media": "workspace:*",
-        "@sand/model": "workspace:*",
         "@sand/provider-threads": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/usage": "workspace:*",
@@ -824,6 +825,7 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
+        "@sand/compaction": "workspace:*",
         "@sand/devices-notify": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/ledger": "workspace:*",
@@ -2285,9 +2287,11 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/compaction": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
         "@sand/inspector": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
@@ -2374,6 +2378,21 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/inspector/threads": {
+      "name": "@sand/inspector-threads",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chat": "workspace:*",
+        "@sand/inspector": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/ui/look/kit": {
       "name": "@sand/ui-kit",
       "version": "0.0.0",
@@ -2420,6 +2439,21 @@
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/ui/panel/plan": {
+      "name": "@sand/panel-plan",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bot-plan": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/markdown": "workspace:*",
+        "@sand/panel": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -2584,6 +2618,7 @@
       "name": "@sand/ui-shell",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/engine": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
@@ -2878,6 +2913,8 @@
 
     "@sand/inspector-pc": ["@sand/inspector-pc@workspace:plugins/ui/inspector/pc"],
 
+    "@sand/inspector-threads": ["@sand/inspector-threads@workspace:plugins/ui/inspector/threads"],
+
     "@sand/jobs": ["@sand/jobs@workspace:plugins/agent/jobs"],
 
     "@sand/keys": ["@sand/keys@workspace:plugins/ui/shared/keys"],
@@ -2917,6 +2954,8 @@
     "@sand/panel": ["@sand/panel@workspace:plugins/ui/panel/panel"],
 
     "@sand/panel-changes": ["@sand/panel-changes@workspace:plugins/ui/panel/changes"],
+
+    "@sand/panel-plan": ["@sand/panel-plan@workspace:plugins/ui/panel/plan"],
 
     "@sand/paths": ["@sand/paths@workspace:plugins/core/paths"],
 

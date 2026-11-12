@@ -6,8 +6,6 @@ const own: Record<BotStatus, Status | undefined> = { idle: undefined, working: '
 
 const rank = (status: Status) => statuses.indexOf(status)
 
-export const urgent = (status: Status | undefined) => status === 'waiting' || status === 'ready' || status === 'merging'
-
 export const settled = (status: Status) => status === 'merged' || status === 'done'
 
 export const runningCount = (tabs: BotTab[]) => tabs.filter(tab => tab.status === 'running' || tab.status === 'merging').length
