@@ -121,6 +121,6 @@ const remember = async (context: DialContext, { route, hello }: Opened) => {
 
 export const dial = async (routes: Route[], context: DialContext, run: DialRun, record: Recorder): Promise<DialOutcome> => {
   const outcome = await firstOpened(resumable(routes, context), routes, context, run, record)
-  if (outcome.ok) void remember(context, outcome.opened).catch(() => {})
+  if (outcome.ok) await remember(context, outcome.opened).catch(() => {})
   return outcome
 }
