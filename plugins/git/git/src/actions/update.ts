@@ -1,6 +1,5 @@
 import { gitMaybe, gitOk } from '@sand/git-runner/contract'
 import { fetchOrigin } from '../fetch/origin'
-import { readDefaultBranch } from '../status/default-branch'
 import { read } from './folder'
 
 const conflicted = async (cwd: string) => (await gitOk(cwd, ['diff', '--name-only', '--diff-filter=U'], read)).split(/\r?\n/).filter(Boolean)
@@ -16,8 +15,7 @@ const mergeIn = async (cwd: string, branch: string) => {
   }
 }
 
-export const updateFromDefault = async (cwd: string) => {
-  const branch = await readDefaultBranch(cwd)
+export const updateFromDefault = async (cwd: string, branch: string | undefined) => {
   if (!branch) throw new Error("Couldn't tell which branch is the default.")
   const fetched = await fetchOrigin(cwd)
   if (!fetched) throw new Error('This repo has no origin to update from.')

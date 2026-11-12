@@ -1,4 +1,4 @@
-import { gitCommit, gitDiscard, gitPush, gitUpdate } from '@sand/git/contract'
+import { gitCommit, gitDiscard, gitPush, gitStatus, gitUpdate } from '@sand/git/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync } from 'node:fs'
@@ -72,6 +72,24 @@ test('push sets the upstream the first time and sends new commits after', async 
   git(repo, 'commit', '-q', '-am', 'todo now')
   await sand.ask(gitPush, { cwd: repo })
   expect(git(origin, 'rev-parse', 'work')).toBe(git(repo, 'rev-parse', 'HEAD'))
+})
+
+test('status counts the commits ahead of and behind the upstream and the default branch', async () => {
+  const { seed, repo } = await start()
+  for (const text of ['later\n', 'now\n']) {
+    await Bun.write(join(repo, 'todo.txt'), text)
+    git(repo, 'add', '.')
+    git(repo, 'commit', '-q', '-m', 'todo')
+  }
+  git(repo, 'push', '-q', '-u', 'origin', 'work')
+  git(repo, 'reset', '-q', '--hard', 'HEAD~2')
+  await Bun.write(join(repo, 'other.txt'), 'other\n')
+  git(repo, 'add', '.')
+  git(repo, 'commit', '-q', '-m', 'other')
+  await advanceMain(seed, 'one\ntwo\nthree\nfour\n')
+  git(repo, 'fetch', '-q')
+
+  expect((await sand.ask(gitStatus, { cwd: repo })).remote).toMatchObject({ upstream: 'origin/work', ahead: 1, behind: 2, base: 'origin/main', aheadBase: 1, behindBase: 1 })
 })
 
 test('update merges the latest default branch from origin, and says when there was nothing new', async () => {

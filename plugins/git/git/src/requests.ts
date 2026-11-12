@@ -21,7 +21,7 @@ export const serveGit = (server: Server, { repo, watch }: GitRepoHost) => {
     server.handle(gitBranches, ({ cwd, query, limit }) => repo.branches(cwd, query, limit)),
     server.handle(gitCommit, ({ cwd, message }) => thenRefresh(cwd, commitFolder(cwd, message))),
     server.handle(gitPush, ({ cwd }) => thenRefresh(cwd, pushBranch(cwd))),
-    server.handle(gitUpdate, ({ cwd }) => thenRefresh(cwd, updateFromDefault(cwd))),
+    server.handle(gitUpdate, ({ cwd }) => thenRefresh(cwd, repo.defaultBranch(cwd).then(branch => updateFromDefault(cwd, branch)))),
     server.handle(gitDiscard, ({ cwd }) => thenRefresh(cwd, discardFolder(cwd))),
   )
 }

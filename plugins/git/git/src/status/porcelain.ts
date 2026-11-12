@@ -1,9 +1,18 @@
 import type { FileKind, GitFile } from '../contract'
 
+export interface Upstream {
+  name: string
+  ahead: number
+  behind: number
+}
+
 export interface StatusHead {
   oid?: string
   branch?: string
   unborn: boolean
+  upstream?: string
+  ahead?: number
+  behind?: number
 }
 
 export interface ParsedStatus {
@@ -40,7 +49,12 @@ const readHeader = (head: StatusHead, record: string) => {
     else head.oid = value
   }
   if (key === 'branch.head' && value !== '(detached)') head.branch = value
+  if (key === 'branch.upstream') head.upstream = value
+  if (key === 'branch.ab') [head.ahead, head.behind] = value.split(' ').map(side => Math.abs(Number(side)))
 }
+
+export const upstreamOf = ({ upstream, ahead, behind }: StatusHead): Upstream | undefined =>
+  upstream && ahead !== undefined && behind !== undefined ? { name: upstream, ahead, behind } : undefined
 
 export const parseStatus = (out: string): ParsedStatus => {
   const head: StatusHead = { unborn: false }

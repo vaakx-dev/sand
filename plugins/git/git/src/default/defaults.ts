@@ -1,18 +1,14 @@
-import { normalize } from 'node:path'
-import type { GitBase } from '../contract'
+import type { GitBase, GitLayout } from '../contract'
 import { gitMaybe } from '@sand/git-runner/contract'
 import { readDefaultBranch } from '../status/default-branch'
+import type { Layouts } from '../status/layout'
 
 export interface Defaults {
   branch(cwd: string): Promise<string | undefined>
+  branchOf(layout: GitLayout): Promise<string | undefined>
   base(cwd: string): Promise<GitBase | undefined>
   forget(commonDir: string): void
   clear(): void
-}
-
-const commonDirOf = async (cwd: string) => {
-  const out = await gitMaybe(cwd, ['rev-parse', '--path-format=absolute', '--git-common-dir'], { read: true })
-  return out ? normalize(out) : undefined
 }
 
 const candidates = (branch: string) => [
@@ -31,27 +27,37 @@ const readBase = async (cwd: string, branch: string): Promise<GitBase | undefine
   return undefined
 }
 
-export const createDefaults = (): Defaults => {
+export const createDefaults = (layouts: Layouts): Defaults => {
   const known = new Map<string, Promise<string | undefined>>()
 
-  const branchIn = (commonDir: string, cwd: string) => {
+  const branchOf = ({ commonDir, root }: GitLayout) => {
     const cached = known.get(commonDir)
     if (cached) return cached
-    const reading = readDefaultBranch(cwd).catch(error => {
+    const drop = () => {
       if (known.get(commonDir) === reading) known.delete(commonDir)
-      throw error
-    })
+    }
+    const reading = readDefaultBranch(root).then(
+      found => {
+        if (!found) drop()
+        return found
+      },
+      (error: unknown) => {
+        drop()
+        throw error
+      },
+    )
     known.set(commonDir, reading)
     return reading
   }
 
   const branch = async (cwd: string) => {
-    const commonDir = await commonDirOf(cwd)
-    return commonDir ? branchIn(commonDir, cwd) : undefined
+    const layout = await layouts.read(cwd)
+    return layout ? branchOf(layout) : undefined
   }
 
   return {
     branch,
+    branchOf,
     async base(cwd) {
       const name = await branch(cwd)
       return name ? readBase(cwd, name) : undefined

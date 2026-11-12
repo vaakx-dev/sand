@@ -8,7 +8,7 @@ export interface LineCount {
 
 export type LineCounts = Map<string, LineCount>
 
-const numstat = ['diff', '--numstat', '-z', '-M', '--no-ext-diff']
+const numstatArgs = ['diff', '--numstat', '-z', '-M', '--no-ext-diff']
 
 const parseNumstat = (out: string, counts: LineCounts) => {
   const records = out.split('\0')
@@ -35,12 +35,14 @@ const parseNumstat = (out: string, counts: LineCounts) => {
   return counts
 }
 
-export const readLineCounts = async (root: string, unborn: boolean): Promise<LineCounts> => {
+export const readLineCounts = async (root: string, unborn: boolean, againstHead: Promise<string>): Promise<LineCounts> => {
   const counts: LineCounts = new Map()
-  if (!unborn) return parseNumstat(await gitOk(root, [...numstat, 'HEAD', '--'], { read: true }), counts)
+  if (!unborn) return parseNumstat(await againstHead, counts)
   const [staged, unstaged] = await Promise.all([
-    gitOk(root, [...numstat, '--cached', '--'], { read: true }),
-    gitOk(root, [...numstat, '--'], { read: true }),
+    gitOk(root, [...numstatArgs, '--cached', '--'], { read: true }),
+    gitOk(root, [...numstatArgs, '--'], { read: true }),
   ])
   return parseNumstat(unstaged, parseNumstat(staged, counts))
 }
+
+export { numstatArgs }

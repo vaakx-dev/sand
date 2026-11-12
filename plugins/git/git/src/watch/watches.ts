@@ -1,14 +1,20 @@
 import type { Dispose } from 'drydock'
 import type { GitLocal, GitStatus } from '../contract'
+import type { Defaults } from '../default/defaults'
 import { createFetches } from '../fetch/schedule'
-import { readLayout } from '../status/layout'
+import type { Layouts } from '../status/layout'
 import { readStatus } from '../status/read'
 import { createAttached } from './attached'
 import { createLeases } from './leases'
 import { createLocalListeners, type LocalListener } from './listeners'
 import type { TreeDeps } from './tree'
 
-export type WatchDeps = Omit<TreeDeps, 'fetched' | 'localChanged'>
+export type WatchDeps = Omit<TreeDeps, 'fetched' | 'localChanged' | 'defaultBranch'>
+
+interface Facts {
+  layouts: Layouts
+  defaults: Defaults
+}
 
 export interface Watches {
   lease(cwd: string): Promise<GitStatus>
@@ -21,19 +27,19 @@ export interface Watches {
 
 const notRepo = (cwd: string): GitStatus => ({ cwd, local: { repo: false } })
 
-export const createWatches = (deps: WatchDeps, refsMoved: (commonDir: string) => void): Watches => {
+export const createWatches = (deps: WatchDeps, { layouts, defaults }: Facts): Watches => {
   let closed = false
   const listeners = createLocalListeners(deps.report)
   const fetches = createFetches(commonDir => attached.touch(commonDir))
   const attached = createAttached({
-    tree: { ...deps, fetched: fetches.info, localChanged: listeners.send },
+    tree: { ...deps, fetched: fetches.info, localChanged: listeners.send, defaultBranch: defaults.branchOf },
     joinFetches: commonDir => fetches.join(commonDir),
-    refsMoved,
+    refsMoved: defaults.forget,
   })
   const leases = createLeases({ holding: listeners.holding, detach: attached.detach })
 
   const hold = async (cwd: string): Promise<GitLocal> => {
-    const layout = await readLayout(cwd)
+    const layout = await layouts.read(cwd)
     if (closed || !layout || !listeners.holding(cwd)) return { repo: false }
     leases.keep(cwd, layout.root)
     const tree = attached.attach(cwd, layout)
@@ -43,13 +49,13 @@ export const createWatches = (deps: WatchDeps, refsMoved: (commonDir: string) =>
   }
 
   const treeOf = async (cwd: string) => {
-    const layout = await readLayout(cwd)
+    const layout = await layouts.read(cwd)
     return { layout, tree: layout && attached.tree(layout.root) }
   }
 
   return {
     async lease(cwd) {
-      const layout = await readLayout(cwd)
+      const layout = await layouts.read(cwd)
       if (closed || !layout) {
         if (!closed) leases.renew(cwd, undefined)
         return notRepo(cwd)
@@ -74,17 +80,17 @@ export const createWatches = (deps: WatchDeps, refsMoved: (commonDir: string) =>
     async status(cwd) {
       const { layout, tree } = await treeOf(cwd)
       if (!layout) return notRepo(cwd)
-      if (!tree) return readStatus(cwd, layout, fetches.info(layout.commonDir))
+      if (!tree) return readStatus(cwd, layout, defaults.branchOf(layout), fetches.info(layout.commonDir))
       await tree.update(true)
       return tree.status(cwd, layout.prefix)
     },
     async refresh(cwd) {
       const { layout, tree } = await treeOf(cwd)
-      if (layout) refsMoved(layout.commonDir)
+      if (layout) defaults.forget(layout.commonDir)
       await tree?.update(true, true)
     },
     async fetch(cwd) {
-      const layout = await readLayout(cwd)
+      const layout = await layouts.read(cwd)
       if (!layout) return
       await fetches.now(layout.commonDir)
       await attached.touch(layout.commonDir)

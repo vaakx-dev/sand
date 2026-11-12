@@ -32,7 +32,6 @@ export interface GitRepoLocal {
 export type GitLocal = GitRepoLocal | { repo: false }
 
 export interface GitRemote {
-  remote?: string
   upstream?: string
   ahead: number
   behind: number
