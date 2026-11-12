@@ -101,6 +101,7 @@ export const logbookSearch = request('logbook.search', {
       from: z.number().optional(),
       to: z.number().optional(),
       limit: z.number().int().min(1).max(searchLimit).optional(),
+      offset: z.number().int().min(0).optional(),
     }),
   output: type<Entry[]>(),
   callers: 'any',

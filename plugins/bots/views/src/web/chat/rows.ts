@@ -1,22 +1,12 @@
 import { promptContent, userParts, type Entry } from '@sand/chats/contract'
 import type { Item, Row, Rows, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { dayLabel } from '@sand/util'
 import { derive, div } from '@vaakx-dev/vrui'
 import { sendingCaption, type Sending } from '@sand/composer/contract'
 import type { Conversation, Pending } from './conversation'
 
 const shown = new Set<Item['kind']>(['user', 'text', 'notice', 'custom'])
-
-const dayMs = 24 * 60 * 60 * 1000
-
-const dayLabel = (at: number) => {
-  const date = new Date(at)
-  const today = new Date()
-  if (date.toDateString() === today.toDateString()) return 'Today'
-  if (date.toDateString() === new Date(today.getTime() - dayMs).toDateString()) return 'Yesterday'
-  const year = date.getFullYear() === today.getFullYear() ? undefined : 'numeric'
-  return date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short', year })
-}
 
 const timeOf = (item: Item) => ('at' in item ? item.at : undefined)
 
