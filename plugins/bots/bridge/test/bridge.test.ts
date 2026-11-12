@@ -1,5 +1,5 @@
 import { botCreate, type BotEntry } from '@sand/bots/contract'
-import { botStarts, type BotReplyEntry } from '@sand/bot-bridge/contract'
+import { botSubagents, type BotReplyEntry } from '@sand/bot-bridge/contract'
 import { threadList } from '@sand/orchestrator/contract'
 import { botAwait, botOpen } from '@sand/bot-turns/contract'
 import { type Entry, type Message, type Session, textOf, type UserContent } from '@sand/chats/contract'
@@ -112,21 +112,26 @@ const noticeIn = async (texts: () => string[] | Promise<string[]>) => {
 
 const noticeFor = (bot: string) => noticeIn(() => botTexts(bot))
 
-test('a thread hands a bot a task without waiting and hears its reply, and an @ mention hands the message to the bot with its reply as a card', async () => {
+test('a thread messages a bot, which answers only by messaging the thread back, and an @ mention hands the message to the bot with its reply as a card', async () => {
   await start([said('Dentist noted.'), [], [], said('README fixed.')], [said('Tomorrow: dentist at 9.'), said('Noted.'), said('Booked.')])
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
   expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', projects: [], budget: null, spent: 0 }])
-  expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', reported: true })
+  const sent = await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow? Message me the answer." })
+  expect(sent).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', detached: true })
   const [asked] = userMessages((await sand.ask(botOpen, { bot: bot.id })).entries)
-  expect(textOf(asked!.content)).toContain("from the agent working in the user's thread")
+  expect(textOf(asked!.content)).toContain(`from the agent working in the user's thread "a thread" (id ${thread.id})`)
+  expect(textOf(asked!.content)).toContain('if it asks to hear back, message it with thread_send')
   expect(recordsOf(asked!)).toEqual([expect.objectContaining({ kind: 'thread', data: { id: thread.id, sent: true } })])
-  const notice = await noticeIn(() => textsOf(userMessages(thread.path())))
-  expect(notice).toContain(`<bot>${bot.id}</bot>`)
-  expect(notice).toContain('Tomorrow: dentist at 9.')
-  const hearing = sand.turns.current(thread)
-  if (hearing) await sand.turns.wait(hearing.id, 'end')
+  expect(await sand.ask(botAwait, { bot: bot.id, turn: sent.turn, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Tomorrow: dentist at 9.' })
+  await Bun.sleep(100)
+  expect(userMessages(thread.path())).toEqual([])
+
+  const answer = await use(asBot(bot.id), 'thread_send', { thread: thread.id, prompt: 'Tomorrow: dentist at 9.' })
+  await sand.turns.wait(answer.turn, 'end')
+  expect(recordsOf(userMessages(thread.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', data: { id: bot.id, sent: true } })])
+  expect(seenIn(sand.requests('fake')[0]!)).toContain(`This message is from the user's bot "Calendar" (id ${bot.id}), not from the user.`)
   expect(lastReply(thread)).toBe('Dentist noted.')
 
   await sendAndSettle(thread, mentioning(bot.id, '', ' note the dentist'))
@@ -142,8 +147,8 @@ test('a thread hands a bot a task without waiting and hears its reply, and an @ 
   expect(await sand.ask(botAwait, { bot: bot.id, turn: second.turn!, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Booked.' })
 })
 
-test('a bot starts a thread in its only project, which says the bot sent it and tells the bot its final reply, but not after turns the user starts', async () => {
-  await start([said('README fixed.'), said('Glad to help.'), said('Hi back.')], [said('The README is fixed.')])
+test("a bot starts a thread in its only project, which says the bot sent it and stands on its own: no report back, not listed as the bot's", async () => {
+  await start([said('README fixed.'), said('Hi back.')], [])
   await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
   const bot = await createBot('Builder')
 
@@ -153,28 +158,24 @@ test('a bot starts a thread in its only project, which says the bot sent it and 
   const thread = sand.sessions.require(started.thread)
   expect(thread.project).toBe('p1')
   expect(sand.turns.get(started.turn)?.origin).toBe('bot')
-  expect(await sand.ask(botStarts, {})).toEqual({ [thread.id]: bot.id })
   expect(recordsOf(userMessages(thread.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', label: 'Builder', data: { id: bot.id, sent: true } })])
-  const notice = await noticeFor(bot.id)
-  expect(notice).toContain(`<thread>${thread.id}</thread>`)
-  expect(notice).toContain('<status>done</status>')
-  expect(notice).toContain('README fixed.')
-
-  await sendAndSettle(thread, [{ type: 'text', text: 'Thanks' }])
+  await sand.turns.wait(started.turn, 'end')
+  expect(seenIn(sand.requests('fake')[0]!)).toContain('Your reply stays in this chat; if it asks to hear back, message it with bot_send.')
   await Bun.sleep(100)
-  expect(await botTexts(bot.id)).toHaveLength(1)
+  expect(await botTexts(bot.id)).toEqual([])
+  expect(await sand.ask(botSubagents, {})).toEqual({})
+  expect(await use(asBot(bot.id), 'thread_list', { mine: true })).toEqual([])
+  expect(await use(asBot(bot.id), 'thread_list', { project: 'p1' })).toEqual([expect.objectContaining({ thread: thread.id, status: 'completed' })])
 
   const other = sand.chat('fake/t')
   const sent = await use(asBot(bot.id), 'thread_send', { thread: other.id, prompt: 'Hi' })
   await sand.turns.wait(sent.turn, 'end')
   expect(lastReply(other)).toBe('Hi back.')
-  expect(recordsOf(userMessages(other.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', data: { id: bot.id, sent: true } })])
-  expect(await use(asBot(bot.id), 'thread_list', { mine: true })).toEqual([expect.objectContaining({ thread: thread.id, project: 'p1', status: 'completed' })])
   expect(await use(asBot(bot.id), 'thread_update', { thread: thread.id, settled: true })).toMatchObject({ thread: thread.id, settled: true })
   expect(await use(asBot(bot.id), 'thread_wait', { thread: thread.id })).toEqual({ error: expect.any(String) })
 })
 
-test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent rather than its thread", async () => {
+test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent", async () => {
   await start([said('Found three.')], [])
   const bot = await createBot('Scout')
   const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', model: 'fake/t' } } as const
@@ -186,6 +187,7 @@ test("a bot's subagent works in the bot's folder, reports back to the bot, and l
   const notice = await noticeFor(bot.id)
   expect(notice).toContain(`<thread>${child.id}</thread>`)
   expect(notice).toContain('Found three.')
-  expect(await sand.ask(threadList, { bot: bot.id, subagents: true })).toEqual([expect.objectContaining({ thread: child.id })])
-  expect(await sand.ask(threadList, { bot: bot.id })).toEqual([])
+  expect(await sand.ask(threadList, { bot: bot.id })).toEqual([expect.objectContaining({ thread: child.id })])
+  expect(await sand.ask(botSubagents, {})).toEqual({ [child.id]: bot.id })
+  expect(await sand.ask(threadList, {})).toEqual([])
 })

@@ -101,8 +101,6 @@ export interface Orchestrator {
   item(conversation: ConversationRef, item: string, offset?: number): ItemRead
   starterOf(thread: string): ConversationRef | undefined
   started(owner: Owner): Record<string, string>
-  notify(thread: string, notice: Notice): Promise<boolean>
-  deliver(to: ConversationRef, notice: Notice): Promise<boolean>
   sign(prompt: Prompt, from: ConversationRef | undefined): Prompt
   owner(owner: Owner, kind: OwnerKind): Dispose
 }
@@ -123,7 +121,7 @@ export interface AgentLimits {
 
 export const agentLimits = service<AgentLimits>('agentLimits')
 
-export const threadStarted = event<(thread: string, starter: ConversationRef) => void>('thread.started')
+export const subagentStarted = event<(subagent: string, starter: ConversationRef) => void>('subagent.started')
 
 export interface ThreadRow {
   thread: string

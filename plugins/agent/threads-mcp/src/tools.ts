@@ -22,10 +22,10 @@ const prompt = z.string().min(1).describe('The message')
 const listInput = z.object({
   cwd: z.string().optional().describe('Only threads in this folder'),
   project: z.string().optional().describe('Only threads in this project'),
-  mine: z.boolean().optional().describe("Only threads you started (sand's own threads and bots)"),
-  bot: z.string().optional().describe('Only threads this bot started'),
-  thread: z.string().optional().describe('Only threads this thread started'),
-  subagents: z.boolean().optional().describe('List subagents instead of threads; with mine, bot or thread, the subagents that one started'),
+  mine: z.boolean().optional().describe("Only the subagents you started (sand's own threads and bots); implies subagents"),
+  bot: z.string().optional().describe('Only the subagents this bot started; implies subagents'),
+  thread: z.string().optional().describe('Only the subagents this thread started; implies subagents'),
+  subagents: z.boolean().optional().describe('List subagents instead of threads'),
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many, newest first (default 50)'),
 })
 
@@ -103,7 +103,7 @@ const folderOf = ({ cwd, project, quick, pc }: Pick<z.output<typeof startInput>,
   return project ? undefined : here
 }
 
-const reported = "If you are a sand thread or bot, each final reply comes to you as a <task-notification>, so don't wait or poll for it"
+const replies = "Its reply doesn't come back to you on its own: read it with thread_wait or history_read, or, as a sand thread or bot, ask in the message for it to message you back"
 
 export const threadTools: McpTool[] = [
   {
@@ -120,7 +120,7 @@ export const threadTools: McpTool[] = [
       'Start a new sand thread with a first message: user-facing work that the user sees in their thread list and can join. It works on its own. Returns its id at once.',
       'Start one when the user asks for a thread; to hand off work of your own, start a subagent with the agent tool instead.',
       'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
-      `${reported}; otherwise use thread_wait`,
+      `${replies}.`,
     ].join(' '),
     input: startInput,
     access: 'operate',
@@ -137,7 +137,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof startInput>,
   {
     name: 'thread_send',
-    description: `Send a message to a thread. Returns at once. ${reported}; otherwise use history_read or thread_wait for its reply`,
+    description: `Send a message to a thread. Returns at once. ${replies}.`,
     input: sendInput,
     access: 'operate',
     group: group.name,

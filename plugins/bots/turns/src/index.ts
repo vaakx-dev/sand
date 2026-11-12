@@ -1,6 +1,5 @@
 import { botChange, botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
-import { ledger } from '@sand/ledger/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
 import { projectFiles } from '@sand/project/contract'
 import { context } from '@sand/prompt/contract'
@@ -20,7 +19,7 @@ import { botConversations, inject } from './runner'
 export default definePlugin({
   name: 'bot-turns',
   description: "Runs each bot's turns on the shared engine, with its job as instructions and its main model",
-  inject: { ...inject, engine, context, ledger },
+  inject: { ...inject, engine, context },
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
@@ -45,7 +44,7 @@ export default definePlugin({
       final: finalReply(ctx.bots, ctx.engine),
     }
     ctx.provide(botTurns, turns)
-    const asks = createAsks(ctx, ctx.bots, turns, ctx.ledger)
+    const asks = createAsks(ctx, ctx.bots, turns)
     ctx.watch(orchestrator, found => found?.owner('bot', botOwner(ctx.bots, turns)))
 
     ctx.on(botChange, bot => {

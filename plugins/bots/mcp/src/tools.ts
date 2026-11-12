@@ -55,7 +55,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
-    description: "Hand one of the user's bots a task or question. From sand's own threads and bots it returns at once and the bot's final reply comes to you as a <task-notification>; don't wait or poll for it. From outside sand it returns the reply, or the turn as a handle once timeoutSeconds passes; then read the reply later with history_read",
+    description: "Send one of the user's bots a message, task or question. From sand's own threads and bots it returns at once, and the bot's reply doesn't come back on its own: ask in the message for it to message you back, or read its reply later with history_read. From outside sand it returns the reply, or the turn as a handle once timeoutSeconds passes; then read the reply later with history_read",
     input: sendInput,
     access: 'operate',
     group: group.name,

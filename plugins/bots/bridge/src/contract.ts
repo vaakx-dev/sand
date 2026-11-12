@@ -10,6 +10,6 @@ export interface BotReplyEntry {
   turn?: string
 }
 
-export const botStarts = request('bot.starts', { input: () => z.object({}), output: type<Record<string, string>>() })
+export const botSubagents = request('bot.subagents', { input: () => z.object({}), output: type<Record<string, string>>() })
 
-export const botStartedWire = wireEvent<[thread: string, bot: string]>('bot.started')
+export const botSubagentWire = wireEvent<[subagent: string, bot: string]>('bot.subagent')
