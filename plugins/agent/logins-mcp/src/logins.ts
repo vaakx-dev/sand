@@ -60,6 +60,7 @@ const addTool: McpTool<typeof addInput> = {
   description:
     "Save a website login (site, username, password and an optional authenticator) or a key (value), kept encrypted. Saved by one of sand's own threads or bots, that thread or bot may use it at once; share it further with login_change. Returns the login without its values",
   input: addInput,
+  secret: ['username', 'password', 'totp', 'value'],
   access: 'operate',
   group: group.name,
   run: (input, { call }) => call(loginAdd, addedOf(input)),
@@ -70,6 +71,7 @@ const changeTool: McpTool<typeof changeInput> = {
   description:
     'Change a saved login: rename it, move it to another site, replace its username, password, key value or authenticator, choose which bots and threads may use it, or keep it for the user only. Logins in a password manager change there, except for name, site and who may use them. Returns the login without its values',
   input: changeInput,
+  secret: ['username', 'password', 'value', 'totp'],
   access: 'operate',
   group: group.name,
   run: (input, { call }) => call(loginChange, input),

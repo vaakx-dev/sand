@@ -38,6 +38,7 @@ const connectTool: McpTool<typeof connectInput> = {
   description:
     "Connect a password manager so its items can become saved logins: sand keeps what you give it encrypted and never shows it again. Returns the manager's status (signed-in account, locked or failed)",
   input: connectInput,
+  secret: ['secret'],
   access: 'operate',
   group: group.name,
   run: async ({ source, secret }, { call }) => (await call(sourceConnect, { source, secret })).sources[source],
