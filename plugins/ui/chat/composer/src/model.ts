@@ -1,11 +1,13 @@
+import { promptOf } from '@sand/attachments/contract'
 import type { Held, Shelves } from '@sand/attachments/web/contract'
+import type { UserContent } from '@sand/chats/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
 import type { SendOptions } from '@sand/web-client/contract'
 import { derive, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { commandChar } from './complete/detect'
 import { boundTriggers, type Triggers } from './complete/registry'
-import type { Command, ComposerContent } from './contract'
+import type { Command, ComposerContent, Sending } from './contract'
 import type { Saved } from './drafts/store'
 import { contextOf, createRecords } from './records'
 import { createHolds } from './send/holds'
@@ -20,6 +22,8 @@ const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettin
   const { model, effort, speed } = { ...settings, ...patch }
   return { ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }
 }
+
+const uploaded = (item: Held): item is UserContent => !(item instanceof File)
 
 const sendError = (error: unknown) => `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}.`
 
@@ -36,6 +40,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
   const failure = sig<{ text: string; retry?: Retry } | undefined>(undefined)
   const sending = sig(false)
   const outgoing = sig<Saved | undefined>(undefined)
+  const shown = sig<Sending | undefined>(undefined)
   const running = derive(() => target.running())
   const delivery = derive(() => target.delivery())
   const pcName = derive(() => target.pcName())
@@ -114,8 +119,14 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
 
   const triggers = boundTriggers(registries, command => void runCommand(command))
 
-  const deliver = async ({ draft: saved, options }: Retry) => {
+  const show = ({ options }: Retry, { text: said, content: parts }: ComposerContent, uploading: boolean) =>
+    shown.set({ id: options.clientRequestId, conversation: target.conversation() ?? '', prompt: promptOf(said, parts), at: Date.now(), uploading })
+
+  const deliver = async (retry: Retry) => {
+    const { draft: saved, options } = retry
+    show(retry, { text: saved.text.trim(), content: [...saved.items.filter(uploaded), ...contextOf(saved.records)] }, !saved.items.every(uploaded))
     const prompt = await content(saved)
+    show(retry, prompt, false)
     await target.send(prompt.text, prompt.content, saved.settings ?? {}, options)
   }
 
@@ -124,6 +135,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     if (unchanged(retry.draft)) clear()
     const ours = () => outgoing.get() === retry.draft
     const settle = (error?: unknown) => {
+      shown.set(undefined)
       if (!ours()) return
       outgoing.set(undefined)
       if (error) putBack(retry.draft, sendError(error), retry)
@@ -154,6 +166,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     choose: (patch: SettingsPatch) => picked.update(current => applied(current, patch)),
     failure,
     sending,
+    shown,
     running,
     delivery,
     pcName,

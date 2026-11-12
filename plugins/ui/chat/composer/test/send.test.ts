@@ -31,7 +31,9 @@ test('a message sent again after its answer was lost reaches sand once', async (
 
   const sent = model.send()
   expect(model.text.get()).toBe('')
+  expect(model.shown.get()).toMatchObject({ conversation: 'helper', prompt: 'ship it' })
   await sent
+  expect(model.shown.get()).toBeUndefined()
   expect(model.failure.get()?.text).toContain('Your message is still here')
   expect(model.text.get()).toBe('ship it')
 
