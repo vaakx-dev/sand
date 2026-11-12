@@ -1,9 +1,10 @@
 import { botMemorySpace } from '@sand/bot-memory/contract'
-import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
+import { botName, type BotSummary } from '@sand/bots/contract'
 import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite } from '@sand/memory/contract'
 import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
 import { noAutomations } from '../automations/empty'
 import { automationRow } from '../automations/row'
+import { deleteAction } from '../delete'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
 import { advancedBlock } from './advanced'
 import { createProject, projectChecklist } from './projects'
@@ -159,16 +160,21 @@ const foot = (parts: Parts, id: string, bot: Bot, close: () => void) => {
   const { kit } = parts.ctx
   const paused = () => bot()?.paused ?? false
   const pause = () => void parts.store.update(id, { paused: !paused() }).catch(error => parts.ctx.report(error))
-  const remove = () => {
-    close()
-    parts.ctx.shell.land({ forget: { kind: botRoute, id } })
-    void parts.store.remove(id).catch(error => parts.ctx.report(error))
-  }
+  const remove = deleteAction(parts, id, nameOf(bot))
   return div(
     { class: 'flex w-full items-center gap-2' },
     kit.secondaryAction({ size: 'sm', onClick: pause }, () => (paused() ? `Resume ${nameOf(bot)}` : `Pause ${nameOf(bot)}`)),
     span({ class: 'flex-1' }),
-    kit.rowAction({ label: 'Delete bot', danger: true, run: remove }),
+    kit.confirmButton({
+      action: {
+        ...remove,
+        label: 'Delete bot',
+        run: async () => {
+          await remove.run()
+          close()
+        },
+      },
+    }),
   )
 }
 

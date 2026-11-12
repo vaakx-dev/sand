@@ -1,7 +1,9 @@
-import type { MenuAction } from '@sand/ui-shell/contract'
-import { div, p, span, type Child } from '@vaakx-dev/vrui'
+import type { MenuAction, MenuChoice } from '@sand/ui-shell/contract'
+import { errorMessage } from '@sand/util'
+import { div, p, show, sig, span, type Child } from '@vaakx-dev/vrui'
 import { dangerAction, secondaryAction } from '../buttons/button'
 import { menuSeparator } from '../menus/menu'
+import { errorText } from '../notes/notes'
 import { menuIcon, menuItem, menuSizes } from '../menus/menu-item'
 import { askView } from './ask'
 import { choiceChips, type ChipHandlers } from './chips'
@@ -21,9 +23,10 @@ const finish = (control: MenuControl, run: () => void | Promise<unknown>) => {
   void run()
 }
 
-export const firstStep = (actions: MenuAction[], ask?: string): MenuStep | undefined => {
-  const action = ask ? actions.find(candidate => candidate.id === ask && candidate.ask) : undefined
-  return action ? { kind: 'ask', action } : undefined
+export const firstStep = (actions: MenuAction[], step?: string): MenuStep | undefined => {
+  const action = step ? actions.find(candidate => candidate.id === step) : undefined
+  if (action?.confirm) return { kind: 'confirm', action }
+  return action?.ask ? { kind: 'ask', action } : undefined
 }
 
 export const choose = (control: MenuControl, action: MenuAction) => (event: MouseEvent) => {
@@ -61,19 +64,41 @@ const choiceRow = (action: MenuAction, control: MenuControl, size: ItemSize) =>
 export const menuItems = (actions: MenuAction[], control: MenuControl, size: ItemSize): Child[] =>
   actions.flatMap((action, index) => [
     index > 0 && action.group !== actions[index - 1]?.group ? menuSeparator() : null,
-    action.choices ? choiceRow(action, control, size) : item(action, control, size),
+    action.choices && !action.confirm ? choiceRow(action, control, size) : item(action, control, size),
   ])
 
-const confirmView = (action: MenuAction, control: MenuControl, back: () => void, size: ItemSize) =>
-  div(
+const outcome = async (run: MenuChoice['run']) => {
+  try {
+    await run()
+    return undefined
+  } catch (error) {
+    return errorMessage(error)
+  }
+}
+
+const confirmView = (action: MenuAction, control: MenuControl, back: () => void, size: ItemSize) => {
+  const busy = sig(false)
+  const failure = sig<string | undefined>(undefined)
+  const press = (run: MenuChoice['run']) => async () => {
+    busy.set(true)
+    failure.set(undefined)
+    const problem = await outcome(run)
+    if (problem === undefined) return control.close()
+    failure.set(problem)
+    busy.set(false)
+  }
+  const answers = action.choices ?? [action]
+  return div(
     { class: 'flex flex-col gap-3 p-2' },
     p({ class: 'text-sm text-neutral-100' }, action.confirm),
+    show(() => failure.get() !== undefined, () => errorText(() => failure.get())),
     div(
-      { class: 'flex justify-end gap-2' },
+      { class: 'flex flex-wrap justify-end gap-2' },
       secondaryAction({ size, onClick: back, onMount: node => node.focus() }, 'Cancel'),
-      dangerAction({ size, onClick: () => finish(control, () => action.run()) }, action.label),
+      ...answers.map(answer => dangerAction({ size, disabled: busy, onClick: press(answer.run) }, answer.label)),
     ),
   )
+}
 
 export const stepView = (step: MenuStep, control: MenuControl, back: () => void, size: ItemSize) => {
   if (step.kind === 'confirm') return confirmView(step.action, control, back, size)

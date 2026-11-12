@@ -19,7 +19,7 @@ export const modelMenu = ({ copyText }: Kit, { model, subtitle, use, makeDefault
     },
     toggleHidden !== undefined && { id: 'hidden', label: model.hidden ? 'Show in picker' : 'Hide from picker', icon: 'eye', group: 'list', run: toggleHidden },
     { id: 'copy-id', label: 'Copy model id', icon: 'copy', group: 'copy', run: copy },
-    remove !== undefined && { id: 'remove', label: 'Remove', icon: 'trash', group: 'remove', danger: true, run: remove },
+    remove !== undefined && { id: 'remove', label: 'Remove', icon: 'trash', group: 'remove', danger: true, confirm: `Remove ${model.label} from sand?`, run: remove },
   ]
   return { title: model.label, subtitle, actions: actions.filter(action => action !== false) }
 }

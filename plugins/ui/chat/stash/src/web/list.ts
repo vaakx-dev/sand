@@ -10,7 +10,8 @@ export interface ListParts {
   entries: Sig<Entry[]>
   here: ComposerView
   phone: () => boolean
-  remove(entry: Entry): void
+  remove(entry: Entry): Promise<unknown>
+  take(entry: Entry): void
 }
 
 const metaOf = (entry: Entry) => {
@@ -20,7 +21,16 @@ const metaOf = (entry: Entry) => {
 
 const titleOf = (entry: Entry) => oneLine(entry.text, 200) || entry.content.map(contentName).join(', ')
 
-const row = ({ kit, here, phone, remove }: ListParts, entry: Entry, close: () => void) =>
+const deleteAction = (remove: ListParts['remove'], entry: Entry) => ({
+  id: 'delete',
+  label: 'Delete',
+  icon: 'trash',
+  danger: true,
+  confirm: 'Delete this stashed message? It can’t be brought back.',
+  run: () => remove(entry),
+})
+
+const row = ({ kit, here, phone, remove, take }: ListParts, entry: Entry, close: () => void) =>
   div(
     { class: 'group flex min-w-0 items-center gap-1 rounded-md pr-1 hover:bg-neutral-700' },
     kit.plainButton(
@@ -28,14 +38,14 @@ const row = ({ kit, here, phone, remove }: ListParts, entry: Entry, close: () =>
         class: 'flex min-w-0 flex-1 flex-col px-2 py-1.5 text-left',
         onClick: () => {
           close()
-          remove(entry)
+          take(entry)
           here.restore({ text: entry.text, content: entry.content })
         },
       },
       span({ class: 'min-w-0 truncate text-sm text-neutral-100' }, titleOf(entry)),
       kit.metaLine(metaOf(entry)),
     ),
-    kit.closeButton({ size: 'sm', title: 'Delete', class: () => (phone() ? '' : 'opacity-0 group-hover:opacity-100'), onClick: () => remove(entry) }),
+    kit.closeButton({ size: 'sm', title: 'Delete', class: () => (phone() ? '' : 'opacity-0 group-hover:opacity-100'), onClick: event => kit.confirm(event)(deleteAction(remove, entry)) }),
   )
 
 export const stashRows = (parts: ListParts, close: () => void) =>

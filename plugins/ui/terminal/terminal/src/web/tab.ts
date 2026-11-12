@@ -7,6 +7,7 @@ import {
   type Size,
   terminalAck,
   terminalAttach,
+  terminalBusy,
   terminalClose,
   terminalDetach,
   terminalInput,
@@ -213,6 +214,7 @@ export const createTab = ({ place, wire, createScreen, colors, closed, known }: 
     arrow: (key: 'A' | 'B' | 'C' | 'D') => type(arrowKey(key, screen.applicationCursor())),
     paste: screen.paste,
     focus: screen.focus,
+    busy: () => (exit ? Promise.resolve(false) : withId(found => call(terminalBusy, { id: found })).catch(() => true)),
     end() {
       if (id) void call(terminalClose, { id }).catch(() => {})
       leave()

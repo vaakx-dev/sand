@@ -15,10 +15,11 @@ export default definePlugin({
     const entries = sig<Entry[]>([])
     const phone = media('(max-width: 767px)')
     const refresh = () => void ctx.wire.call(stashList, {}).then(list => entries.set(list), error => ctx.report(error))
-    const remove = (entry: Entry) => {
+    const remove = async (entry: Entry) => {
+      await ctx.wire.call(stashRemove, { id: entry.id })
       entries.update(list => list.filter(other => other.id !== entry.id))
-      void ctx.wire.call(stashRemove, { id: entry.id }).catch(error => ctx.report(error))
     }
+    const take = (entry: Entry) => void remove(entry).catch(error => ctx.report(error))
     if (ctx.wire.ready()) refresh()
     ctx.on(wireHello, refresh)
     ctx.effect(() => ctx.wire.on(stashChange, list => entries.set(list)))
@@ -29,7 +30,7 @@ export default definePlugin({
               const added = await ctx.wire.call(stashAdd, { text, content, chat })
               entries.update(list => [added, ...list.filter(other => other.id !== added.id)])
             }),
-            found.shared('above', here => stashEntry({ kit: ctx.kit, entries, here, phone: () => phone.get(), remove }), 100),
+            found.shared('above', here => stashEntry({ kit: ctx.kit, entries, here, phone: () => phone.get(), remove, take }), 100),
           )
         : undefined,
     )

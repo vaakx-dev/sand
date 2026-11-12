@@ -20,7 +20,7 @@ export interface MenuSpec {
 }
 
 export interface MenuRequest extends PressAt, MenuSpec {
-  ask?: string
+  step?: string
   expand?: string
 }
 

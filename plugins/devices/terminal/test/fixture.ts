@@ -8,6 +8,7 @@ export interface Shell {
   size: Size
   typed: string[]
   killed: boolean
+  running: boolean
   events: PtyEvents
 }
 
@@ -27,13 +28,14 @@ export const setup = (folders = ['/work']) => {
     platform: 'linux',
     isFolder: async path => folders.includes(path),
     spawn(cwd, size, events) {
-      const shell: Shell = { cwd, size, typed: [], killed: false, events }
+      const shell: Shell = { cwd, size, typed: [], killed: false, running: false, events }
       shells.push(shell)
       return {
         write: data => void shell.typed.push(data),
         resize(next) {
           shell.size = next
         },
+        busy: async () => shell.running,
         kill() {
           shell.killed = true
         },

@@ -1,12 +1,10 @@
 import type { AgentAccess, DeviceRecord } from '@sand/devices-contract'
 import { span, type Sig } from '@vaakx-dev/vrui'
-import { removeButton } from '../../shared/remove-button'
+import { removeAction } from '../../shared/remove'
 import { toneDot } from '../../status/dot'
 import type { Ui } from '../../ui'
 
 const accessWords: Record<AgentAccess, string> = { read: 'Reads threads', operate: 'Starts and messages threads' }
-
-const remove = (ui: Ui, device: DeviceRecord) => void ui.toasts.attempt(`Couldn’t remove ${device.name}`, ui.data.devices.remove(device.id))
 
 export const agentRow = (ui: Ui, device: Sig<DeviceRecord>) => {
   const { icon, settingsRow, statusLine } = ui.kit
@@ -21,6 +19,6 @@ export const agentRow = (ui: Ui, device: Sig<DeviceRecord>) => {
       title: span({ class: 'min-w-0 truncate' }, () => device.get().name),
       detail: statusLine({ mark: toneDot(ui.kit, () => (working() ? 'ok' : 'off'), words), text: words, title: words }),
     },
-    removeButton(ui.kit, 'Remove', () => remove(ui, device.get())),
+    ui.kit.confirmButton({ action: removeAction(ui, device.get().id) }),
   )
 }

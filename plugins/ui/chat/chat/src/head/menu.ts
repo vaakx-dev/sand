@@ -16,8 +16,8 @@ const renameThread = async (ctx: ChatContext, id: string) => {
 }
 
 const removeThread = async (ctx: ChatContext, shell: Shell, id: string) => {
-  shell.land({ forget: { kind: threadRoute, id } })
   await ctx.threads.remove(id)
+  shell.land({ forget: { kind: threadRoute, id } })
 }
 
 export const threadActions = (ctx: ChatContext, shell: Shell, id: string): MenuAction[] => {

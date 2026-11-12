@@ -75,9 +75,9 @@ export const createCatalog = (page: Page, source: string) => {
     return send(page.call(() => page.catalog.favourite(model.id, favourite)))
   }
 
-  const remove = (model: ModelInfo) => {
+  const remove = async (model: ModelInfo) => {
+    await page.call(() => page.catalog.remove(model.id))
     patch(model.id, () => undefined)
-    return send(page.call(() => page.catalog.remove(model.id)))
   }
 
   const add = async (name: string) => {
@@ -95,7 +95,7 @@ export const createCatalog = (page: Page, source: string) => {
         keep(model.id)
         void setHidden(model, !model.hidden)
       },
-      ...(model.added && { remove: () => void remove(model) }),
+      ...(model.added && { remove: () => remove(model) }),
     })
 
   effect(() => {
@@ -110,7 +110,6 @@ export const createCatalog = (page: Page, source: string) => {
     reload: load,
     setHidden,
     setFavourite,
-    remove,
     add,
     menu,
   }

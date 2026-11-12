@@ -1,4 +1,5 @@
 import { platformWords } from '../requests/words'
+import { removeAction } from '../shared/remove'
 import { dateWords } from '../shared/time'
 import { toneDot } from '../status/dot'
 import { statusWords, toneOf } from '../status/words'
@@ -29,17 +30,22 @@ const statusBlock = (ui: Ui, pc: string) => {
 }
 
 const removeSection = (ui: Ui, pc: string, close: () => void) => {
-  const { rowAction, settingsRow, settingsSection } = ui.kit
+  const { confirmButton, settingsRow, settingsSection } = ui.kit
   const name = () => ui.data.nameOf(pc)
-  const remove = async () => {
-    const done = await ui.toasts.attempt(`Couldn’t remove ${name()}`, ui.data.devices.remove(pc).then(() => true))
-    if (done) close()
-  }
+  const remove = removeAction(ui, pc)
   return settingsSection(
     {},
     settingsRow(
       { title: 'Remove PC', detail: () => `${name()} and your other devices stop trusting each other. To use it again, add it again.` },
-      rowAction({ label: 'Remove PC', danger: true, run: () => void remove() }),
+      confirmButton({
+        action: {
+          ...remove,
+          run: async () => {
+            await remove.run()
+            close()
+          },
+        },
+      }),
     ),
   )
 }

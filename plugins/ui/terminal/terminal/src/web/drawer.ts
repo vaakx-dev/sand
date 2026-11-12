@@ -68,6 +68,14 @@ const tabButtons = ({ kit }: Parts, shelf: Shelf) =>
         : null,
   )
 
+const closeTab = async (kit: Kit, shelf: Shelf, event: MouseEvent) => {
+  const tab = shelf.selected.get()
+  if (!tab) return
+  const ask = kit.confirm(event)
+  if (!(await tab.busy())) return tab.end()
+  ask({ id: 'close', label: 'Close', icon: 'trash', danger: true, confirm: 'A command is still running here. Close the terminal and stop it?', run: tab.end })
+}
+
 const head = (parts: Parts, shelf: Shelf) => {
   const { kit } = parts
   return div(
@@ -76,7 +84,7 @@ const head = (parts: Parts, shelf: Shelf) => {
     kit.iconButton({ size: 'sm', title: 'New terminal', 'aria-label': 'New terminal', onClick: shelf.add }, kit.icon('plus', 'sm')),
     span({ class: 'min-w-0 flex-1 truncate text-xs text-neutral-500' }, () => shelf.failure.get()),
     kit.iconButton(
-      { size: 'sm', title: 'Close this terminal', 'aria-label': 'Close this terminal', onClick: () => shelf.selected.get()?.end() },
+      { size: 'sm', title: 'Close this terminal', 'aria-label': 'Close this terminal', onClick: event => void closeTab(kit, shelf, event) },
       kit.icon('trash', 'sm'),
     ),
   )

@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, show, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
 import type { Feature } from '../contract'
 import type { FeatureStore } from './store'
 
@@ -52,38 +52,26 @@ const status = (features: Feature[], feature: Feature) => {
 
 const detail = (summary: string, line: string) => (line ? [div(summary), div(line)] : summary)
 
-const row = (kit: Kit, store: FeatureStore, confirming: Sig<string | undefined>, features: Feature[], { feature, depth }: Placed) => {
-  const { actionTones, controlButton, quietButton, rowWarning, settingsRow, spinner, toggleSwitch } = kit
+const row = (kit: Kit, store: FeatureStore, features: Feature[], { feature, depth }: Placed) => {
+  const { confirm, settingsRow, spinner, toggleSwitch } = kit
   const { id, kind, label, summary } = feature
   const on = kind === 'feature' ? feature.on : feature.chosen
   const warning = on ? notice(features, feature) : ''
-  const apply = (next: boolean) => {
-    confirming.set(undefined)
-    void store.apply({ [id]: next })
+  const apply = (next: boolean) => store.apply({ [id]: next })
+  const turnOff = { id: 'off', label: 'Turn off', danger: true, confirm: warning, run: () => apply(false) }
+  const flip = (event: MouseEvent) => {
+    if (warning) return confirm(event)(turnOff)
+    void apply(!on)
   }
-  const flip = () => (warning ? confirming.set(id) : apply(!on))
-  return div(
-    { class: 'contents' },
-    settingsRow(
-      { title: label, detail: detail(summary, status(features, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
-      show(() => id in (store.applying.get() ?? {}), () => spinner()),
-      toggleSwitch({ on, disabled: () => Boolean(store.applying.get()) || blocked(features, feature), 'aria-label': label, onClick: flip }),
-    ),
-    show(
-      () => confirming.get() === id,
-      () =>
-        rowWarning(
-          warning,
-          quietButton({ size: 'sm', onClick: () => confirming.set(undefined) }, 'Cancel'),
-          controlButton(actionTones.danger, { size: 'sm', onClick: () => apply(false) }, 'Turn off'),
-        ),
-    ),
+  return settingsRow(
+    { title: label, detail: detail(summary, status(features, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
+    show(() => id in (store.applying.get() ?? {}), () => spinner()),
+    toggleSwitch({ on, disabled: () => Boolean(store.applying.get()) || blocked(features, feature), 'aria-label': label, onClick: flip }),
   )
 }
 
 export const featuresPage = (kit: Kit, store: FeatureStore) => {
   const { errorText, loadingState, settingsSection } = kit
-  const confirming = sig<string | undefined>(undefined)
   const state = derive(() => JSON.stringify(store.choice.get()?.features ?? null))
   return div(
     { class: 'flex flex-col gap-6' },
@@ -97,10 +85,10 @@ export const featuresPage = (kit: Kit, store: FeatureStore) => {
       const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent)
       return div(
         { class: 'contents' },
-        tops.map(top => settingsSection({}, tree(features, top).map(item => row(kit, store, confirming, features, item)))),
+        tops.map(top => settingsSection({}, tree(features, top).map(item => row(kit, store, features, item)))),
         settingsSection(
           { title: 'Shared parts' },
-          features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, confirming, features, { feature, depth: 0 })),
+          features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, features, { feature, depth: 0 })),
         ),
       )
     }),

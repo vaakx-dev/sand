@@ -1,4 +1,5 @@
 import type { Size } from '../contract'
+import { hasChildren } from './children'
 import { shellCommand, shellEnv } from './shell'
 import type { Pc, PtyEvents } from './terminals'
 
@@ -23,6 +24,7 @@ const spawn = (cwd: string, { cols, rows }: Size, events: PtyEvents) => {
     return {
       write: (data: string) => void terminal.write(data),
       resize: (size: Size) => terminal.resize(size.cols, size.rows),
+      busy: () => hasChildren(shell.pid),
       kill() {
         terminal.close()
         shell.kill()

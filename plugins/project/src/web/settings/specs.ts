@@ -25,7 +25,7 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup, looks: Entr
       icon: 'trash',
       danger: true,
       confirm: `Delete ${group.name}? It's removed from sand on every PC. The folders stay.`,
-      run: quietly(() => ctx.projects.remove(group)),
+      run: () => ctx.projects.remove(group),
     },
   ],
 })

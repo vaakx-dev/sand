@@ -18,8 +18,11 @@ export const wireState = <T>(ctx: WireContext) => {
 
   const run = async <I>(key: string, request: Request<I, T>, input: I) => {
     busy.set(key)
-    await call(request, input)
-    busy.set(undefined)
+    try {
+      value.set(await ctx.wire.call(request, input))
+    } finally {
+      busy.set(undefined)
+    }
   }
 
   return { value, busy, load, run }

@@ -1,48 +1,33 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, p, sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild } from '@vaakx-dev/vrui'
 import type { Action, ActionId } from './actions'
+
+export type Failure = 'report' | 'raise'
 
 export interface RowModel {
   actions(): Action[]
   label(): string
   end(): string
   busy(): boolean
-  run(id: ActionId): void
+  run(id: ActionId, failure: Failure): Promise<void>
 }
 
-const confirmText = "Discard every uncommitted change in this folder, new files too? This can't be undone."
-
-const confirmView = (kit: Kit, back: () => void, discard: () => void) =>
-  div(
-    { class: 'flex max-w-64 flex-col gap-3 p-2' },
-    p({ class: 'text-sm text-neutral-100' }, confirmText),
-    div(
-      { class: 'flex justify-end gap-2' },
-      kit.secondaryAction({ size: 'sm', onClick: back, onMount: node => node.focus() }, 'Cancel'),
-      kit.controlButton(kit.actionTones.danger, { size: 'sm', onClick: discard }, 'Discard'),
-    ),
-  )
+const discard = (model: RowModel, label: string) => ({
+  id: 'discard',
+  label,
+  danger: true,
+  confirm: "Discard every uncommitted change in this folder, new files too? This can't be undone.",
+  run: () => model.run('discard', 'raise'),
+})
 
 const menu = (kit: Kit, model: RowModel, close: () => void) => {
-  const confirming = sig(false)
-  const run = (id: ActionId) => {
+  const choose = (action: Action) => (event: MouseEvent) => {
+    if (action.id === 'discard') kit.confirm(event)(discard(model, action.label))
+    else void model.run(action.id, 'report')
     close()
-    model.run(id)
   }
-  const item = (action: Action) =>
-    kit.menuItem(
-      {
-        role: 'menuitem',
-        tone: action.id === 'discard' ? 'danger' : undefined,
-        onClick: () => (action.id === 'discard' ? confirming.set(true) : run(action.id)),
-      },
-      action.label,
-    )
-  return dynamicChild(confirming, asking =>
-    asking
-      ? confirmView(kit, () => confirming.set(false), () => run('discard'))
-      : div({ class: 'flex flex-col' }, ...model.actions().map(item)),
-  )
+  const item = (action: Action) => kit.menuItem({ role: 'menuitem', tone: action.id === 'discard' ? 'danger' : undefined, onClick: choose(action) }, action.label)
+  return div({ class: 'flex flex-col' }, ...model.actions().map(item))
 }
 
 export const gitRow = (kit: Kit, model: RowModel) => {

@@ -10,14 +10,23 @@ const history = (plugin: PluginEntry, actions: RowActions, open: Sig<boolean>): 
     ? [{ id: 'history', label: open.get() ? 'Hide history' : 'Show history', icon: 'clock', group: 'history', run: open.toggle() }]
     : []
 
+export const restoreAction = (plugin: PluginEntry, actions: RowActions): MenuAction => ({
+  id: 'restore',
+  label: 'Use built-in',
+  icon: 'reload',
+  group: 'change',
+  danger: true,
+  confirm: `Delete your copy of ${plugin.name} and use the built-in?`,
+  run: () => actions.restore(plugin),
+})
+
 const change = (plugin: PluginEntry, actions: RowActions): MenuAction[] => {
   const whenIdle = (run: () => void) => () => {
     if (!actions.busy()) run()
   }
   const found: MenuAction[] = []
   if (plugin.origin === 'builtin') found.push({ id: 'customise', label: 'Customise', icon: 'duplicate', group: 'change', run: whenIdle(() => actions.customise(plugin)) })
-  if (plugin.origin === 'customised')
-    found.push({ id: 'restore', label: 'Use built-in', icon: 'reload', group: 'change', danger: true, run: whenIdle(() => actions.restore(plugin)) })
+  if (plugin.origin === 'customised') found.push(restoreAction(plugin, actions))
   if (plugin.changed) found.push({ id: 'keep', label: 'Keep mine', icon: 'check', group: 'change', run: whenIdle(() => actions.keep(plugin)) })
   return found
 }
