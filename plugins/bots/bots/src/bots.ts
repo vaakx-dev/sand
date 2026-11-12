@@ -35,12 +35,13 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
   const entries = createEntries(db)
   const jobs = createJobs(db)
   const statuses = new Map<string, BotStatus>()
+  const folderOf = (id: string) => join(root, id)
 
   const summary = (bot: Bot): BotSummary => {
     const last = lastLine(entries.newest(bot.id, 'message', scanned), entries.newest(bot.id, gistEntry, 1))
     const spent = billedCost(entries.usage(bot.id, monthStart()), llm)
     const hold = holdOf(bot, spent)
-    return { ...bot, status: statuses.get(bot.id) ?? 'idle', spent, ...(hold && { hold }), ...(last ? { last } : {}) }
+    return { ...bot, folder: folderOf(bot.id), status: statuses.get(bot.id) ?? 'idle', spent, ...(hold && { hold }), ...(last ? { last } : {}) }
   }
 
   const known = (id: string) => {
@@ -132,6 +133,6 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
       page: range => entries.page(known(id).id, range),
       entry: entry => entries.entry(known(id).id, entry),
     }),
-    folder: id => join(root, id),
+    folder: folderOf,
   }
 }

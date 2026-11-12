@@ -38,7 +38,7 @@ export const openAt = async (context: BrowserContext, url: string, { width, heig
   const page = await context.newPage()
   await page.setViewportSize({ width, height })
   await page.goto(url)
-  await page.getByText('Fixtures').filter({ visible: true }).first().waitFor()
+  await page.getByText(/^(Fixtures|Fixture plain)$/).filter({ visible: true }).first().waitFor()
   return { page, cdp: await context.newCDPSession(page) }
 }
 

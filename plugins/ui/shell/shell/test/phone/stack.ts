@@ -2,12 +2,7 @@ import type { Shell } from '@sand/ui-shell/contract'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { Browser, BrowserContext } from 'playwright'
 import { startSandbox } from './sand'
-import { openAt, phones, screen, state, swipe, tap, touchBrowser, until, type Phone } from './touch'
-
-const installedApp = () => {
-  const query = matchMedia.bind(window)
-  window.matchMedia = media => query(media === '(display-mode: standalone)' ? 'all' : media)
-}
+import { drawer, openAt, phones, screen, state, swipe, tap, touchBrowser, until, type Phone } from './touch'
 
 const flick = { steps: 4, gapMs: 0 }
 
@@ -39,7 +34,7 @@ describe.each(phones)('on a $name', size => {
   afterAll(() => phone.page.close())
 
   const pushPlain = async () => {
-    await phone.page.getByRole('button', { name: /Plain screen/ }).click()
+    await phone.page.getByRole('button', { name: /Plain screen/ }).first().click()
     expect(await screen(phone.page, 'fixture/plain')).toBe('fixture/plain')
   }
 
@@ -79,45 +74,91 @@ describe.each(phones)('on a $name', size => {
     expect(page.url()).toBe(before)
   })
 
-  test('a swipe right pops a pushed screen, and a short one springs back', async () => {
-    const { page } = phone
-    await pushPlain()
-    await swipe(phone, [60, mid()], [110, mid()])
-    expect(await screen(page)).toBe('fixture/plain')
-    await swipe(phone, [60, mid()], [size.width - 30, mid()])
-    expect(await screen(page, 'home')).toBe('home')
-    await swipe(phone, [60, mid()], [size.width - 30, mid()], flick)
-    expect(await screen(page)).toBe('home')
-  })
+  const scrolledToEnd = () =>
+    phone.page.evaluate(() => {
+      const list = [...document.querySelectorAll('div.overflow-y-auto')].find(node => node.textContent?.includes('Line 39'))
+      list?.scrollTo({ top: list.scrollHeight })
+    })
 
-  test('a swipe left never goes forward', async () => {
+  test('a swipe right slides the sidebar over the chat, and a swipe left or a tap outside closes it in place', async () => {
     const { page } = phone
     await pushPlain()
+    await swipe(phone, [60, mid()], [100, mid()])
+    expect(await drawer(page, false)).toBe(false)
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
+    expect(await drawer(page, true)).toBe(true)
+    expect(await screen(page)).toBe('fixture/plain')
+    await swipe(phone, [250, mid()], [20, mid()])
+    expect(await drawer(page, false)).toBe(false)
+    expect(await screen(page)).toBe('fixture/plain')
+    await swipe(phone, [60, mid()], [size.width - 30, mid()], flick)
+    expect(await drawer(page, true)).toBe(true)
+    await page.mouse.click(size.width - 20, mid())
+    expect(await drawer(page, false)).toBe(false)
+    expect(await screen(page)).toBe('fixture/plain')
     await tap(page, 'Back')
     expect(await screen(page, 'home')).toBe('home')
+  })
+
+  test('a row in the slid-over sidebar opens its chat', async () => {
+    const { page } = phone
+    await pushPlain()
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
+    expect(await drawer(page, true)).toBe(true)
+    await page.getByRole('button', { name: /Split screen/ }).filter({ visible: true }).last().click()
+    expect(await screen(page, 'fixture/split')).toBe('fixture/split')
+    expect(await drawer(page, false)).toBe(false)
+    await page.goto(`${origin}/?keep=1`)
+    await page.getByText('Fixtures').filter({ visible: true }).first().waitFor()
+  })
+
+  test('a swipe left pulls in the details, a swipe right puts them away, and a short one springs back', async () => {
+    const { page } = phone
+    await pushPlain()
     await swipe(phone, [size.width - 60, mid()], [size.width - 110, mid()])
+    expect(await screen(page)).toBe('fixture/plain')
+    await swipe(phone, [size.width - 60, mid()], [30, mid()])
+    expect(await screen(page, 'aside/fixture-aside')).toBe('aside/fixture-aside')
+    expect(await page.getByText('Details content').filter({ visible: true }).isVisible()).toBe(true)
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
+    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    await tap(page, 'Back')
+  })
+
+  test('a swipe up at the end of a chat pulls up the terminal, and a swipe down puts it away', async () => {
+    const { page } = phone
+    await pushPlain()
+    await swipe(phone, [size.width / 2, mid()], [size.width / 2, mid() - 200])
+    expect(await screen(page)).toBe('fixture/plain')
+    await scrolledToEnd()
+    await swipe(phone, [size.width / 2, mid()], [size.width / 2, 60])
+    expect(await screen(page, 'aside/fixture-drawer')).toBe('aside/fixture-drawer')
+    await swipe(phone, [size.width / 2, 120], [size.width / 2, size.height - 60])
+    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    await tap(page, 'Back')
+  })
+
+  test('swipes from the right and bottom edges belong to the phone', async () => {
+    const { page } = phone
+    await pushPlain()
+    await scrolledToEnd()
+    await swipe(phone, [size.width - 4, mid()], [30, mid()])
+    expect(await screen(page)).toBe('fixture/plain')
+    await swipe(phone, [size.width / 2, size.height - 4], [size.width / 2, 60])
+    expect(await screen(page)).toBe('fixture/plain')
+    await tap(page, 'Back')
+  })
+
+  test('a swipe on home does nothing', async () => {
+    const { page } = phone
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
     expect(await screen(page)).toBe('home')
+    expect(await drawer(page)).toBe(false)
     await swipe(phone, [size.width - 60, mid()], [30, mid()])
     expect(await screen(page)).toBe('home')
   })
 
-  test('the screen edge belongs to the browser in a tab, and swipes back in the installed app', async () => {
-    await pushPlain()
-    await swipe(phone, [4, mid()], [size.width - 30, mid()])
-    expect(await screen(phone.page)).toBe('fixture/plain')
-
-    const page = await context.newPage()
-    await page.addInitScript(installedApp)
-    await page.setViewportSize(size)
-    await page.goto(phone.page.url())
-    await page.getByText('Fixture plain').waitFor()
-    await swipe({ page, cdp: await context.newCDPSession(page) }, [4, mid()], [size.width - 30, mid()])
-    expect(await screen(page, 'home')).toBe('home')
-    await page.close()
-    await tap(phone.page, 'Back')
-  })
-
-  test('a sideways swipe over a wide table scrolls the table, then goes back', async () => {
+  test('a sideways swipe over a wide table scrolls the table first', async () => {
     const { page } = phone
     await pushPlain()
     const table = page.locator('table').filter({ visible: true }).first()
@@ -126,13 +167,12 @@ describe.each(phones)('on a $name', size => {
     const scrolled = () => table.evaluate(node => node.parentElement!.scrollLeft)
     await swipe(phone, [size.width - 60, y], [60, y])
     expect(await scrolled()).toBeGreaterThan(0)
-    for (let swipes = 0; swipes < 4 && (await scrolled()) > 1; swipes++) {
-      await swipe(phone, [60, y], [size.width - 60, y])
-      expect(await screen(page)).toBe('fixture/plain')
-    }
-    expect(await scrolled()).toBeLessThanOrEqual(1)
-    await swipe(phone, [60, y], [size.width - 30, y])
-    expect(await screen(page, 'home')).toBe('home')
+    expect(await screen(page)).toBe('fixture/plain')
+    const before = await scrolled()
+    await swipe(phone, [60, y], [size.width - 60, y])
+    expect(await scrolled()).toBeLessThan(before)
+    expect(await drawer(page)).toBe(false)
+    await tap(page, 'Back')
   })
 
   test('a swipe started while editing text never fires', async () => {
@@ -142,19 +182,19 @@ describe.each(phones)('on a $name', size => {
     await field.click()
     const box = (await field.boundingBox())!
     await swipe(phone, [box.x + 10, box.y + box.height / 2], [size.width - 30, box.y + box.height / 2])
+    expect(await drawer(page)).toBe(false)
+    await swipe(phone, [box.x + box.width - 10, box.y + box.height / 2], [30, box.y + box.height / 2])
     expect(await screen(page)).toBe('fixture/plain')
     await tap(page, 'Back')
   })
 
-  test('the header button opens the card as a sheet, and back closes it', async () => {
+  test('the header button opens the details as a screen, and back closes it', async () => {
     const { page } = phone
     await pushPlain()
     await tap(page, 'Fixture details')
-    const sheet = page.getByRole('dialog', { name: 'Fixture details' })
-    await sheet.waitFor()
-    expect(await sheet.getByText('Details content').isVisible()).toBe(true)
+    expect(await screen(page, 'aside/fixture-aside')).toBe('aside/fixture-aside')
+    expect(await page.getByText('Details content').filter({ visible: true }).isVisible()).toBe(true)
     await page.goBack()
-    expect(await until(() => sheet.count(), count => count === 0)).toBe(0)
     expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
     await tap(page, 'Back')
     expect(await screen(page, 'home')).toBe('home')

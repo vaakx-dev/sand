@@ -188,6 +188,8 @@ export interface ChipSource {
 
 export type Place = 'overlay' | 'top' | 'home'
 
+export type Way = 'left' | 'right' | 'up' | 'down'
+
 export interface Swipe {
   move(dx: number): void
   end(velocity: number): void
@@ -210,7 +212,7 @@ export interface Shell {
   chip(source: ChipSource): Dispose
   chipBar(scope: ChipScope): HTMLElement
   mount(where: Place, view: HTMLElement, order?: number): Dispose
-  swipe(): Swipe | undefined
+  swipe(way: Way): Swipe | undefined
 }
 
 export const shell = service<Shell>('shell')

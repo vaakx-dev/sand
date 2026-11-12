@@ -1,4 +1,4 @@
-import type { Swipe } from '@sand/ui-shell/contract'
+import type { Swipe, Way } from '@sand/ui-shell/contract'
 import { el, listen, type Props } from '@vaakx-dev/vrui'
 import { hostContext, openImage, openLink, pressKey, shortcutKeys, showPage, sizeChanged, swipeEnd, swipeMove, swipeStart } from '../../page/protocol'
 
@@ -6,7 +6,7 @@ interface Message {
   jsonrpc?: unknown
   id?: unknown
   method?: unknown
-  params?: { height?: unknown; url?: unknown; dx?: unknown; velocity?: unknown; src?: unknown; name?: unknown; key?: unknown }
+  params?: { height?: unknown; url?: unknown; delta?: unknown; way?: unknown; velocity?: unknown; src?: unknown; name?: unknown; key?: unknown }
 }
 
 export interface FrameEvents {
@@ -14,7 +14,7 @@ export interface FrameEvents {
   open(url: string): void
   image(src: string, name: string): void
   key(key: string): void
-  swipe?(): Swipe | undefined
+  swipe?(way: Way): Swipe | undefined
 }
 
 const isWebUrl = (url: unknown): url is string => typeof url === 'string' && /^https?:\/\//i.test(url)
@@ -32,11 +32,15 @@ export const sendTheme = (frame: HTMLIFrameElement, css: string) => post(frame, 
 
 export const sendKeys = (frame: HTMLIFrameElement, keys: string[]) => post(frame, { method: shortcutKeys, params: { keys } })
 
-const swipeRelay = (begin: () => Swipe | undefined) => {
+const WAYS: readonly unknown[] = ['left', 'right', 'up', 'down'] satisfies Way[]
+
+const isWay = (value: unknown): value is Way => WAYS.includes(value)
+
+const swipeRelay = (begin: (way: Way) => Swipe | undefined) => {
   let swipe: Swipe | undefined
   return ({ method, params }: Message) => {
-    if (method === swipeStart) swipe = begin()
-    if (method === swipeMove && typeof params?.dx === 'number') swipe?.move(params.dx)
+    if (method === swipeStart) swipe = isWay(params?.way) ? begin(params.way) : undefined
+    if (method === swipeMove && typeof params?.delta === 'number') swipe?.move(params.delta)
     if (method === swipeEnd && typeof params?.velocity === 'number') {
       swipe?.end(params.velocity)
       swipe = undefined
@@ -45,7 +49,7 @@ const swipeRelay = (begin: () => Swipe | undefined) => {
 }
 
 export const listenToFrame = (frame: HTMLIFrameElement, events: FrameEvents) => {
-  const relaySwipe = swipeRelay(() => events.swipe?.())
+  const relaySwipe = swipeRelay(way => events.swipe?.(way))
   return listen<MessageEvent>(window, 'message', ({ source, data }) => {
     const message = data as Message | null
     if (source !== frame.contentWindow || message?.jsonrpc !== '2.0') return

@@ -1,4 +1,5 @@
 export { editing, selecting } from './busy'
-export { direction } from './direction'
+export { alongWay, direction } from './direction'
+export { fromSystemEdge } from './edge'
 export { follow } from './follow'
 export { canScrollToward } from './scroll'

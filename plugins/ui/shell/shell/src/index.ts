@@ -60,7 +60,7 @@ export default definePlugin({
         const route = model.current.get()
         untrack(() => ctx.emit(shellChange, state, route))
       })
-      swipeGesture(ctx.kit, () => edgeSwipe(model))
+      swipeGesture(ctx.kit, way => edgeSwipe(model, way))
     })
     ctx.effect(() => onAddressChange(() => model.follow()))
     ctx.effect(() => mount(byId('stage'), owned(ctx, () => shellView(model))))
@@ -86,7 +86,7 @@ export default definePlugin({
       chip: source => model.chips.add(source),
       chipBar: scope => chipBar(ctx.kit, model.chips.items, scope),
       mount: (where, view, order = 0) => model.places[where].add({ view, order }),
-      swipe: () => edgeSwipe(model),
+      swipe: way => edgeSwipe(model, way),
     }
     ctx.provide(shell, host)
   },

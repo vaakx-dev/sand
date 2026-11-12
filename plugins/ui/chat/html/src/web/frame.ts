@@ -39,7 +39,7 @@ const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, re
       loads.update(count => count + 1)
     },
   })
-  const connection = connectPage(ctx, frame, { resize, swipe: () => ctx.get(shell)?.swipe() })
+  const connection = connectPage(ctx, frame, { resize, swipe: way => ctx.get(shell)?.swipe(way) })
 
   const retry = () => {
     if (!failed.get()) return
