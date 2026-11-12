@@ -85,10 +85,8 @@ export const detailSheet = (kit: Kit, parts: DetailParts): SheetSpec => {
   const guests = people(event)
   return {
     label: event.title,
-    head: () => [
-      kit.sheetTitle(event.title),
-      writable ? kit.iconButton({ title: 'Edit', 'aria-label': 'Edit', surface: 'raised', onClick: edit }, kit.icon('pencil')) : null,
-    ],
+    title: event.title,
+    ...(writable && { head: () => kit.iconButton({ title: 'Edit', 'aria-label': 'Edit', surface: 'raised', onClick: edit }, kit.icon('pencil')) }),
     body: () => [
       line(kit, 'clock', spanLabel(event), event.recurrence ? quiet(repeatText(event.recurrence.rule)) : null),
       event.location ? line(kit, 'pin', event.location) : null,

@@ -1,9 +1,9 @@
 import { collectScope, derive, disposeAll, span, untrack, type Child } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { screenKey } from './address'
-import type { Route, RouteSpec, ScreenNav } from './contract'
+import type { BackTo, Route, RouteSpec, ScreenNav } from './contract'
 
-type Title = (text: string) => HTMLElement
+type Title = (text: string | (() => string)) => HTMLElement
 
 export interface Nav {
   label: string
@@ -16,13 +16,18 @@ export interface Built {
   head: HTMLElement
   main: HTMLElement
   nav?: Nav
+  back?: BackTo
   split: boolean
   scope: Dispose[]
 }
 
 const navOf = ({ label, render }: ScreenNav): Nav => ({ label, body: render() })
 
-const headOf = (head: Child, title: Title) => (typeof head === 'string' ? (head ? title(head) : null) : head)
+const headOf = (head: Child, title: Title) => {
+  if (typeof head === 'string') return head ? title(head) : null
+  if (typeof head === 'function') return title(head as () => string)
+  return head
+}
 
 export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, routeOf: (key: string) => Route | undefined, title: Title) => {
   const built = new Map<string, Built>()
@@ -41,6 +46,7 @@ export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, ro
         head: span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, headOf(screen.head(), title)),
         main: screen.main(),
         ...(screen.nav && { nav: navOf(screen.nav) }),
+        ...(screen.back && { back: screen.back }),
         split: Boolean(screen.split),
       }
     })

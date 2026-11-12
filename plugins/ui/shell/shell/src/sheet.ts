@@ -1,5 +1,5 @@
-import type { Kit } from '@sand/ui-kit/contract'
-import { div, list, type Child } from '@vaakx-dev/vrui'
+import type { Kit, Surface } from '@sand/ui-kit/contract'
+import { div, list, show, type Child } from '@vaakx-dev/vrui'
 import type { SheetLook, SheetSpec } from './contract'
 import type { Model } from './model'
 
@@ -12,13 +12,25 @@ const frameProps = (spec: SheetSpec, body: string) =>
     ? { role: 'alertdialog', 'aria-modal': 'true', 'aria-label': spec.label, 'aria-describedby': body, tabIndex: -1, class: 'outline-none', onMount: (node: HTMLElement) => node.focus() }
     : { 'aria-label': spec.label }
 
-const headRow = (kit: Kit, spec: SheetSpec, close: () => void) => {
-  const shown = spec.closeButton !== false
-  if (!spec.head && !shown) return null
+const headRow = (kit: Kit, spec: SheetSpec, close: () => void, surface: Surface | undefined = 'raised') => {
+  const closes = spec.closeButton !== false
+  if (spec.title === undefined && !spec.head && !spec.back && !closes) return null
+  const back = () => spec.back?.()
   return div(
-    { class: 'flex min-h-12 shrink-0 items-center gap-2 overflow-hidden py-2 pr-2 pl-4', style: kit.stableGutter },
-    div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, spec.head?.(close) ?? null),
-    shown ? kit.closeButton({ surface: 'raised', onClick: close }) : null,
+    { class: ['flex min-h-12 shrink-0 items-center gap-2 overflow-hidden py-2 pr-2', () => (back() ? 'pl-2' : 'pl-4')], style: kit.stableGutter },
+    spec.back
+      ? show(
+          () => Boolean(back()),
+          () => kit.backButton({ surface, onClick: () => back()?.() }),
+        )
+      : null,
+    spec.title === undefined ? null : kit.sheetTitle(spec.title),
+    spec.title === undefined
+      ? div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, spec.head?.(close) ?? null)
+      : spec.head
+        ? div({ class: 'flex shrink-0 items-center gap-2' }, spec.head(close))
+        : null,
+    closes ? kit.closeButton({ surface, onClick: close }) : null,
   )
 }
 
@@ -43,7 +55,7 @@ const searchSheet: SheetView = (kit, spec, close) =>
   kit.screenOverlay(close, kit.sheet({ phone: 'screen', size: spec.size, 'aria-label': spec.label, ...keysOf(spec) }, spec.head?.(close) ?? null, spec.body(close)))
 
 const viewerSheet: SheetView = (kit, spec, close) =>
-  kit.viewerShell({ label: spec.label, close, ...keysOf(spec) }, spec.head?.(close) ?? null, spec.body(close))
+  kit.viewerShell({ label: spec.label, close, ...keysOf(spec) }, headRow(kit, spec, close, undefined), spec.body(close))
 
 const views: Record<SheetLook, SheetView> = { form: formSheet, bare: bareSheet, list: listSheet, search: searchSheet, viewer: viewerSheet }
 

@@ -5,7 +5,7 @@ export const pageTitleLook = 'min-w-0 text-xl font-semibold tracking-tight text-
 
 export const pageTitle = (...children: Child[]) => h1({ class: pageTitleLook }, ...children)
 
-const barTitleLook = 'min-w-0 flex-1 truncate text-sm font-medium text-neutral-100'
+export const barTitleLook = 'min-w-0 flex-1 truncate text-sm font-medium text-neutral-100'
 
 export const barTitle = (...children: Child[]) => h1({ class: barTitleLook }, ...children)
 

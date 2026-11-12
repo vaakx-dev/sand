@@ -52,14 +52,12 @@ const removeSection = (ui: Ui, pc: string, close: () => void) => {
 }
 
 export const detailsSheet = (ui: Ui, pc: string, close: () => void): SheetSpec => {
-  const { primaryAction, sheetTitle } = ui.kit
   const name = () => ui.data.nameOf(pc)
   const home = pc === ui.data.homeId()
   return {
     label: name,
-    head: () => sheetTitle(name),
+    title: name,
     body: () => [nameField(ui, pc), statusBlock(ui, pc), routesSection(ui, pc), ...pcSwitches(ui, pc), home ? null : removeSection(ui, pc, close)],
-    foot: () => primaryAction({ onClick: close }, 'Done'),
     onClose: close,
   }
 }

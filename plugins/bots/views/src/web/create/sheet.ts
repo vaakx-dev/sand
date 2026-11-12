@@ -31,7 +31,7 @@ export const openNewBot = (parts: Parts) => {
 
   parts.ctx.shell.sheet({
     label: 'New bot',
-    head: () => kit.barTitle('New bot'),
+    title: 'New bot',
     body: () =>
       div(
         { class: 'flex flex-col gap-4 pt-2' },

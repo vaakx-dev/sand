@@ -40,7 +40,7 @@ const nameField = (parts: Parts, id: string, bot: Bot) => {
             if (event.key === 'Escape') editing.set(false)
           },
         })
-      : kit.plainButton({ title: 'Rename', class: 'min-w-0 rounded-sm', onClick: start }, kit.barTitle(() => nameOf(bot))),
+      : kit.plainButton({ title: 'Rename', class: 'min-w-0 rounded-sm', onClick: start }, kit.sheetTitle(() => nameOf(bot))),
   )
 }
 

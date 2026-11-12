@@ -37,7 +37,7 @@ const fileInput = (model: CalendarModel, report: (error: unknown) => void) => {
 const ownCalendar = (model: CalendarModel) => model.writable.get().find(calendar => calendar.provider === 'sand' && calendar.primary)
 
 const viewMenu = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTMLInputElement) => {
-  const { choiceItem, dropdown, icon, menuItem, menuSeparator, navButton } = kit
+  const { choiceItem, dropdown, menuItem, menuSeparator } = kit
   const run = (close: () => void, action: () => void) => () => {
     close()
     action()
@@ -49,12 +49,8 @@ const viewMenu = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTML
   const heading = () => title(model, parts.phone())
   return dropdown({
     class: 'flex-1',
-    trigger: (press, open) =>
-      navButton(
-        { active: open, title: 'Views and calendar files', ...press },
-        kit.barTitle(heading),
-        span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
-      ),
+    trigger: press =>
+      kit.titleButton({ title: 'Views and calendar files', ...press }, heading),
     items: close => [
       ...modes.map(({ value, label, narrow }) =>
         choiceItem({ selected: () => model.mode.get() === value, onClick: run(close, () => model.show(value)) }, span({ class: 'flex-1' }, model.narrow.get() ? narrow : label)),

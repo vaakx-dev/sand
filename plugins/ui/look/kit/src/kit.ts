@@ -1,4 +1,5 @@
 import { actionTones, controlButton, iconButton, linkButton, navButton, plainButton, primaryAction, quietButton, rowButton, secondaryAction } from './buttons/button'
+import { backButton } from './buttons/back'
 import { closeButton } from './buttons/close'
 import { copyButton } from './buttons/copy'
 import { floatButton } from './buttons/float'
@@ -12,10 +13,11 @@ import { contextMenu, menuLayer } from './context-menu/menu'
 import { editable } from './fields/editable'
 import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
 import { field } from './fields/labelled'
-import { appIcon, showSideButton, sideHead } from './heads/app-icon'
+import { appIcon } from './heads/app-icon'
 import { pageBody } from './heads/page-body'
-import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
+import { pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
+import { titleButton } from './heads/title-button'
 import { barTitle, colorLabel, countMark, metaLine, monoMeta, pageTitle, pathLabel, rowName, rowTitle, secondaryText, sectionTitle, sheetTitle, shortcutHint } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
@@ -59,8 +61,8 @@ import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
-import { overlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
-import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
+import { overlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetStep } from './sheets/overlay'
+import { viewerShell, zoomControls } from './sheets/viewer'
 import { emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
@@ -104,6 +106,7 @@ export const kit = {
   choiceChips,
   choiceItem,
   choiceList,
+  backButton,
   closeButton,
   codeBlock,
   colorLabel,
@@ -141,7 +144,6 @@ export const kit = {
   gesture,
   groupHeading,
   hasOpenLayer,
-  headTitle,
   icon,
   iconButton,
   isMac,
@@ -224,7 +226,6 @@ export const kit = {
   sheet,
   sheetBody,
   sheetFoot,
-  sheetHead,
   sheetStep,
   sheetText: secondaryText,
   sheetTitle,
@@ -233,10 +234,8 @@ export const kit = {
   cardItem,
   cardRule,
   shortcutHint,
-  showSideButton,
   shrinkBadge,
   sideColumn,
-  sideHead,
   spinner,
   stableGutter,
   starMark,
@@ -249,6 +248,7 @@ export const kit = {
   style,
   tab,
   tabStrip,
+  titleButton,
   textArea,
   textInput,
   textRule,
@@ -259,7 +259,6 @@ export const kit = {
   toolCard,
   scrollFade,
   topFade,
-  viewerBar,
   viewerShell,
   waitingLine,
   withDot,

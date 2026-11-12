@@ -1,5 +1,5 @@
-import { div, h2, read, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
-import { pageTitleLook, secondaryText, sheetTitle } from './text'
+import { div, read, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import { secondaryText } from './text'
 
 export const pageColumn = 'mx-auto w-full max-w-3xl'
 
@@ -15,4 +15,3 @@ export const pageHead = (caption?: Child, action?: Child) =>
 export const paneHead = ({ led = false, class: extra, ...props }: PaneHeadProps, ...children: Child[]) =>
   div({ ...props, class: ['flex h-12 shrink-0 items-center gap-2 pr-3', () => (read(led) ? 'pl-2' : 'pl-4'), extra] }, ...children)
 
-export const headTitle = (level: 1 | 2, title: Child) => (level === 1 ? h2({ class: [pageTitleLook, 'flex-1 truncate'] }, title) : sheetTitle(title))

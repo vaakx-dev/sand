@@ -79,7 +79,7 @@ const closeTab = async (kit: Kit, shelf: Shelf, event: MouseEvent) => {
 const head = (parts: Parts, shelf: Shelf) => {
   const { kit } = parts
   return div(
-    { class: 'flex h-8 shrink-0 items-center gap-1 px-2' },
+    { class: 'flex min-w-0 flex-1 items-center gap-1' },
     tabButtons(parts, shelf),
     kit.iconButton({ size: 'sm', title: 'New terminal', 'aria-label': 'New terminal', onClick: shelf.add }, kit.icon('plus', 'sm')),
     span({ class: 'min-w-0 flex-1 truncate text-xs text-neutral-500' }, () => shelf.failure.get()),
@@ -96,7 +96,6 @@ const screen = (tab: Tab) =>
 const shelfView = (parts: Parts, shelf: Shelf) =>
   div(
     { class: 'flex min-h-0 flex-1 flex-col' },
-    head(parts, shelf),
     dynamicChild(shelf.selected, tab => (tab ? screen(tab) : null)),
     show(
       () => parts.shell.state() === 'phone',
@@ -106,19 +105,20 @@ const shelfView = (parts: Parts, shelf: Shelf) =>
 
 const keyOf = (subject: Subject | undefined) => (subject?.cwd ? [subject.session, subject.device, subject.cwd].join('\u0000') : '')
 
-export const drawer = (parts: Parts, route: () => Route) => {
+const forShelf = (parts: Parts, route: () => Route, view: (parts: Parts, shelf: Shelf) => HTMLElement) => {
   const subject = () => parts.shell.subjectOf(route())
-  return div(
-    { class: 'flex min-h-0 flex-1 flex-col' },
-    dynamicChild(
-      derive(() => keyOf(subject())),
-      key => {
-        const found = key ? subject() : undefined
-        if (!found?.cwd) return null
-        const shelf = parts.shelfOf({ ...found, cwd: found.cwd })
-        shelf.show()
-        return shelfView(parts, shelf)
-      },
-    ),
+  return dynamicChild(
+    derive(() => keyOf(subject())),
+    key => {
+      const found = key ? subject() : undefined
+      if (!found?.cwd) return null
+      const shelf = parts.shelfOf({ ...found, cwd: found.cwd })
+      shelf.show()
+      return view(parts, shelf)
+    },
   )
 }
+
+export const drawerHead = (parts: Parts, route: () => Route) => forShelf(parts, route, head)
+
+export const drawer = (parts: Parts, route: () => Route) => div({ class: 'flex min-h-0 flex-1 flex-col' }, forShelf(parts, route, shelfView))

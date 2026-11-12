@@ -6,7 +6,7 @@ import { sand, type Theme, theme } from '@sand/ui-theme/contract'
 import xtermCss from '@xterm/xterm/css/xterm.css' with { type: 'text' }
 import { definePlugin } from 'drydock'
 import { terminalColors } from './colors'
-import { drawer } from './drawer'
+import { drawer, drawerHead } from './drawer'
 import { onPageShown } from './integrations/page'
 import { createShelf, type Shelf } from './shelf'
 
@@ -56,6 +56,7 @@ export default definePlugin({
         icon: 'term',
         order: 30,
         shows: route => Boolean(ctx.shell.subjectOf(route)?.cwd),
+        head: route => drawerHead({ kit: ctx.kit, shell: ctx.shell, shelfOf }, route),
         render: route => drawer({ kit: ctx.kit, shell: ctx.shell, shelfOf }, route),
       }),
     )

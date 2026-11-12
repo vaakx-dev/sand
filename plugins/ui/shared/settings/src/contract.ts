@@ -10,6 +10,7 @@ export interface SettingsPage {
   group?: SettingsGroup
   order?: number
   parent?: string
+  back?(): (() => void) | undefined
   dot?: () => boolean
   render?(): HTMLElement
 }

@@ -16,7 +16,6 @@ export const ask = (kit: Kit, frame: Shell, cancels: Set<() => void>, title: str
     cancels.add(cancel)
     const close = openSheet(
       frame,
-      kit,
       { title, size: 'md', close: cancel, keydown: keys({ Escape: cancel }, { stop: true }) },
       form(
         { class: 'flex min-h-0 flex-col', onSubmit: preventThen(() => finish(text.get())) },

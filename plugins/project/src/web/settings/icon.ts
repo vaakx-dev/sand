@@ -94,7 +94,7 @@ export const iconSheet = (ctx: ProjectsContext, changes: Pulse, picking: Sig<Pic
       frame.sheet({
         label: title,
         size: 'sm',
-        head: () => ctx.kit.sheetTitle(title),
+        title,
         body: () => dynamicChild(group, found => (found ? div({ class: 'contents' }, ...iconPicker(ctx, found, picking)) : null)),
         onClose: () => picking.set(undefined),
       }),

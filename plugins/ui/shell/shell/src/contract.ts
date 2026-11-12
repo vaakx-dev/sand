@@ -133,8 +133,11 @@ export interface ScreenNav {
   render(): HTMLElement
 }
 
+export type BackTo = () => (() => void) | undefined
+
 export interface Screen {
   head(): Child
+  back?: BackTo
   main(): HTMLElement
   nav?: ScreenNav
   split?: boolean
@@ -153,6 +156,8 @@ export type SheetLook = 'form' | 'bare' | 'list' | 'search' | 'viewer'
 
 export interface SheetSpec {
   label: MaybeReactive<string>
+  title?: MaybeReactive<string>
+  back?: BackTo
   look?: SheetLook
   size?: SheetSize
   closeButton?: false

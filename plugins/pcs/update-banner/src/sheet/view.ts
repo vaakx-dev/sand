@@ -23,7 +23,7 @@ const runTitle = (fleet: Fleet) => {
 }
 
 export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void): SheetSpec => {
-  const { loadingState, openTab, quietButton, sheetBody, sheetTitle } = kit
+  const { loadingState, openTab, quietButton, sheetBody } = kit
   const mode = derive(() => modeOf(fleet))
   const chooseTitle = () => {
     const target = fleet.target.get()
@@ -34,13 +34,12 @@ export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void): SheetSpe
   return {
     label: 'Update sand',
     look: 'bare',
-    head: () => [
-      sheetTitle(title),
+    title,
+    head: () =>
       show(
         () => mode.get() === 'choose' && !!notes(),
         () => quietButton({ surface: 'raised', onClick: () => openTab(notes() ?? '') }, 'Release notes'),
       ),
-    ],
     body: () =>
       dynamicChild(mode, current => {
         if (current === 'run') return progressBody(kit, fleet, close)

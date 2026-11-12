@@ -1,5 +1,5 @@
 import type { Pulse } from '@sand/reactive'
-import { div, dynamicChild, show } from '@vaakx-dev/vrui'
+import { div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import { defaultsSection } from './defaults'
 import { favouritesPage } from './favourites'
@@ -24,11 +24,11 @@ const subpage = (page: Page) => {
   return topPage(page)
 }
 
-export const modelsPage = (ctx: PanelContext, changes: Pulse, slots: Slots) => {
+export const modelsPage = (ctx: PanelContext, changes: Pulse, slots: Slots, view: Sig<View>) => {
   const { errorText } = ctx.kit
-  const page = createPage(ctx, changes, slots)
+  const page = createPage(ctx, changes, slots, view)
   return div(
-    { class: 'flex flex-col gap-6' },
+    { class: 'flex flex-col gap-6', onMount: () => () => view.set({ kind: 'top' }) },
     show(page.problem.map(Boolean), () => div({ class: 'px-1' }, errorText(page.problem))),
     dynamicChild(page.view.map(viewKey), () => subpage(page)),
   )

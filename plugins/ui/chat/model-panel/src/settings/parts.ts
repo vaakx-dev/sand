@@ -12,12 +12,4 @@ export const whereText = (source: SourceInfo) => (source.via ? `On ${source.via}
 
 export const sourceTitle = (source: SourceInfo) => `${sourceName(source)}${offlineText(source)}`
 
-export const crumb = (page: Page, mark: Child, title: Child) => {
-  const { icon, iconButton, rowTitle } = page.ctx.kit
-  return div(
-    { class: 'flex min-w-0 items-center gap-2' },
-    iconButton({ title: 'Back to Models', 'aria-label': 'Back to Models', onClick: () => page.go({ kind: 'top' }) }, icon('back')),
-    mark,
-    rowTitle(title),
-  )
-}
+export const crumb = (page: Page, mark: Child, title: Child) => div({ class: 'flex min-w-0 items-center gap-2' }, mark, page.ctx.kit.rowTitle(title))

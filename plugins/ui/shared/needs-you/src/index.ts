@@ -2,7 +2,7 @@ import { keys } from '@sand/keys/contract'
 import { palette } from '@sand/palette/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
-import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
+import { derive, div } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { needs } from './contract'
 import { createList } from './list'
@@ -47,13 +47,10 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.shell.route({
         kind,
-        render: () => {
-          const phone = derive(() => ctx.shell.state() === 'phone')
-          return {
-            head: () => dynamicChild(phone, onPhone => (onPhone ? ctx.kit.barTitle(label) : null)),
-            main: () => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, needsScreen(ctx.kit, items)),
-          }
-        },
+        render: () => ({
+          head: () => label,
+          main: () => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, needsScreen(ctx.kit, items)),
+        }),
       }),
     )
   },

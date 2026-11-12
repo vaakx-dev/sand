@@ -20,12 +20,12 @@ const actionButton = ({ primaryAction }: Kit, action: ChipAction, record: Contex
 }
 
 export const detailsSheet = (kit: Kit, kind: ChipKind, link: ChipLink, record: ContextRecord | undefined, close: () => void): SheetSpec => {
-  const { icon, sheetTitle } = kit
+  const { icon } = kit
   const { action } = kind
   return {
     label: link.label,
     size: 'sm',
-    head: () => sheetTitle(link.label),
+    title: link.label,
     body: () => [div({ class: 'flex items-center gap-2 text-sm text-neutral-400' }, icon(kind.icon, 'sm'), kind.title), body(kit, kind, record)],
     foot: record && action ? () => actionButton(kit, action, record, close) : undefined,
   }

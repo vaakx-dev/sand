@@ -7,7 +7,7 @@ import type { Ui } from '../ui'
 const tailscaleApp = 'https://tailscale.com/download'
 
 export const anywhereSheet = (ui: Ui, close: () => void): SheetSpec => {
-  const { errorText, icon, openTab, primaryAction, secondaryAction, sheetText, sheetTitle } = ui.kit
+  const { errorText, icon, openTab, primaryAction, secondaryAction, sheetText } = ui.kit
   const busy = sig(false)
   const error = sig('')
   const home = () => ui.data.nameOf(ui.data.homeId())
@@ -29,7 +29,7 @@ export const anywhereSheet = (ui: Ui, close: () => void): SheetSpec => {
   return {
     label: 'Use this phone from anywhere',
     size: 'sm',
-    head: () => sheetTitle('Use this phone from anywhere'),
+    title: 'Use this phone from anywhere',
     body: () => [
       sheetText('sand opens its secure Tailscale address and keeps this phone paired there too.'),
       sheetText(() => `This phone needs the Tailscale app, signed in to the same account as ${home()}.`),

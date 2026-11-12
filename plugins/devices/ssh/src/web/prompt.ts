@@ -40,6 +40,6 @@ export const askSheet = (ctx: Context, kit: Kit) => (prompt: SshPrompt, signal: 
     }
     const close = () => answer(null)
     const body = prompt.confirm ? confirmView : fieldView
-    const sheet = frame.sheet({ label: 'SSH', look: 'bare', size: 'sm', head: () => kit.sheetTitle('SSH'), body: () => body(kit, prompt, answer), onClose: close })
+    const sheet = frame.sheet({ label: 'SSH', look: 'bare', size: 'sm', title: 'SSH', body: () => body(kit, prompt, answer), onClose: close })
     const unlisten = listen(signal, 'abort', close, { once: true })
   })

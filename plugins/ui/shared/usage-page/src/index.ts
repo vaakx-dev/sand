@@ -4,7 +4,7 @@ import { shell } from '@sand/ui-shell/contract'
 import { limits, limitsChange } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
-import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
+import { div } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { pcList } from './pcs'
 import { usagePage } from './view/page'
@@ -37,13 +37,10 @@ export default definePlugin({
             frame.nav({ id: 'usage', label, icon: 'chart', order: 150, place: 'foot', to: { kind } }),
             frame.route({
               kind,
-              render: () => {
-                const phone = derive(() => frame.state() === 'phone')
-                return {
-                  head: () => dynamicChild(phone, onPhone => (onPhone ? ctx.kit.barTitle(label) : null)),
-                  main: () => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, dynamicChild(phone, onPhone => ctx.kit.pageBody(onPhone ? {} : { title: label, intro }, render()))),
-                }
-              },
+              render: () => ({
+                head: () => label,
+                main: () => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, ctx.kit.pageBody({ intro }, render())),
+              }),
             }),
           )
         : undefined,
