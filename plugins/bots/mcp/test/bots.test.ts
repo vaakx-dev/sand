@@ -155,7 +155,7 @@ test('a bot with no job writes its own job, works to it from its next step, and 
   expect(jobs).toEqual([job, 'You file notes.', job])
 })
 
-test('an outside agent lists bots, hands one a task, gets its reply and renames it over MCP', async () => {
+test('an outside agent lists, makes, stops and deletes bots, hands one a task, gets its reply and renames it over MCP', async () => {
   await start([said('Booked for Friday.')])
   const bot = await createBot('Travel')
   const call: Call = sand.askAs({ device: 'outside', kind: 'agent' })
@@ -176,5 +176,10 @@ test('an outside agent lists bots, hands one a task, gets its reply and renames 
   expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', projects: [], budget: null, spent: 0 }])
   expect(await value('bot_send', { bot: bot.id, prompt: 'Book Friday' })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
   expect(await value('bot_update', { bot: bot.id, name: 'Trips' })).toMatchObject({ bot: bot.id, name: 'Trips', job: 'Be Travel.' })
+  const made = await value('bot_create', { name: 'Errands', job: 'You run errands.', budget: 10 })
+  expect(made).toMatchObject({ name: 'Errands', job: 'You run errands.', budget: 10, status: 'idle' })
+  expect(await value('bot_interrupt', { bot: made.bot })).toBe(false)
+  expect(await value('bot_delete', { bot: made.bot })).toBe(true)
+  expect((await value('bot_list', {})).map((row: { name: string }) => row.name)).toEqual(['Trips'])
   await client.close()
 })

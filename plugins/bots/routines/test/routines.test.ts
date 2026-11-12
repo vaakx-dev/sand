@@ -22,7 +22,7 @@ const at = (iso: string) => Date.parse(iso)
 
 const start = async (replies: Source['replies']) => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], {
-    plugins: ['automation/schedules', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/routines'],
+    plugins: ['automation/schedules', 'agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/routines'],
   })
   return sand
 }
@@ -66,7 +66,7 @@ test('a bot sets a reminder, and when it is due the bot gets a routine turn in i
   await until(() => answered(bot.id, 'I will remind you at 18:00.'))
   const [routine] = await ask(routineList, { bot: bot.id })
   expect(routine).toMatchObject({ bot: bot.id, name: 'Call Ana', when: { kind: 'once', at: at('2026-11-04T18:00:00Z') }, next: at('2026-11-04T18:00:00Z'), paused: false })
-  expect(JSON.parse(requests('fake')[1]!).messages.at(-1).content[0].content[0].text).toContain('Set "Call Ana"')
+  expect(JSON.parse(requests('fake')[1]!).messages.at(-1).content[0].content[0].text).toContain('"name":"Call Ana"')
 
   const told: Moment[] = []
   sand.app.provide(notify, { send: async moment => void told.push(moment) })
@@ -85,7 +85,7 @@ test('a bot sets a reminder, and when it is due the bot gets a routine turn in i
   expect(sand.app.get(engine)!.turn('bot', fired.turn!)?.origin).toBe('routine')
 })
 
-test('routines can be paused, resumed and deleted, and go when their bot does', async () => {
+test('routines can be paused, resumed and deleted, by any bot, and go when their bot does', async () => {
   setSystemTime(at('2026-11-04T08:00:00Z'))
   const { ask } = await start([])
   const bot = await ask(botCreate, { name: 'Briefer', models: { main: { model: 'fake/m' }, quick: {} } })
@@ -97,12 +97,14 @@ test('routines can be paused, resumed and deleted, and go when their bot does', 
   expect(await text('routine_create', { name: 'Both', instructions: 'Ping', at: '2026-11-05 09:00', repeat: '0 9 * * *' })).toContain('exactly one of at, in_minutes or repeat')
   const [routine] = await ask(routineList, { bot: bot.id })
   expect(routine).toMatchObject({ name: 'Brief', next: at('2026-11-04T09:00:00Z') })
-  expect(await text('routine_list', {})).toContain(`- ${routine!.id} "Brief": repeats on cron 0 9 * * 1-5 (UTC); next`)
-  expect(await text('routine_pause', { id: routine!.id, paused: true }, other.id)).toContain(`No routine ${routine!.id}`)
+  expect(JSON.parse(await text('routine_list', {})).routines).toEqual([
+    { id: routine!.id, bot: bot.id, name: 'Brief', when: 'repeats on cron 0 9 * * 1-5 (UTC)', next: expect.stringContaining('09:00'), instructions: 'Brief me' },
+  ])
+  expect(JSON.parse(await text('routine_pause', { id: routine!.id, paused: true }, other.id))).toMatchObject({ name: 'Brief', paused: true })
 
   expect(await ask(routinePause, { routine: routine!.id, paused: true })).toMatchObject({ paused: true })
   setSystemTime(at('2026-11-05T12:00:00Z'))
-  expect(await text('routine_pause', { id: routine!.id, paused: false })).toBe('Resumed "Brief"')
+  expect(JSON.parse(await text('routine_pause', { id: routine!.id, paused: false }))).not.toHaveProperty('paused')
   expect(await ask(routineList, { bot: bot.id })).toMatchObject([{ paused: false, next: at('2026-11-06T09:00:00Z') }])
 
   await text('routine_create', { name: 'Later', instructions: 'Later', in_minutes: 90 })
