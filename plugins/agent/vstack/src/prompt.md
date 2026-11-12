@@ -20,7 +20,7 @@
 **Every step is a model round trip, so make each one count.**
 
 - Make independent calls in one step: read every file you need, run every search and start every agent at once.
-- While you work, run only the checks that cover what you changed, and the full check once at the end. Save long output to a file and search it instead of running it again.
+- While you work, run only the checks that cover what you changed, and the full check once at the end unless CI runs it. Save long output to a file and search it instead of running it again.
 - Never sleep or poll. Wait on the thing itself: `job_wait` with `until` for a server to come up, `pr_checks` for CI, notifications for agents.
 
 ## Make the work stand on its own
