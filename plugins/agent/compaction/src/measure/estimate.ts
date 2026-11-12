@@ -1,4 +1,4 @@
-import type { LLMRequest } from '@sand/accounts/contract'
+import { type LLMRequest, loadedTools, type ToolSpec } from '@sand/accounts/contract'
 import { type Block, fileText, type Message, type ToolReferenceBlock } from '@sand/chats/contract'
 
 const imageChars = 1600 * 4
@@ -32,5 +32,6 @@ export const messageTokens = (message: Message) => Math.ceil(message.content.red
 
 export const messagesTokens = (messages: Message[]) => messages.reduce((sum, message) => sum + messageTokens(message), 0)
 
-export const requestTokens = (request: LLMRequest) =>
-  Math.ceil((request.system.length + JSON.stringify(request.tools).length) / 4) + messagesTokens(request.messages)
+export const toolsChars = (tools: ToolSpec[]) => JSON.stringify(loadedTools(tools).map(({ name, description, inputSchema }) => ({ name, description, inputSchema }))).length
+
+export const requestTokens = (request: LLMRequest) => Math.ceil((request.system.length + toolsChars(request.tools)) / 4) + messagesTokens(request.messages)

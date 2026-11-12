@@ -1,8 +1,7 @@
 import type { Message } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import type { Effort, LLMRequest, ModelInfo } from '../contract'
+import { type Effort, type LLMRequest, loadedTools, type ModelInfo } from '../contract'
 import { createHash } from 'node:crypto'
-import { loadedTools } from '../http/deferred'
 import { openaiInput } from './input'
 
 const reasoningOf = ({ efforts, defaultEffort }: ModelInfo, wanted: Effort | undefined) => {
