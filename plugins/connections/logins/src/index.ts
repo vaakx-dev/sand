@@ -18,7 +18,7 @@ import { responsibleFor } from './responsible'
 import { serveLogins } from './serve'
 import { createLogins, type Data } from './service'
 import { codeTool } from './tools/code'
-import { group, type ToolDeps } from './tools/deps'
+import { group, signInGroup, type ToolDeps } from './tools/deps'
 import { fillTool } from './tools/fill'
 import { listTool } from './tools/list'
 import { secretTool } from './tools/secret'
@@ -76,6 +76,7 @@ export default definePlugin({
           .catch(error => ctx.report(error)),
     }
     ctx.effect(() => ctx.tools.group({ name: group, label: 'Saved logins', summary: "use the user's saved website logins and keys without seeing them", load: 'always' }))
+    ctx.effect(() => ctx.tools.group({ name: signInGroup, label: 'Browser sign-in', summary: "sign in to websites in the browser with the user's saved logins and two-step codes, without seeing them", load: 'on-demand' }))
     for (const tool of [listTool(deps), fillTool(deps), codeTool(deps), secretTool(deps)]) ctx.effect(() => ctx.tools.register(tool))
   },
 })

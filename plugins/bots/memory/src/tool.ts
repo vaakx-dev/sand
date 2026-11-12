@@ -37,7 +37,7 @@ const whole = (notes: Note[], name: string) => {
 export const noteTool = (memory: BotMemory): Tool<typeof input> => ({
   name: 'note_read',
   description:
-    'Look up your notes on your own work: how the systems you look after behave, what broke before and why, how to test things. Pass query to get the parts that mention its words, note to read one whole, or nothing to list them. Check them before work they may cover',
+    'Look up your notes on your own work: how your systems behave, what broke before and why, how to test things. Pass query for the parts that mention its words, note to read one whole, or nothing to list them.',
   input,
   effect: 'read',
   parallel: true,

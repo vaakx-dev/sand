@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { answerEntry, type AskAnswer, codeEntry, type CodeRequest } from '../contract'
 import { type Saved, websiteOf } from '../service'
 import type { Unanswered } from '../waits'
-import { computerInput, fillerOf, group, loginInput, type ToolDeps } from './deps'
+import { computerInput, fillerOf, loginInput, signInGroup, type ToolDeps } from './deps'
 import { filledText } from './fill'
 
 const answerTimeout = 10 * 60_000
@@ -48,7 +48,7 @@ const askUser = async (deps: ToolDeps, entry: Saved, site: string, prompt: strin
 
 export const codeTool = (deps: ToolDeps): Tool<typeof input> => ({
   name: 'login_code',
-  group,
+  group: signInGroup,
   description:
     "Get past a sign-in's two-step check on the page open in the browser. With an authenticator saved for the login, fills its current code at once. Otherwise asks the user: they type the code they got into a private card, which fills it into the page, or say they approved the sign-in on their phone. You never see the code. Submit the form yourself after.",
   input,
