@@ -1,27 +1,30 @@
 import { sessions } from '@sand/chats/contract'
-import { memory, type MemorySpace } from '@sand/memory/contract'
+import { memory } from '@sand/memory/contract'
 import { paths } from '@sand/paths/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
-import { projectMemorySpace } from './contract'
-
-const PROJECT_ID = /^[\w-]+$/
+import { projectId, projectMemorySpace } from './contract'
+import { createReplica } from './replica'
+import { syncAcrossPcs } from './sync'
 
 export default definePlugin({
   name: 'project-memory',
-  description: "Gives each project one memory that every thread in it shares, threads started by bots included",
-  inject: { sessions, paths },
+  description: "Gives each project one memory that every thread in it shares, threads started by bots and threads on any of your PCs included",
+  inject: { sessions, paths, memory },
   apply(ctx) {
-    const space: MemorySpace = {
-      name: projectMemorySpace,
-      title: 'Project memory',
-      about: 'Shared by every thread in this project.',
-      of: conversation => (conversation.owner === 'thread' ? (ctx.sessions.open(conversation.id)?.project ?? undefined) : undefined),
-      folder(project) {
-        if (!PROJECT_ID.test(project)) throw new Error(`No project ${project}`)
-        return join(ctx.paths.home, 'project-memory', project)
-      },
-    }
-    ctx.watch(memory, found => found?.space(space))
+    const root = join(ctx.paths.home, 'project-memory')
+    ctx.effect(() =>
+      ctx.memory.space({
+        name: projectMemorySpace,
+        title: 'Project memory',
+        about: 'Shared by every thread in this project, on every PC.',
+        of: conversation => (conversation.owner === 'thread' ? (ctx.sessions.open(conversation.id)?.project ?? undefined) : undefined),
+        folder(project) {
+          if (!projectId().safeParse(project).success) throw new Error(`No project ${project}`)
+          return join(root, project)
+        },
+      }),
+    )
+    syncAcrossPcs(ctx, createReplica({ memory: ctx.memory, root }))
   },
 })

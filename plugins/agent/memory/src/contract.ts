@@ -50,6 +50,8 @@ const ref = lazy(() => z.object({ space: z.string(), id: z.string() }))
 
 export const memoryChange = event<(ref: MemoryRef, text: string) => void>('memory.change')
 
+export const memoryStore = event<(ref: MemoryRef) => void>('memory.store')
+
 export const memoryChangeWire = wireEvent<[ref: MemoryRef, text: string]>('memory.change')
 
 export const memoryRead = request('memory.read', { input: ref, output: type<string>() })
