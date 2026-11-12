@@ -41,21 +41,22 @@ const talk = async (bot: string, prompt: string) => {
   throw new Error(`${prompt} never got an answer`)
 }
 
-test('a bot writes and reads its plan through its tools, the user sees each change, and the plan stays out of its brief', async () => {
-  const changes = await start([use('bot_plan_write', { text: plan }), use('bot_plan_read', {}), said('Planned.'), said('Still booking.')])
+test('a bot sees its plan in every request, writes it through its tool, and sees the user edit it on its next step', async () => {
+  const changes = await start([use('bot_plan_write', { text: plan }), said('Planned.'), said('Booked.')])
   const bot = await sand.ask(botCreate, { name: 'Travel', job: 'Be Travel.', models: { main: { model: 'fake/b' }, quick: {} } })
+  await sand.ask(planWrite, { bot: bot.id, text: '- Ask about dates\n' })
 
   await talk(bot.id, 'Book my Lisbon flights')
   expect(await Bun.file(join(sand.home, 'bots', bot.id, 'plan.md')).text()).toBe(plan)
-  expect(changes).toEqual([[bot.id, plan]])
-  expect(await sand.ask(planRead, { bot: bot.id })).toBe(plan)
+  expect(changes.at(-1)).toEqual([bot.id, plan])
 
-  await talk(bot.id, 'How is it going?')
+  const edited = '- [Book the Lisbon flights](thread:0b6c2e1a): booked, window seats\n'
+  await sand.ask(planWrite, { bot: bot.id, text: edited })
+  await talk(bot.id, 'Did you get window seats?')
   const bodies = sand.requests('fake').map(body => JSON.parse(body))
   expect(bodies[0].tools.map((tool: { name: string }) => tool.name)).toContain('bot_plan_write')
-  expect(JSON.stringify(bodies[2].messages.at(-1))).toContain('Book the Lisbon flights')
-  for (const body of bodies) expect(JSON.stringify(body.system)).not.toContain('Book the Lisbon flights')
-  expect(JSON.stringify(bodies[3].messages.at(-1))).not.toContain('Book the Lisbon flights')
+  expect(JSON.stringify(bodies[0].system)).toContain('Ask about dates')
+  expect(JSON.stringify(bodies[2].system)).toContain('booked, window seats')
 })
 
 test('the user edits a plan by bot, and a plan with no bot named fails', async () => {
