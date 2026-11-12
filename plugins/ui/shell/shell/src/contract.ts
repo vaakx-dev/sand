@@ -11,7 +11,7 @@ export interface Route {
   tab?: string
 }
 
-export const statuses = ['waiting', 'ready', 'merging', 'running', 'merged', 'done'] as const
+export const statuses = ['waiting', 'ready', 'merging', 'running', 'merged', 'done', 'failed', 'stopped'] as const
 
 export type Status = (typeof statuses)[number]
 

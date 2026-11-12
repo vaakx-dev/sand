@@ -1,17 +1,19 @@
 {
   "name": "@sand/inspector-helpers",
   "version": "0.0.0",
-  "description": "The subagents working in a thread or bot chat: listed in its Details, and counted as running above its composer",
+  "description": "The subagents of a thread or bot chat: listed in its Details with the last few finished ones, and counted as running above its composer",
   "type": "module",
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
-    "label": "Running subagents",
-    "summary": "Shows the subagents working in a chat and opens them"
+    "label": "Subagents",
+    "summary": "Shows the subagents working in a chat, and the last few that finished, and opens them"
   },
   "dependencies": {
     "@sand/chat": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/inspector": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/threads-home": "workspace:*",
     "@sand/ui-kit": "workspace:*",

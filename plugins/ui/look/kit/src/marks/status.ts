@@ -2,7 +2,7 @@ import { badge, type Tone } from './marks'
 
 export type RunStatus = 'running' | 'done' | 'failed' | 'cancelled' | 'stopped'
 
-const statuses: Record<RunStatus, { label: string; tone: Tone }> = {
+export const runLooks: Record<RunStatus, { label: string; tone: Tone }> = {
   running: { label: 'Running', tone: 'run' },
   done: { label: 'Done', tone: 'success' },
   failed: { label: 'Failed', tone: 'danger' },
@@ -10,6 +10,6 @@ const statuses: Record<RunStatus, { label: string; tone: Tone }> = {
   stopped: { label: 'Stopped', tone: 'neutral' },
 }
 
-export const statusLabel = (status: RunStatus) => statuses[status].label
+export const statusLabel = (status: RunStatus) => runLooks[status].label
 
-export const statusBadge = (status: RunStatus) => badge(statuses[status].tone, statuses[status].label)
+export const statusBadge = (status: RunStatus) => badge(runLooks[status].tone, runLooks[status].label)

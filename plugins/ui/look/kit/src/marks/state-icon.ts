@@ -4,23 +4,24 @@ import { icon, type IconName } from '../icons/lucide'
 import { spinner } from './marks'
 import { toneText, type Tone } from './tones'
 
-export type WorkState = 'running' | 'waiting' | 'ready' | 'merged' | 'settled' | 'idle'
+export type WorkState = 'running' | 'waiting' | 'ready' | 'merged' | 'settled' | 'failed' | 'idle'
 
 const glyphs: Record<Exclude<WorkState, 'running'>, IconName> = {
   waiting: 'working',
   ready: 'circle-dot',
   merged: 'merge',
   settled: 'circle-check',
+  failed: 'circle-x',
   idle: 'circle',
 }
 
-const statusStates: Record<Status, WorkState> = { waiting: 'waiting', ready: 'ready', merging: 'running', running: 'running', merged: 'settled', done: 'settled' }
+const statusStates: Record<Status, WorkState> = { waiting: 'waiting', ready: 'ready', merging: 'running', running: 'running', merged: 'settled', done: 'settled', failed: 'failed', stopped: 'idle' }
 
 const urgent = new Set<Status>(['waiting', 'ready', 'merging'])
 
-const labels: Record<WorkState, string> = { running: 'Running', waiting: 'Waiting', ready: 'Ready', merged: 'Merged', settled: 'Settled', idle: 'Idle' }
+const labels: Record<WorkState, string> = { running: 'Running', waiting: 'Waiting', ready: 'Ready', merged: 'Merged', settled: 'Settled', failed: 'Failed', idle: 'Idle' }
 
-export const workTones: Record<WorkState, Tone> = { running: 'run', waiting: 'warning', ready: 'success', merged: 'merged', settled: 'neutral', idle: 'neutral' }
+export const workTones: Record<WorkState, Tone> = { running: 'run', waiting: 'warning', ready: 'success', merged: 'merged', settled: 'neutral', failed: 'danger', idle: 'neutral' }
 
 const stateColor = (state: WorkState, attention: MaybeReactive<boolean>) => () =>
   workTones[state] === 'neutral' && read(attention) ? 'text-neutral-100' : toneText[workTones[state]]

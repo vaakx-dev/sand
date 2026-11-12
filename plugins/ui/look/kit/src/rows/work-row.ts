@@ -3,7 +3,8 @@ import { clock, derive, div, dynamicChild, p, read, span, type Child, type Maybe
 import { rowButton } from '../buttons/button'
 import { largeRowTitle, metaLine, rowTitle } from '../heads/text'
 import { dot, spinner } from '../marks/marks'
-import { toneText } from '../marks/tones'
+import { runLooks } from '../marks/status'
+import { toneText, type Tone } from '../marks/tones'
 import { placeLook, type Surface } from '../surface'
 
 const minute = 60_000
@@ -21,15 +22,18 @@ export const age = (at: number) => {
   return span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => shortAge(Math.max(0, now.get() - at)))
 }
 
-const attention: Partial<Record<Status, { label: string; tone: 'run' | 'warning' | 'success' }>> = {
+const statusLooks: Partial<Record<Status, { label: string; tone: Tone }>> = {
   running: { label: 'Running', tone: 'run' },
   merging: { label: 'Merging', tone: 'run' },
   waiting: { label: 'Needs you', tone: 'warning' },
   ready: { label: 'Ready', tone: 'success' },
+  done: runLooks.done,
+  failed: runLooks.failed,
+  stopped: runLooks.stopped,
 }
 
 export const workStatus = (status: Status | undefined) => {
-  const shown = status && attention[status]
+  const shown = status && statusLooks[status]
   if (!shown) return null
   const lead = shown.tone === 'run' ? spinner('xs') : dot(shown.tone)
   return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs', toneText[shown.tone]] }, lead, shown.label)
