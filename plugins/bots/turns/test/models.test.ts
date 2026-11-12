@@ -16,7 +16,7 @@ const app = (replies: Source['replies']): Source => ({ id: 'n', models: ['m'], r
 const handoff = /^Earlier messages of this chat, [^]*\ntwo$/
 
 const start = async (sources: Source[]) => {
-  sand = await startSand(sources, { plugins: ['bots/bots', 'bots/memory', 'bots/turns'] })
+  sand = await startSand(sources, { plugins: ['bots/bots', 'bots/turns'] })
   return sand
 }
 

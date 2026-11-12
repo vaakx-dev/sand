@@ -19,6 +19,7 @@
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/markdown": "workspace:*",
+    "@sand/memory": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/model-panel": "workspace:*",
     "@sand/model-picker": "workspace:*",

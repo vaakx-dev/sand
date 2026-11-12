@@ -1,10 +1,11 @@
-import { memoryWrite } from '@sand/bot-memory/contract'
+import { botMemorySpace } from '@sand/bot-memory/contract'
 import { botCreate, botDelete, botList, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botOpen, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
 import { contextChange, contextGet } from '@sand/compaction/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
 import { media } from '@sand/media/contract'
+import { memoryWrite } from '@sand/memory/contract'
 import { server } from '@sand/server/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -17,7 +18,7 @@ afterEach(() => sand.stop())
 const said = (text: string) => ({ type: 'text', text }) as const
 
 const start = async (replies: Source['replies'], projects: SandOptions['projects'] = []) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins: ['bots/bots', 'bots/memory', 'bots/turns', 'agent/vstack'], projects })
+  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins: ['agent/memory', 'bots/bots', 'bots/memory', 'bots/turns', 'agent/vstack'], projects })
   return sand
 }
 
@@ -35,7 +36,7 @@ const messages = (entries: BotEntry[]) => entries.flatMap(entry => (entry.type =
 test('a message to a bot runs a turn on its own conversation with its job, memory and model', async () => {
   const { ask, requests } = await start([[said('Noted.')]], [{ project: '0b6c2e1a', name: 'tiles', path: resolve('work', 'tiles') }])
   const bot = await ask(botCreate, { name: 'Calendar', job: 'Keep my calendar.', projects: ['family', '0b6c2e1a'], models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
-  await ask(memoryWrite, { bot: bot.id, text: 'Gym on Mondays.' })
+  await ask(memoryWrite, { space: botMemorySpace, id: bot.id, text: 'Gym on Mondays.' })
 
   expect(await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana is every Friday', clientRequestId: 'one' })).toMatchObject({ bot: bot.id, status: 'running' })
   expect(await settled(bot.id)).toMatchObject({ status: 'idle', last: { role: 'assistant', text: 'Noted.' } })
@@ -126,7 +127,7 @@ test('a bot whose tool waits on the user is waiting until it answers', async () 
 
 test('an image sent to a bot reaches its model after a label with the path it is saved at, as in a thread', async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [[said('A cat.')]], api: 'anthropic' }], {
-    plugins: ['bots/bots', 'bots/memory', 'bots/turns', 'core/transfers', 'agent/attachments'],
+    plugins: ['bots/bots', 'bots/turns', 'core/transfers', 'agent/attachments'],
   })
   const store = sand.app.get(media)
   if (!store) throw new Error('No media store')

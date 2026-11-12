@@ -31,7 +31,7 @@ const start = async (thread: Reply[], bot: Reply[]) => {
       { id: 'botsrc', models: ['b'], replies: bot, api: 'anthropic' },
     ],
     {
-      plugins: ['core/watch', 'agent/subagents', 'agent/context', 'agent/mcp-server', 'agent/threads-mcp', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/mcp', 'bots/bridge'],
+      plugins: ['core/watch', 'agent/subagents', 'agent/context', 'agent/mcp-server', 'agent/threads-mcp', 'bots/bots', 'bots/turns', 'bots/mcp', 'bots/bridge'],
       projects: [{ project: 'p1', path: folder }],
     },
   )

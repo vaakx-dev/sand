@@ -14,7 +14,7 @@ const reply = 'I checked the greenhouse sensors.\n\nThe east bed read 12% moistu
 
 test("a finished bot reply gets a one-line gist from the fast sub model, shown with the bot's last line", async () => {
   sand = await startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies: [[said(reply)], [said('{"gist": "Watered the dry east bed."}')]] }], {
-    plugins: ['agent/ask', 'agent/sub-model', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/gist'],
+    plugins: ['agent/ask', 'agent/sub-model', 'bots/bots', 'bots/turns', 'bots/gist'],
   })
   await sand.ask(subModelSet, { tier: 'fast', model: { model: 'fake/m' } })
   const bot = await sand.ask(botCreate, { name: 'Gardener', models: { main: { model: 'fake/m' }, quick: {} } })

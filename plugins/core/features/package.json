@@ -26,6 +26,7 @@
         ],
         "uses": [
           "compaction",
+          "memory",
           "skills",
           "background",
           "attachments",
@@ -80,6 +81,7 @@
         ],
         "uses": [
           "compaction",
+          "memory",
           "skills",
           "background",
           "attachments",
@@ -216,6 +218,15 @@
         "needs": [
           "engine",
           "media"
+        ]
+      },
+      "memory": {
+        "kind": "capability",
+        "label": "Memory",
+        "summary": "Memory that lasts across conversations, for threads and bots",
+        "stops": "Threads and bots don't remember anything from one conversation to the next.",
+        "needs": [
+          "engine"
         ]
       },
       "skills": {

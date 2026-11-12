@@ -29,7 +29,7 @@ const conversation = (owner: 'thread' | 'bot', id: string): ToolContext['convers
 })
 
 test("a bot's computer_* calls act on its chosen computer unless it names one, and with none chosen it is told how to choose", async () => {
-  sand = await startSand([], { plugins: ['bots/bots', 'bots/memory', 'bots/turns', 'computer/computers', 'computer/tools'] })
+  sand = await startSand([], { plugins: ['bots/bots', 'bots/turns', 'computer/computers', 'computer/tools'] })
   const acted: string[] = []
   for (const id of ['browser', 'desktop']) sand.app.get(computers)!.register(fake(id, acted))
   const registry = sand.app.get(tools)!

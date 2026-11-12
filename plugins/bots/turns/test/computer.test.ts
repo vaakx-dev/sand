@@ -15,7 +15,7 @@ const needing: Record<string, Need[]> = { plain: [], in_folder: ['folder'], on_p
 
 const offeredWith = async (computers: Computer[]) => {
   sand = await startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies: computers.map(() => [said('ok')]) }], {
-    plugins: ['bots/bots', 'bots/memory', 'bots/turns'],
+    plugins: ['bots/bots', 'bots/turns'],
   })
   for (const [name, needs] of Object.entries(needing)) sand.app.get(tools)!.register({ name, description: name, needs, input: z.object({}), run: () => name })
   const bot = await sand.ask(botCreate, { name: 'Helper', models: { main: { model: 'fake/m' }, quick: {} } })

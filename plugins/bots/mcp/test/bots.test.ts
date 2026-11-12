@@ -21,7 +21,7 @@ const update = (input: Record<string, unknown>): Reply => [{ type: 'call', name:
 
 const start = async (replies: Reply[], plugins: string[] = []) => {
   sand = await startSand([{ id: 'fake', models: ['b'], replies, api: 'anthropic' }], {
-    plugins: ['agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/mcp', ...plugins],
+    plugins: ['agent/mcp-server', 'bots/bots', 'bots/turns', 'bots/mcp', ...plugins],
   })
   return sand
 }

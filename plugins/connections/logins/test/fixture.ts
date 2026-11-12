@@ -18,7 +18,7 @@ export const said = (text: string) => ({ type: 'text', text }) as const
 
 export const call = (name: string, input: Record<string, unknown> = {}) => ({ type: 'call', name, input }) as const
 
-export const plugins = ['connections/logins', 'agent/shell', 'computer/computers', 'bots/bots', 'bots/memory', 'bots/turns']
+export const plugins = ['connections/logins', 'agent/shell', 'computer/computers', 'bots/bots', 'bots/turns']
 
 export const start = (replies: Source['replies'], options: SandOptions = {}) =>
   startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins, ...options })

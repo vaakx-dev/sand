@@ -1,5 +1,6 @@
-import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite } from '@sand/bot-memory/contract'
+import { botMemorySpace } from '@sand/bot-memory/contract'
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
+import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite } from '@sand/memory/contract'
 import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
 import { noAutomations } from '../automations/empty'
 import { automationRow } from '../automations/row'
@@ -131,12 +132,13 @@ const automationsBlock = (parts: Parts, id: string) => {
 const memoryBlock = (parts: Parts, id: string) => {
   const { kit, markdown } = parts.ctx
   const text = sig('')
-  void parts.ctx.wire.call(memoryRead, { bot: id }).then(
+  const ref = { space: botMemorySpace, id }
+  void parts.ctx.wire.call(memoryRead, ref).then(
     found => text.set(found),
     error => parts.ctx.report(error),
   )
   const stop = parts.ctx.wire.on(memoryChangeWire, ([changed, found]) => {
-    if (changed === id) text.set(found)
+    if (changed.space === ref.space && changed.id === id) text.set(found)
   })
   return div(
     { class: 'contents', onMount: () => stop },
@@ -145,7 +147,7 @@ const memoryBlock = (parts: Parts, id: string) => {
       text: () => text.get(),
       view: memory => div({ class: 'flex flex-col gap-2' }, ...markdown.nodes(memory)),
       empty: 'Nothing remembered yet.',
-      save: memory => parts.ctx.wire.call(memoryWrite, { bot: id, text: memory }).then(() => text.set(memory)),
+      save: memory => parts.ctx.wire.call(memoryWrite, { ...ref, text: memory }).then(() => text.set(memory)),
       rows: 10,
       maxLength: memoryLimit,
       placeholder: 'What it should remember',

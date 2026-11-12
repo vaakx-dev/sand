@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-memory",
   "version": "0.0.0",
-  "description": "Each bot's long-term knowledge: a small memory about the user, always in its instructions, and notes on its work it looks up; the bot rewrites both when its conversation compacts, and the user can read and edit them",
+  "description": "Each bot's own memory: its memory and notes live in its folder and load into its conversations",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,17 +10,12 @@
     "feature": "bots",
     "runtime": "./src/index.ts",
     "label": "Bot memory",
-    "summary": "Keeps what each bot remembers about you and what it learned about its work, in files you can read and edit"
+    "summary": "Gives each bot a memory of its own, in files you can read and edit"
   },
   "dependencies": {
     "@sand/bots": "workspace:*",
-    "@sand/compaction": "workspace:*",
-    "@sand/host-hub": "workspace:*",
-    "@sand/server": "workspace:*",
-    "@sand/tools": "workspace:*",
-    "@sand/util": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "@sand/memory": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
   "devDependencies": {
     "@sand/bot-turns": "workspace:*",

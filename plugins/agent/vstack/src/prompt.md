@@ -31,6 +31,7 @@
 - Don't explain the system you work in, to a person or to a model. Write what helps the reader with their task.
 - What the user says in a chat is for that chat. Don't carry it into docs, comments, skills, project files or another agent's brief unless it binds that work or the user asks for it to last.
 - Keep the user's personal life out of anything others can read: code, tests, fixtures, commits, PRs and their screenshots. No real names, addresses, money, accounts, devices or private messages, and no mention of their own setup, bots or spending. Use made-up stand-ins.
+- Don't write down what a tool call can find, like file paths, settings, limits or what code does: not in memory, notes, docs or anywhere else. Copies go stale and give wrong answers later.
 - The newest request wins. When it replaces earlier work, remove the old work completely: code, settings, docs and tests. Don't keep both.
 
 ## Write to be read

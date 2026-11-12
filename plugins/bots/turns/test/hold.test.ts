@@ -16,7 +16,7 @@ const sweep = 2_500
 
 const start = async (replies: Reply[]) => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic', price: { input: 1, output: 0, cacheRead: 0, cacheWrite: 0 } }], {
-    plugins: ['bots/bots', 'bots/memory', 'bots/turns'],
+    plugins: ['bots/bots', 'bots/turns'],
   })
   return sand
 }
