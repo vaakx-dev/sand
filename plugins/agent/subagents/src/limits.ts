@@ -1,4 +1,4 @@
-import type { AgentLimits } from './contract'
+import type { AgentLimits } from '@sand/orchestrator/contract'
 import type { Meta } from './meta'
 
 const narrowed = (inherited: string[] | undefined, own: string[] | undefined) => {
@@ -8,7 +8,7 @@ const narrowed = (inherited: string[] | undefined, own: string[] | undefined) =>
 
 export const createLimits = (meta: Meta, maxDepth: number): AgentLimits => ({
   child(parent, name, own) {
-    const inherited = meta(parent)
+    const inherited = parent && meta(parent)
     const depth = (inherited?.depth ?? 0) + 1
     if (depth > maxDepth) throw new Error(`Agents can only nest ${maxDepth} levels deep`)
     const tools = narrowed(inherited?.tools, own)

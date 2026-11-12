@@ -1,36 +1,36 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
-import type { WireJob } from '@sand/jobs/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { duration, oneLine } from '@sand/util'
-import type { Threads } from '@sand/web-client/contract'
-import type { JobWatch } from './jobs'
+import type { Thread } from '@sand/web-client/contract'
+import type { ChildWatch } from './children'
 
 const firstSentence = (text: string) => oneLine(/^[^\n]*?[.!?](?=\s|$)/.exec(text.trim())?.[0] ?? text, 80)
 
-export const subAgentOf = (chats: Threads | undefined, thread: string, call: string) => chats?.children(thread).find(chat => chat.info.origin === call)
+export interface ChildActions {
+  open(thread: string): void
+  stop(thread: string): void
+}
 
-export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats: () => Threads | undefined, openChat: (thread: string) => void): ToolRenderer => {
-  const outcomes: Record<WireJob['status'], ToolBadge | undefined> = {
-    running: undefined,
-    done: undefined,
-    failed: { text: kit.statusLabel('failed'), tone: 'danger' },
-    cancelled: { text: kit.statusLabel('cancelled'), tone: 'neutral' },
-  }
+export const agentRenderer = (kit: Kit, views: ToolViews, watch: ChildWatch, act: ChildActions): ToolRenderer => {
+  const childOf = (tool: ToolView) => watch.of(tool.thread, tool.call.id)
 
   const plainMeta = (tool: ToolView) => {
     if (tool.status === 'running') return kit.statusLabel('running')
     return tool.call.malformed ? 'malformed input' : ''
   }
 
+  const outcome = ({ running, ended }: Thread): ToolBadge | undefined => {
+    if (running || !ended) return undefined
+    if (ended.stopReason === 'error') return { text: kit.statusLabel('failed'), tone: 'danger' }
+    if (ended.stopReason === 'interrupted') return { text: kit.statusLabel('cancelled'), tone: 'neutral' }
+  }
+
   const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: kit.statusLabel('failed'), tone: 'danger' } : undefined)
 
-  const stop = (job: WireJob): MenuAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => watch.cancel(job.id) })
+  const open = (child: Thread): MenuAction => ({ id: 'open', label: 'Open subagent', icon: 'right', group: 'open', tile: true, run: () => act.open(child.id) })
 
-  const open = (tool: ToolView): MenuAction[] => {
-    const chat = subAgentOf(chats(), tool.thread, tool.call.id)
-    return chat ? [{ id: 'open', label: 'Open sub-agent', icon: 'right', group: 'open', tile: true, run: () => openChat(chat.id) }] : []
-  }
+  const stop = (child: Thread): MenuAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => act.stop(child.id) })
 
   return {
     icon: 'bot',
@@ -39,18 +39,18 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
     label: ({ call }) => views.field(call.input, 'label') || firstSentence(views.field(call.input, 'task')),
     meta(tool) {
       watch.tick()
-      const job = watch.of(tool.call.id)
-      if (!job) return plainMeta(tool)
-      const took = duration((job.ended ?? Date.now()) - job.started)
-      return job.status === 'running' ? `Running in background · ${took}` : `Ran in background · ${took}`
+      const child = childOf(tool)
+      if (!child) return plainMeta(tool)
+      if (!child.running) return ''
+      return `Running · ${duration(Date.now() - (child.started ?? child.info.created))}`
     },
     badge(tool) {
-      const job = watch.of(tool.call.id)
-      return job ? outcomes[job.status] : plainBadge(tool)
+      const child = childOf(tool)
+      return child ? outcome(child) : plainBadge(tool)
     },
     actions(tool) {
-      const job = watch.of(tool.call.id)
-      return [...open(tool), ...(job?.status === 'running' ? [stop(job)] : [])]
+      const child = childOf(tool)
+      return child ? [open(child), ...(child.running ? [stop(child)] : [])] : []
     },
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@sand/jobs",
   "version": "0.0.0",
-  "description": "Background jobs: sub-agents and commands that run on after the tool call returns",
+  "description": "Background commands that run on after the tool call returns",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -12,7 +12,7 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Background jobs",
-    "summary": "Tracks background agents and commands, tells the agent when they finish, and lets it read, message, wait for and stop them"
+    "summary": "Tracks background commands, tells the agent when they finish, and lets it read, wait for and stop them"
   },
   "dependencies": {
     "@sand/chats": "workspace:*",

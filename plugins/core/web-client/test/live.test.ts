@@ -115,11 +115,38 @@ test('a thread between turns counts as running while a background job it launche
   const store = new Store(createApp(), 'home')
   store.upsert(info('chat'), pc)
   listenThreads(wire, store, () => {})
-  const job: WireJob = { id: 'job-1', kind: 'command', label: 'bun test', parent: 'chat', status: 'running', started: 1 }
+  const job: WireJob = { id: 'job-1', label: 'bun test', parent: 'chat', status: 'running', started: 1 }
 
   emit(jobStartWire, job)
   expect(store.threads.get('chat')?.running).toBe(true)
 
   emit(jobEndWire, [{ ...job, status: 'done', ended: 2 }, 'ok'])
+  expect(store.threads.get('chat')?.running).toBe(false)
+})
+
+test('a thread counts as running while a subagent it started is in a turn', () => {
+  const { wire, emit } = fakeWire()
+  const store = new Store(createApp(), 'home')
+  store.upsert(info('chat'), pc)
+  store.upsert({ ...info('helper'), kind: 'agent', parent: 'chat' }, pc)
+  listenThreads(wire, store, () => {})
+  const turn: TurnInfo = {
+    id: 't1',
+    session: 'helper',
+    ordinal: 1,
+    status: 'running',
+    origin: 'agent',
+    selection: { source: 'a', model: 'a/m', speed: 'normal' },
+    prompt: 'dig',
+    step: 1,
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    started: 1,
+  }
+  const change = (info: TurnInfo) => emit(turnChangeWire, [{ $session: { id: 'helper' } }, info])
+
+  change(turn)
+  expect(store.threads.get('chat')?.running).toBe(true)
+
+  change({ ...turn, status: 'completed', ended: 2 })
   expect(store.threads.get('chat')?.running).toBe(false)
 })

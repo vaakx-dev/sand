@@ -23,7 +23,9 @@ export interface SessionInfo {
 export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'seen' | 'pinned' | 'settled' | 'snoozed' | 'position'>>
 
 export interface NewAgent {
-  parent: string
+  parent?: string
+  cwd: string
+  project?: string | null
   title: string
   origin?: string
 }

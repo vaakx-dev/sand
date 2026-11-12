@@ -1,4 +1,4 @@
-import type { SessionInfo } from '@sand/chats/contract'
+import type { Session, SessionInfo } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import { service } from 'drydock'
@@ -71,6 +71,7 @@ export interface WorktreeThreadInput {
   cwd: string
   branch?: string
   from?: string
+  open?: (cwd: string, project: string | null) => Session
 }
 
 export interface Worktrees {

@@ -12,7 +12,7 @@ import { createStore } from './store'
 
 export default definePlugin({
   name: 'chats',
-  description: "Stores each project's threads, their sub-agents and quick task chats, in SQLite",
+  description: "Stores each project's threads, their subagents and quick task chats, in SQLite",
   inject: { paths, projectFiles, media, ledger },
   apply(ctx) {
     const { home } = ctx.paths

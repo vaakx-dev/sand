@@ -7,7 +7,7 @@ const everyPc: WireListen = { from: 'all' }
 
 export default definePlugin({
   name: 'jobs-web',
-  description: 'Keeps the background jobs of each PC on the page, for the Agents panel and the agent tool cards',
+  description: 'Keeps the background commands of each PC on the page, for their tool cards',
   inject: { wire, pcs },
   apply(ctx) {
     const devices = new Map<string, Map<string, WireJob>>()

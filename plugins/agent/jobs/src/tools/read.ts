@@ -10,14 +10,13 @@ const input = z.object({
 
 export const readTool = (store: Store): Tool<typeof input> => ({
   name: 'job_read',
-  description: "Read a background job's progress since the cursor: an agent's thread messages, or a command's output.",
+  description: "Read a background command's output since the cursor.",
   group,
   input,
   effect: 'read',
   needs: ['thread'],
   async run({ job, cursor }, { conversation }) {
     const { spec } = store.own(conversation.id, job)
-    if (!spec.read) throw new Error(`${job} has nothing to read`)
     return spec.read(cursor)
   },
 })

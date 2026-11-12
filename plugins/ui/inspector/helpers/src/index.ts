@@ -1,68 +1,58 @@
 import { inspector } from '@sand/inspector/contract'
-import { jobs, jobsChange, type JobStatus, type WireJob } from '@sand/jobs/contract'
 import { pulse } from '@sand/reactive'
 import { kit, type Tone } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
-import { models, modelsChange, threadRouteKind, threads, threadsChange } from '@sand/web-client/contract'
-import { derive, div, list, span } from '@vaakx-dev/vrui'
+import { threadRouteKind, threads, threadsChange, type Thread } from '@sand/web-client/contract'
+import { derive, div, list } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 
-interface Helper {
-  job: WireJob
-  model?: string
-  thread?: string
+type Status = 'running' | 'done' | 'failed' | 'stopped'
+
+const looks: Record<Status, Tone> = { running: 'run', done: 'success', failed: 'danger', stopped: 'neutral' }
+
+const statusOf = ({ running, ended }: Thread): Status => {
+  if (running) return 'running'
+  if (ended?.stopReason === 'error') return 'failed'
+  if (ended?.stopReason === 'interrupted') return 'stopped'
+  return 'done'
 }
 
-const looks: Record<JobStatus, { tone: Tone; end?: string }> = {
-  running: { tone: 'run' },
-  done: { tone: 'success', end: 'done' },
-  failed: { tone: 'danger', end: 'failed' },
-  cancelled: { tone: 'neutral', end: 'stopped' },
-}
-
-const shownOf = (all: WireJob[]) => {
-  const agents = all.filter(job => job.kind === 'agent')
-  const running = agents.filter(job => job.status === 'running')
-  if (!running.length) return []
-  const since = Math.min(...running.map(job => job.started))
-  return agents.filter(job => job.status === 'running' || (job.ended ?? 0) >= since).toSorted((a, b) => a.started - b.started)
-}
-
-const keyOf = ({ job, model, thread }: Helper) => [job.id, job.status, model ?? '', thread ?? ''].join(' ')
+const keyOf = (child: Thread) => [child.id, statusOf(child), child.info.title].join(' ')
 
 export default definePlugin({
   name: 'inspector-helpers',
-  description: "The inspector's helpers row: the sub-agents a thread has running",
-  inject: { inspector, kit, jobs },
+  description: "The inspector's subagents row: the subagents a thread started",
+  inject: { inspector, kit, threads },
   apply(ctx) {
-    const changes = pulse(ctx, [jobsChange, threadsChange, modelsChange], [threads, models])
-    const modelOf = (model?: string) => model && (ctx.get(models)?.info(model)?.label ?? model)
-    const threadOf = (session: string, { origin }: WireJob) => origin && ctx.get(threads)?.children(session).find(chat => chat.info.origin === origin)?.id
+    const changes = pulse(ctx, [threadsChange])
 
-    const helpersOf = (session: string): Helper[] => {
+    const helpersOf = (session: string) => {
       changes.version.get()
-      return shownOf(ctx.jobs.list(session)).map(job => ({ job, model: modelOf(job.model), thread: threadOf(session, job) }))
+      return ctx.threads
+        .children(session)
+        .filter(child => child.info.kind === 'agent')
+        .toSorted((a, b) => b.info.created - a.info.created)
     }
 
-    const line = ({ job, model, thread }: Helper) => {
-      const look = looks[job.status]
+    const line = (child: Thread) => {
+      const status = statusOf(child)
       return ctx.kit.cardItem(
         {
-          lead: ctx.kit.dot(look.tone),
-          end: [model && span({ class: 'mr-2' }, model), look.end ?? ctx.kit.elapsed(job.started)],
-          ...(thread && { onClick: () => ctx.get(shell)?.open({ kind: threadRouteKind, id: thread }) }),
+          lead: ctx.kit.dot(looks[status]),
+          end: status === 'running' ? ctx.kit.elapsed(child.started ?? child.info.created) : status,
+          onClick: () => ctx.get(shell)?.open({ kind: threadRouteKind, id: child.id }),
         },
-        job.label,
+        child.info.title || 'Subagent',
       )
     }
 
     const render = (session: () => string) => {
       const helpers = derive(() => helpersOf(session()))
-      const running = () => helpers.get().filter(({ job }) => job.status === 'running').length
+      const running = () => helpers.get().filter(child => child.running).length
       return div(
         { class: 'flex min-w-0 flex-col' },
-        ctx.kit.cardCaption(() => `Helpers · ${running()} running`),
-        list(helpers, keyOf, helper => line(helper.get()), div({ class: 'flex min-w-0 flex-col' })),
+        ctx.kit.cardCaption(() => `Subagents · ${running()} running`),
+        list(helpers, keyOf, child => line(child.get()), div({ class: 'flex min-w-0 flex-col' })),
       )
     }
 

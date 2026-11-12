@@ -10,14 +10,14 @@ const before = "Some earlier jobs may be missing; find their results in this thr
 
 export const listTool = (sessions: Sessions, store: Store, started: number): Tool<typeof input> => ({
   name: 'jobs',
-  description: "List the background agents and commands this thread started: id, kind, status, label, latest note (a command's last output line) and child thread ids.",
+  description: "List the background commands this thread started: id, status, label and latest note (the last output line).",
   group,
   input,
   effect: 'read',
   needs: ['thread'],
   run(_input, { conversation }) {
     const jobs = store.list(conversation.id)
-    const lines = jobs.length ? jobs.map(job => jobLine(sessions, job)) : ['No background jobs in this thread.']
+    const lines = jobs.length ? jobs.map(jobLine) : ['No background jobs in this thread.']
     return [...lines, ...(sessions.require(conversation.id).created < started ? [before] : [])].join('\n')
   },
 })

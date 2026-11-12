@@ -3,9 +3,9 @@ import type { Context } from 'drydock'
 import type { Resolve } from './layers'
 import type { Meta } from './meta'
 
-const preamble = `You are a sand subagent doing one task for another agent. You have full access to the machine. Nobody will answer questions, so decide yourself.
+const preamble = `You are a sand subagent doing a task for another agent. You have full access to the machine. Decide for yourself rather than asking; the user may open your chat and write to you, and then you answer them.
 
-Finish the task. Your final message is all the other agent sees. Put in what you found or did, with sources, such as file paths or links, and results.`
+Finish the task. Your final reply goes back to the agent that started you. Put in what you found or did, with sources, such as file paths or links, and results.`
 
 export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
   ctx.on(promptBase, async (_, session) => {

@@ -1,8 +1,10 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { modelSettings } from '@sand/model/contract'
+import { threadSend, threadUpdate } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
-import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
+import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 let sand: Sand
@@ -13,18 +15,24 @@ const said = (text: string): Reply => [{ type: 'text', text }]
 
 const delegate = (input: Record<string, unknown> = {}): Reply => [{ type: 'call', name: 'agent', input: { label: 'Dig', task: 'Dig into it', model: 'child/m', ...input } }]
 
-const start = async (parent: Reply[], child: Reply[], maxAgents?: number) => {
+const start = async (parent: Reply[], child: Reply[], projects: { project: string; path: string }[] = [], plugins: string[] = []) => {
   sand = await startSand(
     [
       { id: 'parent', models: ['m'], replies: parent, api: 'anthropic' },
       { id: 'child', models: ['m'], replies: child, api: 'anthropic' },
     ],
-    { plugins: ['core/watch', 'agent/jobs', 'agent/subagents'], ...(maxAgents && { options: { subagents: { max_agents: maxAgents } } }) },
+    { plugins: ['core/watch', 'agent/subagents', ...plugins], projects },
   )
 }
 
-const until = async <T>(find: () => T | undefined | false) => {
-  for (let tries = 0; tries < 300; tries++) {
+const git = (cwd: string, ...args: string[]) => {
+  const result = Bun.spawnSync(['git', ...args], { cwd, env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } })
+  if (result.exitCode !== 0) throw new Error(result.stderr.toString())
+  return result.stdout.toString().trim()
+}
+
+const until = async <T>(find: () => T | undefined | false, most = 300) => {
+  for (let tries = 0; tries < most; tries++) {
     const found = find()
     if (found) return found
     await Bun.sleep(10)
@@ -44,38 +52,33 @@ type Body = { system: { text: string }[]; tools: { name: string; description: st
 
 const bodies = (source: string) => sand.requests(source).map(body => JSON.parse(body) as Body)
 
-const use = async (session: Session, name: string, input: Record<string, unknown>) => {
-  const call = { type: 'tool_call', id: `${name}-call`, name, input } as const
-  const result = await sand.app.get(tools)!.run(call, { cwd: session.cwd, signal: new AbortController().signal, conversation: session, turn: 'test', progress() {}, wait: () => () => {} })
-  return textOf(result.content)
-}
-
 const notices = (session: Session) => prompts(session).filter(text => text.startsWith('<task-notification>'))
 
-test('an agent runs as a background job of its parent, reports back as a task notification and takes a follow-up', async () => {
+const childOf = (parent: Session) => until(() => sand.sessions.children(parent.id)[0])
+
+test('a subagent is its own chat in the parent folder; its replies come back as thread notices, including ones to a follow-up', async () => {
   await start([delegate(), said('Started it.'), said('Got it.'), said('Got more.')], [said('Found it.'), said('Found more.')])
   const parent = sand.chat('parent/m')
   await sand.turns.run(parent, 'Go')
 
-  const [child] = sand.sessions.children(parent.id)
-  expect(child).toMatchObject({ kind: 'agent', title: 'Dig', origin: expect.any(String) })
-  expect(sand.sessions.require(child!.id).latest('agent')?.data).toEqual({ depth: 1 })
-  const [, job, thread] = /^Started background agent (\S+) in thread (\S+)\./.exec(results(parent)[0]!) ?? []
-  expect(thread).toBe(child!.id)
+  const child = await childOf(parent)
+  expect(child).toMatchObject({ kind: 'agent', title: 'Dig', cwd: parent.cwd, parent: parent.id, origin: expect.any(String) })
+  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1 })
+  expect(results(parent)[0]).toStartWith(`Started subagent ${child.id}.`)
   const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
-  expect(notice).toContain(`<job>${job}</job>`)
+  expect(notice).toContain(`<thread>${child.id}</thread>`)
   expect(notice).toContain('<status>done</status>')
   expect(notice).toContain('Found it.')
 
   await until(() => !running(parent.id))
-  expect(await use(parent, 'job_send', { job, message: 'Dig deeper' })).toContain('working on your follow-up')
+  await sand.askAs({ device: 'sand', kind: 'agent', actor: { owner: 'thread', id: parent.id } })(threadSend, { session: child.id, prompt: 'Dig deeper', origin: 'mcp', clientRequestId: 'more' })
   const [, followed] = await until(() => notices(parent).length === 2 && notices(parent))
   expect(followed).toContain('Found more.')
   expect(sand.sessions.children(parent.id)).toHaveLength(1)
 })
 
-test('interrupting the parent stops its running agents, which then send no notification', async () => {
-  await start([delegate(), [{ type: 'hold' }]], [[{ type: 'hold' }]])
+test("a subagent keeps working when its parent's turn is interrupted, and the user's own turns in it report back too", async () => {
+  await start([delegate(), [{ type: 'hold' }], said('Noted.'), said('Noted again.')], [[{ type: 'hold' }], said('Answered you.')])
   const parent = sand.chat('parent/m')
   const turn = sand.turns.run(parent, 'Go')
   const child = await until(() => sand.sessions.children(parent.id).find(found => running(found.id)))
@@ -83,10 +86,52 @@ test('interrupting the parent stops its running agents, which then send no notif
 
   sand.turns.interrupt(parent)
   await turn
-  await until(() => !running(child.id))
-  await Bun.sleep(100)
-  expect(prompts(parent)).toEqual(['Go'])
+  expect(running(child.id)).toBeTruthy()
+
+  sand.turns.interrupt(sand.sessions.require(child.id))
+  await until(() => notices(parent).length === 1)
+  await until(() => !running(parent.id))
+  await sand.turns.run(sand.sessions.require(child.id), 'What did you find?', { origin: 'user' })
+  const [, answered] = await until(() => notices(parent).length === 2 && notices(parent))
+  expect(answered).toContain('Answered you.')
 })
+
+test('a subagent can work in a project of its own, and settles with its parent', async () => {
+  const folder = join(process.env.TEMP ?? '/tmp', `sand-project-${Bun.randomUUIDv7()}`)
+  mkdirSync(folder, { recursive: true })
+  await start([delegate({ project: 'site' }), said('Started.')], [[{ type: 'hold' }]], [{ project: 'site', path: folder }])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+
+  const child = await childOf(parent)
+  expect(child).toMatchObject({ cwd: folder, project: 'site' })
+  await until(() => running(child.id))
+
+  await sand.ask(threadUpdate, { session: parent.id, settled: true })
+  await until(() => sand.sessions.require(child.id).settled !== null)
+  expect(running(child.id)).toBeFalsy()
+})
+
+test('a subagent given a worktree works in its own checkout, which goes once its parent settles', async () => {
+  await start([delegate({ worktree: true }), said('Started.'), said('Noted.')], [said('Done.')], [], ['git/runner', 'git/git', 'git/worktrees'])
+  const repo = join(sand.home, 'repo')
+  await Bun.write(join(repo, 'tracked.txt'), 'first\n')
+  git(repo, 'init', '-q', '-b', 'main')
+  git(repo, 'add', '.')
+  git(repo, 'commit', '-q', '-m', 'first')
+  const parent = sand.sessions.thread(repo)
+  sand.app.get(modelSettings)!.change(parent, { model: 'parent/m' })
+  await sand.turns.run(parent, 'Go')
+
+  const child = await childOf(parent)
+  expect(child.kind).toBe('agent')
+  expect(child.cwd.startsWith(join(sand.home, 'worktrees'))).toBe(true)
+  await until(() => notices(parent).length === 1)
+  await until(() => !running(parent.id))
+
+  await sand.ask(threadUpdate, { session: parent.id, settled: true })
+  await until(() => !existsSync(child.cwd) && git(repo, 'branch', '--list', 'sand/*') === '', 2000)
+}, 30_000)
 
 test('only agents defined in the home folder can be named, and they run with their role and tools', async () => {
   await start([delegate({ agent: 'nobody' }), said('No such agent.'), delegate({ agent: 'scout' }), said('Started.'), said('Noted.')], [said('Scouted.')])
@@ -98,21 +143,8 @@ test('only agents defined in the home folder can be named, and they run with the
   expect(bodies('parent')[0]!.tools.find(tool => tool.name === 'agent')!.description).toContain('Agents you can name:\n- scout: Looks around.')
 
   await sand.turns.run(parent, 'Scout')
-  const [child] = sand.sessions.children(parent.id)
-  expect(sand.sessions.require(child!.id).latest('agent')?.data).toEqual({ name: 'scout', depth: 1, tools: ['read', 'grep'] })
+  const child = await childOf(parent)
+  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ name: 'scout', depth: 1, tools: ['read', 'grep'] })
   await until(() => sand.requests('child').length > 0)
   expect(bodies('child')[0]!.system[0]!.text).toContain('# Your role\n\nOnly look, never touch.')
-})
-
-test('agents past the cap wait for a running one to finish before they start working', async () => {
-  await start([[...delegate({ label: 'One' }), ...delegate({ label: 'Two' })], said('Started both.'), said('Noted.'), said('Noted.')], [[{ type: 'hold' }], said('Second done.')], 1)
-  const parent = sand.chat('parent/m')
-  await sand.turns.run(parent, 'Go')
-  const [first] = sand.sessions.children(parent.id)
-  await until(() => sand.requests('child').length === 1)
-  await Bun.sleep(100)
-  expect(sand.requests('child')).toHaveLength(1)
-
-  sand.turns.interrupt(sand.sessions.require(first!.id))
-  await until(() => prompts(parent).some(text => text.includes('Second done.')))
 })

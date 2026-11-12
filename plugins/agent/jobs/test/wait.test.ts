@@ -1,6 +1,5 @@
 import { type Session, textOf } from '@sand/chats/contract'
 import { startSand } from '@sand/harness'
-import type { Reply } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -8,14 +7,7 @@ let sand: Awaited<ReturnType<typeof startSand>>
 
 afterEach(() => sand.stop())
 
-const start = (child: Reply[] = []) =>
-  startSand(
-    [
-      { id: 'parent', models: ['m'], replies: [[{ type: 'call', name: 'agent', input: { label: 'Dig', task: 'Dig into it', model: 'child/m' } }], [{ type: 'text', text: 'Started.' }]], api: 'anthropic' },
-      { id: 'child', models: ['m'], replies: child, api: 'anthropic' },
-    ],
-    { plugins: ['core/watch', 'agent/jobs', 'agent/shell', 'agent/shell-jobs', 'agent/subagents'] },
-  )
+const start = () => startSand([{ id: 'parent', models: ['m'], replies: [], api: 'anthropic' }], { plugins: ['core/watch', 'agent/jobs', 'agent/shell', 'agent/shell-jobs'] })
 
 const use = async (session: Session, name: string, input: Record<string, unknown>, progress: (text: string) => void = () => {}) => {
   const call = { type: 'tool_call', id: `${name}-${Bun.randomUUIDv7()}`, name, input } as const
@@ -59,29 +51,20 @@ test('any returns the first finished job and leaves the rest running', async () 
 
   expect(value).toStartWith(`${quick} finished; the others keep running.`)
   expect(value).toContain('first report')
-  expect(value).toContain(`${slow} · command · running`)
+  expect(value).toContain(`${slow} · running`)
   expect(seconds).toBeLessThan(10)
   await use(thread, 'job_stop', { job: slow })
 })
 
-test("while it waits, progress shows how many jobs are done and each running one's latest activity", async () => {
-  let release = () => {}
-  const held = new Promise<void>(resolve => (release = resolve))
-  sand = await start([[{ type: 'call', name: 'probe', input: { what: 'deep dig' } }], [{ type: 'text', text: 'Found it.' }]])
-  sand.tool('probe', () => held.then(() => 'probed'))
+test("while it waits, progress shows how many jobs are done and each running one's latest output", async () => {
+  sand = await start()
   const thread = sand.chat('parent/m')
-  await sand.turns.run(thread, 'Go')
-  const agent = /job_\w+/.exec(await use(thread, 'jobs', {}))![0]
-  const command = await background(thread, 'echo warming up; sleep 4', 'Warm')
+  const quick = await background(thread, 'echo warming up; sleep 1', 'Warm')
+  const slow = await background(thread, 'echo still going; sleep 3', 'Slow')
   const lines: string[] = []
 
-  const waited = use(thread, 'job_wait', { jobs: [agent, command] }, text => {
-    lines.push(...text.split('\n'))
-    if (lines.some(line => line.includes('probe deep dig'))) release()
-  })
+  await use(thread, 'job_wait', { jobs: [quick, slow] }, text => lines.push(...text.split('\n')))
 
-  expect(await waited).toContain('Found it.')
-  expect(lines).toContainEqual(expect.stringMatching(/^0\/2 done · Dig · step \d+ · probe deep dig$/))
-  expect(lines).toContainEqual(expect.stringMatching(/^[01]\/2 done · Warm · warming up$/))
-  expect(lines).toContainEqual(expect.stringMatching(/^1\/2 done · (Dig|Warm) · done$/))
+  expect(lines).toContainEqual(expect.stringMatching(/^0\/2 done · Warm · (warming up|running)$/))
+  expect(lines).toContainEqual(expect.stringMatching(/^1\/2 done · Warm · done$/))
 }, 20_000)

@@ -1,18 +1,17 @@
 {
   "name": "@sand/inspector-helpers",
   "version": "0.0.0",
-  "description": "The inspector's helpers row: the sub-agents a thread has running",
+  "description": "The inspector's subagents row: the subagents a thread started",
   "type": "module",
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
-    "label": "Helpers row",
-    "summary": "Shows the sub-agents a thread has running"
+    "label": "Subagents row",
+    "summary": "Shows the subagents a thread started and opens them"
   },
   "dependencies": {
     "@sand/ui-shell": "workspace:*",
     "@sand/inspector": "workspace:*",
-    "@sand/jobs": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",
