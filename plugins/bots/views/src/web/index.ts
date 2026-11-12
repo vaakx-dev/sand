@@ -1,5 +1,5 @@
 import { advanced } from '@sand/advanced/contract'
-import { botAutomations, botName, botProfile, botRoute, botTabs, botViews, jobEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type JobEntry } from '@sand/bots/contract'
+import { botAutomations, botName, botProfile, botRoute, botTabs, botViews, changeEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type ChangeEntry } from '@sand/bots/contract'
 import { modelTargets } from '@sand/model-panel/contract'
 import { palette, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -10,7 +10,7 @@ import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { automationsScreen } from './automations/page'
 import { conversations } from './chat/conversations'
-import { jobNote } from './chat/job'
+import { changeNote } from './chat/change'
 import { inject } from './context'
 import { openNewBot } from './create/sheet'
 import { effective } from './models'
@@ -92,7 +92,7 @@ export default definePlugin({
     )
 
     ctx.watch(transcript, found =>
-      found?.entry(jobEntry, (entry, bot) => jobNote(ctx.kit, { store: parts.store, edit: parts.profile, report: error => ctx.report(error) }, bot, entry.data as JobEntry)),
+      found?.entry(changeEntry, (entry, bot) => changeNote(ctx.kit, { store: parts.store, edit: parts.profile, report: error => ctx.report(error) }, bot, entry.data as ChangeEntry)),
     )
     ctx.watch(palette, found =>
       found?.source({

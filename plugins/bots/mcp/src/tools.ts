@@ -1,7 +1,9 @@
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { awaitBot, botAsk, botRoster, botSet, jobLimit } from './contract'
+import { botUpdate, jobLimit } from '@sand/bots/contract'
+import { awaitBot, botAsk, botRoster } from './contract'
+import { rowOf } from './row'
 
 const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task, read its replies and change its job or limits" }
 
@@ -32,9 +34,9 @@ const updateInput = z.object({
 
 const updateRules = `Rename a bot, write its job, set the projects it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
 
-A paused bot starts no turns: its running turn stops, and its messages, routines and watches wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count. A bot can't change its own limit.
+A paused bot starts no turns: its running turn stops, and its messages, routines and watches wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count.
 
-A job is the bot's standing instructions, written to it in the second person ("You keep the user's calendar and plan their days."): what it takes care of, when to check with the user before acting, and how to reply. Keep it to a line and a few bullets. Facts about the user, like names, places and preferences, go in its memory instead. The user sees each new job in the bot's chat and can edit or undo it.`
+A job is the bot's standing instructions, written to it in the second person ("You keep the user's calendar and plan their days."): what it takes care of, when to check with the user before acting, and how to reply. Keep it to a line and a few bullets. Facts about the user, like names, places and preferences, go in its memory instead. Every change shows in the bot's chat with who made it, and the user can edit or undo a new job there.`
 
 export const botTools: McpTool[] = [
   {
@@ -61,7 +63,7 @@ export const botTools: McpTool[] = [
     access: 'operate',
     group: group.name,
     always: ['bot'],
-    run: (input, { call }) => call(botSet, input),
+    run: async ({ bot, ...patch }, { call }) => rowOf(await call(botUpdate, { bot, patch })),
   } satisfies McpTool<typeof updateInput>,
 ]
 

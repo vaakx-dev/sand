@@ -60,17 +60,17 @@ export interface GistEntry {
 
 export const botName = (bot: Pick<Bot, 'name'>) => bot.name || 'New bot'
 
-export interface JobVersion {
-  job: string
-  replaced: number
+export type Changer = { kind: 'user' } | { kind: 'agent' } | { kind: 'bot' | 'thread'; id: string; label: string }
+
+export const changeEntry = 'bot-change'
+
+export interface ChangeEntry {
+  by: Changer
+  before: BotPatch
+  after: BotPatch
 }
 
-export const jobEntry = 'bot-job'
-
-export interface JobEntry {
-  job: string
-  previous: string
-}
+export const jobLimit = 20_000
 
 export interface BotSummary extends Bot {
   folder: string
@@ -122,7 +122,7 @@ const botFields = lazy(() => z.object({
   name: z.string().trim().min(1).max(60),
   initial: z.string().trim().min(1).max(2),
   color: z.enum(botColors),
-  job: z.string().max(20_000),
+  job: z.string().max(jobLimit),
   models: z.object({ main: modelChoice(), quick: modelChoice() }),
   computer: computer(),
   projects: projectIds(),
@@ -142,8 +142,7 @@ export interface Bots {
   list(): BotSummary[]
   get(id: string): BotSummary | undefined
   create(spec: NewBot): BotSummary
-  update(id: string, patch: BotPatch): BotSummary
-  jobs(id: string): JobVersion[]
+  update(id: string, patch: BotPatch, by: Changer): BotSummary
   remove(id: string): boolean
   status(id: string, status: BotStatus): void
   conversation(id: string): Conversation
@@ -231,8 +230,7 @@ const one = lazy(() => z.object({ bot: z.string() }))
 
 export const botList = request('bot.list', { input: () => z.object({}), output: type<BotSummary[]>() })
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>() })
-export const botUpdate = request('bot.update', { input: () => one().extend({ patch: botPatch() }), output: type<BotSummary>() })
-export const botJobs = request('bot.jobs', { input: one, output: type<JobVersion[]>() })
+export const botUpdate = request('bot.update', { input: () => z.object({ bot: z.string().optional(), patch: botPatch() }), output: type<BotSummary>(), callers: 'any' })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>() })
 export const botConversation = request('bot.conversation', {
   input: () => one().extend({ before: z.number().int().optional(), after: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),

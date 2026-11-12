@@ -1,3 +1,5 @@
+import { sessions } from '@sand/chats/contract'
+import type { Caller } from '@sand/host-hub/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
@@ -9,24 +11,35 @@ import {
   botDelete,
   botEntry,
   botEntryWire,
-  botJobs,
   botList,
   botRemove,
   botRemoveWire,
   type Bots,
   botUpdate,
+  type Changer,
   helloBots,
 } from './contract'
 
-export const serveBots = (ctx: Context, service: Bots) =>
-  ctx.watch(server, found => {
+export const serveBots = (ctx: Context, service: Bots) => {
+  const changerOf = ({ kind, actor }: Caller): Changer => {
+    if (actor?.owner === 'bot') return { kind: 'bot', id: actor.id, label: service.get(actor.id)?.name || 'a bot' }
+    if (actor) return { kind: 'thread', id: actor.id, label: ctx.get(sessions)?.open(actor.id)?.title || 'a thread' }
+    return kind === 'agent' ? { kind: 'agent' } : { kind: 'user' }
+  }
+
+  const botOf = (bot: string | undefined, { actor }: Caller) => {
+    const id = bot ?? (actor?.owner === 'bot' ? actor.id : undefined)
+    if (!id) throw new Error('Name the bot')
+    return id
+  }
+
+  return ctx.watch(server, found => {
     if (!found) return
     return joinDisposers(
       found.hello(helloBots, () => service.list()),
       found.handle(botList, () => service.list()),
       found.handle(botCreate, spec => service.create(spec)),
-      found.handle(botUpdate, ({ bot, patch }) => service.update(bot, patch)),
-      found.handle(botJobs, ({ bot }) => service.jobs(bot)),
+      found.handle(botUpdate, ({ bot, patch }, caller) => service.update(botOf(bot, caller), patch, changerOf(caller))),
       found.handle(botDelete, ({ bot }) => service.remove(bot)),
       found.handle(botConversation, ({ bot, ...range }) => service.conversation(bot).page(range)),
       ctx.on(botChange, bot => found.broadcast(botChangeWire, bot)),
@@ -34,3 +47,4 @@ export const serveBots = (ctx: Context, service: Bots) =>
       ctx.on(botEntry, entry => found.broadcast(botEntryWire, entry)),
     )
   })
+}

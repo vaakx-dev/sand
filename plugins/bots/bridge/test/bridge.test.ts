@@ -147,7 +147,6 @@ test('a bot starts a thread in its only project, which says the bot sent it and 
   const bot = await createBot('Builder')
 
   expect(await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })).toEqual({ error: expect.stringContaining('Give either cwd or project') })
-  expect(await use(asBot(bot.id), 'bot_update', { projects: ['p1', 'elsewhere'] })).toEqual({ error: expect.stringContaining('Project elsewhere has no folder on this PC') })
   expect(await use(asBot(bot.id), 'bot_update', { projects: ['p1'] })).toMatchObject({ bot: bot.id, projects: ['p1'] })
   const started = await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })
   const thread = sand.sessions.require(started.thread)

@@ -1,4 +1,4 @@
-import { type BotHold, type BotStatus, projectIds } from '@sand/bots/contract'
+import type { BotHold, BotStatus } from '@sand/bots/contract'
 import type { TurnStatus } from '@sand/engine/contract'
 import { request, type } from '@sand/host-hub/contract'
 import { type Call, outsideOrigins } from '@sand/orchestrator/contract'
@@ -26,7 +26,6 @@ export interface BotAnswer {
 }
 
 export const waitLimit = 25_000
-export const jobLimit = 2_000
 
 const callers = 'any'
 const one = lazy(() => z.object({ bot: z.string() }))
@@ -42,19 +41,6 @@ export const botAwait = request('bot.await', {
   output: type<BotAnswer>(),
   callers,
 })
-const setInput = lazy(() => z.object({
-  bot: z.string().optional(),
-  name: z.string().trim().min(1).max(60).optional(),
-  job: z.string().trim().min(1).max(jobLimit).optional(),
-  projects: projectIds().optional(),
-  paused: z.boolean().optional(),
-  budget: z.number().positive().max(1_000_000).nullable().optional(),
-}))
-
-export type BotSet = z.infer<ReturnType<typeof setInput>>
-
-export const botSet = request('bot.set', { input: setInput, output: type<BotRow>(), callers })
-
 const answerGrace = 10_000
 
 export const awaitBot = async (call: Call, answer: BotAnswer, deadline: number, signal?: AbortSignal): Promise<BotAnswer> => {

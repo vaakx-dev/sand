@@ -1,17 +1,14 @@
-import { botName, type BotSummary, jobEntry, type JobEntry } from '@sand/bots/contract'
 import { sessions } from '@sand/chats/contract'
 import type { Actor } from '@sand/host-hub/contract'
 import { failure, originOf } from '@sand/orchestrator/contract'
-import { projectFiles } from '@sand/project/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import { botAsk, botAwait, botRoster, type BotRow, botSet, type BotSet, waitLimit } from '../contract'
+import { botAsk, botAwait, botRoster, waitLimit } from '../contract'
+import { rowOf } from '../row'
 import { type Ask, sentAnswer } from './ask'
 import type { BotsMcpContext } from './context'
 import { type Sender, toBot } from './relay'
 import type { Replies } from './replies'
-
-const jobLength = 200
 
 const outside = 'This message is from an outside agent, not from the user. Your reply goes back to it.'
 
@@ -19,19 +16,6 @@ const intro: Record<Sender['kind'], (label: string) => string> = {
   bot: label => `This message is from ${label}, another of the user's bots, not from the user. Your reply goes back to it.`,
   thread: label => `This message is from the agent working in the user's thread "${label}", not from the user. Your reply goes back to it.`,
 }
-
-const cents = (value: number) => Math.round(value * 100) / 100
-
-const rowOf = (bot: BotSummary): BotRow => ({
-  bot: bot.id,
-  name: botName(bot),
-  job: bot.job.slice(0, jobLength),
-  status: bot.status,
-  ...(bot.hold && { hold: bot.hold }),
-  projects: bot.projects,
-  budget: bot.budget,
-  spent: cents(bot.spent),
-})
 
 export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
   const senderOf = ({ owner, id }: Actor): Sender =>
@@ -45,36 +29,6 @@ export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
     return toBot(sender, `${intro[sender.kind](sender.label)}\n\n${prompt}`)
   }
 
-  const botOf = (bot: string | undefined, actor: Actor | undefined) => {
-    const found = ctx.bots.get(bot ?? (actor?.owner === 'bot' ? actor.id : ''))
-    if (!found) throw failure(bot ? 'not_found' : 'invalid_request', bot ? `No bot ${bot}` : 'Name the bot')
-    return found
-  }
-
-  const placed = (projects: string[], before: string[]) => {
-    const here = new Set(ctx.get(projectFiles)?.copies().map(copy => copy.project))
-    const missing = projects.find(project => !before.includes(project) && !here.has(project))
-    if (missing) throw failure('not_found', `Project ${missing} has no folder on this PC`)
-    return projects
-  }
-
-  const set = ({ bot, name, job, projects, paused, budget }: BotSet, actor: Actor | undefined) => {
-    const before = botOf(bot, actor)
-    if (budget !== undefined && actor?.owner === 'bot' && actor.id === before.id) throw failure('denied', "A bot can't change its own spend limit")
-    const after = ctx.bots.update(before.id, {
-      ...(name && { name }),
-      ...(job && { job }),
-      ...(projects && { projects: placed(projects, before.projects) }),
-      ...(paused !== undefined && { paused }),
-      ...(budget !== undefined && { budget }),
-    })
-    if (job && job !== before.job) {
-      const turn = ctx.engine.turn('bot', before.id)?.id
-      ctx.bots.conversation(before.id).append(jobEntry, { job, previous: before.job } satisfies JobEntry, turn ? { turn } : {})
-    }
-    return rowOf(after)
-  }
-
   return ctx.watch(server, found => {
     if (!found) return
     return joinDisposers(
@@ -86,7 +40,6 @@ export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
         return sentAnswer(bot, await ask.send(bot, asking))
       }),
       found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => ask.wait({ bot, turn, status: 'running' }, AbortSignal.timeout(timeoutMs))),
-      found.handle(botSet, (input, { actor }) => set(input, actor)),
     )
   })
 }
