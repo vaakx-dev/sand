@@ -18,7 +18,6 @@ export const createRoster = (ctx: BridgeWeb) => {
     list: () => bots.get()?.list() ?? [],
     find: (id: string) => bots.get()?.find(id),
     starterOf: (thread: string) => starts.get()[thread],
-    startedBy: (bot: string) => Object.entries(starts.get()).flatMap(([thread, starter]) => (starter === bot ? [thread] : [])),
   }
 }
 

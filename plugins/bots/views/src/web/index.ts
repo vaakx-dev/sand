@@ -1,5 +1,5 @@
 import { advanced } from '@sand/advanced/contract'
-import { botAutomations, botName, botProfile, botRoster, botRoute, botTabs, botViews, changeEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type ChangeEntry } from '@sand/bots/contract'
+import { botAutomations, botName, botProfile, botRoster, botRoute, botViews, changeEntry, type BotAutomationSource, type BotProfileSection, type ChangeEntry } from '@sand/bots/contract'
 import { modelTargets } from '@sand/model-panel/contract'
 import { palette, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -21,7 +21,6 @@ import { botScreen } from './screen/bot'
 import { botsGroup } from './sidebar'
 import { botStore } from './store'
 import { modelTarget } from './target'
-import { work } from './work'
 
 const automationsRoute = 'automations'
 
@@ -41,7 +40,6 @@ export default definePlugin({
   description: "Bots in the sidebar; each bot's screen with its chat and the model it runs with; its profile, New bot, Automations and the Listening chip",
   inject,
   apply(ctx) {
-    const tabSources = registry<BotTabSource & { order?: number }>()
     const sections = registry<BotProfileSection>()
     const automationSources = registry<BotAutomationSource>()
     const known = pulse(ctx, [projectsChange], [projects])
@@ -49,7 +47,6 @@ export default definePlugin({
       ctx,
       store: botStore(ctx),
       chats: conversations(ctx),
-      work: work(tabSources),
       projects: owned(ctx, () => known.read(() => ctx.get(projects)?.groups({ hidden: true }) ?? [])),
       defaults: owned(ctx, () => pulse(ctx, [modelsChange], [models]).read(() => effective({}, ctx.get(models)?.defaults() ?? {}))),
       advanced: owned(ctx, () => pulse(ctx, [], [advanced]).read(() => ctx.get(advanced)?.on() ?? false)),
@@ -64,7 +61,6 @@ export default definePlugin({
 
     ctx.provide(botViews, { open: parts.open })
     ctx.provide(botRoster, { list: () => parts.store.bots.get() ?? [], find: parts.store.find })
-    ctx.provide(botTabs, { source: tabSources.add })
     ctx.provide(botProfile, { section: sections.add })
     ctx.provide(botAutomations, { source: automationSources.add })
 

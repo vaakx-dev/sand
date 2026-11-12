@@ -1,5 +1,6 @@
 import { botCreate, type BotEntry } from '@sand/bots/contract'
 import { botStarts, type BotReplyEntry } from '@sand/bot-bridge/contract'
+import { threadList } from '@sand/orchestrator/contract'
 import { botAwait, botOpen } from '@sand/bot-turns/contract'
 import { type Entry, type Message, type Session, textOf, type UserContent } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
@@ -30,7 +31,7 @@ const start = async (thread: Reply[], bot: Reply[]) => {
       { id: 'botsrc', models: ['b'], replies: bot, api: 'anthropic' },
     ],
     {
-      plugins: ['agent/context', 'agent/mcp-server', 'agent/threads-mcp', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/mcp', 'bots/bridge'],
+      plugins: ['core/watch', 'agent/subagents', 'agent/context', 'agent/mcp-server', 'agent/threads-mcp', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/mcp', 'bots/bridge'],
       projects: [{ project: 'p1', path: folder }],
     },
   )
@@ -171,4 +172,20 @@ test('a bot starts a thread in its only project, which says the bot sent it and 
   expect(await use(asBot(bot.id), 'thread_list', { mine: true })).toEqual([expect.objectContaining({ thread: thread.id, project: 'p1', status: 'completed' })])
   expect(await use(asBot(bot.id), 'thread_update', { thread: thread.id, settled: true })).toMatchObject({ thread: thread.id, settled: true })
   expect(await use(asBot(bot.id), 'thread_wait', { thread: thread.id })).toEqual({ error: expect.any(String) })
+})
+
+test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent rather than its thread", async () => {
+  await start([said('Found three.')], [])
+  const bot = await createBot('Scout')
+  const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', model: 'fake/t' } } as const
+  const result = await registry().run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: asBot(bot.id), turn: 'test', progress() {}, wait: () => () => {} })
+  const [, id] = /^Started subagent (\S+)\./.exec(textOf(result.content)) ?? []
+
+  const child = sand.sessions.require(id!)
+  expect(child).toMatchObject({ kind: 'agent', parent: null, cwd: bot.folder })
+  const notice = await noticeFor(bot.id)
+  expect(notice).toContain(`<thread>${child.id}</thread>`)
+  expect(notice).toContain('Found three.')
+  expect(await sand.ask(threadList, { bot: bot.id, subagents: true })).toEqual([expect.objectContaining({ thread: child.id })])
+  expect(await sand.ask(threadList, { bot: bot.id })).toEqual([])
 })

@@ -1,3 +1,4 @@
+import { threadOwners } from '@sand/chat/contract'
 import { inspector } from '@sand/inspector/contract'
 import { pulse } from '@sand/reactive'
 import { kit, type Tone } from '@sand/ui-kit/contract'
@@ -6,31 +7,33 @@ import { threadRouteKind, threads, threadsChange, type Thread } from '@sand/web-
 import { derive, div, list } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 
-type Status = 'running' | 'done' | 'failed' | 'stopped'
+type Status = 'running' | 'new' | 'done' | 'failed' | 'stopped'
 
-const looks: Record<Status, Tone> = { running: 'run', done: 'success', failed: 'danger', stopped: 'neutral' }
+const looks: Record<Status, Tone> = { running: 'run', new: 'accent', done: 'success', failed: 'danger', stopped: 'neutral' }
 
-const statusOf = ({ running, ended }: Thread): Status => {
+const statusOf = ({ running, ended, info }: Thread): Status => {
   if (running) return 'running'
   if (ended?.stopReason === 'error') return 'failed'
   if (ended?.stopReason === 'interrupted') return 'stopped'
-  return 'done'
+  return info.seen ? 'done' : 'new'
 }
 
 const keyOf = (child: Thread) => [child.id, statusOf(child), child.info.title].join(' ')
 
 export default definePlugin({
   name: 'inspector-helpers',
-  description: "The inspector's subagents row: the subagents a thread started",
+  description: "The inspector's subagents row: the subagents a thread or bot started",
   inject: { inspector, kit, threads },
   apply(ctx) {
-    const changes = pulse(ctx, [threadsChange])
+    const changes = pulse(ctx, [threadsChange], [threadOwners])
 
-    const helpersOf = (session: string) => {
+    const startedBy = (owner: string, child: Thread) => child.info.parent === owner || ctx.get(threadOwners)?.owner(child.id)?.id === owner
+
+    const helpersOf = (owner: string) => {
       changes.version.get()
       return ctx.threads
-        .children(session)
-        .filter(child => child.info.kind === 'agent')
+        .list()
+        .filter(child => child.info.kind === 'agent' && startedBy(owner, child))
         .toSorted((a, b) => b.info.created - a.info.created)
     }
 

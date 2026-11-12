@@ -1,19 +1,20 @@
 {
   "name": "@sand/inspector-helpers",
   "version": "0.0.0",
-  "description": "The inspector's subagents row: the subagents a thread started",
+  "description": "The inspector's subagents row: the subagents a thread or bot started",
   "type": "module",
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
     "label": "Subagents row",
-    "summary": "Shows the subagents a thread started and opens them"
+    "summary": "Shows the subagents a thread or bot started and opens them"
   },
   "dependencies": {
-    "@sand/ui-shell": "workspace:*",
+    "@sand/chat": "workspace:*",
     "@sand/inspector": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"

@@ -20,7 +20,7 @@ export const threadTurn = ({ owner, conversation, ...info }: EngineTurn): TurnIn
 
 export const threadConversations = (ctx: TurnsContext): Conversations<Session> => {
   const unseen = (session: Session) => {
-    if (session.kind !== 'agent') ctx.sessions.update(session.id, { seen: false })
+    ctx.sessions.update(session.id, { seen: false })
   }
 
   const reopen = (session: Session) => {
