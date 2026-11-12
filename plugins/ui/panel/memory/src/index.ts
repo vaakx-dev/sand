@@ -1,7 +1,7 @@
 import { botMemorySpace } from '@sand/bot-memory/contract'
 import { wire } from '@sand/devices-contract'
 import { featureState, type FeatureState } from '@sand/features/contract'
-import { markdown } from '@sand/markdown/contract'
+import { markdown, type Markdown } from '@sand/markdown/contract'
 import { memoryChangeWire, memoryNoteWrite, memoryRead, memoryWrite, type MemoryRef } from '@sand/memory/contract'
 import { panel } from '@sand/panel/contract'
 import { projectMemorySpace } from '@sand/project-memory/contract'
@@ -26,7 +26,7 @@ const keyOf = ({ space, id }: MemoryRef) => `${space}/${id}`
 export default definePlugin({
   name: 'panel-memory',
   description: "The side panel's Memory tab: a bot's own memory and notes in its chat, or the project's shared memory in a thread's chat, live and editable",
-  inject: { panel, kit, markdown, wire, threads },
+  inject: { panel, kit, wire, threads },
   apply(ctx) {
     const threadInfo = pulse(ctx, [threadChange, threadsChange])
     const features = sig<FeatureState | undefined>(undefined)
@@ -49,17 +49,17 @@ export default definePlugin({
       return project === undefined ? undefined : { ref: { space: projectMemorySpace, id: project }, about: PROJECT_ABOUT }
     }
 
-    const view = ({ ref, about }: Place) =>
+    const view = ({ ref, about }: Place, markdown: Markdown) =>
       memoryView({
         kit: ctx.kit,
-        markdown: ctx.markdown,
+        markdown,
         files: () => files(ref),
         about,
         saveMemory: text => ctx.wire.call(memoryWrite, { ...ref, text }),
         saveNote: note => ctx.wire.call(memoryNoteWrite, { ...ref, ...note }),
       })
 
-    const render = (subject: () => Subject) => {
+    const render = (subject: () => Subject, markdown: Markdown) => {
       const place = derive(() => placeOf(subject()))
       const shownKey = derive(() => {
         const shown = place.get()
@@ -67,19 +67,21 @@ export default definePlugin({
       })
       return dynamicChild(shownKey, () => {
         const shown = place.get()
-        return shown ? view(shown) : null
+        return shown ? view(shown, markdown) : null
       })
     }
 
-    ctx.effect(() =>
-      ctx.panel.tab({
-        id: 'memory',
-        label: 'Memory',
-        icon: 'brain',
-        order: 7,
-        shows: subject => remembering() && placeOf(subject) !== undefined,
-        render,
-      }),
+    ctx.watch(markdown, found =>
+      found
+        ? ctx.panel.tab({
+            id: 'memory',
+            label: 'Memory',
+            icon: 'brain',
+            order: 7,
+            shows: subject => remembering() && placeOf(subject) !== undefined,
+            render: subject => render(subject, found),
+          })
+        : undefined,
     )
   },
 })
