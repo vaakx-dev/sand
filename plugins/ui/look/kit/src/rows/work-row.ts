@@ -44,6 +44,8 @@ export interface RowPlaceProps {
   mark?: Child
 }
 
+export type RowForm = 'stacked' | 'line'
+
 export interface WorkRowBody {
   title: Child
   lead?: Child
@@ -54,6 +56,7 @@ export interface WorkRowBody {
   status?: Status
   trail?: Child
   large?: boolean
+  form?: RowForm
 }
 
 export type WorkRowProps = Props<HTMLButtonElement> & {
@@ -71,20 +74,30 @@ const secondLine = (large: boolean, { detail, place, status, trail }: Pick<WorkR
 
 const endOf = (end: Child | undefined, at: number | undefined) => end ?? (at === undefined ? null : age(at))
 
-export const workRowBody = ({ title, lead, end, at, large = false, ...rest }: WorkRowBody) =>
+const titleOf = (title: Child, large: boolean) => span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title))
+
+const stackedBody = ({ title, lead, end, at, large = false, ...rest }: WorkRowBody) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col gap-px' },
-    div(
-      { class: 'flex min-w-0 items-center gap-2' },
-      lead ?? null,
-      span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title)),
-      endOf(end, at),
-    ),
+    div({ class: 'flex min-w-0 items-center gap-2' }, lead ?? null, titleOf(title, large), endOf(end, at)),
     secondLine(large, rest),
   )
 
+const lineBody = ({ title, lead, end, at, place, status, large = false }: WorkRowBody) =>
+  div(
+    { class: 'flex min-w-0 flex-1 items-center gap-2' },
+    lead ?? null,
+    place?.mark ?? null,
+    titleOf(title, large),
+    endOf(end, at),
+    workStatus(status),
+  )
+
+export const workRowBody = (body: WorkRowBody) => (body.form === 'line' ? lineBody(body) : stackedBody(body))
+
 export interface RowBodyLook {
   large?: boolean
+  form?: RowForm
 }
 
 const sameLook = (shown: Row, next: Row) =>
@@ -107,10 +120,11 @@ const looksOf = (row: () => Row) => {
   })
 }
 
-const bodyOf = (row: Row, large: boolean) =>
+const bodyOf = (row: Row, { large, form }: RowBodyLook) =>
   workRowBody({
     title: row.label,
     large,
+    form,
     lead: row.lead?.(),
     end: row.end ? span({ class: 'flex shrink-0 tabular-nums' }, metaLine(row.end)) : undefined,
     at: row.at,
@@ -120,7 +134,7 @@ const bodyOf = (row: Row, large: boolean) =>
     trail: row.trail?.(),
   })
 
-export const rowBody = (row: () => Row, { large = false }: RowBodyLook = {}) => dynamicChild(looksOf(row), shown => bodyOf(shown, large))
+export const rowBody = (row: () => Row, look: RowBodyLook = {}) => dynamicChild(looksOf(row), shown => bodyOf(shown, look))
 
 export const workRow = ({ current = false, large = false, surface = 'page', class: extra, ...props }: WorkRowProps, body: Child) =>
   rowButton(

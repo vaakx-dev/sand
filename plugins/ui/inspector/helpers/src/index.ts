@@ -16,6 +16,8 @@ const startOf = (subagent: Thread) => subagent.started ?? subagent.info.created
 
 const keyOf = ({ subagent, final }: Listed) => [subagent.id, final, titleOf(subagent)].join(' ')
 
+const placeIn = (owner: Subject['owner'], row: Row) => (owner === 'bot' ? row.place : undefined)
+
 const captionOf = (running: number) => (running ? `Subagents · ${running} running` : 'Subagents')
 
 export default definePlugin({
@@ -46,11 +48,14 @@ export default definePlugin({
       return ctx.get(threadRows)?.row(subagent.id) ?? { id: subagent.id, label: titleOf(subagent), status: 'running', at: startOf(subagent) }
     }
 
-    const listedRowOf = ({ subagent, final }: Listed): Row => (final ? { ...rowOf(subagent), status: final } : rowOf(subagent))
-
-    const line = (item: Listed) => ctx.kit.workRow({ surface: 'raised', onClick: () => open(item.subagent) }, ctx.kit.rowBody(() => listedRowOf(item)))
+    const listedRowOf = (owner: Subject['owner'], { subagent, final }: Listed): Row => {
+      const row = rowOf(subagent)
+      return { ...row, place: placeIn(owner, row), status: final ?? row.status }
+    }
 
     const render = (subject: () => Subject) => {
+      const line = (item: Listed) =>
+        ctx.kit.workRow({ surface: 'raised', onClick: () => open(item.subagent) }, ctx.kit.rowBody(() => listedRowOf(subject().owner, item), { form: 'line' }))
       const listed = derive(() => listedIn(subject()))
       return div(
         { class: 'flex min-w-0 flex-col' },
