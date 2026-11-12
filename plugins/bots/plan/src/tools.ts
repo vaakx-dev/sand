@@ -4,18 +4,16 @@ import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
 import { planLimit, planRead, planWrite } from './contract'
 
-const bot = z.string().optional().describe('The bot id (default: you, when you are a bot)')
-
-const readInput = z.object({ bot })
+const readInput = z.object({ bot: z.string().describe('The bot id') })
 
 const writeInput = z.object({
-  bot,
+  bot: z.string().optional().describe('The bot id (default: you, when you are a bot)'),
   text: z.string().max(planLimit).describe(`The whole plan in Markdown, replacing the one there; at most ${planLimit.toLocaleString('en')} characters`),
 })
 
-const readRules = `Read your plan: the Markdown file the user reads to see where your work stands. It's empty until you write one. The user can edit it, so read it before you change it. A bot leaves out bot to read its own.`
+const readRules = `Read a bot's plan: the Markdown file of what's happening in its work, what's next and what's blocked, which the user reads and can edit. It's empty until the bot writes one. Read it before you change it.`
 
-const writeRules = `Write your plan, replacing the whole file. Keep it current: update it when you start or finish work, or wait on someone or something, and drop done items that no longer matter. A bot leaves out bot to write its own.
+const writeRules = `Write a bot's plan, replacing the whole file. A bot leaves out bot to write its own, and writes it whenever its work changes: when it starts or finishes something, or starts waiting on someone or something. Drop done items that no longer matter.
 
 One bullet per item. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note; each link shows its thread's live state, so don't add status headings. An item with no thread stays plain, with what it waits on:
 
@@ -28,7 +26,7 @@ export const planTools: McpTool[] = [
     description: readRules,
     input: readInput,
     access: 'read',
-    agents: ['bot'],
+    agents: [],
     run: (input, { call }) => call(planRead, input),
   } satisfies McpTool<typeof readInput>,
   {

@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-plan",
   "version": "0.0.0",
-  "description": "Each bot's project plan: one Markdown file of its work, each item linked to its thread, that the bot keeps through sand's tools and the user can read and edit",
+  "description": "Each bot's project plan: one Markdown file of its work, each item linked to its thread, that stays in the bot's context, that the bot keeps through sand's tools and that the user can read and edit",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -12,7 +12,7 @@
     "host": "./src/host.ts",
     "cli": "./src/host.ts",
     "label": "Bot plans",
-    "summary": "Keeps each bot's plan of its work in one file you can read and edit"
+    "summary": "Keeps each bot's plan of its work in its context, in one file you can read and edit"
   },
   "dependencies": {
     "@sand/bots": "workspace:*",
@@ -20,6 +20,8 @@
     "@sand/host-hub": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",
+    "@sand/prompt": "workspace:*",
+    "@sand/provider-threads": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
