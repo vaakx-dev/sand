@@ -2,9 +2,11 @@ import type { Wire } from '@sand/devices-contract'
 import { detailsLimit, logbookChange, logbookRemove, titleLimit, type Entry } from '@sand/logbook/contract'
 import type { Markdown } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, form, p, preventThen, show, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { linkSource } from './links'
+import { projectPicker } from './picker'
 
 interface Focus {
   id: string
@@ -18,7 +20,17 @@ interface EntryParts {
   report(error: unknown): void
   focus: Sig<Focus | undefined>
   projectOf(entry: Entry): string | undefined
+  projects(): ProjectGroup[]
+  projectName(id: string): string | undefined
   pickTag(tag: string): void
+}
+
+const NO_PROJECT = 'No project'
+
+const projectChoices = (parts: EntryParts, current: string | null) => {
+  const known = parts.projects().map(group => ({ value: group.id, name: group.name }))
+  const missing = current && !known.some(choice => choice.value === current)
+  return missing ? [...known, { value: current, name: parts.projectName(current) ?? current }] : known
 }
 
 const tagsOf = (text: string) => text.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -28,13 +40,14 @@ const editForm = (parts: EntryParts, entry: Entry) => {
   const title = sig(entry.title)
   const details = sig(entry.details)
   const tags = sig(entry.tags.join(', '))
+  const project = sig(entry.project)
   const saving = sig(false)
   const failure = sig('')
   const close = () => parts.focus.set({ id: entry.id, mode: 'open' })
   const save = () => {
     saving.set(true)
     parts.wire
-      .call(logbookChange, { id: entry.id, title: title.get(), details: details.get(), tags: tagsOf(tags.get()) })
+      .call(logbookChange, { id: entry.id, project: project.get(), title: title.get(), details: details.get(), tags: tagsOf(tags.get()) })
       .then(close, error => failure.set(errorMessage(error)))
       .finally(() => saving.set(false))
   }
@@ -43,6 +56,15 @@ const editForm = (parts: EntryParts, entry: Entry) => {
     kit.field({ label: 'Title' }, kit.textInput({ bindValue: title, maxLength: titleLimit, onMount: node => node.focus() })),
     kit.field({ label: 'Details' }, kit.textArea({ bindValue: details, rows: 6, maxLength: detailsLimit })),
     kit.field({ label: 'Tags', hint: 'Separate tags with commas' }, kit.textInput({ bindValue: tags })),
+    kit.field(
+      { label: 'Project' },
+      projectPicker<string | null>(kit, {
+        field: true,
+        choices: () => [{ value: null, name: NO_PROJECT }, ...projectChoices(parts, entry.project)],
+        selected: () => project.get(),
+        pick: value => project.set(value),
+      }),
+    ),
     show(
       () => Boolean(failure.get()),
       () => kit.errorText(() => failure.get()),

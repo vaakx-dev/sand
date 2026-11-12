@@ -1,9 +1,12 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { event } from 'drydock'
 import { z } from 'zod'
 
 export const planLimit = 20_000
 
 const one = z.object({ bot: z.string().optional() })
+
+export const planDoneRule = event<(rule: string) => string>('botPlan.doneRule')
 
 export const planChangeWire = wireEvent<[bot: string, text: string]>('botPlan.change')
 

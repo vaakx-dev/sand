@@ -1,6 +1,6 @@
 import type { Entry } from '@sand/logbook/contract'
-import type { ProjectGroup } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, list, show, sig, span } from '@vaakx-dev/vrui'
+import { projectPicker } from './picker'
 import { entryView, type EntryParts, type Focus } from './entry'
 import { search as searchOf, type Search } from './search'
 import { sections } from './sections'
@@ -8,8 +8,6 @@ import { sections } from './sections'
 interface ViewParts extends Omit<EntryParts, 'focus' | 'projectOf' | 'pickTag'> {
   version(): number
   home(): string | undefined
-  projects(): ProjectGroup[]
-  projectName(id: string): string | undefined
 }
 
 interface Choice {
@@ -20,30 +18,13 @@ type State = 'failed' | 'loading' | 'empty' | 'listed'
 
 const ALL_PROJECTS = 'All projects'
 
-const projectMenu = (parts: ViewParts, project: () => string | undefined, pick: (choice: Choice) => void) => {
-  const { kit } = parts
-  const label = () => {
-    const id = project()
-    return id ? (parts.projectName(id) ?? 'Project') : ALL_PROJECTS
-  }
-  const item = (close: () => void, choice: Choice, name: string) =>
-    kit.choiceItem(
-      {
-        selected: () => project() === choice.project,
-        onClick: () => {
-          close()
-          pick(choice)
-        },
-      },
-      span({ class: 'flex-1 truncate' }, name),
-    )
-  return kit.dropdown({
-    placement: 'below-right',
+const projectMenu = (parts: ViewParts, project: () => string | undefined, pick: (choice: Choice) => void) =>
+  projectPicker<string | undefined>(parts.kit, {
     class: 'max-w-40 shrink-0',
-    trigger: press => kit.pickerButton({ ...press, 'aria-label': 'Project' }, label),
-    items: close => [item(close, {}, ALL_PROJECTS), ...parts.projects().map(group => item(close, { project: group.id }, group.name))],
+    choices: () => [{ value: undefined, name: ALL_PROJECTS }, ...parts.projects().map(group => ({ value: group.id, name: group.name }))],
+    selected: project,
+    pick: value => pick({ project: value }),
   })
-}
 
 const tagLine = (parts: ViewParts, search: Search) =>
   show(

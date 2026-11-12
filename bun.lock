@@ -286,6 +286,7 @@
       "name": "@sand/logbook",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/bot-plan": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
