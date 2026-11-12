@@ -1,0 +1,36 @@
+{
+  "name": "@sand/logbook",
+  "version": "0.0.0",
+  "description": "The Logbook: a dated record of finished work that every thread and bot adds to and searches through sand's tools, kept in sand.db and the same on all your PCs",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "threads",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "host": "./src/host.ts",
+    "cli": "./src/host.ts",
+    "label": "Logbook",
+    "summary": "Keeps a dated record of finished work that threads and bots add to and search"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

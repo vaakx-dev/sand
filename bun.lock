@@ -51,6 +51,7 @@
         "@sand/boot": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/media": "workspace:*",
@@ -278,6 +279,28 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
+      },
+    },
+    "plugins/agent/logbook": {
+      "name": "@sand/logbook",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/ledger": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+        "@sand/model": "workspace:*",
         "@sand/replay": "workspace:*",
       },
     },
@@ -2564,6 +2587,24 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/panel/logbook": {
+      "name": "@sand/panel-logbook",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/logbook": "workspace:*",
+        "@sand/markdown": "workspace:*",
+        "@sand/panel": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/ui/panel/panel": {
       "name": "@sand/panel",
       "version": "0.0.0",
@@ -3045,6 +3086,8 @@
 
     "@sand/ledger": ["@sand/ledger@workspace:plugins/core/ledger"],
 
+    "@sand/logbook": ["@sand/logbook@workspace:plugins/agent/logbook"],
+
     "@sand/logins": ["@sand/logins@workspace:plugins/connections/logins"],
 
     "@sand/logins-mcp": ["@sand/logins-mcp@workspace:plugins/agent/logins-mcp"],
@@ -3082,6 +3125,8 @@
     "@sand/panel": ["@sand/panel@workspace:plugins/ui/panel/panel"],
 
     "@sand/panel-changes": ["@sand/panel-changes@workspace:plugins/ui/panel/changes"],
+
+    "@sand/panel-logbook": ["@sand/panel-logbook@workspace:plugins/ui/panel/logbook"],
 
     "@sand/panel-plan": ["@sand/panel-plan@workspace:plugins/ui/panel/plan"],
 
