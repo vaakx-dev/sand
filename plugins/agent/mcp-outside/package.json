@@ -1,0 +1,41 @@
+{
+  "name": "@sand/mcp-outside",
+  "version": "0.0.0",
+  "description": "Lets outside agents use sand's tools over MCP, with the sand mcp command on stdio and at /mcp over HTTP for agents paired in Settings → Devices",
+  "type": "module",
+  "sand": {
+    "feature": "outside",
+    "host": "./src/http/index.ts",
+    "cli": "./src/stdio.ts",
+    "label": "MCP server",
+    "summary": "Offers sand's tools to outside agents over MCP, with the sand mcp command or at /mcp for agents paired in Settings → Devices",
+    "features": {
+      "outside": {
+        "label": "Outside access",
+        "summary": "Outside agents and scripts reach sand: the MCP server for agents paired in Settings → Devices, and the sand mcp and sand thread commands",
+        "needs": [
+          "mcp-server"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@sand/cli-commands": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@sand/harness": "workspace:*"
+  }
+}

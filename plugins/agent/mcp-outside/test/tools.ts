@@ -1,6 +1,6 @@
 import { threadList, threadStop } from '@sand/orchestrator/contract'
 import { z } from 'zod'
-import type { McpTool } from '../src/contract'
+import type { McpTool } from '@sand/mcp-server/contract'
 
 const empty = z.object({})
 const thread = z.object({ thread: z.string() })

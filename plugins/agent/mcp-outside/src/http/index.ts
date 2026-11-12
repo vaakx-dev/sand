@@ -7,7 +7,7 @@ import { agentEndpoint } from './endpoint'
 import { hubUse } from './link'
 
 export default definePlugin({
-  name: 'mcp-server',
+  name: 'mcp-outside',
   description: 'Serves the tools other features register, such as threads and bots, over MCP at /mcp to agents paired in Settings → Devices, read-only or able to operate',
   inject: { auth, hostHttp, hub },
   apply(ctx) {

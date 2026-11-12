@@ -34,3 +34,5 @@ export interface McpTools {
 }
 
 export const mcpTools = service<McpTools>('mcpTools')
+
+export const resultText = (value: unknown) => JSON.stringify(value ?? { ok: true })

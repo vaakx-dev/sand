@@ -17,15 +17,19 @@ declare global {
 
 interface Combo {
   name: string
-  off: string[]
+  off?: string[]
   pages?: string[]
   absent?: string[]
   exact?: boolean
 }
 
-const topLevel = ['threads', 'bots', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates']
+const core = ['threads', 'bots', 'phone', 'notifications', 'updates']
 
-const kernelPages = ['Features', 'Plugins']
+const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'computers', 'bot-watches', 'logbook', 'guesses', 'stash', 'math', 'mcp', 'pcs', 'outside']
+
+const topLevel = [...core, ...addons]
+
+const kernelPages = ['Add-ons', 'Plugins']
 
 const fillingShell = ['threads', 'bots', 'calendar']
 
@@ -37,17 +41,18 @@ const alone = (id: string, pages: string[] = []): Combo => ({
 })
 
 const combos: Combo[] = [
+  { name: 'a new install', pages: ['Models', 'Projects', 'Devices', 'Notifications', 'Updates'], absent: ['Connections'] },
   { name: 'kernel only', off: topLevel, pages: kernelPages, exact: true },
   alone('threads', ['Models', 'Projects']),
   alone('bots', ['Models']),
-  alone('calendar', ['Connections']),
+  alone('connections', ['Connections']),
   alone('computers', ['Models']),
-  alone('pcs', ['Devices']),
+  alone('phone', ['Devices']),
   alone('notifications', ['Notifications']),
-  alone('mcp-server'),
+  alone('outside'),
   alone('updates', ['Updates']),
-  { name: 'threads without git', off: [...topLevel.filter(id => id !== 'threads'), 'git'] },
-  { name: 'bots without notifications, schedules and connections', off: [...topLevel.filter(id => id !== 'bots'), 'schedules', 'connections'], absent: ['Notifications', 'Connections'] },
+  { name: 'threads with coding', off: topLevel.filter(id => id !== 'threads' && id !== 'git') },
+  { name: 'bots without notifications and schedules', off: [...topLevel.filter(id => id !== 'bots'), 'schedules'], absent: ['Notifications', 'Connections'] },
 ]
 
 const withModel = '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n'
@@ -107,7 +112,7 @@ for (const combo of combos)
     combo.name,
     async () => {
       const release = await slot()
-      const sand = await startSandbox(`[features]\n${combo.off.map(id => `${id} = false`).join('\n')}\n`)
+      const sand = await startSandbox(combo.off ? `[features]\n${combo.off.map(id => `${id} = false`).join('\n')}\n` : '')
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
       try {
         const pairing = await context.newPage()
@@ -129,7 +134,7 @@ for (const combo of combos)
         if (combo.exact) expect(pages.toSorted()).toEqual(combo.pages?.toSorted() ?? [])
 
         await visitAll(page)
-        if (fillingShell.every(id => combo.off.includes(id))) {
+        if (fillingShell.every(id => combo.off?.includes(id))) {
           await page.getByText('No features are on.').waitFor()
           await page.getByRole('button', { name: 'Settings' }).first().waitFor()
           await page.setViewportSize({ width: 390, height: 844 })

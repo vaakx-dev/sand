@@ -1,10 +1,12 @@
 import { combinations } from './boot'
 
 combinations([
-  ['Calendar alone', ['calendar'], [], ['calendars', 'connections']],
+  ['Calendar alone', ['calendar'], [], ['calendars']],
   ['Computer use alone', ['computers'], [], ['computers', 'engine', 'llm', 'tools']],
-  ['Several PCs & phone alone', ['pcs'], [], []],
+  ['Calendar with its accounts', ['calendar', 'connections'], [], ['calendars', 'connections']],
+  ['Several PCs alone', ['phone', 'pcs'], [], []],
+  ['Phone alone', ['phone'], [], []],
   ['Notifications alone', ['notifications'], [], []],
-  ['the MCP server alone', ['mcp-server'], [], []],
+  ['Outside access alone', ['outside'], [], []],
   ['Updates alone', ['updates'], [], []],
 ])

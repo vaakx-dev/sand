@@ -12,7 +12,30 @@
     "print": "./src/runtime.ts",
     "web": "./src/web/index.ts",
     "label": "Git",
-    "summary": "Reads each thread folder's git status, kept up to date"
+    "summary": "Reads each thread folder's git status, kept up to date",
+    "features": {
+      "git": {
+        "label": "Coding",
+        "summary": "Git status and diffs for each thread's folder, with worktrees, merging and GitHub",
+        "uses": [
+          "background"
+        ],
+        "needs": [
+          "threads"
+        ],
+        "addon": true
+      },
+      "worktrees": {
+        "label": "Worktrees",
+        "summary": "Let a thread work in its own folder and branch",
+        "parent": "git"
+      },
+      "merge": {
+        "label": "Merge",
+        "summary": "See which threads have work ready to merge, and merge it into the project on this PC",
+        "parent": "worktrees"
+      }
+    }
   },
   "dependencies": {
     "@sand/devices-contract": "workspace:*",

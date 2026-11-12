@@ -7,7 +7,17 @@
     "feature": "changes-tab",
     "web": "./src/index.ts",
     "label": "Changes",
-    "summary": "Shows the files a thread changed and their patches in the side panel, with a count in Details"
+    "summary": "Shows the files a thread changed and their patches in the side panel, with a count in Details",
+    "features": {
+      "changes-tab": {
+        "label": "Changes tab",
+        "summary": "The files a thread changed and their patches, with a count in Details",
+        "parent": "side-panel",
+        "needs": [
+          "git"
+        ]
+      }
+    }
   },
   "dependencies": {
     "@sand/changes": "workspace:*",

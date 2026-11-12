@@ -4,7 +4,7 @@
   "description": "The sand thread command: start, message, wait for, show, list and stop threads from a script or another agent",
   "type": "module",
   "sand": {
-    "feature": "threads",
+    "feature": "outside",
     "cli": "./src/index.ts",
     "label": "Thread command",
     "summary": "Drives threads from the terminal"

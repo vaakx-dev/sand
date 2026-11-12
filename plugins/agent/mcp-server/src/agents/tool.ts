@@ -2,8 +2,7 @@ import type { Conversation } from '@sand/engine/contract'
 import type { Server } from '@sand/server/contract'
 import type { Tool } from '@sand/tools/contract'
 import type { ZodObject } from 'zod'
-import type { McpTool } from '../contract'
-import { resultText } from '../result'
+import { type McpTool, resultText } from '../contract'
 
 const longestWait = 3_600_000
 const waitGrace = 60_000

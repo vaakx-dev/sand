@@ -11,7 +11,17 @@
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Saved logins",
-    "summary": "Save website logins and keys once, choose which bots may use each, and let them sign in without seeing the values"
+    "summary": "Save website logins and keys once, choose which bots may use each, and let them sign in without seeing the values",
+    "features": {
+      "logins": {
+        "label": "Saved logins",
+        "summary": "Agents sign in and use keys you saved, without seeing them",
+        "needs": [
+          "engine"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/bots": "workspace:*",

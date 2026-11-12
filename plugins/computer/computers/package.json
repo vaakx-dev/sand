@@ -11,7 +11,29 @@
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Computers",
-    "summary": "The browsers and desktops the agent can see and use"
+    "summary": "The browsers and desktops the agent can see and use",
+    "features": {
+      "computers": {
+        "label": "Computer use",
+        "summary": "Let agents see and use a browser or this PC",
+        "needs": [
+          "engine",
+          "models",
+          "media"
+        ],
+        "addon": true
+      },
+      "browser": {
+        "label": "Browser",
+        "summary": "A Chrome or Edge browser agents can use, visible or headless",
+        "parent": "computers"
+      },
+      "desktop": {
+        "label": "This PC's screen",
+        "summary": "Agents see this PC's screen and use its mouse and keyboard",
+        "parent": "computers"
+      }
+    }
   },
   "dependencies": {
     "@sand/host-hub": "workspace:*",

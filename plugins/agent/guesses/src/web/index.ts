@@ -9,7 +9,7 @@ import { createGuesses } from './guesses'
 
 export default definePlugin({
   name: 'guesses-web',
-  description: 'Offers the guessed next message in the empty composer, and the switch for it in Settings › Features',
+  description: 'Offers the guessed next message in the empty composer, and the switch for it in Settings › Add-ons',
   inject: { wire, composer, kit },
   apply(ctx) {
     const helloOn = () => ctx.wire.hello(helloGuesses)?.on ?? false

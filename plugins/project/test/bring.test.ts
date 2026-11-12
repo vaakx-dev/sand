@@ -14,7 +14,7 @@ import { projectRoot } from '../src/registry/root'
 import { projectStore } from '../src/registry/store'
 
 const model = { id: 'fake', models: ['m'], replies: [] }
-const othersOff = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates'].map(id => `${id} = false`)
+const othersOff = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates'].map(id => `${id} = false`)
 
 const sands: Sand[] = []
 

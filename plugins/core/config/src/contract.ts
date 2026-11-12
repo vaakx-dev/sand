@@ -58,6 +58,7 @@ export interface FeatureDefinition {
   parent?: string
   needs: string[]
   uses: string[]
+  addon: boolean
   stops?: string
 }
 

@@ -1,6 +1,6 @@
 import type { DeviceRecord } from '@sand/devices-contract'
 import type { IconName } from '@sand/ui-kit/contract'
-import { div, type Sig } from '@vaakx-dev/vrui'
+import { div, show, type Sig } from '@vaakx-dev/vrui'
 import type { AddStep, Ui } from '../ui'
 import { askingSection } from './asking'
 import { foundSection } from './found'
@@ -14,10 +14,10 @@ export const listStep = (ui: Ui, joined: Sig<DeviceRecord[]>, go: (step: AddStep
   div(
     { class: 'flex flex-col gap-6' },
     askingSection(ui, joined),
-    foundSection(ui, () => go('link')),
+    show(ui.several, () => foundSection(ui, () => go('link'))),
     ui.kit.settingsSection(
       { title: 'More ways' },
       moreRow(ui, 'qr', 'Show a QR for a phone or browser', () => go('phone')),
-      moreRow(ui, 'term', 'Install sand on a new PC', () => go('install')),
+      show(ui.several, () => moreRow(ui, 'term', 'Install sand on a new PC', () => go('install'))),
     ),
   )

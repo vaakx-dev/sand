@@ -7,11 +7,21 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "feature": "markdown",
+    "feature": "math",
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Math",
-    "summary": "Typesets LaTeX formulas, from inline symbols to aligned equations, matrices and chemistry"
+    "summary": "Typesets LaTeX formulas, from inline symbols to aligned equations, matrices and chemistry",
+    "features": {
+      "math": {
+        "label": "Math",
+        "summary": "Typesets LaTeX formulas in replies, from inline symbols to aligned equations",
+        "needs": [
+          "markdown"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/server": "workspace:*",

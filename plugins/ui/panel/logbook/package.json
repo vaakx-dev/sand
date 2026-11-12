@@ -7,7 +7,17 @@
     "feature": "logbook-tab",
     "web": "./src/index.ts",
     "label": "Logbook tab",
-    "summary": "Shows the Logbook in the side panel, where you can search, edit and remove entries"
+    "summary": "Shows the Logbook in the side panel, where you can search, edit and remove entries",
+    "features": {
+      "logbook-tab": {
+        "label": "Logbook tab",
+        "summary": "The record of finished work for the chat's project, searchable and editable",
+        "parent": "side-panel",
+        "needs": [
+          "logbook"
+        ]
+      }
+    }
   },
   "dependencies": {
     "@sand/bots": "workspace:*",

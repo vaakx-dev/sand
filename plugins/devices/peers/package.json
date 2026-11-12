@@ -8,7 +8,22 @@
     "host": "./src/host.ts",
     "runtime": "./src/runtime.ts",
     "label": "Your PCs",
-    "summary": "Connections to your other PCs"
+    "summary": "Connections to your other PCs",
+    "features": {
+      "pcs": {
+        "label": "Several PCs",
+        "summary": "Use sand on your other PCs from one place, with your plugins shared between them",
+        "needs": [
+          "phone"
+        ],
+        "addon": true
+      },
+      "ssh": {
+        "label": "SSH machines",
+        "summary": "Use machines you reach over SSH as your PCs, and set sand up on them",
+        "parent": "pcs"
+      }
+    }
   },
   "dependencies": {
     "@sand/devices-connect": "workspace:*",

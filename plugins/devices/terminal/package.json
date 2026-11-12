@@ -9,7 +9,8 @@
   "sand": {
     "runtime": "./src/runtime/index.ts",
     "label": "Terminals",
-    "summary": "Runs a shell in a thread's folder for the terminal drawer"
+    "summary": "Runs a shell in a thread's folder for the terminal drawer",
+    "feature": "terminal"
   },
   "dependencies": {
     "@sand/host-hub": "workspace:*",

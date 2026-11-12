@@ -1,8 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server'
 import type { AgentAccess } from '@sand/devices-contract'
 import { type Call, failure, failureOf } from '@sand/orchestrator/contract'
-import type { McpTool } from './contract'
-import { resultText } from './result'
+import { type McpTool, resultText } from '@sand/mcp-server/contract'
 
 export type Use = <T>(work: (call: Call) => Promise<T>) => Promise<T>
 

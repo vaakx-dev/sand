@@ -7,11 +7,21 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "feature": "composer",
+    "feature": "stash",
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Stash",
-    "summary": "Messages set aside for later, synced between your devices"
+    "summary": "Messages set aside for later, synced between your devices",
+    "features": {
+      "stash": {
+        "label": "Stash",
+        "summary": "Set messages aside for later, synced between your devices",
+        "needs": [
+          "composer"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/attachments": "workspace:*",

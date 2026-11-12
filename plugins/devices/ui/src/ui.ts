@@ -20,4 +20,5 @@ export interface Ui {
   toasts: Toasts
   open: Openers
   device(): string
+  several(): boolean
 }

@@ -12,7 +12,17 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "MCP tools",
-    "summary": "Gives the agent the tools of your own MCP servers, set in sand.toml"
+    "summary": "Gives the agent the tools of your own MCP servers, set in sand.toml",
+    "features": {
+      "mcp": {
+        "label": "Your MCP servers",
+        "summary": "Gives agents the tools of MCP servers you add in sand.toml",
+        "needs": [
+          "engine"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.4.0",
