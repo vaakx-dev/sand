@@ -1,3 +1,4 @@
+import { llm } from '@sand/accounts/contract'
 import { compactionBrief } from '@sand/compaction/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { promptSections } from '@sand/prompt/contract'
@@ -5,6 +6,7 @@ import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
+import { memoryCheck } from './check'
 import { memoryCompaction } from './compaction'
 import { memory, memoryChange, memoryChangeWire, memoryRead, type MemoryRef, type MemorySpace, memoryWrite } from './contract'
 import { createStore } from './files'
@@ -15,6 +17,7 @@ export default definePlugin({
   name: 'memory',
   description:
     'Memory that lasts across conversations, in Markdown files the user can read and edit: a memory that loads into every conversation and notes listed there by their first line. Other plugins say whose memory a conversation uses, like a bot its own or a thread its project\'s; the agent writes it with the memory tool and tidies it when its conversation compacts',
+  inject: { llm, tools },
   apply(ctx) {
     const spaces = new Map<string, MemorySpace>()
     const spaceOf = (name: string) => {
@@ -41,13 +44,13 @@ export default definePlugin({
     })
     ctx.on(compactionBrief, conversation => {
       const ref = of(conversation)
-      return ref && memoryCompaction(store, ref)
+      return ref && memoryCompaction({ store, ref, check: memoryCheck({ llm: ctx.llm, tools: ctx.tools, conversation }) })
     })
     ctx.on(promptSections, async (sections, conversation) => {
       const found = placed(conversation)
       return found ? [...sections, await memorySection(store, found.space, found.ref)] : sections
     })
-    ctx.watch(tools, found => found?.register(memoryTool(store, of)))
+    ctx.effect(() => ctx.tools.register(memoryTool(store, of)))
     ctx.watch(server, found => {
       if (!found) return
       return joinDisposers(

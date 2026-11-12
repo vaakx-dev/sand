@@ -1,7 +1,7 @@
 import type { Conversation } from '@sand/engine/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { type MemoryRef, type MemoryStore, noteName } from './contract'
+import { type MemoryRef, type MemoryStore, type Note, noteName } from './contract'
 
 type Place = { kind: 'root' } | { kind: 'notes' } | { kind: 'memory' } | { kind: 'note'; name: string }
 
@@ -18,11 +18,14 @@ const MEMORY_PATH = `${ROOT}/memory.md`
 const NOTES_PATH = `${ROOT}/notes`
 const LINE_NUMBER_WIDTH = 6
 
-const commands = ['view', 'create', 'str_replace', 'insert', 'delete', 'rename'] as const
+const commands = ['view', 'search', 'create', 'str_replace', 'insert', 'delete', 'rename'] as const
+
+const MOST_FOUND = 10
 
 const input = z.object({
   command: z.enum(commands),
   path: z.string().optional().describe('A path in /memories'),
+  query: z.string().optional().describe('Words to look for in the notes'),
   view_range: z.array(z.number().int()).length(2).optional().describe('First and last line to view; -1 as the last means to the end'),
   file_text: z.string().optional().describe('The whole text of the file to create'),
   old_str: z.string().optional().describe('Text to replace; it must appear exactly once'),
@@ -62,6 +65,20 @@ const numbered = (text: string, [first = 1, last = -1]: number[] = []) => {
     .slice(first - 1, end)
     .map((line, index) => `${String(first + index).padStart(LINE_NUMBER_WIDTH)}\t${line}`)
     .join('\n')
+}
+
+const paragraphsOf = ({ name, text }: Note) =>
+  text
+    .split(/\n\s*\n/)
+    .map(paragraph => paragraph.trim())
+    .filter(Boolean)
+    .map(paragraph => ({ path: notePath(name), paragraph }))
+
+const search = (notes: Note[], query: string) => {
+  const words = [...new Set(query.toLowerCase().split(/\s+/).filter(Boolean))]
+  const scored = notes.flatMap(paragraphsOf).map(found => ({ ...found, score: words.filter(word => found.paragraph.toLowerCase().includes(word)).length }))
+  const best = scored.filter(found => found.score > 0).sort((a, b) => b.score - a.score).slice(0, MOST_FOUND)
+  return best.length ? best.map(({ path, paragraph }) => `${path}:\n${paragraph}`).join('\n\n') : `No note mentions ${query}.`
 }
 
 const occurrences = (text: string, part: string) => (part ? text.split(part).length - 1 : 0)
@@ -139,6 +156,8 @@ const memoryTool = (store: MemoryStore, of: (conversation: Conversation) => Memo
     switch (command) {
       case 'view':
         return view(ref, path(), args.view_range)
+      case 'search':
+        return search(await store.notes(ref), given(args.query, 'query', command))
       case 'create':
         await file(ref, path()).write(given(args.file_text, 'file_text', command))
         return `Saved ${path()}.`
