@@ -13,7 +13,7 @@ export interface PanelTab {
 export interface Panel {
   tab(tab: PanelTab): Dispose
   show(tab: string): void
-  applies(tab: string, subject: Subject): boolean
+  showing(tab: string, subject: Subject): boolean
 }
 
 export const panel = service<Panel>('panel')

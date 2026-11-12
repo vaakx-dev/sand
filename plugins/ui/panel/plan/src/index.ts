@@ -33,7 +33,6 @@ export default definePlugin({
       return div(
         { class: 'p-4' },
         ctx.kit.editable({
-          title: 'Plan',
           text,
           view: () => view(text),
           save: plan => ctx.wire.call(planWrite, { bot, text: plan }),
