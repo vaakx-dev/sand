@@ -4,7 +4,7 @@ import { newThread } from '../launch/launch'
 import { startChat, type StartParts } from '../launch/start'
 import { projectItems } from './projects'
 import { sessionActions } from './session'
-import { sessionItems } from './sessions'
+import { sessionItems, type SessionParts } from './sessions'
 
 const newChatItem = (parts: StartParts, group: string): PaletteItem => ({
   id: 'session:new-thread',
@@ -15,15 +15,15 @@ const newChatItem = (parts: StartParts, group: string): PaletteItem => ({
   run: () => newThread(parts),
 })
 
-export const sessionSource = (parts: StartParts, kit: Kit): PaletteSource => ({
+export const sessionSource = (parts: SessionParts, kit: Kit): PaletteSource => ({
   id: 'sessions',
   order: 10,
   items(query) {
-    const { ctx, shell, threads } = parts
+    const { threads } = parts
     if (query.startsWith('/')) return []
     const current = threads.current()
     const actions = current ? sessionActions(kit, threads, current) : []
-    if (!query.trim()) return [...actions, ...sessionItems(ctx, shell, threads, 'Recent').slice(0, 5)]
-    return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts, startChat(parts)), ...sessionItems(ctx, shell, threads, 'Chats')]
+    if (!query.trim()) return [...actions, ...sessionItems(parts, 'Recent').slice(0, 5)]
+    return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts, startChat(parts)), ...sessionItems(parts, 'Chats')]
   },
 })

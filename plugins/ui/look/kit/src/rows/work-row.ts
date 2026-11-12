@@ -1,5 +1,5 @@
 import type { Status } from '@sand/ui-shell/contract'
-import { div, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import { clock, div, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
 import { largeRowTitle, rowTitle } from '../heads/text'
 import { dot, spinner } from '../marks/marks'
@@ -8,12 +8,17 @@ import { placeLook, type Surface } from '../surface'
 
 const minute = 60_000
 
-export const shortAge = (ms: number) => {
+const shortAge = (ms: number) => {
   const minutes = Math.floor(ms / minute)
   if (minutes < 1) return 'now'
   if (minutes < 60) return `${minutes}m`
   const hours = Math.floor(minutes / 60)
   return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`
+}
+
+export const age = (at: number) => {
+  const now = clock(minute)
+  return span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => shortAge(Math.max(0, now.get() - at)))
 }
 
 const attention: Partial<Record<Status, { label: string; tone: 'run' | 'warning' | 'success' }>> = {
@@ -39,6 +44,7 @@ export interface WorkRowBody {
   title: Child
   lead?: Child
   end?: Child
+  at?: number
   detail?: Child
   place?: RowPlaceProps
   status?: Status
@@ -59,14 +65,16 @@ const secondLine = (large: boolean, { detail, place, status, trail }: Pick<WorkR
   return div({ class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, right)
 }
 
-export const workRowBody = ({ title, lead, end, large = false, ...rest }: WorkRowBody) =>
+const endOf = (end: Child | undefined, at: number | undefined) => end ?? (at === undefined ? null : age(at))
+
+export const workRowBody = ({ title, lead, end, at, large = false, ...rest }: WorkRowBody) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col gap-px' },
     div(
       { class: 'flex min-w-0 items-center gap-2' },
       lead ?? null,
       span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title)),
-      end ?? null,
+      endOf(end, at),
     ),
     secondLine(large, rest),
   )

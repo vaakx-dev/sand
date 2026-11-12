@@ -1,7 +1,6 @@
 import type { ContextMenu } from '@sand/ui-kit/contract'
 import { button, derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { GroupAction, NavItem, ShellGroup, ShellRow } from './contract'
-import { ageEnd } from './marks'
 import type { Model } from './model'
 
 export interface ListedGroup {
@@ -208,7 +207,8 @@ export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, loo
         title: shown.label,
         large: look.phone,
         lead: shown.lead?.(),
-        end: shown.end ? span({ class: 'flex shrink-0 tabular-nums' }, model.kit.metaLine(shown.end)) : ageEnd(model.kit, shown.at),
+        end: shown.end ? span({ class: 'flex shrink-0 tabular-nums' }, model.kit.metaLine(shown.end)) : undefined,
+        at: shown.at,
         detail: shown.detail?.(),
         place: shown.place && { label: shown.place.label, mark: shown.place.mark?.() },
         status: shown.status,

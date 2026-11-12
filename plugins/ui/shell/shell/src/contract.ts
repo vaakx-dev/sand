@@ -165,20 +165,14 @@ export interface ChipScope {
   owner: string
 }
 
-export interface ChipAction {
-  label: string
-  busy?(): boolean
-  run(): void | Promise<unknown>
-}
-
 export interface ChipItem {
   id: string
   label: string
   status?: Status
   icon?: string
-  meta?: Child
-  open?(): void
-  action?: ChipAction
+  detail?: Child
+  at?: number
+  open(): void
 }
 
 export interface ChipSource {

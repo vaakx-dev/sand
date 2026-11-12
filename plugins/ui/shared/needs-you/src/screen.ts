@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { clock, div, dynamicChild, list, span, type Derive } from '@vaakx-dev/vrui'
+import { div, dynamicChild, list, type Derive } from '@vaakx-dev/vrui'
 import type { Need, NeedKind } from './contract'
 
 const groups: { kind: NeedKind; label: string }[] = [
@@ -8,19 +8,7 @@ const groups: { kind: NeedKind; label: string }[] = [
   { kind: 'review', label: 'Ready to review' },
 ]
 
-const card = (kit: Kit, need: Need) => {
-  const now = clock(30_000)
-  return div(
-    { class: 'flex min-w-0 flex-col gap-2 rounded-lg bg-neutral-800 px-4 py-3' },
-    div(
-      { class: 'flex min-w-0 items-center gap-2' },
-      need.mark?.() ?? null,
-      span({ class: 'min-w-0 truncate text-sm font-semibold text-neutral-100' }, need.who),
-      span({ class: 'ml-auto shrink-0 text-xs text-neutral-500 tabular-nums' }, () => kit.shortAge(Math.max(0, now.get() - need.at))),
-    ),
-    need.render(),
-  )
-}
+const card = (kit: Kit, need: Need) => kit.card({ title: need.who, lead: need.mark?.(), at: need.at }, need.render())
 
 export const needsScreen = (kit: Kit, items: Derive<Need[]>) => {
   const grouped = (kind: NeedKind) => items.map(all => all.filter(need => need.kind === kind))

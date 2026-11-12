@@ -24,8 +24,6 @@ export const spinner = (size: IconSize = 'sm') =>
     span({ class: 'hidden motion-reduce:inline-flex' }, icon('working', size)),
   )
 
-export const working = (size: IconSize = 'sm', title: MaybeReactive<string> = 'Working') => span({ class: ['inline-flex shrink-0', toneText.run], title }, icon('working', size))
-
 export const elapsed = (start: MaybeReactive<number | undefined>) => {
   const now = clock()
   return span({ class: 'tabular-nums' }, () => {

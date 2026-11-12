@@ -1,4 +1,5 @@
 import type { ProjectLook } from '@sand/project/contract'
+import type { Status } from '@sand/ui-shell/contract'
 import { service, type Dispose } from 'drydock'
 
 export interface PaletteItem {
@@ -10,7 +11,8 @@ export interface PaletteItem {
   icon?: string
   avatar?: string
   avatarIcon?: ProjectLook
-  busy?: boolean
+  status?: Status
+  at?: number
   search?: string
   disabled?: boolean
   danger?: boolean
