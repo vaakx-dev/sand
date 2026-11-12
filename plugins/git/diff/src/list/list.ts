@@ -16,7 +16,7 @@ const sum = (files: DiffFile[], key: 'add' | 'del') => files.reduce((total, file
 export const listDiff = async (tools: DiffGit, cwd: string, scope: DiffScope): Promise<DiffList> => {
   const { git } = tools
   const range = await resolveScope(tools, cwd, scope)
-  const { value: out, truncated, untracked } = await readRange(git, range, [], env => git.output(range.repo.root, diffArgs(range, changeList), { env, read: true }))
+  const { value: out, truncated, untracked } = await readRange(git, range, [], env => git.output(range.root, diffArgs(range, changeList), { env, read: true }))
   const files = markUntracked(parseChanges(out), new Set(untracked))
   const cut = truncated || files.length > maxFiles
   return {

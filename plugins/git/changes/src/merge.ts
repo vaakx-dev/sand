@@ -7,13 +7,9 @@ import { diffOf, type Work, workOf } from './read'
 
 const untitled = 'Work from a thread'
 
-const read = { read: true }
-
 const squash = async ({ git, report }: ChangesDeps, work: Work, target: string, title: string) => {
-  const [tip, head] = await Promise.all([
-    git.ok(work.main, ['rev-parse', '--verify', `refs/heads/${target}^{commit}`], read),
-    git.ok(work.root, ['rev-parse', '--verify', 'HEAD^{commit}'], read),
-  ])
+  const [tip, head] = await git.commits(work.root, [`refs/heads/${target}`, 'HEAD'])
+  if (!tip || !head) throw new Error(`Couldn't find the tip of ${target} or of the thread's branch.`)
   const combined = await combine(git, work.main, work.fork, tip, head)
   if (combined.conflicts) return undefined
   const commit = await git.ok(work.main, ['commit-tree', combined.tree, '-p', tip, '-m', title], { what: "Couldn't make the merge commit" })
@@ -45,7 +41,7 @@ const mergeIn = async (deps: ChangesDeps, session: Session, work: Work, self: bo
   const diff = await diffOf(deps, work)
   if (!diff.files.length) throw new Error('This thread has nothing to merge.')
   deps.attempts.set(id, { state: 'merging' })
-  deps.changed(id).catch(deps.report)
+  deps.show({ session: id, project: session.project, files: diff.files, add: diff.add, del: diff.del, state: 'merging' }).catch(deps.report)
   const commit = await attempt(deps, session, work, target)
   if (commit) {
     await deps.merged.put(id, { main: work.main, commit, files: diff.files, add: diff.add, del: diff.del, at: Date.now() }).catch(deps.report)

@@ -21,16 +21,18 @@ export const createTracker = (deps: ChangesDeps, send: (changes: ThreadChanges) 
   const timers = new Map<string, ReturnType<typeof setTimeout>>()
   const inOrder = keyedSerial()
 
-  const publish = (id: string) =>
-    inOrder(id, async () => {
-      const changes = await readChanges(deps, id)
-      const json = JSON.stringify(changes)
-      if (sent.get(id) !== json) {
-        sent.set(id, json)
-        send(changes)
-      }
-      return changes
-    })
+  const deliver = (changes: ThreadChanges) => {
+    const json = JSON.stringify(changes)
+    if (sent.get(changes.session) !== json) {
+      sent.set(changes.session, json)
+      send(changes)
+    }
+    return changes
+  }
+
+  const publish = (id: string) => inOrder(id, async () => deliver(await readChanges(deps, id)))
+
+  const show = (changes: ThreadChanges) => inOrder(changes.session, async () => deliver(changes))
 
   const schedule = (id: string) => {
     clearTimeout(timers.get(id))
@@ -115,7 +117,7 @@ export const createTracker = (deps: ChangesDeps, send: (changes: ThreadChanges) 
     for (const id of [...followed.keys(), ...timers.keys()]) forget(id)
   }
 
-  return { follow, forget, poke, publish, list, close }
+  return { follow, forget, poke, publish, show, list, close }
 }
 
 export type Tracker = ReturnType<typeof createTracker>

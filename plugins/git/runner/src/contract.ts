@@ -37,6 +37,7 @@ export interface GitRunner {
   output(cwd: string, args: string[], options?: GitOptions): Promise<string>
   maybe(cwd: string, args: string[], options?: GitOptions): Promise<string | undefined>
   lines(cwd: string, args: string[], max: number, options?: GitOptions): Promise<GitLines>
+  commits(cwd: string, revisions: string[]): Promise<(string | undefined)[]>
   classify(result: GitResult, args: string[], what?: string): GitProblem
   problem(error: unknown): GitProblem | undefined
   remoteUrl(folder: string): Promise<string | undefined>
