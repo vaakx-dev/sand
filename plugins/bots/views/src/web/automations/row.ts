@@ -12,7 +12,7 @@ export const automationRow = (kit: Kit, menu: ContextMenu, automation: Sig<BotAu
     surface,
     lead: kit.icon(automation.get().icon, 'sm'),
     title: span({ class: () => (automation.get().paused ? 'text-neutral-400' : '') }, () => automation.get().title),
-    meta: span({ class: () => (automation.get().error ? 'text-danger-400' : '') }, () => noteOf(automation.get())),
+    meta: span({ class: () => (automation.get().error ? kit.toneText.danger : '') }, () => noteOf(automation.get())),
   })
   return row
 }

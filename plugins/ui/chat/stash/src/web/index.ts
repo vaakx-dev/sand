@@ -1,5 +1,6 @@
 import { composer } from '@sand/composer/contract'
 import { wire, wireHello } from '@sand/devices-contract'
+import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { media, sig } from '@vaakx-dev/vrui'
@@ -19,7 +20,7 @@ export default definePlugin({
       await ctx.wire.call(stashRemove, { id: entry.id })
       entries.update(list => list.filter(other => other.id !== entry.id))
     }
-    const take = (entry: Entry) => void remove(entry).catch(error => ctx.report(error))
+    const take = (entry: Entry) => void toastsOf(ctx).attempt('Couldn’t remove the stashed message', () => remove(entry))
     if (ctx.wire.ready()) refresh()
     ctx.on(wireHello, refresh)
     ctx.effect(() => ctx.wire.on(stashChange, list => entries.set(list)))

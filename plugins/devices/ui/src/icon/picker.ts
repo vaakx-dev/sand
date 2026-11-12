@@ -22,7 +22,7 @@ export const iconPicker = (ui: Ui, view: Sig<PcView>, close: () => void) => {
   const choose = (kind: PcIcon) => {
     close()
     const { id, name } = view.get()
-    if (kind !== view.get().icon) void ui.toasts.attempt(`Couldn’t change ${name}’s icon`, ui.data.devices.setIcon(id, kind))
+    if (kind !== view.get().icon) void ui.toasts.attempt(`Couldn’t change ${name}’s icon`, () => ui.data.devices.setIcon(id, kind))
   }
   return div(
     { class: 'pb-3 pl-12' },

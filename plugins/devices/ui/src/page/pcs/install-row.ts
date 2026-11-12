@@ -14,7 +14,7 @@ const steps: Partial<Record<InstallStep, [number, string]>> = {
 
 const stepCount = 5
 
-const cancel = (ui: Ui, id: string) => () => void ui.toasts.attempt('Couldn’t cancel the install', ui.data.installs.cancel(id))
+const cancel = (ui: Ui, id: string) => () => void ui.toasts.attempt('Couldn’t cancel the install', () => ui.data.installs.cancel(id))
 
 const progressDetail = (ui: Ui, entry: InstallProgress) => {
   const { icon, progressSteps, spinner, statusLine } = ui.kit

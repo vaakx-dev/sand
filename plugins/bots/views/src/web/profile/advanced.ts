@@ -105,7 +105,7 @@ const limitRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void) => {
 }
 
 export const advancedBlock = (parts: Parts, id: string, bot: Bot) => {
-  const save = (patch: BotPatch) => void parts.store.update(id, patch).catch(error => parts.ctx.report(error))
+  const save = (patch: BotPatch) => void parts.toasts.attempt('Couldn’t save the bot', () => parts.store.update(id, patch))
   return dynamicChild(parts.advanced, on =>
     on
       ? parts.ctx.kit.pageSection(

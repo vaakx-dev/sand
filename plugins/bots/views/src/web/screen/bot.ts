@@ -32,7 +32,7 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
   const id = untrack(route).id ?? ''
   const known = () => Boolean(parts.store.find(id))
   const gone = () => parts.store.bots.get() !== undefined && !known()
-  const save = (patch: BotPatch) => void parts.store.update(id, patch).catch(error => parts.ctx.report(error))
+  const save = (patch: BotPatch) => void parts.toasts.attempt('Couldn’t save the bot', () => parts.store.update(id, patch))
   return {
     head: () => headerOf(parts, id),
     main: () =>

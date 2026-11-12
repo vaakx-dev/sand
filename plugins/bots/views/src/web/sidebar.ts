@@ -10,7 +10,7 @@ const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
   {
     id: 'pause',
     label: bot.paused ? 'Resume' : 'Pause',
-    run: () => parts.store.update(bot.id, { paused: !bot.paused }).catch(error => parts.ctx.report(error)),
+    run: () => parts.toasts.attempt(`Couldn’t ${bot.paused ? 'resume' : 'pause'} ${botName(bot)}`, () => parts.store.update(bot.id, { paused: !bot.paused })),
   },
   deleteAction(parts, bot.id, botName(bot)),
 ]

@@ -27,6 +27,7 @@
     "@sand/palette": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
+    "@sand/toasts": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",

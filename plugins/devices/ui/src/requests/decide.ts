@@ -6,7 +6,7 @@ export const deciding = (ui: Ui, request: () => JoinRequest, allowed?: (device: 
   const busy = sig(false)
   const run = async <T>(what: string, task: () => Promise<T>) => {
     busy.set(true)
-    const done = await ui.toasts.attempt(what, task())
+    const done = await ui.toasts.attempt(what, task)
     busy.set(false)
     return done
   }

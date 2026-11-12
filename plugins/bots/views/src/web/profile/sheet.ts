@@ -20,7 +20,7 @@ const nameField = (parts: Parts, id: string, bot: Bot) => {
   const save = () => {
     const name = draft.get().trim()
     editing.set(false)
-    if (name && name !== bot()?.name) void parts.store.update(id, { name }).catch(error => parts.ctx.report(error))
+    if (name && name !== bot()?.name) void parts.toasts.attempt('Couldn’t rename the bot', () => parts.store.update(id, { name }))
   }
   const start = () => {
     draft.set(bot()?.name ?? '')
@@ -62,7 +62,7 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
   const fresh = { open: sig(false), name: sig('') }
   const creating = sig(false)
   const chosen = () => bot()?.projects ?? []
-  const save = (projects: string[]) => void parts.store.update(id, { projects }).catch(error => parts.ctx.report(error))
+  const save = (projects: string[]) => void parts.toasts.attempt('Couldn’t change the bot’s projects', () => parts.store.update(id, { projects }))
   const create = () => {
     creating.set(true)
     createProject(parts, fresh.name.get())
@@ -71,7 +71,7 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
         fresh.open.set(false)
         fresh.name.set('')
       })
-      .catch(error => parts.ctx.report(error))
+      .catch(error => parts.toasts.error('Couldn’t create the project', error))
       .finally(() => creating.set(false))
   }
   const row = (project: string) =>
@@ -159,7 +159,7 @@ const memoryBlock = (parts: Parts, id: string) => {
 const foot = (parts: Parts, id: string, bot: Bot, close: () => void) => {
   const { kit } = parts.ctx
   const paused = () => bot()?.paused ?? false
-  const pause = () => void parts.store.update(id, { paused: !paused() }).catch(error => parts.ctx.report(error))
+  const pause = () => void parts.toasts.attempt(`Couldn’t ${paused() ? 'resume' : 'pause'} ${nameOf(bot)}`, () => parts.store.update(id, { paused: !paused() }))
   const remove = deleteAction(parts, id, nameOf(bot))
   return div(
     { class: 'flex w-full items-center gap-2' },

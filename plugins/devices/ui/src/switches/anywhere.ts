@@ -32,7 +32,7 @@ export const anywhereRows = (ui: Ui, settings: PcSettings, name: () => string, s
   const toggle = async () => {
     busy.set(true)
     const on = !state.get()?.https
-    await ui.toasts.attempt(`Couldn’t turn ${on ? 'on' : 'off'} Reach from anywhere on ${name()}`, settings.setHttps(on))
+    await ui.toasts.attempt(`Couldn’t turn ${on ? 'on' : 'off'} Reach from anywhere on ${name()}`, () => settings.setHttps(on))
     busy.set(false)
   }
   const problem = derive(() => {

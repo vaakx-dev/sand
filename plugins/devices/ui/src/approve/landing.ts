@@ -16,7 +16,7 @@ const askedText = (request: JoinRequest) => {
 const decision = (ui: Ui, request: JoinRequest, close: () => void) => {
   const { icon, metaLine, primaryAction, quietButton, sectionTitle, sheetText } = ui.kit
   const { busy, allow, deny } = deciding(ui, () => request, device => {
-    ui.toasts.ok(`Allowed ${device.name}`)
+    ui.toasts.show({ tone: 'success', title: `Allowed ${device.name}` })
     close()
   })
   return centered(

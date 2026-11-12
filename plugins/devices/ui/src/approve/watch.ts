@@ -51,7 +51,7 @@ export const approvals = (ui: Ui, adding: () => boolean) => {
       if (approval.get() === settled.id) closeLanding()
       if (!request || ui.data.requests.decidedHere(settled.id)) return
       const text = elsewhereText(ui, settled, request)
-      if (text) ui.toasts.ok(text)
+      if (text) ui.toasts.show({ tone: 'success', title: text })
     }),
   )
 }

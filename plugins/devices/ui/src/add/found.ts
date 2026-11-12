@@ -39,7 +39,7 @@ const foundRow = (ui: Ui, found: Sig<FoundPc>) => {
     const [first] = found.get().urls
     if (!first) return
     busy.set(true)
-    await ui.toasts.attempt(`Couldn’t ask ${found.get().name} to let you in`, ui.data.joins.join(first.url, first.id))
+    await ui.toasts.attempt(`Couldn’t ask ${found.get().name} to let you in`, () => ui.data.joins.join(first.url, first.id))
     busy.set(false)
   }
   const detail = () => [platformWords(found.get().platform), ...found.get().urls.map(url => sourceWords[url.via])].filter(Boolean).join(' · ')
@@ -51,7 +51,7 @@ const foundRow = (ui: Ui, found: Sig<FoundPc>) => {
     },
     dynamicChild(join, current =>
       current
-        ? quietButton({ size: 'sm', surface: 'raised', onClick: () => void ui.toasts.attempt('Couldn’t cancel the request', ui.data.joins.cancel(current.id)) }, 'Cancel')
+        ? quietButton({ size: 'sm', surface: 'raised', onClick: () => void ui.toasts.attempt('Couldn’t cancel the request', () => ui.data.joins.cancel(current.id)) }, 'Cancel')
         : primaryAction({ size: 'sm', disabled: busy, onClick: () => void connect() }, 'Connect'),
     ),
   )

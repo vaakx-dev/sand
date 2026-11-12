@@ -4,6 +4,7 @@ import { modelTargets } from '@sand/model-panel/contract'
 import { needs } from '@sand/needs-you/contract'
 import { palette, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
+import { toastsOf } from '@sand/toasts/contract'
 import { transcript } from '@sand/transcript/contract'
 import type { ChipSource } from '@sand/ui-shell/contract'
 import { models, modelsChange, projects, projectsChange, threads } from '@sand/web-client/contract'
@@ -48,6 +49,7 @@ export default definePlugin({
     const parts: Parts = {
       ctx,
       store: botStore(ctx),
+      toasts: toastsOf(ctx),
       chats: conversations(ctx),
       projects: owned(ctx, () => known.read(() => ctx.projects.groups({ hidden: true }))),
       shown(project) {
@@ -94,7 +96,7 @@ export default definePlugin({
     )
 
     ctx.watch(transcript, found =>
-      found?.entry(changeEntry, (entry, bot) => changeNote(ctx.kit, { store: parts.store, edit: parts.profile, report: error => ctx.report(error) }, bot, entry.data as ChangeEntry)),
+      found?.entry(changeEntry, (entry, bot) => changeNote(ctx.kit, { store: parts.store, edit: parts.profile, report: error => parts.toasts.error('Couldn’t restore the job', error) }, bot, entry.data as ChangeEntry)),
     )
     ctx.watch(palette, found =>
       found?.source({

@@ -37,7 +37,7 @@ const shellView = (model: Model) => {
         })
       },
     },
-    placed(model.places.top, div({ class: 'flex shrink-0 flex-col' })),
+    placed(model.places.top, div({ class: 'flex shrink-0 flex-col gap-2 px-3 pt-2', hidden: () => !model.places.top.items.get().length })),
     dynamicChild(model.phone, phone => (phone ? phoneView(model) : deskView(model))),
     sheetHost(model),
     placed(model.places.overlay, div({ class: 'contents' })),

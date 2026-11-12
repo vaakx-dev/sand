@@ -16,7 +16,7 @@ import { inject } from './inject'
 import { joinOffer } from './join-offer/watch'
 import { devicesSettings } from './page'
 import { overlaySlot } from './shared/overlay'
-import { createToasts } from './shared/toasts'
+import { toastsOf } from '@sand/toasts/contract'
 import { createMarks } from './status/marks'
 import type { AddStep, Openers, Ui } from './ui'
 import { unpairedPage } from './unpaired/page'
@@ -29,7 +29,7 @@ export default definePlugin({
   apply(ctx) {
     owned(ctx, () => {
       const data = createData(ctx)
-      const toasts = createToasts(ctx)
+      const toasts = toastsOf(ctx)
       const sheet = overlaySlot(ctx)
       const why = overlaySlot(ctx, 130)
       const adding = sig(false)

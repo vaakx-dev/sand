@@ -1,5 +1,6 @@
 import { keys } from '@sand/keys/contract'
 import { owned } from '@sand/reactive'
+import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { sig } from '@vaakx-dev/vrui'
@@ -31,7 +32,7 @@ export default definePlugin({
       items: (page, typed) => merged([...sources].filter(source => source.page === page), typed),
     }
 
-    owned(ctx, () => searchSheet(ctx.kit, ctx.shell, stack, () => query))
+    owned(ctx, () => searchSheet(ctx.kit, ctx.shell, stack, () => query, error => void toastsOf(ctx).error('Couldn’t finish that', error)))
     const toggle = () => (stack.get().length ? host.close() : host.open())
     ctx.provide(palette, host)
     ctx.watch(keys, found => found?.bind({ key: 'mod+k', global: true, passthrough: true, run: toggle }))

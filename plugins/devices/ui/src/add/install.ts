@@ -48,7 +48,7 @@ export const installStep = (ui: Ui) => {
     error.set('')
     try {
       grant.set(await ui.data.installs.create(system, url))
-      if (before) void ui.toasts.attempt('Couldn’t cancel the old install command', ui.data.installs.cancel(before.id))
+      if (before) void ui.toasts.attempt('Couldn’t cancel the old install command', () => ui.data.installs.cancel(before.id))
     } catch (failure) {
       error.set(errorMessage(failure))
     } finally {

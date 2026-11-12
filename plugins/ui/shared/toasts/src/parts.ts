@@ -1,22 +1,19 @@
-import type { IconName, Kit, Tone } from '@sand/ui-kit/contract'
-import { div, span } from '@vaakx-dev/vrui'
+import type { BannerTone, Kit, Tone } from '@sand/ui-kit/contract'
 import type { ToastAction } from './contract'
 
-const toneIcons: Record<Tone, IconName> = {
-  neutral: 'info',
-  accent: 'info',
-  success: 'check',
-  warning: 'alert',
-  danger: 'alert',
-  run: 'info',
-  merged: 'check',
+export const bannerTone: Record<Tone, BannerTone> = {
+  neutral: 'neutral',
+  accent: 'accent',
+  success: 'success',
+  warning: 'warning',
+  danger: 'danger',
+  run: 'neutral',
+  merged: 'success',
 }
-
-export const toneMark = (kit: Kit, tone: Tone) => span({ class: ['inline-flex h-5 shrink-0 items-center', kit.toneText[tone]] }, kit.icon(toneIcons[tone], 'md'))
 
 export const outputBlock = (kit: Kit, output: string) => kit.codeBlock({ copy: () => output, class: 'max-h-40 leading-4' }, output)
 
-const actionButton = (kit: Kit, action: ToastAction, dismiss: () => void) => {
+export const actionButton = (kit: Kit, action: ToastAction, dismiss: () => void) => {
   const press = () => {
     dismiss()
     void action.run()
@@ -25,6 +22,3 @@ const actionButton = (kit: Kit, action: ToastAction, dismiss: () => void) => {
     ? kit.secondaryAction({ size: 'sm', onClick: press }, action.label)
     : kit.quietButton({ size: 'sm', surface: 'raised', onClick: press }, action.label)
 }
-
-export const actionRow = (kit: Kit, actions: ToastAction[], dismiss: () => void) =>
-  div({ class: 'flex flex-wrap items-center gap-2 pt-1' }, ...actions.map(action => actionButton(kit, action, dismiss)))

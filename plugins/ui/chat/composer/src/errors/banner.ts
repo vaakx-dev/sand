@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, show, sig, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { show, sig, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 import { bannerRow } from '../dock/banner'
 
 export interface ErrorBanner {
@@ -17,21 +17,7 @@ const details = ({ codeBlock, expandToggle }: Kit, detail: string) => {
 }
 
 export const errorBanner = (kit: Kit, { text, hint, retry, actions = [], detail, dismiss }: ErrorBanner) => {
-  const { closeButton, icon, secondaryAction, secondaryText } = kit
   const more = detail ? details(kit, detail) : undefined
-  const buttons = [retry && secondaryAction({ size: 'sm', onClick: retry }, 'Retry'), ...actions, more?.toggle].filter(Boolean)
-  return bannerRow(
-    div(
-      { role: 'alert', class: 'flex flex-col gap-2' },
-      div(
-        { class: 'flex min-h-6 items-start gap-2 text-danger-400' },
-        span({ class: 'inline-flex h-6 shrink-0 items-center' }, icon('alert', 'md')),
-        span({ class: 'min-w-0 flex-1 leading-6' }, text),
-        closeButton({ title: 'Dismiss', size: 'sm', onClick: dismiss }),
-      ),
-      hint ? div({ class: 'pl-6' }, secondaryText(hint)) : null,
-      buttons.length ? div({ class: 'flex flex-wrap items-center gap-2 pl-6' }, ...buttons) : null,
-      more?.block,
-    ),
-  )
+  const buttons = [...(retry ? [kit.secondaryAction({ size: 'sm', onClick: retry }, 'Retry')] : []), ...actions, ...(more ? [more.toggle] : [])]
+  return bannerRow(kit.banner({ tone: 'danger', title: text, ...(hint && { detail: hint }), actions: buttons, dismiss }, ...(more ? [more.block] : [])))
 }

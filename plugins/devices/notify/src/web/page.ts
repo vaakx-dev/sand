@@ -47,7 +47,7 @@ export const notificationsPage = ({ kit, wire, toasts, on, key, off, device }: P
     if (!pushKey) return
     busy.set(true)
     const turningOn = !on.get()
-    await toasts.attempt(toastId, turningOn ? 'Couldn’t turn notifications on' : 'Couldn’t turn notifications off', () => (turningOn ? enable(pushKey) : disable()))
+    await toasts.attempt(turningOn ? 'Couldn’t turn notifications on' : 'Couldn’t turn notifications off', () => (turningOn ? enable(pushKey) : disable()), { id: toastId })
     allowed.set(permission())
     busy.set(false)
   }
@@ -61,7 +61,7 @@ export const notificationsPage = ({ kit, wire, toasts, on, key, off, device }: P
   const momentRow = (kind: MomentKind) => {
     const { label, detail } = moments[kind]
     const wanted = derive(() => !off.get().includes(kind))
-    const choose = () => toasts.attempt(toastId, 'Couldn’t change notifications', () => wire.call(notifyMoment, { kind, on: !wanted.get() }))
+    const choose = () => toasts.attempt('Couldn’t change notifications', () => wire.call(notifyMoment, { kind, on: !wanted.get() }), { id: toastId })
     return settingsRow({ title: label, detail }, toggleSwitch({ on: wanted, 'aria-label': `Notify about ${label}`, onClick: () => void choose() }))
   }
 

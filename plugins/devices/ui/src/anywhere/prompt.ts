@@ -1,5 +1,5 @@
 import { place } from '@sand/ui-shell/contract'
-import { derive, div, effect, span, stored, untrack } from '@vaakx-dev/vrui'
+import { derive, effect, stored, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { overlaySlot } from '../shared/overlay'
 import type { Ui } from '../ui'
@@ -9,22 +9,8 @@ const recent = 10 * 60_000
 
 const homeWifiPage = () => location.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
 
-const banner = (ui: Ui, tone: 'accent' | 'neutral', mark: HTMLElement, title: string, text: string, dismiss: () => void, action?: HTMLElement) => {
-  const { bannerTitle, closeButton, secondaryText, statusBanner } = ui.kit
-  return div(
-    { class: 'px-3 pt-2' },
-    statusBanner(
-      { tone },
-      mark,
-      div({ class: 'flex min-w-0 flex-1 flex-col' }, bannerTitle(title), secondaryText(text)),
-      action ?? null,
-      closeButton({ title: 'Dismiss', size: 'sm', surface: 'raised', onClick: dismiss }),
-    ),
-  )
-}
-
 export const anywherePrompt = (ui: Ui) => {
-  const { icon, primaryAction } = ui.kit
+  const { banner, primaryAction } = ui.kit
   const dismissed = stored('sand.anywhere.dismissed', false)
   const doneSeen = stored(`sand.anywhere.done.${location.origin}`, false)
   const sheet = overlaySlot(ui.ctx, 120)
@@ -44,24 +30,21 @@ export const anywherePrompt = (ui: Ui) => {
 
   const open = () => sheet.open(() => anywhereSheet(ui, sheet.close))
   const offerView = () =>
-    banner(
-      ui,
-      'accent',
-      span({ class: 'inline-flex text-accent-400' }, icon('globe', 'md')),
-      'Use this phone from anywhere',
-      'Right now it only works on your home wifi.',
-      () => dismissed.set(true),
-      primaryAction({ size: 'sm', onClick: open }, 'Set up'),
-    )
+    banner({
+      tone: 'accent',
+      icon: 'globe',
+      title: 'Use this phone from anywhere',
+      detail: 'Right now it only works on your home wifi.',
+      actions: [primaryAction({ size: 'sm', onClick: open }, 'Set up')],
+      dismiss: () => dismissed.set(true),
+    })
   const doneView = () =>
-    banner(
-      ui,
-      'neutral',
-      span({ class: 'inline-flex text-success-400' }, icon('check', 'md')),
-      'This phone works anywhere now',
-      'Add this page to your home screen and open sand from there.',
-      () => doneSeen.set(true),
-    )
+    banner({
+      tone: 'success',
+      title: 'This phone works anywhere now',
+      detail: 'Add this page to your home screen and open sand from there.',
+      dismiss: () => doneSeen.set(true),
+    })
 
   let unplace: Dispose | undefined
   effect(() => {
