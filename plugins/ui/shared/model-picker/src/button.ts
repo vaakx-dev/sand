@@ -10,7 +10,7 @@ type Press = Record<string, unknown>
 
 export const pickerButton = (picker: Picker, target: PickerTarget, { label, look = 'field', opened = false, opener }: ButtonOptions) => {
   const { ctx, changes, pcs } = picker
-  const { actionTones, cardItem, controlButton, dropdown, icon, modelLogo, pressOpens } = ctx.kit
+  const { cardItem, dropdown, modelLogo, pickerButton: pickerField, pressOpens } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const reveal = () => whenAddressSettled(() => open.set(true))
@@ -32,13 +32,7 @@ export const pickerButton = (picker: Picker, target: PickerTarget, { label, look
   const name = (extra: string): Child => span({ class: () => [extra, shown.get()?.model ? '' : 'text-warning-400'] }, text)
 
   const field = (press: Press) =>
-    controlButton(
-      actionTones.secondary,
-      { ...press, ...named, class: ['max-w-full min-w-40 justify-start pr-2', () => (open.get() ? 'bg-neutral-700' : '')] },
-      logo(),
-      name('min-w-0 flex-1 truncate text-left'),
-      span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon('down', 'sm')),
-    )
+    pickerField({ ...press, ...named, field: true, lead: logo() }, name(''))
   const row = (press: Press) => cardItem({ ...press, ...named, lead: logo(), menu: true }, name(''))
 
   const panel = () => modelPanel(picker, target, close)

@@ -22,13 +22,15 @@ const pcRow = (kit: Kit, row: Sig<PcView>, fleet: Fleet) => {
     if (kind === 'channel') return channelButton(kit, fleet)
     return kind ? actionButton(kit, fleetAction(fleet, row.get().key, kind)) : null
   }
+  const spec = () => pcMenu(row.get(), fleet)
   return settingsRow(
     {
-      ...menu.target(() => pcMenu(row.get(), fleet)),
+      ...menu.target(spec),
       title: () => row.get().name,
       detail: pcStatusLine(kit, row, fleet, () => versionText(row.get().state?.current, fleet.target.get())),
     },
     dynamicChild(row.map(controlKind), control),
+    menu.button(spec),
     menu.view(),
   )
 }

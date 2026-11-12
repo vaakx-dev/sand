@@ -16,6 +16,7 @@ export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: 
     void catalog.setHidden(model, !model.hidden)
   }
   const menu = contextMenu()
+  const spec = () => catalog.menu(row.get(), keep)
   return div(
     { class: 'contents' },
     listRow({
@@ -34,13 +35,14 @@ export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: 
           return context ? tokens(context) : ''
         }),
       ],
-      ...menu.target(() => catalog.menu(row.get(), keep), toggle),
+      ...menu.target(spec, toggle),
       actions: [
         show(added, () => {
           const remove = catalog.menu(row.get(), keep).actions.find(action => action.id === 'remove')
           return remove ? confirmButton({ action: remove }) : null
         }),
         starButton(kit, label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
+        menu.button(spec, { size: 'sm' }),
       ],
     }),
     menu.view(),

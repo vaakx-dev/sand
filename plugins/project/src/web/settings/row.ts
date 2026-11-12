@@ -1,4 +1,4 @@
-import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import type { ContextMenu } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import { div, type Sig } from '@vaakx-dev/vrui'
 import { remoteKey } from '../../projects/remote'
@@ -7,23 +7,6 @@ import { iconEntries, iconSheet, type Picking } from './icon'
 import { locationLine } from './location'
 import { byRecent } from './places'
 import { groupSpec } from './specs'
-
-const menuButton = ({ icon, iconButton }: Kit, menu: ContextMenu, spec: () => ReturnType<typeof groupSpec>) =>
-  iconButton(
-    {
-      title: 'Project actions',
-      'aria-label': 'Project actions',
-      'aria-haspopup': 'menu',
-      onClick: (event: MouseEvent) => {
-        const from = event.currentTarget
-        if (!(from instanceof HTMLElement)) return
-        const box = from.getBoundingClientRect()
-        const touch = event instanceof PointerEvent && event.pointerType === 'touch'
-        menu.open({ x: box.left, y: box.bottom, touch, from, ...spec() })
-      },
-    },
-    icon('more', 'md'),
-  )
 
 const details = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup) =>
   div(
@@ -44,7 +27,7 @@ export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: Project
       detail: details(ctx, menu, group),
     },
     group.hidden ? metaLine('Hidden') : null,
-    menuButton(ctx.kit, menu, spec),
+    menu.button(spec, { title: 'Project actions' }),
     iconSheet(ctx, group, picking),
   )
 }

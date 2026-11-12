@@ -3,7 +3,7 @@ import type { ContextUsage } from '@sand/compaction/contract'
 import type { Entry, ImageBlock, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/chats/contract'
 import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
-import type { ContextMenu, IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
+import type { ContextMenu, IconName } from '@sand/ui-kit/contract'
 import type { ToolProgress } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
@@ -115,16 +115,6 @@ export interface ToolStepOptions {
   open: Sig<boolean>
   toggle(): void
   menu?: ContextMenu
-}
-
-export interface TextMenu {
-  props: ReturnType<Kit['pressMenu']>['props']
-  held(): boolean
-}
-
-export interface MenuKit {
-  text(menu: ContextMenu, spec: () => MenuSpec | undefined): TextMenu
-  more(menu: ContextMenu, spec: () => MenuSpec | undefined): HTMLElement
 }
 
 export interface Place {

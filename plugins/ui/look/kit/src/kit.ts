@@ -76,7 +76,6 @@ import { onPressOutside, popupTrigger, pressOpens } from './layers/outside'
 import { dismissible, hasOpenLayer, modal, returnFocus } from './layers/stack'
 import { listbox } from './listbox/model'
 import { optionProps } from './listbox/option'
-import { pressMenu } from './menus/press'
 import { copyText } from './page/clipboard'
 import { delayed } from './page/delayed'
 import { ownedByNode } from './page/owned'
@@ -191,7 +190,6 @@ export const kit = {
   plainButton,
   popover,
   popupTrigger,
-  pressMenu,
   pressOpens,
   primaryAction,
   progressSteps,

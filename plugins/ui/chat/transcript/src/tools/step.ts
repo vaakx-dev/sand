@@ -1,4 +1,4 @@
-import type { MenuKit, ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contract'
+import type { ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { stepBody, stepLine, stepMark, type StepState } from '../rows/line'
@@ -43,7 +43,6 @@ export const toolStep = (
   kit: Kit,
   tool: Sig<ToolView>,
   { renderer, version, open, toggle, menu }: ToolStepOptions,
-  menus: MenuKit,
   cwd: string | undefined,
 ) => {
   const { contextMenu, copyButton, shine } = kit
@@ -84,7 +83,6 @@ export const toolStep = (
       { id: 'toggle', label: open.get() ? 'Collapse' : 'Expand', icon: open.get() ? 'up' : 'down', run: toggle },
     ],
   })
-  const press = menus.text(own, spec)
   const line = stepLine(
     kit,
     {
@@ -110,13 +108,11 @@ export const toolStep = (
         copyButton({ text: copy }),
         show(
           () => current().actions(tool.get()).length > 0,
-          () => menus.more(own, spec),
+          () => own.button(spec, { size: 'sm' }),
         ),
       ],
-      onToggle: () => {
-        if (!press.held()) toggle()
-      },
-      headProps: press.props,
+      onToggle: toggle,
+      headProps: own.target(spec, undefined, 'text'),
     },
     body,
     tail,

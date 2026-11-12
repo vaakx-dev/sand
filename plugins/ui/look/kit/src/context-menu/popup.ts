@@ -8,11 +8,11 @@ import { arrowKeys, focusFirst } from './keyboard'
 
 const margin = 8
 
-const fitOnScreen = (menu: Element, x: number, y: number) => {
+const fitOnScreen = (menu: Element, { x, y, above = y }: MenuRequest) => {
   const { width, height } = menu.getBoundingClientRect()
   return {
     x: Math.max(margin, Math.min(x, innerWidth - width - margin)),
-    y: y + height > innerHeight - margin ? Math.max(margin, y - height) : y,
+    y: y + height > innerHeight - margin ? Math.max(margin, above - height) : y,
   }
 }
 
@@ -40,7 +40,7 @@ export const menuPopup = (request: MenuRequest, close: () => void) => {
       'data-menu-layer': '',
       style: { left: () => `${at.get().x}px`, top: () => `${at.get().y}px` },
       onMount: node => {
-        resizeObserver(menu, () => at.set(fitOnScreen(menu, request.x, request.y)))
+        resizeObserver(menu, () => at.set(fitOnScreen(menu, request)))
         focusFirst(node)
         const stops = [onWindow(node, 'resize', close), returnFocus(node, request.from)]
         return () => disposeAll(stops)

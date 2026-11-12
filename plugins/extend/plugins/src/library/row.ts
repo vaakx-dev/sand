@@ -73,14 +73,16 @@ export const pluginRow = (kit: Kit, plugin: PluginEntry, actions: RowActions) =>
   const history = sig(false)
   const key = `plugins/${plugin.name}`
   const tracked = plugin.origin !== 'builtin'
+  const spec = () => pluginMenu(plugin, actions, history)
   return expandRow(
     {},
     menu.view(),
     settingsRow(
-      { ...menu.target(() => pluginMenu(plugin, actions, history)), title: plugin.name, detail: [detail(plugin), offReason(plugin, actions)] },
+      { ...menu.target(spec), title: plugin.name, detail: [detail(plugin), offReason(plugin, actions)] },
       ...marks(kit, plugin, actions),
       tracked ? actions.historyToggle(key, history) : null,
       control(kit, plugin, actions),
+      menu.button(spec),
     ),
     plugin.changed ? changedNote(kit, plugin, actions) : null,
     failureNote(kit, plugin, actions),

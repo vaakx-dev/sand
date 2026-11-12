@@ -6,13 +6,12 @@ const noteOf = ({ when, detail, paused, error }: BotAutomation) => error ?? [pau
 
 export const automationRow = (kit: Kit, menu: ContextMenu, automation: Sig<BotAutomation>, surface: Surface) => {
   const spec = () => ({ title: automation.get().title, actions: automation.get().actions() })
-  const row: HTMLElement = kit.listRow({
-    ...menu.target(spec, event => menu.open({ x: event.clientX, y: event.clientY, touch: false, from: row, ...spec() })),
+  return kit.listRow({
+    ...menu.target(spec, event => menu.openBelow(event, spec)),
     'aria-haspopup': 'menu',
     surface,
     lead: kit.icon(automation.get().icon, 'sm'),
     title: span({ class: () => (automation.get().paused ? 'text-neutral-400' : '') }, () => automation.get().title),
     meta: span({ class: () => (automation.get().error ? kit.toneText.danger : '') }, () => noteOf(automation.get())),
   })
-  return row
 }

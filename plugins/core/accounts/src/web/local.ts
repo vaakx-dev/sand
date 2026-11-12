@@ -43,9 +43,11 @@ const rowControls = (kit: Kit, account: LoginAccount, control: LoginControl, fix
 
 const signedInRow = (kit: Kit, account: LoginAccount, control: LoginControl, fix: Fix, menu: ContextMenu) => {
   const { settingsRow } = kit
+  const spec = () => accountSpec(account, control, fix)
   return settingsRow(
-    { ...menu.target(() => accountSpec(account, control, fix)), lead: accountLogo(kit, account.provider), title: account.label, detail: detail(kit, account) },
+    { ...menu.target(spec), lead: accountLogo(kit, account.provider), title: account.label, detail: detail(kit, account) },
     ...rowControls(kit, account, control, fix),
+    menu.button(spec),
   )
 }
 

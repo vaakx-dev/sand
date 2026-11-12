@@ -1,4 +1,4 @@
-export { editing, selecting } from './busy'
+export { editing, selecting, selectingIn } from './busy'
 export { alongWay, direction } from './direction'
 export { fromSystemEdge } from './edge'
 export { follow } from './follow'

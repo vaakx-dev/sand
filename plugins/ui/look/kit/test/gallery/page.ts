@@ -117,6 +117,18 @@ const pageSections = () =>
     settings(),
   )
 
+const menuSample = () => {
+  const menu = kit.contextMenu()
+  const spec = () => ({
+    title: 'Fix the flaky cache test',
+    actions: [
+      { id: 'copy', label: 'Copy link', icon: 'copy', run: () => {} },
+      { id: 'delete', label: 'Delete', icon: 'trash', group: 'danger', danger: true, confirm: 'Delete this thread?', run: () => {} },
+    ],
+  })
+  return kit.settingsRow({ ...menu.target(spec), title: 'Fix the flaky cache test' }, menu.button(spec), menu.view())
+}
+
 const gallery = () =>
   kit.pageBody(
     { title: 'Kit', intro: 'Every piece the screens draw with, on the approved roles.' },
@@ -169,13 +181,7 @@ const gallery = () =>
       kit.codeBlock({ copy: () => 'bun run check' }, 'bun run check'),
       line(kit.badge('success', 'Merged'), kit.statusBadge('failed'), kit.keycap('⌘K'), kit.lineStat(12, 3)),
     ),
-    block(
-      'Menus',
-      kit.dropdown({
-        trigger: press => kit.quietButton(press, 'Open menu', kit.icon('down', 'sm')),
-        items: close => [kit.menuItem({ icon: 'copy', onClick: close }, 'Copy link'), kit.menuSeparator(), kit.menuItem({ icon: 'trash', tone: 'danger', onClick: close }, 'Delete')],
-      }),
-    ),
+    block('Menus', menuSample()),
     block(
       'Tool steps',
       kit.toolCard({ icon: kit.icon('search', 'sm'), verb: 'Read', target: 'src/cache/store.ts' }),

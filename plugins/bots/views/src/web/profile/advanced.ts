@@ -59,13 +59,8 @@ const computerRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void) =>
     { title: 'Computer', detail: 'What its computer tools use when it names none' },
     kit.dropdown({
       placement: 'below-right',
-      trigger: (press, open) =>
-        kit.controlButton(
-          kit.actionTones.secondary,
-          { ...press, 'aria-label': 'Computer', class: ['max-w-full min-w-40 justify-start pr-2', () => (open.get() ? 'bg-neutral-700' : '')] },
-          span({ class: 'min-w-0 flex-1 truncate text-left' }, () => computerLabel(computerChoices(parts), bot()?.computer)),
-          span({ class: 'inline-flex shrink-0 text-neutral-400' }, kit.icon('down', 'sm')),
-        ),
+      trigger: press =>
+        kit.pickerButton({ ...press, 'aria-label': 'Computer', field: true }, () => computerLabel(computerChoices(parts), bot()?.computer)),
       items: close =>
         computerChoices(parts).map(choice =>
           kit.choiceItem({ selected: () => bot()?.computer === choice.value, onClick: pick(close, choice.value) }, span({ class: 'flex-1 truncate' }, choice.label)),

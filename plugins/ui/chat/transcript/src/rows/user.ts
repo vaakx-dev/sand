@@ -98,9 +98,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     const records = item.parts.flatMap(part => (part.kind === 'context' ? part.records : []))
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
     const shown = derive(() => (from.get() ? withoutSent(text, records) : text))
-    const { menus } = context
     const spec = () => ({ title: 'Message', subtitle: promptLabel(shown.get()).slice(0, 80), actions: actions(shown.get()) })
-    const press = menus.text(context.menu, spec)
     const reveal = tapReveal()
     return div(
       { class: 'chat-row group mt-2 mb-2 flex flex-col items-end gap-2 pl-16 md:pl-32' },
@@ -109,7 +107,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
         () => div({ class: '-mb-1 flex min-w-0 max-w-full px-1' }, metaLine(() => `From ${from.get()}`)),
       ),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
-      div({ class: 'min-w-0 max-w-full' }, dynamicChild(shown, value => (value ? bubble(value, records, { ...press.props, onClick: reveal.onClick }, context) : null))),
+      div({ class: 'min-w-0 max-w-full' }, dynamicChild(shown, value => (value ? bubble(value, records, context.menu.target(spec, reveal.onClick, 'text'), context) : null))),
       actionRow(
         () => reveal.tapped.get(),
         '-mt-1',
@@ -117,10 +115,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
           () => Boolean(shown.get()),
           () => copyButton({ text: () => shown.get(), formats: () => contextFormats(shown.get(), records), size: 'sm' }),
         ),
-        show(
-          () => spec().actions.length > 0,
-          () => menus.more(context.menu, spec),
-        ),
+        context.menu.button(spec, { size: 'sm' }),
       ),
       note?.(),
       !item.steer && context.branchSwitch?.(item.key),
