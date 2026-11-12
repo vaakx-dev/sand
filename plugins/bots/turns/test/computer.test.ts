@@ -1,4 +1,4 @@
-import { botCreate, botGet, botUpdate, type Computer } from '@sand/bots/contract'
+import { botCreate, botList, botUpdate, type Computer } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { type Need, tools } from '@sand/tools/contract'
@@ -23,7 +23,7 @@ const offeredWith = async (computers: Computer[]) => {
     await sand.ask(botUpdate, { bot: bot.id, patch: { computer } })
     await sand.ask(botSend, { bot: bot.id, prompt: computer, clientRequestId: computer })
     for (let tries = 0; tries < 200 && sand.requests('fake').length <= at; tries++) await Bun.sleep(10)
-    for (let tries = 0; tries < 200 && (await sand.ask(botGet, { bot: bot.id }))?.status !== 'idle'; tries++) await Bun.sleep(10)
+    for (let tries = 0; tries < 200 && (await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.status !== 'idle'; tries++) await Bun.sleep(10)
   }
   return sand.requests('fake').map(body => (JSON.parse(body).tools as { name: string }[]).map(tool => tool.name))
 }

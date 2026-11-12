@@ -2,7 +2,6 @@ import {
   type OpenedSession,
   sessionBranches,
   sessionCheckout,
-  sessionMove,
   sessionPin,
   sessionRemove,
   sessionRename,
@@ -18,7 +17,6 @@ import type { Context } from 'drydock'
 import { type DraftTarget, onAddressChange, type Thread, type Threads, type ThreadVisit, threadSelect } from '../contract'
 import { helloOf, onPcHello } from '../greeted'
 import { type Place, recordPlace, requestedPlace, requestedSession, samePlace, sessionLink } from './address'
-import { threadCreators } from './creators'
 import { applyHello } from './hello'
 import { threadLoader } from './loading'
 import { threadPages } from './pages'
@@ -34,7 +32,6 @@ export interface ThreadService extends Threads {
 export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, hydrate: (id: string) => Promise<void> | undefined): ThreadService => {
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
-  const creators = threadCreators()
   const watches = threadWatches(wire, store, id => void load(id))
   let greeted = false
 
@@ -88,8 +85,6 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
   }
 
   const created = async (target: DraftTarget) => {
-    const claimed = creators.claim(target)
-    if (claimed) return claimed
     if (!target.cwd) return wire.call(sessionsQuick, {}, target.device)
     return wire.call(sessionsCreate, { cwd: target.cwd }, target.device)
   }
@@ -128,7 +123,6 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
       thread.loaded = true
       return thread
     },
-    creator: creators.add,
     async rename(id, title) {
       await wire.call(sessionRename, { session: id, title }, store.deviceOf(id))
     },
@@ -140,9 +134,6 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     },
     async snooze(id, until) {
       await wire.call(sessionSnooze, { session: id, until }, store.deviceOf(id))
-    },
-    async move(id, position) {
-      await wire.call(sessionMove, { session: id, position }, store.deviceOf(id))
     },
     async remove(id) {
       await wire.call(sessionRemove, { session: id }, store.deviceOf(id))

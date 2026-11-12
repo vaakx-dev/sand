@@ -1,5 +1,5 @@
-import { memoryRead, memoryWrite, notesRead, noteWrite } from '@sand/bot-memory/contract'
-import { botCreate, botDelete, botGet } from '@sand/bots/contract'
+import { botMemory, memoryRead, memoryWrite } from '@sand/bot-memory/contract'
+import { botCreate, botDelete, botList } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Source } from '@sand/replay/contract'
@@ -8,6 +8,8 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 let sand: Sand
+
+const memory = () => sand.app.get(botMemory)!
 
 afterEach(() => sand.stop())
 
@@ -22,7 +24,7 @@ const talk = async (bot: string, prompt: string) => {
   const before = sand.requests('fake').length
   await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 300; tries++) {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (sand.requests('fake').length > before && found?.status === 'idle' && found.last?.role === 'assistant') return
     await Bun.sleep(10)
   }
@@ -102,18 +104,18 @@ test('a memory over the size limit is sent back once to be cut to fit', async ()
   expect(await sand.ask(memoryRead, { bot: bot.id })).toBe(`${remembered}\n`)
 })
 
-test("a bot's notes are Markdown files in its notes folder that the user can read, edit and delete", async () => {
+test("a bot's notes are Markdown files in its notes folder, removed when emptied", async () => {
   sand = await start([])
   const bot = await sand.ask(botCreate, { name: 'Ops' })
-  expect(await sand.ask(notesRead, { bot: bot.id })).toEqual([])
+  expect(await memory().notes(bot.id)).toEqual([])
 
-  await sand.ask(noteWrite, { bot: bot.id, name: 'deploys', text: 'How deploys go.\n- Staging first.\n' })
+  await memory().writeNote(bot.id, { name: 'deploys', text: 'How deploys go.\n- Staging first.\n' })
   const path = join(sand.home, 'bots', bot.id, 'notes', 'deploys.md')
   expect(await Bun.file(path).text()).toBe('How deploys go.\n- Staging first.\n')
-  expect(await sand.ask(notesRead, { bot: bot.id })).toEqual([{ name: 'deploys', text: 'How deploys go.\n- Staging first.\n' }])
-  await expect(sand.ask(noteWrite, { bot: bot.id, name: '../memory', text: 'x' })).rejects.toThrow()
+  expect(await memory().notes(bot.id)).toEqual([{ name: 'deploys', text: 'How deploys go.\n- Staging first.\n' }])
+  await expect(memory().writeNote(bot.id, { name: '../memory', text: 'x' })).rejects.toThrow()
 
-  await sand.ask(noteWrite, { bot: bot.id, name: 'deploys', text: '' })
+  await memory().writeNote(bot.id, { name: 'deploys', text: '' })
   expect(existsSync(path)).toBe(false)
 })
 
@@ -128,7 +130,7 @@ test('when a bot compacts, it writes what it learned about its work as notes, li
 
   const [, , compaction, next, after] = bodies()
   expect(firstText(compaction)).toContain('You have no notes so far.')
-  expect(await sand.ask(notesRead, { bot: bot.id })).toEqual([
+  expect(await memory().notes(bot.id)).toEqual([
     { name: 'deploys', text: 'How deploys go and what broke them.\n\n## Rollback\n- A failed migration needs a manual rollback (2026-11-02).\n' },
   ])
   expect(next.system[0].text).toContain('- deploys: How deploys go and what broke them.')
@@ -142,7 +144,7 @@ test('a note the bot changes without having seen it is shown to it, and it write
   const second = compacted(remembered, `<note name="deploys">\n${merged}\n</note>`)
   sand = await start([[said('Noted.')], [overflow], [first], [second], [said('Tagged.')]])
   const bot = await sand.ask(botCreate, { name: 'Ops', models: { main: { model: 'fake/m' }, quick: {} } })
-  await sand.ask(noteWrite, { bot: bot.id, name: 'deploys', text: 'How deploys go.\n- Staging first.\n' })
+  await memory().writeNote(bot.id, { name: 'deploys', text: 'How deploys go.\n- Staging first.\n' })
 
   await talk(bot.id, 'Production needs a release tag now.')
   await talk(bot.id, 'Ship it')
@@ -151,5 +153,5 @@ test('a note the bot changes without having seen it is shown to it, and it write
   expect(firstText(compaction)).toContain('- deploys (32 characters): How deploys go.')
   expect(firstText(compaction)).not.toContain('Staging first')
   expect(retry.messages.at(-1).content[0].text).toContain('<current-note name="deploys">\nHow deploys go.\n- Staging first.\n</current-note>')
-  expect(await sand.ask(notesRead, { bot: bot.id })).toEqual([{ name: 'deploys', text: `${merged}\n` }])
+  expect(await memory().notes(bot.id)).toEqual([{ name: 'deploys', text: `${merged}\n` }])
 })

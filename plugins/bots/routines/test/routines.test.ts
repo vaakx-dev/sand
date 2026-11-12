@@ -1,6 +1,6 @@
 import { botSend } from '@sand/bot-turns/contract'
 import { routineDelete, routineList, routinePause } from '@sand/bot-routines/contract'
-import { botConversation, botCreate, botDelete, botGet, type BotEntry } from '@sand/bots/contract'
+import { botConversation, botCreate, botDelete, botList, type BotEntry } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { engine } from '@sand/engine/contract'
@@ -33,7 +33,7 @@ const until = async (done: () => Promise<boolean>) => {
 }
 
 const answered = async (bot: string, text: string) => {
-  const found = await sand.ask(botGet, { bot })
+  const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
   return found?.status === 'idle' && found.last?.text === text
 }
 

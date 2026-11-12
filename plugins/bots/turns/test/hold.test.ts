@@ -1,6 +1,6 @@
 import type { UsageRecord } from '@sand/accounts/contract'
 import { botOpen, botSend } from '@sand/bot-turns/contract'
-import { botCreate, botGet, bots, type BotSummary, botUpdate } from '@sand/bots/contract'
+import { botCreate, botList, bots, type BotSummary, botUpdate } from '@sand/bots/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Reply } from '@sand/replay/contract'
@@ -23,7 +23,7 @@ const start = async (replies: Reply[]) => {
 
 const until = async (bot: string, done: (found: BotSummary) => boolean) => {
   for (let tries = 0; tries < 500; tries++) {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (found && done(found)) return found
     await Bun.sleep(10)
   }
@@ -71,7 +71,7 @@ test('a bot that spends its monthly limit in API money holds new work and says s
   spend(bot.id, 1_500_000, 'api')
   spend(bot.id, 500_000, 'credits')
   spend(bot.id, 1_000_000, 'api')
-  expect(await sand.ask(botGet, { bot: bot.id })).toMatchObject({ spent: 3, hold: 'limit' })
+  expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ spent: 3, hold: 'limit' })
   expect(told).toEqual([expect.objectContaining({ kind: 'paused', title: 'Travel' })])
 
   expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Book it', clientRequestId: 'two' })).toMatchObject({ disposition: 'queued' })

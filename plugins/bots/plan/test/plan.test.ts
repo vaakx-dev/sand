@@ -1,5 +1,5 @@
 import { botSend } from '@sand/bot-turns/contract'
-import { botCreate, botGet } from '@sand/bots/contract'
+import { botCreate, botList } from '@sand/bots/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Reply } from '@sand/replay/contract'
 import { server } from '@sand/server/contract'
@@ -34,7 +34,7 @@ const talk = async (bot: string, prompt: string) => {
   const before = sand.requests('fake').length
   await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 300; tries++) {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (sand.requests('fake').length > before && found?.status === 'idle' && found.last?.role === 'assistant') return
     await Bun.sleep(10)
   }

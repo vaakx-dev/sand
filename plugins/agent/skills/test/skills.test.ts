@@ -1,4 +1,4 @@
-import { botCreate, botGet, bots } from '@sand/bots/contract'
+import { botCreate, botList, bots } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { paths } from '@sand/paths/contract'
@@ -27,7 +27,7 @@ const fromThreadAndBot = async (prompt: string) => {
   await sand.turns.run(sand.chat('fake/m'), prompt)
   const bot = await sand.ask(botCreate, { name: 'Helper', models: { main: { model: 'fake/m' }, quick: {} } })
   await sand.ask(botSend, { bot: bot.id, prompt, clientRequestId: 'one' })
-  while ((await sand.ask(botGet, { bot: bot.id }))?.last?.role !== 'assistant') await Bun.sleep(10)
+  while ((await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last?.role !== 'assistant') await Bun.sleep(10)
   return sand.requests('fake').map(body => JSON.parse(body))
 }
 
@@ -72,6 +72,6 @@ test("a bot's skill list is the one its $mentions load from, not the open thread
   expect(forBot).toEqual(['notes', 'verify'])
 
   await sand.ask(botSend, { bot: bot.id, prompt: 'Take $notes', clientRequestId: 'one' })
-  while ((await sand.ask(botGet, { bot: bot.id }))?.last?.role !== 'assistant') await Bun.sleep(10)
+  while ((await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last?.role !== 'assistant') await Bun.sleep(10)
   expect(firstBlock(JSON.parse(sand.requests('fake').at(-1)!))).toStartWith('<skill name="notes"')
 })

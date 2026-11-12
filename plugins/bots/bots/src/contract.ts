@@ -230,7 +230,6 @@ export const helloBots = helloField<BotSummary[]>('bots')
 const one = lazy(() => z.object({ bot: z.string() }))
 
 export const botList = request('bot.list', { input: () => z.object({}), output: type<BotSummary[]>() })
-export const botGet = request('bot.get', { input: one, output: type<BotSummary | null>() })
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>() })
 export const botUpdate = request('bot.update', { input: () => one().extend({ patch: botPatch() }), output: type<BotSummary>() })
 export const botJobs = request('bot.jobs', { input: one, output: type<JobVersion[]>() })

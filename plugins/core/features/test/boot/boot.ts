@@ -1,5 +1,5 @@
 import { llm } from '@sand/accounts/contract'
-import { botGet, bots } from '@sand/bots/contract'
+import { botList, bots } from '@sand/bots/contract'
 import { calendars } from '@sand/calendar/contract'
 import { sessions } from '@sand/chats/contract'
 import { computers } from '@sand/computers/contract'
@@ -46,7 +46,7 @@ export const combinations = (list: [string, string[], string[], Name[]][]) => {
 
 export const answer = async (sand: Booted, bot: string) => {
   for (let tries = 0; tries < 200; tries++) {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (found?.status === 'idle' && found.last?.role === 'assistant') return found.last.text
     await Bun.sleep(10)
   }

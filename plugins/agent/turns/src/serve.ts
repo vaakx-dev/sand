@@ -6,16 +6,12 @@ import {
   helloTurnsApi,
   turnChange,
   turnChangeWire,
-  turnGet,
   turnHold,
   turnInterrupt,
-  turnList,
   turnPending,
-  turnPendingList,
   turnPendingWire,
   type Turns,
   turnSend,
-  turnWait,
   turnWithdraw,
 } from '@sand/turns-contract/contract'
 import { joinDisposers } from '@sand/util'
@@ -27,15 +23,8 @@ export interface Served {
   runner: Runner<Session>
 }
 
-const waitFor = 25_000
-
 export const serveTurns = (ctx: TurnsContext, { service, runner }: Served) => {
   const session = (id: string) => ctx.sessions.require(id)
-  const own = (chat: string, turn: string) => {
-    const info = service.get(turn)
-    if (info?.session !== chat) throw new Error(`No turn ${turn} in this chat`)
-    return info
-  }
   const live = () => Object.fromEntries(runner.live().map(info => [info.conversation, threadTurn(info)]))
 
   ctx.on(sessionOpened, (opened, chat) => ({ ...opened, pending: service.pending(chat) }))
@@ -54,13 +43,6 @@ export const serveTurns = (ctx: TurnsContext, { service, runner }: Served) => {
       found.handle(turnInterrupt, ({ session: id, turn }) => service.interrupt(session(id), turn)),
       found.handle(turnWithdraw, ({ session: id, pending }) => service.withdraw(session(id), pending)),
       found.handle(turnHold, ({ session: id, pending, held }) => runner.hold(session(id), pending, held)),
-      found.handle(turnGet, ({ session: id, turn }) => (turn ? own(id, turn) : service.list(session(id), undefined, 1)[0]) ?? null),
-      found.handle(turnList, ({ session: id, before, limit }) => service.list(session(id), before, limit)),
-      found.handle(turnWait, ({ session: id, turn, until, timeoutMs = waitFor }) => {
-        own(id, turn)
-        return service.wait(turn, until, AbortSignal.timeout(timeoutMs))
-      }),
-      found.handle(turnPendingList, ({ session: id }) => service.pending(session(id))),
     )
   })
 }

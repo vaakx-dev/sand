@@ -37,5 +37,3 @@ export const noteChangeWire = wireEvent<[bot: string, note: Note]>('botMemory.no
 
 export const memoryRead = request('botMemory.read', { input: one, output: type<string>() })
 export const memoryWrite = request('botMemory.write', { input: () => one().extend({ text: z.string().max(1_000_000) }), output: type<void>() })
-export const notesRead = request('botMemory.notes', { input: one, output: type<Note[]>() })
-export const noteWrite = request('botMemory.writeNote', { input: () => one().extend({ name: noteName(), text: z.string().max(1_000_000) }), output: type<void>() })

@@ -9,7 +9,6 @@ import {
   botDelete,
   botEntry,
   botEntryWire,
-  botGet,
   botJobs,
   botList,
   botRemove,
@@ -25,7 +24,6 @@ export const serveBots = (ctx: Context, service: Bots) =>
     return joinDisposers(
       found.hello(helloBots, () => service.list()),
       found.handle(botList, () => service.list()),
-      found.handle(botGet, ({ bot }) => service.get(bot) ?? null),
       found.handle(botCreate, spec => service.create(spec)),
       found.handle(botUpdate, ({ bot, patch }) => service.update(bot, patch)),
       found.handle(botJobs, ({ bot }) => service.jobs(bot)),

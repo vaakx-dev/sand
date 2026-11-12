@@ -1,7 +1,7 @@
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { McpServer } from '@modelcontextprotocol/server'
 import { botSend } from '@sand/bot-turns/contract'
-import { botConversation, botCreate, type BotEntry, botGet, botJobs, botUpdate, jobEntry } from '@sand/bots/contract'
+import { botConversation, botCreate, type BotEntry, botList, botJobs, botUpdate, jobEntry } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -65,10 +65,10 @@ const noticeFor = async (bot: string) => {
 }
 
 const answered = async (bot: string, prompt: string) => {
-  const before = (await sand.ask(botGet, { bot }))?.last?.at ?? 0
+  const before = (await sand.ask(botList, {})).find(listed => listed.id === bot)?.last?.at ?? 0
   await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 300; tries++) {
-    const last = (await sand.ask(botGet, { bot }))?.last
+    const last = (await sand.ask(botList, {})).find(listed => listed.id === bot)?.last
     if (last?.role === 'assistant' && last.at > before) return
     await Bun.sleep(10)
   }
@@ -89,7 +89,7 @@ test('a bot can pause another bot and set its limit, but not change its own limi
 
   expect(await use(asBot(planner.id), 'bot_update', { bot: travel.id, paused: true, budget: 5 })).toMatchObject({ bot: travel.id, hold: 'paused', budget: 5, spent: 0 })
   expect(await use(asBot(planner.id), 'bot_update', { budget: 50 })).toEqual({ error: expect.stringContaining("can't change its own spend limit") })
-  expect(await sand.ask(botGet, { bot: planner.id })).toMatchObject({ budget: null })
+  expect((await sand.ask(botList, {})).find(listed => listed.id === planner.id)).toMatchObject({ budget: null })
 })
 
 test('a bot hands another bot a task without waiting, and hears its reply as a task notification', async () => {
@@ -143,7 +143,7 @@ test('a bot with no job writes its own job, works to it from its next step, and 
   expect(entries.filter(entry => entry.type === jobEntry).map(entry => entry.data)).toEqual([{ job, previous: '' }])
 
   await answered(bot.id, 'File them instead')
-  expect(await sand.ask(botGet, { bot: bot.id })).toMatchObject({ name: 'Notes', job: 'You file notes.' })
+  expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ name: 'Notes', job: 'You file notes.' })
   await sand.ask(botUpdate, { bot: bot.id, patch: { job } })
   expect((await sand.ask(botJobs, { bot: bot.id })).map(version => version.job)).toEqual(['You file notes.', job])
 })

@@ -89,7 +89,6 @@ export interface Sessions {
   pin(id: string, pinned: boolean): Session
   settle(id: string, settled: boolean): Promise<Session>
   snooze(id: string, until: number | null): Session
-  move(id: string, position: number): Session
   remove(id: string): Promise<void>
   open(id: string): Session | undefined
   require(id: string): Session
