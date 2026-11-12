@@ -1,6 +1,7 @@
 import { bytes } from '@sand/util'
 import type { LoadedPage } from '../contract'
 import { dirname, resolve } from 'node:path'
+import { inlineAssets } from './assets'
 import { bootstrap } from './bootstrap'
 import { dataUrl, inlineImages } from './images'
 import { maxPageBytes } from './limits'
@@ -13,9 +14,12 @@ const imagePage = (url: string) => `<img src="${url}" alt="" style="display:bloc
 
 export const prepare = async (html: string, base: string): Promise<LoadedPage> => {
   rejectViewportUnits(html)
-  const { html: inlined, missing } = await inlineImages(html, base)
+  const images = await inlineImages(html, base)
+  const assets = await inlineAssets(images.html, base)
+  const inlined = assets.html
+  const missing = [...images.missing, ...assets.missing]
   const size = Buffer.byteLength(inlined, 'utf8')
-  if (size > maxPageBytes) throw new Error(`With its images inlined the page is ${bytes(size)}. The limit is ${bytes(maxPageBytes)}; use smaller images.`)
+  if (size > maxPageBytes) throw new Error(`With its images, stylesheets and scripts inlined the page is ${bytes(size)}. The limit is ${bytes(maxPageBytes)}; use smaller files.`)
   return { html: `${pageStart}${await bootstrap()}${inlined.replace(doctype, '')}`, missing }
 }
 

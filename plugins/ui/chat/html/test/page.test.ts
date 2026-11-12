@@ -51,6 +51,19 @@ test.each(['html', 'path'])('html_render shows an image passed as %s', async fie
   expect(shown).toContain(`<img src="data:image/png;base64,${dot.toBase64()}"`)
 })
 
+test("html_render inlines the project's local stylesheet and script, with the stylesheet's images", async () => {
+  const page = '<link rel="stylesheet" href="../style/app.css"><script src="app.js"></script><button class="save">Save</button>'
+  const { result, shown } = await call(
+    'html_render',
+    { path: 'mock/page.html', title: 'Mock' },
+    { 'mock/page.html': page, 'style/app.css': '.save { background: url(dot.png) }', 'style/dot.png': dot, 'mock/app.js': 'document.title = "</script>"' },
+  )
+
+  expect(result?.is_error).toBeFalsy()
+  expect(shown).toContain(`<style>.save { background: url(data:image/png;base64,${dot.toBase64()}) }</style>`)
+  expect(shown).toContain('<script>document.title = "<\\/script>"</script>')
+})
+
 test.each(['html_render', 'html_preview'])('%s turns down html that is neither markup nor a file', async name => {
   const { result, shown } = await call(name, { html: 'pages/chart.html', title: 'Chart' })
 

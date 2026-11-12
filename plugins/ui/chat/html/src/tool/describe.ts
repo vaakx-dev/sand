@@ -10,11 +10,13 @@ const layoutGuide = [
 ].join(' ')
 
 const themeGuide = [
-  `Use these theme CSS variables instead of fixed colors: ${tokenNames().join(', ')}.`,
-  'The background, text color and font are already set.',
+  'The background, font, text, headings, lists, tables and code already look like the chat.',
+  "A report, chart, table or other page that isn't a UI mockup adds no styling of its own beyond what a chart or diagram needs.",
+  "A mockup of an existing project links that project's own stylesheet and component scripts instead of imitating them.",
+  `Color with these theme CSS variables instead of fixed colors: ${tokenNames().join(', ')}.`,
 ].join(' ')
 
-const pageRules = `Inline <style> and <script>. Local images as absolute paths, or paths relative to the thread folder, are inlined; remote URLs load as they are. At most ${maxHtmlChars} characters.`
+const pageRules = `Inline <style> and <script>. Local images, stylesheets (<link rel="stylesheet">) and scripts (<script src>) as absolute paths, or paths relative to the thread folder, are inlined; remote URLs load as they are. At most ${maxHtmlChars} characters.`
 
 export const renderDescription = `Show a finished HTML page (chart, diagram, table, mockup) inline in this thread, above your final reply. The frame fits the page's height. Pass the document as html, or the path of a .html file or an image as path; pass neither to publish the page html_preview just checked. ${layoutGuide} ${themeGuide} ${pageRules}`
 

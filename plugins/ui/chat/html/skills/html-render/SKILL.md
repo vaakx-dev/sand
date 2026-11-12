@@ -1,6 +1,6 @@
 ---
 name: html-render
-description: Theme and layout rules for html_render pages. Load before the first page in a chat.
+description: Style, theme and layout rules for html_render pages. Load before the first page in a chat.
 ---
 
 The page sits inside your reply on the chat's background: build it as part of the reply, not a website.
@@ -25,9 +25,14 @@ If no browser is installed, `html_preview` says so. Publish anyway, pass a heigh
 - Prefer inline SVG or HTML and CSS; use https CDN libraries only when needed. Local images (absolute paths, or relative to the page's file) are inlined, and remote URLs load as they are.
 - A page may run scripts and take keyboard input. Clicking a plain image in it opens that image in the reader's viewer, and app shortcuts like the command palette still work.
 
-## Mockups
+## Styles
 
-Use the project's real copy, structure, icons and colours. Label alternative treatments A, B, C and change only what differs. A mock of another app uses that app's colours and fonts; sand mockups, charts and diagrams use the theme below.
+Every page is one of two kinds:
+
+- **No styles.** A report, explanation, chart, table or any page that isn't a mockup of a UI adds no styling of its own: no fonts, text colours, backgrounds, cards, borders or shadows. The base style already makes it match the chat. Write plain HTML, and style only what a chart or diagram needs, coloured with the theme below.
+- **The project's real styles.** A mockup of an existing project uses that project's own stylesheet and components, so its buttons and rows are the real ones. Link the project's stylesheet with `<link rel="stylesheet" href="…">` and its component scripts with `<script src="…">`, by absolute path or a path relative to the page; they are inlined like local images. Build them first if the project has a build step. When a skill offers the project's components for pages, load it and draw with them.
+
+A screenshot of a running app shows as `<img src="…">` by local path.
 
 ## Theme
 
@@ -35,4 +40,4 @@ Set on `:root`; use them instead of fixed colours. The page follows the app's th
 
 {{tokens}}
 
-The base style sets the font, 14px text, the foreground colour and `body { margin: 0 }`.
+The base style sets the font, 14px text, the foreground colour and `body { margin: 0 }`, and gives headings, paragraphs, lists, tables, quotes, rules and code the chat's look.

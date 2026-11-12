@@ -12,7 +12,16 @@ Keep each screen focused on its main task. Open on useful content and controls.
 - Read the existing interface and any references the user named.
 - Name the audience, the main task and the content that matters most.
 - For visual changes, propose colors with values, type sizes and a layout sketch. Get agreement first.
-- A mockup or plan is an HTML page, not real code.
+
+## Mockups
+
+Never draw an existing project's look from memory. Pick the mockup by what it shows:
+
+- **A change to an existing screen:** make the change for real as a throwaway in its own worktree, run the app and screenshot the changed screen. Show it next to a screenshot of the screen as it is today.
+- **A quick sketch for an existing project:** an HTML page built with the project's own stylesheet and components, as the html-render skill describes.
+- **A project with no interface yet:** an HTML page in the look you propose.
+
+Label alternatives A, B, C and change only what differs. Before you show a mockup of an existing interface, put it next to a screenshot of the real screen and fix every difference in corners, buttons, spacing, type and colour that the change doesn't make.
 
 ## Headings and copy
 
