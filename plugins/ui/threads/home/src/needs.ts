@@ -3,7 +3,7 @@ import type { Need, NeedAction } from '@sand/needs-you/contract'
 import { panel } from '@sand/panel/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Shell } from '@sand/ui-shell/contract'
-import { turns, type Thread } from '@sand/web-client/contract'
+import { turns, type Projects, type Thread } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { mergeTrouble, type Changes } from './changes'
@@ -14,6 +14,7 @@ export interface NeedsParts {
   ctx: Context
   kit: Kit
   threads: { list(): Thread[]; get(id: string): Thread | undefined }
+  projects: Projects
   shell: Shell
   changes: Changes
   pulse: { version: { get(): number } }
@@ -21,7 +22,14 @@ export interface NeedsParts {
 
 const changesTab = 'changes'
 
+const markSize = 16
+
 const titleOf = (thread: Thread) => thread.info.title || 'Untitled thread'
+
+const projectMark = ({ kit, projects }: NeedsParts, thread: Thread) => () => {
+  const { name, icon } = projects.shown({ path: thread.info.cwd, device: thread.device, project: thread.info.project, quick: thread.info.kind === 'quick' })
+  return kit.projectIcon(name, icon, markSize)
+}
 
 const fileCount = (count: number) => `${count} ${count === 1 ? 'file' : 'files'}`
 
@@ -51,7 +59,7 @@ const askToFix = (parts: NeedsParts, thread: Thread, clashes: string[]): NeedAct
 }
 
 const conflictNeed = (parts: NeedsParts, thread: Thread, change: ThreadChanges, trouble: string): Need => {
-  const base = { id: `conflict:${thread.id}`, kind: 'conflict' as const, who: titleOf(thread), mark: () => parts.kit.roundMark('warning', parts.kit.icon('merge', 'sm')), at: thread.info.updated }
+  const base = { id: `conflict:${thread.id}`, kind: 'conflict' as const, who: titleOf(thread), mark: projectMark(parts, thread), at: thread.info.updated }
   const clashes = change.clashes ?? []
   const fix = clashes.length ? askToFix(parts, thread, clashes) : undefined
   if (!fix) return { ...base, title: trouble, main: opener(parts, thread) }
@@ -70,7 +78,16 @@ export const conflictNeeds = (parts: NeedsParts) => ({
 
 const reviewText = ({ kit, changes }: NeedsParts, thread: Thread) => {
   const change = () => changes.get(thread.id)
-  return span({}, 'Done. ', kit.emphasis(() => fileCount(change()?.files.length ?? 0)), () => `, +${change()?.add ?? 0} −${change()?.del ?? 0}.`)
+  return span(
+    {},
+    'Done. ',
+    kit.emphasis(() => fileCount(change()?.files.length ?? 0)),
+    ', ',
+    span({ class: kit.toneText.success }, () => `+${change()?.add ?? 0}`),
+    ' ',
+    span({ class: kit.toneText.danger }, () => `−${change()?.del ?? 0}`),
+    '.',
+  )
 }
 
 const review = (parts: NeedsParts, thread: Thread) => {
@@ -82,7 +99,7 @@ const reviewNeed = (parts: NeedsParts, thread: Thread): Need => ({
   id: `review:${thread.id}`,
   kind: 'review',
   who: titleOf(thread),
-  mark: () => parts.kit.roundMark('success', parts.kit.icon('check', 'sm')),
+  mark: projectMark(parts, thread),
   title: 'Done and ready to merge',
   text: () => reviewText(parts, thread),
   at: thread.info.updated,
@@ -99,7 +116,7 @@ const secretNeed = (parts: NeedsParts, thread: Thread, call: string, asked: stri
   id: `secret:${thread.id}:${call}`,
   kind: 'secret',
   who: titleOf(thread),
-  mark: () => parts.kit.roundMark('neutral', parts.kit.icon('key', 'sm')),
+  mark: projectMark(parts, thread),
   title: `Waiting on you: ${asked}`,
   text: () => span({}, 'Waiting on you: ', parts.kit.emphasis(asked), '.'),
   at: thread.started ?? thread.info.updated,

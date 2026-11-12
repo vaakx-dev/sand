@@ -11,6 +11,7 @@ const controlSizes: Record<Size, string> = {
 
 export type ButtonProps = Props<HTMLButtonElement> & { size?: Size }
 export type ToggleProps = ButtonProps & { active?: MaybeReactive<boolean>; surface?: Surface }
+export type QuietProps = ToggleProps & { strong?: boolean }
 
 export const plainButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, ...children: Child[]) =>
   button(
@@ -46,8 +47,8 @@ export const secondaryAction = (props: ButtonProps, ...children: Child[]) => con
 
 export const dangerAction = (props: ButtonProps, ...children: Child[]) => controlButton(actionTones.danger, props, ...children)
 
-export const quietButton = ({ active = false, surface, ...props }: ToggleProps, ...children: Child[]) =>
-  controlButton(placeLook(active, surface), props, ...children)
+export const quietButton = ({ active = false, surface, strong = false, ...props }: QuietProps, ...children: Child[]) =>
+  controlButton(placeLook(active, surface, strong ? 'font-medium text-neutral-100' : undefined), props, ...children)
 
 export const navButton = ({ size = 'md', active = false, surface, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
   plainButton(

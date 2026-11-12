@@ -27,7 +27,7 @@ import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { botFace } from './marks/face'
 import { monogram } from './marks/monogram'
-import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, opensMark, progressSteps, roundMark, shrinkBadge, spinner, starMark, statusLine, withDot } from './marks/marks'
+import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, opensMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot } from './marks/marks'
 import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
@@ -202,7 +202,6 @@ export const kit = {
   quietButton,
   quoteButton,
   returnFocus,
-  roundMark,
   rowButton,
   rowDetail,
   rowList,

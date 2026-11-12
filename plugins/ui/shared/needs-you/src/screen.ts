@@ -30,8 +30,8 @@ const actions = (kit: Kit, need: Need) => {
   }
   const second = need.second
   const buttons = [
-    kit.primaryAction({ disabled: busy, onClick: () => void run(need.main) }, need.main.label),
-    second ? kit.quietButton({ disabled: busy, onClick: () => void run(second) }, second.label) : null,
+    kit.quietButton({ size: 'sm', strong: true, disabled: busy, onClick: () => void run(need.main) }, need.main.label),
+    second ? kit.quietButton({ size: 'sm', disabled: busy, onClick: () => void run(second) }, second.label) : null,
   ]
   return { buttons, failure: dynamicChild(failure, text => (text ? kit.errorText(text) : null)) }
 }
