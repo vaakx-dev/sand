@@ -2345,20 +2345,6 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
-    "plugins/ui/inspector/changes": {
-      "name": "@sand/inspector-changes",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/changes": "workspace:*",
-        "@sand/git": "workspace:*",
-        "@sand/inspector": "workspace:*",
-        "@sand/panel": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/ui-shell": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
     "plugins/ui/inspector/context": {
       "name": "@sand/inspector-context",
       "version": "0.0.0",
@@ -2489,7 +2475,9 @@
         "@sand/git": "workspace:*",
         "@sand/git-diff": "workspace:*",
         "@sand/git-diff-view": "workspace:*",
+        "@sand/inspector": "workspace:*",
         "@sand/panel": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -2953,8 +2941,6 @@
     "@sand/inspector": ["@sand/inspector@workspace:plugins/ui/inspector/inspector"],
 
     "@sand/inspector-branch": ["@sand/inspector-branch@workspace:plugins/ui/inspector/branch"],
-
-    "@sand/inspector-changes": ["@sand/inspector-changes@workspace:plugins/ui/inspector/changes"],
 
     "@sand/inspector-context": ["@sand/inspector-context@workspace:plugins/ui/inspector/context"],
 

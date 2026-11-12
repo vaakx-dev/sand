@@ -6,7 +6,7 @@ import { pageSection } from '../rows/section'
 import { textArea } from './field'
 
 export interface EditableProps {
-  title: string
+  title?: string
   text(): string
   view(): Child
   save(text: string): Promise<unknown>
@@ -38,7 +38,7 @@ export const editable = (props: EditableProps) => {
   const editor = () =>
     div(
       { class: 'flex flex-col gap-2' },
-      textArea({ bindValue: draft, rows: props.rows ?? 6, maxLength: props.maxLength, placeholder: props.placeholder, 'aria-label': props.title, onMount: node => node.focus() }),
+      textArea({ bindValue: draft, rows: props.rows ?? 6, maxLength: props.maxLength, placeholder: props.placeholder, 'aria-label': props.title ?? props.placeholder, onMount: node => node.focus() }),
       show(
         () => Boolean(failure.get()),
         () => errorText(() => failure.get()),

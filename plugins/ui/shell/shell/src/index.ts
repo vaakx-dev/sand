@@ -84,6 +84,10 @@ export default definePlugin({
       cover: close => model.cover(close),
       aside: spec => model.asides.add(spec),
       showAside: (id, open) => model.showAside(id, open),
+      asideOpen(id) {
+        const spec = model.asides.items.get().find(found => found.id === id)
+        return spec ? model.asideShown(spec) : false
+      },
       subject: source => model.addSubject(source),
       subjectOf: route => model.subjectOf(route),
       chip: source => model.chips.add(source),

@@ -1,7 +1,7 @@
 import { kit } from '@sand/ui-kit/contract'
 import { shell, type Route, type Subject } from '@sand/ui-shell/contract'
 import { byOrder } from '@sand/util'
-import { derive, div, dynamicChild, list, sig, stored, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, sig, stored, type Derive, type Sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { panel, type PanelTab } from './contract'
 
@@ -35,13 +35,20 @@ export default definePlugin({
 
     const tabBar = (subject: () => Subject) => {
       const active = derive(() => activeOf(subject()))
-      return list(
-        derive(() => shownTabs(subject())),
+      const shown = derive(() => shownTabs(subject()))
+      return dynamicChild(
+        derive(() => shown.get().length === 1),
+        single => (single ? ctx.kit.barTitle(() => shown.get()[0]?.label ?? '') : tabStrip(shown, active)),
+      )
+    }
+
+    const tabStrip = (shown: Derive<PanelTab[]>, active: Derive<PanelTab | undefined>) =>
+      list(
+        shown,
         tab => tab.id,
         tab => tabButton(tab, () => active.get() === tab.get()),
         div({ role: 'tablist', 'aria-label': 'Panel tabs', class: 'flex min-w-0 flex-1 items-center gap-1' }),
       )
-    }
 
     const frame = (subject: () => Subject) =>
       div(
@@ -88,7 +95,7 @@ export default definePlugin({
         picked.set(tab)
         ctx.shell.showAside('panel', true)
       },
-      applies: (tab, subject) => tabs.get().some(found => found.id === tab && found.shows(subject)),
+      showing: (tab, subject) => ctx.shell.asideOpen('panel') && activeOf(subject)?.id === tab,
     })
   },
 })

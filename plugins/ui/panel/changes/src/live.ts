@@ -8,6 +8,8 @@ import type { Context } from 'drydock'
 
 export interface Changes {
   files: DiffFile[]
+  add: number
+  del: number
   patch(file: DiffFile): Promise<DiffPatch>
 }
 
@@ -23,9 +25,9 @@ export const liveChanges = (ctx: Context, link: Wire) => {
     if (!local) return undefined
     const merging = threads.get()
     if (!local.worktree || !merging) {
-      return { files: local.files, patch: ({ path, from }) => link.call(gitPatch, { cwd, scope: { kind: 'uncommitted' }, path, from }, device) }
+      return { files: local.files, add: local.add, del: local.del, patch: ({ path, from }) => link.call(gitPatch, { cwd, scope: { kind: 'uncommitted' }, path, from }, device) }
     }
     const changes = merging.get(session, device)
-    return changes && { files: changes.files, patch: ({ path, from }) => link.call(changesPatch, { session, path, from }, device) }
+    return changes && { files: changes.files, add: changes.add, del: changes.del, patch: ({ path, from }) => link.call(changesPatch, { session, path, from }, device) }
   }
 }
