@@ -2,9 +2,9 @@ import type { ContextUsage } from '@sand/compaction/contract'
 import type { Artifact } from '@sand/html/contract'
 import type { Limits, LLMEvent, Usage } from '@sand/accounts/contract'
 import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import { duration, errorMessage, leftOf, percent } from '@sand/util'
+import { duration, errorMessage, inputText, leftOf, percent } from '@sand/util'
 import { cyan, dim, red } from './paint'
-import { inputSummary, resultSummary } from './tool'
+import { resultSummary } from './tool'
 
 export interface Summary {
   usage: Usage
@@ -36,7 +36,7 @@ export const createPrinter = () => {
       }
     },
     call(call: ToolCallBlock) {
-      err(`${cyan(`● ${call.name}`)} ${dim(inputSummary(call.input))}`)
+      err(`${cyan(`● ${call.name}`)} ${dim(inputText(call.input, 120))}`)
     },
     result(result: ToolResultBlock) {
       if (result.isError) err(red(`  ✗ ${resultSummary(result)}`))

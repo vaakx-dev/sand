@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { charStart, clip, head, oneLine, tail, wellFormed } from '../src'
+import { charStart, clip, head, inputText, oneLine, tail, wellFormed } from '../src'
 
 const bold = '𝗧𝗵𝗲'
 
@@ -20,4 +20,14 @@ test('wellFormed replaces lone halves everywhere in a request and keeps the rest
   const request = { system: `s${half}`, messages: [{ role: 'user', content: [{ type: 'text', text: `t${half}` }] }], count: 2, native: undefined }
   expect(wellFormed(request)).toEqual({ system: 's\uFFFD', messages: [{ role: 'user', content: [{ type: 'text', text: 't\uFFFD' }] }], count: 2, native: undefined })
   expect(wellFormed(bold)).toBe(bold)
+})
+
+test('input text reads nested input as its short values, skipping long ones', () => {
+  const edits = [
+    { path: 'a.ts', old_string: 'const a = 1', new_string: 'const first = 1' },
+    { path: 'b.ts', old_string: 'x\ny', new_string: 'z' },
+  ]
+  expect(inputText({ edits })).toBe('a.ts const a = 1 const first = 1 b.ts z')
+  expect(inputText({ code: 'line one\nline two' })).toBe('line one line two')
+  expect(inputText({ title: 'Plan', steps: ['a'] })).toBe('Plan')
 })
