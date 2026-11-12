@@ -1,6 +1,5 @@
 import { pcsChange } from '@sand/devices-contract'
 import { sshHostsChange, sshMachines } from '@sand/devices-ssh/contract'
-import { firstRun } from '@sand/features/contract'
 import { palette } from '@sand/palette/contract'
 import { settings } from '@sand/settings/contract'
 import { shell } from '@sand/ui-shell/contract'
@@ -9,7 +8,6 @@ import { pulse } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { projectAdd, type ProjectAdd } from '../contract'
-import { firstProject } from './add/first'
 import { addSheet } from './add/sheet'
 import { newThreadSource, projectSource } from './add/source'
 import { inject } from './context'
@@ -18,7 +16,7 @@ import { projectsPage } from './settings/page'
 
 export default definePlugin({
   name: 'project',
-  description: 'Projects settings page, the Add project sheet with the first-run project step, and palette items to add a project, go to a file or search the project',
+  description: 'Projects settings page, the Add project sheet, and palette items to add a project, go to a file or search the project',
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [projectsChange, pcsChange, sshHostsChange], [shell, sshMachines])
@@ -32,18 +30,6 @@ export default definePlugin({
         ctx.provide(projectAdd, adder),
         ctx.watch(palette, found => found?.source(projectSource(add))),
         ctx.watch(palette, found => found?.source(newThreadSource(add))),
-        ctx.watch(firstRun, run =>
-          run?.step({
-            feature: 'threads',
-            render: next =>
-              firstProject(
-                ctx.kit,
-                changes.read(() => ctx.projects.list().length),
-                add,
-                next,
-              ),
-          }),
-        ),
       )
     })
   },

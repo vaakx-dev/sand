@@ -26,7 +26,6 @@ export default definePlugin({
     const screens = threadScreens(ctx, dock)
     const placeholder = () => {
       changes.version.get()
-      if (ctx.threads.drafting()) return 'Describe the change.'
       const current = ctx.threads.current()
       return current && merged(current) ? 'Ask a follow-up' : undefined
     }

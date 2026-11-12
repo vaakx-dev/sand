@@ -1392,7 +1392,6 @@
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
-        "@sand/features": "workspace:*",
         "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/media": "workspace:*",
@@ -1468,7 +1467,6 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
-        "@sand/reactive": "workspace:*",
         "@sand/settings": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
@@ -2187,7 +2185,6 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/devices-identity": "workspace:*",
         "@sand/devices-ssh": "workspace:*",
-        "@sand/features": "workspace:*",
         "@sand/git-runner": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-hub": "workspace:*",
@@ -2710,24 +2707,6 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
-    "plugins/ui/shared/model-setup": {
-      "name": "@sand/model-setup",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/accounts": "workspace:*",
-        "@sand/devices-contract": "workspace:*",
-        "@sand/features": "workspace:*",
-        "@sand/model": "workspace:*",
-        "@sand/model-picker": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/ui-shell": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
     "plugins/ui/shared/needs-you": {
       "name": "@sand/needs-you",
       "version": "0.0.0",
@@ -3153,8 +3132,6 @@
     "@sand/model-panel": ["@sand/model-panel@workspace:plugins/ui/chat/model-panel"],
 
     "@sand/model-picker": ["@sand/model-picker@workspace:plugins/ui/shared/model-picker"],
-
-    "@sand/model-setup": ["@sand/model-setup@workspace:plugins/ui/shared/model-setup"],
 
     "@sand/models-mcp": ["@sand/models-mcp@workspace:plugins/agent/models-mcp"],
 

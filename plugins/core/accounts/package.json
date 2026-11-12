@@ -18,7 +18,6 @@
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/features": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",

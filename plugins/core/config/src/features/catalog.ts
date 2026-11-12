@@ -33,19 +33,16 @@ const resolve = (definitions: FeatureDefinition[], off: ReadonlySet<string>) => 
 
 export const createCatalog = (definitions: FeatureDefinition[], table: unknown) => {
   let off = offIn(table)
-  let asked = isRecord(table)
   let state = resolve(definitions, off)
 
   return {
     on: (id: string | undefined) => id === undefined || state.on(id),
-    asked: () => asked,
     list: (): Feature[] =>
       definitions.map(definition => ({ ...definition, chosen: !off.has(definition.id), on: state.on(definition.id), usedBy: state.usedBy(definition.id) })),
     choose(changes: Record<string, boolean>) {
       off = new Set([...off].filter(id => changes[id] !== true))
       for (const [id, on] of Object.entries(changes)) if (!on) off.add(id)
       state = resolve(definitions, off)
-      asked = true
     },
   }
 }

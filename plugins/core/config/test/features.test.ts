@@ -6,7 +6,7 @@ import type { FeatureDefinition } from '../src/contract'
 import { createCatalog } from '../src/features/catalog'
 import { writeFeatures } from '../src/features/toml'
 
-const feature = (id: string, more: Partial<FeatureDefinition> = {}): FeatureDefinition => ({ id, kind: 'feature', label: id, summary: '', needs: [], uses: [], offer: false, ...more })
+const feature = (id: string, more: Partial<FeatureDefinition> = {}): FeatureDefinition => ({ id, kind: 'feature', label: id, summary: '', needs: [], uses: [], ...more })
 const capability = (id: string, more: Partial<FeatureDefinition> = {}) => feature(id, { kind: 'capability', ...more })
 
 const definitions = [
@@ -51,11 +51,6 @@ test('plugins of no feature, or of a feature nobody defines, stay on', () => {
   expect(catalog.on(undefined)).toBe(true)
   expect(catalog.on('unknown')).toBe(true)
   expect(catalog.on('worktrees')).toBe(false)
-})
-
-test('the person was asked once sand.toml has a [features] table', () => {
-  expect(createCatalog(definitions, undefined).asked()).toBe(false)
-  expect(createCatalog(definitions, {}).asked()).toBe(true)
 })
 
 test('writing features keeps the rest of sand.toml and only lists what is off', async () => {

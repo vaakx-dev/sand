@@ -12,7 +12,7 @@ import { welcomeView } from './welcome/view'
 
 export default definePlugin({
   name: 'accounts-web',
-  description: 'Accounts page in settings and the first-run welcome: sign in to plans other plugins offer, add API keys or local servers, or use accounts from another PC',
+  description: 'Accounts page in settings, and a sign-in screen while no account is found: sign in to plans other plugins offer, add API keys or local servers, or use accounts from another PC',
   inject: { wire, kit },
   apply(ctx) {
     const control = loginState(ctx)

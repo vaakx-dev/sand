@@ -7,7 +7,6 @@ import type { LLM, LLMEvent, Limits } from './llm'
 import type { DetectedServer, LoginState } from './login'
 import type { ModelInfo } from './models'
 import type { Plans } from './plans'
-import type { ModelSetup } from './setup'
 
 export type * from './live'
 export type * from './llm'
@@ -16,7 +15,6 @@ export * from './match'
 export type * from './models'
 export { efforts, isEffort } from './models'
 export type * from './plans'
-export type * from './setup'
 export { UsageLimited } from './limited'
 export { StreamStalled } from './stall'
 export { statelessCaps, ThreadLost } from './threads'
@@ -28,7 +26,6 @@ export { windowText } from './window'
 
 export const llm = service<LLM>('llm')
 export const llmPlans = service<Plans>('llmPlans')
-export const modelSetup = service<ModelSetup>('modelSetup')
 
 export const llmEvent = event<(event: LLMEvent, session: Session) => void>('llm.event')
 export const llmLimits = event<(limits: Limits) => void>('llm.limits')

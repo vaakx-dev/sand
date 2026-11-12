@@ -21,7 +21,6 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
     "@sand/devices-ssh": "workspace:*",
-    "@sand/features": "workspace:*",
     "@sand/git-runner": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
