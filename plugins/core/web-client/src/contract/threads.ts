@@ -1,7 +1,8 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
 import type { PendingItem, TurnResult, WaitReason } from '@sand/turns-contract/contract'
-import type { Branch, Entry, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
+import type { Branch, Entry, Prompt, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
+import type { SessionSettings } from '@sand/model/contract'
 import type { InputOf } from '@sand/host-hub/contract'
 import type { threadUpdate } from '@sand/orchestrator/contract'
 import type { Mark } from '@sand/server/contract'
@@ -48,6 +49,12 @@ export interface DraftTarget {
 
 export type OpenChat = { thread: string } | { draft: string }
 
+export interface FirstMessage {
+  prompt: Prompt
+  label: string
+  settings: SessionSettings
+}
+
 
 export type ThreadChange = Omit<InputOf<typeof threadUpdate>, 'session'>
 
@@ -61,7 +68,7 @@ export interface Threads {
   get(id: string): Thread | undefined
   current(): Thread | undefined
   children(id: string): Thread[]
-  create(target: DraftTarget): Promise<Thread>
+  start(draft: DraftTarget, first: FirstMessage): Promise<void>
   update(id: string, change: ThreadChange): Promise<void>
   remove(id: string): Promise<void>
   watch(id: string): Dispose

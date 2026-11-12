@@ -88,3 +88,14 @@ test('a start refuses a folder that does not exist and a model nobody has, witho
   await expect(sand.ask(threadStart, { ...base, model: 'nobody', prompt: 'go' })).rejects.toThrow(/^invalid_request: No model matches/)
   expect(await sand.ask(threadList, {})).toEqual([])
 })
+
+test('a quick start from the page makes a scratch thread, and a quick start with a folder is refused', async () => {
+  const { cwd, ...base } = await start([[said('Noted.')]])
+
+  await expect(sand.ask(threadStart, { ...base, cwd, quick: true, prompt: 'go' })).rejects.toThrow(/^invalid_request: /)
+  const sent = await sand.ask(threadStart, { ...base, quick: true, prompt: [{ type: 'text', text: 'jot this' }], label: 'Jot', origin: 'user' })
+  const { kind, project } = sand.sessions.require(sent.thread)
+  expect({ kind, project }).toEqual({ kind: 'quick', project: null })
+  expect(await waitThread(sand.ask, sent.thread, 'end')).toMatchObject({ status: 'completed', reply: 'Noted.' })
+  expect(sand.turns.get(sent.turn!)?.origin).toBe('user')
+})

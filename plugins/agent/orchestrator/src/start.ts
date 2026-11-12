@@ -9,7 +9,7 @@ import { matchSettings } from './settings'
 import type { Starters } from './starters'
 
 const folderOf = (ctx: OrchestratorContext, { cwd, project }: Pick<StartInput, 'cwd' | 'project'>) => {
-  if ((cwd === undefined) === (project === undefined)) throw failure('invalid_request', 'Give either cwd or project')
+  if ((cwd === undefined) === (project === undefined)) throw failure('invalid_request', 'Give either cwd, project or quick')
   if (cwd !== undefined) {
     if (!existsSync(cwd)) throw failure('invalid_request', `${cwd} is not a folder on this PC`)
     return { cwd }
@@ -34,9 +34,18 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
 
   const placeOf = ({ cwd, project, from }: StartInput) => (cwd === undefined && project === undefined ? { project: owners.home(from) } : { cwd, project })
 
-  const open = async (input: StartInput, adopt?: Adopt) => {
+  const inFolder = (input: StartInput) => {
     const { cwd, project } = folderOf(ctx, placeOf(input))
-    const session = wantsWorktree(input) ? await inWorktree(ctx, cwd, input) : ctx.sessions.thread(cwd, project ? { project } : undefined)
+    return wantsWorktree(input) ? inWorktree(ctx, cwd, input) : ctx.sessions.thread(cwd, project ? { project } : undefined)
+  }
+
+  const quickThread = (input: StartInput) => {
+    if (input.cwd !== undefined || input.project !== undefined || wantsWorktree(input)) throw failure('invalid_request', 'A quick thread has no folder, project or worktree')
+    return ctx.sessions.quick()
+  }
+
+  const open = async (input: StartInput, adopt?: Adopt) => {
+    const session = await (input.quick ? quickThread(input) : inFolder(input))
     if (input.title) ctx.sessions.rename(session.id, input.title)
     adopt?.(session)
     receipts.put(input.clientRequestId, session.id)
@@ -56,7 +65,7 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     const prompt = owners.sign(input.prompt, input.from)
     const session = await threadFor(input, adopt)
     if (input.from && starters.put(session.id, input.from)) ctx.emit(threadStarted, session.id, input.from)
-    const sent = await ctx.turns.send(session, { prompt, origin: input.origin, clientRequestId: input.clientRequestId, settings })
+    const sent = await ctx.turns.send(session, { prompt, label: input.label, origin: input.origin, clientRequestId: input.clientRequestId, settings })
     return { ...sent, thread: session.id }
   }
 }

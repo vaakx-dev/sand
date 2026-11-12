@@ -71,7 +71,6 @@ export interface WorktreeThreadInput {
   cwd: string
   branch?: string
   from?: string
-  existing?: string
 }
 
 export interface Worktrees {
@@ -80,12 +79,6 @@ export interface Worktrees {
 }
 
 export const worktrees = service<Worktrees>('worktrees')
-
-export const worktreesThread = request('worktrees.thread', {
-  input: () => z.object({ cwd: cwd(), branch: z.string().optional(), from: z.string().optional(), existing: z.string().optional() }),
-  output: type<SessionInfo>(),
-  place: 'thread',
-})
 
 export const worktreesRemove = request('worktrees.remove', {
   input: () => z.object({ path: z.string(), force: z.boolean().optional() }),

@@ -1,37 +1,52 @@
 import { llm } from '@sand/accounts/contract'
-import type { Sessions } from '@sand/chats/contract'
+import type { Session } from '@sand/chats/contract'
 import type { cli, CliFlags } from '@sand/config/contract'
-import { type Asked, modelSettings } from '@sand/model/contract'
-import type { TurnResult, Turns } from '@sand/turns-contract/contract'
+import type { Orchestrator, StartInput } from '@sand/orchestrator/contract'
+import type { TurnInfo, Turns } from '@sand/turns-contract/contract'
 import type { Context } from 'drydock'
 import { createFollower } from '../follow/follower'
 import type { Printer } from '../print/printer'
 import { followLocal } from './events'
 
 export interface Run {
+  threads: Orchestrator
   turns: Turns
-  sessions: Sessions
   printer: Printer
   prompt: string
   flags: CliFlags
   signal: AbortSignal
 }
 
-const askedOf = ({ model, effort, fast }: CliFlags): Asked => ({ model, effort, ...(fast !== undefined && { speed: fast ? 'fast' : 'normal' }) })
+const startOf = (cwd: string, prompt: string, { model, effort, fast }: CliFlags): StartInput => ({
+  cwd,
+  prompt,
+  model,
+  effort,
+  ...(fast !== undefined && { speed: fast ? 'fast' : 'normal' }),
+  origin: 'print',
+  clientRequestId: Bun.randomUUIDv7(),
+})
 
-const exitCode = (result: TurnResult, signal: AbortSignal) => {
+const exitCode = (ended: TurnInfo, signal: AbortSignal) => {
   if (signal.aborted) return 130
-  return result.stopReason === 'refusal' ? 1 : 0
+  return ended.stopReason === 'refusal' ? 1 : 0
 }
 
-export const runPrompt = async (ctx: Context<{ cli: typeof cli }>, { turns, sessions, printer, prompt, flags, signal }: Run) => {
-  const session = sessions.thread(ctx.cli.cwd)
-  const follower = createFollower(session.id, printer)
-  follower.limits(ctx.get(llm)?.limits?.())
-  followLocal(ctx, follower)
-  const settings = ctx.get(modelSettings)
-  settings?.change(session, settings.match(askedOf(flags)))
-  const result = await turns.run(session, prompt, { origin: 'print', signal })
+export const runPrompt = async (ctx: Context<{ cli: typeof cli }>, { threads, turns, printer, prompt, flags, signal }: Run) => {
+  let follower: ReturnType<typeof createFollower> | undefined
+  let thread: Session | undefined
+  const follow = (session: Session) => {
+    thread = session
+    follower = createFollower(session.id, printer)
+    follower.limits(ctx.get(llm)?.limits?.())
+    followLocal(ctx, follower)
+  }
+  const sent = await threads.start(startOf(ctx.cli.cwd, prompt, flags), follow)
+  if (sent.disposition !== 'started' || !thread || !follower) throw new Error('sand could not start a turn for this prompt')
+  const stop = () => thread && turns.interrupt(thread)
+  signal.addEventListener('abort', stop, { once: true })
+  const ended = await turns.wait(sent.turn, 'end')
+  signal.removeEventListener('abort', stop)
   await follower.finish(signal)
-  return exitCode(result, signal)
+  return exitCode(ended, signal)
 }

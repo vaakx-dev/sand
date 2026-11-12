@@ -3,12 +3,10 @@ import {
   sessionBranches,
   sessionCheckout,
   sessionRemove,
-  sessionsCreate,
-  sessionsQuick,
   uiFocus,
 } from '@sand/server/contract'
 import type { Pcs, Wire } from '@sand/devices-contract'
-import { threadUpdate } from '@sand/orchestrator/contract'
+import { threadStart, threadUpdate } from '@sand/orchestrator/contract'
 import { uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { draftStarted, type DraftTarget, type OpenChat, type Thread, type Threads, threadSelect } from '../contract'
@@ -74,10 +72,7 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     void wire.call(uiFocus, current?.device === device ? { session: current.id } : {}, device).catch(() => {})
   }
 
-  const created = async (target: DraftTarget) => {
-    if (!target.cwd) return wire.call(sessionsQuick, {}, target.device)
-    return wire.call(sessionsCreate, { cwd: target.cwd }, target.device)
-  }
+  const placeOf = ({ cwd: folder }: DraftTarget) => (folder ? { cwd: folder } : { quick: true as const })
 
   const greetedBy = (pc: string) => {
     applyHello(store, helloOf(wire, pc), pc)
@@ -100,12 +95,10 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     get: id => store.threads.get(id),
     current: () => store.currentThread(),
     children: id => [...store.threads.values()].filter(chat => chat.info.parent === id),
-    async create(target) {
-      const thread = store.upsert(await created(target), target.device)
-      thread.loaded = true
-      plans.delete(target.id)
-      ctx.emit(draftStarted, target.id, thread.id)
-      return thread
+    async start(draft, { prompt, label, settings }) {
+      const sent = await wire.call(threadStart, { ...placeOf(draft), prompt, label, ...settings, origin: 'user', clientRequestId: draft.id }, draft.device)
+      plans.delete(draft.id)
+      ctx.emit(draftStarted, draft.id, sent.thread)
     },
     async update(id, change) {
       await wire.call(threadUpdate, { session: id, ...change })

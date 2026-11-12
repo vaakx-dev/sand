@@ -30,7 +30,7 @@ export default definePlugin({
     const wait = (thread: string, until: WaitUntil, signal: AbortSignal) => waitThread(ctx, findThread(ctx, thread), until, signal)
     const named = ({ owner, id }: ConversationRef): Partial<Record<Owner, string>> => ({ [owner]: id })
     const threads: Orchestrator = {
-      start: input => start(input),
+      start,
       send: async (thread, { prompt, from, ...input }) => ({ ...(await ctx.turns.send(findThread(ctx, thread), { ...input, prompt: owners.sign(prompt, from) })), thread }),
       wait: (thread, until, signal, by) => (by ? waits.during(by, thread, () => wait(thread, until, signal)) : wait(thread, until, signal)),
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
