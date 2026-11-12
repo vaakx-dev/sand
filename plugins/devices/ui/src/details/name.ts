@@ -1,4 +1,3 @@
-import { pcRename } from '@sand/devices-contract'
 import { errorMessage, oneLine } from '@sand/util'
 import { div, keys, show, sig } from '@vaakx-dev/vrui'
 import { field } from '../shared/parts'
@@ -11,9 +10,6 @@ export const nameField = (ui: Ui, pc: string) => {
   const error = sig('')
   const busy = sig(false)
 
-  const rename = (name: string) =>
-    ui.ctx.pcs.online(pc) ? ui.ctx.wire.call(pcRename, { name }, pc) : ui.data.devices.rename(pc, name)
-
   const commit = async () => {
     const name = oneLine(value.get()).trim()
     if (!name) return value.set(current())
@@ -21,7 +17,7 @@ export const nameField = (ui: Ui, pc: string) => {
     busy.set(true)
     error.set('')
     try {
-      await rename(name)
+      await ui.data.devices.rename(pc, name)
       await ui.data.devices.refresh()
     } catch (failure) {
       error.set(`Couldn’t rename it: ${errorMessage(failure)}`)

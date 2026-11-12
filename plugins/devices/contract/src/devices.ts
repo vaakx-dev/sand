@@ -8,6 +8,7 @@ export const devicesList = request('devices.list', { input: () => z.object({}), 
 export const devicesRename = request('devices.rename', {
   input: () => z.object({ device: z.string().min(1), name: z.string().trim().min(1) }),
   output: type<DeviceRecord>(),
+  callers: 'any',
 })
 export const devicesIcon = request('devices.icon', {
   input: () => z.object({ device: z.string().min(1), icon: pcIconSchema() }),
@@ -28,8 +29,6 @@ export interface DeviceSeen {
 }
 
 export const devicesSeen = request('devices.seen', { input: () => z.object({}), output: type<DeviceSeen[]>() })
-
-export const pcRename = request('pc.rename', { input: () => z.object({ name: z.string().trim().min(1) }), output: type<PcIdentity>() })
 
 export const helloPc = helloField<PcIdentity>('pc')
 export const helloDevice = helloField<DeviceRecord>('device')

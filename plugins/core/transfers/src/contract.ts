@@ -13,8 +13,7 @@ export interface Transfers {
   offer(file: string): ChunkedFile
   received(transfer: string, chunks: number, size: number): Promise<string | undefined>
   release(transfer: string): Promise<void>
-  offerPath(input: OfferInput): Promise<OfferedPath>
-  savePath(input: SaveInput): Promise<void>
+  copy(input: CopyInput): Promise<Copied>
 }
 
 export const transfers = service<Transfers>('transfers')
@@ -36,5 +35,25 @@ const saveInput = lazy(() => offered().extend({ from: z.string().optional(), pat
 
 export type SaveInput = z.infer<ReturnType<typeof saveInput>>
 
+const copyInput = lazy(() =>
+  z.object({
+    from: z.string().min(1),
+    to: z.string().min(1),
+    fromPc: z.string().min(1).optional(),
+    toPc: z.string().min(1).optional(),
+    files: z.array(z.string()).optional(),
+  }),
+)
+
+export type CopyInput = z.infer<ReturnType<typeof copyInput>>
+
+export interface Copied {
+  folder: boolean
+  size: number
+  to: string
+  pc?: string
+}
+
 export const transfersOffer = request('transfers.offer', { input: offerInput, output: type<OfferedPath>(), callers: 'pc' })
 export const transfersSave = request('transfers.save', { input: saveInput, output: type<void>(), callers: 'pc' })
+export const transfersCopy = request('transfers.copy', { input: copyInput, output: type<Copied>(), callers: 'any' })

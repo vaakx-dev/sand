@@ -3,7 +3,7 @@ import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { transfers, transfersOffer, transfersSave } from '../src/contract'
+import { transfers, transfersCopy, transfersSave } from '../src/contract'
 
 const posix = process.platform !== 'win32'
 
@@ -33,11 +33,7 @@ const write = (path: string, text: string, mode = 0o644) => {
   chmodSync(path, mode)
 }
 
-const copy = async (from: string, to: string, files?: string[]) => {
-  const ask = sand.askAs({ device: 'other-pc', kind: 'pc' })
-  const offered = await ask(transfersOffer, { path: from, ...(files && { files }) })
-  await ask(transfersSave, { ...offered, path: to })
-}
+const copy = (from: string, to: string, files?: string[]) => sand.ask(transfersCopy, { from, to, ...(files && { files }) })
 
 const tree = (folder: string) => readdirSync(folder, { recursive: true, encoding: 'utf8' }).map(path => path.replaceAll('\\', '/')).sort()
 
@@ -117,6 +113,7 @@ test.if(!canLink)("a link this PC can't create fails the copy with a clear reaso
   const store = sand.app.get(transfers)
   if (!store) throw new Error('transfers did not start')
   const to = join(sand.home, 'unlinked')
-  await expect(store.savePath({ ...store.offer(archive), folder: true, path: to })).rejects.toThrow("Couldn't create the link run-link")
+  const save = sand.askAs({ device: 'other-pc', kind: 'pc' })(transfersSave, { ...store.offer(archive), folder: true, path: to })
+  await expect(save).rejects.toThrow("Couldn't create the link run-link")
   expect(existsSync(join(to, 'run-link'))).toBe(false)
 })

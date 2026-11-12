@@ -21,6 +21,8 @@ export const findPc = <P extends NamedPc>(pcs: P[], name: string) => pcs.find(pc
 
 export const noSuchPc = (pcs: NamedPc[], name: string) => `No paired PC is called ${name}. Paired PCs: ${pcs.map(pc => pc.name).join(', ') || 'none'}`
 
+export const unreachablePcs = "This PC can't reach your other PCs right now"
+
 export type PeerOutcome<O> = { pc: string; ok: true; value: O } | { pc: string; ok: false; error: unknown }
 
 export interface Peers {
@@ -40,6 +42,18 @@ export interface Peers {
 
 export const peers = service<Peers>('peers')
 
+export const reachablePeers = (linked: Peers | undefined) => {
+  if (!linked) throw new Error(unreachablePcs)
+  return linked
+}
+
+export const pcNamed = (linked: Peers | undefined, name: string) => {
+  const pcs = reachablePeers(linked).list()
+  const found = findPc(pcs, name)
+  if (!found) throw new Error(noSuchPc(pcs, name))
+  return found
+}
+
 export interface PeerRoutes {
   add(pc: string, url: string): Dispose
   advertise(pc: string, url: string): Dispose
@@ -47,7 +61,7 @@ export interface PeerRoutes {
 
 export const peerRoutes = service<PeerRoutes>('peerRoutes')
 
-export const peersList = request('peers.list', { input: () => z.object({}), output: type<PeerView[]>() })
+export const peersList = request('peers.list', { input: () => z.object({}), output: type<PeerView[]>(), callers: 'any' })
 export const peersChange = wireEvent<PeerView[]>('peers.change')
 
 export const peersAnnounce = request('peers.announce', {
