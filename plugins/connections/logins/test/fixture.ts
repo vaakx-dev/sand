@@ -69,7 +69,9 @@ export const botEntries = (sand: Sand, bot: string) => async () => (await sand.a
 export const answer = async <I>(sand: Sand, session: string, entries: Entries, type: string, request: Request<I, unknown>, reply: (id: string) => I) => {
   const id = await until(async () => {
     const asked = (await entries()).findLast(entry => entry.type === type)?.data as { id: string } | undefined
-    return asked && (await sand.ask(askWaiting, { session, id: asked.id })) ? asked.id : undefined
+    if (!asked) return undefined
+    const waiting = await sand.ask(askWaiting, { session })
+    return waiting.some(found => found.id === asked.id) ? asked.id : undefined
   }, type)
   await sand.ask(request, reply(id))
 }

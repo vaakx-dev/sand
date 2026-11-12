@@ -14,6 +14,7 @@ import {
   type loginPick,
   type Logins,
   type LoginsState,
+  type Listed,
   type LoginValues,
   type Pointer,
   type Use,
@@ -165,7 +166,7 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
   const find = (id: string) => {
     prune()
     const found = saved.find(entry => entry.id === id) ?? once.get(id)?.entry
-    if (!found) throw new Error(`No saved login "${id}". Call logins for the ids.`)
+    if (!found) throw new Error(`No saved login "${id}". Call login_list for the ids.`)
     return found
   }
 
@@ -257,6 +258,12 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
 
   const remember = (found: string, name: string) => pass([found], name, Date.now() + codeLife)
 
+  const sharedWith = (conversation: ConversationRef | undefined): Allowed => {
+    if (!conversation) return { bots: [], threads: [] }
+    const { bot } = deps.responsible(conversation)
+    return bot ? { bots: [bot], threads: [] } : { bots: [], threads: [conversation.id] }
+  }
+
   const common = (name: string, access: Allowed) => ({
     id: `login-${crypto.randomUUID().slice(0, 8)}`,
     name,
@@ -276,28 +283,28 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
         }
       : { ...common(input.name, access), values: { kind: 'key', value: input.value } }
 
-  const add = async (input: InputOf<typeof loginAdd>, access: Allowed = { bots: [], threads: [] }) => {
-    const entry = heldOf(input, access)
+  const add = async (input: InputOf<typeof loginAdd>, by?: ConversationRef) => {
+    const entry = heldOf(input, sharedWith(by))
     await commit([...saved, entry])
     return loginOf(entry)
   }
 
-  const hold = (input: InputOf<typeof loginAdd>, access: Allowed) => {
-    const entry = heldOf(input, access)
+  const hold = (input: InputOf<typeof loginAdd>, by: ConversationRef) => {
+    const entry = heldOf(input, sharedWith(by))
     const until = Date.now() + onceLife
     once.set(entry.id, { entry, until })
     pass(valuesIn(entry.values), entry.name, until + codeLife)
     return loginOf(entry)
   }
 
-  const pick = async ({ name, site, kind, ...pointer }: InputOf<typeof loginPick>) => {
+  const pick = async ({ name, site, kind, ...pointer }: InputOf<typeof loginPick>, by?: ConversationRef) => {
     const item = await sources.item(pointer)
     const chosen = kind ?? item.kind
     if (!sources.kinds(pointer.source).includes(chosen)) throw new Error(`${sourceLabel(pointer.source)} keeps keys, not website logins`)
     const where = chosen === 'website' ? (site ?? item.sites[0]) : undefined
     if (chosen === 'website' && !where) throw new Error(`${item.name} has no website: give it a site`)
     const entry: Pointed = {
-      ...common(name ?? item.name, { bots: [], threads: [] }),
+      ...common(name ?? item.name, sharedWith(by)),
       ...(where && { site: siteOf(where) }),
       kind: chosen,
       pointer,
@@ -331,10 +338,11 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
     return state()
   }
 
-  const state = (): LoginsState => ({ logins: saved.map(loginOf), keychain: vault.keychain(), sources: sources.statuses() })
+  const listed = (entry: Saved, by: ConversationRef | undefined): Listed => (by ? { ...loginOf(entry), access: accessOf(entry, by) } : loginOf(entry))
+
+  const state = (by?: ConversationRef): LoginsState => ({ logins: saved.map(entry => listed(entry, by)), keychain: vault.keychain(), sources: sources.statuses() })
 
   const service: Logins = {
-    list: conversation => saved.map(entry => ({ ...loginOf(entry), access: accessOf(entry, conversation) })),
     use,
     redact,
   }
@@ -366,7 +374,6 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
     search: sources.search,
     refresh: sources.refresh,
     uses: (id: string) => find(id).uses,
-    responsible: deps.responsible,
   }
 }
 

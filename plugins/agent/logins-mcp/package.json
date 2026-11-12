@@ -1,0 +1,27 @@
+{
+  "name": "@sand/logins-mcp",
+  "version": "0.0.0",
+  "description": "sand's saved login tools, defined once for its own threads and bots and for outside agents over MCP: list, add, change and remove logins, choose who may use them, connect password managers and answer secret and code requests, never showing a value",
+  "type": "module",
+  "sand": {
+    "feature": "logins",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Login tools",
+    "summary": "Lets your threads, your bots and outside agents manage your saved logins and password managers without seeing any value"
+  },
+  "dependencies": {
+    "@sand/host-hub": "workspace:*",
+    "@sand/logins": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

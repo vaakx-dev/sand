@@ -83,7 +83,7 @@ const overflow = { type: 'error', message: 'prompt is too long' } as const
 
 const signIn = (ids: Ids, work: string, who: string): Reply[] => [
   [call('request_secret', { title: `${who} deploy token`, reason: 'To deploy', once: false })],
-  [call('logins')],
+  [call('login_list')],
   [call('shell', { command: `bun ${join(work, 'print.ts').replaceAll('\\', '/')} ${who}`, logins: { TOKEN: ids.key, USER: `${ids.bank}/username`, PASS: ids.bank } })],
   [call('fails', { who })],
   [call('login_fill', { login: ids.bank })],
@@ -129,7 +129,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
       [said('<summary>Bot summary.</summary>\n<memory>\n## The user\n- Banks at Northbank\n</memory>')],
       [said('Bot carried on.')],
     ],
-    { home, plugins: [...plugins, 'agent/usage'] },
+    { home, plugins: [...plugins, 'agent/usage', 'agent/mcp-server', 'agent/logins-mcp'] },
   )
   let stopped = false
   try {
@@ -171,6 +171,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
       expect(resultText(entries, 'fails')).toContain('Rejected [secret: Deploy key] for [secret: Northbank]:[secret: Northbank], then [secret:')
       expect(resultText(entries, 'page')).toContain('"code":"[secret: Shop]"')
       expect(resultText(entries, 'page')).toContain('"code":"[secret: Northbank]"')
+      expect(resultText(entries, 'login_list')).toContain(`"id":"${ids.bank}"`)
       expect(leaksInText(JSON.stringify(entries), codes, values)).toEqual([])
     }
     expect(transcripts.bot.some(entry => entry.type === 'compaction')).toBe(true)

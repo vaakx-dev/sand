@@ -5,8 +5,6 @@ import { z } from 'zod'
 import type { LoginsRuntime } from '../service'
 import type { CodeAnswer, SecretAnswer, Waits } from '../waits'
 
-export const group = 'logins'
-
 export const signInGroup = 'sign-in'
 
 export interface ToolDeps {
@@ -18,7 +16,7 @@ export interface ToolDeps {
   needs(conversation: ConversationRef, text: string): void
 }
 
-export const loginInput = z.string().trim().min(1).describe('The id of a login from logins')
+export const loginInput = z.string().trim().min(1).describe('The id of a login from login_list')
 
 export const computerInput = z.string().trim().min(1).optional().describe('The id of a browser from computer_list; leave it out for the browser')
 
