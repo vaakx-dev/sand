@@ -56,7 +56,7 @@ test('commit takes every change in the folder, new files too, and refuses when t
   expect(git(repo, 'show', '--name-only', '--format=', 'HEAD').split('\n')).toEqual(['notes.txt', 'todo.txt'])
   expect(git(repo, 'status', '--porcelain')).toBe('')
   await expect(sand.ask(gitCommit, { cwd: repo, message: 'Again' })).rejects.toThrow('There are no changes to commit.')
-}, 30_000)
+})
 
 test('push sets the upstream the first time and sends new commits after', async () => {
   const { origin, repo } = await start()
@@ -72,7 +72,7 @@ test('push sets the upstream the first time and sends new commits after', async 
   git(repo, 'commit', '-q', '-am', 'todo now')
   await sand.ask(gitPush, { cwd: repo })
   expect(git(origin, 'rev-parse', 'work')).toBe(git(repo, 'rev-parse', 'HEAD'))
-}, 30_000)
+})
 
 test('update merges the latest default branch from origin, and says when there was nothing new', async () => {
   const { seed, repo } = await start()
@@ -85,7 +85,7 @@ test('update merges the latest default branch from origin, and says when there w
   expect(await Bun.file(join(repo, 'notes.txt')).text()).toBe('one\ntwo\nthree\nfour\n')
   expect(await Bun.file(join(repo, 'todo.txt')).text()).toBe('later\n')
   expect(await sand.ask(gitUpdate, { cwd: repo })).toEqual({ updated: false })
-}, 30_000)
+})
 
 test('an update that conflicts is undone and names the files', async () => {
   const { seed, repo } = await start()
@@ -98,7 +98,7 @@ test('an update that conflicts is undone and names the files', async () => {
   expect(git(repo, 'rev-parse', 'HEAD')).toBe(head)
   expect(git(repo, 'status', '--porcelain')).toBe('')
   expect(existsSync(join(repo, '.git', 'MERGE_HEAD'))).toBe(false)
-}, 30_000)
+})
 
 test('discard drops tracked, staged and untracked changes in the folder and leaves the rest of the repo alone', async () => {
   const { repo } = await start()
@@ -119,4 +119,4 @@ test('discard drops tracked, staged and untracked changes in the folder and leav
   expect(existsSync(join(docs, 'drafts'))).toBe(false)
   expect(git(repo, 'status', '--porcelain')).toBe('M notes.txt')
   await expect(sand.ask(gitDiscard, { cwd: docs })).rejects.toThrow('There are no changes to discard.')
-}, 30_000)
+})

@@ -60,4 +60,4 @@ test('a live sand runs the plugins in the sand home in place of built-ins with t
   const run = Bun.spawn(['bun', join(home, 'bench.ts')], { env: { ...Bun.env, HOME: home, USERPROFILE: home }, stderr: 'pipe' })
 
   expect([await run.exited, await new Response(run.stderr).text()]).toEqual([0, ''])
-}, 30_000)
+})

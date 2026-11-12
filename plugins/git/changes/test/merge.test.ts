@@ -60,7 +60,7 @@ test("a thread's committed and uncommitted work is ready, and merging squashes i
   expect(sand.sessions.require(thread).settled).not.toBeNull()
   expect(git(worktree, 'rev-parse', 'HEAD')).toBe(git(repo, 'rev-parse', 'HEAD'))
   expect(await sand.ask(changesList, { sessions: [thread] })).toEqual([expect.objectContaining({ state: 'merged', commit: git(repo, 'rev-parse', 'HEAD') })])
-}, 30_000)
+})
 
 test('a dirty project folder is refused and a conflict ends in conflict, and neither loses work', async () => {
   const { repo, thread, worktree } = await start()
@@ -80,4 +80,4 @@ test('a dirty project folder is refused and a conflict ends in conflict, and nei
   expect(git(repo, 'status', '--porcelain')).toBe('')
   expect(git(worktree, 'show', 'HEAD:notes.txt')).toBe('one\nthread\nthree')
   expect(sand.sessions.require(thread).settled).toBeNull()
-}, 30_000)
+})

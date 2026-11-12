@@ -25,11 +25,22 @@ const flags = ['--no-first-run', '--no-default-browser-check', '--disable-smooth
 
 const headlessFlags = [...flags, '--headless=new', '--window-size=1280,800', '--screen-info={0,0 1920x1080 workAreaBottom=48}']
 
-const headlessAgent = async (start: Start) => {
+const probeAgent = async (start: Start) => {
   const probe = await launch({ ...start, args: headlessFlags })
   const { userAgent } = await probe.call<{ userAgent: string }>('Browser.getVersion')
   await probe.close()
   return userAgent.replace('HeadlessChrome/', 'Chrome/')
+}
+
+const headlessAgents = new Map<string, Promise<string>>()
+
+const headlessAgent = (start: Start) => {
+  const known = headlessAgents.get(start.executable)
+  if (known) return known
+  const agent = probeAgent(start)
+  headlessAgents.set(start.executable, agent)
+  agent.catch(() => headlessAgents.delete(start.executable))
+  return agent
 }
 
 const flagsFor = async (start: Start, headless: boolean) => (headless ? [...headlessFlags, `--user-agent=${await headlessAgent(start)}`] : flags)

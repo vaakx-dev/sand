@@ -1,7 +1,7 @@
 import { errorCode } from './errors'
 
 const retryable = new Set(['EPERM', 'EACCES', 'EBUSY'])
-const attempts = 10
+const attempts = 15
 
 const shouldRetry = (error: unknown, attempt: number) =>
   process.platform === 'win32' && attempt < attempts && retryable.has(errorCode(error) ?? '')

@@ -11,7 +11,8 @@ import { type RouteHandler, server } from '@sand/server/contract'
 import { type ToolContext, tools } from '@sand/tools/contract'
 import { turns } from '@sand/turns-contract/contract'
 import { type Context, createApp, scopeError, type ContextCore, type Service } from 'drydock'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { removeFolder } from '@sand/util/fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
@@ -155,7 +156,7 @@ const start = async (models: Models, options: SandOptions) => {
   const app = createApp()
   const stop = async () => {
     await app.dispose()
-    if (!shared) rmSync(home, { recursive: true, force: true })
+    if (!shared) await removeFolder(home)
   }
   const { wire, routes, heard } = await boot(app, home, models, options).catch(async (error: unknown) => {
     await stop()

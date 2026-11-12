@@ -82,7 +82,7 @@ test('a turn whose process died mid tool call carries on: kept results stay, and
     { role: 'user', content: [{ type: 'tool_result', callId: 'fake-2', content: [said(`${unrecorded}\n\nIts last output:\nhalfway`)], isError: true }] },
     { role: 'assistant', content: [said('Carried on.')] },
   ])
-}, 20_000)
+})
 
 test('a call that only reads runs again after its process died', async () => {
   const died = await killDuring([[{ type: 'call', name: 'look', input: {} }]], 'look')
@@ -93,7 +93,7 @@ test('a call that only reads runs again after its process died', async () => {
     { role: 'user', content: [{ type: 'tool_result', callId: 'fake-1', content: [said('seen')] }] },
     { role: 'assistant', content: [said('Done.')] },
   ])
-}, 20_000)
+})
 
 test('a model reply cut off when its process died is asked for again', async () => {
   const died = await killDuring([[said('Half a thought'), { type: 'hold' }]], 'text')
@@ -104,7 +104,7 @@ test('a model reply cut off when its process died is asked for again', async () 
     { role: 'user', content: [said('go')] },
     { role: 'assistant', content: [said('Whole thought.')] },
   ])
-}, 20_000)
+})
 
 test('what was sent while a turn was down is steered into it or stays queued for after it', async () => {
   const died = await killDuring([[{ type: 'call', name: 'gate' }]], 'gate')
@@ -127,7 +127,7 @@ test('what was sent while a turn was down is steered into it or stays queued for
     { role: 'user', content: [said('later')] },
     { role: 'assistant', content: [said('Queued.')] },
   ])
-}, 20_000)
+})
 
 test('a turn that keeps dying is lost, keeping what the model had said', async () => {
   const { chat, turn } = await killDuring([[said('Half a thought'), { type: 'hold' }]], 'text')
@@ -138,7 +138,7 @@ test('a turn that keeps dying is lost, keeping what the model had said', async (
   expect(next.turns.get(turn)).toMatchObject({ status: 'lost', stopReason: 'lost' })
   expect(recovered.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Half a thought')] })
   expect(recovered.latest('turn-ending')?.data).toEqual({ stopReason: 'lost' })
-}, 20_000)
+})
 
 test('a turn running in another process is left alone, blocks a second runner and stops when interrupted from there', async () => {
   const first = await start([[{ type: 'call', name: 'gate' }]])

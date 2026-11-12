@@ -13,7 +13,7 @@ test('with only Bots on, a bot answers', async () => {
   } finally {
     await sand.stop()
   }
-}, 60_000)
+})
 
 test("with only Bots on, a bot's shell call runs without asking", async () => {
   const replies = [[{ type: 'call' as const, name: 'shell', input: { command: 'echo ran' } }], [{ type: 'text' as const, text: 'Done' }]]
@@ -30,4 +30,4 @@ test("with only Bots on, a bot's shell call runs without asking", async () => {
   } finally {
     await sand.stop()
   }
-}, 60_000)
+})

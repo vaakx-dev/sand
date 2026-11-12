@@ -65,7 +65,7 @@ test('pushes the branch with an upstream, then opens a pull request into the def
     ['GET', '/repos/acme/tiles', undefined],
     ['POST', '/repos/acme/tiles/pulls', { title: 'Fix the cache', head: 'fix/cache', base: 'main' }],
   ])
-}, 30_000)
+})
 
 test("refuses a folder whose origin isn't on GitHub and asks GitHub nothing", async () => {
   const { repo } = await start()
@@ -74,4 +74,4 @@ test("refuses a folder whose origin isn't on GitHub and asks GitHub nothing", as
 
   await expect(openPull(runner, client, repo, 'Fix the cache')).rejects.toThrow("This folder isn't on a branch of a GitHub repo.")
   expect(calls).toEqual([])
-}, 30_000)
+})

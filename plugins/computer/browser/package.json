@@ -20,6 +20,7 @@
   "devDependencies": {
     "@sand/chats": "workspace:*",
     "@sand/harness": "workspace:*",
-    "@sand/tools": "workspace:*"
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*"
   }
 }

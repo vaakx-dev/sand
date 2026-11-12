@@ -87,7 +87,7 @@ beforeAll(async () => {
   bare = await pc(['attachments = false', 'git = false'])
   link(near, far)
   link(bare, far)
-}, 60_000)
+})
 
 const project = async (name: string) => {
   const source = join(far.sand.home, name)

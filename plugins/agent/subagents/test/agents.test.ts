@@ -131,7 +131,7 @@ test('a subagent given a worktree works in its own checkout, which goes once its
 
   await sand.ask(threadUpdate, { session: parent.id, settled: true })
   await until(() => !existsSync(child.cwd) && git(repo, 'branch', '--list', 'sand/*') === '', 2000)
-}, 30_000)
+})
 
 test('only agents defined in the home folder can be named, and they run with their role and tools', async () => {
   await start([delegate({ agent: 'nobody' }), said('No such agent.'), delegate({ agent: 'scout' }), said('Started.'), said('Noted.')], [said('Scouted.')])

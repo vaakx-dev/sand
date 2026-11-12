@@ -67,4 +67,4 @@ test("while it waits, progress shows how many jobs are done and each running one
 
   expect(lines).toContainEqual(expect.stringMatching(/^0\/2 done · Warm · (warming up|running)$/))
   expect(lines).toContainEqual(expect.stringMatching(/^1\/2 done · Warm · done$/))
-}, 20_000)
+})

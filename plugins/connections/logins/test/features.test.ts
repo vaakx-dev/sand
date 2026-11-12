@@ -34,4 +34,4 @@ test('with threads off and bots on, logins loads, serves its state and saves a s
   } finally {
     await sand.stop()
   }
-}, 60_000)
+})

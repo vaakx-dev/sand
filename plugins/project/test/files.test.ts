@@ -45,7 +45,7 @@ describe('without git', () => {
     } finally {
       await sand.stop()
     }
-  }, 60_000)
+  })
 })
 
 describe.if(Boolean(Bun.which('git')))('with git', () => {
@@ -58,5 +58,5 @@ describe.if(Boolean(Bun.which('git')))('with git', () => {
     } finally {
       await sand.stop()
     }
-  }, 60_000)
+  })
 })

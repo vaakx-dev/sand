@@ -92,4 +92,4 @@ test("a bot and the threads it starts use the bot's logins; any other thread, or
   } finally {
     await sand.stop()
   }
-}, 30_000)
+})

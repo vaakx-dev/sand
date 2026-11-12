@@ -53,4 +53,4 @@ test('a one-time secret works for one use and is never saved; one the user choos
   } finally {
     if (!stopped) await sand.stop()
   }
-}, 30_000)
+})

@@ -1,7 +1,8 @@
 import { findBrowser } from '@sand/cdp'
 import { center, parseKeys, type UiElement } from '@sand/computers/contract'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { removeFolder } from '@sand/util/fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { browserComputer, pngSize } from '../src/computer'
@@ -173,12 +174,12 @@ const tabsShow = async (...lines: string[]) => {
 }
 
 describe.skipIf(!(await findBrowser()))('browser computer', () => {
-  beforeAll(() => computer.act({ type: 'open', url }), 30_000)
+  beforeAll(() => computer.act({ type: 'open', url }))
 
   afterAll(async () => {
     await computer.close()
     await server.stop(true)
-    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+    await removeFolder(profile)
   })
 
   test('takes a png screenshot of the viewport', async () => {

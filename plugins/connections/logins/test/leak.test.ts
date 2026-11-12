@@ -189,4 +189,4 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
   } finally {
     if (!stopped) await sand.stop()
   }
-}, 60_000)
+})
