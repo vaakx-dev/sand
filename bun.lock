@@ -331,6 +331,21 @@
         "@sand/tools": "workspace:*",
       },
     },
+    "plugins/agent/pcs-mcp": {
+      "name": "@sand/pcs-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/devices-contract": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/transfers": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/projects-mcp": {
       "name": "@sand/projects-mcp",
       "version": "0.0.0",
@@ -1390,7 +1405,6 @@
         "@sand/devices-identity": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/server": "workspace:*",
-        "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -1572,6 +1586,7 @@
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/media": "workspace:*",
+        "@sand/server": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -2948,6 +2963,8 @@
     "@sand/panel-plan": ["@sand/panel-plan@workspace:plugins/ui/panel/plan"],
 
     "@sand/paths": ["@sand/paths@workspace:plugins/core/paths"],
+
+    "@sand/pcs-mcp": ["@sand/pcs-mcp@workspace:plugins/agent/pcs-mcp"],
 
     "@sand/picker": ["@sand/picker@workspace:plugins/ui/shared/picker"],
 

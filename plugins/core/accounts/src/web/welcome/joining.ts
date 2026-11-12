@@ -1,4 +1,4 @@
-import { type DiscoveredPc, discoverChange, type OutgoingJoin, type OutgoingOutcome, pairCancelJoin, pairJoin, pairJoinResult, pcsDiscover, type wire } from '@sand/devices-contract'
+import { type DiscoveredPc, discoverChange, type OutgoingJoin, pairCancelJoin, pairJoin, pairJoinResult, pcsDiscover, unjoinedText, type wire } from '@sand/devices-contract'
 import { unanswered } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
@@ -8,13 +8,6 @@ import { whileBusy } from '../parts'
 export interface JoinedPc {
   id: string
   name: string
-}
-
-const outcomeText: Record<Exclude<OutgoingOutcome, 'approved'>, string> = {
-  denied: 'was turned down',
-  expired: 'expired before anyone allowed it',
-  failed: "couldn't be sent",
-  cancelled: 'was cancelled',
 }
 
 export const pcJoining = (ctx: Context<{ wire: typeof wire }>, joined: (pc: JoinedPc) => void) => {
@@ -30,7 +23,7 @@ export const pcJoining = (ctx: Context<{ wire: typeof wire }>, joined: (pc: Join
       if (!asked || result.id !== asked.id) return
       waiting.set(undefined)
       if (result.outcome === 'approved') return joined({ id: asked.pc, name: asked.name })
-      error.set(result.error ?? `Joining ${asked.name} ${outcomeText[result.outcome]}.`)
+      error.set(unjoinedText(asked.name, result.outcome, result.error))
     }),
   )
 

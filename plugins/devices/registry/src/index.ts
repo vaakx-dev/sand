@@ -1,4 +1,4 @@
-import { auth, devicesChange, helloDevice, helloPc, registry as registryService, thisPc as thisPcService } from '@sand/devices-contract'
+import { auth, devicesChange, helloDevice, helloPc, peers, registry as registryService, thisPc as thisPcService } from '@sand/devices-contract'
 import { loadPcIdentity } from '@sand/devices-identity/pc'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hostBuild } from '@sand/host-dist/contract'
@@ -37,7 +37,7 @@ export default definePlugin({
         return record && !record.removed ? record : undefined
       }),
     )
-    for (const register of deviceRequests(ctx.hub, registry, thisPc)) ctx.effect(register)
+    for (const register of deviceRequests({ hub: ctx.hub, registry, here: thisPc.id, linked: () => ctx.get(peers) })) ctx.effect(register)
 
     const seen = await loadSeen(home)
     ctx.on(hubOpen, device => seen.touch([device]))

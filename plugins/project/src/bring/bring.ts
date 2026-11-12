@@ -1,11 +1,11 @@
 import { peers } from '@sand/devices-contract'
 import { type GitFailure, type GitRunner, gitRunner } from '@sand/git-runner/contract'
 import { hostChannel } from '@sand/host-runtimes/contract'
-import { type OfferedPath, transfers } from '@sand/transfers/contract'
+import { transfers } from '@sand/transfers/contract'
 import { errorMessage } from '@sand/util'
 import type { ContextCore } from 'drydock'
 import { mkdir, readdir, rm, stat } from 'node:fs/promises'
-import { type BringInput, type BringStep, type Project, type ProjectOffer, projectsOffer, runtimeProjectCreate } from '../contract'
+import { type BringInput, type BringStep, type CopySource, type Project, projectsSource, runtimeProjectCreate, type SourceInput } from '../contract'
 import type { LocalCopies } from '../local/copies'
 import { fullPath } from '../registry/paths'
 
@@ -19,7 +19,7 @@ interface BringDeps {
   here: string
   local: LocalCopies
   services: Pick<ContextCore, 'get'>
-  offer: (input: ProjectOffer) => Promise<OfferedPath>
+  source: (input: SourceInput) => Promise<CopySource>
   step: (step: BringStep) => void
 }
 
@@ -53,7 +53,7 @@ const undo = async (path: string, existed: boolean) => {
 
 const filesText = (count: number) => (count === 1 ? '1 file' : `${count} files`)
 
-export const bringProject = ({ here, local, services, offer, step }: BringDeps) => {
+export const bringProject = ({ here, local, services, source, step }: BringDeps) => {
   const known = (id: string) => {
     const project = local.projects().find(found => found.id === id)
     if (!project) throw new Error("The PC you're bringing it to doesn't know this project yet. Try again in a moment.")
@@ -71,24 +71,24 @@ export const bringProject = ({ here, local, services, offer, step }: BringDeps) 
     }
   }
 
-  const source = (from: string) => {
-    if (from === here) return offer
+  const sourceOn = (from: string) => {
+    if (from === here) return source
     const linked = services.get(peers)
     if (!linked) throw new Error("The PC you're bringing it to can't reach your other PCs right now.")
     const pc = linked.get(from)
     if (!pc) throw new Error("The PC with the files isn't one of your PCs.")
     if (pc.status.phase !== 'connected') throw new Error(`${pc.name} is offline. Turn it on, or bring the project from another PC.`)
-    return (input: ProjectOffer) => linked.call(from, projectsOffer, input, { timeout: longMs })
+    return (input: SourceInput) => linked.call(from, projectsSource, input)
   }
 
   const copier = ({ project, from, how, files }: BringInput) => {
     const receiver = services.get(transfers)
     if (!receiver) throw new Error(`Copying files needs the File transfers plugin, which is off on ${target}.`)
-    const ask = source(from)
+    const ask = sourceOn(from)
     return async (path: string, say: Say) => {
       say(how === 'copy' ? 'Copying the files…' : `Copying ${filesText(files.length)}…`)
-      const offered = await ask({ project, how, files })
-      await receiver.savePath({ ...offered, ...(from !== here && { from }), path })
+      const copied = await ask({ project, how, files })
+      await receiver.copy({ from: copied.path, ...(copied.files && { files: copied.files }), ...(from !== here && { fromPc: from }), to: path })
     }
   }
 

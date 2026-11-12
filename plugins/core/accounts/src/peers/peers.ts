@@ -1,4 +1,4 @@
-import type { Peers as PcLinks } from '@sand/devices-contract'
+import { type Peers as PcLinks, reachablePeers } from '@sand/devices-contract'
 import type { Media } from '@sand/media/contract'
 import { type Limits, type LLMEvent, type LLMRequest, ThreadLost } from '../contract'
 import { isKeyKind, keyLabels } from '../auth/kinds'
@@ -49,8 +49,6 @@ const ownedBy = (pc: SharePc, { windows, status, updated, source }: Limits): Lim
 })
 
 const rank = (state: PeerState) => (state.refused ? 2 : state.online ? 0 : 1)
-
-const noLinks = () => new Error("This PC can't reach your other PCs right now")
 
 export type Peers = ReturnType<typeof createPeers>
 
@@ -137,8 +135,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
 
   async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pin?: Pin): AsyncGenerator<LLMEvent> {
     await first
-    const found = links()
-    if (!found) throw noLinks()
+    const found = reachablePeers(links())
     let problem: Error | undefined
     const sent = { ...request, media: carriedMedia(media, request.messages) }
     for (const peer of candidates(id).filter(candidate => !pin || candidate.pc.id === pin.pc)) {

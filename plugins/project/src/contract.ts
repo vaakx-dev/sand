@@ -1,5 +1,4 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import type { OfferedPath } from '@sand/transfers/contract'
 import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
@@ -168,9 +167,14 @@ const bringInput = lazy(() => z.object({ project: z.string(), from: z.string().m
 
 export type BringInput = z.infer<ReturnType<typeof bringInput>>
 
-const offerInput = lazy(() => z.object({ project: z.string(), how: bringHow(), files: z.array(z.string()) }))
+const sourceInput = lazy(() => z.object({ project: z.string(), how: bringHow(), files: z.array(z.string()) }))
 
-export type ProjectOffer = z.infer<ReturnType<typeof offerInput>>
+export type SourceInput = z.infer<ReturnType<typeof sourceInput>>
+
+export interface CopySource {
+  path: string
+  files?: string[]
+}
 
 export const projectsList = request('projects.list', { input: () => z.object({}), output: type<ProjectList>() })
 export const helloProjects = helloField<ProjectList>('projects')
@@ -216,7 +220,7 @@ export const fsBrowse = request('fs.browse', { input: pathInput, output: type<Fo
 export const fsMkdir = request('fs.mkdir', { input: pathInput, output: type<void>() })
 export const projectsIgnored = request('projects.ignored', { input: pathInput, output: type<IgnoredFiles>() })
 export const projectsBring = request('projects.bring', { input: bringInput, output: type<ProjectRow>() })
-export const projectsOffer = request('projects.offer', { input: offerInput, output: type<OfferedPath>(), callers: 'pc' })
+export const projectsSource = request('projects.source', { input: sourceInput, output: type<CopySource>(), callers: 'pc' })
 
 export const projectsChange = wireEvent<ProjectList>('projects.change')
 export const projectsBringing = wireEvent<BringStep>('projects.bringing')

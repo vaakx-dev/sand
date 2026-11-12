@@ -1,0 +1,25 @@
+{
+  "name": "@sand/pcs-mcp",
+  "version": "0.0.0",
+  "description": "sand's PC tools, defined once for its own threads and bots and for outside agents over MCP: list your PCs and copy files and folders between them",
+  "type": "module",
+  "sand": {
+    "feature": "pcs",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "PC tools",
+    "summary": "Lets your threads, your bots and outside agents list your PCs and copy files and folders between them"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/transfers": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

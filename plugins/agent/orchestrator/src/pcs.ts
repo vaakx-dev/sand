@@ -1,4 +1,4 @@
-import { findPc, isPcUnavailable, noSuchPc, type PeerOutcome, peers } from '@sand/devices-contract'
+import { findPc, isPcUnavailable, noSuchPc, type PeerOutcome, peers, unreachablePcs } from '@sand/devices-contract'
 import type { InputOf, Request } from '@sand/host-hub/contract'
 import type { OrchestratorContext } from './context'
 import { failure, historyRead, threadList, type ThreadRow, threadStart } from './contract'
@@ -11,7 +11,7 @@ export const createPcs = (ctx: OrchestratorContext) => {
 
   const call = async <I, O>(pc: string, request: Request<I, O>, input: I, timeout?: number) => {
     const found = linked()
-    if (!found) throw failure('unavailable', "This PC can't reach your other PCs right now")
+    if (!found) throw failure('unavailable', unreachablePcs)
     try {
       return await found.call(pc, request, input, { timeout })
     } catch (error) {

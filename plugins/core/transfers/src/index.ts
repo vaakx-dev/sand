@@ -1,15 +1,14 @@
 import { cli } from '@sand/config/contract'
 import { peers } from '@sand/devices-contract'
 import { server } from '@sand/server/contract'
-import { tools } from '@sand/tools/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { transferPath } from './chunks'
-import { transfers as transfersService, transfersOffer, transfersPull, transfersSave, transfersStatus } from './contract'
+import { transfersCopy, transfers as transfersService, transfersOffer, transfersPull, transfersSave, transfersStatus } from './contract'
+import { copyBetween } from './copy/copy'
 import { offerPath } from './copy/offer'
 import { saveFrom } from './copy/save'
-import { group, pcTools } from './copy/tools'
 import { pullFrom } from './pull'
 import { transferRoute } from './route'
 import { createTransfers } from './transfers'
@@ -18,7 +17,7 @@ const sweepEvery = 60_000
 
 export default definePlugin({
   name: 'transfers',
-  description: 'Moves big files between the page, the CLI and PCs in raw HTTP chunks, and lets the agent copy files and folders between PCs',
+  description: 'Moves big files between the page, the CLI and PCs in raw HTTP chunks, and copies files and folders between PCs',
   inject: { cli },
   apply(ctx) {
     const { home } = ctx.cli
@@ -26,7 +25,8 @@ export default definePlugin({
     const transfers = createTransfers(join(home, 'transfers'))
     const offer = offerPath(transfers)
     const save = saveFrom(transfers, linked)
-    ctx.provide(transfersService, { ...transfers, offerPath: offer, savePath: save })
+    const copy = copyBetween({ home, linked, offer, save })
+    ctx.provide(transfersService, { ...transfers, copy })
     ctx.effect(() => {
       const sweep = () => void transfers.sweep().catch(error => ctx.report(error))
       sweep()
@@ -41,14 +41,7 @@ export default definePlugin({
             found.handle(transfersStatus, ({ transfer }) => transfers.arrived(transfer)),
             found.handle(transfersOffer, offer),
             found.handle(transfersSave, save),
-          )
-        : undefined,
-    )
-    ctx.watch(tools, found =>
-      found
-        ? joinDisposers(
-            found.group({ name: group, label: 'PCs', summary: 'list your PCs and copy files and folders between them', load: 'on-demand' }),
-            ...pcTools(home, transfers, linked).map(tool => found.register(tool)),
+            found.handle(transfersCopy, copy),
           )
         : undefined,
     )
