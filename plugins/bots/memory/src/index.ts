@@ -5,7 +5,7 @@ import { tools } from '@sand/tools/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { compactionOf } from './compaction'
-import { botMemory, memoryChange, memoryChangeWire, memoryRead, memoryWrite, noteChange, noteChangeWire, notesRead, noteWrite } from './contract'
+import { botMemory, memoryChange, memoryChangeWire, memoryRead, memoryWrite, noteChange, noteChangeWire } from './contract'
 import { createMemory } from './files'
 import { noteTool } from './tool'
 
@@ -27,8 +27,6 @@ export default definePlugin({
       return joinDisposers(
         found.handle(memoryRead, ({ bot }) => memory.read(bot)),
         found.handle(memoryWrite, ({ bot, text }) => memory.write(bot, text)),
-        found.handle(notesRead, ({ bot }) => memory.notes(bot)),
-        found.handle(noteWrite, ({ bot, name, text }) => memory.writeNote(bot, { name, text })),
         ctx.on(memoryChange, (bot, text) => found.broadcast(memoryChangeWire, [bot, text])),
         ctx.on(noteChange, (bot, note) => found.broadcast(noteChangeWire, [bot, note])),
       )

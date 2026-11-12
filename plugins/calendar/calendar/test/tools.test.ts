@@ -1,4 +1,4 @@
-import { botConversation, botCreate, botGet, type BotEntry } from '@sand/bots/contract'
+import { botConversation, botCreate, botList, type BotEntry } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { calendarAgenda, calendarCreate } from '@sand/calendar/contract'
 import { textOf, type Message } from '@sand/chats/contract'
@@ -42,7 +42,7 @@ test('a bot adds an event to the calendar and reads its agenda back', async () =
   ])
   const bot = await ask(botCreate, { name: 'Planner', job: 'Keep my calendar.', models: { main: { model: 'fake/m' }, quick: {} } })
   await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana next Friday at 1', clientRequestId: 'one' })
-  for (let tries = 0; tries < 300 && (await ask(botGet, { bot: bot.id }))?.last?.text !== 'Booked lunch with Ana.'; tries++) await Bun.sleep(10)
+  for (let tries = 0; tries < 300 && (await ask(botList, {})).find(listed => listed.id === bot.id)?.last?.text !== 'Booked lunch with Ana.'; tries++) await Bun.sleep(10)
 
   const [lunch] = await ask(calendarAgenda, { from: Date.parse('2026-11-13T00:00Z'), to: Date.parse('2026-11-14T00:00Z'), zone })
   expect(lunch).toMatchObject({ title: 'Lunch with Ana', location: 'Café Luna', start: { time: '2026-11-13T13:00:00', zone }, end: { time: '2026-11-13T14:00:00', zone } })

@@ -138,7 +138,6 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
       return sessions.update(id, { settled: Date.now(), pinned: false, snoozed: null })
     },
     snooze: (id, until) => sessions.update(topLevel(id).id, snoozePatch(until)),
-    move: (id, position) => sessions.update(topLevel(id).id, { position }),
     async remove(id) {
       const session = topLevel(id)
       await close(session)

@@ -1,5 +1,5 @@
 import { memoryWrite } from '@sand/bot-memory/contract'
-import { botConversation, botCreate, botDelete, botGet, type BotEntry, type BotStatus } from '@sand/bots/contract'
+import { botConversation, botCreate, botDelete, botList, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botOpen, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
 import { contextChange, contextGet } from '@sand/compaction/contract'
@@ -23,7 +23,7 @@ const start = async (replies: Source['replies'], projects: SandOptions['projects
 
 const settled = async (bot: string, want: BotStatus = 'idle') => {
   for (let tries = 0; tries < 200; tries++) {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (found?.status === want && found.last?.role === 'assistant') return found
     await Bun.sleep(10)
   }
@@ -78,9 +78,9 @@ test('a failed turn marks the bot failed, and deleting a bot forgets its turns',
   const { ask } = await start([[{ type: 'error', message: 'overloaded' }]])
   const bot = await ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
   await ask(botSend, { bot: bot.id, prompt: 'Buy milk', clientRequestId: 'one' })
-  for (let tries = 0; tries < 200 && (await ask(botGet, { bot: bot.id }))?.status !== 'failed'; tries++) await Bun.sleep(10)
+  for (let tries = 0; tries < 200 && (await ask(botList, {})).find(listed => listed.id === bot.id)?.status !== 'failed'; tries++) await Bun.sleep(10)
 
-  expect(await ask(botGet, { bot: bot.id })).toMatchObject({ status: 'failed', last: { role: 'user', text: 'Buy milk' } })
+  expect((await ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ status: 'failed', last: { role: 'user', text: 'Buy milk' } })
   const { entries } = await ask(botConversation, { bot: bot.id })
   expect(entries.at(-1)).toMatchObject({ type: 'turn-ending', data: { stopReason: 'error' } })
 
@@ -117,9 +117,9 @@ test('a bot whose tool waits on the user is waiting until it answers', async () 
   })
   const bot = await ask(botCreate, { name: 'Planner', models: { main: { model: 'fake/m' }, quick: {} } })
   await ask(botSend, { bot: bot.id, prompt: 'Plan lunch', clientRequestId: 'one' })
-  for (let tries = 0; tries < 200 && (await ask(botGet, { bot: bot.id }))?.status !== 'waiting'; tries++) await Bun.sleep(10)
+  for (let tries = 0; tries < 200 && (await ask(botList, {})).find(listed => listed.id === bot.id)?.status !== 'waiting'; tries++) await Bun.sleep(10)
 
-  expect(await ask(botGet, { bot: bot.id })).toMatchObject({ status: 'waiting' })
+  expect((await ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ status: 'waiting' })
   answered.resolve('Friday')
   expect(await settled(bot.id)).toMatchObject({ status: 'idle', last: { text: 'Thanks.' } })
 })

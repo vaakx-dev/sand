@@ -1,5 +1,5 @@
 import { botWatchCreate, botWatchList, botWatchRemove } from '@sand/bot-watches/contract'
-import { botConversation, botCreate, botDelete, type BotEntry, botGet } from '@sand/bots/contract'
+import { botConversation, botCreate, botDelete, type BotEntry, botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -77,7 +77,7 @@ test('a change to what a bot watches wakes it with the change and its instructio
   await until(async () => (await sand.ask(botWatchList, { bot: bot.id }))[0]?.info?.url === `https://hooks.test/${watch.id}`)
 
   emitters.get(watch.id)!({ at: Date.now(), from: 'feed', summary: 'Release 2.0 is out', detail: 'It drops Node 18' })
-  await until(async () => (await sand.ask(botGet, { bot: bot.id }))?.last?.text === 'Nothing breaks; noted the new release.')
+  await until(async () => (await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last?.text === 'Nothing breaks; noted the new release.')
 
   const [prompt] = await userTexts(bot.id)
   expect(prompt).toContain('Release feed')

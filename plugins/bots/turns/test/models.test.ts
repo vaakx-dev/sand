@@ -1,4 +1,4 @@
-import { botCreate, botGet, bots, botUpdate } from '@sand/bots/contract'
+import { botCreate, botList, bots, botUpdate } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { ledger } from '@sand/ledger/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -23,7 +23,7 @@ const start = async (sources: Source[]) => {
 const say = async (bot: string, prompt: string) => {
   await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 200; tries++) {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (found?.status === 'idle' && found.last?.role === 'assistant') return found.last.text
     await Bun.sleep(10)
   }

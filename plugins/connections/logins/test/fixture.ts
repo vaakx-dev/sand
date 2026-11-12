@@ -1,4 +1,4 @@
-import { botConversation, botGet } from '@sand/bots/contract'
+import { botConversation, botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Computer, Fill, Filled } from '@sand/computers/contract'
 import { computers } from '@sand/computers/contract'
@@ -104,6 +104,6 @@ export const resultText = (entries: { type: string; data: unknown }[], tool: str
 
 export const idle = (sand: Sand, bot: string) =>
   until(async () => {
-    const found = await sand.ask(botGet, { bot })
+    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     return found?.status === 'idle' && found.last?.role === 'assistant' ? found : undefined
   }, `bot ${bot} to finish`)

@@ -1,4 +1,4 @@
-import { botColors, botConversation, botCreate, botDelete, botGet, botList, bots, botUpdate, freshColor } from '@sand/bots/contract'
+import { botColors, botConversation, botCreate, botDelete, botList, bots, botUpdate, freshColor } from '@sand/bots/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
@@ -37,7 +37,7 @@ test('a bot is created with defaults, listed, updated and deleted along with its
   mkdirSync(folder, { recursive: true })
   expect(await ask(botDelete, { bot: bot.id })).toBe(true)
   expect(existsSync(folder)).toBe(false)
-  expect(await ask(botGet, { bot: bot.id })).toBeNull()
+  expect((await ask(botList, {})).find(listed => listed.id === bot.id)).toBeUndefined()
   expect(await ask(botDelete, { bot: bot.id })).toBe(false)
 })
 
@@ -49,8 +49,8 @@ test("a bot's messages land in its own conversation, page from the newest or cat
   for (const text of ['one', 'two', 'three']) conversation.append('message', { role: 'user', content: [{ type: 'text', text }] })
   conversation.append('message', { role: 'assistant', content: [{ type: 'text', text: '**Noted**,\n- all `three`, see [notes](https://example.com).' }] })
 
-  expect((await ask(botGet, { bot: first.id }))?.last).toMatchObject({ role: 'assistant', text: 'Noted, all three, see notes.' })
-  expect((await ask(botGet, { bot: second.id }))?.last).toBeUndefined()
+  expect((await ask(botList, {})).find(listed => listed.id === first.id)?.last).toMatchObject({ role: 'assistant', text: 'Noted, all three, see notes.' })
+  expect((await ask(botList, {})).find(listed => listed.id === second.id)?.last).toBeUndefined()
 
   const newest = await ask(botConversation, { bot: first.id, limit: 2 })
   expect(newest.more).toBe(true)
