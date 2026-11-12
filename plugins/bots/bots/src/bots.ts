@@ -7,9 +7,25 @@ import { dollars, uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { type Bot, botChange, botEntry, type BotHold, botName, botRemove, type Bots, type BotStatus, type BotSummary, freshColor, gistEntry, type ModelChoice, type NewBot } from './contract'
+import {
+  type Bot,
+  botChange,
+  botEntry,
+  type BotHold,
+  botName,
+  type BotPatch,
+  botRemove,
+  type Bots,
+  type BotStatus,
+  type BotSummary,
+  changeEntry,
+  type ChangeEntry,
+  freshColor,
+  gistEntry,
+  type ModelChoice,
+  type NewBot,
+} from './contract'
 import { createEntries } from './entries'
-import { createJobs } from './jobs'
 import { lastLine } from './last'
 import { createRecords } from './records'
 
@@ -24,6 +40,14 @@ const monthStart = () => {
   return date.getTime()
 }
 
+const pick = <T extends object>(source: T, keys: (keyof T)[]): Partial<T> => {
+  const picked: Partial<T> = {}
+  for (const key of keys) picked[key] = source[key]
+  return picked
+}
+
+const changedKeys = (bot: Bot, patch: BotPatch) => (Object.keys(patch) as (keyof BotPatch)[]).filter(key => JSON.stringify(patch[key]) !== JSON.stringify(bot[key]))
+
 const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => {
   if (paused) return 'paused'
   if (budget !== null && spent >= budget) return 'limit'
@@ -33,7 +57,6 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
 export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: LLM, quick: (main: ModelChoice) => ModelChoice): Bots => {
   const records = createRecords(db)
   const entries = createEntries(db)
-  const jobs = createJobs(db)
   const statuses = new Map<string, BotStatus>()
   const folderOf = (id: string) => join(root, id)
 
@@ -100,20 +123,16 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
       records.save(bot)
       return changed(bot.id)
     },
-    update(id, patch) {
+    update(id, patch, by) {
       const bot = known(id)
-      const now = Date.now()
-      tx(() => {
-        if (patch.job !== undefined && patch.job !== bot.job && bot.job.trim()) jobs.keep(id, bot.job, now)
-        records.save({ ...bot, ...patch, updated: now })
-      })
+      const keys = changedKeys(bot, patch)
+      records.save({ ...bot, ...patch, updated: Date.now() })
+      if (keys.length) append(id, changeEntry, { by, before: pick(bot, keys), after: pick(patch, keys) } satisfies ChangeEntry)
       return changed(id)
     },
-    jobs: id => jobs.list(known(id).id),
     remove(id) {
       const removed = tx(() => {
         entries.remove(id)
-        jobs.remove(id)
         return records.remove(id)
       })
       if (!removed) return false

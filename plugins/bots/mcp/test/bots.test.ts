@@ -1,7 +1,7 @@
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { McpServer } from '@modelcontextprotocol/server'
 import { botSend } from '@sand/bot-turns/contract'
-import { botConversation, botCreate, type BotEntry, botList, botJobs, botUpdate, jobEntry } from '@sand/bots/contract'
+import { botConversation, botCreate, type BotEntry, botList, botUpdate, changeEntry } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -82,14 +82,22 @@ test('a bot cannot message itself', async () => {
   expect(await use(asBot(bot.id), 'bot_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
 })
 
-test('a bot can pause another bot and set its limit, but not change its own limit', async () => {
+const changes = async (bot: string) => (await sand.ask(botConversation, { bot })).entries.filter(entry => entry.type === changeEntry).map(entry => entry.data)
+
+test("a bot can pause another bot and change any bot's limit, its own too, and each change shows in that bot's chat with who made it", async () => {
   await start([])
   const planner = await createBot('Planner')
   const travel = await createBot('Travel')
 
   expect(await use(asBot(planner.id), 'bot_update', { bot: travel.id, paused: true, budget: 5 })).toMatchObject({ bot: travel.id, hold: 'paused', budget: 5, spent: 0 })
-  expect(await use(asBot(planner.id), 'bot_update', { budget: 50 })).toEqual({ error: expect.stringContaining("can't change its own spend limit") })
-  expect((await sand.ask(botList, {})).find(listed => listed.id === planner.id)).toMatchObject({ budget: null })
+  expect(await use(asBot(planner.id), 'bot_update', { budget: 50 })).toMatchObject({ bot: planner.id, budget: 50 })
+  await sand.ask(botUpdate, { bot: planner.id, patch: { budget: 20, color: planner.color } })
+
+  expect(await changes(travel.id)).toEqual([{ by: { kind: 'bot', id: planner.id, label: 'Planner' }, before: { paused: false, budget: null }, after: { paused: true, budget: 5 } }])
+  expect(await changes(planner.id)).toEqual([
+    { by: { kind: 'bot', id: planner.id, label: 'Planner' }, before: { budget: null }, after: { budget: 50 } },
+    { by: { kind: 'user' }, before: { budget: 50 }, after: { budget: 20 } },
+  ])
 })
 
 test('a bot hands another bot a task without waiting, and hears its reply as a task notification', async () => {
@@ -130,7 +138,7 @@ test('a bot looks up its own past with history_read: what was said and done, and
   expect(await read({ item: String(done.items[1].seq) })).toMatchObject({ bot: bot.id, seq: done.items[1].seq, text: expect.stringMatching(/^\[bot_list result\] .*Clerk/) })
 })
 
-test('a bot with no job writes its own job, works to it from its next step, and keeps the jobs it replaced', async () => {
+test('a bot with no job writes its own job, works to it from its next step, and its chat keeps every job it had', async () => {
   const job = "You keep the user's notes."
   await start([update({ job, name: 'Notes' }), said('Done.'), update({ job: 'You file notes.' }), said('Done.')])
   const bot = await sand.ask(botCreate, { models })
@@ -139,13 +147,12 @@ test('a bot with no job writes its own job, works to it from its next step, and 
   const [, next] = sand.requests('fake').map(body => JSON.parse(body).system[0].text as string)
   expect(next).toStartWith('You are Notes')
   expect(next).toContain(job)
-  const { entries } = await sand.ask(botConversation, { bot: bot.id })
-  expect(entries.filter(entry => entry.type === jobEntry).map(entry => entry.data)).toEqual([{ job, previous: '' }])
 
   await answered(bot.id, 'File them instead')
   expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ name: 'Notes', job: 'You file notes.' })
   await sand.ask(botUpdate, { bot: bot.id, patch: { job } })
-  expect((await sand.ask(botJobs, { bot: bot.id })).map(version => version.job)).toEqual(['You file notes.', job])
+  const jobs = (await changes(bot.id)).map(change => (change as { after: { job: string } }).after.job)
+  expect(jobs).toEqual([job, 'You file notes.', job])
 })
 
 test('an outside agent lists bots, hands one a task, gets its reply and renames it over MCP', async () => {

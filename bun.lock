@@ -740,7 +740,6 @@
         "@sand/ledger": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
-        "@sand/project": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
