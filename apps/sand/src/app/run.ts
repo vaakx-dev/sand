@@ -1,6 +1,7 @@
 import { sharedModules } from '@sand/boot/modules'
 import { cli, type CliPlace } from '@sand/config/contract'
 import { errorMessage } from '@sand/util'
+import { addonFolders } from '@sand/util/release'
 import { inspectorPlugin, scopeError } from 'drydock'
 import { join } from 'node:path'
 import { problems } from './diagnose'
@@ -17,7 +18,8 @@ interface RunOptions {
 }
 
 export const run = async (options: RunOptions) => {
-  const modules = await sharedModules(builtins)
+  const addons = options.safe ? [] : await addonFolders(join(options.home, 'plugins'))
+  const modules = await sharedModules(builtins, addons)
   const { ctx, exit } = startApp(modules)
   if (runsUserPlugins(options))
     await writeTypings(join(options.home, 'plugins'), modules).catch(error => console.error(`could not write plugin typings: ${errorMessage(error)}`))
