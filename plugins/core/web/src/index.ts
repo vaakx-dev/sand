@@ -6,7 +6,7 @@ import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { ASSETS } from './bundle/build'
-import { webBuild, webExtensions, webExtensionsReport, webPluginsOff } from './contract'
+import { webBuild, webExtensions, webExtensionsReport } from './contract'
 import { discover } from './extensions/discover'
 import { createSite } from './extensions/site'
 import { createStates } from './extensions/states'
@@ -48,7 +48,6 @@ export default definePlugin({
     }
     for (const [path, handler] of Object.entries(routes)) ctx.effect(() => ctx.server.route(path, handler, { public: true }))
     ctx.effect(() => ctx.server.handle(webExtensionsReport, request => states.report(request.states)))
-    ctx.effect(() => ctx.server.handle(webPluginsOff, () => states.off()))
     ctx.server.broadcast(webBuild, site.current().entry)
   },
 })

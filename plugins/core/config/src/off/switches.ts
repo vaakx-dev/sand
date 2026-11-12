@@ -43,6 +43,7 @@ export const createSwitches = (turnedOff: () => Plugin[]) => {
     turnedOff: dir => turnedOff().some(plugin => plugin.dir === dir),
     needs,
     off: () => [...turnedOff().map(plugin => ({ ...plugin, needs: [] })), ...[...loaded.values()].flatMap(waitingOff)],
+    folder: scope => [...loaded.values()].find(plugin => plugin.scope.id === scope.id)?.dir,
   }
 
   return {

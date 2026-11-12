@@ -1,4 +1,4 @@
-import type { PluginOff, PluginSwitches } from '@sand/config/contract'
+import type { PluginSwitches } from '@sand/config/contract'
 import type { Bundle } from '../bundle/build'
 import type { BrowserState, WebExtensionState } from '../contract'
 import type { Extension } from './discover'
@@ -39,12 +39,6 @@ export const createStates = (site: StateSource, switches: PluginSwitches) => {
     return site.list().map(extension => state(extension, off))
   }
 
-  const webOff = (): PluginOff[] =>
-    site.list().flatMap(({ id, dir }) => {
-      const needs = needsOf(reported.get(id))
-      return needs ? [{ id, dir, needs }] : []
-    })
-
   const unmounted = () => {
     const off = cascaded()
     return site.list().flatMap(({ id, dir }) => (off.has(dir) ? [id] : []))
@@ -53,7 +47,6 @@ export const createStates = (site: StateSource, switches: PluginSwitches) => {
   return {
     list,
     unmounted,
-    off: () => [...switches.off(), ...webOff()],
     report(states: BrowserState[]) {
       reported = new Map(states.map(browser => [browser.id, browser]))
       at = Date.now()

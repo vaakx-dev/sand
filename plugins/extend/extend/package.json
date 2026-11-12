@@ -1,21 +1,18 @@
 {
   "name": "@sand/extend",
   "version": "0.0.0",
-  "description": "The plugin tool and the sand-plugins skill, so the agent can inspect and write plugins",
+  "description": "The sand-plugins skill, so the agent can learn to write plugins",
   "type": "module",
   "sand": {
     "feature": "extend",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Extend",
-    "summary": "Lets the agent list plugins and learn to write new ones"
+    "summary": "Teaches the agent to write new plugins"
   },
   "dependencies": {
     "@sand/config": "workspace:*",
     "@sand/skills": "workspace:*",
-    "@sand/tools": "workspace:*",
-    "@sand/web": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

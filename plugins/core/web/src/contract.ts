@@ -1,4 +1,3 @@
-import type { PluginOff } from '@sand/config/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import { service, type Status } from 'drydock'
@@ -41,8 +40,6 @@ const browserState = lazy(() => z.object({
 }))
 
 export const webExtensionsReport = request('web.extensions.report', { input: () => z.object({ states: z.array(browserState()) }), output: type<void>() })
-
-export const webPluginsOff = request('web.plugins.off', { input: () => z.object({}), output: type<PluginOff[]>() })
 
 export const webBuild = wireEvent<string>('web.build')
 

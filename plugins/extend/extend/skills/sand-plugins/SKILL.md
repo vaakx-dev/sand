@@ -46,4 +46,4 @@ export default definePlugin({
 - Build for the web UI, the only user surface. Don't build or adapt anything for `sand -p`.
 - Ship skills by putting `skills/<name>/SKILL.md` in the plugin folder and calling `ctx.watch(skills, found => found?.register(dir))` with `skills` from `@sand/skills/contract`.
 
-Check your plugin with the `plugin` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding or editing a plugin, ask the user to press the Reload plugins button at the bottom of the sidebar.
+Check your plugin with the `plugin_show` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding or editing a plugin, ask the user to press the Reload plugins button at the bottom of the sidebar.
