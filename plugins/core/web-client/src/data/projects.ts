@@ -21,7 +21,7 @@ import {
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import type { Context } from 'drydock'
-import { type ProjectEntry, type ProjectGroup, type Projects, projectsChange, threadsChange } from '../contract'
+import { type ProjectEntry, type ProjectGroup, type ProjectRef, type Projects, type ProjectShown, projectsChange, quickProject, threadsChange } from '../contract'
 import { onPcHello } from '../greeted'
 import type { Store } from '../threads/store'
 import { buildGroups, copyEntry, groupAt, type Lists } from './groups'
@@ -126,16 +126,21 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
     await refreshHere()
   }
 
+  const shownOf = ({ path = '', device = '', project, quick }: ProjectRef): ProjectShown => {
+    if (quick) return quickProject
+    const found = (project ? get(project) : undefined) ?? (path ? group(path, device) : undefined)
+    if (found) return { name: found.name || folderName(path || (found.locations[0]?.path ?? '')), icon: groupIcon(found) }
+    if (path) return { name: folderName(path) }
+    if (project) return { name: 'Unknown project' }
+    return quickProject
+  }
+
   const projects: Projects = {
     list: () => all().flatMap(found => found.locations),
     groups: options => all().filter(found => options?.hidden || !found.hidden),
     get,
     group,
-    name: (path, device) => group(path, device)?.name || folderName(path),
-    icon(path, device) {
-      const found = group(path, device)
-      return found && groupIcon(found)
-    },
+    shown: shownOf,
     groupIcon,
     place,
     browse: (path, device) => wire.call(fsBrowse, { path }, device),

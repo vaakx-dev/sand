@@ -25,12 +25,12 @@ import { wakeTimer } from './snooze/wake'
 
 export default definePlugin({
   name: 'threads-home',
-  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread picks a project and opens a new chat; the running count above a bot's chat; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search",
-  inject: { kit, threads, shell, wire },
+  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread opens a new chat in the last project, and its header picks another; the running count above a bot's chat; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search",
+  inject: { kit, threads, projects, shell, wire },
   apply(ctx) {
     const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs, threadOwners])
     const changes = changesModel(ctx, ctx.wire)
-    const parts = { ctx, kit: ctx.kit, threads: ctx.threads, shell: ctx.shell }
+    const parts = { ctx, kit: ctx.kit, threads: ctx.threads, projects: ctx.projects, shell: ctx.shell }
     const limit = sig(pageSize)
     const more = () => limit.update(shown => shown + pageSize)
     const trail = sig<RowPart[]>([])

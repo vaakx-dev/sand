@@ -37,7 +37,7 @@ export const projectChecklist = (parts: Parts, { chosen, toggle, fresh, only = (
       group =>
         checkRow({
           surface: 'raised',
-          title: () => group.get().name,
+          title: () => parts.shown(group.get().id).name,
           meta: () => folderOf(group.get()),
           checked: () => chosen().includes(group.get().id),
           onToggle: () => toggle(group.get().id),

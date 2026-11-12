@@ -3,10 +3,9 @@ import { draftRoute, threadRoute } from '@sand/chat/contract'
 import { drafts, type Drafts, type ThreadDraft } from '@sand/composer/contract'
 import type { ShellRow, Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
-import type { Thread } from '@sand/web-client/contract'
+import type { ProjectShown, Thread } from '@sand/web-client/contract'
 import { changeStatus, type Changes } from '../changes'
 import type { RowPart } from '../contract'
-import { projectLookup, quick, type ProjectInfo, type ProjectLookup } from '../contract'
 import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
@@ -39,26 +38,26 @@ export interface RowSources {
   looks: RowLooks
 }
 
-const projectPlaceOf = (parts: MenuParts, looks: RowLooks, project: ProjectInfo) => ({
-  label: project.quick ? 'No project' : project.name,
+const projectPlaceOf = (parts: MenuParts, looks: RowLooks, project: ProjectShown) => ({
+  label: project.name,
   mark: looks.mark(parts.kit, project),
 })
 
-const placeOf = (parts: MenuParts, looks: RowLooks, project: ProjectInfo, device: string) => {
+const placeOf = (parts: MenuParts, looks: RowLooks, project: ProjectShown, device: string) => {
   const place = projectPlaceOf(parts, looks, project)
   return { ...place, label: [place.label, awayPcName(parts.ctx, device)].filter(Boolean).join(' · ') }
 }
 
-const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jobsOf: JobsOf, { changes, trail, looks }: RowSources): Entry => {
+const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes, trail, looks }: RowSources): Entry => {
   const change = changes.get(thread.id)
-  const project = thread.info.kind === 'quick' ? quick(thread.device) : lookup(thread.info.cwd, thread.device, thread.info.project)
+  const project = parts.projects.shown({ path: thread.info.cwd, device: thread.device, project: thread.info.project, quick: thread.info.kind === 'quick' })
   const { jobs, since } = jobsOf(thread.id)
   const snoozed = snoozedUntil(thread)
   const started = thread.running ? thread.started : since
   return {
     row: {
       id: thread.id,
-      label: thread.info.title || (project.quick ? project.name : 'Untitled thread'),
+      label: thread.info.title || 'Untitled thread',
       place: placeOf(parts, looks, project, thread.device),
       trail: looks.trail(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
       ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
@@ -75,12 +74,12 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jo
 
 const draftTitle = (draft: ThreadDraft) => draft.text.trim().split('\n', 1)[0]?.trim() || plural(draft.attachments, 'attachment')
 
-const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: ThreadDraft, lookup: ProjectLookup): Entry => ({
+const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: ThreadDraft): Entry => ({
   row: {
     id: `draft:${draft.id}`,
     label: draftTitle(draft),
     end: 'Draft',
-    place: projectPlaceOf(parts, looks, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device)),
+    place: projectPlaceOf(parts, looks, parts.projects.shown({ path: draft.cwd, device: draft.device })),
     at: draft.updated,
     to: { kind: draftRoute, id: draft.id },
     menu: () => draftMenu(saved, draft.id),
@@ -89,10 +88,9 @@ const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: Thr
 })
 
 export const threadEntries = (parts: MenuParts, sources: RowSources, withOwned: boolean): Entry[] => {
-  const lookup = projectLookup(parts.ctx)
   const saved = parts.ctx.get(drafts)
-  const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, sources.looks, saved, draft, lookup)) : []
+  const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, sources.looks, saved, draft)) : []
   const jobsOf = runningJobs(parts.ctx, parts.threads)
   const listed = visibleThreads(parts.threads.list()).filter(thread => withOwned || !owned(parts.ctx, thread.id))
-  return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, jobsOf, sources))]
+  return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, jobsOf, sources))]
 }

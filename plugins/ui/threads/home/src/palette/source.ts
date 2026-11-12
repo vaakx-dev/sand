@@ -10,7 +10,7 @@ const newChatItem = (parts: StartParts, group: string): PaletteItem => ({
   id: 'session:new-thread',
   group,
   icon: 'compose',
-  label: 'New thread…',
+  label: 'New thread',
   search: 'new thread chat start project',
   run: () => newThread(parts),
 })

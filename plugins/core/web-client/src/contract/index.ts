@@ -2,7 +2,7 @@ import { event, service } from 'drydock'
 import type { FileIndex, LimitsFeed, Models, SkillIndex } from './data'
 import type { DeviceCache } from './device'
 import type { Outbox } from './outbox'
-import type { Projects } from './projects'
+import type { Projects, ProjectShown } from './projects'
 import type { Threads } from './threads'
 import type { Turns } from './turns'
 
@@ -21,6 +21,8 @@ export const limits = service<LimitsFeed>('limits')
 export const fileIndex = service<FileIndex>('fileIndex')
 export const skillIndex = service<SkillIndex>('skillIndex')
 export const projects = service<Projects>('projects')
+export const quickProject: ProjectShown = { name: 'Quick thread', icon: { quick: true }, quick: true }
+
 export const outbox = service<Outbox>('outbox')
 export const deviceCache = service<DeviceCache>('deviceCache')
 

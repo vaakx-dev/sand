@@ -35,11 +35,12 @@ const details = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup) =
 export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup, picking: Sig<Picking>) => {
   const { metaLine, projectIcon, settingsRow } = ctx.kit
   const spec = () => groupSpec(ctx, group, iconEntries(ctx, group, picking))
+  const shown = ctx.projects.shown({ project: group.id })
   return settingsRow(
     {
       ...menu.target(spec),
-      lead: projectIcon(group.name, ctx.projects.groupIcon(group)),
-      title: group.name,
+      lead: projectIcon(shown.name, shown.icon),
+      title: shown.name,
       detail: details(ctx, menu, group),
     },
     group.hidden ? metaLine('Hidden') : null,

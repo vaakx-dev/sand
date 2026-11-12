@@ -14,14 +14,16 @@ const elsewhere = (ctx: ProjectsContext, device: string) =>
 
 const otherProjects = (ctx: ProjectsContext, groups: Derive<ProjectGroup[]>, bring: (project: string) => void) => {
   const { listRow, projectIcon, rowList, sectionHeading } = ctx.kit
-  const row = (group: Sig<ProjectGroup>) =>
-    listRow({
+  const row = (group: Sig<ProjectGroup>) => {
+    const shown = () => ctx.projects.shown({ project: group.get().id })
+    return listRow({
       surface: 'raised',
       touch: true,
-      lead: projectIcon(group.get().name, ctx.projects.groupIcon(group.get())),
-      title: () => group.get().name,
+      lead: projectIcon(shown().name, shown().icon),
+      title: () => shown().name,
       onClick: () => bring(group.get().id),
     })
+  }
   return dynamicChild(
     derive(() => groups.get().length > 0),
     shown => (shown ? div({ class: 'flex flex-col gap-1' }, sectionHeading('On your other PCs'), rowList(groups, group => group.id, row)) : null),
