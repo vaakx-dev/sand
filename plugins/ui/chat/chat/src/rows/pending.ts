@@ -17,7 +17,7 @@ interface Shown {
 }
 
 const captions: Record<Look, string | undefined> = {
-  sending: 'Sending�',
+  sending: 'Sending…',
   steer: undefined,
   queued: 'Queued for the next turn',
   held: 'Held — the turn stopped before this was sent',
