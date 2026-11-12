@@ -13,16 +13,14 @@ const writeInput = z.object({
   text: z.string().max(planLimit).describe(`The whole plan in Markdown, replacing the one there; at most ${planLimit.toLocaleString('en')} characters`),
 })
 
-const readRules = `Read your plan: the Markdown file of your work that the user reads to see where things stand. It's empty until you write one. The user can edit it too, so read it before you change it. A bot leaves out bot to read its own.`
+const readRules = `Read your plan: the Markdown file the user reads to see where your work stands. It's empty until you write one. The user can edit it, so read it before you change it. A bot leaves out bot to read its own.`
 
-const writeRules = `Write your plan, replacing the whole file. The plan is what the user reads to see where your work stands, so keep it current: update it when you start work, finish it, or wait on someone or something. Drop items that are done and no longer matter. A bot leaves out bot to write its own.
+const writeRules = `Write your plan, replacing the whole file. Keep it current: update it when you start or finish work, or wait on someone or something, and drop done items that no longer matter. A bot leaves out bot to write its own.
 
-Write one bullet per item. Link each item that has a thread to it as [title](${threadScheme}:<thread id>), with a short note after it. Don't sort items under status headings like Working, Ready or Done: the Project page groups linked items by each thread's live state. An item with no thread yet stays plain, with what it waits on:
+One bullet per item. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note; the Project page groups linked items by each thread's state, so don't add status headings. An item with no thread stays plain, with what it waits on:
 
 - [Fix the login bug](${threadScheme}:0b6c2e1a): tests running
-- [Lisbon flight options](${threadScheme}:7f3d9a40): for you to pick one
-- Hotel quote: asked the hotel, reply due Friday
-- Book the airport transfer once the flights are picked`
+- Hotel quote: asked the hotel, reply due Friday`
 
 export const planTools: McpTool[] = [
   {

@@ -10,7 +10,7 @@ const fields = z.object({
     .string()
     .trim()
     .min(1)
-    .describe('What to do when it comes due, written to your future self, like "Remind the user to call Ana about Friday\'s lunch"'),
+    .describe('What to do when it comes due, written to your future self'),
   at: z.string().optional().describe('For one time: the local date and time, like 2026-11-04 18:00'),
   in_minutes: z.number().int().min(1).optional().describe('For one time: how many minutes from now'),
   repeat: z
@@ -18,7 +18,7 @@ const fields = z.object({
     .optional()
     .describe(`To repeat: a five-field cron schedule in local time, like "0 9 * * 1-5" for weekdays at 9:00`),
   zone: z.string().optional().describe(`The time zone for at and repeat, like Europe/Berlin. Default: ${systemZone()}`),
-  if_missed: z.enum(['run', 'skip']).optional().describe('If a due time is missed because sand was off: run once when it is back (the default), or skip that time'),
+  if_missed: z.enum(['run', 'skip']).optional().describe('When sand was off at a due time: run once when back (default), or skip it'),
 })
 
 type Input = z.output<typeof fields>

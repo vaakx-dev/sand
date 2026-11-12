@@ -32,14 +32,9 @@ const updateInput = z.object({
 
 const updateRules = `Rename a bot, write its job, set the projects it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
 
-A paused bot starts no turns: its running turn stops, and messages, routines and watches for it wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; usage on a subscription plan doesn't count. A bot can't change its own limit.
+A paused bot starts no turns: its running turn stops, and its messages, routines and watches wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count. A bot can't change its own limit.
 
-A job is the bot's standing instructions. Write it to the bot in the second person ("You keep the user's calendar and plan their days."): what it takes care of, when to check with the user before it acts, and how to reply. Keep it to a line and a few bullets. Leave out facts about the user, like names, places and preferences; those go in its memory. The user sees each new job in the bot's chat and can edit or undo it.
-
-When you are a bot with no job yet:
-- If the user hasn't said what they want you for, ask, in one or two short questions at most.
-- If their message is a task, do it first, then offer to take on that kind of work as your job.
-- Once you know what you're for, write your job, and a name if you have none. After that, change your job only when the user asks.`
+A job is the bot's standing instructions, written to it in the second person ("You keep the user's calendar and plan their days."): what it takes care of, when to check with the user before acting, and how to reply. Keep it to a line and a few bullets. Facts about the user, like names, places and preferences, go in its memory instead. The user sees each new job in the bot's chat and can edit or undo it.`
 
 export const botTools: McpTool[] = [
   {

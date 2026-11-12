@@ -16,7 +16,7 @@ const input = z.object({
 export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: ShellRunner, sessions: Sessions): Tool<typeof input> => ({
   name: 'run_background',
   description:
-    "Start a long-running shell command, like a dev server, watcher or long build, in the background, in the working directory and the same shell as the shell tool. Returns its job id at once. Read its output with job_read, wait for it with job_wait and stop it with job_stop. To wait until it is up, call job_wait with until set to a pattern from its output, like 'listening on|ready'; it returns the moment that line appears, so never sleep or poll in a loop. When it exits, a <task-notification> brings its exit code and last output.",
+    "Start a long-running command, like a dev server, watcher or long build, in the background, in the working directory and the shell tool's shell. Returns its job id at once; read, wait for and stop it with job_read, job_wait and job_stop. To wait until it is up, call job_wait with until set to a pattern from its output, like 'listening on|ready', instead of sleeping or polling. When it exits, a <task-notification> brings its exit code and last output.",
   input,
   needs: ['thread', 'pc'],
   effect: 'run',
