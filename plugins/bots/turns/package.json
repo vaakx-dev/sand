@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-turns",
   "version": "0.0.0",
-  "description": "Runs each bot's turns on the shared engine: its job and memory as instructions, its main model, its conversation as the history",
+  "description": "Runs each bot's turns on the shared engine: its job as instructions, its main model, its conversation as the history",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,11 +10,10 @@
     "feature": "bots",
     "runtime": "./src/index.ts",
     "label": "Bot turns",
-    "summary": "Lets your bots answer: runs their turns with their job, memory and model"
+    "summary": "Lets your bots answer: runs their turns with their job and model"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
-    "@sand/bot-memory": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/engine": "workspace:*",
@@ -32,10 +31,12 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@sand/bot-memory": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/harness": "workspace:*",
     "@sand/media": "workspace:*",
+    "@sand/memory": "workspace:*",
     "@sand/replay": "workspace:*"
   }
 }

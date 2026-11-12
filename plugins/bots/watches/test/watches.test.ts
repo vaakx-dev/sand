@@ -22,7 +22,7 @@ const emitters = new Map<string, (change: Change) => void>()
 
 const start = async (replies: Reply[]) => {
   sand = await startSand([{ id: 'fake', models: ['b'], replies, api: 'anthropic' }], {
-    plugins: ['automation/watches', 'agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/watches'],
+    plugins: ['automation/watches', 'agent/mcp-server', 'bots/bots', 'bots/turns', 'bots/watches'],
     options: { watches: { debounce_ms: 20 } },
   })
   sand.app.get(watches)!.kind({

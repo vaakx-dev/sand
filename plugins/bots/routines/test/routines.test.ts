@@ -22,7 +22,7 @@ const at = (iso: string) => Date.parse(iso)
 
 const start = async (replies: Source['replies']) => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], {
-    plugins: ['automation/schedules', 'agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/routines'],
+    plugins: ['automation/schedules', 'agent/mcp-server', 'bots/bots', 'bots/turns', 'bots/routines'],
   })
   return sand
 }

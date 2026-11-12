@@ -14,7 +14,7 @@ const said = (text: string) => ({ type: 'text', text }) as const
 
 const start = async () => {
   sand = await startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies: [[said('ok')], [said('ok')]] }], {
-    plugins: ['core/watch', 'agent/skills', 'bots/bots', 'bots/memory', 'bots/turns'],
+    plugins: ['core/watch', 'agent/skills', 'bots/bots', 'bots/turns'],
   })
   const dir = join(sand.home, 'contributed', 'verify')
   await Bun.write(join(dir, 'SKILL.md'), '---\nname: verify\ndescription: Check that a change works\n---\nRun it.')

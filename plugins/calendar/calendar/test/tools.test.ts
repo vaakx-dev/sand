@@ -15,7 +15,7 @@ const zone = 'Europe/Berlin'
 
 const start = async (replies: Source['replies'] = []) => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], {
-    plugins: ['calendar/calendar', 'calendar/local', 'bots/bots', 'bots/memory', 'bots/turns'],
+    plugins: ['calendar/calendar', 'calendar/local', 'bots/bots', 'bots/turns'],
   })
   return sand
 }

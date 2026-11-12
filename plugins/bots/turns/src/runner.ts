@@ -1,4 +1,3 @@
-import { botMemory } from '@sand/bot-memory/contract'
 import { bots, type BotStatus } from '@sand/bots/contract'
 import type { Conversation, Conversations, TurnStatus } from '@sand/engine/contract'
 import { modelSettings, modelSource } from '@sand/model/contract'
@@ -9,7 +8,7 @@ import { mkdirSync } from 'node:fs'
 import { conversationOf } from './conversation'
 import type { Live } from './live'
 
-export const inject = { bots, botMemory, modelSettings, tools, providerThreads }
+export const inject = { bots, modelSettings, tools, providerThreads }
 
 export type BotTurnsContext = Context<typeof inject>
 

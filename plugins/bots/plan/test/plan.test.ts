@@ -19,7 +19,7 @@ const plan = '- [Book the Lisbon flights](thread:0b6c2e1a): comparing fares\n'
 
 const start = async (replies: Reply[]) => {
   sand = await startSand([{ id: 'fake', models: ['b'], replies, api: 'anthropic' }], {
-    plugins: ['agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/plan'],
+    plugins: ['agent/mcp-server', 'bots/bots', 'bots/turns', 'bots/plan'],
   })
   const changes: unknown[] = []
   const hub = sand.app.get(server)

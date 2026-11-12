@@ -19,12 +19,12 @@ import { botConversations, inject } from './runner'
 
 export default definePlugin({
   name: 'bot-turns',
-  description: "Runs each bot's turns on the shared engine, with its job and memory as instructions and its main model",
+  description: "Runs each bot's turns on the shared engine, with its job as instructions and its main model",
   inject: { ...inject, engine, context, ledger },
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
-    const { brief, stale } = botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context, () => ctx.get(projectFiles))
+    const { brief, stale } = botBrief(ctx.bots, ctx.tools, ctx.context, () => ctx.get(projectFiles))
     ctx.effect(() => ctx.providerThreads.brief('bot', brief))
     ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && stale(conversation.id)) || undefined)
     ctx.effect(() => ctx.tools.offer('bot', () => offered))

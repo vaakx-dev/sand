@@ -16,5 +16,5 @@ export interface ContextBuilder {
 
 export const context = service<ContextBuilder>('context')
 
-export const promptSections = event<(sections: string[], conversation: Conversation) => string[]>('prompt.sections')
+export const promptSections = event<(sections: string[], conversation: Conversation) => string[] | Promise<string[]>>('prompt.sections')
 export const promptBase = event<(parts: string[], session: Session) => string[] | Promise<string[]>>('prompt.base')
