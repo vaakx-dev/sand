@@ -15,6 +15,6 @@ export interface FeatureState {
 
 export const featureState = service<FeatureState>('featureState')
 
-export const featuresList = request('features.list', { input: () => z.object({}), output: type<FeatureChoice>() })
+export const featuresList = request('features.list', { input: () => z.object({}), output: type<FeatureChoice>(), callers: 'any' })
 
-export const featuresSet = request('features.set', { input: () => z.object({ changes: z.record(z.string(), z.boolean()) }), output: type<FeatureChoice>() })
+export const featuresSet = request('features.set', { input: () => z.object({ changes: z.record(z.string(), z.boolean()) }), output: type<FeatureChoice>(), callers: 'any' })

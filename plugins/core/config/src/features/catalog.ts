@@ -31,18 +31,23 @@ const resolve = (definitions: FeatureDefinition[], off: ReadonlySet<string>) => 
   return { on: (id: string) => !byId.has(id) || on.has(id), usedBy }
 }
 
+const addonsOff = (definitions: FeatureDefinition[]) => Object.fromEntries(definitions.flatMap(definition => (definition.addon ? [[definition.id, false]] : [])))
+
 export const createCatalog = (definitions: FeatureDefinition[], table: unknown) => {
-  let off = offIn(table)
+  let written = isRecord(table)
+  let off = written ? offIn(table) : offIn(addonsOff(definitions))
   let state = resolve(definitions, off)
 
   return {
     on: (id: string | undefined) => id === undefined || state.on(id),
     list: (): Feature[] =>
       definitions.map(definition => ({ ...definition, chosen: !off.has(definition.id), on: state.on(definition.id), usedBy: state.usedBy(definition.id) })),
+    toWrite: (changes: Record<string, boolean>) => (written ? changes : { ...addonsOff(definitions), ...changes }),
     choose(changes: Record<string, boolean>) {
       off = new Set([...off].filter(id => changes[id] !== true))
       for (const [id, on] of Object.entries(changes)) if (!on) off.add(id)
       state = resolve(definitions, off)
+      written = true
     },
   }
 }

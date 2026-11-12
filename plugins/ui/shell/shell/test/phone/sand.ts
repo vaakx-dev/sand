@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 const main = join(import.meta.dir, '../../../../../../apps/sand/src/main.ts')
 
-const quiet = ['threads', 'bots', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates']
+const quiet = ['threads', 'bots', 'calendar', 'computers', 'phone', 'notifications', 'updates']
 
 const unloaded = ['features']
 

@@ -5,7 +5,7 @@ import { mcpTools } from '../contract'
 import { agentTool } from './tool'
 
 export default definePlugin({
-  name: 'mcp-server-agents',
+  name: 'mcp-server',
   description: "Gives sand's own threads and bots the same tools the MCP server offers outside agents, called as the thread or bot that uses them",
   inject: { tools, server },
   apply(ctx) {

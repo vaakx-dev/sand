@@ -6,7 +6,7 @@ import type { FeatureDefinition } from '../src/contract'
 import { createCatalog } from '../src/features/catalog'
 import { writeFeatures } from '../src/features/toml'
 
-const feature = (id: string, more: Partial<FeatureDefinition> = {}): FeatureDefinition => ({ id, kind: 'feature', label: id, summary: '', needs: [], uses: [], ...more })
+const feature = (id: string, more: Partial<FeatureDefinition> = {}): FeatureDefinition => ({ id, kind: 'feature', label: id, summary: '', needs: [], uses: [], addon: false, ...more })
 const capability = (id: string, more: Partial<FeatureDefinition> = {}) => feature(id, { kind: 'capability', ...more })
 
 const definitions = [
@@ -51,6 +51,22 @@ test('plugins of no feature, or of a feature nobody defines, stay on', () => {
   expect(catalog.on(undefined)).toBe(true)
   expect(catalog.on('unknown')).toBe(true)
   expect(catalog.on('worktrees')).toBe(false)
+})
+
+test('add-ons start off in a home with no [features] table, and the first change writes them off beside it', () => {
+  const addons = [...definitions, feature('logbook', { addon: true }), feature('math', { addon: true })]
+  const fresh = createCatalog(addons, undefined)
+  expect(fresh.on('logbook')).toBe(false)
+  expect(fresh.toWrite({ math: true })).toEqual({ logbook: false, math: true })
+  fresh.choose(fresh.toWrite({ math: true }))
+  expect(fresh.on('math')).toBe(true)
+  expect(fresh.toWrite({ logbook: true })).toEqual({ logbook: true })
+})
+
+test("a [features] table keeps every add-on it doesn't turn off", () => {
+  const catalog = createCatalog([...definitions, feature('logbook', { addon: true })], {})
+  expect(catalog.on('logbook')).toBe(true)
+  expect(catalog.toWrite({ calendar: false })).toEqual({ calendar: false })
 })
 
 test('writing features keeps the rest of sand.toml and only lists what is off', async () => {

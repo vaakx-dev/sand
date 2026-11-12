@@ -10,7 +10,22 @@
     "feature": "calendar",
     "runtime": "./src/index.ts",
     "label": "Calendar",
-    "summary": "Your calendars in one place, for you and your agents"
+    "summary": "Your calendars in one place, for you and your agents",
+    "features": {
+      "calendar": {
+        "label": "Calendar",
+        "summary": "Your calendars in one place, for you and your agents",
+        "addon": true
+      },
+      "calendar-accounts": {
+        "label": "Calendar accounts",
+        "summary": "Google, Microsoft, CalDAV and subscribed calendars",
+        "parent": "calendar",
+        "needs": [
+          "connections"
+        ]
+      }
+    }
   },
   "dependencies": {
     "@sand/host-hub": "workspace:*",

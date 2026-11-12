@@ -8,7 +8,7 @@ export const joinOffer = (ui: Ui) => {
   const slot = sheetSlot(ui.ctx)
   const { data } = ui
   const alone = derive(() => {
-    if (dismissed.get() || data.paired.get().phase !== 'paired' || !data.devices.records.loaded.get()) return false
+    if (dismissed.get() || !ui.several() || data.paired.get().phase !== 'paired' || !data.devices.records.loaded.get()) return false
     data.changes.version.get()
     const status = ui.ctx.pcs.get(data.homeId())?.status
     const ownScreen = status?.phase === 'connected' && status.route.kind === 'local'

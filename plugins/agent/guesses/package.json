@@ -7,11 +7,22 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "feature": "composer",
+    "feature": "guesses",
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Next message guesses",
-    "summary": "Offers a likely next message in the empty composer after each reply"
+    "summary": "Offers a likely next message in the empty composer after each reply",
+    "features": {
+      "guesses": {
+        "label": "Message guesses",
+        "summary": "Offers a likely next message in the empty composer after each reply",
+        "needs": [
+          "engine",
+          "composer"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",

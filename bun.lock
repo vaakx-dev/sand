@@ -345,21 +345,19 @@
         "@sand/harness": "workspace:*",
       },
     },
-    "plugins/agent/mcp-server": {
-      "name": "@sand/mcp-server",
+    "plugins/agent/mcp-outside": {
+      "name": "@sand/mcp-outside",
       "version": "0.0.0",
       "dependencies": {
         "@modelcontextprotocol/server": "^2.4.0",
         "@sand/cli-commands": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
-        "@sand/engine": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
-        "@sand/server": "workspace:*",
-        "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -367,6 +365,20 @@
       "devDependencies": {
         "@modelcontextprotocol/client": "^2.4.0",
         "@sand/harness": "workspace:*",
+      },
+    },
+    "plugins/agent/mcp-server": {
+      "name": "@sand/mcp-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/devices-contract": "workspace:*",
+        "@sand/engine": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
       },
     },
     "plugins/agent/memory": {
@@ -462,6 +474,7 @@
       "name": "@sand/plugins-mcp",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/features": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/plugins": "workspace:*",
         "@sand/reload": "workspace:*",
@@ -3120,6 +3133,8 @@
     "@sand/math": ["@sand/math@workspace:plugins/ui/chat/math"],
 
     "@sand/mcp": ["@sand/mcp@workspace:plugins/agent/mcp"],
+
+    "@sand/mcp-outside": ["@sand/mcp-outside@workspace:plugins/agent/mcp-outside"],
 
     "@sand/mcp-server": ["@sand/mcp-server@workspace:plugins/agent/mcp-server"],
 

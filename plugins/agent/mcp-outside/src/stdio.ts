@@ -30,7 +30,7 @@ const serve = async (server: McpServer) => {
 }
 
 export default definePlugin({
-  name: 'mcp-server',
+  name: 'mcp-outside',
   description: 'The sand mcp command: an MCP server on stdio that offers an outside agent the tools other features register, such as threads and bots',
   inject: { cli, cliCommands, daemon },
   apply(ctx) {

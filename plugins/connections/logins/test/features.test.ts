@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test'
 import { type AskAnswer, answerEntry, logins, loginsState, secretEntry, secretSave } from '../src/contract'
 import { answer, botEntries, call, idle, models, said } from './fixture'
 
-const offTopLevel = ['threads', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates']
+const offTopLevel = ['threads', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates']
 
 test('with threads off and bots on, logins loads, serves its state and saves a secret a bot asks for to that bot', async () => {
   const replies = [[call('request_secret', { title: 'Deploy token', reason: 'To deploy', once: false })], [said('Saved.')]]

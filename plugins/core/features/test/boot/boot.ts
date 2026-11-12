@@ -14,7 +14,11 @@ import { tools } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
 import type { Service } from 'drydock'
 
-const topLevel = ['threads', 'bots', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates']
+const core = ['threads', 'bots', 'phone', 'notifications', 'updates']
+
+const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'computers', 'bot-watches', 'logbook', 'guesses', 'stash', 'math', 'mcp', 'pcs', 'outside']
+
+const topLevel = [...core, ...addons]
 
 export const model = { id: 'fake', models: ['m'], replies: [[{ type: 'text' as const, text: 'Hello from the bot' }]] }
 
@@ -29,7 +33,9 @@ export const boot = (on: string[], off: string[] = [], sources: Parameters<typeo
 
 export type Booted = Awaited<ReturnType<typeof boot>>
 
-const running = (sand: Booted) => Object.entries(watched).flatMap(([name, token]) => (sand.app.get(token as Service<unknown>) ? [name as Name] : []))
+export const running = (sand: Booted) => Object.entries(watched).flatMap(([name, token]) => (sand.app.get(token as Service<unknown>) ? [name as Name] : []))
+
+export const fresh = () => startSand([model], { config: '' })
 
 export const combinations = (list: [string, string[], string[], Name[]][]) => {
   for (const [name, on, off, expected] of list)

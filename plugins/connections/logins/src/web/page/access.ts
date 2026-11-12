@@ -9,7 +9,7 @@ const toggled = (list: string[], id: string) => (list.includes(id) ? list.filter
 
 const botRows = ({ kit, bots }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
   const roster = bots()
-  if (!roster) return kit.emptyState({ text: 'Bots are off. Turn them on in Settings → Features.' })
+  if (!roster) return kit.emptyState({ text: 'Bots are off. Turn them on in Settings → Add-ons.' })
   const listed = derive(() => roster.list())
   const botRow = (bot: Sig<BotSummary>) =>
     kit.checkRow({

@@ -24,7 +24,7 @@ test('every moment is wanted until its kind is turned off, and the choice outliv
   }
 })
 
-const offTopLevel = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates']
+const offTopLevel = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates']
 
 test('with Notifications off, a thread turn finishes and nothing fails', async () => {
   const model = { id: 'fake', models: ['m'], replies: [[{ type: 'text' as const, text: 'Done' }]] }

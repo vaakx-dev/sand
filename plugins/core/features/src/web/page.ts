@@ -83,9 +83,11 @@ export const featuresPage = (kit: Kit, store: FeatureStore) => {
       const features = store.choice.get()?.features
       if (!features) return loadingState()
       const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent)
+      const section = (title: string, list: Feature[]) => settingsSection({ title }, list.flatMap(top => tree(features, top)).map(item => row(kit, store, features, item)))
       return div(
         { class: 'contents' },
-        tops.map(top => settingsSection({}, tree(features, top).map(item => row(kit, store, features, item)))),
+        section('Add-ons', tops.filter(top => top.addon).toSorted((a, b) => a.label.localeCompare(b.label))),
+        section('Core', tops.filter(top => !top.addon)),
         settingsSection(
           { title: 'Shared parts' },
           features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, features, { feature, depth: 0 })),

@@ -4,7 +4,7 @@
   "description": "The sand devices command: lists your PCs, phones and browsers, pairs new ones and answers join requests",
   "type": "module",
   "sand": {
-    "feature": "pcs",
+    "feature": "phone",
     "cli": "./src/index.ts",
     "label": "Devices command",
     "summary": "Lists and pairs devices from the terminal"

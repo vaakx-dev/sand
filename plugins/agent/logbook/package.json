@@ -7,13 +7,23 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "feature": "threads",
+    "feature": "logbook",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "host": "./src/host.ts",
     "cli": "./src/host.ts",
     "label": "Logbook",
-    "summary": "Keeps a dated record of finished work that threads and bots add to and search"
+    "summary": "Keeps a dated record of finished work that threads and bots add to and search",
+    "features": {
+      "logbook": {
+        "label": "Logbook",
+        "summary": "A dated record of finished work that threads and bots add to and search",
+        "needs": [
+          "engine"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/bot-plan": "workspace:*",

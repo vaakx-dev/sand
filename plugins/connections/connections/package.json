@@ -11,7 +11,14 @@
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Connections",
-    "summary": "Connect your accounts at other services, like Google, Outlook or iCloud calendars"
+    "summary": "Connect your accounts at other services, like Google, Outlook or iCloud calendars",
+    "features": {
+      "connections": {
+        "label": "Connected accounts",
+        "summary": "Accounts of outside services, like Google or Microsoft, for your calendars and agents",
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/devices-contract": "workspace:*",

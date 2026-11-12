@@ -6,7 +6,18 @@
   "sand": {
     "web": "./src/web/index.ts",
     "label": "Terminal",
-    "summary": "A live terminal along the bottom of a chat, in the thread's folder on the thread's PC"
+    "summary": "A live terminal along the bottom of a chat, in the thread's folder on the thread's PC",
+    "feature": "terminal",
+    "features": {
+      "terminal": {
+        "label": "Terminal",
+        "summary": "A live terminal along the bottom of a chat, in the thread's folder on the thread's PC",
+        "needs": [
+          "threads"
+        ],
+        "addon": true
+      }
+    }
   },
   "dependencies": {
     "@sand/devices-contract": "workspace:*",

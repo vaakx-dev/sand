@@ -13,7 +13,24 @@
     "cli": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Bot watches",
-    "summary": "Lets your bots listen to pages, folders, webhooks and repos, and wake only when something changed"
+    "summary": "Lets your bots listen to pages, folders, webhooks and repos, and wake only when something changed",
+    "features": {
+      "bot-watches": {
+        "label": "Watches",
+        "summary": "Bots listen to pages, folders, webhooks and repos, and wake only when something changed",
+        "needs": [
+          "bots",
+          "watches",
+          "mcp-server"
+        ],
+        "addon": true
+      },
+      "watches": {
+        "kind": "capability",
+        "label": "Watches",
+        "summary": "Notices when something you follow changes, without spending tokens to check"
+      }
+    }
   },
   "dependencies": {
     "@sand/bot-turns": "workspace:*",

@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { filesGrep, filesList, filesRead } from '../src/contract'
 
 const model = { id: 'fake', models: ['m'], replies: [] }
-const othersOff = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'mcp-server', 'updates'].map(id => `${id} = false`)
+const othersOff = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates'].map(id => `${id} = false`)
 
 const boot = (off: string[]) => startSand([model], { config: `[features]\n${[...othersOff, ...off].join('\n')}` })
 

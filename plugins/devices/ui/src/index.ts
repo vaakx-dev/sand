@@ -1,4 +1,5 @@
 import { pcMarks } from '@sand/devices-contract'
+import { featureState } from '@sand/features/contract'
 import { owned } from '@sand/reactive'
 import { toastsOf } from '@sand/toasts/contract'
 import { sheetSlot, type SheetSpec } from '@sand/ui-shell/contract'
@@ -53,7 +54,7 @@ export default definePlugin({
         agent: () => showSheet(() => agentSheet(ui, closeSheet)),
         command: install => showSheet(() => commandSheet(ui, install, closeSheet)),
       }
-      const ui: Ui = { ctx, kit: ctx.kit, data, toasts, open, device: () => (phone.get() ? 'This phone' : 'This browser') }
+      const ui: Ui = { ctx, kit: ctx.kit, data, toasts, open, device: () => (phone.get() ? 'This phone' : 'This browser'), several: () => ctx.get(featureState)?.on('pcs') === true }
 
       ctx.provide(pcMarks, createMarks(ui))
       devicesSettings(ui)

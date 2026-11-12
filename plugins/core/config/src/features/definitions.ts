@@ -15,6 +15,7 @@ const definitionOf = (id: string, value: unknown): FeatureDefinition[] => {
       ...(typeof parent === 'string' && { parent }),
       needs: words(value.needs),
       uses: words(value.uses),
+      addon: value.addon === true,
       ...(typeof stops === 'string' && { stops }),
     },
   ]

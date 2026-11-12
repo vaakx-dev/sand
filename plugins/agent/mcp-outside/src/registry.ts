@@ -1,5 +1,5 @@
 import type { Context } from 'drydock'
-import { type McpTool, type McpTools, mcpTools } from './contract'
+import { type McpTool, type McpTools, mcpTools } from '@sand/mcp-server/contract'
 
 export const provideTools = (ctx: Context) => {
   const tools = new Map<string, McpTool>()
