@@ -49,6 +49,7 @@ export default definePlugin({
         kind,
         render: () => ({
           head: () => label,
+          column: true,
           main: () => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, needsScreen(ctx.kit, items)),
         }),
       }),

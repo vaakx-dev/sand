@@ -13,7 +13,7 @@ import { editable } from './fields/editable'
 import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
 import { field } from './fields/labelled'
 import { appIcon } from './heads/app-icon'
-import { pageBody } from './heads/page-body'
+import { bodyColumn, pageBody } from './heads/page-body'
 import { pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
 import { titleButton } from './heads/title-button'
@@ -96,6 +96,7 @@ export const kit = {
   badge,
   banner,
   barTitle,
+  bodyColumn,
   botFace,
   checkMark,
   checkRow,
