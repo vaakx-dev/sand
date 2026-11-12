@@ -89,7 +89,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     const items = cache.items(thread, () => ctx.threads.path(thread.id))
     const folded = foldTurns(items, {
       older: ctx.threads.older(thread.id),
-      running: thread.running,
+      running: thread.turn,
       waiting: thread.waiting !== undefined,
       streaming: thread.live.length > 0,
       started: thread.started,

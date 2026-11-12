@@ -115,7 +115,7 @@ test('a thread between turns counts as running while a background job it launche
   const store = new Store(createApp(), 'home')
   store.upsert(info('chat'), pc)
   listenThreads(wire, store, () => {})
-  const job: WireJob = { id: 'job-1', label: 'bun test', parent: 'chat', status: 'running', started: 1 }
+  const job: WireJob = { id: 'job-1', label: 'bun test', command: 'bun test', cwd: 'home', parent: 'chat', status: 'running', started: 1 }
 
   emit(jobStartWire, job)
   expect(store.threads.get('chat')?.running).toBe(true)

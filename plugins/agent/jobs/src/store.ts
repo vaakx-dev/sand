@@ -94,6 +94,8 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     const job: Job = {
       id: `job_${Bun.randomUUIDv7().slice(-8)}`,
       label: spec.label,
+      command: spec.command,
+      cwd: spec.cwd,
       parent: spec.parent.id,
       ...(spec.origin && { origin: spec.origin }),
       status: 'running',

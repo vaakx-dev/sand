@@ -8,6 +8,8 @@ export type JobStatus = 'running' | 'done' | 'failed' | 'cancelled'
 export interface Job {
   id: string
   label: string
+  command: string
+  cwd: string
   parent: string
   origin?: string
   status: JobStatus
@@ -22,6 +24,8 @@ export type JobWork = (signal: AbortSignal, job: Job) => Promise<string>
 export interface JobSpec {
   parent: Session
   label: string
+  command: string
+  cwd: string
   origin?: string
   work: JobWork
   read(cursor?: number): string | Promise<string>
