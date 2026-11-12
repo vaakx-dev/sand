@@ -28,7 +28,7 @@ export default definePlugin({
       hasHistory: key => versions.targets.get().some(item => item.key === key && item.versions.length > 0),
       copy: versions.copy,
       customise: plugin => void library.customise(plugin.name),
-      restore: plugin => void library.restore(plugin.name),
+      restore: plugin => library.restore(plugin.name),
       keep: plugin => library.keep(plugin.name),
     }
     ctx.watch(settings, found =>

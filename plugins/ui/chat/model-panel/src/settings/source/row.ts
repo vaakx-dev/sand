@@ -6,7 +6,7 @@ import { starButton } from '../star'
 import type { Catalog } from './catalog'
 
 export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: (id: string) => void) => {
-  const { badge, checkMark, contextMenu, listRow, rowAction } = kit
+  const { badge, checkMark, confirmButton, contextMenu, listRow } = kit
   const label = untrack(() => row.get().label)
   const shown = () => !row.get().hidden
   const added = row.map(model => !!model.added)
@@ -36,7 +36,10 @@ export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: 
       ],
       ...menu.target(() => catalog.menu(row.get(), keep), toggle),
       actions: [
-        show(added, () => rowAction({ label: 'Remove', danger: true, run: () => void catalog.remove(row.get()) })),
+        show(added, () => {
+          const remove = catalog.menu(row.get(), keep).actions.find(action => action.id === 'remove')
+          return remove ? confirmButton({ action: remove }) : null
+        }),
         starButton(kit, label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
       ],
     }),

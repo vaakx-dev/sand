@@ -18,13 +18,15 @@ const fitOnScreen = (menu: Element, x: number, y: number) => {
 
 export const menuPopup = (request: MenuRequest, close: () => void) => {
   const { actions } = request
-  const current = sig<MenuStep | undefined>(firstStep(actions, request.ask))
+  const current = sig<MenuStep | undefined>(firstStep(actions, request.step))
   const at = sig({ x: request.x, y: request.y })
   const control: MenuControl = { close, step: next => current.set(next), armed: () => true }
-  const back = () => {
-    current.set(undefined)
-    focusFirst(menu)
-  }
+  const back = request.step
+    ? close
+    : () => {
+        current.set(undefined)
+        focusFirst(menu)
+      }
   const menu = popover(
     close,
     { class: 'top-0 left-0', onKeyDown: arrowKeys },

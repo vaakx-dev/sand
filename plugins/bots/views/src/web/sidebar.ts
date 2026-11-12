@@ -1,6 +1,7 @@
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
 import type { FaceState } from '@sand/ui-kit/contract'
 import type { MenuAction, ShellGroup, ShellRow } from '@sand/ui-shell/contract'
+import { deleteAction } from './delete'
 import type { Parts } from './parts'
 import { botStatus, statusLine } from './work'
 
@@ -11,14 +12,7 @@ const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
     label: bot.paused ? 'Resume' : 'Pause',
     run: () => parts.store.update(bot.id, { paused: !bot.paused }).catch(error => parts.ctx.report(error)),
   },
-  {
-    id: 'delete',
-    label: 'Delete',
-    icon: 'trash',
-    danger: true,
-    confirm: `Delete ${botName(bot)}, its chat, plan and memory?`,
-    run: () => parts.store.remove(bot.id).catch(error => parts.ctx.report(error)),
-  },
+  deleteAction(parts, bot.id, botName(bot)),
 ]
 
 const faceStateOf = (bot: BotSummary): FaceState | undefined => (botStatus(bot) === 'running' ? 'running' : undefined)

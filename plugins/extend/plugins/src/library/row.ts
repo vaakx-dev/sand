@@ -3,7 +3,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { tildeHome } from '@sand/util'
 import { div, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
 import { originLabels } from './filter'
-import { pluginMenu } from './menu'
+import { pluginMenu, restoreAction } from './menu'
 
 export interface RowActions {
   busy: () => boolean
@@ -14,13 +14,16 @@ export interface RowActions {
   hasHistory(key: string): boolean
   copy(text: string): () => Promise<boolean>
   customise(plugin: PluginEntry): void
-  restore(plugin: PluginEntry): void
+  restore(plugin: PluginEntry): Promise<unknown>
   keep(plugin: PluginEntry): void
 }
 
-const control = ({ quietButton, rowAction }: Kit, plugin: PluginEntry, actions: RowActions) => {
+const restoreButton = ({ confirmButton }: Kit, plugin: PluginEntry, actions: RowActions) => confirmButton({ action: restoreAction(plugin, actions), disabled: actions.busy })
+
+const control = (kit: Kit, plugin: PluginEntry, actions: RowActions) => {
+  const { quietButton } = kit
   if (plugin.origin === 'builtin') return quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.customise(plugin) }, 'Customise')
-  if (plugin.origin === 'customised' && !plugin.changed) return rowAction({ label: 'Use built-in', danger: true, disabled: actions.busy, run: () => actions.restore(plugin) })
+  if (plugin.origin === 'customised' && !plugin.changed) return restoreButton(kit, plugin, actions)
   return null
 }
 
@@ -29,11 +32,11 @@ const detail = (plugin: PluginEntry) =>
     ? `Your copy in ${tildeHome(plugin.folder)} replaces the built-in. Press Reload plugins after editing it.`
     : (plugin.description ?? '')
 
-const changedNote = ({ quietButton, rowAction, rowWarning }: Kit, plugin: PluginEntry, actions: RowActions) =>
-  rowWarning(
+const changedNote = (kit: Kit, plugin: PluginEntry, actions: RowActions) =>
+  kit.rowWarning(
     'The built-in changed since you customised it.',
-    quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.keep(plugin) }, 'Keep mine'),
-    rowAction({ label: 'Use built-in', danger: true, disabled: actions.busy, run: () => actions.restore(plugin) }),
+    kit.quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.keep(plugin) }, 'Keep mine'),
+    restoreButton(kit, plugin, actions),
   )
 
 const failureNote = ({ codeBlock, rowDetail }: Kit, plugin: PluginEntry, actions: RowActions) => {

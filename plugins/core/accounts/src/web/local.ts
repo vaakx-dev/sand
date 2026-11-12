@@ -1,8 +1,8 @@
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, label, sig, span } from '@vaakx-dev/vrui'
-import { loginLogout, loginShared, type LoginAccount, type LoginState } from '../contract'
-import { accountLogo, howText, removeLabel } from './names'
-import { accountSpec } from './account-menu'
+import { loginShared, type LoginAccount, type LoginState } from '../contract'
+import { accountLogo, howText } from './names'
+import { accountSpec, removeAction } from './account-menu'
 import { whileBusy } from './parts'
 import type { LoginControl } from './state'
 
@@ -35,13 +35,13 @@ const detail = (kit: Kit, account: LoginAccount) => {
 const fixLabel = (account: LoginAccount) => (account.kind === 'server' ? 'Edit' : 'Sign in again')
 
 const rowControls = (kit: Kit, account: LoginAccount, control: LoginControl, fix: Fix) => {
-  const { quietButton, rowAction } = kit
+  const { confirmButton, quietButton } = kit
   if (account.env) return []
   const server = account.kind === 'server'
   return [
     server && account.error ? quietButton({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
     account.app ? null : shareSwitch(kit, account, control),
-    rowAction({ label: removeLabel(account), danger: true, run: () => void control.run(loginLogout, { account: account.id }) }),
+    confirmButton({ action: removeAction(account, control) }),
   ]
 }
 

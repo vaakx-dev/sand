@@ -1,7 +1,7 @@
 import type { DeviceRecord } from '@sand/devices-contract'
 import { span, type Sig } from '@vaakx-dev/vrui'
 import { kindIcon } from '../../requests/words'
-import { removeButton } from '../../shared/remove-button'
+import { removeAction } from '../../shared/remove'
 import { canRename, renameDevice } from '../../shared/rename'
 import { agoWords } from '../../shared/time'
 import { toneDot } from '../../status/dot'
@@ -18,8 +18,6 @@ const seenWords = (ui: Ui, device: DeviceRecord, self: boolean) => {
   return { online: false, text: seen ? `Last seen ${agoWords(seen.at, ui.data.now.get())}` : 'Not connected' }
 }
 
-const remove = (ui: Ui, device: DeviceRecord) => void ui.toasts.attempt(`Couldn’t remove ${device.name}`, ui.data.devices.remove(device.id))
-
 export const phoneRow = (ui: Ui, device: Sig<DeviceRecord>) => {
   const { icon, iconButton, settingsRow, statusLine } = ui.kit
   const self = device.get().id === ui.ctx.pcs.self()
@@ -32,6 +30,6 @@ export const phoneRow = (ui: Ui, device: Sig<DeviceRecord>) => {
       detail: statusLine({ mark: toneDot(ui.kit, () => (status().online ? 'ok' : 'off'), words), text: words, title: words }),
     },
     canRename(ui) ? iconButton({ size: 'sm', title: 'Rename', 'aria-label': 'Rename', onClick: () => void renameDevice(ui, device.get()) }, icon('pencil', 'sm')) : null,
-    removeButton(ui.kit, 'Remove', () => remove(ui, device.get())),
+    ui.kit.confirmButton({ action: removeAction(ui, device.get().id) }),
   )
 }

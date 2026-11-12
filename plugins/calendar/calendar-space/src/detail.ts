@@ -1,7 +1,7 @@
 import { type Answer, type Attendee, type Calendar, type Occurrence, type Person, type Response, type Scope } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { SheetSpec } from '@sand/ui-shell/contract'
-import { div, dynamicChild, sig, span, type Child } from '@vaakx-dev/vrui'
+import { div, sig, span, type Child } from '@vaakx-dev/vrui'
 import { spanLabel } from './days'
 
 export interface DetailParts {
@@ -60,19 +60,22 @@ const scopes: { value: Scope; label: string }[] = [
 ]
 
 const removal = (kit: Kit, { event, remove }: DetailParts, close: () => void) => {
-  const asking = sig(false)
-  const run = (scope: Scope) => () => void remove(scope).then(close)
-  const danger = (scope: Scope, label: string) => kit.controlButton(kit.actionTones.danger, { onClick: run(scope) }, label)
+  const run = (scope: Scope) => async () => {
+    await remove(scope)
+    close()
+  }
   const repeating = Boolean(event.recurrence || event.series)
-  return dynamicChild(asking, ask =>
-    ask
-      ? div(
-          { class: 'flex flex-wrap items-center justify-end gap-2' },
-          kit.quietButton({ onClick: () => asking.set(false) }, 'Cancel'),
-          ...(repeating ? scopes.map(scope => danger(scope.value, scope.label)) : [danger('occurrence', 'Delete')]),
-        )
-      : kit.secondaryAction({ onClick: () => asking.set(true) }, 'Delete'),
-  )
+  return kit.confirmButton({
+    action: {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'trash',
+      danger: true,
+      confirm: `Delete “${event.title}”?`,
+      run: run('occurrence'),
+      ...(repeating && { choices: scopes.map(scope => ({ id: scope.value, label: scope.label, run: run(scope.value) })) }),
+    },
+  })
 }
 
 export const detailSheet = (kit: Kit, parts: DetailParts): SheetSpec => {

@@ -56,7 +56,7 @@ export interface ModelMenuInput {
   makeDefault?: () => void
   toggleFavourite?: () => void
   toggleHidden?: () => void
-  remove?: () => void
+  remove?: () => Promise<unknown>
 }
 
 export const modelPicker = service<ModelPicker>('modelPicker')

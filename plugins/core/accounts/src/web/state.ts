@@ -24,17 +24,15 @@ export const loginState = (ctx: Context<{ wire: typeof wire }>) => {
     }
   }
 
-  const run = async <I>(request: Request<I, LoginState>, input: I) => {
-    try {
-      apply(await ctx.wire.call(request, input))
-    } catch {}
-  }
+  const send = async <I>(request: Request<I, LoginState>, input: I) => apply(await ctx.wire.call(request, input))
+
+  const run = <I>(request: Request<I, LoginState>, input: I) => send(request, input).catch(() => {})
 
   const detect = () => ctx.wire.call(loginDetect, {}).catch((): DetectedServer[] => [])
 
   const account = (id: string) => state.get()?.accounts.find(found => found.id === id)
 
-  return { state, unavailable, load, run, detect, account }
+  return { state, unavailable, load, send, run, detect, account }
 }
 
 export type LoginControl = ReturnType<typeof loginState>

@@ -3,11 +3,11 @@ import { closeButton } from './buttons/close'
 import { copyButton } from './buttons/copy'
 import { floatButton } from './buttons/float'
 import { quoteButton } from './buttons/quote'
-import { rowAction } from './buttons/row-action'
 import { toggleSwitch } from './buttons/toggle'
 import { card } from './cards/card'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
+import { confirm, confirmButton } from './context-menu/confirm'
 import { contextMenu, menuLayer } from './context-menu/menu'
 import { editable } from './fields/editable'
 import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
@@ -111,6 +111,8 @@ export const kit = {
   closeButton,
   codeBlock,
   colorLabel,
+  confirm,
+  confirmButton,
   contextMenu,
   controlButton,
   copyButton,
@@ -200,7 +202,6 @@ export const kit = {
   quoteButton,
   railOverlay,
   returnFocus,
-  rowAction,
   rowButton,
   rowDetail,
   rowList,

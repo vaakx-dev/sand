@@ -12,7 +12,7 @@ const menuOf = (page: Page, model: ModelInfo, unstar: (model: ModelInfo) => void
   settingsMenu(page, model, {
     toggleFavourite: () => unstar(model),
     toggleHidden: () => void page.run(() => page.catalog.hide(model.id, !model.hidden)),
-    ...(model.added && { remove: () => void page.run(() => page.catalog.remove(model.id)) }),
+    ...(model.added && { remove: () => page.call(() => page.catalog.remove(model.id)) }),
   })
 
 const favouriteRow = (page: Page, row: Sig<ModelInfo>, unstar: (model: ModelInfo) => void) => {

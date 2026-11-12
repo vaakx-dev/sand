@@ -26,8 +26,9 @@ const rename = async ({ ctx, threads }: MenuParts, thread: Thread) => {
 }
 
 const remove = async ({ threads, shell }: MenuParts, thread: Thread) => {
-  if (threads.current()?.id === thread.id) shell.land({ forget: { kind: threadRoute, id: thread.id } })
+  const current = threads.current()?.id === thread.id
   await threads.remove(thread.id)
+  if (current) shell.land({ forget: { kind: threadRoute, id: thread.id } })
 }
 
 const openActions = (parts: MenuParts, thread: Thread): MenuAction[] => [
@@ -67,7 +68,7 @@ const deleteAction = (parts: MenuParts, thread: Thread): MenuAction => ({
   icon: 'trash',
   danger: true,
   confirm: `Delete “${thread.info.title || 'Untitled thread'}”? This can’t be undone.`,
-  run: () => attempt(parts.ctx, "Couldn't delete", () => remove(parts, thread)),
+  run: () => remove(parts, thread),
 })
 
 export const threadMenu = (parts: MenuParts, id: string): MenuAction[] => {

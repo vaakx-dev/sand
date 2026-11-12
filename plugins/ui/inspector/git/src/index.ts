@@ -8,7 +8,7 @@ import { onInterval, sig, type Sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { type ActionId, actionsFor, type GitFacts, nextAction, stateText } from './actions'
 import { gitModel } from './model'
-import { gitRow } from './row'
+import { gitRow, type Failure } from './row'
 import { stepsFor } from './steps'
 
 const renewMs = 2 * 60_000
@@ -29,7 +29,7 @@ export default definePlugin({
       else ctx.report(error)
     }
 
-    const runner = (subject: () => Subject, busy: Sig<string | undefined>) => async (id: ActionId) => {
+    const runner = (subject: () => Subject, busy: Sig<string | undefined>) => async (id: ActionId, failure: Failure) => {
       const current = untrack(subject)
       const facts = untrack(() => model.factsOf(current))
       const { session, device, cwd } = current
@@ -50,6 +50,7 @@ export default definePlugin({
         const done = await step.run()
         ctx.get(toasts)?.show({ tone: 'success', ...done })
       } catch (error) {
+        if (failure === 'raise') throw error
         report(id, step.failed, error)
       } finally {
         busy.set(undefined)

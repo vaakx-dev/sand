@@ -34,7 +34,7 @@ const tile = (action: MenuAction, control: MenuControl, expanded: Expanded) => {
         tileText(action),
       ],
       onClick: (event: MouseEvent) => {
-        if (!action.choices) return choose(control, action)(event)
+        if (!action.choices || action.confirm) return choose(control, action)(event)
         if (control.armed(event)) expanded.set(open() ? undefined : action.id)
       },
     },
@@ -69,13 +69,14 @@ const choices = (actions: MenuAction[], control: MenuControl, expand?: string) =
 
 export const menuSheet = (request: MenuRequest, close: () => void) => {
   const { actions } = request
-  const current = sig<MenuStep | undefined>(firstStep(actions, request.ask))
+  const current = sig<MenuStep | undefined>(firstStep(actions, request.step))
   let pressed = Boolean(current.get())
   const control: MenuControl = {
     close,
     step: next => current.set(next),
     armed: event => pressed || event.detail === 0,
   }
+  const back = request.step ? close : () => current.set(undefined)
   return bottomSheet(
     {
       close,
@@ -87,8 +88,8 @@ export const menuSheet = (request: MenuRequest, close: () => void) => {
       },
       onKeyDown: arrowKeys,
     },
-    head(request),
-    dynamicChild(current, step => (step ? div(stepView(step, control, () => current.set(undefined), 'md')) : choices(actions, control, request.expand))),
+    request.step ? null : head(request),
+    dynamicChild(current, step => (step ? div(stepView(step, control, back, 'md')) : choices(actions, control, request.expand))),
     div({ class: 'h-2' }),
   )
 }

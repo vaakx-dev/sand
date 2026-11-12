@@ -125,7 +125,7 @@ const pageSections = () =>
     kit.pageSection(
       { title: 'Accounts', action: kit.secondaryAction({ size: 'sm' }, 'Add') },
       kit.listRow({ surface: 'group', title: 'Claude', meta: 'Signed in', onClick: () => {} }),
-      kit.listRow({ surface: 'group', title: 'OpenAI', meta: 'Needs sign-in', actions: kit.rowAction({ label: 'Remove', danger: true, run: () => {} }), onClick: () => {} }),
+      kit.listRow({ surface: 'group', title: 'OpenAI', meta: 'Needs sign-in', actions: kit.confirmButton({ action: { id: 'remove', label: 'Remove', danger: true, confirm: 'Remove OpenAI?', run: () => {} } }), onClick: () => {} }),
     ),
     settings(),
   )
