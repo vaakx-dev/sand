@@ -14,8 +14,8 @@ export default definePlugin({
   name: 'model',
   inject: { cli },
   async apply(ctx) {
-    const defaults = await createDefaults(ctx.cli.home)
     const current = () => ctx.get(llm)
+    const defaults = await createDefaults(ctx.cli.home, () => current()?.models?.().find(model => !model.hidden)?.id)
     const choices = createChoices(ctx, defaults)
     ctx.provide(modelSettings, {
       effective: choices.effective,

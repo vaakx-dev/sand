@@ -67,7 +67,6 @@ export default definePlugin({
 
     ctx.provide(features, {
       list: catalog.list,
-      asked: catalog.asked,
       async set(changes) {
         await writeFeatures(path, changes)
         catalog.choose(changes)

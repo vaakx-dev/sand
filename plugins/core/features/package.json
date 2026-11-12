@@ -1,7 +1,7 @@
 {
   "name": "@sand/features",
   "version": "0.0.0",
-  "description": "Turns sand's features on and off: the Features settings page and the first-run question of what sand is for",
+  "description": "Turns sand's features on and off: the Features settings page",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -41,8 +41,7 @@
           "mcp",
           "extend",
           "html"
-        ],
-        "offer": true
+        ]
       },
       "git": {
         "label": "Git",
@@ -95,8 +94,7 @@
           "palette",
           "mcp",
           "html"
-        ],
-        "offer": true
+        ]
       },
       "routines": {
         "label": "Routines",
@@ -167,8 +165,7 @@
       },
       "calendar": {
         "label": "Calendar",
-        "summary": "Your calendars in one place, for you and your agents",
-        "offer": true
+        "summary": "Your calendars in one place, for you and your agents"
       },
       "calendar-accounts": {
         "label": "Calendar accounts",
@@ -185,8 +182,7 @@
           "engine",
           "models",
           "media"
-        ],
-        "offer": true
+        ]
       },
       "browser": {
         "label": "Browser",
@@ -203,8 +199,7 @@
         "summary": "Use sand from your phone and your other PCs",
         "uses": [
           "picker"
-        ],
-        "offer": true
+        ]
       },
       "ssh": {
         "label": "SSH machines",
@@ -213,8 +208,7 @@
       },
       "notifications": {
         "label": "Notifications",
-        "summary": "Tell you when something finishes, fails or needs you",
-        "offer": true
+        "summary": "Tell you when something finishes, fails or needs you"
       },
       "mcp-server": {
         "label": "MCP server",
@@ -435,7 +429,6 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
-    "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",

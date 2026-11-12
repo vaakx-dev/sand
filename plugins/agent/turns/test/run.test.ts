@@ -105,8 +105,15 @@ test('each step records its own usage, and the turn adds them up', async () => {
   expect(steps[1]!.turn).toBe(steps[0]!.turn)
 })
 
-test('a chat with no model asks for one before it starts a turn', async () => {
-  sand = await startSand([{ id: 'fake', models: ['m'] }])
+test('a chat with no model chosen runs on the first model offered', async () => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies: [[said('Hi.')]] }])
+  const chat = sand.sessions.thread(sand.home)
+
+  expect(await sand.turns.run(chat, 'go')).toMatchObject({ stopReason: 'end_turn', text: 'Hi.' })
+})
+
+test('a chat with no model to use asks for one before it starts a turn', async () => {
+  sand = await startSand([])
   const chat = sand.sessions.thread(sand.home)
 
   await expect(sand.turns.run(chat, 'go')).rejects.toThrow('Pick a model')

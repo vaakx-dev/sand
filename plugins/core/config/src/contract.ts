@@ -58,7 +58,6 @@ export interface FeatureDefinition {
   parent?: string
   needs: string[]
   uses: string[]
-  offer: boolean
   stops?: string
 }
 
@@ -70,7 +69,6 @@ export interface Feature extends FeatureDefinition {
 
 export interface Features {
   list(): Feature[]
-  asked(): boolean
   set(changes: Record<string, boolean>): Promise<void>
 }
 

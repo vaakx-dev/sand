@@ -4,7 +4,7 @@ import { runtimes } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { type FeatureChoice, featuresList, featuresSet } from './contract'
 
-const choiceOf = (found: Features): FeatureChoice => ({ features: found.list(), asked: found.asked() })
+const choiceOf = (found: Features): FeatureChoice => ({ features: found.list() })
 
 export default definePlugin({
   name: 'features',

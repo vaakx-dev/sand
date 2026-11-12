@@ -1,30 +1,13 @@
 import type { Feature } from '@sand/config/contract'
 import { request, type } from '@sand/host-hub/contract'
-import { service, type Dispose } from 'drydock'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export type { Feature }
 
 export interface FeatureChoice {
   features: Feature[]
-  asked: boolean
 }
-
-export interface FirstStep {
-  feature: string
-  render(next: () => void): HTMLElement
-}
-
-export type FirstRunStage = 'question' | 'setup' | 'done'
-
-export interface FirstRun {
-  stage(): FirstRunStage | undefined
-  step(step: FirstStep): Dispose
-  steps(): FirstStep[]
-  start(): void
-}
-
-export const firstRun = service<FirstRun>('firstRun')
 
 export interface FeatureState {
   on(id: string): boolean | undefined
