@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { createList } from '../src/list'
 import type { Need } from '../src/contract'
 
-const need = (id: string, at: number, kind: Need['kind'] = 'question'): Need => ({
+const need = (id: string, at: number, kind: Need['kind'] = 'secret'): Need => ({
   id,
   kind,
   who: 'Wren',

@@ -1,4 +1,5 @@
 import { sessionRemove, sessions, sessionUpdate } from '@sand/chats/contract'
+import { notify } from '@sand/devices-notify/contract'
 import { gitRepo, pathKey } from '@sand/git/contract'
 import { gitDiffs } from '@sand/git-diff/contract'
 import { gitRunner } from '@sand/git-runner/contract'
@@ -9,7 +10,7 @@ import { turnEnd, turns, turnStart } from '@sand/turns-contract/contract'
 import { joinDisposers, keyedSerial } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
-import { changesChange } from './contract'
+import { changesChange, type ThreadChanges } from './contract'
 import type { Attempt, ChangesDeps } from './deps'
 import { createMerged } from './merged'
 import { serveChanges } from './requests'
@@ -49,12 +50,26 @@ export default definePlugin({
       changed: id => tracker.publish(id),
       report,
     }
-    const tracker = createTracker(deps, changes => live?.broadcast(changesChange, changes))
+    const troubled = new Set<string>()
+    const tellTrouble = (changes: ThreadChanges) => {
+      if (changes.state !== 'conflict' && changes.state !== 'failed') return void troubled.delete(changes.session)
+      if (troubled.has(changes.session)) return
+      troubled.add(changes.session)
+      ctx
+        .get(notify)
+        ?.send({ kind: 'needs', thread: changes.session, title: ctx.sessions.open(changes.session)?.title ?? 'Thread', text: changes.reason ?? "Couldn't merge" })
+        .catch(report)
+    }
+    const tracker = createTracker(deps, changes => {
+      live?.broadcast(changesChange, changes)
+      tellTrouble(changes)
+    })
     ctx.effect(() => tracker.close)
 
     for (const session of ctx.sessions.list()) tracker.follow(session)
     ctx.on(sessionUpdate, session => tracker.follow(session))
     ctx.on(sessionRemove, id => {
+      troubled.delete(id)
       tracker.forget(id)
       merged.drop(id).catch(report)
     })

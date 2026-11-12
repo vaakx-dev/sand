@@ -59,6 +59,10 @@ export const sshSection = (kit: Kit, ssh: SshMachines, state: Sig<SshState>) => 
     dynamicChild(machine, ({ state, error }) => {
       const words = stateWords[state]
       if (state === 'connected' || state === 'connecting') return statusLine({ mark: null, text: words, title: words })
+      if (state === 'needs-you') {
+        const text = error ? `${words} · ${error}` : words
+        return statusLine({ mark: kit.statusIcon('waiting'), text, title: text })
+      }
       return alertLine(error ? `${words} Â· ${error}` : words)
     })
 

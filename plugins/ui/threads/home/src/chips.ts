@@ -1,22 +1,17 @@
 import type { Pulse } from '@sand/reactive'
 import { duration } from '@sand/util'
-import type { Kit } from '@sand/ui-kit/contract'
 import type { ChipItem, ChipScope, ChipSource, Shell } from '@sand/ui-shell/contract'
 import type { Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { mergeTrouble, type Changes } from './changes'
-import { attempt } from './items/failure'
 import { visibleThreads } from './items/items'
 import { inScope, openThread } from './owners'
 
 export interface ChipParts {
   ctx: Context
-  kit: Kit
   shell: Shell
   threads: Threads
   pulse: Pulse
   now(): number
-  changes: Changes
 }
 
 const startOf = (thread: Thread) => thread.started ?? (thread.jobs.size ? Math.min(...thread.jobs.values()) : undefined)
@@ -35,44 +30,6 @@ const item = (parts: ChipParts, thread: Thread, rest: Omit<ChipItem, 'id' | 'lab
   ...rest,
 })
 
-const waiting = (parts: ChipParts): ChipSource => ({
-  key: 'waiting',
-  label: 'needs you',
-  title: 'Needs you',
-  order: 10,
-  status: 'waiting',
-  items: scope =>
-    scoped(parts, scope).flatMap(thread => {
-      const note = thread.waiting?.title ?? mergeTrouble(parts.changes.get(thread.id))
-      return note ? [item(parts, thread, { status: 'waiting', meta: note })] : []
-    }),
-})
-
-const ready = (parts: ChipParts): ChipSource => ({
-  key: 'ready',
-  label: 'ready to review',
-  title: 'Ready to review',
-  order: 20,
-  status: 'ready',
-  items: scope =>
-    scoped(parts, scope).flatMap(thread => {
-      const change = parts.changes.get(thread.id)
-      if (thread.running || (change?.state !== 'ready' && change?.state !== 'merging')) return []
-      const merging = change.state === 'merging'
-      return [
-        item(parts, thread, {
-          status: change.state,
-          meta: parts.kit.lineStat(change.add, change.del),
-          action: {
-            label: merging ? 'Merging' : 'Merge',
-            busy: () => merging,
-            run: () => attempt(parts.ctx, "Couldn't merge", () => parts.changes.merge(thread)),
-          },
-        }),
-      ]
-    }),
-})
-
 const working = (parts: ChipParts): ChipSource => ({
   key: 'working',
   label: 'running',
@@ -85,4 +42,4 @@ const working = (parts: ChipParts): ChipSource => ({
       .map(thread => item(parts, thread, { status: 'running', meta: () => duration(Math.max(0, parts.now() - (startOf(thread) ?? parts.now()))) })),
 })
 
-export const chipSources = (parts: ChipParts) => [waiting(parts), ready(parts), working(parts)]
+export const chipSources = (parts: ChipParts) => [working(parts)]

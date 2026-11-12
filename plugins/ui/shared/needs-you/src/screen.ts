@@ -1,11 +1,10 @@
-import { plural } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { clock, div, dynamicChild, list, span, type Derive } from '@vaakx-dev/vrui'
 import type { Need, NeedKind } from './contract'
 
 const groups: { kind: NeedKind; label: string }[] = [
-  { kind: 'question', label: 'Questions' },
   { kind: 'secret', label: 'Sign-ins and keys' },
+  { kind: 'conflict', label: "Couldn't merge" },
   { kind: 'review', label: 'Ready to review' },
 ]
 
@@ -37,7 +36,7 @@ export const needsScreen = (kit: Kit, items: Derive<Need[]>) => {
                   shown.length
                     ? div(
                         { class: 'flex min-w-0 flex-col gap-2' },
-                        kit.sectionHeading(span({ class: 'min-w-0 flex-1 truncate' }, label), span({ class: 'tabular-nums text-neutral-600' }, String(shown.length))),
+                        kit.sectionHeading(label),
                         list(grouped(kind), need => need.id, need => card(kit, need.get()), div({ class: 'flex min-w-0 flex-col gap-2' })),
                       )
                     : null,
@@ -47,14 +46,5 @@ export const needsScreen = (kit: Kit, items: Derive<Need[]>) => {
           : kit.emptyState({ text: 'Nothing needs you.' }),
       ),
     )
-  return kit.pageBody(
-    {
-      title: 'What needs you',
-      intro: () => {
-        const count = items.get().length
-        return count === 0 ? 'Nothing is waiting.' : plural(count, 'thing') + ' ' + (count === 1 ? 'is' : 'are') + ' waiting.'
-      },
-    },
-    body(),
-  )
+  return kit.pageBody({ title: 'What needs you' }, body())
 }

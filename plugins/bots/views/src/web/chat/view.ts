@@ -37,7 +37,7 @@ const statusView = (kit: Kit, talk: Conversation, status: () => BotStatus | unde
   })
   return dynamicChild(line, shown => {
     if (!shown) return null
-    const text = shown === 'waiting' ? 'Waiting for you' : doing
+    const text = shown === 'waiting' ? 'Needs you' : doing
     return div({ class: 'mb-3' }, kit.statusLine({ mark: shown === 'waiting' ? kit.stateIcon('waiting', 'sm', true) : kit.spinner('sm'), text, title: text }))
   })
 }

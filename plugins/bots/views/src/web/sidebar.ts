@@ -1,7 +1,6 @@
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
 import type { FaceState } from '@sand/ui-kit/contract'
 import type { MenuAction, ShellGroup, ShellRow } from '@sand/ui-shell/contract'
-import { span } from '@vaakx-dev/vrui'
 import type { Parts } from './parts'
 import { botStatus, statusLine } from './work'
 
@@ -22,12 +21,7 @@ const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
   },
 ]
 
-const faceStateOf = (bot: BotSummary): FaceState | undefined => {
-  const status = botStatus(bot)
-  if (status === 'running') return 'running'
-  if (status === 'waiting') return 'waiting'
-  return undefined
-}
+const faceStateOf = (bot: BotSummary): FaceState | undefined => (botStatus(bot) === 'running' ? 'running' : undefined)
 
 const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
   const at = bot.last?.at
@@ -41,7 +35,8 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
       const state = faceStateOf(bot)
       return parts.ctx.kit.botFace(bot.id, bot.color, 32, state ? { state } : {})
     },
-    ...(detail && { detail: () => span({ class: detail.waiting ? 'text-warning-400' : 'text-neutral-500' }, detail.text) }),
+    ...(botStatus(bot) === 'waiting' && { status: 'waiting' as const }),
+    ...(detail && { detail: () => detail }),
     ...(at !== undefined && { at }),
   }
 }

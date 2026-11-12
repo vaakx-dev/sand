@@ -21,6 +21,7 @@ export interface SupervisorDeps {
   background(): Answers
   publish(link: OpenLink): Dispose
   changed(): void
+  needsYou(error: string): void
   sleep(ms: number, signal: AbortSignal): Promise<void>
   random(): number
   now(): number
@@ -65,6 +66,7 @@ export const createSupervisor = (deps: SupervisorDeps) => {
         link => ({ link }),
         (error: unknown) => ({ error }),
       )
+      const asked = answers !== undefined
       answers = undefined
       if (signal.aborted) return
       if ('link' in opened) {
@@ -79,6 +81,7 @@ export const createSupervisor = (deps: SupervisorDeps) => {
         outcome.reject(opened.error)
         const needsYou = opened.error instanceof NeedsYou
         set({ state: needsYou ? 'needs-you' : 'failed', error: errorMessage(opened.error) })
+        if (needsYou && !asked) deps.needsYou(errorMessage(opened.error))
         if (needsYou) return
       }
       await deps.sleep(backoff(failures++, deps.random()), signal)
