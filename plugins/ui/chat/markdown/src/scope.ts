@@ -15,4 +15,6 @@ export interface Scope extends Renderers {
   image?: MarkdownImage
   size?: MarkdownSize
   streaming?: boolean
+  paragraph?: string
+  tight?: boolean
 }

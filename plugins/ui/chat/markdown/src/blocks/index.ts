@@ -84,7 +84,8 @@ const plain: Parser = (lines, start, scope) => {
     body.push(line.trimStart())
     index++
   }
-  return { node: paragraph(inline(body.join('\n').trimEnd(), scope)), next: index }
+  const text = body.join('\n').trimEnd()
+  return { node: paragraph(inline(text, scope.tight ? scope : { ...scope, paragraph: text })), next: index }
 }
 
 const parsers: Parser[] = [fenced, mathBlock, atxHeading, ruled, table, list, quoted, indentedCode, plain]

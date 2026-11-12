@@ -2,7 +2,7 @@ import { threadRoute, threadScheme } from '@sand/chat/contract'
 import type { LinkScheme } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Shell, ShellRow } from '@sand/ui-shell/contract'
-import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 
 export interface LinkParts {
   kit: Kit
@@ -12,11 +12,6 @@ export interface LinkParts {
 }
 
 const textOf = (label: (Node | string)[]) => label.map(part => (typeof part === 'string' ? part : part.textContent)).join('')
-
-const standsAlone = (link: Node) => {
-  const paragraph = link.parentElement
-  return paragraph?.tagName === 'P' && paragraph.textContent?.trim() === link.textContent?.trim()
-}
 
 const unknownRow = (thread: string, label: string): ShellRow => ({ id: thread, label, to: { kind: threadRoute, id: thread } })
 
@@ -37,13 +32,8 @@ const inline = (parts: LinkParts, thread: string, label: string) =>
 
 export const threadLinks = (parts: LinkParts): LinkScheme => ({
   scheme: threadScheme,
-  render(thread, label) {
+  render(thread, label, place) {
     const text = textOf(label)
-    const alone = sig(false)
-    return dynamicChild(
-      alone,
-      shown => (shown ? block(parts, thread, text) : inline(parts, thread, text)),
-      span({ class: 'contents', onMount: link => void alone.set(standsAlone(link)) }),
-    )
+    return place === 'block' ? block(parts, thread, text) : inline(parts, thread, text)
   },
 })

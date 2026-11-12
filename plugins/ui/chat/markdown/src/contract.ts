@@ -24,10 +24,12 @@ export interface Markdown {
 
 export const markdown = service<Markdown>('markdown')
 
+export type LinkPlace = 'block' | 'inline'
+
 export interface LinkScheme {
   scheme: string
   order?: number
-  render(target: string, label: (Node | string)[]): Node
+  render(target: string, label: (Node | string)[], place: LinkPlace): Node
 }
 
 export interface MarkdownLinks {
