@@ -44,10 +44,7 @@ export default definePlugin({
     const keptProjects = cache.device.records<unknown>('projects')
     const projects = createProjects(ctx, ctx.wire, ctx.pcs, store)
     const threads = createThreads(ctx, ctx.wire, ctx.pcs, store, cache.hydrate)
-    void Promise.all([keptProjects.read('lists'), cache.ready]).then(([kept]) => {
-      projects.restore(kept, store.devices())
-      threads.restored()
-    })
+    void Promise.all([keptProjects.read('lists'), cache.ready]).then(([kept]) => projects.restore(kept, store.devices()))
     ctx.on(projectsChange, () => keptProjects.write('lists', projects.kept()))
     const models = createModels(ctx, ctx.wire, ctx.pcs, threads, store)
     forgetRemovedPcs(ctx, store, ctx.pcs, { projects, models })

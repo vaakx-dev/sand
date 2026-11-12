@@ -1,7 +1,7 @@
 import type { ContextRecord } from '@sand/chats/contract'
-import { place } from '@sand/ui-shell/contract'
+import { place, shell } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
-import { threads } from '@sand/web-client/contract'
+import { threadRouteKind, threads } from '@sand/web-client/contract'
 import { definePlugin, type Dispose } from 'drydock'
 import { contextChips, type ChipKind, type ChipLink } from '../contract'
 import { chipView } from './chip'
@@ -33,6 +33,6 @@ export default definePlugin({
 
     ctx.provide(contextChips, { register: kinds.register, chip })
     ctx.effect(() => kinds.register(fileChip))
-    ctx.effect(() => kinds.register(threadChip(ctx.kit, ctx.threads)))
+    ctx.effect(() => kinds.register(threadChip(ctx.kit, ctx.threads, thread => ctx.get(shell)?.open({ kind: threadRouteKind, id: thread }))))
   },
 })

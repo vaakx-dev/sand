@@ -118,7 +118,7 @@ export const chatView = (parts: ChatParts) => {
     },
     { placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
   )
-  dock.slot('above', () => ctx.shell.chipBar({ kind: 'owner', owner: id }))
+  dock.slot('above', () => ctx.shell.chipBar({ owner: id }))
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
   return div(

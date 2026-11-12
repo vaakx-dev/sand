@@ -1,6 +1,5 @@
 import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite } from '@sand/bot-memory/contract'
-import { botName, type BotSummary } from '@sand/bots/contract'
-import { homeRoute } from '@sand/ui-shell/contract'
+import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
 import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
 import { automationRow } from '../automations/row'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
@@ -165,7 +164,7 @@ const foot = (parts: Parts, id: string, bot: Bot, close: () => void) => {
   const pause = () => void parts.store.update(id, { paused: !paused() }).catch(error => parts.ctx.report(error))
   const remove = () => {
     close()
-    parts.ctx.shell.open({ kind: homeRoute }, { replace: true })
+    parts.ctx.shell.land({ forget: { kind: botRoute, id } })
     void parts.store.remove(id).catch(error => parts.ctx.report(error))
   }
   return div(

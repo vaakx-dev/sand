@@ -30,12 +30,10 @@ const listening = (parts: Parts): ChipSource => ({
   label: 'Listening',
   title: 'Listening',
   order: 40,
-  items: scope =>
-    scope.kind === 'owner'
-      ? automationsOf(parts, scope.owner)
-          .filter(item => !item.paused)
-          .map(item => ({ id: item.id, label: item.title, icon: item.icon, meta: item.when, open: () => parts.profile(scope.owner) }))
-      : [],
+  items: ({ owner }) =>
+    automationsOf(parts, owner)
+      .filter(item => !item.paused)
+      .map(item => ({ id: item.id, label: item.title, icon: item.icon, meta: item.when, open: () => parts.profile(owner) })),
 })
 
 export default definePlugin({

@@ -14,6 +14,14 @@ export const addressParams = (): AddressParams => Object.fromEntries(new URLSear
 
 export const addressParam = (key: string) => addressParams()[key]
 
+export const routeParams = { kind: 'view', id: 'id', tab: 'tab' } as const
+
+export const threadRouteKind = 'thread'
+
+export const draftRouteKind = 'draft'
+
+export const addressedThread = () => (addressParam(routeParams.kind) === threadRouteKind ? addressParam(routeParams.id) : undefined)
+
 export const addressState = (): AddressState => (isRecord(history.state) ? history.state : {})
 
 const layerKey = 'layer'

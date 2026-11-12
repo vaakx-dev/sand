@@ -77,7 +77,7 @@ self.addEventListener('push', event => {
 })
 
 const addressOf = notice => {
-  if (notice.thread) return '/?session=' + encodeURIComponent(notice.thread)
+  if (notice.thread) return '/?view=thread&id=' + encodeURIComponent(notice.thread)
   return notice.bot ? '/?bot=' + encodeURIComponent(notice.bot) : '/'
 }
 

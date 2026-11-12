@@ -3,7 +3,7 @@ import { markdownLinks } from '@sand/markdown/contract'
 import { modelTargets } from '@sand/model-panel/contract'
 import { pulse } from '@sand/reactive'
 import { shell } from '@sand/ui-shell/contract'
-import { projects, projectsChange, threadSelect, threadsChange } from '@sand/web-client/contract'
+import { draftStarted, projects, projectsChange, threadSelect, threadsChange } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
@@ -11,7 +11,7 @@ import { draftRoute, threadOwners, threadRoute, threadView } from './contract'
 import { threadLinks } from './links'
 import { threadLive } from './live/status'
 import { threadRoutes } from './route'
-import { followSelect } from './route/select'
+import { followStart } from './route/select'
 import { threadScreens } from './screens'
 import { threadViewService } from './service'
 
@@ -24,14 +24,15 @@ export default definePlugin({
     const live = threadLive(ctx)
     const dock = sig<Composer | undefined>(undefined)
     const screens = threadScreens(ctx, dock)
-    const followUp = () => {
+    const placeholder = () => {
       changes.version.get()
+      if (ctx.threads.drafting()) return 'Describe the change.'
       const current = ctx.threads.current()
       return current && live(current.id)?.status === 'merged' ? 'Ask a follow-up' : undefined
     }
     ctx.watch(composer, found => {
       dock.set(found)
-      return found?.placeholder(followUp)
+      return found?.placeholder(placeholder)
     })
     const view = threadViewService(ctx, screens, live)
     ctx.provide(threadView, view)
@@ -55,12 +56,13 @@ export default definePlugin({
       targets?.source(({ session }) => {
         changes.version.get()
         const found = dock.get()
-        return found && ctx.threads.current()?.id === session ? { settings: found.settings, choose: found.choose, running: () => ctx.threads.current()?.running ?? false } : undefined
+        const open = ctx.threads.current()?.id ?? ctx.threads.drafting()?.id
+        return found && open === session ? { settings: found.settings, choose: found.choose, running: () => ctx.threads.current()?.running ?? false } : undefined
       }),
     )
-    ctx.on(threadSelect, (_, visit) => {
+    ctx.on(draftStarted, (draft, thread) => {
       const found = ctx.get(shell)
-      if (found) followSelect(ctx, found, visit)
+      if (found) followStart(found, draft, thread)
     })
   },
 })

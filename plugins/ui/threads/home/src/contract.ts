@@ -5,25 +5,6 @@ import { projects, threadChange, type Threads } from '@sand/web-client/contract'
 import { sig, untrack, type Child } from '@vaakx-dev/vrui'
 import { service, type Context, type Dispose } from 'drydock'
 
-export interface HomeProject {
-  name: string
-  icon?: ProjectLook
-}
-
-export interface HomeHeadPart {
-  id: string
-  order: number
-  render(): HTMLElement
-}
-
-export interface NewThreadHome {
-  project(): HomeProject
-  chooseProject(): void
-  head(part: HomeHeadPart): Dispose
-}
-
-export const newThreadHome = service<NewThreadHome>('newThreadHome')
-
 export interface RowThread {
   id: string
   cwd: string

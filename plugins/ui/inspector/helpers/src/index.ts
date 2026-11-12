@@ -2,7 +2,8 @@ import { inspector } from '@sand/inspector/contract'
 import { jobs, jobsChange, type JobStatus, type WireJob } from '@sand/jobs/contract'
 import { pulse } from '@sand/reactive'
 import { kit, type Tone } from '@sand/ui-kit/contract'
-import { models, modelsChange, threads, threadsChange } from '@sand/web-client/contract'
+import { shell } from '@sand/ui-shell/contract'
+import { models, modelsChange, threadRouteKind, threads, threadsChange } from '@sand/web-client/contract'
 import { derive, div, list, span } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 
@@ -49,7 +50,7 @@ export default definePlugin({
         {
           lead: ctx.kit.dot(look.tone),
           end: [model && span({ class: 'mr-2' }, model), look.end ?? ctx.kit.elapsed(job.started)],
-          ...(thread && { onClick: () => ctx.get(threads)?.select(thread) }),
+          ...(thread && { onClick: () => ctx.get(shell)?.open({ kind: threadRouteKind, id: thread }) }),
         },
         job.label,
       )

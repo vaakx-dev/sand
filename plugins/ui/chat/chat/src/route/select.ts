@@ -1,41 +1,29 @@
 import { drafts } from '@sand/composer/contract'
-import { homeRoute, type Route, type Shell } from '@sand/ui-shell/contract'
-import type { ThreadVisit } from '@sand/web-client/contract'
+import type { Route, Shell } from '@sand/ui-shell/contract'
 import type { ChatContext } from '../context'
 import { draftRoute, threadRoute } from '../contract'
 
-const shows = (route: Route) => route.kind === threadRoute || route.kind === draftRoute
+const savedDraft = (ctx: ChatContext, id: string) => ctx.get(drafts)?.list().find(found => found.id === id)
 
-const same = (a: Route, b: Route) => a.kind === b.kind && a.id === b.id
-
-const selected = (ctx: ChatContext): Route | undefined => {
-  const id = ctx.threads.current()?.id
-  if (id) return { kind: threadRoute, id }
-  const draft = ctx.threads.drafting()
-  return draft && { kind: draftRoute, id: draft.id }
+const newDraft = (ctx: ChatContext, shell: Shell) => {
+  const { id } = ctx.threads.plan({ cwd: ctx.threads.cwd(), device: ctx.threads.device() })
+  shell.open({ kind: draftRoute, id }, { replace: true })
 }
 
-const openDraft = (ctx: ChatContext, id: string) => {
-  const draft = ctx.get(drafts)?.list().find(found => found.id === id)
-  if (draft) void ctx.threads.draft(draft.cwd, draft.device, draft.id, { replace: true })
-  else void ctx.threads.select(undefined, { replace: true })
+const showDraft = (ctx: ChatContext, id: string) => {
+  const saved = ctx.threads.drafting()?.id === id ? undefined : savedDraft(ctx, id)
+  if (saved) ctx.threads.plan({ id, cwd: saved.cwd, device: saved.device })
+  ctx.threads.show({ draft: id })
 }
 
-export const claimRoute = (ctx: ChatContext, route: Route) => {
-  const now = selected(ctx)
-  if (!shows(route) || !route.id || (now && same(now, route))) return
-  if (route.kind === threadRoute) void ctx.threads.select(route.id, { replace: true })
-  else openDraft(ctx, route.id)
+export const claimRoute = (ctx: ChatContext, shell: Shell, { kind, id }: Route) => {
+  if (kind === threadRoute && id) return ctx.threads.show({ thread: id })
+  if (kind !== draftRoute) return
+  if (id) return showDraft(ctx, id)
+  newDraft(ctx, shell)
 }
 
-export const clearOnHome = (ctx: ChatContext, route: Route, first: boolean) => {
-  if (route.kind === homeRoute && !first && ctx.threads.current()) void ctx.threads.select(undefined, { replace: true })
-}
-
-export const followSelect = (ctx: ChatContext, shell: Shell, visit: ThreadVisit) => {
-  const target = selected(ctx)
-  const now = shell.current()
-  if (visit === 'restore' || !target || same(now, target)) return
-  if (visit === 'replace' && !shows(now) && (target.kind === draftRoute || now.kind !== homeRoute)) return
-  shell.open(target, { replace: true })
+export const followStart = (shell: Shell, draft: string, thread: string) => {
+  const { kind, id } = shell.current()
+  if (kind === draftRoute && id === draft) shell.open({ kind: threadRoute, id: thread }, { replace: true })
 }

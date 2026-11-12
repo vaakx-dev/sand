@@ -1,4 +1,4 @@
-import { threadOwners } from '@sand/chat/contract'
+import { draftPlaces, threadOwners } from '@sand/chat/contract'
 import { draftsChange, drafts } from '@sand/composer/contract'
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import { jobs, jobsChange } from '@sand/jobs/contract'
@@ -18,14 +18,14 @@ import { chipSources } from './chips'
 import { pageSize, threadGroups } from './groups'
 import { threadEntries } from './items/items'
 import { RowLooks } from './items/looks'
-import { launch, newThread } from './launch/launch'
+import { chooseDraftPlace, newThread } from './launch/launch'
 import { questionNeeds, reviewNeeds, secretNeeds } from './needs'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
 
 export default definePlugin({
   name: 'threads-home',
-  description: 'Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; Home is the new-thread screen with a slot for its pickers and the running, needs-you and ready counts; New thread in Search; threads and projects in Search',
+  description: 'Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread picks a project and opens a new chat; the running, needs-you and ready counts; New thread in Search; threads and projects in Search',
   inject: { kit, threads, turns, shell, wire },
   apply(ctx) {
     const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs, threadOwners])
@@ -57,8 +57,7 @@ export default definePlugin({
         return () => trail.update(found => found.filter(other => other !== part))
       },
     })
-    const launched = { ...parts, pulse: events }
-    launch(launched)
+    ctx.provide(draftPlaces, { choose: draft => chooseDraftPlace(parts, draft) })
     const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get(), looks }, botThreads.get()), limit.get(), more, () => newThread(parts))))
     const now = owned(ctx, () => clock(1000))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
@@ -69,7 +68,7 @@ export default definePlugin({
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
     })
-    ctx.watch(palette, found => found?.source(sessionSource(launched, ctx.kit)))
+    ctx.watch(palette, found => found?.source(sessionSource(parts, ctx.kit)))
     wakeTimer(ctx, ctx.threads, events.bump)
   },
 })

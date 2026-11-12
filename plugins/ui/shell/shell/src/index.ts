@@ -3,6 +3,7 @@ import { kit } from '@sand/ui-kit/contract'
 import { onAddressChange } from '@sand/web-client/contract'
 import { byId, div, dynamicChild, effect, list, mount, resizeObserver, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
+import { routeLink } from './address'
 import { chipBar } from './chips'
 import { shell, shellChange, type Shell } from './contract'
 import { deskView } from './desk'
@@ -71,6 +72,8 @@ export default definePlugin({
       section: section => model.sections.add(section),
       route: spec => model.routes.add(spec),
       open: (route, options) => model.open(route, options?.replace),
+      land: options => model.land(options?.forget),
+      link: routeLink,
       back: () => model.back(),
       current: () => model.current.get(),
       state: () => model.state.get(),

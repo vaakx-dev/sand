@@ -1,7 +1,7 @@
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { newThread } from '../launch/launch'
-import type { StartParts } from '../launch/start'
+import { startChat, type StartParts } from '../launch/start'
 import { projectItems } from './projects'
 import { sessionActions } from './session'
 import { sessionItems } from './sessions'
@@ -24,6 +24,6 @@ export const sessionSource = (parts: StartParts, kit: Kit): PaletteSource => ({
     const current = threads.current()
     const actions = current ? sessionActions(kit, threads, current) : []
     if (!query.trim()) return [...actions, ...sessionItems(ctx, shell, threads, 'Recent').slice(0, 5)]
-    return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts), ...sessionItems(ctx, shell, threads, 'Chats')]
+    return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts, startChat(parts)), ...sessionItems(ctx, shell, threads, 'Chats')]
   },
 })

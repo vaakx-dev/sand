@@ -1,8 +1,9 @@
+import { threadRoute } from '@sand/chat/contract'
 import type { Drafts } from '@sand/composer/contract'
 import { palette } from '@sand/palette/contract'
 import { picker } from '@sand/picker/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { homeRoute, type MenuAction, type Shell } from '@sand/ui-shell/contract'
+import type { MenuAction, Shell } from '@sand/ui-shell/contract'
 import { oneLine } from '@sand/util'
 import type { Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
@@ -25,12 +26,12 @@ const rename = async ({ ctx, threads }: MenuParts, thread: Thread) => {
 }
 
 const remove = async ({ threads, shell }: MenuParts, thread: Thread) => {
-  if (threads.current()?.id === thread.id) shell.open({ kind: homeRoute }, { replace: true })
+  if (threads.current()?.id === thread.id) shell.land({ forget: { kind: threadRoute, id: thread.id } })
   await threads.remove(thread.id)
 }
 
 const openActions = (parts: MenuParts, thread: Thread): MenuAction[] => [
-  { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => parts.kit.openTab(parts.threads.link(thread.id)) },
+  { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => parts.kit.openTab(parts.shell.link({ kind: threadRoute, id: thread.id })) },
   ...(parts.ctx.get(palette) || parts.ctx.get(picker)
     ? [{ id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(parts.ctx, "Couldn't rename", () => rename(parts, thread)) }]
     : []),
@@ -54,8 +55,8 @@ const organiseActions = ({ ctx, threads }: MenuParts, thread: Thread): MenuActio
   ]
 }
 
-const copyActions = ({ kit, threads }: MenuParts, thread: Thread): MenuAction[] => [
-  { id: 'copy-link', group: 'copy', label: 'Copy link', icon: 'link', run: () => kit.copyText(threads.link(thread.id)) },
+const copyActions = ({ kit, shell }: MenuParts, thread: Thread): MenuAction[] => [
+  { id: 'copy-link', group: 'copy', label: 'Copy link', icon: 'link', run: () => kit.copyText(shell.link({ kind: threadRoute, id: thread.id })) },
   { id: 'copy-path', group: 'copy', label: 'Copy path', icon: 'folder', run: () => kit.copyText(thread.info.cwd) },
 ]
 

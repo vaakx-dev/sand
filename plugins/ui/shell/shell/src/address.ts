@@ -1,12 +1,10 @@
-import { addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/contract'
-import { homeRoute, type Route } from './contract'
+import { addressParams, addressState, pushAddress, routeParams as params, updateAddress } from '@sand/web-client/contract'
+import type { Route } from './contract'
 
 export interface Place {
   route: Route
   depth: number
 }
-
-const params = { kind: 'view', id: 'id', tab: 'tab' } as const
 
 const depthKey = 'shellDepth'
 
@@ -21,7 +19,9 @@ const routeOf = (value: Record<string, unknown>): Route[] => {
   return kind ? [{ kind, ...(id !== undefined && { id }), ...(tab !== undefined && { tab }) }] : []
 }
 
-export const requestedPlace = (fallback: Route = { kind: homeRoute }): Place => {
+export const nowhere: Route = { kind: '' }
+
+export const requestedPlace = (fallback: Route = nowhere): Place => {
   const { [params.kind]: kind, [params.id]: id, [params.tab]: tab } = addressParams()
   const [route = fallback] = routeOf({ kind, id, tab })
   const depth = addressState()[depthKey]
@@ -32,7 +32,14 @@ export const ownEntry = () => typeof addressState()[depthKey] === 'number'
 
 export const samePlace = (a: Place, b: Place) => JSON.stringify(a) === JSON.stringify(b)
 
-const urlOf = ({ kind, id, tab }: Route) => ({ [params.kind]: kind === homeRoute ? undefined : kind, [params.id]: id, [params.tab]: tab })
+const urlOf = ({ kind, id, tab }: Route) => ({ [params.kind]: kind || undefined, [params.id]: id, [params.tab]: tab })
+
+export const routeLink = (route: Route) => {
+  const url = new URL(location.href)
+  url.hash = ''
+  url.search = new URLSearchParams(Object.entries(urlOf(route)).filter((entry): entry is [string, string] => entry[1] !== undefined)).toString()
+  return url.href
+}
 
 const stateOf = ({ depth }: Place) => ({ [depthKey]: depth })
 

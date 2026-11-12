@@ -21,7 +21,7 @@ export const fileChip: ChipKind = {
   },
 }
 
-export const threadChip = ({ sheetText }: Kit, threads: Threads): ChipKind => ({
+export const threadChip = ({ sheetText }: Kit, threads: Threads, open: (thread: string) => void): ChipKind => ({
   kind: 'thread',
   title: 'Thread',
   icon: 'message',
@@ -35,7 +35,7 @@ export const threadChip = ({ sheetText }: Kit, threads: Threads): ChipKind => ({
     label: 'Open thread',
     run: record => {
       const id = text(record, 'id')
-      if (id) void threads.select(id)
+      if (id) open(id)
     },
   },
 })

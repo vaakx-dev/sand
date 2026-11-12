@@ -11,9 +11,8 @@ import type { Pcs, Wire } from '@sand/devices-contract'
 import { threadUpdate } from '@sand/orchestrator/contract'
 import { uuid } from '@sand/util'
 import type { Context } from 'drydock'
-import { type DraftTarget, onAddressChange, type Thread, type Threads, type ThreadVisit, threadSelect } from '../contract'
+import { draftStarted, type DraftTarget, type OpenChat, type Thread, type Threads, threadSelect } from '../contract'
 import { helloOf, onPcHello } from '../greeted'
-import { type Place, recordPlace, requestedPlace, requestedSession, samePlace, sessionLink } from './address'
 import { applyHello } from './hello'
 import { threadLoader } from './loading'
 import { threadPages } from './pages'
@@ -23,14 +22,12 @@ import { threadWatches } from './watch'
 
 export interface ThreadService extends Threads {
   adopt(opened: OpenedSession, device: string): Thread
-  restored(): void
 }
 
 export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, hydrate: (id: string) => Promise<void> | undefined): ThreadService => {
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
   const watches = threadWatches(wire, store, id => void load(id))
-  let greeted = false
 
   const recentFolder = () =>
     [...store.threads.values()]
@@ -39,46 +36,42 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
 
   const cwd = () => store.currentThread()?.info.cwd ?? store.draft?.cwd ?? recentFolder() ?? ''
 
-  const place = (): Place => ({ session: store.current, draft: store.draft })
+  const plans = new Map<string, DraftTarget>()
 
-  const show = (id: string | undefined, visit: ThreadVisit, draft?: DraftTarget) => {
-    const from = place()
-    store.current = id
-    store.draft = id ? undefined : (draft ?? store.draft ?? { id: uuid(), cwd: cwd(), device: store.here() })
-    recordPlace(from, place(), visit)
-    ctx.emit(threadSelect, id, visit)
-    store.changed(id, true)
-    return id ? store.threads.get(id) : undefined
+  const opened = (): OpenChat | undefined => {
+    if (store.current) return { thread: store.current }
+    return store.draft && { draft: store.draft.id }
   }
 
-  const open = async (id: string | undefined, visit: ThreadVisit, draft?: DraftTarget) => {
-    const thread = show(id, visit, draft)
-    void wire.call(uiFocus, id ? { session: id } : {}).catch(() => {})
-    if (id && !thread?.loaded) await load(id)
+  const sameChat = (a: OpenChat | undefined, b: OpenChat) => a !== undefined && ('thread' in a ? 'thread' in b && a.thread === b.thread : 'draft' in b && a.draft === b.draft)
+
+  const plan = ({ id = uuid(), cwd: folder, device }: Omit<DraftTarget, 'id'> & { id?: string }) => {
+    const target = { id, cwd: folder, device }
+    plans.set(id, target)
+    if (store.draft?.id === id) {
+      store.draft = target
+      ctx.emit(threadSelect, undefined)
+      store.changed(undefined, true)
+    }
+    return target
   }
 
-  const visitOf = (options?: { replace?: boolean }): ThreadVisit => (options?.replace ? 'replace' : 'push')
+  const draftFor = (id: string) => plans.get(id) ?? plan({ id, cwd: cwd(), device: store.device() })
 
-  const select = (id: string | undefined, options?: { replace?: boolean }) => open(id, visitOf(options))
+  const show = (chat: OpenChat) => {
+    if (sameChat(opened(), chat)) return
+    store.current = 'thread' in chat ? chat.thread : undefined
+    store.draft = 'draft' in chat ? draftFor(chat.draft) : undefined
+    ctx.emit(threadSelect, store.current)
+    store.changed(store.current, true)
+    void wire.call(uiFocus, store.current ? { session: store.current } : {}).catch(() => {})
+    const thread = store.currentThread()
+    if (store.current && !thread?.loaded) void load(store.current)
+  }
 
   const refocus = (device: string) => {
     const current = store.currentThread()
     void wire.call(uiFocus, current?.device === device ? { session: current.id } : {}, device).catch(() => {})
-  }
-
-  const openRequested = async () => {
-    const { session, draft } = requestedPlace()
-    if (session && !store.threads.has(session)) await load(session)
-    await open(session && store.threads.has(session) ? session : undefined, 'replace', draft)
-  }
-
-  const revisit = async () => {
-    const asked = requestedPlace()
-    const { session, draft } = asked
-    if (!greeted || samePlace(asked, place())) return
-    if (session && !store.threads.has(session)) await load(session)
-    if (requestedSession() !== session) return
-    await open(session && store.threads.has(session) ? session : undefined, 'restore', draft)
   }
 
   const created = async (target: DraftTarget) => {
@@ -89,35 +82,29 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
   const greetedBy = (pc: string) => {
     applyHello(store, helloOf(wire, pc), pc)
     watches.greeted(pc)
-    if (pc === store.here() && !greeted) {
-      greeted = true
-      return void openRequested()
-    }
     refocus(pc)
     const current = store.currentThread()
     if (current?.device === pc) void load(current.id)
   }
 
   onPcHello(ctx, wire, pcs, greetedBy)
-  ctx.effect(() => onAddressChange(() => void revisit()))
 
   return {
     adopt: install,
-    restored() {
-      const asked = requestedSession()
-      if (!greeted && asked && store.threads.has(asked)) show(asked, 'replace')
-    },
     cwd,
     device: () => store.device(),
-    draft: (folder, device, id = uuid(), options) => open(undefined, visitOf(options), { id, cwd: folder, device }),
+    plan,
+    show,
     drafting: () => (store.current ? undefined : store.draft),
     list: () => [...store.threads.values()],
     get: id => store.threads.get(id),
     current: () => store.currentThread(),
     children: id => [...store.threads.values()].filter(chat => chat.info.parent === id),
-    async create({ id = uuid(), cwd, device }) {
-      const thread = store.upsert(await created({ id, cwd, device }), device)
+    async create(target) {
+      const thread = store.upsert(await created(target), target.device)
       thread.loaded = true
+      plans.delete(target.id)
+      ctx.emit(draftStarted, target.id, thread.id)
       return thread
     },
     async update(id, change) {
@@ -125,17 +112,14 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     },
     async remove(id) {
       await wire.call(sessionRemove, { session: id }, store.deviceOf(id))
-      if (store.current === id) await select(undefined, { replace: true })
       store.remove(id)
     },
-    select,
     watch: watches.watch,
     load,
     path: (id, options) => {
       const thread = store.threads.get(id)
       return thread ? pathOf(thread, options?.carried) : []
     },
-    link: sessionLink,
     older: id => {
       const thread = store.threads.get(id)
       return thread ? hasOlder(thread) : false
