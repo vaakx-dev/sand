@@ -30,7 +30,7 @@ export interface SystemParts {
   add(part: SystemPart): Dispose
 }
 
-export type CompactionReason = 'threshold' | 'overflow' | 'idle'
+export type CompactionReason = 'threshold' | 'overflow' | 'idle' | 'manual'
 
 export interface CompactedFiles {
   read: string[]
@@ -75,6 +75,17 @@ export const contextUsage = event<(conversation: Conversation, usage: ContextUsa
 
 export const contextChange = wireEvent<[session: string, usage: ContextUsage]>('context.change')
 
-export const contextGet = request('context.get', { input: () => z.object({ session: z.string(), owner: z.enum(['thread', 'bot']) }), output: type<ContextUsage | undefined>(), place: 'thread' })
+export interface Compacted {
+  before: number
+  after: number
+}
+
+const chat = () => z.object({ session: z.string(), owner: z.enum(['thread', 'bot']) })
+
+export const contextGet = request('context.get', { input: chat, output: type<ContextUsage | undefined>(), place: 'thread' })
+
+export const compactTimeoutMs = 600_000
+
+export const contextCompact = request('context.compact', { input: chat, output: type<Compacted>(), callers: 'any', place: 'thread' })
 
 export { summaryFormat } from './summarize/format'

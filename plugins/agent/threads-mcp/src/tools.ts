@@ -1,5 +1,6 @@
 import { filesInput, promptWithFiles } from '@sand/attachments/contract'
 import { historyItem, historyReading } from '@sand/chats/contract'
+import { compactTimeoutMs, contextCompact } from '@sand/compaction/contract'
 import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
 import { historyRead, itemRead, pendingActions, readLimit, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import { sendModes } from '@sand/turns-contract/contract'
@@ -89,11 +90,22 @@ const updateInput = z.object({
   fast: z.boolean().optional().describe('Turn fast mode on or off, if its model has it'),
 })
 
+const compactInput = z.object({
+  thread: z.string().optional().describe('A thread id'),
+  bot: z.string().optional().describe('A bot id'),
+})
+
 const waitInput = z.object({
   thread,
   until: z.enum(['attention', 'end']).optional().describe('attention (default): also return when the thread waits on the user; end: only when it is done'),
   timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Give up after this long (default ${waitSeconds}); the thread keeps running`),
 })
+
+const chatOf = ({ thread, bot }: z.output<typeof compactInput>) => {
+  if (thread !== undefined && bot === undefined) return { session: thread, owner: 'thread' } as const
+  if (bot !== undefined && thread === undefined) return { session: bot, owner: 'bot' } as const
+  throw new Error('Give either a thread or a bot')
+}
 
 const requestId = (given: string | undefined) => given ?? Bun.randomUUIDv7()
 
@@ -194,6 +206,16 @@ export const threadTools: McpTool[] = [
         ...(fast !== undefined && { speed: fast ? 'fast' : 'normal' }),
       }),
   } satisfies McpTool<typeof updateInput>,
+  {
+    name: 'chat_compact',
+    description:
+      "Compact a thread's or bot's chat now instead of waiting for it to compact by itself: summarize its earlier conversation, so its next turn carries on from the summary. The chat must be idle. Returns its context size in tokens before and after",
+    input: compactInput,
+    feature: 'compaction',
+    access: 'operate',
+    group: group.name,
+    run: (input, { call }) => call(contextCompact, chatOf(input), { timeout: compactTimeoutMs }),
+  } satisfies McpTool<typeof compactInput>,
   {
     name: 'history_read',
     description: [

@@ -1,4 +1,6 @@
+import type { Compacted } from '@sand/compaction/contract'
 import type { HistoryItem as Item, ThreadRow, ThreadState, ThreadStatus } from '@sand/orchestrator/contract'
+import { tokens } from '@sand/util'
 
 const exits: Record<ThreadStatus, number> = { idle: 0, running: 0, completed: 0, waiting: 3, interrupted: 130, failed: 1, lost: 1 }
 
@@ -32,6 +34,11 @@ export const printRows = (rows: ThreadRow[], json: boolean) => {
   const cells = rows.map(row => [row.thread, row.status, row.pc ?? 'this PC', row.title, row.cwd])
   const widths = [0, 1, 2, 3].map(column => Math.max(0, ...cells.map(cell => cell[column]!.length)))
   for (const cell of cells) console.log(cell.map((text, column) => text.padEnd(widths[column] ?? 0)).join('  ').trimEnd())
+}
+
+export const printCompact = (thread: string, { before, after }: Compacted, json: boolean) => {
+  if (json) console.log(JSON.stringify({ thread, before, after }))
+  else console.log(`compacted ${thread}: ${tokens(before)} → ${tokens(after)} tokens`)
 }
 
 export const printStop = (thread: string, stopped: boolean, json: boolean) => {

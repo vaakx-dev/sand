@@ -2,7 +2,7 @@ import type { llm, LLMRequest } from '@sand/accounts/contract'
 import type { Entry } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import type { media } from '@sand/media/contract'
-import { compactionBrief, contextUsage, type CompactionReason, type CompactionRecord } from './contract'
+import { compactionBrief, contextUsage, type Compacted, type CompactionReason, type CompactionRecord } from './contract'
 import { usageRecord } from '@sand/usage/contract'
 import { untilAborted } from '@sand/util'
 import type { Context } from 'drydock'
@@ -25,9 +25,13 @@ interface Summary {
   previous?: string
 }
 
+type Placed = CompactionRecord & Compacted
+
 interface Job {
+  reason: CompactionReason
   work: Promise<Summary>
   done?: Summary
+  placed?: Placed
 }
 
 const draft = (conversation: Conversation, path: Entry[], record: CompactionRecord): Entry => ({
@@ -61,7 +65,7 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
     const path = conversation.path()
     const overflow = reason === 'overflow'
     const { keep, limit } = budget(request)
-    const cut = plan(path, keep) ?? (overflow ? plan(path, 0) : undefined)
+    const cut = plan(path, keep) ?? (overflow || reason === 'manual' ? plan(path, 0) : undefined)
     if (!cut) throw new Error('Nothing to compact yet')
     const brief = (await ctx.bail(compactionBrief, conversation)) ?? summaryBrief
     const { summary, usage, source } =
@@ -89,7 +93,7 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
 
   const run = (conversation: Conversation, request: LLMRequest, reason: CompactionReason) => {
     const release = ctx.busy()
-    const job: Job = { work: summarizeFrom(conversation, request, reason) }
+    const job: Job = { reason, work: summarizeFrom(conversation, request, reason) }
     jobs.set(conversation.id, job)
     job.work
       .then(
@@ -107,38 +111,60 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
 
   const place = (conversation: Conversation, request: LLMRequest, summary: Summary) => {
     const path = conversation.path()
-    if (!fits(summary, path, request)) return false
+    if (!fits(summary, path, request)) return undefined
     const before = tracker.project(conversation.id, request)
     const compacted = { ...request, messages: compactedMessages([...path, draft(conversation, path, summary.record)]) }
     const after = requestTokens(compacted)
-    conversation.append('compaction', { ...summary.record, before, after } satisfies CompactionRecord)
+    const record: Placed = { ...summary.record, before, after }
+    conversation.append('compaction', record)
     tracker.reset(conversation.id)
     ctx.emit(contextUsage, conversation, usage(compacted, after))
-    return true
+    return record
+  }
+
+  const placeJob = (conversation: Conversation, request: LLMRequest, job: Job, summary: Summary) => {
+    if (jobs.get(conversation.id) !== job) return job.placed
+    jobs.delete(conversation.id)
+    job.placed = place(conversation, request, summary)
+    return job.placed
   }
 
   const take = (conversation: Conversation, request: LLMRequest) => {
-    const done = jobs.get(conversation.id)?.done
-    if (!done) return false
-    jobs.delete(conversation.id)
-    return place(conversation, request, done)
+    const job = jobs.get(conversation.id)
+    return !!job?.done && !!placeJob(conversation, request, job, job.done)
   }
+
+  const settle = async (conversation: Conversation, request: LLMRequest, job: Job, work: Promise<Summary>) => {
+    const before = tracker.project(conversation.id, request)
+    const restore = () => ctx.emit(contextUsage, conversation, usage(request, before))
+    ctx.emit(contextUsage, conversation, { ...usage(request, before), compacting: true })
+    const summary = await work.catch(error => {
+      restore()
+      throw error
+    })
+    const placed = placeJob(conversation, request, job, summary)
+    if (!placed) restore()
+    return placed
+  }
+
+  const jobFor = (conversation: Conversation, request: LLMRequest, reason: CompactionReason) => jobs.get(conversation.id) ?? run(conversation, request, reason)
 
   return {
     budget,
-    start: (conversation: Conversation, request: LLMRequest, reason: CompactionReason) => (jobs.get(conversation.id) ?? run(conversation, request, reason)).work,
+    start: (conversation: Conversation, request: LLMRequest, reason: CompactionReason) => jobFor(conversation, request, reason).work,
     take,
+    requested: (conversation: Conversation) => jobs.get(conversation.id)?.reason === 'manual',
     async wait(conversation: Conversation, request: LLMRequest, reason: CompactionReason, signal: AbortSignal) {
       if (reason === 'overflow') jobs.delete(conversation.id)
       else if (take(conversation, request)) return true
-      const job = jobs.get(conversation.id) ?? run(conversation, request, reason)
-      const before = tracker.project(conversation.id, request)
-      ctx.emit(contextUsage, conversation, { ...usage(request, before), compacting: true })
-      const summary = await untilAborted(job.work, signal).catch(() => undefined)
-      if (summary && jobs.get(conversation.id) === job) jobs.delete(conversation.id)
-      if (summary && place(conversation, request, summary)) return true
-      ctx.emit(contextUsage, conversation, usage(request, before))
-      return false
+      const job = jobFor(conversation, request, reason)
+      return !!(await settle(conversation, request, job, untilAborted(job.work, signal)).catch(() => undefined))
+    },
+    async now(conversation: Conversation, request: LLMRequest) {
+      const job = jobFor(conversation, request, 'manual')
+      const placed = await settle(conversation, request, job, job.work)
+      if (!placed) throw new Error('The chat moved on while it was being compacted. Try again.')
+      return placed
     },
   }
 }
