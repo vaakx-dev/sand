@@ -84,8 +84,9 @@ export const drawer = (page: Page, expected?: boolean) => (expected === undefine
 
 const coverShown = (page: Page, label: string) =>
   page.evaluate(name => {
-    const box = document.querySelector(`div[aria-label="${name}"]`)?.getBoundingClientRect()
-    return Boolean(box && Math.abs(box.left) < 1 && Math.abs(box.top) < innerHeight / 2 && box.width >= innerWidth - 1)
+    const node = document.querySelector(`div[aria-label="${name}"]`)
+    const box = node?.getBoundingClientRect()
+    return Boolean(box && !node?.closest('[inert]') && Math.abs(box.left) < 1 && Math.abs(box.top) < innerHeight / 2 && box.width >= innerWidth - 1)
   }, label)
 
 export const cover = (page: Page, label: string, expected?: boolean) =>

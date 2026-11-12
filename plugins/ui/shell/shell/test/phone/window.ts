@@ -114,7 +114,7 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page)).toBe('fixture/plain')
   })
 
-  test('a swipe left covers the chat with the details, then the side panel, and a swipe right shows the same chat', async () => {
+  test('a swipe left covers the chat with the details, then the side panel, and each swipe right steps back to the same chat', async () => {
     const { page } = phone
     await openPlain()
     await scrollChat(page, 300)
@@ -128,9 +128,30 @@ describe.each(phones)('on a $name', size => {
     expect(await cover(page, 'Fixture panel', true)).toBe(true)
     await swipe(phone, [60, mid()], [size.width - 30, mid()])
     expect(await cover(page, 'Fixture panel', false)).toBe(false)
-    expect(await cover(page, 'Fixture details')).toBe(false)
+    expect(await cover(page, 'Fixture details', true)).toBe(true)
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
+    expect(await cover(page, 'Fixture details', false)).toBe(false)
     expect(await drawer(page)).toBe(false)
     expect(await chatScroll(page)).toBe(scrolled)
+  })
+
+  test('Close steps back to whatever was showing before a cover opened', async () => {
+    const { page } = phone
+    await openPlain()
+    await tap(page, 'Fixture panel')
+    expect(await cover(page, 'Fixture panel', true)).toBe(true)
+    await tap(page, 'Close Fixture panel')
+    expect(await cover(page, 'Fixture panel', false)).toBe(false)
+    expect(await cover(page, 'Fixture details')).toBe(false)
+    await tap(page, 'Fixture details')
+    expect(await cover(page, 'Fixture details', true)).toBe(true)
+    await page.evaluate(() => window.sand.get<Shell>({ id: 'shell' })?.showAside('fixture-panel', true))
+    expect(await cover(page, 'Fixture panel', true)).toBe(true)
+    await tap(page, 'Close Fixture panel')
+    expect(await cover(page, 'Fixture details', true)).toBe(true)
+    await tap(page, 'Close Fixture details')
+    expect(await cover(page, 'Fixture details', false)).toBe(false)
+    expect(await screen(page)).toBe('fixture/plain')
   })
 
   test('vertical swipes never open the terminal; its button does, and a swipe down puts it away', async () => {
