@@ -1,23 +1,54 @@
-interface ErrorBody {
-  error?: { type?: string; message?: string }
+interface ErrorDetail {
+  type?: string
+  code?: string
+  message?: string
+}
+
+interface Reply {
+  waitMs?: number
+  usageLimit?: boolean
+}
+
+const usageLimitErrors = new Set(['insufficient_quota', 'usage_limit_reached', 'usage_not_included'])
+
+const waitOf = (headers: Headers) => {
+  const ms = Number(headers.get('retry-after-ms'))
+  if (ms > 0) return ms
+  const seconds = Number(headers.get('retry-after'))
+  return seconds > 0 ? seconds * 1000 : undefined
+}
+
+const usageLimited = (headers: Headers, { type, code }: ErrorDetail) =>
+  headers.get('anthropic-ratelimit-unified-status') === 'rejected' || usageLimitErrors.has(type ?? '') || usageLimitErrors.has(code ?? '')
+
+const detailOf = (text: string): ErrorDetail => {
+  try {
+    const error = JSON.parse(text)?.error
+    return error && typeof error === 'object' ? error : {}
+  } catch {
+    return {}
+  }
 }
 
 export class ApiError extends Error {
+  readonly waitMs?: number
+  readonly usageLimit: boolean
+
   constructor(
     readonly status: number | undefined,
     readonly type: string,
     detail: string,
+    { waitMs, usageLimit = false }: Reply = {},
   ) {
     super(`${status ? `${status} ` : ''}${type}: ${detail}`)
+    this.waitMs = waitMs
+    this.usageLimit = usageLimit
   }
 
   static async from(response: Response) {
     const text = await response.text()
-    try {
-      const { error }: ErrorBody = JSON.parse(text)
-      return new ApiError(response.status, error?.type ?? 'api_error', error?.message ?? text)
-    } catch {
-      return new ApiError(response.status, 'api_error', text || response.statusText)
-    }
+    const error = detailOf(text)
+    const reply = { waitMs: waitOf(response.headers), usageLimit: usageLimited(response.headers, error) }
+    return new ApiError(response.status, error.type ?? 'api_error', error.message ?? (text || response.statusText), reply)
   }
 }

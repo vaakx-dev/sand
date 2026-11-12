@@ -13,6 +13,7 @@ import type { Compat } from './compat/client'
 import type { CompatTarget } from './compat/target'
 import type { LimitStore } from './limits'
 import type { OpenAI } from './openai/client'
+import { troubleOf } from './trouble'
 
 const levels: EffortLevel[] = [
   { id: 'none', label: 'None' },
@@ -92,9 +93,13 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
       const meta = model?.source ? view.entry(model.source)?.meta : undefined
       if (!model || !meta) throw view.missing(request.model)
       const source = sourceRef(meta)
-      for await (const event of route(meta, model, request, signal, caller)) {
-        if (event.type === 'start') yield { ...event, model: model.id }
-        else yield event.type === 'done' ? { ...event, source } : event
+      try {
+        for await (const event of route(meta, model, request, signal, caller)) {
+          if (event.type === 'start') yield { ...event, model: model.id }
+          else yield event.type === 'done' ? { ...event, source } : event
+        }
+      } catch (error) {
+        throw signal?.aborted ? error : troubleOf(meta.label, error)
       }
     },
     release: bridges.release,

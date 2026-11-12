@@ -14,6 +14,6 @@ export const reaching = async <T>(url: string, provider: string, signal: AbortSi
     return await run()
   } catch (error) {
     if (signal?.aborted || error instanceof ApiError || (error instanceof Error && error.name === 'AbortError')) throw error
-    throw new AccountError(`Couldn't reach ${origin(url)} for ${provider}`, `${url} · ${rawMessage(error)}`)
+    throw new AccountError(`Couldn't reach ${origin(url)} for ${provider}`, `${url} · ${rawMessage(error)}`, { cause: error })
   }
 }

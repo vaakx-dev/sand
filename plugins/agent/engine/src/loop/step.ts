@@ -1,7 +1,8 @@
-import { type LLMEvent, StreamStalled } from '@sand/accounts/contract'
+import { type LLMEvent, ProviderTrouble, StreamStalled } from '@sand/accounts/contract'
 import { type Message, noteBlock, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { conceal } from '@sand/tools/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
+import { untilAborted } from '@sand/util'
 import type { Conversation, Step, TurnOrigin } from '../contract'
 import type { EngineContext } from '../context'
 import { expand } from '../lifecycle/start'
@@ -12,6 +13,7 @@ import type { TurnHooks, TurnRun } from './turn'
 import { createWaiting } from './waiting'
 
 const noticeOrigins = new Set<TurnOrigin>(['job', 'wake', 'routine'])
+const troublePausesMs = [1_000, 2_000, 4_000, 8_000]
 
 type Done = Extract<LLMEvent, { type: 'done' }>
 
@@ -40,20 +42,27 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     stores.turns.outputs(info.id, open)
   }
 
-  const retries = async (step: Step, error: unknown, again: boolean) => {
-    if (signal.aborted) return false
-    const lost = step.lost(error) || error instanceof StreamStalled
-    return again && (lost || Boolean(await conversations.overflow?.(conversation, info, error, signal)))
+  const retries = async (lost: boolean, error: unknown) =>
+    lost || error instanceof StreamStalled || Boolean(await conversations.overflow?.(conversation, info, error, signal))
+
+  const pause = async (trouble: ProviderTrouble, tries: number) => {
+    const pauseMs = troublePausesMs[tries]
+    if (pauseMs === undefined) throw new Error(`${trouble.message}. sand tried ${tries + 1} times and gave up.`, { cause: trouble })
+    await untilAborted(Bun.sleep(trouble.waitMs ?? pauseMs), signal)
+    return tries + 1
   }
 
-  const send = async (again = true): Promise<Sent> => {
+  const send = async (again = true, tries = 0): Promise<Sent> => {
     const step = await conversations.step(conversation, info, signal)
     if (step.thread) stores.turns.thread(info.id, step.thread)
     try {
       return { step, done: await streamStep(ctx, conversations, step.request, run) }
     } catch (error) {
-      if (!(await retries(step, error, again))) throw error
-      return send(false)
+      if (signal.aborted) throw error
+      const lost = step.lost(error)
+      if (error instanceof ProviderTrouble) return send(again, await pause(error, tries))
+      if (!again || !(await retries(lost, error))) throw error
+      return send(false, tries)
     }
   }
 

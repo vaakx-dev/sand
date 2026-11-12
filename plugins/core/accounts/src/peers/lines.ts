@@ -1,6 +1,8 @@
-import { type LLMEvent, ThreadLost } from '../contract'
+import { type LLMEvent, ProviderTrouble, ThreadLost } from '../contract'
 import { AccountError } from '../errors'
 import type { ShareLine } from '../share/info'
+
+type ErrorLine = Extract<ShareLine, { type: 'error' }>
 
 const read = async (reader: ReadableStreamDefaultReader<Uint8Array>, name: string, signal?: AbortSignal) => {
   try {
@@ -31,12 +33,24 @@ async function* lines(body: ReadableStream<Uint8Array>, name: string, signal?: A
   }
 }
 
+const failureOf = ({ message, detail, kind, waitMs }: ErrorLine, name: string) => {
+  const text = `On ${name}: ${message}`
+  switch (kind) {
+    case 'lost':
+      return new ThreadLost(text)
+    case 'trouble':
+      return new ProviderTrouble(text, waitMs)
+    default:
+      return new AccountError(text, detail)
+  }
+}
+
 export async function* readEvents(body: ReadableStream<Uint8Array>, name: string, signal?: AbortSignal): AsyncGenerator<LLMEvent> {
   let finished = false
   for await (const text of lines(body, name, signal)) {
     const line: ShareLine = JSON.parse(text)
     if (line.type === 'ping') continue
-    if (line.type === 'error') throw line.lost ? new ThreadLost(`On ${name}: ${line.message}`) : new AccountError(`On ${name}: ${line.message}`, line.detail)
+    if (line.type === 'error') throw failureOf(line, name)
     if (line.type === 'done') finished = true
     yield line
   }

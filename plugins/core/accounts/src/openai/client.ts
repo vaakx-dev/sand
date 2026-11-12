@@ -14,13 +14,12 @@ interface OpenAIOptions {
   accounts: Accounts
   plans: PlanRegistry
   media: Media
-  retries: number
   inspect(account: string): ((response: Response) => void) | undefined
 }
 
 export type OpenAI = ReturnType<typeof createOpenAI>
 
-export const createOpenAI = ({ accounts, plans, media, retries, inspect }: OpenAIOptions) => {
+export const createOpenAI = ({ accounts, plans, media, inspect }: OpenAIOptions) => {
   const prepare = async (account: string, request: LLMRequest & { model: string }, model: ModelInfo) => {
     const credential = await accounts.auth(account)
     const payload = openaiBody(request, model, media)
@@ -32,7 +31,7 @@ export const createOpenAI = ({ accounts, plans, media, retries, inspect }: OpenA
       const call = await prepare(account, request, model)
       const name = accounts.label(account)
       const init = { method: 'POST', headers: call.headers(false), body: JSON.stringify(call.payload) }
-      const response = await reaching(call.url, name, signal, () => send(call.url, init, { retries, signal, inspect: inspect(account) }))
+      const response = await reaching(call.url, name, signal, () => send(call.url, init, { signal, inspect: inspect(account) }))
       if (!response.body) throw new Error('Empty response body')
       yield* readOpenAI(sseEvents<OpenAIEvent>(response.body, name), request.model)
     },

@@ -1,13 +1,21 @@
-import { type LLMEvent, ThreadLost } from '../contract'
+import { type LLMEvent, ProviderTrouble, ThreadLost } from '../contract'
 import { errorMessage } from '@sand/util'
 import { detailOf } from '../errors'
-import type { ShareLine } from './info'
+import type { ShareFailure, ShareLine } from './info'
 
 const heartbeat = 5_000
 
+const kindOf = (error: unknown): ShareFailure | undefined => {
+  if (error instanceof ThreadLost) return 'lost'
+  if (error instanceof ProviderTrouble) return 'trouble'
+  return undefined
+}
+
 const errorLine = (error: unknown): ShareLine => {
   const detail = detailOf(error)
-  return { type: 'error', message: errorMessage(error), ...(detail && { detail }), ...(error instanceof ThreadLost && { lost: true }) }
+  const kind = kindOf(error)
+  const waitMs = error instanceof ProviderTrouble ? error.waitMs : undefined
+  return { type: 'error', message: errorMessage(error), ...(detail && { detail }), ...(kind && { kind }), ...(waitMs && { waitMs }) }
 }
 
 export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEvent>, signal: AbortSignal) => {
