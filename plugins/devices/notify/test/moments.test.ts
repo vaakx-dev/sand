@@ -37,4 +37,4 @@ test('with Notifications off, a thread turn finishes and nothing fails', async (
   } finally {
     await sand.stop()
   }
-}, 60_000)
+})

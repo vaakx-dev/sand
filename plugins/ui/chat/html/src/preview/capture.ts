@@ -1,6 +1,7 @@
 import { findBrowser, launch, type Browser, type CdpEvent } from '@sand/cdp'
 import { clip } from '@sand/util'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { removeFolder } from '@sand/util/fs'
+import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ConsoleLevel, ConsoleMessage, HtmlPreview } from '../contract'
@@ -120,6 +121,6 @@ export const capture = async (html: string, width: number) => {
       await browser.close()
     }
   } finally {
-    await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+    await removeFolder(profile)
   }
 }

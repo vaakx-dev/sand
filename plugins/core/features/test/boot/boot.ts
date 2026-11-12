@@ -41,7 +41,7 @@ export const combinations = (list: [string, string[], string[], Name[]][]) => {
       } finally {
         await sand.stop()
       }
-    }, 60_000)
+    })
 }
 
 export const answer = async (sand: Booted, bot: string) => {

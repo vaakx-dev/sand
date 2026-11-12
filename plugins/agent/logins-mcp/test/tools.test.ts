@@ -67,7 +67,7 @@ test('a thread adds a login, shares another with itself and lists its access thr
   } finally {
     await sand.stop()
   }
-}, 30_000)
+})
 
 test('an outside agent finds a waiting secret request and answers it; the asking thread gets a login, never the value', async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-logins-mcp-'))
@@ -93,4 +93,4 @@ test('an outside agent finds a waiting secret request and answers it; the asking
   } finally {
     await sand.stop()
   }
-}, 30_000)
+})

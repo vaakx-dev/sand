@@ -1,4 +1,5 @@
 import { errorMessage } from '@sand/util'
+import { existsSync } from 'node:fs'
 import type { GitOptions } from '../contract'
 import { GitError } from './error'
 
@@ -26,6 +27,7 @@ export const startGit = (cwd: string, args: string[], { env, input, timeoutMs, r
       windowsHide: true,
     })
   } catch (error) {
+    if (!existsSync(cwd)) throw new GitError('unknown', `The folder ${cwd} doesn't exist.`)
     throw new GitError('unknown', `git could not start: ${errorMessage(error)}`)
   }
 }

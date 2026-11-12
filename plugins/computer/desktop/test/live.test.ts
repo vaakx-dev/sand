@@ -2,7 +2,8 @@ import { findBrowser, launch } from '@sand/cdp'
 import { parseKeys, type Point } from '@sand/computers/contract'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { dlopen, FFIType } from 'bun:ffi'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { removeFolder } from '@sand/util/fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { win32, type Win32 } from '../src/windows/api'
@@ -63,7 +64,7 @@ const openRig = async () => {
     desktop.close()
     await browser.close()
     await server.stop(true)
-    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+    await removeFolder(profile)
   }
   return { api, windows, home, desktop, evaluate, close }
 }

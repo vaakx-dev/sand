@@ -1,6 +1,7 @@
 import { findBrowser } from '@sand/cdp'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { removeFolder } from '@sand/util/fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { browserComputer } from '../src/computer'
@@ -63,12 +64,12 @@ const received = async (at: string, name: string) => {
 }
 
 describe.skipIf(!(await findBrowser()))('browser login fill', () => {
-  beforeAll(() => open(`${local}/login`), 30_000)
+  beforeAll(() => open(`${local}/login`))
 
   afterAll(async () => {
     await computer.close()
     await server.stop(true)
-    rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
+    await removeFolder(profile)
   })
 
   test('fills the username and password of a plain form and leaves other fields alone', async () => {

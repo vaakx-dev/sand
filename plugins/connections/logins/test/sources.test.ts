@@ -156,7 +156,7 @@ test("Settings shows each vault's status, unlocks Bitwarden with the master pass
   } finally {
     await sand.stop()
   }
-}, 60_000)
+})
 
 const script = `const hash = text => new Bun.CryptoHasher('sha256').update(text).digest('hex')
 const { TOKEN = '', API = '', NOTE = '', USER = '' } = process.env
@@ -234,4 +234,4 @@ test('a thread fills, enters codes and passes keys from Bitwarden, Secrets Manag
   }
   expect((await leaksIn(home, values)).found).toEqual([])
   expect(leaksInText(await storedData(home), Object.values(codes), { ...fetched, master: credentials.master })).toEqual([])
-}, 60_000)
+})

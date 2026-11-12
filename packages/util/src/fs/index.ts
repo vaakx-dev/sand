@@ -1,7 +1,7 @@
 export { packageExports, pluginContracts } from './exports'
 export { folderEntries } from './entries'
 export { errorCode, isMissing } from './errors'
-export { exists, isLink, removeQuietly } from './exists'
+export { exists, isLink, removeFolder, removeQuietly } from './exists'
 export { isFolder } from './folder'
 export { fileHash } from './hash'
 export { expandHome } from './home'
