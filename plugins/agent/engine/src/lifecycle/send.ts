@@ -45,7 +45,7 @@ export const createSend = <C extends Conversation>(ctx: EngineContext, { convers
     const earlier = stores.receipts.get(conversation, input.clientRequestId)
     if (earlier) return earlier
     recover()
-    const held = conversations.held?.(conversation) || (await ctx.bail(turnHold, conversation, input.origin ?? 'user'))
+    const held = conversations.held?.(conversation) || (await ctx.bail(turnHold, conversation, input.origin ?? 'user', 'send'))
     const routing: SendInput = held ? { ...input, mode: 'queue' } : input
     const opening = held || stores.turns.current(conversation) ? undefined : await opener.prepare(conversation, input.prompt, input.origin ?? 'user')
     const routed = store(conversation, routing, opening)

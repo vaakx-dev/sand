@@ -1,5 +1,5 @@
 import { noteBlock } from '@sand/chats/contract'
-import { type ConversationRef, engine, turnClose, turnHold, turnOpen } from '@sand/engine/contract'
+import { type Conversation, type ConversationRef, engine, type HoldStep, turnClose, turnHold, turnOpen, type TurnOrigin } from '@sand/engine/contract'
 import { scheduleChange, scheduleRemove, schedules, type Schedule } from '@sand/schedules/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
@@ -25,14 +25,26 @@ export default definePlugin({
       await sent?.catch(error => ctx.report(error))
     }
 
-    ctx.effect(() => ctx.schedules.handle(plans.owner, (schedule, fire) => resume(plans.plannedOf(schedule.data), fire.key)))
+    const hold = (conversation: Conversation, origin: TurnOrigin, step: HoldStep) => {
+      const found = plans.of(conversation)
+      if (!found || origin === 'resume') return undefined
+      if (!found.resume && origin === 'user' && step === 'send') plans.forget(conversation)
+      return true
+    }
+
+    ctx.effect(() =>
+      ctx.schedules.handle(plans.owner, async (schedule, fire) => {
+        const found = plans.plannedOf(schedule.data)
+        if (found.resume) await resume(found, fire.key)
+      }),
+    )
     ctx.on(scheduleChange, announce)
     ctx.on(scheduleRemove, announce)
     ctx.on(turnOpen, conversation => plans.forget(conversation))
     ctx.on(turnClose, (conversation, { stopReason, resetsAt }, turn) => {
-      if (stopReason === 'limited' && resetsAt && resetsAt > Date.now()) plans.plan(conversation, turn.id, resetsAt)
+      if (stopReason === 'limited' && resetsAt && resetsAt > Date.now()) plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: resetsAt })
     })
-    ctx.on(turnHold, (conversation, origin) => (origin !== 'resume' && plans.waiting(conversation)) || undefined)
+    ctx.on(turnHold, hold)
     ctx.watch(server, found => found && joinDisposers(found.hello(helloResumes, plans.list), found.handle(resumeCancel, ({ turn }) => plans.cancel(turn))))
   },
 })

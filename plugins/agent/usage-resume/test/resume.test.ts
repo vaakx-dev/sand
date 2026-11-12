@@ -60,16 +60,32 @@ test('a chat out of usage keeps what is sent meanwhile, continues at the reset, 
   expect(sent()).toEqual(['Start', continued, 'And this'])
 })
 
-test('cancelling a chatâ€™s resume keeps it stopped and lets what waited go out now', async () => {
-  sand = await start([[said('Half'), limit(60_000)], [said('Answered.')]])
+test('cancelling a chat’s resume keeps what waits until the reset, then sends it without continuing', async () => {
+  sand = await start([[said('Half'), limit(2_500)], [said('Answered.')]])
   const chat = sand.chat('fake/m')
   await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
   const [stopped] = await ended(chat, 1)
   await sand.turns.send(chat, { prompt: 'And this', clientRequestId: 'two' })
 
   await sand.ask(resumeCancel, { turn: stopped!.id })
+  await Bun.sleep(1_000)
+  expect(sent()).toEqual(['Start'])
+
   await ended(chat, 2)
   expect(sent()).toEqual(['Start', then])
+})
+
+test('after cancelling, the owner sending again lets what waited go out first', async () => {
+  sand = await start([[said('Half'), limit(60_000)], [said('Answered.')], [said('Done.')]])
+  const chat = sand.chat('fake/m')
+  await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
+  const [stopped] = await ended(chat, 1)
+  await sand.turns.send(chat, { prompt: 'And this', clientRequestId: 'two' })
+  await sand.ask(resumeCancel, { turn: stopped!.id })
+
+  await sand.turns.send(chat, { prompt: 'Try now', clientRequestId: 'three' })
+  await ended(chat, 3)
+  expect(sent()).toEqual(['Start', then, 'Try now'])
 })
 
 test('without a reset time a chat does not wait or resume', async () => {

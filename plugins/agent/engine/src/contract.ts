@@ -179,7 +179,9 @@ export const entryViews = service<EntryViews>('entryViews')
 
 export const turnOpen = event<(conversation: Conversation, turn: TurnInfo) => void>('conversation.turn.open')
 
-export const turnHold = event<(conversation: Conversation, origin: TurnOrigin) => true | undefined>('conversation.turn.hold')
+export type HoldStep = 'send' | 'dispatch'
+
+export const turnHold = event<(conversation: Conversation, origin: TurnOrigin, step: HoldStep) => true | undefined>('conversation.turn.hold')
 
 export const turnClose = event<(conversation: Conversation, result: TurnResult, turn: TurnInfo) => void>('conversation.turn.close')
 
