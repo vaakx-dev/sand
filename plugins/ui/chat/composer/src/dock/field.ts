@@ -71,7 +71,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
   const escape = () => {
     if (hasOpenLayer()) return false
     if (dismiss()) return true
-    if (!model.running.get()) return false
+    if (!model.stoppable.get()) return false
     void model.target.interrupt().catch(error => model.fail(errorMessage(error)))
     return true
   }

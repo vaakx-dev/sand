@@ -34,7 +34,7 @@ const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
   const delivery = model.delivery.get()
   if (delivery === 'unreachable' || model.blocked.get() || model.holds.reason.get()) return 'off'
-  if (model.empty.get()) return model.running.get() && delivery === 'now' ? 'stop' : 'off'
+  if (model.empty.get()) return model.stoppable.get() && delivery === 'now' ? 'stop' : 'off'
   return model.running.get() ? 'steer' : 'send'
 }
 

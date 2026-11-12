@@ -11,7 +11,7 @@ const usage = [
   'sand thread wait <id>                   wait until the thread is done or waits on you',
   'sand thread show <id>                   print what the thread said',
   'sand thread list                        list threads on all your reachable PCs, newest first',
-  'sand thread stop <id>                   stop the running turn',
+  'sand thread stop <id>                   stop its turn and background commands',
   '                                        exit codes: 0 done, 1 failed, 2 usage, 3 waiting on you, 130 interrupted',
 ].join('\n')
 
