@@ -198,7 +198,6 @@ export const shellModel = (kit: Kit) => {
     const at = shown.indexOf(top)
     return at < 0 ? undefined : shown[at + 1]
   }
-  const bottomAside = () => (coverAside.get() ? undefined : shownAsides.get().find(spec => axisOf(spec) === 'y'))
 
   const subjectOf = (route: Route) => subjects.get().reduce<ReturnType<SubjectSource>>((found, source) => found ?? source(route), undefined)
   effect(() => {
@@ -224,7 +223,6 @@ export const shellModel = (kit: Kit) => {
     pull,
     axisOf,
     nextRight,
-    bottomAside,
     coverAside,
     covered,
     drawerReach,

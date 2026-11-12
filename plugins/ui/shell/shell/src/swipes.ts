@@ -71,7 +71,6 @@ const openingSwipe = (model: Model, way: Way) => {
     case 'left':
       return pullTo(model, model.nextRight())
     case 'up':
-      return pullTo(model, model.bottomAside())
     case 'down':
       return undefined
   }

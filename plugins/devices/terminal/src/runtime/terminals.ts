@@ -35,7 +35,6 @@ interface Terminal {
   cwd: string
   history: History
   viewers: Map<string, Viewer>
-  grid: Size
   pty?: Pty
   exit?: Exit
   primary?: string
@@ -81,8 +80,8 @@ export const createTerminals = (pc: Pc, outbox: Outbox, later: Later) => {
 
   const fitGrid = (terminal: Terminal) => {
     const grid = sharedGrid(terminal.viewers.values())
-    if (!grid || sameSize(grid, terminal.grid)) return
-    terminal.grid = grid
+    if (!grid || sameSize(grid, terminal.history.grid())) return
+    terminal.history.resize(grid)
     terminal.pty?.resize(grid)
     for (const { caller } of terminal.viewers.values()) if (caller) outbox.tell(caller, terminalGrid, { id: terminal.id, ...grid })
   }
@@ -114,7 +113,7 @@ export const createTerminals = (pc: Pc, outbox: Outbox, later: Later) => {
     if (!primary?.caller) terminal.primary = id
     fitGrid(terminal)
     schedule(terminal)
-    return { grid: terminal.grid, ...(terminal.exit && { exit: terminal.exit }) }
+    return { grid: terminal.history.grid(), ...(terminal.exit && { exit: terminal.exit }) }
   }
 
   const remove = (terminal: Terminal) => {
@@ -125,7 +124,7 @@ export const createTerminals = (pc: Pc, outbox: Outbox, later: Later) => {
   }
 
   const start = (session: string, cwd: string, size: Size) => {
-    const terminal: Terminal = { id: crypto.randomUUID(), session, cwd, history: createHistory(limits.history), viewers: new Map(), grid: size, flushing: false, flushed: 0 }
+    const terminal: Terminal = { id: crypto.randomUUID(), session, cwd, history: createHistory(limits.history, size), viewers: new Map(), flushing: false, flushed: 0 }
     terminal.pty = pc.spawn(cwd, size, {
       output(text) {
         terminal.history.append(text)

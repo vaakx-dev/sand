@@ -18,15 +18,17 @@ export const take = (id: string, history: History, viewer: Viewer): Frame | unde
   if (viewer.sent >= end || room <= 0) return undefined
   if (viewer.sent < history.start() || end - viewer.sent > limits.snapshot) {
     if (viewer.sent !== viewer.acked) return undefined
-    const data = withoutQueries(history.tail(limits.snapshot))
-    viewer.sent = end
-    viewer.acked = end - data.length
-    return { id, data, end, reset: true }
+    const from = history.recent(limits.snapshot)
+    const to = history.cut(from, limits.snapshot)
+    const data = withoutQueries(history.read(from, to))
+    viewer.sent = to
+    viewer.acked = to - data.length
+    return { id, data, end: to, grid: history.gridAt(from), reset: true }
   }
-  const to = history.cut(viewer.sent, Math.min(limits.frame, room))
-  const data = history.read(viewer.sent, to)
+  const from = viewer.sent
+  const to = history.cut(from, Math.min(limits.frame, room))
   viewer.sent = to
-  return { id, data, end: to }
+  return { id, data: history.read(from, to), end: to, grid: history.gridAt(from) }
 }
 
 export const sharedGrid = (viewers: Iterable<Viewer>): Size | undefined => {

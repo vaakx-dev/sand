@@ -35,6 +35,8 @@ export const createScreen = (colors: ITheme, events: ScreenEvents) => {
     if (size && size.cols > 0 && size.rows > 0) events.propose({ cols: size.cols, rows: size.rows })
   }
 
+  const afterWrites = (run: () => void) => terminal.write('', run)
+
   const open = (node: HTMLElement) => {
     terminal.options.fontFamily = getComputedStyle(node).fontFamily
     terminal.open(host)
@@ -54,11 +56,12 @@ export const createScreen = (colors: ITheme, events: ScreenEvents) => {
         if (host.parentNode === node) host.remove()
       }
     },
-    grid({ cols, rows }: Size) {
-      if (cols !== terminal.cols || rows !== terminal.rows) terminal.resize(cols, rows)
-    },
+    grid: ({ cols, rows }: Size) =>
+      afterWrites(() => {
+        if (cols !== terminal.cols || rows !== terminal.rows) terminal.resize(cols, rows)
+      }),
     write: (text: string, done?: () => void) => terminal.write(text, done),
-    reset: () => terminal.reset(),
+    reset: () => afterWrites(() => terminal.reset()),
     note: (text: string) => terminal.write(`\r\n\x1b[2m${text}\x1b[0m\r\n`),
     paste: (text: string) => terminal.paste(text),
     focus: () => terminal.focus(),

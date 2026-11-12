@@ -166,6 +166,32 @@ test('the shell takes the size of the smallest page showing it, and grows back w
   expect(shell.size).toEqual({ cols: 160, rows: 40 })
 })
 
+test('a page that missed output while the shell was resized gets each part with the size it was drawn at', async () => {
+  const fixture = setup()
+  const laptop = page()
+  const phone = page('phone')
+  const id = await opened(fixture, laptop)
+  const shell = fixture.shells[0]!
+  const wide = { cols: 160, rows: 40 }
+  const narrow = { cols: 44, rows: 40 }
+  fixture.terminals.resize({ id, viewer: 'v1', ...wide }, laptop)
+  fixture.terminals.attach({ id, viewer: 'phone', from: null, cols: 44, rows: 50 }, phone)
+  shell.events.output('$ ')
+  fixture.tick()
+  const screen = createScreen()
+  screen.apply(fixture.framesFor(phone))
+
+  fixture.terminals.detach({ id, viewer: 'phone' }, phone)
+  shell.events.output('drawn wide')
+  fixture.terminals.attach({ id, viewer: 'phone', from: screen.offset(), cols: 44, rows: 50 }, phone)
+  shell.events.output('drawn narrow')
+  fixture.tick()
+  expect(fixture.framesFor(phone).map(({ data, grid }) => [data, grid])).toEqual([
+    ['drawn wide', wide],
+    ['drawn narrow', narrow],
+  ])
+})
+
 test('an exited shell drains its last output, says where it ended, and stays listed until closed', async () => {
   const fixture = setup()
   const caller = page()

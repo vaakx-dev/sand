@@ -2,8 +2,10 @@ import { expect, test } from 'bun:test'
 import { createHistory } from '../src/runtime/history'
 import { withoutQueries } from '../src/runtime/replay'
 
+const grid = { cols: 80, rows: 24 }
+
 test('keeps the most recent output under its limit, read by absolute offsets', () => {
-  const history = createHistory(10)
+  const history = createHistory(10, grid)
   history.append('abcdef')
   history.append('ghijkl')
   expect([history.start(), history.end()]).toEqual([2, 12])
@@ -12,15 +14,28 @@ test('keeps the most recent output under its limit, read by absolute offsets', (
 })
 
 test('never cuts a frame inside a character, and starts a recent screen at a line', () => {
-  const history = createHistory(100)
+  const history = createHistory(100, grid)
   history.append('ab😀')
   expect(history.cut(0, 3)).toBe(2)
   expect(history.cut(0, 4)).toBe(4)
 
-  const lines = createHistory(12)
+  const lines = createHistory(12, grid)
   lines.append('first\nsecond\nthird\n')
-  expect(lines.tail(12)).toBe('third\n')
-  expect(createHistory(100).tail(5)).toBe('')
+  expect(lines.read(lines.recent(12), lines.end())).toBe('third\n')
+  expect(createHistory(100, grid).recent(5)).toBe(0)
+})
+
+test('remembers the size each part of the output was drawn at, and never cuts a frame across a resize', () => {
+  const narrow = { cols: 40, rows: 12 }
+  const history = createHistory(10, grid)
+  history.append('wide')
+  history.resize(narrow)
+  history.append('narrow')
+  expect([history.gridAt(0), history.gridAt(4), history.grid()]).toEqual([grid, narrow, narrow])
+  expect(history.cut(0, 100)).toBe(4)
+  expect(history.cut(4, 100)).toBe(10)
+  history.append('more')
+  expect(history.gridAt(history.start())).toEqual(narrow)
 })
 
 test('replays leave out questions the terminal would answer, and keep everything that draws', () => {
