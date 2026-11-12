@@ -1,5 +1,5 @@
 import { advanced } from '@sand/advanced/contract'
-import { botAutomations, botName, botProfile, botRoute, botTabs, botViews, changeEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type ChangeEntry } from '@sand/bots/contract'
+import { botAutomations, botName, botProfile, botRoster, botRoute, botTabs, botViews, changeEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type ChangeEntry } from '@sand/bots/contract'
 import { modelTargets } from '@sand/model-panel/contract'
 import { palette, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -65,6 +65,7 @@ export default definePlugin({
     }
 
     ctx.provide(botViews, { open: parts.open })
+    ctx.provide(botRoster, { list: () => parts.store.bots.get() ?? [], find: parts.store.find })
     ctx.provide(botTabs, { source: tabSources.add })
     ctx.provide(botProfile, { section: sections.add })
     ctx.provide(botAutomations, { source: automationSources.add })

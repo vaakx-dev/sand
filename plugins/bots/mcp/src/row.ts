@@ -1,5 +1,15 @@
-import { botName, type BotSummary } from '@sand/bots/contract'
-import type { BotRow } from './contract'
+import { type BotHold, botName, type BotStatus, type BotSummary } from '@sand/bots/contract'
+
+export interface BotRow {
+  bot: string
+  name: string
+  job: string
+  status: BotStatus
+  hold?: BotHold
+  projects: string[]
+  budget: number | null
+  spent: number
+}
 
 const jobLength = 200
 

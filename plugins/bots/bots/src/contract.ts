@@ -159,6 +159,13 @@ export interface BotViews {
 
 export const botViews = service<BotViews>('botViews')
 
+export interface BotRoster {
+  list(): BotSummary[]
+  find(id: string): BotSummary | undefined
+}
+
+export const botRoster = service<BotRoster>('botRoster')
+
 export interface BotTab {
   ref: string
   title: string
@@ -228,11 +235,7 @@ export const helloBots = helloField<BotSummary[]>('bots')
 
 const one = lazy(() => z.object({ bot: z.string() }))
 
-export const botList = request('bot.list', { input: () => z.object({}), output: type<BotSummary[]>() })
+export const botList = request('bot.list', { input: () => z.object({}), output: type<BotSummary[]>(), callers: 'any' })
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>() })
 export const botUpdate = request('bot.update', { input: () => z.object({ bot: z.string().optional(), patch: botPatch() }), output: type<BotSummary>(), callers: 'any' })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>() })
-export const botConversation = request('bot.conversation', {
-  input: () => one().extend({ before: z.number().int().optional(), after: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),
-  output: type<EntryPage>(),
-})

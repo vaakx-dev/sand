@@ -1,5 +1,5 @@
-import { botConversation, botCreate, botList, type BotEntry } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
+import { botCreate, botList, type BotEntry } from '@sand/bots/contract'
+import { botOpen, botSend } from '@sand/bot-turns/contract'
 import { calendarAgenda, calendarCreate } from '@sand/calendar/contract'
 import { textOf, type Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -46,7 +46,7 @@ test('a bot adds an event to the calendar and reads its agenda back', async () =
 
   const [lunch] = await ask(calendarAgenda, { from: Date.parse('2026-11-13T00:00Z'), to: Date.parse('2026-11-14T00:00Z'), zone })
   expect(lunch).toMatchObject({ title: 'Lunch with Ana', location: 'Café Luna', start: { time: '2026-11-13T13:00:00', zone }, end: { time: '2026-11-13T14:00:00', zone } })
-  const [added, agenda] = results((await ask(botConversation, { bot: bot.id })).entries)
+  const [added, agenda] = results((await ask(botOpen, { bot: bot.id })).entries)
   expect(added).toMatch(/^Added "Lunch with Ana", Fri, 13 Nov 2026 \d\d:00–\d\d:00 \[id [\w-]+\]$/)
   expect(agenda).toContain(`Lunch with Ana (Café Luna) [id ${lunch!.id}]`)
 })

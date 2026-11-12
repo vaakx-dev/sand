@@ -1,5 +1,5 @@
 import { memoryWrite } from '@sand/bot-memory/contract'
-import { botConversation, botCreate, botDelete, botList, type BotEntry, type BotStatus } from '@sand/bots/contract'
+import { botCreate, botDelete, botList, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botOpen, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
 import { contextChange, contextGet } from '@sand/compaction/contract'
@@ -37,7 +37,7 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   const bot = await ask(botCreate, { name: 'Calendar', job: 'Keep my calendar.', projects: ['family', '0b6c2e1a'], models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
   await ask(memoryWrite, { bot: bot.id, text: 'Gym on Mondays.' })
 
-  expect(await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana is every Friday', clientRequestId: 'one' })).toMatchObject({ disposition: 'started' })
+  expect(await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana is every Friday', clientRequestId: 'one' })).toMatchObject({ bot: bot.id, status: 'running' })
   expect(await settled(bot.id)).toMatchObject({ status: 'idle', last: { role: 'assistant', text: 'Noted.' } })
 
   const [first] = requests('fake').map(body => JSON.parse(body))
@@ -52,7 +52,7 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(system).toContain(`- tiles (id 0b6c2e1a): ${resolve('work', 'tiles')}`)
   expect(first.messages).toEqual([{ role: 'user', content: [expect.objectContaining(said('Lunch with Ana is every Friday'))] }])
 
-  const { entries } = await ask(botConversation, { bot: bot.id })
+  const { entries } = await ask(botOpen, { bot: bot.id })
   expect(messages(entries).map(message => message.role)).toEqual(['user', 'assistant'])
   expect(sand.sessions.list()).toEqual([])
 })
@@ -81,7 +81,7 @@ test('a failed turn marks the bot failed, and deleting a bot forgets its turns',
   for (let tries = 0; tries < 200 && (await ask(botList, {})).find(listed => listed.id === bot.id)?.status !== 'failed'; tries++) await Bun.sleep(10)
 
   expect((await ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ status: 'failed', last: { role: 'user', text: 'Buy milk' } })
-  const { entries } = await ask(botConversation, { bot: bot.id })
+  const { entries } = await ask(botOpen, { bot: bot.id })
   expect(entries.at(-1)).toMatchObject({ type: 'turn-ending', data: { stopReason: 'error' } })
 
   expect(await ask(botDelete, { bot: bot.id })).toBe(true)

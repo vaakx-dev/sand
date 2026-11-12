@@ -1,4 +1,5 @@
-import { botConversation, botList } from '@sand/bots/contract'
+import { botOpen } from '@sand/bot-turns/contract'
+import { botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Computer, Fill, Filled } from '@sand/computers/contract'
 import { computers } from '@sand/computers/contract'
@@ -63,7 +64,7 @@ type Entries = () => Promise<{ type: string; data: unknown }[]> | { type: string
 
 export const threadEntries = (sand: Sand, id: string) => () => sand.sessions.require(id).path()
 
-export const botEntries = (sand: Sand, bot: string) => async () => (await sand.ask(botConversation, { bot, limit: 500 })).entries
+export const botEntries = (sand: Sand, bot: string) => async () => (await sand.ask(botOpen, { bot, limit: 500 })).entries
 
 export const answer = async <I>(sand: Sand, session: string, entries: Entries, type: string, request: Request<I, unknown>, reply: (id: string) => I) => {
   const id = await until(async () => {

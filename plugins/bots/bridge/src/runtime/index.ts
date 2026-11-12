@@ -11,8 +11,6 @@ import { threadLinks } from './links'
 import { routeMentions } from './mention'
 import { replyView } from './view'
 
-const soleProject = (projects: string[]) => (projects.length === 1 ? projects[0] : undefined)
-
 export default definePlugin({
   name: 'bot-bridge',
   description:
@@ -22,14 +20,6 @@ export default definePlugin({
     ctx.on(sessionEntry, routeMentions(ctx))
     ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ctx.botTurns)))
     ctx.on(threadStarted, (thread, { owner, id }) => void (owner === 'bot' && ctx.get(server)?.broadcast(botStartedWire, [thread, id])))
-    ctx.effect(() =>
-      ctx.orchestrator.owner('bot', {
-        deliver: (bot, { text, clientRequestId }) => ctx.bots.get(bot) && ctx.botTurns.send(bot, { prompt: text, origin: 'job', clientRequestId }),
-        label: bot => ctx.bots.get(bot)?.name || undefined,
-        history: bot => (ctx.bots.get(bot) ? ctx.bots.conversation(bot).entries() : undefined),
-        project: bot => soleProject(ctx.bots.get(bot)?.projects ?? []),
-      }),
-    )
     ctx.on(promptSections, (sections, conversation) => (conversation.owner === 'bot' ? [...sections, threadLinks] : sections))
     ctx.watch(contextKinds, found => found?.register(botContext(ctx.bots)))
     ctx.watch(server, found => found?.handle(botStarts, () => ctx.orchestrator.started('bot')))

@@ -1,13 +1,17 @@
 import { botChange, botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
+import { ledger } from '@sand/ledger/contract'
+import { orchestrator } from '@sand/orchestrator/contract'
 import { projectFiles } from '@sand/project/contract'
 import { context } from '@sand/prompt/contract'
 import { stepPrepare } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
+import { createAsks } from './ask'
+import { botOwner } from './owner'
 import { botBrief, offered } from './brief'
-import { botInterrupt, botOpen, botPendingWire, botSend, botStreamWire, botTurns } from './contract'
+import { botAwait, botInterrupt, botOpen, botPendingWire, botSend, botStreamWire, botTurns, type BotTurns, waitLimit } from './contract'
 import { conversationOf } from './conversation'
 import { createLive } from './live'
 import { finalReply } from './reply'
@@ -16,7 +20,7 @@ import { botConversations, inject } from './runner'
 export default definePlugin({
   name: 'bot-turns',
   description: "Runs each bot's turns on the shared engine, with its job and memory as instructions and its main model",
-  inject: { ...inject, engine, context },
+  inject: { ...inject, engine, context, ledger },
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
@@ -34,12 +38,15 @@ export default definePlugin({
       if (!conversation) throw new Error(`No bot ${bot}`)
       return conversation
     }
-    ctx.provide(botTurns, {
+    const turns: BotTurns = {
       send: (bot, input) => runner.send(open(bot), input),
       ended: (turn, signal) => runner.wait(turn, 'end', signal),
       follow: (bot, sent, signal) => runner.follow(open(bot), sent, signal),
       final: finalReply(ctx.bots, ctx.engine),
-    })
+    }
+    ctx.provide(botTurns, turns)
+    const asks = createAsks(ctx, ctx.bots, turns, ctx.ledger)
+    ctx.watch(orchestrator, found => found?.owner('bot', botOwner(ctx.bots, turns)))
 
     ctx.on(botChange, bot => {
       if (bot.hold) runner.interrupt(conversationOf(ctx.bots, bot.id))
@@ -52,10 +59,11 @@ export default definePlugin({
     ctx.watch(server, found => {
       if (!found) return
       return joinDisposers(
-        found.handle(botSend, ({ bot, prompt, clientRequestId }) => runner.send(open(bot), { prompt, clientRequestId })),
+        found.handle(botSend, (asking, { actor }) => asks.send(asking, actor)),
+        found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => asks.wait(bot, turn, AbortSignal.timeout(timeoutMs))),
         found.handle(botInterrupt, ({ bot }) => runner.interrupt(open(bot))),
-        found.handle(botOpen, ({ bot, after }) => ({
-          ...ctx.bots.conversation(bot).page({ after }),
+        found.handle(botOpen, ({ bot, ...range }) => ({
+          ...ctx.bots.conversation(bot).page(range),
           live: live.snapshot(bot),
           pending: runner.pending(open(bot)),
         })),

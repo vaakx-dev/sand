@@ -46,7 +46,7 @@ test('pausing a bot stops its turn, and what is sent to it meanwhile waits until
 
   expect(await sand.ask(botUpdate, { bot: bot.id, patch: { paused: true } })).toMatchObject({ paused: true, hold: 'paused' })
   await until(bot.id, found => found.status === 'idle')
-  expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Then this', clientRequestId: 'two' })).toMatchObject({ disposition: 'queued' })
+  expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Then this', clientRequestId: 'two' })).toEqual({ bot: bot.id, status: 'queued' })
   await Bun.sleep(sweep)
   expect(sand.requests('fake')).toHaveLength(1)
   expect((await sand.ask(botOpen, { bot: bot.id })).pending).toEqual([expect.objectContaining({ kind: 'queue', prompt: 'Then this' })])
@@ -74,7 +74,7 @@ test('a bot that spends its monthly limit in API money holds new work and says s
   expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ spent: 3, hold: 'limit' })
   expect(told).toEqual([expect.objectContaining({ kind: 'paused', title: 'Travel' })])
 
-  expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Book it', clientRequestId: 'two' })).toMatchObject({ disposition: 'queued' })
+  expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Book it', clientRequestId: 'two' })).toEqual({ bot: bot.id, status: 'queued' })
   await Bun.sleep(sweep)
   expect(sand.requests('fake')).toHaveLength(1)
 

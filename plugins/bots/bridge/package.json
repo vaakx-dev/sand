@@ -16,7 +16,6 @@
   "dependencies": {
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
-    "@sand/bots-mcp": "workspace:*",
     "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",

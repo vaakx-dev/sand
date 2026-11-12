@@ -1,6 +1,6 @@
-import { botSend } from '@sand/bot-turns/contract'
+import { botOpen, botSend } from '@sand/bot-turns/contract'
 import { routineDelete, routineList, routinePause } from '@sand/bot-routines/contract'
-import { botConversation, botCreate, botDelete, botList, type BotEntry } from '@sand/bots/contract'
+import { botCreate, botDelete, botList, type BotEntry } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { engine } from '@sand/engine/contract'
@@ -79,7 +79,7 @@ test('a bot sets a reminder, and when it is due the bot gets a routine turn in i
   expect(prompt).toStartWith(`<task-notification>\n<routine>${routine!.id}</routine>\n<kind>reminder</kind>\n<label>Call Ana</label>\n<status>due</status>`)
   expect(prompt).toContain(`<at>${timestamp(at('2026-11-04T18:00:00Z'))}</at>`)
   expect(prompt).toContain('<instructions>\nRemind the user to call Ana about lunch\n</instructions>')
-  const { entries } = await ask(botConversation, { bot: bot.id })
+  const { entries } = await ask(botOpen, { bot: bot.id })
   const fired = userMessages(entries).at(-1)!
   expect(textOf((fired.data as Message).content)).toBe(prompt)
   expect(sand.app.get(engine)!.turn('bot', fired.turn!)?.origin).toBe('routine')

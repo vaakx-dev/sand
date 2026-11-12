@@ -1,23 +1,26 @@
-import { botList, botName, type BotSummary } from '@sand/bots/contract'
-import { derive, div, resource, show, type Derive, type Sig } from '@vaakx-dev/vrui'
+import { botName, type BotSummary } from '@sand/bots/contract'
+import { derive, div, dynamicChild, show, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { Login } from '../../contract'
 import { task } from '../task'
 import type { LoginPatch, PageParts } from './model'
-import { loadedRows, rowProblem } from './parts'
+import { rowProblem } from './parts'
 
 const toggled = (list: string[], id: string) => (list.includes(id) ? list.filter(other => other !== id) : [...list, id])
 
-const botRows = ({ kit, wire, bots: botsOn }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
-  if (!botsOn()) return kit.settingsRow({ title: 'Bots are off', detail: 'Turn on Bots in Settings → Features to choose which bots can use this login.' })
-  const bots = resource(() => wire.call(botList, {}))
-  const listed = derive(() => bots.data.get() ?? [])
+const botRows = ({ kit, bots }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
+  const roster = bots()
+  if (!roster) return kit.settingsRow({ title: 'Bots are off', detail: 'Turn on Bots in Settings → Features to choose which bots can use this login.' })
+  const listed = derive(() => roster.list())
   const botRow = (bot: Sig<BotSummary>) =>
     kit.checkRow({
       title: () => botName(bot.get()),
       checked: () => login.get().bots.includes(bot.get().id),
       onToggle: () => change({ bots: toggled(login.get().bots, bot.get().id) }),
     })
-  return loadedRows(kit, bots, listed, 'No bots yet. Make one in the Bots space, then choose it here.', () => kit.rowList(listed, bot => bot.id, botRow))
+  return dynamicChild(
+    derive(() => listed.get().length > 0),
+    some => (some ? kit.rowList(listed, bot => bot.id, botRow) : kit.emptyState({ flush: true, text: 'No bots yet. Make one in the Bots space, then choose it here.' })),
+  )
 }
 
 const threadRows = ({ kit, threads }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {

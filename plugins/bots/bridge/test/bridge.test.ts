@@ -1,6 +1,6 @@
-import { botCreate, botConversation, type BotEntry } from '@sand/bots/contract'
+import { botCreate, type BotEntry } from '@sand/bots/contract'
 import { botStarts, type BotReplyEntry } from '@sand/bot-bridge/contract'
-import { botAwait } from '@sand/bots-mcp/contract'
+import { botAwait, botOpen } from '@sand/bot-turns/contract'
 import { type Entry, type Message, type Session, textOf, type UserContent } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -98,7 +98,7 @@ const seenIn = (request: string) =>
 
 const textsOf = (messages: Message[]) => messages.map(message => textOf(message.content))
 
-const botTexts = async (bot: string) => textsOf(userMessages((await sand.ask(botConversation, { bot })).entries))
+const botTexts = async (bot: string) => textsOf(userMessages((await sand.ask(botOpen, { bot })).entries))
 
 const noticeIn = async (texts: () => string[] | Promise<string[]>) => {
   for (let tries = 0; tries < 300; tries++) {
@@ -118,7 +118,7 @@ test('a thread hands a bot a task without waiting and hears its reply, and an @ 
 
   expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', projects: [], budget: null, spent: 0 }])
   expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', reported: true })
-  const [asked] = userMessages((await sand.ask(botConversation, { bot: bot.id })).entries)
+  const [asked] = userMessages((await sand.ask(botOpen, { bot: bot.id })).entries)
   expect(textOf(asked!.content)).toContain("from the agent working in the user's thread")
   expect(recordsOf(asked!)).toEqual([expect.objectContaining({ kind: 'thread', data: { id: thread.id, sent: true } })])
   const notice = await noticeIn(() => textsOf(userMessages(thread.path())))
