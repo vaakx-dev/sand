@@ -1,23 +1,23 @@
 import { toastsOf } from '@sand/toasts/contract'
 import type { PendingItem } from '@sand/turns-contract/contract'
-import type { OutboxItem, Thread } from '@sand/web-client/contract'
+import { sendingCaption, type Sending } from '@sand/composer/contract'
+import type { Thread } from '@sand/web-client/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { type Entry, promptContent, userParts } from '@sand/chats/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { Item, Row, Rows } from '@sand/transcript/contract'
 import type { ChatContext } from '../context'
 
-type Look = 'sending' | 'steer' | 'queued' | 'held'
+type Look = 'steer' | 'queued' | 'held'
 
 interface Shown {
   item: Pick<PendingItem, 'id' | 'prompt' | 'at'>
-  look: Look
+  caption?: string
   actions: MenuAction[]
   resume?: MenuAction
 }
 
 const captions: Record<Look, string | undefined> = {
-  sending: 'Sending…',
   steer: undefined,
   queued: 'Queued for the next turn',
   held: 'Held — the turn stopped before this was sent',
@@ -56,19 +56,23 @@ const note = (ctx: ChatContext, caption: string, resume: MenuAction | undefined)
 const queuedOf = (ctx: ChatContext, thread: Thread, pending: PendingItem): Shown => {
   const look = lookOf(pending)
   const resume = look === 'held' ? resumeAction(ctx, thread, pending) : undefined
-  return { item: pending, look, resume, actions: [...(resume ? [resume] : []), removeAction(ctx, thread, pending)] }
+  return { item: pending, caption: captions[look], resume, actions: [...(resume ? [resume] : []), removeAction(ctx, thread, pending)] }
 }
 
-const sendingOf = (item: OutboxItem): Shown => ({ item, look: 'sending', actions: [] })
+const sendingOf = (sending: Sending): Shown => ({ item: sending, caption: sendingCaption(sending), actions: [] })
 
-const rowsOf = (ctx: ChatContext, thread: Thread, { item, look, actions, resume }: Shown, rows: Rows): Row[] => {
-  const caption = captions[look]
-  const entry: Entry = { id: item.id, session: thread.id, parent: null, at: item.at, type: 'message', data: null, seq: 0 }
-  const key = [item.id, look, resume?.label].filter(Boolean).join(':')
+const rowsOf = (ctx: ChatContext, session: string, { item, caption, actions, resume }: Shown, rows: Rows): Row[] => {
+  const entry: Entry = { id: item.id, session, parent: null, at: item.at, type: 'message', data: null, seq: 0 }
+  const key = [item.id, caption, resume?.label].filter(Boolean).join(':')
   const shown = (part: Item) =>
     part.kind === 'user' ? [rows.user({ ...part, key }, () => actions, caption ? note(ctx, caption, resume) : undefined)] : rows.item(part)
   return ctx.transcriptParts.prompt(entry, userParts({ role: 'user', content: promptContent(item.prompt) })).flatMap(shown)
 }
 
-export const pendingRows = (ctx: ChatContext, thread: Thread, rows: Rows): Row[] =>
-  [...thread.pending.map(pending => queuedOf(ctx, thread, pending)), ...thread.sending.map(sendingOf)].flatMap(shown => rowsOf(ctx, thread, shown, rows))
+export const sendingRows = (ctx: ChatContext, session: string, rows: Rows, sending: Sending | undefined): Row[] =>
+  sending?.conversation === session ? rowsOf(ctx, session, sendingOf(sending), rows) : []
+
+export const pendingRows = (ctx: ChatContext, thread: Thread, rows: Rows, sending: Sending | undefined): Row[] => [
+  ...thread.pending.flatMap(pending => rowsOf(ctx, thread.id, queuedOf(ctx, thread, pending), rows)),
+  ...sendingRows(ctx, thread.id, rows, sending),
+]

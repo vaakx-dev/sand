@@ -101,8 +101,17 @@ export interface DockOptions {
   placeholder?: () => string
 }
 
+export interface Sending {
+  id: string
+  conversation: string
+  prompt: Prompt
+  at: number
+  uploading: boolean
+}
+
 export interface ChatDock {
   view: HTMLElement
+  sending(): Sending | undefined
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
 }
 
@@ -131,6 +140,7 @@ export interface Composer {
   settings(): SessionSettings
   choose(patch: SettingsPatch): void
   dock(chat: Chat, options?: DockOptions): ChatDock
+  sending(): Sending | undefined
 }
 
 export interface Typing {
@@ -147,6 +157,8 @@ export interface Drafts {
   list(): ThreadDraft[]
   remove(id: string): void
 }
+
+export const sendingCaption = ({ uploading }: Sending) => (uploading ? 'Uploading files…' : 'Sending…')
 
 export const composer = service<Composer>('composer')
 export const drafts = service<Drafts>('drafts')

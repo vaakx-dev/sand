@@ -85,7 +85,7 @@ export default definePlugin({
         suggesters,
         placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
       }
-      return { view: dock(parts, field(parts)), slot: own.add }
+      return { view: dock(parts, field(parts)), slot: own.add, sending: () => model.shown.get() }
     }
 
     const settings = () => nextSettings(ctx, model.picked.get())
@@ -146,6 +146,7 @@ export default definePlugin({
       settings,
       choose,
       dock: chatDock,
+      sending: () => model.shown.get(),
     }
 
     session.start()

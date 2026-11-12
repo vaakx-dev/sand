@@ -15,6 +15,7 @@ export interface Target {
   delivery(): Delivery
   pcName(): string
   name(): string
+  conversation(): string | undefined
   chat(): ChatRef | undefined
   path(): Entry[]
   ready(picked: SessionSettings): boolean
@@ -30,6 +31,7 @@ export const chatTarget = (chat: Chat): Target => ({
   delivery: () => 'now',
   pcName: () => 'sand',
   name: chat.name,
+  conversation: () => chat.ref.id,
   chat: () => chat.ref,
   path: chat.path,
   ready: () => true,

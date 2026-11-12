@@ -59,7 +59,25 @@ export const chatView = (parts: ChatParts) => {
   const rowList = div({ class: 'pb-6' })
   const quote = ctx.transcriptParts.quoteJump(rowList)
   const surface = { conversation: id, menu, states: ctx.transcriptParts.openStates(), jump: (from: Element, text: string) => quote(rowList, from, text) }
-  const rows = chatRows(kit, ctx.transcriptParts, ctx.transcriptParts.rows(surface), talk, busy)
+  const dock = ctx.composer.dock(
+    {
+      ref: { owner: 'bot', id },
+      name: () => botName(bot() ?? { name: '' }),
+      skills: { bot: id },
+      running: busy,
+      path: () => talk.path.get(),
+      send: talk.send,
+      interrupt: talk.interrupt,
+      settings: () => effective(bot()?.models.main ?? {}, parts.defaults()),
+      choose: patch => {
+        const models = bot()?.models
+        if (models) parts.save({ models: { ...models, main: applyChoice(models.main, patch) } })
+      },
+    },
+    { placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
+  )
+  dock.slot('above', () => ctx.shell.chipBar({ owner: id }))
+  const rows = chatRows({ kit, parts: ctx.transcriptParts, rows: ctx.transcriptParts.rows(surface), talk, working: busy, sending: dock.sending })
   const state = derive(() => {
     if (talk.entries.get() === undefined) return talk.failure.get() ? 'failed' : 'loading'
     return rows.get().length || busy() ? 'rows' : 'empty'
@@ -94,24 +112,6 @@ export const chatView = (parts: ChatParts) => {
   )
   const follow = kit.followEnd(scroller)
 
-  const dock = ctx.composer.dock(
-    {
-      ref: { owner: 'bot', id },
-      name: () => botName(bot() ?? { name: '' }),
-      skills: { bot: id },
-      running: busy,
-      path: () => talk.path.get(),
-      send: talk.send,
-      interrupt: talk.interrupt,
-      settings: () => effective(bot()?.models.main ?? {}, parts.defaults()),
-      choose: patch => {
-        const models = bot()?.models
-        if (models) parts.save({ models: { ...models, main: applyChoice(models.main, patch) } })
-      },
-    },
-    { placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
-  )
-  dock.slot('above', () => ctx.shell.chipBar({ owner: id }))
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
   return div(

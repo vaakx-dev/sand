@@ -59,6 +59,7 @@ export const threadTarget = (ctx: ComposerContext): Target => {
     pcName: () => pcName.get(),
     name: () => name.get(),
     chat: () => chat.get(),
+    conversation: () => ctx.threads.current()?.id ?? ctx.threads.drafting()?.id,
     path() {
       const thread = ctx.threads.current()
       return thread ? ctx.threads.path(thread.id) : []

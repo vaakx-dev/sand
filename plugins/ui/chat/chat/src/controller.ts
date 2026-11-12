@@ -1,6 +1,7 @@
+import { composer } from '@sand/composer/contract'
 import { joinDisposers } from '@sand/util'
 import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/web-client/contract'
-import { collectScope, div, effect, onRaf, untrack } from '@vaakx-dev/vrui'
+import { collectScope, derive, div, effect, onRaf, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
 import { threadOwners } from './contract'
@@ -104,7 +105,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     view.rowEntries = drawn.map(({ entry }) => entry)
     view.more.set(view.above > 0 || ctx.threads.older(thread.id))
     view.branches.follow(thread)
-    view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, rows)])
+    view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, rows, untrack(() => ctx.get(composer)?.sending()))])
   }
 
   const reveal = () => {
@@ -173,6 +174,16 @@ export const chatController = (ctx: ChatContext, id: string) => {
       ctx.on(threadsChange, render),
       ctx.on(modelsChange, refresh),
       ctx.watch(threadOwners, () => refresh()),
+      ctx.watch(composer, found => {
+        const sending = derive(() => {
+          const message = found?.sending()
+          return message?.conversation === id ? message : undefined
+        })
+        return effect(() => {
+          sending.get()
+          untrack(render)
+        })
+      }),
       effect(() => {
         parts.version.get()
         untrack(refresh)

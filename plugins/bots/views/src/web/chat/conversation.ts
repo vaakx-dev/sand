@@ -1,7 +1,7 @@
 import type { LiveBlock, LiveEvent } from '@sand/accounts/contract'
 import { botInterrupt, botOpen, botSend, type BotSnapshot } from '@sand/bot-turns/contract'
 import { chatPath, type BotEntry } from '@sand/bots/contract'
-import { promptContent, saidText, textOf, type Message, type Prompt } from '@sand/chats/contract'
+import { textOf, type Message, type Prompt } from '@sand/chats/contract'
 import { applyLiveEvent } from '@sand/server/contract'
 import { errorMessage, isRecord } from '@sand/util'
 import type { DeviceRecords } from '@sand/web-client/contract'
@@ -39,19 +39,9 @@ const isReply = (entry: BotEntry) => {
   return message?.role === 'assistant' && Boolean(spoken(message))
 }
 
-const withoutDelivered = (pending: Pending[], entry: BotEntry) => {
-  const message = messageOf(entry)
-  if (message?.role !== 'user') return pending
-  const said = saidText(message)
-  const index = pending.findIndex(item => saidText({ role: 'user', content: promptContent(item.prompt) }) === said)
-  return index < 0 ? pending : pending.filter((_, at) => at !== index)
-}
-
 export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRecords<BotSnapshot> | undefined) => {
   const entries = sig<BotEntry[] | undefined>(undefined)
   const queued = sig<BotSnapshot['pending']>([])
-  const sending = sig<Pending[]>([])
-  const pending = derive((): Pending[] => [...queued.get(), ...sending.get()])
   const live = sig<LiveBlock[]>([])
   const more = sig(false)
   const loading = sig(false)
@@ -122,12 +112,7 @@ export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRe
   }
 
   const send = async (prompt: Prompt, id: string) => {
-    sending.update(list => [...list, { id, prompt, at: Date.now() }])
-    try {
-      await ctx.wire.call(botSend, { bot, prompt, clientRequestId: id })
-    } finally {
-      sending.update(list => list.filter(item => item.id !== id))
-    }
+    await ctx.wire.call(botSend, { bot, prompt, clientRequestId: id })
   }
 
   effect(() => {
@@ -139,7 +124,7 @@ export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRe
     bot,
     entries,
     path,
-    pending,
+    pending: queued,
     live,
     more,
     loading,
@@ -151,7 +136,6 @@ export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRe
     release,
     arrived(entry: BotEntry) {
       entries.update(list => list && merged(list, [entry]))
-      sending.update(list => withoutDelivered(list, entry))
       if (isReply(entry)) live.set([])
     },
     queue: (items: BotSnapshot['pending']) => queued.set(items),
