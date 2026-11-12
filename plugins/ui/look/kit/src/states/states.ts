@@ -39,8 +39,10 @@ export const emptyState = ({ text, action }: EmptyProps) =>
     action ? secondaryAction({ size: 'sm', onClick: () => action.run() }, action.label) : null,
   )
 
+const balanced = { textWrap: 'balance' }
+
 export const emptyPage = ({ title, text }: { title: Child; text: Child }) =>
-  div({ class: 'flex flex-col items-center gap-1 px-6 py-24 text-center' }, div({ class: 'text-base font-medium text-neutral-100' }, title), div({ class: secondaryLook }, text))
+  div({ class: 'flex flex-col items-center gap-1 px-6 py-24 text-center' }, div({ class: 'text-base font-medium text-neutral-100' }, title), div({ class: secondaryLook, style: balanced }, text))
 
 export const errorState = ({ text, retry, ...where }: ErrorProps) =>
   div(
