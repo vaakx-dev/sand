@@ -34,6 +34,8 @@ export const cardHeight = 360
 
 const layers = { drawer: 'drawer', sheet: 'sheet', aside: 'aside:' } as const
 
+const coverJoin = ' '
+
 export const shellModel = (kit: Kit) => {
   const navs = registry<NavItem>()
   const sections = registry<ShellSection>()
@@ -161,10 +163,12 @@ export const shellModel = (kit: Kit) => {
 
   const opened: Record<AsideKind, typeof openCard> = { card: openCard, panel: openPanel, drawer: openDrawer }
 
-  const coverId = derive(() => {
+  const coverIds = derive(() => {
     const name = layer.get()
-    return phone.get() && name?.startsWith(layers.aside) ? name.slice(layers.aside.length) : undefined
+    return phone.get() && name?.startsWith(layers.aside) ? name.slice(layers.aside.length).split(coverJoin) : []
   })
+  const coverId = derive(() => coverIds.get().at(-1))
+  const coverStack = derive(() => coverIds.get().flatMap(id => shownAsides.get().filter(spec => spec.id === id)))
   const coverAside = derive(() => shownAsides.get().find(spec => spec.id === coverId.get()))
   const covered = derive(() => drawerOpen.get() || Boolean(coverAside.get()))
 
@@ -173,10 +177,20 @@ export const shellModel = (kit: Kit) => {
     return (spec.kind === 'card' && !floats.get() ? openPop : opened[spec.kind]).get()?.id === spec.id
   }
 
-  const showCover = (id: string, show: boolean) => {
-    if (show) return enter(`${layers.aside}${id}`)
-    if (coverId.get() === id) leave()
+  const enterCovers = (ids: string[]) => (ids.length ? enter(`${layers.aside}${ids.join(coverJoin)}`) : leave())
+
+  const raiseCover = (id: string) => {
+    const ids = coverIds.get()
+    const at = ids.indexOf(id)
+    enterCovers(at < 0 ? [...ids, id] : ids.slice(0, at + 1))
   }
+
+  const lowerCover = (id: string) => {
+    const ids = coverIds.get()
+    if (ids.at(-1) === id) enterCovers(ids.slice(0, -1))
+  }
+
+  const showCover = (id: string, show: boolean) => (show ? raiseCover(id) : lowerCover(id))
 
   const showAside = (id: string, show: boolean) => {
     const spec = asides.items.get().find(found => found.id === id)
@@ -221,6 +235,7 @@ export const shellModel = (kit: Kit) => {
     axisOf,
     nextRight,
     coverAside,
+    coverStack,
     covered,
     drawerReach,
     drawerDrag,

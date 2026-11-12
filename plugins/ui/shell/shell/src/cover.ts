@@ -12,14 +12,15 @@ const heldPx = (model: Model, id: string) => {
   return pull?.id === id ? pull.px : undefined
 }
 
-const active = (model: Model, id: string) => model.coverAside.get()?.id === id || heldPx(model, id) !== undefined
+const stacked = (model: Model, id: string) => model.coverStack.get().some(spec => spec.id === id)
+
+const active = (model: Model, id: string) => stacked(model, id) || heldPx(model, id) !== undefined
 
 const look = (model: Model, spec: Aside) => {
   const axis = model.axisOf(spec)
   const px = heldPx(model, spec.id)
   if (px !== undefined) return { translate: along(axis, `calc(100% - ${px}px)`), transition: 'none' }
-  const open = model.coverAside.get()?.id === spec.id
-  return { translate: along(axis, open ? '0' : '100%'), transition: `translate ${settleMs}ms ease-out` }
+  return { translate: along(axis, stacked(model, spec.id) ? '0' : '100%'), transition: `translate ${settleMs}ms ease-out` }
 }
 
 const slideIn = (model: Model, spec: Aside) => (node: Element) => {
@@ -30,7 +31,11 @@ const slideIn = (model: Model, spec: Aside) => (node: Element) => {
 
 export const asideCovers = (model: Model) => {
   const shown = sig<Aside[]>([])
-  const raised = derive(() => model.shownAsides.get().filter(spec => active(model, spec.id)))
+  const raised = derive(() => {
+    const stack = model.coverStack.get()
+    const held = model.shownAsides.get().find(spec => spec.id === model.pull.get()?.id)
+    return held && !stack.includes(held) ? [...stack, held] : stack
+  })
   effect(() => {
     const top = raised.get()
     untrack(() => shown.update(all => [...all.filter(spec => !top.includes(spec)), ...top]))
