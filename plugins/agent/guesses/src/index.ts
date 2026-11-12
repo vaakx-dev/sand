@@ -1,23 +1,19 @@
 import { llm } from '@sand/accounts/contract'
 import { type Conversation, turnClose, turnOpen, type TurnInfo } from '@sand/engine/contract'
-import { paths } from '@sand/paths/contract'
 import { providerThreads } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
-import { errorMessage, joinDisposers } from '@sand/util'
+import { errorMessage } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { join } from 'node:path'
 import { guessNext } from './ask'
-import { type Guess, guessChange, guessesChange, guessesSet, guessRead, helloGuesses } from './contract'
-import { createStore } from './store'
+import { type Guess, guessChange, guessRead } from './contract'
 
 const GUESS_TIMEOUT_MS = 60_000
 
 export default definePlugin({
   name: 'guesses',
   description: "Guesses the next message as each turn of a thread or bot chat ends, with the chat's own model and prompt cache, for the composer to offer",
-  inject: { llm, providerThreads, paths },
-  async apply(ctx) {
-    const store = await createStore(join(ctx.paths.home, 'guesses.json'))
+  inject: { llm, providerThreads },
+  apply(ctx) {
     const guesses = new Map<string, Guess>()
     const asking = new Map<string, AbortController>()
     const unloaded = new AbortController()
@@ -54,26 +50,10 @@ export default definePlugin({
         })
     }
 
-    const turnOff = () => [...asking.keys(), ...guesses.keys()].forEach(forget)
-
-    const choose = async (on: boolean) => {
-      await store.save({ on })
-      if (!on) turnOff()
-      ctx.get(server)?.broadcast(guessesChange, store.get())
-    }
-
     ctx.on(turnOpen, conversation => forget(conversation.id))
     ctx.on(turnClose, (conversation, result, turn) => {
-      if (store.get().on && result.stopReason === 'end_turn') start(conversation, turn)
+      if (result.stopReason === 'end_turn') start(conversation, turn)
     })
-    ctx.watch(server, found =>
-      found
-        ? joinDisposers(
-            found.hello(helloGuesses, store.get),
-            found.handle(guessesSet, ({ on }) => choose(on)),
-            found.handle(guessRead, ({ session }) => guesses.get(session) ?? null),
-          )
-        : undefined,
-    )
+    ctx.watch(server, found => found?.handle(guessRead, ({ session }) => guesses.get(session) ?? null))
   },
 })

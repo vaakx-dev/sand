@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test'
 import { join } from 'node:path'
 import { fresh, running } from './boot'
 
-test('a new install starts with the core on and every add-on off, and turning one on keeps the others off', async () => {
+test('sand starts with the core on and every add-on off, and turning one on writes only that one', async () => {
   const sand = await fresh()
   try {
     expect(sand.problems()).toEqual([])
@@ -16,7 +16,7 @@ test('a new install starts with the core on and every add-on off, and turning on
     expect(running(sand)).toContain('calendars')
     expect(running(sand)).not.toContain('gitRepo')
     const written = Bun.TOML.parse(await Bun.file(join(sand.home, 'sand.toml')).text()) as { features: Record<string, boolean> }
-    expect(Object.keys(written.features).toSorted()).toEqual(addons.map(feature => feature.id).filter(id => id !== 'calendar').toSorted())
+    expect(written.features).toEqual({ calendar: true })
   } finally {
     await sand.stop()
   }

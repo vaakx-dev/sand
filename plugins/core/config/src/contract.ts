@@ -70,6 +70,7 @@ export interface Feature extends FeatureDefinition {
 
 export interface Features {
   list(): Feature[]
+  on(id: string): boolean
   set(changes: Record<string, boolean>): Promise<void>
 }
 

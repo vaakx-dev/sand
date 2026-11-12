@@ -53,31 +53,26 @@ test('plugins of no feature, or of a feature nobody defines, stay on', () => {
   expect(catalog.on('worktrees')).toBe(false)
 })
 
-test('add-ons start off in a home with no [features] table, and the first change writes them off beside it', () => {
+test('an add-on is off until it is turned on, with or without a [features] table', () => {
   const addons = [...definitions, feature('logbook', { addon: true }), feature('math', { addon: true })]
-  const fresh = createCatalog(addons, undefined)
-  expect(fresh.on('logbook')).toBe(false)
-  expect(fresh.toWrite({ math: true })).toEqual({ logbook: false, math: true })
-  fresh.choose(fresh.toWrite({ math: true }))
-  expect(fresh.on('math')).toBe(true)
-  expect(fresh.toWrite({ logbook: true })).toEqual({ logbook: true })
-})
-
-test("a [features] table keeps every add-on it doesn't turn off", () => {
-  const catalog = createCatalog([...definitions, feature('logbook', { addon: true })], {})
+  expect(createCatalog(addons, undefined).on('logbook')).toBe(false)
+  const catalog = createCatalog(addons, { math: true, threads: false })
+  expect([catalog.on('logbook'), catalog.on('math'), catalog.on('threads'), catalog.on('bots')]).toEqual([false, true, false, true])
+  catalog.choose({ logbook: true })
   expect(catalog.on('logbook')).toBe(true)
-  expect(catalog.toWrite({ calendar: false })).toEqual({ calendar: false })
 })
 
-test('writing features keeps the rest of sand.toml and only lists what is off', async () => {
+const onByDefault = (id: string) => id !== 'git'
+
+test('writing features keeps the rest of sand.toml and only lists what differs from the default', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'sand-features-'))
   const path = join(dir, 'sand.toml')
   try {
-    await Bun.write(path, '# mine\n[host]\nport = 0\n\n[features]\ngit = false # no git\n\n[plugins.web]\npaths = []\n')
-    await writeFeatures(path, { git: true, threads: false })
+    await Bun.write(path, '# mine\n[host]\nport = 0\n\n[features]\ngit = true # coding\n\n[plugins.web]\npaths = []\n')
+    await writeFeatures(path, { git: false, threads: false }, onByDefault)
     expect(await Bun.file(path).text()).toBe('# mine\n[host]\nport = 0\n\n[features]\nthreads = false\n\n[plugins.web]\npaths = []\n')
-    await writeFeatures(path, { threads: true })
-    expect(Bun.TOML.parse(await Bun.file(path).text())).toEqual({ host: { port: 0 }, features: {}, plugins: { web: { paths: [] } } })
+    await writeFeatures(path, { threads: true, git: true }, onByDefault)
+    expect(Bun.TOML.parse(await Bun.file(path).text())).toEqual({ host: { port: 0 }, features: { git: true }, plugins: { web: { paths: [] } } })
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -87,7 +82,7 @@ test('writing features to a missing sand.toml creates it with the table, even wh
   const dir = mkdtempSync(join(tmpdir(), 'sand-features-'))
   const path = join(dir, 'sand.toml')
   try {
-    await writeFeatures(path, { bots: true })
+    await writeFeatures(path, { bots: true }, onByDefault)
     expect(await Bun.file(path).text()).toBe('[features]\n')
   } finally {
     rmSync(dir, { recursive: true, force: true })

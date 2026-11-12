@@ -7,9 +7,9 @@ import { join } from 'node:path'
 import { filesGrep, filesList, filesRead } from '../src/contract'
 
 const model = { id: 'fake', models: ['m'], replies: [] }
-const othersOff = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates'].map(id => `${id} = false`)
+const othersOff = ['bots', 'notifications', 'updates'].map(id => `${id} = false`)
 
-const boot = (off: string[]) => startSand([model], { config: `[features]\n${[...othersOff, ...off].join('\n')}` })
+const boot = (chosen: string[]) => startSand([model], { config: `[features]\n${[...othersOff, ...chosen].join('\n')}` })
 
 const folder = mkdtempSync(join(tmpdir(), 'sand-project-files-'))
 
@@ -31,7 +31,7 @@ afterAll(() => rmSync(folder, { recursive: true, force: true }))
 
 describe('without git', () => {
   test('files list, grep and read with no git runner', async () => {
-    const sand = await boot(['git = false'])
+    const sand = await boot([])
     try {
       expect(sand.problems()).toEqual([])
       expect(sand.app.get(gitRunner)).toBeUndefined()
@@ -50,7 +50,7 @@ describe('without git', () => {
 
 describe.if(Boolean(Bun.which('git')))('with git', () => {
   test('files list and grep skip what .gitignore ignores', async () => {
-    const sand = await boot([])
+    const sand = await boot(['git = true'])
     try {
       expect(sand.app.get(gitRunner)).toBeDefined()
       expect((await sand.ask(filesList, { cwd: folder })).sort()).toEqual(['.gitignore', 'bin/blob.dat', 'src/main.ts'])

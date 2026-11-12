@@ -1,4 +1,5 @@
 import { llm, type Effort } from '@sand/accounts/contract'
+import { features } from '@sand/config/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { describeAgents } from './catalog'
@@ -10,16 +11,19 @@ const effortInput = (ctx: AgentsContext) => {
   return first ? z.enum([first, ...rest]) : z.string()
 }
 
-const inputSchema = (ctx: AgentsContext) =>
-  z.object({
+const worktreeField = z.boolean().optional().describe('Give it its own git worktree and branch, so its edits stay apart from yours and from other agents')
+
+const inputSchema = (ctx: AgentsContext) => {
+  const input = z.object({
     label: z.string().describe('A short title, 3 to 6 words'),
     task: z.string().describe("Full instructions. The subagent can't see this chat."),
     agent: z.string().optional().describe('A named agent from the list (default: a plain agent with your tools)'),
     model: z.string().optional().describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
     effort: effortInput(ctx).optional().describe('Reasoning effort (default: inherited)'),
     project: z.string().optional().describe('A project id to work in instead of your folder, from project_list'),
-    worktree: z.boolean().optional().describe('Give it its own git worktree and branch, so its edits stay apart from yours and from other agents'),
   })
+  return (ctx.get(features)?.on('worktrees') ?? true) ? input.extend({ worktree: worktreeField }) : input
+}
 
 const started = (thread: string, owner: string) =>
   `Started subagent ${thread}. Its final reply arrives as a <task-notification>. Meanwhile keep working or end your turn; don't sleep or poll for it. To message or stop it, use thread_send or thread_stop with thread ${thread}${owner === 'thread' ? '; thread_wait waits for it' : ''}.`

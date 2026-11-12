@@ -40,7 +40,7 @@ const oneInput = z.object({ bot })
 
 const updateRules = `Rename a bot, write its job, set the projects it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
 
-A paused bot starts no turns: its running turn stops, and its messages, routines and watches wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count.
+A paused bot starts no turns: its running turn stops, and its messages and everything it set to run wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count.
 
 A job is a bot's standing instructions, written to it in the second person ("You keep the user's calendar and plan their days."): what it takes care of, when to check with the user before acting, and how to reply. Keep it to a line and a few bullets. Facts about the user, like names, places and preferences, go in its memory instead. Every change shows in the bot's chat with who made it, and the user can edit or undo a new job there.`
 
@@ -72,7 +72,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof createInput>,
   {
     name: 'bot_delete',
-    description: 'Delete a bot for good, with its chat, memory, plan, routines and watches',
+    description: 'Delete a bot for good, with its chat, memory, plan and everything it set to run',
     input: oneInput,
     access: 'operate',
     group: group.name,

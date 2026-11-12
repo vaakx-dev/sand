@@ -13,12 +13,14 @@
     "summary": "Gives sand's threads and bots the tools other plugins define, like starting threads, messaging bots and turning add-ons on"
   },
   "dependencies": {
+    "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }

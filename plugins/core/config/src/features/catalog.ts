@@ -1,7 +1,16 @@
 import { isRecord } from '@sand/util'
 import type { Feature, FeatureDefinition } from '../contract'
 
-const offIn = (table: unknown) => new Set(Object.entries(isRecord(table) ? table : {}).flatMap(([id, value]) => (value === false ? [id] : [])))
+const onByDefault = (definition: FeatureDefinition | undefined) => !definition?.addon
+
+const offIn = (definitions: FeatureDefinition[], table: unknown) => {
+  const chosen = isRecord(table) ? table : {}
+  const on = (definition: FeatureDefinition) => {
+    const value = chosen[definition.id]
+    return typeof value === 'boolean' ? value : onByDefault(definition)
+  }
+  return new Set(definitions.filter(definition => !on(definition)).map(definition => definition.id))
+}
 
 const requiredBy = (definition: FeatureDefinition) => (definition.parent ? [definition.parent, ...definition.needs] : definition.needs)
 
@@ -31,23 +40,20 @@ const resolve = (definitions: FeatureDefinition[], off: ReadonlySet<string>) => 
   return { on: (id: string) => !byId.has(id) || on.has(id), usedBy }
 }
 
-const addonsOff = (definitions: FeatureDefinition[]) => Object.fromEntries(definitions.flatMap(definition => (definition.addon ? [[definition.id, false]] : [])))
-
 export const createCatalog = (definitions: FeatureDefinition[], table: unknown) => {
-  let written = isRecord(table)
-  let off = written ? offIn(table) : offIn(addonsOff(definitions))
+  const byId = new Map(definitions.map(definition => [definition.id, definition]))
+  let off = offIn(definitions, table)
   let state = resolve(definitions, off)
 
   return {
     on: (id: string | undefined) => id === undefined || state.on(id),
     list: (): Feature[] =>
       definitions.map(definition => ({ ...definition, chosen: !off.has(definition.id), on: state.on(definition.id), usedBy: state.usedBy(definition.id) })),
-    toWrite: (changes: Record<string, boolean>) => (written ? changes : { ...addonsOff(definitions), ...changes }),
+    onByDefault: (id: string) => onByDefault(byId.get(id)),
     choose(changes: Record<string, boolean>) {
       off = new Set([...off].filter(id => changes[id] !== true))
       for (const [id, on] of Object.entries(changes)) if (!on) off.add(id)
       state = resolve(definitions, off)
-      written = true
     },
   }
 }

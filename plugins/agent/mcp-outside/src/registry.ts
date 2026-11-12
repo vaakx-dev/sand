@@ -1,5 +1,6 @@
+import { features } from '@sand/config/contract'
+import { type McpTool, type McpTools, mcpTools, toolsOn } from '@sand/mcp-server/contract'
 import type { Context } from 'drydock'
-import { type McpTool, type McpTools, mcpTools } from '@sand/mcp-server/contract'
 
 export const provideTools = (ctx: Context) => {
   const tools = new Map<string, McpTool>()
@@ -14,5 +15,5 @@ export const provideTools = (ctx: Context) => {
     group: () => () => {},
   }
   ctx.provide(mcpTools, registry)
-  return () => [...tools.values()]
+  return () => toolsOn([...tools.values()], feature => ctx.get(features)?.on(feature) ?? true)
 }

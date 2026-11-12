@@ -55,6 +55,8 @@ const combos: Combo[] = [
   { name: 'bots without notifications and schedules', off: [...topLevel.filter(id => id !== 'bots'), 'schedules'], absent: ['Notifications', 'Connections'] },
 ]
 
+const chosen = (off: string[]) => [...topLevel.map(id => `${id} = ${!off.includes(id)}`), ...off.filter(id => !topLevel.includes(id)).map(id => `${id} = false`)]
+
 const withModel = '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n'
 
 const together = 3
@@ -112,7 +114,7 @@ for (const combo of combos)
     combo.name,
     async () => {
       const release = await slot()
-      const sand = await startSandbox(combo.off ? `[features]\n${combo.off.map(id => `${id} = false`).join('\n')}\n` : '')
+      const sand = await startSandbox(combo.off ? `[features]\n${chosen(combo.off).join('\n')}\n` : '')
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
       try {
         const pairing = await context.newPage()
