@@ -80,32 +80,42 @@ const heard = async (session: Session, count: number) => {
   throw new Error(`The thread heard ${count} notices or fewer`)
 }
 
-test('a thread tells the thread that started it its final reply when it finishes, and other features can notify the starter too', async () => {
+const startSubagent = async (parent: Session) => {
+  const { text } = await use(parent, 'agent', { label: 'Child work', task: 'child work' })
+  const subagent = /Started subagent (\S+?)\./.exec(text)?.[1]
+  if (!subagent) throw new Error(`No subagent started: ${text}`)
+  return subagent
+}
+
+test('a subagent tells the thread that started it its final reply when it finishes; a thread it starts stands on its own', async () => {
   await start()
   const parent = agent(2)
   parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
 
-  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })).text)
-  const [notice] = await heard(parent, 1)
-  expect(notice).toContain(`<thread>${thread}</thread>`)
+  const subagent = await startSubagent(parent)
+  const notices = await heard(parent, 1)
+  const [notice] = notices
+  expect(notice).toContain(`<thread>${subagent}</thread>`)
   expect(notice).toContain('<status>done</status>')
   expect(notice).toContain('child done')
-  const [first] = sand.sessions.require(thread).path().filter(entry => entry.type === 'message')
+  const [first] = sand.sessions.require(subagent).path().filter(entry => entry.type === 'message')
   expect((first!.data as Message).content.at(-1)).toEqual({ type: 'context', records: [expect.objectContaining({ kind: 'thread', data: { id: parent.id, sent: true } })] })
-
   const threads = sand.app.get(orchestrator)!
-  expect(threads.starterOf(thread)).toEqual({ owner: 'thread', id: parent.id })
-  expect(await threads.notify(thread, { text: '<pr>merged</pr>', clientRequestId: 'pr-1' })).toBe(true)
-  expect((await heard(parent, 2))[1]).toBe('<pr>merged</pr>')
-  expect(await threads.notify(parent.id, { text: 'nobody', clientRequestId: 'pr-2' })).toBe(false)
+  expect(threads.starterOf(subagent)).toEqual({ owner: 'thread', id: parent.id })
+
+  const started = JSON.parse((await use(parent, 'thread_start', { prompt: 'own work', model: 'fake/m' })).text)
+  expect(await sand.turns.wait(started.turn, 'end')).toMatchObject({ status: 'completed' })
+  expect(threads.starterOf(started.thread)).toBeUndefined()
+  await Bun.sleep(100)
+  expect(await heard(parent, 0)).toEqual(notices)
 })
 
-test('a thread waiting on a thread it started gets the reply from the wait, not as a notice too', async () => {
+test('a thread waiting on its subagent gets the reply from the wait, not as a notice too', async () => {
   await start([[{ type: 'hold' }]])
   const parent = agent(2)
   parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
 
-  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })).text)
+  const thread = await startSubagent(parent)
   const waited = use(parent, 'thread_wait', { thread })
   await Bun.sleep(50)
   sand.turns.interrupt(sand.sessions.require(thread))

@@ -6,7 +6,6 @@ import { plural } from '@sand/util'
 import type { ProjectShown, Thread } from '@sand/web-client/contract'
 import { changeStatus, type Changes } from '../changes'
 import type { RowPart } from '../contract'
-import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import { backLabel } from '../snooze/when'
@@ -87,10 +86,10 @@ const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: Thr
   moved: draft.updated,
 })
 
-export const threadEntries = (parts: MenuParts, sources: RowSources, withOwned: boolean): Entry[] => {
+export const threadEntries = (parts: MenuParts, sources: RowSources): Entry[] => {
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, sources.looks, saved, draft)) : []
   const jobsOf = runningJobs(parts.ctx, parts.threads)
-  const listed = visibleThreads(parts.threads.list()).filter(thread => withOwned || !owned(parts.ctx, thread.id))
+  const listed = visibleThreads(parts.threads.list())
   return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, jobsOf, sources))]
 }

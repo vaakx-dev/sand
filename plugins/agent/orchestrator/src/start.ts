@@ -4,7 +4,7 @@ import type { SessionSettings } from '@sand/model/contract'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
-import { failure, type Sent, type StartInput, threadStarted } from './contract'
+import { failure, type Sent, type StartInput, subagentStarted } from './contract'
 import type { Owners } from './owners'
 import type { Receipts } from './receipts'
 import { matchSettings } from './settings'
@@ -100,7 +100,7 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     const settings = { ...inherited, ...matchSettings(ctx, input, inherited.model) }
     const prompt = owners.sign(input.prompt, input.from)
     const session = await threadFor(input, adopt)
-    if (input.from && starters.put(session.id, input.from)) ctx.emit(threadStarted, session.id, input.from)
+    if (input.subagent && input.from && starters.put(session.id, input.from)) ctx.emit(subagentStarted, session.id, input.from)
     const sent = await ctx.turns.send(session, { prompt, label: input.label, origin: input.origin, clientRequestId: input.clientRequestId, settings })
     return { ...sent, thread: session.id }
   }

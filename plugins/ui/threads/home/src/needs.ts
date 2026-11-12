@@ -7,7 +7,7 @@ import { div, dynamicChild, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { mergeTrouble, type Changes } from './changes'
 import { visibleThreads } from './items/items'
-import { openThread } from './owners'
+import { openThread } from './open'
 import type { Shell } from '@sand/ui-shell/contract'
 
 export interface NeedsParts {

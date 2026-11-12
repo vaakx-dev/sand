@@ -26,7 +26,7 @@ const setUp = async () => {
 const asksEveryTime = (name: string) =>
   `Not used: the login ${name} is set to "Ask me every time", so agents can't use it. Tell the user: they can turn that off in the login's settings (Settings → Logins), or use it themselves.`
 
-test("a bot and the threads it starts use the bot's logins; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
+test("a bot and its subagents use the bot's logins; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-logins-access-'))
   const ids = await setUp()
   const useKey = call('shell', { command: 'echo used', logins: { TOKEN: ids.key } })
@@ -37,7 +37,7 @@ test("a bot and the threads it starts use the bot's logins; any other thread, or
       [fillSite],
       [said('Bot used both.')],
       [useKey],
-      [said('Started thread used it.')],
+      [said('Subagent used it.')],
       [said('Bot heard back.')],
       [useKey],
       [said('User thread was refused.')],
@@ -56,13 +56,14 @@ test("a bot and the threads it starts use the bot's logins; any other thread, or
 
     const started = await sand.app.get(orchestrator)!.start({
       cwd: home,
-      prompt: 'Deploy from a thread',
+      prompt: 'Deploy from a subagent',
       model: 'fake/m',
       origin: 'agent',
       clientRequestId: 'started',
       from: { owner: 'bot', id: ids.bot },
+      subagent: { call: 'deploy' },
     })
-    if (started.disposition !== 'started') throw new Error('The started thread should run at once')
+    if (started.disposition !== 'started') throw new Error('The subagent should run at once')
     expect(await sand.turns.wait(started.turn, 'end')).toMatchObject({ status: 'completed' })
     for (let tries = 0; tries < 500 && sand.requests('fake').length < 6; tries++) await Bun.sleep(10)
     await idle(sand, ids.bot)

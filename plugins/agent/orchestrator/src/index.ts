@@ -20,13 +20,13 @@ import { createWaits } from './waits'
 export default definePlugin({
   name: 'orchestrator',
   description:
-    "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A thread or subagent tells whoever started it when it finishes, and subagents settle with their parent",
+    "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A subagent tells whoever started it when it finishes and settles with its parent; a thread stands on its own",
   inject,
   apply(ctx) {
     ctx.ledger.migrate('orchestrator', schema)
     const starters = openStarters(ctx.ledger)
     const waits = createWaits()
-    const owners = createOwners(ctx, starters)
+    const owners = createOwners(ctx)
     const start = createStart(ctx, openReceipts(ctx.ledger), starters, owners)
     const wait = (thread: string, until: WaitUntil, signal: AbortSignal) => waitThread(ctx, findThread(ctx, thread), until, signal)
     const named = ({ owner, id }: ConversationRef): Partial<Record<Owner, string>> => ({ [owner]: id })
@@ -36,10 +36,11 @@ export default definePlugin({
       wait: (thread, until, signal, by) => (by ? waits.during(by, thread, () => wait(thread, until, signal)) : wait(thread, until, signal)),
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
-      starterOf: starters.of,
+      starterOf: thread => {
+        const session = ctx.sessions.open(thread)
+        return session && starters.of(session)
+      },
       started: starters.owned,
-      notify: owners.notify,
-      deliver: owners.deliver,
       sign: owners.sign,
       owner: owners.register,
     }

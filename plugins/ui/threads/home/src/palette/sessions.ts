@@ -1,4 +1,3 @@
-import { threadOwners } from '@sand/chat/contract'
 import type { PaletteItem } from '@sand/palette/contract'
 import type { Projects, Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
@@ -6,13 +5,13 @@ import type { Changes } from '../changes'
 import { runningJobs, type JobsOf } from '../items/jobs'
 import { statusOf, visibleThreads } from '../items/items'
 import type { StartParts } from '../launch/start'
-import { openThread } from '../owners'
+import { openThread } from '../open'
 import { awayPcName } from './places'
 
 const projectName = (projects: Projects, thread: Thread) =>
   projects.shown({ path: thread.info.cwd, device: thread.device, project: thread.info.project, quick: thread.info.kind === 'quick' }).name
 
-const detail = (ctx: Context, thread: Thread, project: string | false) => [ctx.get(threadOwners)?.owner(thread.id)?.label, project, awayPcName(ctx, thread.device), thread.info.pinned && 'pinned'].filter(Boolean).join(' · ')
+const detail = (ctx: Context, thread: Thread, project: string | false) => [project, awayPcName(ctx, thread.device), thread.info.pinned && 'pinned'].filter(Boolean).join(' · ')
 
 export interface SessionParts extends StartParts {
   changes: Changes

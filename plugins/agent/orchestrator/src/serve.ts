@@ -21,7 +21,7 @@ import {
   waitLimit,
 } from './contract'
 import { findThread } from './find'
-import { listThreads } from './list'
+import { type ListFilter, listThreads } from './list'
 import type { Pcs } from './pcs'
 import type { Start } from './start'
 import { changePending } from './pending'
@@ -45,15 +45,17 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
   }
 
   const startedBy = (actor: Actor | undefined) => {
-    if (!actor) throw failure('invalid_request', "Only sand's own threads and bots start threads of their own")
+    if (!actor) throw failure('invalid_request', "Only sand's own threads and bots start subagents")
     const started = threads.started(actor.owner)
     return new Set(Object.keys(started).filter(id => started[id] === actor.id))
   }
 
+  const subagentsOf = (starter: Actor | undefined, filter: ListFilter) => listThreads(ctx, { ...filter, subagents: true, ids: startedBy(starter) })
+
   const list = ({ mine, bot, thread, ...filter }: InputOf<typeof threadList>, caller: Caller) => {
-    if (mine) return listThreads(ctx, { ...filter, ids: startedBy(caller.actor) })
-    if (bot) return listThreads(ctx, { ...filter, ids: startedBy({ owner: 'bot', id: bot }) })
-    if (thread) return listThreads(ctx, { ...filter, ids: startedBy({ owner: 'thread', id: thread }) })
+    if (mine) return subagentsOf(caller.actor, filter)
+    if (bot) return subagentsOf({ owner: 'bot', id: bot }, filter)
+    if (thread) return subagentsOf({ owner: 'thread', id: thread }, filter)
     return forwarded(caller) ? listThreads(ctx, filter) : pcs.list(filter)
   }
 

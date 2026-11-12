@@ -18,7 +18,6 @@
     "@sand/chats": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/ledger": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/project": "workspace:*",

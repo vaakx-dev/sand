@@ -1,4 +1,4 @@
-import { draftPlaces, threadOwners } from '@sand/chat/contract'
+import { draftPlaces } from '@sand/chat/contract'
 import { draftsChange, drafts } from '@sand/composer/contract'
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import { jobs, jobsChange } from '@sand/jobs/contract'
@@ -7,14 +7,12 @@ import { palette } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
-import { settings } from '@sand/settings/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
-import { sig, stored } from '@vaakx-dev/vrui'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
 import { threadRows, type RowPart } from './contract'
-import { chipSources } from './chips'
 import { pageSize, threadGroups } from './groups'
 import { threadEntries } from './items/items'
 import { RowLooks } from './items/looks'
@@ -25,32 +23,16 @@ import { wakeTimer } from './snooze/wake'
 
 export default definePlugin({
   name: 'threads-home',
-  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread opens a new chat in the last project, and its header picks another; the running count above a bot's chat; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search",
+  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread opens a new chat in the last project, and its header picks another; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search",
   inject: { kit, threads, projects, shell, wire },
   apply(ctx) {
-    const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs, threadOwners])
+    const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs])
     const changes = changesModel(ctx, ctx.wire)
     const parts = { ctx, kit: ctx.kit, threads: ctx.threads, projects: ctx.projects, shell: ctx.shell }
     const limit = sig(pageSize)
     const more = () => limit.update(shown => shown + pageSize)
     const trail = sig<RowPart[]>([])
-    const botThreads = stored('sand.threads.bot-threads', true)
     const looks = new RowLooks()
-    ctx.watch(settings, found =>
-      found?.section({
-        page: 'features',
-        id: 'bot-threads',
-        order: 20,
-        render: () =>
-          ctx.kit.settingsSection(
-            {},
-            ctx.kit.settingsRow(
-              { title: 'Bot threads in the sidebar', detail: 'List threads bots start with your own, marked with the bot' },
-              ctx.kit.toggleSwitch({ on: botThreads, 'aria-label': 'Bot threads in the sidebar', onClick: () => botThreads.update(on => !on) }),
-            ),
-          ),
-      }),
-    )
     ctx.provide(threadRows, {
       part(part) {
         trail.update(found => [...found, part].toSorted(byOrder))
@@ -58,9 +40,8 @@ export default definePlugin({
       },
     })
     ctx.provide(draftPlaces, { choose: draft => chooseDraftPlace(parts, draft) })
-    const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get(), looks }, botThreads.get()), limit.get(), more, () => newThread(parts))))
+    const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get(), looks }), limit.get(), more, () => newThread(parts))))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
-    for (const source of chipSources({ ...parts, pulse: events })) ctx.effect(() => ctx.shell.chip(source))
     ctx.watch(needs, found => {
       if (!found) return
       const needParts = { ...parts, wire: ctx.wire, changes, pulse: events }

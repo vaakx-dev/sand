@@ -1,3 +1,4 @@
+import type { Session } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import type { Ledger } from '@sand/ledger/contract'
 
@@ -8,9 +9,9 @@ export const openStarters = (ledger: Ledger) => {
   const removed = ledger.db.query('delete from thread_starters where thread = $thread')
 
   return {
-    of: (thread: string) => one.get({ thread }) ?? undefined,
+    of: (subagent: Session) => (subagent.kind === 'agent' ? (one.get({ thread: subagent.id }) ?? undefined) : undefined),
     owned: (owner: Owner) => Object.fromEntries(owned.all({ owner }).map(row => [row.thread, row.id])),
-    put: (thread: string, { owner, id }: ConversationRef) => written.run({ thread, owner, id, at: Date.now() }).changes > 0,
+    put: (subagent: string, { owner, id }: ConversationRef) => written.run({ thread: subagent, owner, id, at: Date.now() }).changes > 0,
     remove: (thread: string) => void removed.run({ thread }),
   }
 }

@@ -3,7 +3,6 @@ import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { uuid } from '@sand/util'
 import type { OrchestratorContext } from './context'
 import { failure, type Notice, type OwnerKind } from './contract'
-import type { Starters } from './starters'
 
 const signed = (prompt: Prompt, record: ContextRecord): UserContent[] => {
   const link = contextLink(record)
@@ -11,7 +10,7 @@ const signed = (prompt: Prompt, record: ContextRecord): UserContent[] => {
   return [...content, { type: 'context', records: [record] }]
 }
 
-export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
+export const createOwners = (ctx: OrchestratorContext) => {
   const kinds = new Map<Owner, OwnerKind>()
 
   const register = (owner: Owner, kind: OwnerKind) => {
@@ -31,16 +30,9 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
     }),
   )
 
-  const deliver = async ({ owner, id }: ConversationRef, notice: Notice) => {
-    const kind = kinds.get(owner)
-    if (!kind) return false
-    await kind.deliver(id, notice)
-    return true
-  }
-
   return {
     register,
-    deliver,
+    deliver: async ({ owner, id }: ConversationRef, notice: Notice) => void (await kinds.get(owner)?.deliver(id, notice)),
     sign(prompt: Prompt, from: ConversationRef | undefined): Prompt {
       if (!from) return prompt
       const kind = kinds.get(from.owner)
@@ -54,10 +46,6 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
     },
     home: (from: ConversationRef | undefined) => from && kinds.get(from.owner)?.project?.(from.id),
     folder: (from: ConversationRef) => kinds.get(from.owner)?.folder?.(from.id),
-    async notify(thread: string, notice: Notice) {
-      const starter = starters.of(thread)
-      return starter ? deliver(starter, notice) : false
-    },
   }
 }
 
