@@ -16,6 +16,7 @@
     "@sand/accounts": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/context": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",

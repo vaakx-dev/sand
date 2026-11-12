@@ -1,5 +1,4 @@
 import type { BotSummary } from '@sand/bots/contract'
-import type { Entry, UserContent } from '@sand/chats/contract'
 import { expect, test } from 'bun:test'
 import { threadOwnersOf } from '../src/web/owners'
 import type { Roster } from '../src/web/roster'
@@ -12,11 +11,7 @@ const roster: Roster = {
   starterOf: thread => ({ t1: 'b1', t2: 'gone' })[thread],
 }
 
-const prompt = (content: UserContent[]): Entry => ({ id: 'e1', session: 't1', parent: null, at: 1, seq: 1, type: 'message', data: { role: 'user', content } })
-
-const botRecord = (data: Record<string, unknown>): UserContent => ({ type: 'context', records: [{ v: 1, id: 'r1', kind: 'bot', label: 'Atlas', data }] })
-
-test("a bot owns the threads it started, opens them as its own thread screen when the shell is there, and signs only the prompts it sent", () => {
+test("a bot owns the threads it started, opens them as its own thread screen when the shell is there", () => {
   const opened: [string, string | undefined][] = []
   const owners = threadOwnersOf(roster, { open: (bot, tab) => void opened.push([bot, tab]) }, {
     open: (route: { id?: string; tab?: string }) => void opened.push([route.id ?? '', route.tab]),
@@ -28,9 +23,4 @@ test("a bot owns the threads it started, opens them as its own thread screen whe
   expect(opened).toEqual([['t1', undefined]])
   expect(owners.owner('t2')).toBeUndefined()
   expect(owners.owner('t3')).toBeUndefined()
-
-  const text: UserContent = { type: 'text', text: 'Fix the cache test' }
-  expect(owners.sender('t1', prompt([text, botRecord({ id: 'b1', sent: true })]))?.label).toBe('Atlas')
-  expect(owners.sender('t1', prompt([text, botRecord({ id: 'b1' })]))).toBeUndefined()
-  expect(owners.sender('t1', prompt([text]))).toBeUndefined()
 })

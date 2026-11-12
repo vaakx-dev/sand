@@ -1,7 +1,7 @@
 import type { Session, Sessions } from '@sand/chats/contract'
-import type { ContextKind } from './contract'
+import type { ContextKind, Reader } from './contract'
 
-const sentBy = (thread: Session, to: Session) => {
+const sentBy = (thread: Session, to: Reader) => {
   const from = `This message is from the agent working in the user's thread "${thread.title}" (id ${thread.id}), not from the user.`
   if (to.kind === 'agent') return from
   return `${from} Your reply stays in this chat; if it asks to hear back, message it with thread_send.`

@@ -2,7 +2,7 @@ import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { McpServer } from '@modelcontextprotocol/server'
 import { botAwait, botOpen, botSend } from '@sand/bot-turns/contract'
 import { botCreate, type BotEntry, botList, botUpdate, changeEntry } from '@sand/bots/contract'
-import { type Message, textOf } from '@sand/chats/contract'
+import { type Message, promptText, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Call } from '@sand/orchestrator/contract'
@@ -52,8 +52,11 @@ const use = async (conversation: Conversation, name: string, input: Record<strin
 
 const userTexts = async (bot: string) =>
   (await sand.ask(botOpen, { bot })).entries.flatMap((entry: BotEntry) =>
-    entry.type === 'message' && (entry.data as Message).role === 'user' ? [textOf((entry.data as Message).content)] : [],
+    entry.type === 'message' && (entry.data as Message).role === 'user' ? [promptText(entry.data as Message)] : [],
   )
+
+const seenIn = (request: string) =>
+  (JSON.parse(request).messages as { content: { text?: string }[] }[]).flatMap(message => message.content.map(block => block.text ?? '')).join('\n')
 
 const answered = async (bot: string, prompt: string) => {
   const before = (await sand.ask(botList, {})).find(listed => listed.id === bot)?.last?.at ?? 0
@@ -92,16 +95,18 @@ test("a bot can pause another bot and change any bot's limit, its own too, and e
 })
 
 test('a bot messages another bot without waiting, and hears back only if that bot messages it', async () => {
-  await start([said('Booked for Friday.')])
+  await start([said('Booked for Friday.')], ['agent/context', 'bots/bridge'])
   const asker = await createBot('Planner')
   const travel = await createBot('Travel')
 
   const sent = await use(asBot(asker.id), 'bot_send', { bot: travel.id, prompt: 'Book Friday' })
   expect(sent).toEqual({ bot: travel.id, turn: expect.any(String), status: 'running', detached: true })
   const [asked] = await userTexts(travel.id)
-  expect(asked).toContain(`This message is from Planner (bot id ${asker.id}), another of the user's bots`)
-  expect(asked).toContain('if it asks to hear back, message it with bot_send')
+  expect(asked).toMatch(/^\[Planner\]\(sand-context:\/\/v1\/bot\/[^)]+\) Book Friday$/)
   expect(await sand.ask(botAwait, { bot: travel.id, turn: sent.turn, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
+  const seen = seenIn(sand.requests('fake')[0]!)
+  expect(seen).toContain(`This message is from the user's bot "Planner" (id ${asker.id}), not from the user.`)
+  expect(seen).toContain('if it asks to hear back, message it with bot_send')
   await Bun.sleep(100)
   expect(await userTexts(asker.id)).toEqual([])
 })

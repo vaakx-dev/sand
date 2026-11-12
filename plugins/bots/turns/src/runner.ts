@@ -1,4 +1,5 @@
 import { bots, type BotStatus } from '@sand/bots/contract'
+import { contextKinds } from '@sand/context/contract'
 import type { Conversation, Conversations, TurnStatus } from '@sand/engine/contract'
 import { modelSettings, modelSource } from '@sand/model/contract'
 import { contextOverflow, providerThreads } from '@sand/provider-threads/contract'
@@ -39,6 +40,7 @@ export const botConversations = (ctx: BotTurnsContext, live: Live, queued: (bot:
       const { model, effort, speed } = ctx.modelSettings.resolve(bot(conversation.id).models.main)
       return model ? { source: modelSource(model), model, ...(effort && { effort }), speed } : undefined
     },
+    prompt: (content, { cwd }) => ctx.get(contextKinds)?.project(content, { kind: 'bot', cwd }) ?? content,
     held: conversation => ctx.bots.get(conversation.id)?.hold !== undefined,
     step: (conversation, turn, signal) => ctx.providerThreads.step(conversation, turn, signal),
     abandon: thread => ctx.providerThreads.abandon(thread),

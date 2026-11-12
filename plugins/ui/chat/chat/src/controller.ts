@@ -4,7 +4,6 @@ import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/we
 import { collectScope, derive, div, effect, onRaf, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
-import { threadOwners } from './contract'
 import { topEdge } from './integrations/top-edge'
 import { itemCache } from './cache'
 import { branchSwitch } from './rows/branches'
@@ -76,7 +75,6 @@ export const chatController = (ctx: ChatContext, id: string) => {
   }
 
   const paint = (thread: Thread, view: ThreadView, grow = 0) => {
-    const owners = ctx.get(threadOwners)
     const rows = parts.rows({
       conversation: thread.id,
       cwd: thread.info.cwd,
@@ -86,10 +84,6 @@ export const chatController = (ctx: ChatContext, id: string) => {
       reply: text => replyActions(ctx, text),
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       branchSwitch: entry => branchSwitch(ctx, view, entry),
-      sender: entry => {
-        const found = thread.entries.get(entry)
-        return found && owners?.sender(thread.id, found)?.label
-      },
     })
     const context: TurnContext = { kit, rows, states, repaint }
     const items = cache.items(thread, () => ctx.threads.path(thread.id))
@@ -173,7 +167,6 @@ export const chatController = (ctx: ChatContext, id: string) => {
       }),
       ctx.on(threadsChange, render),
       ctx.on(modelsChange, refresh),
-      ctx.watch(threadOwners, () => refresh()),
       ctx.watch(composer, found => {
         const sending = derive(() => {
           const message = found?.sending()

@@ -23,7 +23,13 @@ export default definePlugin({
 
     const chip = (link: ChipLink, record?: ContextRecord) => chipView(ctx.kit, kindOf(link.kind), link, record, () => details(link, record))
 
-    ctx.provide(contextChips, { register: kinds.register, chip })
+    const open = (record: ContextRecord) => {
+      const kind = kindOf(record.kind)
+      if (kind.action) kind.action.run(record)
+      else details(record, record)
+    }
+
+    ctx.provide(contextChips, { register: kinds.register, chip, open })
     ctx.effect(() => kinds.register(fileChip(ctx.kit)))
     ctx.effect(() => kinds.register(threadChip(ctx.kit, ctx.threads, thread => ctx.get(shell)?.open({ kind: threadRouteKind, id: thread }))))
   },

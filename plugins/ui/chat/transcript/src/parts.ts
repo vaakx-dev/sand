@@ -1,4 +1,4 @@
-import { drawChip } from '@sand/context/contract'
+import { drawChip, openContext } from '@sand/context/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
 import type { MediaImage, RendererRegistry, ToolViews, TranscriptParts } from './contract'
@@ -18,6 +18,7 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
   const custom = (type: string) => Boolean(registry.entryRenderer(type))
   const describe: DescribeSettings = settings => ctx.get(models)?.summary(settings)
   const chip = drawChip(ctx)
+  const open = openContext(ctx)
   return {
     version: registry.version,
     settled: (source, path) => settledItems(source, path, custom, describe),
@@ -25,7 +26,7 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
     prompt: (entry, parts) => userItems(entry, parts, true, custom),
     rows(surface) {
       const { kit, markdown } = ctx
-      const context: RowContext = { ...surface, kit, registry, markdown, chip, media: images.image, image: images.replyImage(surface.conversation) }
+      const context: RowContext = { ...surface, kit, registry, markdown, chip, open, media: images.image, image: images.replyImage(surface.conversation) }
       return {
         item: item => itemRows(item, context),
         user: (item, actions, note) => userMessage(item, context, actions, note),
