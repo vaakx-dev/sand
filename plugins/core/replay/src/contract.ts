@@ -10,6 +10,7 @@ const part = z.discriminatedUnion('type', [
   z.object({ type: z.literal('error'), message: z.string() }),
   z.object({ type: z.literal('hold') }),
   z.object({ type: z.literal('crash') }),
+  z.object({ type: z.literal('drop') }),
 ])
 
 const model = z.union([

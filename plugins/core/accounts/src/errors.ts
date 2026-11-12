@@ -2,8 +2,9 @@ export class AccountError extends Error {
   constructor(
     message: string,
     readonly detail?: string,
+    options?: ErrorOptions,
   ) {
-    super(message)
+    super(message, options)
   }
 }
 
