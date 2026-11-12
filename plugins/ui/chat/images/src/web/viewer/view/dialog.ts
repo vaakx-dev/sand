@@ -2,7 +2,7 @@ import type { SheetSpec } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, keys, type Derive } from '@vaakx-dev/vrui'
 import type { Draw } from '../gallery'
-import { viewerHead } from './head'
+import { viewerTitle, viewerTools } from './head'
 import type { ViewerModel } from './model'
 import { viewerStage } from './stage'
 import { viewerStrip } from './strip'
@@ -38,16 +38,16 @@ export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw): SheetSpe
     label: 'Image viewer',
     look: 'viewer',
     onKeyDown: shortcuts,
+    title: () => viewerTitle(model.images[model.current.get()]),
+    head: () =>
+      dynamicChild(model.current, index =>
+        div({ class: 'flex items-center gap-2' }, ...viewerTools(kit, model.images[index], many ? `${index + 1} of ${model.images.length}` : '', zoom)),
+      ),
     body: close => [
       dynamicChild(model.current, index => {
         const shown = model.images[index]
         if (!shown) return null
-        const count = many ? `${index + 1} of ${model.images.length}` : ''
-        return div(
-          { class: 'flex min-h-0 flex-1 flex-col' },
-          viewerHead(kit, shown, count, zoom, close),
-          viewerStage(shown, draw, zoom, by => go(() => model.step(by)), close),
-        )
+        return div({ class: 'flex min-h-0 flex-1 flex-col' }, viewerStage(shown, draw, zoom, by => go(() => model.step(by)), close))
       }),
       many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, back),
       many && flipButton(kit, 'right', 'Next (→)', model.atLast, next),

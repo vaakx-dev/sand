@@ -44,7 +44,8 @@ export const expandedPage = (ctx: FrameContext, data: HtmlRenderEntry, html: str
     label: `Full screen ${data.title}`,
     look: 'viewer',
     onKeyDown: keys({ '+': zoom.zoomIn, '=': zoom.zoomIn, '-': zoom.zoomOut, '0': zoom.fit }),
-    head: close => kit.viewerBar(close, kit.headTitle(2, data.title), kit.zoomControls(zoom)),
+    title: data.title,
+    head: () => kit.zoomControls(zoom),
     body: () =>
       div(
         {

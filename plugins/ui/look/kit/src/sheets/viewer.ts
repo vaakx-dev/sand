@@ -1,5 +1,4 @@
 import { div, read, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
-import { closeButton } from '../buttons/close'
 import { iconButton, quietButton } from '../buttons/button'
 import { icon } from '../icons/lucide'
 import { layer } from '../layer'
@@ -28,9 +27,6 @@ export const viewerShell = ({ label, close, class: extra, ...props }: ViewerShel
     ...children,
   )
 }
-
-export const viewerBar = (close: () => void, ...children: Child[]) =>
-  div({ class: 'flex h-12 shrink-0 items-center gap-2 px-4' }, ...children, closeButton({ onClick: close }))
 
 export interface ZoomView {
   label: MaybeReactive<string>

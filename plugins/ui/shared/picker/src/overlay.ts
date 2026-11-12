@@ -1,5 +1,5 @@
 import type { Shell } from '@sand/ui-shell/contract'
-import type { Kit, SheetSize } from '@sand/ui-kit/contract'
+import type { SheetSize } from '@sand/ui-kit/contract'
 import type { Child, EventHandler } from '@vaakx-dev/vrui'
 
 export interface PickSheet {
@@ -9,5 +9,5 @@ export interface PickSheet {
   keydown: EventHandler<KeyboardEvent>
 }
 
-export const openSheet = (frame: Shell, { sheetTitle }: Kit, { title, size, close, keydown }: PickSheet, ...children: Child[]) =>
-  frame.sheet({ label: title, look: 'bare', size, head: () => sheetTitle(title), body: () => children, onKeyDown: keydown, onClose: close }).close
+export const openSheet = (frame: Shell, { title, size, close, keydown }: PickSheet, ...children: Child[]) =>
+  frame.sheet({ label: title, look: 'bare', size, title, body: () => children, onKeyDown: keydown, onClose: close }).close

@@ -38,7 +38,7 @@ export default definePlugin({
       const shown = derive(() => shownTabs(subject()))
       return dynamicChild(
         derive(() => shown.get().length === 1),
-        single => (single ? ctx.kit.barTitle(() => shown.get()[0]?.label ?? '') : tabStrip(shown, active)),
+        single => (single ? ctx.kit.sheetTitle(() => shown.get()[0]?.label ?? '') : tabStrip(shown, active)),
       )
     }
 

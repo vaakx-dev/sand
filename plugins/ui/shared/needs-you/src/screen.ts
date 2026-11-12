@@ -34,5 +34,5 @@ export const needsScreen = (kit: Kit, items: Derive<Need[]>) => {
           : kit.emptyState({ text: 'Nothing needs you.' }),
       ),
     )
-  return kit.pageBody({ title: 'What needs you' }, body())
+  return kit.pageBody({}, body())
 }

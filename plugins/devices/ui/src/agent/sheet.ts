@@ -69,19 +69,13 @@ const formView = (ui: Ui, made: (pairing: AgentPairing) => void) => {
 }
 
 export const agentSheet = (ui: Ui, close: () => void): SheetSpec => {
-  const { primaryAction, sheetBody, sheetFoot, sheetTitle } = ui.kit
+  const { sheetBody } = ui.kit
   const pairing = sig<AgentPairing | undefined>(undefined)
   return {
     label: 'Add an agent',
     look: 'bare',
-    head: () => sheetTitle(() => (pairing.get() ? 'Agent added' : 'Add an agent')),
-    body: () => [
-      sheetBody(
-        {},
-        dynamicChild(pairing, made => (made ? madeView(ui, made) : formView(ui, next => pairing.set(next)))),
-      ),
-      dynamicChild(pairing, made => (made ? sheetFoot(primaryAction({ onClick: close }, 'Done')) : null)),
-    ],
+    title: () => (pairing.get() ? 'Agent added' : 'Add an agent'),
+    body: () => sheetBody({}, dynamicChild(pairing, made => (made ? madeView(ui, made) : formView(ui, next => pairing.set(next))))),
     onClose: close,
   }
 }

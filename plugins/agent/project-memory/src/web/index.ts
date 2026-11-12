@@ -33,7 +33,7 @@ const openSheet = (ctx: ProjectMemoryContext, ref: MemoryRef) => {
   const { text, stop } = memoryText(ctx, ref)
   ctx.shell.sheet({
     label: TITLE,
-    head: () => ctx.kit.sheetTitle(TITLE),
+    title: TITLE,
     body: () =>
       div(
         { class: 'flex flex-col gap-6 pt-2', onMount: () => stop },

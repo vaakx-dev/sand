@@ -15,16 +15,20 @@ export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, 
   const id = route().id
   const phone = derive(() => shell.state() === 'phone')
   const page = derive(() => (phone.get() && !id ? undefined : store.pick(id)))
-  const titled = () => !phone.get()
+  const parent = derive(() => store.pages.get().find(candidate => candidate.id === page.get()?.parent))
   const current = () => page.get()?.id
   const list = (onPhone: boolean) => listView(kit, { store, current, choose, phone: onPhone })
   return {
-    head: () => dynamicChild(phone, onPhone => (onPhone ? kit.barTitle(() => (id ? (page.get()?.label ?? '') : 'Settings')) : null)),
+    head: () => () => page.get()?.label ?? 'Settings',
+    back: () => {
+      const found = parent.get()
+      return page.get()?.back?.() ?? (found ? () => choose(found.id) : undefined)
+    },
     nav: { label: 'Settings', render: () => list(false) },
     main: () =>
       div(
         { class: 'flex min-h-0 min-w-0 flex-1' },
-        dynamicChild(phone, onPhone => (onPhone && !id ? list(true) : pageView(kit, { store, page, titled, choose }))),
+        dynamicChild(phone, onPhone => (onPhone && !id ? list(true) : pageView(kit, { store, page }))),
       ),
   }
 }

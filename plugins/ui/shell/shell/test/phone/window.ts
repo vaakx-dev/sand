@@ -195,7 +195,7 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page)).toBe('fixture/plain')
     await tap(page, 'Fixture details')
     expect(await cover(page, 'Fixture details', true)).toBe(true)
-    await tap(page, 'Close')
+    await tap(page, 'Close Fixture details')
     expect(await cover(page, 'Fixture details', false)).toBe(false)
     expect(await screen(page)).toBe('fixture/plain')
   })

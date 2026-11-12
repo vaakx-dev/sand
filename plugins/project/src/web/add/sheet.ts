@@ -94,20 +94,6 @@ const stepOf = (ctx: ProjectsContext, changes: Pulse, model: AddModel, place: Pl
   return folderStep(ctx, changes, pc, project => model.go({ kind: 'bring', device: place.device, project }))
 }
 
-const head = (ctx: ProjectsContext, model: AddModel) => {
-  const { icon, iconButton, sheetTitle } = ctx.kit
-  return dynamicChild(model.place, place =>
-    div(
-      { class: 'flex min-w-0 items-center gap-1' },
-      show(
-        () => model.trail.get().length > 1,
-        () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: model.back }, icon('back', 'md')),
-      ),
-      sheetTitle(titleOf(ctx, model, place)),
-    ),
-  )
-}
-
 const body = (ctx: ProjectsContext, changes: Pulse, model: AddModel, close: () => void) => {
   const submit = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && event.target instanceof HTMLInputElement) void model.finish(close)
@@ -141,7 +127,8 @@ export const addSheet = (ctx: ProjectsContext, changes: Pulse, options: ProjectA
   const model = addModel(ctx, changes, options)
   return {
     label: 'Add project',
-    head: () => head(ctx, model),
+    title: () => titleOf(ctx, model, model.place.get()),
+    back: () => (model.trail.get().length > 1 ? model.back : undefined),
     body: close => body(ctx, changes, model, close),
     foot: close => foot(ctx, model, close),
   }

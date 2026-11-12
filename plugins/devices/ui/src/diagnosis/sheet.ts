@@ -45,7 +45,7 @@ const homePeers = (ui: Ui) => {
 }
 
 export const diagnosisSheet = (ui: Ui, pc: string, close: () => void): SheetSpec => {
-  const { copyText, icon, primaryAction, secondaryAction, sheetTitle } = ui.kit
+  const { copyText, icon, primaryAction, secondaryAction } = ui.kit
   const { data } = ui
   const peers = homePeers(ui)
   const facts = derive((): Facts => {
@@ -76,7 +76,7 @@ export const diagnosisSheet = (ui: Ui, pc: string, close: () => void): SheetSpec
   }
   return {
     label: 'Why can’t I connect?',
-    head: () => sheetTitle('Why can’t I connect?'),
+    title: 'Why can’t I connect?',
     body: () => dynamicChild(facts, current => div({ class: 'flex flex-col gap-6' }, summary(ui, current), attemptsSection(ui, current), adviceSection(ui, current))),
     foot: () => [
       secondaryAction({ onClick: () => void copy() }, icon('copy', 'sm'), 'Copy diagnostics'),

@@ -35,7 +35,6 @@ export const choose = <T>(kit: Kit, frame: Shell, cancels: Set<() => void>, fine
 
     const close = openSheet(
       frame,
-      kit,
       { title, size: 'lg', close: model.cancel, keydown: keys({ ...model.box.keyMap, Escape: model.cancel }, { stop: true }) },
       search,
       results(kit, model),

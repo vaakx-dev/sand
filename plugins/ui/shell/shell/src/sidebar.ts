@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, nav, span, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, nav, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
 import { drawerLook, drawerOffset } from './drawer'
 import type { Model } from './model'
 import { brand, footRow, groupList, navList, quietNavList } from './rows'
@@ -25,15 +25,10 @@ const appList = (model: Model, screenNav: Derive<Nav | undefined>) => {
 }
 
 const screenList = (model: Model, { label, body }: Nav) => {
-  const { icon, navButton } = model.kit
+  const { backButton, sheetTitle } = model.kit
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
-    navButton(
-      { class: 'group w-full shrink-0', onClick: () => model.leaveNav() },
-      span({ class: 'inline-flex shrink-0 text-neutral-500 group-hover:text-neutral-100' }, icon('back')),
-      span({ class: 'min-w-0 flex-1 truncate text-left' }, 'Back to chats'),
-    ),
-    div({ class: 'px-2 pt-3 pb-1 text-base font-semibold tracking-tight text-neutral-100' }, label),
+    div({ class: '-mt-2 flex h-12 shrink-0 items-center gap-1' }, backButton({ title: 'Back to chats', onClick: () => model.leaveNav() }), sheetTitle(label)),
     div({ class: 'flex min-h-0 flex-1 flex-col' }, body),
   )
 }

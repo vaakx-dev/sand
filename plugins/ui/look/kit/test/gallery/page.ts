@@ -72,7 +72,7 @@ const diff: DiffLine[] = [
 const sheetSample = () =>
   kit.sheet(
     { size: 'md', 'aria-label': 'Atlas' },
-    kit.sheetHead({ title: 'Atlas', close: () => {} }),
+    div({ class: 'flex h-12 shrink-0 items-center gap-2 pr-2 pl-2' }, kit.backButton({ surface: 'raised' }), kit.sheetTitle('Atlas'), kit.closeButton({ surface: 'raised' })),
     kit.sheetBody(
       {},
       kit.sheetText('Keeps the exporter fast and its tests green.'),
@@ -98,6 +98,7 @@ const roles = () =>
     { class: 'flex flex-col gap-2' },
     kit.pageTitle('Page title'),
     div({ class: 'flex' }, kit.barTitle('Bar title')),
+    div({ class: 'flex' }, kit.titleButton({}, 'Title with a menu')),
     kit.sectionTitle('Section title'),
     kit.sectionHeading('Group label'),
     kit.secondaryText('Secondary text for descriptions and captions.'),
@@ -131,7 +132,7 @@ const menuSample = () => {
 
 const gallery = () =>
   kit.pageBody(
-    { title: 'Kit', intro: 'Every piece the screens draw with, on the approved roles.' },
+    { intro: 'Every piece the screens draw with, on the approved roles.' },
     block('Type roles', roles()),
     block(
       'Buttons',
@@ -191,4 +192,8 @@ const gallery = () =>
     block('Empty', kit.emptyState({ text: 'Nothing needs you.', action: { label: 'Open threads', run: () => {} } })),
   )
 
-mount(document.body, { theme: theme(sandPalette), mode: sand.mode, class: sand.page }, gallery())
+mount(
+  document.body,
+  { theme: theme(sandPalette), mode: sand.mode, class: sand.page },
+  div({ class: 'flex h-screen flex-col' }, div({ class: 'flex h-12 shrink-0 items-center px-4' }, kit.barTitle('Kit')), gallery()),
+)

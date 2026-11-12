@@ -1,10 +1,5 @@
 import type { SheetSize } from '@sand/ui-shell/contract'
-import { div, event, read, show, sig, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
-import { iconButton } from '../buttons/button'
-import { closeButton } from '../buttons/close'
-import { paneHead } from '../heads/page-head'
-import { sheetTitle } from '../heads/text'
-import { icon } from '../icons/lucide'
+import { div, event, sig, type Child, type Props } from '@vaakx-dev/vrui'
 import { stableGutter } from '../scroll/gutter'
 import { floatingEdge } from '../surface'
 import { scrim } from './scrim'
@@ -15,14 +10,6 @@ export type SheetProps = Props<HTMLDivElement> & {
   size?: SheetSize
   phone?: 'sheet' | 'screen'
   grab?: () => void
-}
-
-export interface SheetHeadProps {
-  title: Child
-  close?: () => void
-  back?: () => void
-  backShown?: MaybeReactive<boolean>
-  actions?: Child
 }
 
 const sheetWidths: Record<SheetSize, string> = { sm: 'sm:max-w-md', md: 'sm:max-w-lg', lg: 'sm:max-w-xl' }
@@ -79,17 +66,6 @@ export const sheet = ({ size = 'lg', phone = 'sheet', grab, class: extra, ...pro
     },
     drag?.handle ?? null,
     ...children,
-  )
-}
-
-export const sheetHead = ({ title, close, back, backShown = true, actions }: SheetHeadProps) => {
-  const led = () => Boolean(back) && read(backShown)
-  return paneHead(
-    { led, class: 'overflow-hidden', style: stableGutter },
-    back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: back }, icon('back', 'md'))) : null,
-    sheetTitle(title),
-    actions ?? null,
-    close ? closeButton({ surface: 'raised', onClick: close }) : null,
   )
 }
 

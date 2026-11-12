@@ -1,15 +1,16 @@
 import type { SourceInfo } from '@sand/accounts/contract'
 import { errorMessage } from '@sand/util'
 import type { Pulse } from '@sand/reactive'
-import { sig } from '@vaakx-dev/vrui'
+import { sig, type Sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import type { Slots } from './slots'
 
 export type View = { kind: 'top' } | { kind: 'favourites' } | { kind: 'source'; id: string }
 
-export const createPage = (ctx: PanelContext, changes: Pulse, slots: Slots) => {
+export const createView = () => sig<View>({ kind: 'top' })
+
+export const createPage = (ctx: PanelContext, changes: Pulse, slots: Slots, view: Sig<View>) => {
   const problem = sig('')
-  const view = sig<View>({ kind: 'top' })
 
   const fail = (error: unknown) => problem.set(errorMessage(error))
 

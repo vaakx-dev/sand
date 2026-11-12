@@ -10,10 +10,9 @@ const dimensions = ({ source }: Picture) => {
 
 const details = (shown: Picture) => [senderNames[shown.sender], dimensions(shown)].filter(Boolean).join(' · ')
 
-export const viewerHead = (kit: Kit, shown: Picture, count: string, zoom: Zoom, close: () => void) =>
-  kit.viewerBar(
-    close,
-    div({ class: 'flex min-w-0 flex-1 flex-col' }, kit.headTitle(2, shown.name ?? 'Image'), kit.metaLine(details(shown))),
-    div({ class: 'hidden tabular-nums md:flex' }, kit.metaLine(count)),
-    kit.zoomControls({ label: zoom.label, canZoomOut: zoom.zoomed, zoomIn: zoom.zoomIn, zoomOut: zoom.zoomOut, fit: zoom.fit }),
-  )
+export const viewerTitle = (shown: Picture | undefined) => shown?.name ?? 'Image'
+
+export const viewerTools = (kit: Kit, shown: Picture | undefined, count: string, zoom: Zoom) => [
+  div({ class: 'hidden items-center gap-2 tabular-nums md:flex' }, kit.metaLine([shown ? details(shown) : '', count].filter(Boolean).join(' · '))),
+  kit.zoomControls({ label: zoom.label, canZoomOut: zoom.zoomed, zoomIn: zoom.zoomIn, zoomOut: zoom.zoomOut, fit: zoom.fit }),
+]

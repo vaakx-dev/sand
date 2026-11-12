@@ -8,10 +8,9 @@ const atEnd = (input: HTMLInputElement) => {
   input.setSelectionRange(input.value.length, input.value.length)
 }
 
-const backButton = ({ icon, iconButton }: Kit, model: PageModel) =>
-  model.nested ? iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: () => model.nav.back() }, icon('back', 16)) : null
+const backButton = (kit: Kit, model: PageModel) => (model.nested ? kit.backButton({ surface: 'raised', onClick: () => model.nav.back() }) : null)
 
-const pageLabel = ({ barTitle }: Kit, { page }: PageModel) => span({ class: 'flex max-w-40 shrink-0', title: page.title }, barTitle(page.title))
+const pageLabel = ({ sheetTitle }: Kit, { page }: PageModel) => span({ class: 'flex max-w-40 shrink-0', title: page.title }, sheetTitle(page.title))
 
 const fieldProps = ({ page, text, fills, searching }: PageModel): Props<HTMLInputElement> => ({
   placeholder: page.field?.placeholder ?? page.placeholder ?? 'Search',
@@ -34,7 +33,7 @@ const submitButton = ({ delayed, primaryAction, spinner }: Kit, { busy, action, 
 
 const formParts = (kit: Kit, model: PageModel) => {
   const back = backButton(kit, model)
-  if (model.page.review) return [back, kit.barTitle(model.page.title)]
+  if (model.page.review) return [back, kit.sheetTitle(model.page.title)]
   return [back, pageLabel(kit, model), kit.textInput(fieldProps(model)), submitButton(kit, model)]
 }
 

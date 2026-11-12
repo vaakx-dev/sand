@@ -6,14 +6,23 @@ import type { Built } from './screens'
 
 const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 
-const toolButton = (model: Model, label: string, glyph: string, onClick: () => void) =>
-  model.kit.iconButton({ title: label, 'aria-label': label, onClick }, model.kit.icon(glyph))
+const sidebarButton = ({ kit, setDrawer }: Model) =>
+  kit.iconButton({ title: 'Show the sidebar', 'aria-label': 'Show the sidebar', onClick: () => setDrawer(true) }, kit.icon('sidebar'))
 
-const sidebarButton = (model: Model) => toolButton(model, 'Show the sidebar', 'sidebar', () => model.setDrawer(true))
+const backOf = (model: Model, built: Built | undefined) => () => built?.back?.() ?? (built?.nav && model.state.get() === 'phone' ? () => model.back() : undefined)
 
-const backButton = (model: Model) => toolButton(model, 'Back', 'back', () => model.back())
+const backButton = (model: Model, built: Built | undefined) => {
+  const back = backOf(model, built)
+  return show(
+    () => Boolean(back()),
+    () => model.kit.backButton({ onClick: () => back()?.() }),
+  )
+}
 
-const leadButton = (model: Model, built: Built | undefined) => (built?.nav ? backButton(model) : sidebarButton(model))
+const leadButton = (model: Model, built: Built | undefined) => {
+  const back = backOf(model, built)
+  return [backButton(model, built), show(() => !back(), () => sidebarButton(model))]
+}
 
 export const deskFrames = (model: Model, built: Built) =>
   div(
@@ -25,6 +34,7 @@ export const deskFrames = (model: Model, built: Built) =>
           () => model.state.get() === 'drawer',
           () => sidebarButton(model),
         ),
+        backButton(model, built),
         built.head,
         asideToggles(model),
       ),

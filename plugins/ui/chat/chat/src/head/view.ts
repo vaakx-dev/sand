@@ -35,13 +35,10 @@ const parentCrumb = (ctx: ChatContext, shell: Shell, parent: Sig<ParentLink | un
   )
 
 const titleMenu = (ctx: ChatContext, shell: Shell, id: string, title: Sig<string>) => {
-  const { barTitle, contextMenu, plainButton } = ctx.kit
+  const { contextMenu, titleButton } = ctx.kit
   const menu = contextMenu()
   const spec = () => ({ title: title.get(), actions: threadActions(ctx, shell, id) })
-  return barTitle(
-    plainButton({ class: 'max-w-full truncate rounded-sm', title, 'aria-haspopup': 'menu', ...menu.target(spec, event => menu.openBelow(event, spec)) }, title),
-    menu.view(),
-  )
+  return [titleButton({ title, 'aria-haspopup': 'menu', ...menu.target(spec, event => menu.openBelow(event, spec)) }, title), menu.view()]
 }
 
 export const breadcrumb = (ctx: ChatContext, shell: Shell, changes: Pulse, id: string) => {

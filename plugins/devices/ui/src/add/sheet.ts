@@ -1,6 +1,6 @@
 import type { DeviceRecord } from '@sand/devices-contract'
 import type { SheetSpec } from '@sand/ui-shell/contract'
-import { derive, dynamicChild, effect, show, sig } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, effect, sig } from '@vaakx-dev/vrui'
 import { doneBlock } from '../shared/parts'
 import type { AddStep, Ui } from '../ui'
 import type { AddDone, AddView } from './done'
@@ -15,7 +15,7 @@ const titles: Record<AddStep, string> = { list: 'Add', phone: 'Add a phone or br
 const isDone = (view: AddView): view is AddDone => typeof view !== 'string'
 
 export const addSheet = (ui: Ui, start: AddStep, close: () => void): SheetSpec => {
-  const { icon, iconButton, primaryAction, secondaryAction, sheetBody, sheetFoot, sheetTitle } = ui.kit
+  const { secondaryAction, sheetBody, sheetFoot } = ui.kit
   const view = sig<AddView>(start)
   const joined = sig<DeviceRecord[]>([])
   const step = derive(() => {
@@ -36,31 +36,19 @@ export const addSheet = (ui: Ui, start: AddStep, close: () => void): SheetSpec =
     return listStep(ui, joined, go)
   }
 
-  const foot = (key: AddStep | 'done') => {
+  const foot = () => {
     const current = view.get()
-    const doneButton = primaryAction({ onClick: close }, 'Done')
-    if (isDone(current))
-      return sheetFoot(current.again ? secondaryAction({ onClick: () => go('phone') }, 'Add another') : null, doneButton)
-    if (key === 'install' || (key === 'list' && joined.get().length)) return sheetFoot(doneButton)
-    return null
+    return isDone(current) && current.again ? sheetFoot(secondaryAction({ onClick: () => go('phone') }, 'Add another')) : null
   }
 
   return {
     label: 'Add',
     look: 'bare',
-    head: () => [
-      show(
-        () => step.get() !== 'list' && step.get() !== 'done',
-        () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: () => go('list') }, icon('back', 'md')),
-      ),
-      sheetTitle(() => (isDone(view.get()) ? '' : titles[step.get() as AddStep])),
-    ],
+    title: () => (isDone(view.get()) ? '' : titles[step.get() as AddStep]),
+    back: () => (step.get() === 'list' || step.get() === 'done' ? undefined : () => go('list')),
     body: () => [
       sheetBody({}, dynamicChild(step, body)),
-      dynamicChild(
-        derive(() => `${step.get()}:${joined.get().length > 0}`),
-        () => foot(step.get()),
-      ),
+      dynamicChild(step, foot),
     ],
     onClose: close,
   }
