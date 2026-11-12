@@ -2,7 +2,6 @@ import { history, historyKeymap, insertNewline, standardKeymap } from '@codemirr
 import { EditorState, Prec, Transaction } from '@codemirror/state'
 import { EditorView, keymap, placeholder as placeholderText, type ViewUpdate } from '@codemirror/view'
 import { quoteRuns } from '@sand/util'
-import { span } from '@vaakx-dev/vrui'
 import { chipClipboard } from './chips/clipboard'
 import { placeLink } from './chips/place'
 import { chipWidgets } from './chips/widget'
@@ -29,7 +28,7 @@ const completionWatch = ({ completion }: EditorParts) => [
 const keyHandlers = ({ keydown, keyup, paste, drop }: EditorKeys) => Prec.high(EditorView.domEventHandlers({ keydown, keyup, paste, drop }))
 
 const extensionsOf = (parts: EditorParts) => {
-  const hint = span(parts.placeholder)
+  const hint = parts.hint()
   return [
     history(),
     keymap.of([{ key: 'Enter', run: insertNewline, shift: insertNewline }, ...standardKeymap, ...historyKeymap]),

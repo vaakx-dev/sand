@@ -6,6 +6,7 @@ import {
   ArrowDown,
   ArrowDownToLine,
   ArrowLeft,
+  ArrowRightToLine,
   ArrowUpFromLine,
   ArrowUp,
   Bell,
@@ -27,6 +28,7 @@ import {
   Cloud,
   Copy,
   CopyPlus,
+  CornerDownLeft,
   CornerDownRight,
   CornerUpRight,
   Cpu,
@@ -211,6 +213,8 @@ const nodes = {
   inbox: Inbox,
   shield: ShieldCheck,
   calendar: Calendar,
+  'tab-key': ArrowRightToLine,
+  return: CornerDownLeft,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes | (string & {})

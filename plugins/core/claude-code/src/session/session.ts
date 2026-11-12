@@ -1,24 +1,25 @@
 import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
 import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { claudeArgs, claudeEnv } from '../cli/args'
+import { claudeArgs, claudeEnv, type Saved } from '../cli/args'
 import { connect, fieldsOf, type Json } from '../cli/connection'
 import { usageLimits } from '../account/usage'
+import { askAside } from './aside'
 import { messageBlock } from './content'
 import { createReader } from './stream'
 import { serverName, toolServer } from './tools'
 
-const savedOf = (setup: AppSetup, resume?: string) => {
-  if (resume) return { id: resume, resume: true }
-  return setup.persist ? { id: crypto.randomUUID(), resume: false } : undefined
-}
+const savedOf = (setup: AppSetup, given?: Saved): Saved | undefined => given ?? (setup.persist ? { id: crypto.randomUUID(), start: 'new' } : undefined)
+
+const resumable = (saved?: Saved) => (saved?.start === 'fork' ? undefined : saved)
 
 export interface SessionNeeds {
   media: Media
   report(limits: PlanLimits): void
 }
 
-export const openSession = async (setup: AppSetup, output: AppOutput, { media, report }: SessionNeeds, resume?: string): Promise<AppSession> => {
+export const openSession = async (setup: AppSetup, output: AppOutput, needs: SessionNeeds, given?: Saved): Promise<AppSession> => {
+  const { media, report } = needs
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
   const answerFor = (id: string) => {
     const found = answers.get(id) ?? Promise.withResolvers<ToolResultBlock>()
@@ -28,7 +29,8 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
   const serve = toolServer(setup.tools, id => answerFor(id).promise, media)
   const toBlock = messageBlock(media)
   const reader = createReader(output)
-  const saved = savedOf(setup, resume)
+  const saved = savedOf(setup, given)
+  const resumed = resumable(saved)
   let running = false
   let stopped: PromiseWithResolvers<void> | undefined
 
@@ -80,8 +82,9 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
   }
 
   return {
-    ...(saved && { id: saved.id }),
+    ...(resumed && { id: resumed.id }),
     send,
+    ...(resumed && { aside: (prompt: string, signal?: AbortSignal) => askAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), prompt, signal) }),
     steer: send,
     answer: (id, result) => answerFor(id).resolve(result),
     interrupt() {

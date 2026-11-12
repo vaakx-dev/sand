@@ -96,7 +96,7 @@ export const chatView = (parts: ChatParts) => {
 
   const dock = ctx.composer.dock(
     {
-      key: `bot:${id}`,
+      ref: { owner: 'bot', id },
       name: () => botName(bot() ?? { name: '' }),
       skills: { bot: id },
       running: busy,

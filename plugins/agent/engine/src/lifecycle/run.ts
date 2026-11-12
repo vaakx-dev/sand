@@ -1,6 +1,6 @@
 import { type Message, textOf } from '@sand/chats/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
-import { type Conversation, type TurnEnding, type TurnResult, type TurnStatus } from '../contract'
+import { type Conversation, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
 import type { EngineContext } from '../context'
 import { createPartial } from '../loop/partial'
 import { runReact } from '../loop/react'
@@ -81,6 +81,7 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     const release = joinDisposers(leases.hold(info.id, controller), ctx.busy(), ctx.effect(() => run.partial.stop))
     if ('user' in begun) conversations.started?.(conversation, begun.user, info)
     announce.turn(info.id)
+    ctx.emit(turnOpen, conversation, info)
     const outcome = await react(run, hooks, begun)
     let result: TurnResult
     try {
@@ -88,8 +89,10 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     } finally {
       release()
     }
-    conversations.ended?.(conversation, result, stores.turns.get(conversations.owner, info.id) ?? info)
+    const finished = stores.turns.get(conversations.owner, info.id) ?? info
+    conversations.ended?.(conversation, result, finished)
     announce.turn(info.id)
+    ctx.emit(turnClose, conversation, result, finished)
     ended(conversation)
     return { result, ...(outcome.failure && { failure: outcome.failure }) }
   }

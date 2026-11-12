@@ -11,7 +11,7 @@ import {
   type ThreadRef,
   type ToolSpec,
 } from '../contract'
-import { isModelContent, type Message, type ModelContent } from '@sand/chats/contract'
+import { isModelContent, type Message, type ModelContent, textOf } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import { stat } from 'node:fs/promises'
 import { blankFiles, secretValues } from './blank'
@@ -54,6 +54,12 @@ const isFolder = (path: string) =>
     found => found.isDirectory(),
     () => false,
   )
+
+const noUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+
+const keyOf = (caller: string, thread: ThreadRef) => `${caller}:${thread.id}:${thread.generation}`
+
+const askedOf = (request: Request) => textOf(request.messages.at(-1)?.content ?? [])
 
 const callsOf = (message: Message) => message.content.flatMap(block => (block.type === 'tool_call' ? [block.id] : []))
 
@@ -173,7 +179,7 @@ export const createBridge = (plan: AppPlan, home: string) => {
   }
 
   async function* step(request: Request, thread: ThreadRef, caller: string, signal?: AbortSignal): AsyncIterable<LLMEvent> {
-    const key = `${caller}:${thread.id}:${thread.generation}`
+    const key = keyOf(caller, thread)
     await live.get(key)?.calming
     const delta = request.delta ?? []
     const { found, messages } = held(key, thread, delta) ?? { messages: delta }
@@ -201,6 +207,17 @@ export const createBridge = (plan: AppPlan, home: string) => {
     }
   }
 
+  async function* aside(request: Request, thread: ThreadRef, caller: string, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+    const entry = live.get(keyOf(caller, thread))
+    if (!entry?.done || !entry.session.aside) throw new Error(`${plan.app} can't answer beside this thread now`)
+    yield { type: 'start', model: request.model }
+    const { text, usage } = await entry.session.aside(askedOf(request), signal)
+    yield { type: 'done', message: { role: 'assistant', content: text ? [{ type: 'text', text }] : [] }, stopReason: 'end_turn', usage: { ...noUsage, ...usage } }
+  }
+
+  const threaded = (request: Request, thread: ThreadRef, caller: string, signal?: AbortSignal) =>
+    request.aside ? aside(request, thread, caller, signal) : step(request, thread, caller, signal)
+
   async function* once(request: Request, signal?: AbortSignal): AsyncIterable<LLMEvent> {
     const [message, ...more] = request.messages
     if (!message || message.role !== 'user' || more.length) throw new Error(`${plan.app} takes one message outside a chat`)
@@ -216,7 +233,7 @@ export const createBridge = (plan: AppPlan, home: string) => {
   }
 
   return {
-    stream: (request: Request, signal?: AbortSignal, caller = 'local') => (request.thread ? step(request, request.thread, caller, signal) : once(request, signal)),
+    stream: (request: Request, signal?: AbortSignal, caller = 'local') => (request.thread ? threaded(request, request.thread, caller, signal) : once(request, signal)),
     release(thread: string) {
       for (const [key, entry] of live) if (entry.thread === thread) drop(key, entry)
     },
