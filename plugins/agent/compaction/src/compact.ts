@@ -6,11 +6,11 @@ import { compactionBrief, contextUsage, type CompactionReason, type CompactionRe
 import { usageRecord } from '@sand/usage/contract'
 import { untilAborted } from '@sand/util'
 import type { Context } from 'drydock'
-import { budgetOf, usageOf } from './budget'
 import type { CompactionConfig } from './config'
 import { plan } from './history/plan'
 import { compactedMessages } from './history/summary'
 import { requestTokens } from './measure/estimate'
+import type { Meter } from './measure/meter'
 import type { Tracker } from './measure/tracker'
 import { filesOf } from './summarize/files'
 import { summarize } from './summarize'
@@ -45,12 +45,17 @@ const latestCompaction = (path: Entry[]) => path.findLast(entry => entry.type ==
 const fits = ({ record, base, previous }: Summary, path: Entry[], request: LLMRequest) =>
   record.thread === request.thread?.id && latestCompaction(path) === previous && path.some(entry => entry.id === base)
 
-export const createCompactor = (ctx: CompactionContext, config: CompactionConfig, tracker: Tracker) => {
+interface Measures {
+  config: CompactionConfig
+  tracker: Tracker
+  meter: Meter
+}
+
+export const createCompactor = (ctx: CompactionContext, { config, tracker, meter }: Measures) => {
   const jobs = new Map<string, Job>()
+  const { budget, usage } = meter
 
   const native = (model?: string) => !!model && !!ctx.llm.caps?.(model).native
-
-  const budget = (request: LLMRequest) => budgetOf(ctx.llm, config, request.model)
 
   const summarizeFrom = async (conversation: Conversation, request: LLMRequest, reason: CompactionReason): Promise<Summary> => {
     const path = conversation.path()
@@ -108,7 +113,7 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
     const after = requestTokens(compacted)
     conversation.append('compaction', { ...summary.record, before, after } satisfies CompactionRecord)
     tracker.reset(conversation.id)
-    ctx.emit(contextUsage, conversation, usageOf(budget(request), compacted, after))
+    ctx.emit(contextUsage, conversation, usage(compacted, after))
     return true
   }
 
@@ -128,11 +133,11 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
       else if (take(conversation, request)) return true
       const job = jobs.get(conversation.id) ?? run(conversation, request, reason)
       const before = tracker.project(conversation.id, request)
-      ctx.emit(contextUsage, conversation, usageOf(budget(request), request, before, true))
+      ctx.emit(contextUsage, conversation, { ...usage(request, before), compacting: true })
       const summary = await untilAborted(job.work, signal).catch(() => undefined)
       if (summary && jobs.get(conversation.id) === job) jobs.delete(conversation.id)
       if (summary && place(conversation, request, summary)) return true
-      ctx.emit(contextUsage, conversation, usageOf(budget(request), request, before))
+      ctx.emit(contextUsage, conversation, usage(request, before))
       return false
     },
   }

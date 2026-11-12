@@ -1,4 +1,4 @@
-import { contextChange, contextGet, type ContextParts, type ContextUsage } from '@sand/compaction/contract'
+import { contextChange, contextGet, type ContextPart, type ContextTone, type ContextUsage } from '@sand/compaction/contract'
 import { wire } from '@sand/devices-contract'
 import { inspector } from '@sand/inspector/contract'
 import { pulse, wireValues } from '@sand/reactive'
@@ -10,28 +10,20 @@ import { derive, div, list, show, sig, span, type Child, type Sig } from '@vaakx
 import { definePlugin } from 'drydock'
 
 interface Look {
-  name: string
   swatch: string
   segment: string
 }
 
-interface Part extends Look {
-  size: number
+const looks: Record<ContextTone, Look> = {
+  violet: { swatch: 'bg-violet-400', segment: 'group-hover:bg-violet-400 group-aria-expanded:bg-violet-400' },
+  orange: { swatch: 'bg-orange-400', segment: 'group-hover:bg-orange-400 group-aria-expanded:bg-orange-400' },
+  danger: { swatch: 'bg-danger-400', segment: 'group-hover:bg-danger-400 group-aria-expanded:bg-danger-400' },
+  info: { swatch: 'bg-info-400', segment: 'group-hover:bg-info-400 group-aria-expanded:bg-info-400' },
+  accent: { swatch: 'bg-accent-400', segment: 'group-hover:bg-accent-400 group-aria-expanded:bg-accent-400' },
+  success: { swatch: 'bg-success-400', segment: 'group-hover:bg-success-400 group-aria-expanded:bg-success-400' },
 }
 
-const looks: Record<keyof ContextParts, Look> = {
-  system: { name: 'Instructions', swatch: 'bg-violet-400', segment: 'group-hover:bg-violet-400 group-aria-expanded:bg-violet-400' },
-  tools: { name: 'Tools', swatch: 'bg-info-400', segment: 'group-hover:bg-info-400 group-aria-expanded:bg-info-400' },
-  conversation: { name: 'Conversation', swatch: 'bg-accent-400', segment: 'group-hover:bg-accent-400 group-aria-expanded:bg-accent-400' },
-  results: { name: 'Tool results', swatch: 'bg-success-400', segment: 'group-hover:bg-success-400 group-aria-expanded:bg-success-400' },
-}
-
-const order: (keyof ContextParts)[] = ['system', 'tools', 'conversation', 'results']
-
-const partsOf = ({ used, parts }: ContextUsage): Part[] =>
-  parts ? order.map(key => ({ ...looks[key], size: parts[key] })) : [{ ...looks.conversation, name: 'Used', size: used }]
-
-const empty: ContextUsage = { used: 0, limit: 0, window: 0 }
+const empty: ContextUsage = { used: 0, limit: 0, window: 0, parts: [] }
 
 const percent = (size: number, window: number) => `${window ? (size / window) * 100 : 0}%`
 
@@ -59,16 +51,16 @@ export default definePlugin({
     const render = (subject: () => Subject) => {
       const open = sig(false)
       const usage = () => usageOf(subject()) ?? empty
-      const parts = derive(() => partsOf(usage()))
-      const segment = (part: Sig<Part>) =>
-        span({ class: () => ['h-full shrink-0 bg-neutral-600 transition-colors', part.get().segment], style: () => `width:${percent(part.get().size, usage().window)}` })
+      const parts = derive(() => usage().parts)
+      const segment = (part: Sig<ContextPart>) =>
+        span({ class: () => ['h-full shrink-0 bg-neutral-600 transition-colors', looks[part.get().tone].segment], style: () => `width:${percent(part.get().size, usage().window)}` })
       const breakdown = () =>
         div(
           { class: 'flex flex-col px-2 pb-2 text-xs text-neutral-400' },
           list(
             parts,
             part => part.name,
-            part => breakdownLine(part.get().swatch, part.get().name, () => tokens(part.get().size)),
+            part => breakdownLine(looks[part.get().tone].swatch, part.get().name, () => tokens(part.get().size)),
             div({ class: 'flex flex-col' }),
           ),
           breakdownLine('bg-neutral-800', 'Free', () => tokens(Math.max(0, usage().window - usage().used))),

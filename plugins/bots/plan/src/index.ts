@@ -1,4 +1,5 @@
 import { botRemove, bots } from '@sand/bots/contract'
+import { systemParts } from '@sand/compaction/contract'
 import type { Actor } from '@sand/host-hub/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { failure } from '@sand/orchestrator/contract'
@@ -11,7 +12,7 @@ import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { planChangeWire, planDoneRule, planRead, planWrite } from './contract'
-import { doneRule, planSection } from './prompt'
+import { doneRule, planSection, planSectionLength } from './prompt'
 import { offerPlanTools } from './tools'
 
 export default definePlugin({
@@ -53,6 +54,7 @@ export default definePlugin({
     )
     ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && (await changedElsewhere(conversation.id))) || undefined)
     ctx.on(botRemove, bot => void seen.delete(bot))
+    ctx.watch(systemParts, found => found?.add({ name: 'Plan', tone: 'danger', chars: planSectionLength }))
     ctx.watch(mcpTools, found => found && offerPlanTools(found))
     ctx.watch(server, found => {
       if (!found) return

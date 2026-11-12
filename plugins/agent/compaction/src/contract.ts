@@ -1,14 +1,15 @@
 import type { LLMRequest, Usage } from '@sand/accounts/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
-import { event, service } from 'drydock'
+import { event, service, type Dispose } from 'drydock'
 import { z } from 'zod'
 
-export interface ContextParts {
-  system: number
-  tools: number
-  conversation: number
-  results: number
+export type ContextTone = 'violet' | 'orange' | 'danger' | 'info' | 'accent' | 'success'
+
+export interface ContextPart {
+  name: string
+  tone: ContextTone
+  size: number
 }
 
 export interface ContextUsage {
@@ -16,7 +17,17 @@ export interface ContextUsage {
   limit: number
   window: number
   compacting?: boolean
-  parts?: ContextParts
+  parts: ContextPart[]
+}
+
+export interface SystemPart {
+  name: string
+  tone: ContextTone
+  chars(system: string): number
+}
+
+export interface SystemParts {
+  add(part: SystemPart): Dispose
 }
 
 export type CompactionReason = 'threshold' | 'overflow' | 'idle'
@@ -51,6 +62,14 @@ export interface ContextLimits {
 }
 
 export const contextLimits = service<ContextLimits>('contextLimits')
+
+export const systemParts = service<SystemParts>('systemParts')
+
+export const sectionLength = (system: string, start: string, end: RegExp) => {
+  const from = system.indexOf(start)
+  const found = from < 0 ? null : end.exec(system.slice(from))
+  return found ? found.index + found[0].length : 0
+}
 
 export const contextUsage = event<(conversation: Conversation, usage: ContextUsage) => void>('context.usage')
 
