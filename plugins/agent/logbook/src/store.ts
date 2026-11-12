@@ -171,7 +171,7 @@ class Store {
 
   search(search: Search): Entry[] {
     const { sql, bindings } = whereOf(filters(search))
-    const rows = this.db.query<Row, Bindings>(`select * from logbook where ${sql} order by at desc, id limit $limit offset $offset`).all({ ...bindings, limit: search.limit ?? DEFAULT_LIMIT, offset: search.offset ?? 0 })
+    const rows = this.db.query<Row, Bindings>(`select * from logbook where ${sql} order by at desc, rowid desc limit $limit offset $offset`).all({ ...bindings, limit: search.limit ?? DEFAULT_LIMIT, offset: search.offset ?? 0 })
     return rows.map(entryOf)
   }
 
