@@ -15,7 +15,7 @@ const wakeNow = (threads: Threads, thread: Thread): MenuAction => ({
   label: 'Wake now',
   icon: 'wake',
   quick: true,
-  run: () => threads.snooze(thread.id, null),
+  run: () => threads.update(thread.id, { snoozed: null }),
 })
 
 const snoozeLater = (threads: Threads, thread: Thread): MenuAction => ({
@@ -28,7 +28,7 @@ const snoozeLater = (threads: Threads, thread: Thread): MenuAction => ({
     id: preset.id,
     label: preset.label,
     tip: () => backLabel(Date.now() + preset.span),
-    run: () => threads.snooze(thread.id, Date.now() + preset.span),
+    run: () => threads.update(thread.id, { snoozed: Date.now() + preset.span }),
   })),
   ask: {
     placeholder: '30m, 3d, fri 9am',
@@ -40,7 +40,7 @@ const snoozeLater = (threads: Threads, thread: Thread): MenuAction => ({
     },
     run(text) {
       const at = parseWhen(text)
-      return at ? threads.snooze(thread.id, at) : undefined
+      return at ? threads.update(thread.id, { snoozed: at }) : undefined
     },
   },
   run: () => {},

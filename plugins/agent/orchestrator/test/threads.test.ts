@@ -1,5 +1,5 @@
 import { startSand, type Sand } from '@sand/harness'
-import { historyRead, threadList, threadSend, threadStart, waitThread } from '@sand/orchestrator/contract'
+import { historyRead, threadList, threadSend, threadStart, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -40,6 +40,14 @@ test('a started thread runs to its reply, reads back in order, and a retried sta
     more: true,
   })
   expect(await sand.ask(threadList, {})).toEqual([expect.objectContaining({ thread: sent.thread, status: 'completed', settled: false })])
+})
+
+test('settling a running thread stops its turn first', async () => {
+  const base = await start([[{ type: 'hold' }]])
+  const sent = await sand.ask(threadStart, { ...base, prompt: 'go' })
+
+  expect(await sand.ask(threadUpdate, { session: sent.thread, settled: true })).toMatchObject({ thread: sent.thread, settled: true })
+  expect(sand.turns.get(sent.turn!)).toMatchObject({ status: 'interrupted' })
 })
 
 test('a wait returns when the turn waits on the user, and waiting until the end goes on past it', async () => {

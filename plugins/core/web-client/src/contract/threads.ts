@@ -2,6 +2,8 @@ import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
 import type { PendingItem, TurnResult, WaitReason } from '@sand/turns-contract/contract'
 import type { Branch, Entry, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
+import type { InputOf } from '@sand/host-hub/contract'
+import type { threadUpdate } from '@sand/orchestrator/contract'
 import type { Mark } from '@sand/server/contract'
 import type { Dispose } from 'drydock'
 
@@ -47,6 +49,8 @@ export interface DraftTarget {
 }
 
 
+export type ThreadChange = Omit<InputOf<typeof threadUpdate>, 'session'>
+
 export interface Threads {
   cwd(): string
   device(): string
@@ -57,10 +61,7 @@ export interface Threads {
   current(): Thread | undefined
   children(id: string): Thread[]
   create(target: Omit<DraftTarget, 'id'> & { id?: string }): Promise<Thread>
-  rename(id: string, title: string): Promise<void>
-  pin(id: string, pinned: boolean): Promise<void>
-  settle(id: string, settled: boolean): Promise<void>
-  snooze(id: string, until: number | null): Promise<void>
+  update(id: string, change: ThreadChange): Promise<void>
   remove(id: string): Promise<void>
   select(id: string | undefined, options?: { replace?: boolean }): Promise<void>
   watch(id: string): Dispose

@@ -1,5 +1,5 @@
 import type { Session } from '@sand/chats/contract'
-import { loop, loopInterrupt, loopRun, loopSteer, loopUnsteer, queueChange, type QueueState } from '@sand/loop/contract'
+import { loop, loopRun, loopSteer, loopUnsteer, queueChange, type QueueState } from '@sand/loop/contract'
 import { server, sessionOpened, userWrote } from '@sand/server/contract'
 import { turnPending, type Turns } from '@sand/turns-contract/contract'
 import { joinDisposers } from '@sand/util'
@@ -33,7 +33,6 @@ export const serveLoop = (ctx: TurnsContext, service: Turns) => {
         return sent.disposition === 'started' ? sent.turn : sent.pending
       }),
       found.handle(loopUnsteer, ({ session: id, item }) => service.withdraw(session(id), item)),
-      found.handle(loopInterrupt, ({ session: id }) => service.interrupt(session(id))),
     )
   })
 }

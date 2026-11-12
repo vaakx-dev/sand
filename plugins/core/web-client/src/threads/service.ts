@@ -2,16 +2,13 @@ import {
   type OpenedSession,
   sessionBranches,
   sessionCheckout,
-  sessionPin,
   sessionRemove,
-  sessionRename,
-  sessionSettle,
-  sessionSnooze,
   sessionsCreate,
   sessionsQuick,
   uiFocus,
 } from '@sand/server/contract'
 import type { Pcs, Wire } from '@sand/devices-contract'
+import { threadUpdate } from '@sand/orchestrator/contract'
 import { uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { type DraftTarget, onAddressChange, type Thread, type Threads, type ThreadVisit, threadSelect } from '../contract'
@@ -123,17 +120,8 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
       thread.loaded = true
       return thread
     },
-    async rename(id, title) {
-      await wire.call(sessionRename, { session: id, title }, store.deviceOf(id))
-    },
-    async pin(id, pinned) {
-      await wire.call(sessionPin, { session: id, pinned }, store.deviceOf(id))
-    },
-    async settle(id, settled) {
-      await wire.call(sessionSettle, { session: id, settled }, store.deviceOf(id))
-    },
-    async snooze(id, until) {
-      await wire.call(sessionSnooze, { session: id, until }, store.deviceOf(id))
+    async update(id, change) {
+      await wire.call(threadUpdate, { session: id, ...change })
     },
     async remove(id) {
       await wire.call(sessionRemove, { session: id }, store.deviceOf(id))

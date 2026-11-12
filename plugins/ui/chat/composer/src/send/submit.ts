@@ -18,7 +18,7 @@ export const sendDevice = (ctx: ComposerContext) => {
 
 export const interrupt = async (ctx: ComposerContext) => {
   const current = ctx.threads.current()
-  if (current?.turn) await ctx.turns.interrupt(current.id)
+  if (current?.turn) await ctx.turns.stop(current.id)
 }
 
 export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Outgoing) => {

@@ -12,7 +12,7 @@ export const renamePage = (threads: Threads, thread: Thread): PalettePage => ({
     placeholder: 'Thread name',
     action: value => ({ label: 'Save', enabled: Boolean(value.trim()) && value.trim() !== thread.info.title }),
     async submit(value) {
-      await threads.rename(thread.id, oneLine(value))
+      await threads.update(thread.id, { title: oneLine(value) })
     },
   },
 })
