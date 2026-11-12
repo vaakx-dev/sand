@@ -32,10 +32,11 @@ const unanswered: Record<Unanswered, string> = {
 const askUser = async (deps: ToolDeps, entry: Saved, site: string, prompt: string, enter: Enter, context: ToolContext) => {
   const { conversation, signal } = context
   const id = Bun.randomUUIDv7()
-  conversation.append(codeEntry, { id, login: entry.id, name: entry.name, site, prompt } satisfies CodeRequest)
+  const asked: CodeRequest = { id, login: entry.id, name: entry.name, site, prompt }
+  conversation.append(codeEntry, asked)
   const done = context.wait({ kind: 'secret', call: context.call.id, title: `Sign in to ${entry.name}` })
   deps.needs(conversation, `Sign in to ${entry.name}: ${prompt}`)
-  const outcome = await deps.codes.wait(conversation.id, id, answerTimeout, signal).finally(done)
+  const outcome = await deps.codes.wait({ session: conversation.id, kind: 'code', ...asked }, answerTimeout, signal).finally(done)
   if (outcome.status !== 'answered') {
     conversation.append(answerEntry, { id, status: outcome.status, login: entry.id } satisfies AskAnswer)
     return unanswered[outcome.status]

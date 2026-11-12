@@ -71,7 +71,7 @@ export const askCard = (ctx: CardContext, answer: Sig<AskStatus | undefined>, ta
   const waiting = sig<boolean | undefined>(undefined)
   const shown = derive(() => shownOf(answer.get(), held.get() ? undefined : waiting.get()))
   const check = () => {
-    if (!answer.get()) void ctx.wire.call(askWaiting, target).then(found => waiting.set(found), () => {})
+    if (!answer.get()) void ctx.wire.call(askWaiting, { session: target.session }).then(found => waiting.set(found.some(asked => asked.id === target.id)), () => {})
   }
   return div(
     {

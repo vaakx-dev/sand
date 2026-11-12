@@ -1,11 +1,10 @@
-import type { ConversationRef } from '@sand/engine/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { answerEntry, type AskAnswer, type Login, secretEntry, type SecretRequest } from '../contract'
+import { answerEntry, type AskAnswer, type Login, loginsToolGroup, secretEntry, type SecretRequest } from '../contract'
 import { onceLife } from '../service'
 import { siteOf } from '../site'
 import type { SecretAnswer, Unanswered } from '../waits'
-import { group, type ToolDeps } from './deps'
+import type { ToolDeps } from './deps'
 
 const answerTimeout = 20 * 60_000
 const settleGrace = 30_000
@@ -41,11 +40,6 @@ const kept = (login: Login, save: boolean) =>
     ? `Saved as login ${login.id}.`
     : `Held as one-time login ${login.id}: it works for one use in the next ${onceLife / 60_000} minutes, then it is gone. It is not saved.`
 
-const accessFor = ({ logins }: ToolDeps, conversation: ConversationRef) => {
-  const { bot } = logins.responsible(conversation)
-  return bot ? { bots: [bot], threads: [] } : { bots: [], threads: [conversation.id] }
-}
-
 const newLogin = (name: string, site: string | undefined, answer: SecretAnswer) => {
   if (site && 'username' in answer) return { kind: 'website' as const, name, site, username: answer.username, password: answer.password }
   if (!site && 'value' in answer) return { kind: 'key' as const, name, value: answer.value }
@@ -54,7 +48,7 @@ const newLogin = (name: string, site: string | undefined, answer: SecretAnswer) 
 
 export const secretTool = (deps: ToolDeps): Tool<typeof input> => ({
   name: 'request_secret',
-  group,
+  group: loginsToolGroup,
   description,
   input,
   effect: 'read',
@@ -64,17 +58,17 @@ export const secretTool = (deps: ToolDeps): Tool<typeof input> => ({
     const { conversation, signal } = context
     const site = given && siteOf(given)
     const id = Bun.randomUUIDv7()
-    conversation.append(secretEntry, { id, title, reason, ...(placeholder && { placeholder }), ...(site && { site }), ...(once && { once }) } satisfies SecretRequest)
+    const asked: SecretRequest = { id, title, reason, ...(placeholder && { placeholder }), ...(site && { site }), ...(once && { once }) }
+    conversation.append(secretEntry, asked)
     const done = context.wait({ kind: 'secret', call: context.call.id, title })
-    const outcome = await deps.secrets.wait(conversation.id, id, answerTimeout, signal).finally(done)
+    const outcome = await deps.secrets.wait({ session: conversation.id, kind: 'secret', ...asked }, answerTimeout, signal).finally(done)
     if (outcome.status !== 'answered') {
       conversation.append(answerEntry, { id, status: outcome.status } satisfies AskAnswer)
       return unanswered[outcome.status]
     }
     const { save } = outcome.answer
-    const asked = newLogin(title, site, outcome.answer)
-    const access = accessFor(deps, conversation)
-    const login = save ? await deps.logins.add(asked, access) : deps.logins.hold(asked, access)
+    const entered = newLogin(title, site, outcome.answer)
+    const login = save ? await deps.logins.add(entered, conversation) : deps.logins.hold(entered, conversation)
     conversation.append(answerEntry, { id, status: save ? 'saved' : 'held', login: login.id } satisfies AskAnswer)
     return `${kept(login, save)} ${howTo(login)}`
   },
