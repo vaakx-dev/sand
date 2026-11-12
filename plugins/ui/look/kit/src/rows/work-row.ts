@@ -1,7 +1,7 @@
-import type { Status } from '@sand/ui-shell/contract'
-import { clock, div, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import type { Row, Status } from '@sand/ui-shell/contract'
+import { clock, derive, div, dynamicChild, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
-import { largeRowTitle, rowTitle } from '../heads/text'
+import { largeRowTitle, metaLine, rowTitle } from '../heads/text'
 import { dot, spinner } from '../marks/marks'
 import { toneText } from '../marks/tones'
 import { placeLook, type Surface } from '../surface'
@@ -78,6 +78,45 @@ export const workRowBody = ({ title, lead, end, at, large = false, ...rest }: Wo
     ),
     secondLine(large, rest),
   )
+
+export interface RowBodyLook {
+  large?: boolean
+}
+
+const sameLook = (shown: Row, next: Row) =>
+  shown.label === next.label &&
+  shown.end === next.end &&
+  shown.at === next.at &&
+  shown.status === next.status &&
+  shown.lead === next.lead &&
+  shown.detail === next.detail &&
+  shown.trail === next.trail &&
+  shown.place?.label === next.place?.label &&
+  shown.place?.mark === next.place?.mark
+
+const looksOf = (row: () => Row) => {
+  let shown: Row | undefined
+  return derive(() => {
+    const next = row()
+    if (!shown || !sameLook(shown, next)) shown = next
+    return shown
+  })
+}
+
+const bodyOf = (row: Row, large: boolean) =>
+  workRowBody({
+    title: row.label,
+    large,
+    lead: row.lead?.(),
+    end: row.end ? span({ class: 'flex shrink-0 tabular-nums' }, metaLine(row.end)) : undefined,
+    at: row.at,
+    detail: row.detail?.(),
+    place: row.place && { label: row.place.label, mark: row.place.mark?.() },
+    status: row.status,
+    trail: row.trail?.(),
+  })
+
+export const rowBody = (row: () => Row, { large = false }: RowBodyLook = {}) => dynamicChild(looksOf(row), shown => bodyOf(shown, large))
 
 export const workRow = ({ current = false, large = false, surface = 'page', class: extra, ...props }: WorkRowProps, body: Child) =>
   rowButton(

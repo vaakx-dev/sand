@@ -25,7 +25,7 @@ const positionOf = (thread: Thread) => thread.info.position ?? thread.info.creat
 
 export const visibleThreads = (threads: Thread[]) => threads.filter(thread => thread.info.kind !== 'agent').sort((a, b) => positionOf(b) - positionOf(a))
 
-export const statusOf = (thread: Thread, jobs: number, change: ThreadChanges | undefined): Status | undefined => {
+const statusOf = (thread: Thread, jobs: number, change: ThreadChanges | undefined): Status | undefined => {
   if (thread.waiting) return 'waiting'
   if (thread.running || jobs) return 'running'
   return changeStatus(change)

@@ -76,7 +76,7 @@ export interface RowPlace {
   mark?(): Child
 }
 
-export interface ShellRow {
+export interface Row {
   id: string
   label: string
   end?: string
@@ -86,6 +86,9 @@ export interface ShellRow {
   status?: Status
   place?: RowPlace
   trail?(): Child
+}
+
+export interface ShellRow extends Row {
   to: Route
   menu?(): MenuAction[]
 }
