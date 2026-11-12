@@ -8,6 +8,7 @@ export interface ToolSpec {
   name: string
   description: string
   inputSchema: Record<string, unknown>
+  secret?: string[]
   deferred?: { found: boolean }
 }
 

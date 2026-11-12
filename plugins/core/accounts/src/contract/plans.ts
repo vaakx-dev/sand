@@ -106,7 +106,7 @@ export interface AppSession {
   answer(id: string, result: ToolResultBlock): void
   inject?(handoff: HandoffBlock): Promise<boolean>
   interrupt(): Promise<void>
-  close(): void
+  close(): Promise<void>
 }
 
 export interface AppPlan extends PlanInfo {
@@ -121,6 +121,7 @@ export interface AppPlan extends PlanInfo {
   models(): Promise<PlanModel[]>
   usage?(): Promise<PlanLimits | undefined>
   open(setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession>
+  sessionFiles?(id: string): Promise<string[]>
 }
 
 export type AnyPlan = Plan | AppPlan

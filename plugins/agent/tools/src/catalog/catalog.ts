@@ -1,5 +1,5 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import type { Message, ToolCallBlock } from '@sand/chats/contract'
+import { type Message, secretMark, type ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
 import type { GroupState, Offer, Secrets, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
 import { z } from 'zod'
@@ -18,8 +18,10 @@ const withoutSafeIntegerBounds = ({ jsonSchema }: { jsonSchema: z.core.JSONSchem
 
 const spec = (tool: Tool): ToolSpec => {
   const { $schema, ...inputSchema } = z.toJSONSchema(tool.input, { io: 'input', override: withoutSafeIntegerBounds })
-  return { name: tool.name, description: tool.description, inputSchema }
+  return { name: tool.name, description: tool.description, inputSchema, ...(tool.secret?.length && { secret: tool.secret }) }
 }
+
+const secretNote = `Some tools take secrets, like passwords, keys and one-time codes. Once such a call runs, sand replaces those inputs in the chat with ${secretMark}. The tool got the real values you passed, so a call that shows ${secretMark} was not a mistake.`
 
 const byName = (a: Tool, b: Tool) => a.name.localeCompare(b.name)
 
@@ -101,6 +103,12 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const secrets = (): Secrets =>
     tools().reduce((found, { name, secret }) => (secret?.length ? found.set(name, [...new Set([...(found.get(name) ?? []), ...secret])]) : found), new Map<string, string[]>())
 
+  const notes = (conversation: Conversation) => {
+    const scoped = usable(conversation)
+    const environments = scoped.flatMap(tool => (tool.environment ? [tool.environment] : []))
+    return scoped.some(tool => tool.secret?.length) ? [...environments, secretNote] : environments
+  }
+
   const effect = (call: ToolCallBlock, conversation: Conversation) => {
     const tool = resolve(call.name, conversation)
     return tool && call.malformed === undefined ? (tool.effect ?? 'run') : undefined
@@ -122,7 +130,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
       changed()
     },
     specs,
-    notes: conversation => usable(conversation).flatMap(tool => (tool.environment ? [tool.environment] : [])),
+    notes,
     parallel: (call, conversation) => resolve(call.name, conversation)?.parallel === true,
     effect,
     run: (call, context) => run(resolve(call.name, context.conversation), call, context),
