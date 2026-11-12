@@ -4,7 +4,7 @@ import { accessSections } from './access'
 import { storageNote } from './list'
 import { managers } from './managers/catalog'
 import type { PageParts } from './model'
-import { editForm, field } from './parts'
+import { editForm } from './parts'
 import { usesSection } from './uses'
 import { valuesSection } from './values'
 
@@ -22,8 +22,8 @@ const detailsSection = ({ kit, model }: PageParts, login: Derive<Login>) => {
       editForm(
         kit,
         { save: 'Save', ready, submit },
-        field(kit, 'Name', { type: 'text', bindValue: name }),
-        website ? field(kit, 'Site', { type: 'text', inputMode: 'url', bindValue: site }) : null,
+        kit.field({ label: 'Name' }, kit.textInput({ type: 'text', bindValue: name })),
+        website ? kit.field({ label: 'Site' }, kit.textInput({ type: 'text', inputMode: 'url', bindValue: site })) : null,
       ),
     ),
   )

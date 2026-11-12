@@ -1,10 +1,7 @@
 import { errorMessage } from '@sand/util'
-import { div, label, show, sig } from '@vaakx-dev/vrui'
+import { div, show, sig } from '@vaakx-dev/vrui'
 import type { Parts } from '../parts'
 import { createProject, projectChecklist } from '../profile/projects'
-
-const field = (parts: Parts, text: string, control: HTMLElement) =>
-  label({ class: 'flex flex-col gap-2' }, parts.ctx.kit.sectionTitle(text), control)
 
 export const openNewBot = (parts: Parts) => {
   const { kit } = parts.ctx
@@ -37,18 +34,13 @@ export const openNewBot = (parts: Parts) => {
     head: () => kit.barTitle('New bot'),
     body: () =>
       div(
-        { class: 'flex flex-col gap-6 pt-2' },
-        field(
-          parts,
-          'What should it take care of?',
+        { class: 'flex flex-col gap-4 pt-2' },
+        kit.field(
+          { label: 'What should it take care of?' },
           kit.textArea({ bindValue: job, rows: 3, maxLength: 20_000, placeholder: 'Keep the CLI’s tests green and answer new issues.', onMount: node => node.focus() }),
         ),
-        div(
-          { class: 'flex flex-col gap-2' },
-          kit.sectionTitle('Projects'),
-          div({ class: '-mx-2' }, projectChecklist(parts, { chosen: () => chosen.get(), toggle, fresh })),
-        ),
-        field(parts, 'Name', kit.textInput({ bindValue: name, maxLength: 60, placeholder: 'Optional; it picks one if you leave this empty' })),
+        kit.field({ label: 'Projects' }, div({ class: '-mx-2' }, projectChecklist(parts, { chosen: () => chosen.get(), toggle, fresh }))),
+        kit.field({ label: 'Name' }, kit.textInput({ bindValue: name, maxLength: 60, placeholder: 'Optional; it picks one if you leave this empty' })),
         show(
           () => Boolean(failure.get()),
           () => kit.errorText(() => failure.get()),

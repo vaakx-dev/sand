@@ -6,8 +6,8 @@ import { askingSection } from './asking'
 import { foundSection } from './found'
 
 const moreRow = (ui: Ui, glyph: IconName, title: string, go: () => void) => {
-  const { chevron, icon, listRow } = ui.kit
-  return listRow({ surface: 'raised', lead: icon(glyph, 'md'), title, trail: chevron(() => false), onClick: go })
+  const { icon, listRow } = ui.kit
+  return listRow({ surface: 'raised', lead: icon(glyph, 'md'), title, opens: true, onClick: go })
 }
 
 export const listStep = (ui: Ui, joined: Sig<DeviceRecord[]>, go: (step: AddStep) => void) =>

@@ -2,7 +2,7 @@ import type { Calendar, EventDraft, EventPatch, Occurrence, Scope, When } from '
 import type { Kit } from '@sand/ui-kit/contract'
 import type { SheetSpec } from '@sand/ui-shell/contract'
 import { errorMessage } from '@sand/util'
-import { derive, div, label, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, show, sig, type Sig } from '@vaakx-dev/vrui'
 import { addDays, browserZone, dateInput, fromInputs, isAllDay, timeInput } from './days'
 
 export interface Edit {
@@ -93,16 +93,15 @@ const patchOf = (fields: Fields, before: Fields): EventPatch => {
   }
 }
 
-const row = (kit: Kit, title: string, ...controls: Child[]) =>
-  label({ class: 'flex flex-col gap-1.5' }, kit.metaLine(title), div({ class: 'flex flex-wrap items-center gap-2' }, ...controls))
-
-const moment = (kit: Kit, fields: Fields, date: Sig<string>, time: Sig<string>, changed: () => void = () => undefined) => [
-  kit.textInput({ type: 'date', bindValue: date, class: 'w-40', 'aria-label': 'Date', onChange: changed }),
-  show(
-    () => !fields.allDay.get(),
-    () => kit.textInput({ type: 'time', bindValue: time, class: 'w-32', 'aria-label': 'Time', onChange: changed }),
-  ),
-]
+const moment = (kit: Kit, fields: Fields, date: Sig<string>, time: Sig<string>, changed: () => void = () => undefined) =>
+  div(
+    { class: 'flex flex-wrap items-center gap-2' },
+    kit.textInput({ type: 'date', bindValue: date, class: 'w-40', 'aria-label': 'Date', onChange: changed }),
+    show(
+      () => !fields.allDay.get(),
+      () => kit.textInput({ type: 'time', bindValue: time, class: 'w-32', 'aria-label': 'Time', onChange: changed }),
+    ),
+  )
 
 const keepDuration = (fields: Fields) => {
   const startOf = () => fromInputs(fields.startDate.get(), fields.startTime.get())
@@ -158,20 +157,16 @@ export const formSheet = (kit: Kit, parts: FormParts): SheetSpec => {
         },
         'md',
       ),
-      label(
-        { class: 'flex items-center justify-between gap-3' },
-        'All day',
-        kit.toggleSwitch({ on: fields.allDay, 'aria-label': 'All day', onClick: () => fields.allDay.update(on => !on) }),
-      ),
-      row(kit, 'Starts', ...moment(kit, fields, fields.startDate, fields.startTime, keepDuration(fields))),
-      row(kit, 'Ends', ...moment(kit, fields, fields.endDate, fields.endTime)),
-      row(kit, 'Repeats', kit.segmented(choices, fields.repeat, value => fields.repeat.set(value), { label: 'Repeats' })),
+      kit.settingsRow({ title: 'All day' }, kit.toggleSwitch({ on: fields.allDay, 'aria-label': 'All day', onClick: () => fields.allDay.update(on => !on) })),
+      kit.field({ label: 'Starts' }, moment(kit, fields, fields.startDate, fields.startTime, keepDuration(fields))),
+      kit.field({ label: 'Ends' }, moment(kit, fields, fields.endDate, fields.endTime)),
+      kit.field({ label: 'Repeats' }, kit.segmented(choices, fields.repeat, value => fields.repeat.set(value), { label: 'Repeats' })),
       kit.textInput({ bindValue: fields.location, placeholder: 'Location', 'aria-label': 'Location' }),
       kit.textArea({ bindValue: fields.notes, rows: 3, placeholder: 'Notes', 'aria-label': 'Notes' }),
       !event && parts.calendars.length > 1
-        ? row(kit, 'Calendar', kit.segmented(parts.calendars.map(one => ({ value: one.id, label: one.name })), calendar, value => calendar.set(value)))
+        ? kit.field({ label: 'Calendar' }, kit.segmented(parts.calendars.map(one => ({ value: one.id, label: one.name })), calendar, value => calendar.set(value), { label: 'Calendar' }))
         : null,
-      repeating ? row(kit, 'Change', kit.segmented(scopeChoices, scope, value => scope.set(value), { label: 'Change' })) : null,
+      repeating ? kit.field({ label: 'Change' }, kit.segmented(scopeChoices, scope, value => scope.set(value), { label: 'Change' })) : null,
       show(
         () => Boolean(failure.get()),
         () => kit.errorText(() => failure.get() ?? ''),

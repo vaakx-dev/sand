@@ -12,17 +12,6 @@ export const whereText = (source: SourceInfo) => (source.via ? `On ${source.via}
 
 export const sourceTitle = (source: SourceInfo) => `${sourceName(source)}${offlineText(source)}`
 
-export interface LinkRow {
-  mark: Child
-  title: Child
-  detail?: Child
-  end?: Child[]
-  onClick(): void
-}
-
-export const linkRow = ({ icon, listRow }: Kit, { mark, title, detail, end = [], onClick }: LinkRow) =>
-  listRow({ surface: 'group', lead: mark, title, meta: detail, trail: [...end, icon('right', 'sm')], onClick })
-
 export const crumb = (page: Page, mark: Child, title: Child) => {
   const { icon, iconButton, rowTitle } = page.ctx.kit
   return div(

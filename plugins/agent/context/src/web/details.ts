@@ -2,9 +2,8 @@ import type { ContextRecord } from '@sand/chats/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { ChipAction, ChipKind, ChipLink } from '../contract'
-import { field } from './field'
 
-const dataDetails = ({ codeBlock }: Kit, record: ContextRecord) => field('Data', codeBlock({}, JSON.stringify(record.data, null, 2)))
+const dataDetails = ({ codeBlock, field }: Kit, record: ContextRecord) => field({ label: 'Data' }, codeBlock({}, JSON.stringify(record.data, null, 2)))
 
 const body = (kit: Kit, kind: ChipKind, record: ContextRecord | undefined) => {
   if (!record) return kit.sheetText(`This ${kind.title.toLowerCase()} wasn’t available when the message was sent.`)

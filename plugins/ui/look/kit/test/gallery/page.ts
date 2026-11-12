@@ -88,7 +88,7 @@ const settings = () => {
     kit.settingsRow({ title: 'Ask before merging', detail: 'Each bot asks first' }, kit.toggleSwitch({ on, onClick: () => on.set(!on.get()), 'aria-label': 'Ask before merging' })),
     kit.settingsRow({ title: 'Sound' }, kit.segmented([{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }], 'on', () => {}, { label: 'Sound' })),
     kit.settingsRow({ title: 'Default model', detail: 'Used when a thread does not pick one' }, kit.pickerButton({ 'aria-label': 'Default model' }, 'Opus 5.5 · High')),
-    kit.listRow({ surface: 'group', title: 'Quiet hours', meta: 'From 22:00 to 7:00', trail: kit.chevron(() => false), onClick: () => {} }),
+    kit.settingsRow({ title: 'Quiet hours', detail: 'From 22:00 to 7:00', onOpen: () => {} }),
     kit.emptyState({ text: 'No devices muted.' }),
   )
 }
@@ -157,7 +157,7 @@ const gallery = () =>
     ),
     block('Choice list', choices()),
     block('Segmented', kit.segmented([{ value: 'chat', label: 'Chat' }, { value: 'project', label: 'Project' }], 'chat', () => {}, { label: 'View' })),
-    block('Fields', kit.textInput({ placeholder: 'Name' }), line(kit.searchField({ placeholder: 'Search bots and chats' }))),
+    block('Fields', kit.field({ label: 'Name', hint: 'Shown in the sidebar' }, kit.textInput({ placeholder: 'Optional' })), line(kit.searchField({ placeholder: 'Search bots and chats' }))),
     block('Card', kit.card({ title: 'Fix the flaky cache test', at: Date.now() - 720_000 }, p({ class: 'text-sm' }, 'Ready to review'))),
     block('Diff block', kit.diffBlock('src/cache/store.ts', diff)),
     block('Sheet', sheetSample()),

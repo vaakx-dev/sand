@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, label, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { Field, KindInfo, Setup } from '../contract'
 import type { ConnectionsModel } from './model'
 
@@ -11,8 +11,8 @@ const problem = ({ errorText }: Kit, model: ConnectionsModel) => show(() => !!mo
 
 const howTo = ({ linkButton, openTab }: Kit, url: string) => linkButton({ onClick: () => openTab(url) }, 'How to')
 
-const field = ({ metaLine, textInput }: Kit, { label: name, secret, placeholder }: Field, value: Sig<string>) =>
-  label({ class: 'flex min-w-0 flex-col gap-1' }, metaLine(name), textInput({ type: secret ? 'password' : 'text', placeholder: placeholder ?? '', bindValue: value }))
+const entry = ({ field, textInput }: Kit, { label, secret, placeholder }: Field, value: Sig<string>) =>
+  field({ label }, textInput({ type: secret ? 'password' : 'text', placeholder: placeholder ?? '', bindValue: value }))
 
 const clientStep = (kit: Kit, model: ConnectionsModel, kind: KindInfo, setup: Setup, done: () => void) => {
   const { primaryAction, secondaryAction, sheetText } = kit
@@ -23,8 +23,8 @@ const clientStep = (kit: Kit, model: ConnectionsModel, kind: KindInfo, setup: Se
   }
   return stack(
     div({ class: 'flex flex-col gap-1' }, ...setup.steps.split('\n').map(line => sheetText(line))),
-    field(kit, { key: 'id', label: 'Client ID' }, id),
-    field(kit, { key: 'secret', label: 'Client secret, if it has one', secret: true }, secret),
+    entry(kit, { key: 'id', label: 'Client ID' }, id),
+    entry(kit, { key: 'secret', label: 'Client secret, if it has one', secret: true }, secret),
     problem(kit, model),
     actions(
       primaryAction({ size: 'sm', disabled: () => model.busy.get() || !id.get().trim(), onClick: () => void save() }, 'Save'),
@@ -35,7 +35,7 @@ const clientStep = (kit: Kit, model: ConnectionsModel, kind: KindInfo, setup: Se
 }
 
 const signInStep = (kit: Kit, model: ConnectionsModel, kind: KindInfo, changeClient: () => void) => {
-  const { checkRow, linkButton, openTab, primaryAction, secondaryAction, waitingLine } = kit
+  const { linkButton, openTab, primaryAction, secondaryAction, settingsRow, toggleSwitch, waitingLine } = kit
   const readOnly = sig(false)
   const idle = () =>
     actions(
@@ -50,7 +50,9 @@ const signInStep = (kit: Kit, model: ConnectionsModel, kind: KindInfo, changeCli
       secondaryAction({ size: 'sm', onClick: model.cancel }, 'Cancel'),
     )
   return stack(
-    kind.readOnly ? checkRow({ title: 'Read only', meta: 'Plugins can look but not change anything', checked: readOnly, onToggle: readOnly.toggle() }) : null,
+    kind.readOnly
+      ? settingsRow({ title: 'Read only', detail: 'Plugins can look but not change anything' }, toggleSwitch({ on: readOnly, 'aria-label': 'Read only', onClick: readOnly.toggle() }))
+      : null,
     dynamicChild(
       model.flow.map(flow => flow?.url),
       url => (url ? waiting(url) : idle()),
@@ -69,7 +71,7 @@ const formPanel = (kit: Kit, model: ConnectionsModel, kind: KindInfo, fields: Fi
   const values = fields.map(item => [item, sig(item.value ?? '')] as const)
   const save = () => void model.saveForm(kind.id, Object.fromEntries(values.map(([item, value]) => [item.key, value.get()])))
   return stack(
-    ...values.map(([item, value]) => field(kit, item, value)),
+    ...values.map(([item, value]) => entry(kit, item, value)),
     problem(kit, model),
     actions(
       primaryAction({ size: 'sm', disabled: () => model.busy.get(), onClick: save }, 'Connect'),

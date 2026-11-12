@@ -1,9 +1,8 @@
 import type { SourceInfo } from '@sand/accounts/contract'
 import { favouritesOf } from '@sand/model-picker/contract'
-import { span } from '@vaakx-dev/vrui'
 import { accountsAction } from './accounts'
 import type { Page } from './page'
-import { linkRow, logo, whereText } from './parts'
+import { logo, whereText } from './parts'
 
 export const sourcesKey = (page: Page) =>
   JSON.stringify([page.ctx.models.sources(), favouritesOf(page.ctx.models.list()).map(model => model.label)])
@@ -11,26 +10,23 @@ export const sourcesKey = (page: Page) =>
 const favouritesRow = (page: Page) => {
   const { kit } = page.ctx
   const names = favouritesOf(page.ctx.models.list()).map(model => model.label)
-  return linkRow(kit, {
-    mark: kit.starMark(true),
+  return kit.settingsRow({
+    lead: kit.starMark(true),
     title: 'Favourites',
     detail: names.length ? names.join(', ') : 'Star models to keep them at the top',
-    onClick: () => page.go({ kind: 'favourites' }),
+    onOpen: () => page.go({ kind: 'favourites' }),
   })
 }
 
+const countText = (source: SourceInfo) => [`Shown ${source.shown} of ${source.total}`, source.fresh > 0 && `${source.fresh} new`].filter(Boolean).join(', ')
+
 const sourceRow = (page: Page, source: SourceInfo) => {
   const { kit } = page.ctx
-  const { badge } = kit
-  return linkRow(kit, {
-    mark: logo(kit, source.provider),
+  return kit.settingsRow({
+    lead: logo(kit, source.provider),
     title: source.label,
-    detail: whereText(source),
-    end: [
-      source.fresh > 0 ? badge('accent', `${source.fresh} new`) : null,
-      span({ class: 'tabular-nums' }, `Shown ${source.shown} of ${source.total}`),
-    ],
-    onClick: () => page.go({ kind: 'source', id: source.id }),
+    detail: [whereText(source), countText(source)].filter(Boolean).join(' · '),
+    onOpen: () => page.go({ kind: 'source', id: source.id }),
   })
 }
 

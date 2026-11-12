@@ -23,10 +23,8 @@ const listView = (kit: Kit, item: PaletteItem, props: Props<HTMLButtonElement>, 
     lead: lead(kit, item),
     title: item.label,
     meta: item.detail,
-    trail:
-      item.meta || item.page
-        ? [item.meta ? span({ class: 'tabular-nums' }, item.meta) : null, item.page ? span({ class: 'inline-flex' }, kit.icon('right', 16)) : null]
-        : undefined,
+    trail: item.meta ? span({ class: 'tabular-nums' }, item.meta) : undefined,
+    opens: Boolean(item.page),
   })
 
 export const rowView = (kit: Kit, item: PaletteItem, position: MaybeReactive<number>, model: PageModel, menu: ContextMenu) => {

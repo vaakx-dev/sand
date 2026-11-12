@@ -1,14 +1,11 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
-import { derive, div, dynamicChild, form, label, preventThen, show, sig, span, type Child, type Derive, type Props, type Resource } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, form, preventThen, show, sig, span, type Child, type Derive, type Resource } from '@vaakx-dev/vrui'
 import { problem, task, type Task } from '../task'
 
 export const kindIcons = { website: 'globe', key: 'key' } as const
 
 export const rowProblem = (kit: Kit, { failure }: Task) => show(() => Boolean(failure.get()), () => kit.rowDetail(kit.errorText(() => failure.get())))
-
-export const field = ({ metaLine, textInput }: Kit, name: string, props: Props<HTMLInputElement>) =>
-  label({ class: 'flex min-w-0 flex-col gap-1' }, metaLine(name), textInput(props))
 
 export interface FormParts {
   save: string

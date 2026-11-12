@@ -1,10 +1,9 @@
 import { errorMessage, oneLine } from '@sand/util'
-import { div, keys, show, sig } from '@vaakx-dev/vrui'
-import { field } from '../shared/parts'
+import { keys, sig } from '@vaakx-dev/vrui'
 import type { Ui } from '../ui'
 
 export const nameField = (ui: Ui, pc: string) => {
-  const { errorText, textInput } = ui.kit
+  const { field, textInput } = ui.kit
   const current = () => ui.data.nameOf(pc)
   const value = sig(current())
   const error = sig('')
@@ -26,19 +25,13 @@ export const nameField = (ui: Ui, pc: string) => {
     }
   }
 
-  return div(
-    { class: 'flex flex-col gap-1' },
-    field(
-      ui.kit,
-      'Name',
-      textInput({
-        'aria-label': 'Name',
-        bindValue: value,
-        disabled: busy,
-        onBlur: () => void commit(),
-        onKeyDown: keys({ Enter: () => void commit(), Escape: () => value.set(current()) }, { stop: true }),
-      }),
-    ),
-    show(error.map(Boolean), () => errorText(error)),
+  return field(
+    { label: 'Name', error },
+    textInput({
+      bindValue: value,
+      disabled: busy,
+      onBlur: () => void commit(),
+      onKeyDown: keys({ Enter: () => void commit(), Escape: () => value.set(current()) }, { stop: true }),
+    }),
   )
 }

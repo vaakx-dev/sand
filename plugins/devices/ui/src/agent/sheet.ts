@@ -1,7 +1,7 @@
 import type { AgentAccess, AgentPairing, ShareLink } from '@sand/devices-contract'
 import { errorMessage, oneLine } from '@sand/util'
 import { div, dynamicChild, keys, sig } from '@vaakx-dev/vrui'
-import { copyBox, field } from '../shared/parts'
+import { copyBox } from '../shared/parts'
 import type { Ui } from '../ui'
 
 const reachWords: Record<ShareLink['route']['kind'], string> = {
@@ -17,9 +17,9 @@ const madeView = (ui: Ui, { device, token, links }: AgentPairing) => {
   return div(
     { class: 'flex flex-col gap-4' },
     ui.kit.sheetText(`Give ${device.name} the URL and token. The token is shown only now; remove the agent to revoke it.`),
-    ...links.map(link => field(ui.kit, reachWords[link.route.kind], copyBox(ui.kit, link.url))),
-    field(ui.kit, 'Token', copyBox(ui.kit, token)),
-    best ? field(ui.kit, 'For Claude Code, run', copyBox(ui.kit, claudeCommand(best.url, token))) : null,
+    ...links.map(link => ui.kit.field({ label: reachWords[link.route.kind] }, copyBox(ui.kit, link.url))),
+    ui.kit.field({ label: 'Token' }, copyBox(ui.kit, token)),
+    best ? ui.kit.field({ label: 'For Claude Code, run' }, copyBox(ui.kit, claudeCommand(best.url, token))) : null,
   )
 }
 
@@ -46,14 +46,12 @@ const formView = (ui: Ui, made: (pairing: AgentPairing) => void) => {
   return div(
     { class: 'flex flex-col gap-4' },
     sheetText('An agent such as Claude Code or Codex on another machine can use your threads over MCP with its own token.'),
-    field(
-      ui.kit,
-      'Name',
-      textInput({ placeholder: 'Claude Code on the laptop', 'aria-label': 'Name', bindValue: name, onKeyDown: keys({ Enter: () => void create() }) }),
+    ui.kit.field(
+      { label: 'Name' },
+      textInput({ placeholder: 'Claude Code on the laptop', bindValue: name, onKeyDown: keys({ Enter: () => void create() }) }),
     ),
-    field(
-      ui.kit,
-      'It may',
+    ui.kit.field(
+      { label: 'It may', hint: 'Either way it works on all your PCs.' },
       segmented(
         [
           { value: 'read' as const, label: 'Read threads' },
@@ -63,7 +61,6 @@ const formView = (ui: Ui, made: (pairing: AgentPairing) => void) => {
         value => access.set(value),
         { inset: true, fill: true, label: 'What the agent may do' },
       ),
-      sheetText('Either way it works on all your PCs.'),
     ),
     dynamicChild(error, text => (text ? errorText(text) : null)),
     primaryAction({ disabled: () => busy.get() || !name.get().trim(), onClick: () => void create() }, 'Add agent'),
