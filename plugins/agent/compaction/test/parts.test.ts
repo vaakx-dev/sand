@@ -21,7 +21,7 @@ test('splits the request into its parts in proportion and adds up to the measure
 
 test('carves the parts other plugins own out of the instructions, and leaves out those absent from them', () => {
   const memory: SystemPart = { name: 'Memory', tone: 'orange', chars: () => 98 }
-  const plan: SystemPart = { name: 'Plan', tone: 'sky', chars: () => 0 }
+  const plan: SystemPart = { name: 'Plan', tone: 'danger', chars: () => 0 }
   expect(sizes(partsOf(request, 500, [memory, plan]))).toEqual({ Instructions: 50, Memory: 49, Tools: 1, Conversation: 200, 'Tool results': 200 })
 })
 

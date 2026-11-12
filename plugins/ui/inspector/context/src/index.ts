@@ -17,7 +17,7 @@ interface Look {
 const looks: Record<ContextTone, Look> = {
   violet: { swatch: 'bg-violet-400', segment: 'group-hover:bg-violet-400 group-aria-expanded:bg-violet-400' },
   orange: { swatch: 'bg-orange-400', segment: 'group-hover:bg-orange-400 group-aria-expanded:bg-orange-400' },
-  sky: { swatch: 'bg-sky-400', segment: 'group-hover:bg-sky-400 group-aria-expanded:bg-sky-400' },
+  danger: { swatch: 'bg-danger-400', segment: 'group-hover:bg-danger-400 group-aria-expanded:bg-danger-400' },
   info: { swatch: 'bg-info-400', segment: 'group-hover:bg-info-400 group-aria-expanded:bg-info-400' },
   accent: { swatch: 'bg-accent-400', segment: 'group-hover:bg-accent-400 group-aria-expanded:bg-accent-400' },
   success: { swatch: 'bg-success-400', segment: 'group-hover:bg-success-400 group-aria-expanded:bg-success-400' },
