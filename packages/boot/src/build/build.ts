@@ -10,12 +10,6 @@ const cacheTime = 30_000
 
 export const stampBuild = ({ id, time, commit }: BuildInfo): BuildInfo => ({ id, time, ...(commit && { commit }) })
 
-export const readBuild = async (root: string) => {
-  const [{ hash, files, latest }, stamp] = await Promise.all([hashApp(root), readStamp(root)])
-  const build: BuildInfo = stamp ? stampBuild(stamp) : { id: hash, time: latest }
-  return { build, hash, files, stamp }
-}
-
 const readBuildInfo = async (root: string): Promise<BuildInfo> => {
   const stamp = await readStamp(root)
   if (stamp) return stampBuild(stamp)

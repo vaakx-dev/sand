@@ -74,6 +74,8 @@ export interface Features {
   set(changes: Record<string, boolean>): Promise<void>
 }
 
+export { definitionsIn, featureOf } from './features/definitions'
+
 export const cli = service<Cli>('cli')
 export const features = service<Features>('features')
 export const sandConfig = service<SandConfig>('sandConfig')
