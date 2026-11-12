@@ -14,7 +14,8 @@ import { compactionView } from './history/summary'
 import { idleCompact } from './idle'
 import { createMeter } from './measure/meter'
 import { createTracker } from './measure/tracker'
-import { serveUsage } from './usage'
+import { manualCompact } from './manual'
+import { serveContext } from './serve'
 
 export default definePlugin({
   name: 'compaction',
@@ -26,6 +27,7 @@ export default definePlugin({
     const compactor = createCompactor(ctx, { config, tracker, meter })
     autoCompact(ctx, compactor, tracker)
     idleCompact(ctx, compactor, tracker)
+    const compact = manualCompact(ctx, compactor)
     ctx.effect(() => ctx.entryViews.register(compactionView))
     ctx.provide(contextLimits, { limit: model => budgetOf(ctx.llm, config, model).limit })
     ctx.provide(systemParts, meter.parts)
@@ -40,6 +42,6 @@ export default definePlugin({
       const request = await ctx.get(providerThreads)?.view(conversation)
       return request && meter.usage(request, tracker.project(conversation.id, request))
     }
-    ctx.watch(server, found => (found ? serveUsage(ctx, found, read) : undefined))
+    ctx.watch(server, found => (found ? serveContext(ctx, found, { read, compact }) : undefined))
   },
 })

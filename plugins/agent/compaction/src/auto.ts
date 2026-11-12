@@ -37,6 +37,7 @@ export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracke
     }
     if (failed.get(conversation.id) !== turn.id && tracker.project(conversation.id, request) >= compactor.budget(request).limit)
       return compact(conversation, turn, request, 'threshold', signal)
+    if (crossed && compactor.requested(conversation)) return compact(conversation, turn, request, 'manual', signal)
     return (crossed && compactor.take(conversation, request)) || undefined
   })
 

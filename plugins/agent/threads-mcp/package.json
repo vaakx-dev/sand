@@ -1,7 +1,7 @@
 {
   "name": "@sand/threads-mcp",
   "version": "0.0.0",
-  "description": "sand's thread tools, defined once for its own threads and bots and for outside agents over MCP: list, read, start, message, wait for, stop and manage threads",
+  "description": "sand's thread tools, defined once for its own threads and bots and for outside agents over MCP: list, read, start, message, wait for, stop, compact and manage threads",
   "type": "module",
   "sand": {
     "feature": "threads-mcp",
@@ -15,6 +15,7 @@
   "dependencies": {
     "@sand/attachments": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/compaction": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/transcript": "workspace:*",
