@@ -1,4 +1,5 @@
 import type { OutgoingJoin } from '@sand/devices-contract'
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, effect, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { type FoundPc, groupFound } from '../add/found'
 import { othersThan } from '../add/joining'
@@ -20,8 +21,8 @@ const foundRow = (ui: Ui, found: Sig<FoundPc>, join: (pc: FoundPc) => void, busy
   )
 }
 
-export const joinOfferSheet = (ui: Ui, dismiss: () => void, close: () => void) => {
-  const { overlay, primaryAction, quietButton, rowList, secondaryAction, sectionTitle, settingsSection, sheet, sheetBody, sheetText, waitingLine } = ui.kit
+export const joinOfferSheet = (ui: Ui, dismiss: () => void, close: () => void): SheetSpec => {
+  const { primaryAction, quietButton, rowList, secondaryAction, sectionTitle, settingsSection, sheetText, waitingLine } = ui.kit
   const state = sig<Offer>({ step: 'offer' })
   const busy = sig(false)
   const found = derive(() => groupFound(ui.data.joins.unpaired()))
@@ -73,5 +74,5 @@ export const joinOfferSheet = (ui: Ui, dismiss: () => void, close: () => void) =
     return offerView()
   }
 
-  return overlay(close, sheet({ 'aria-label': 'Join your other PCs', size: 'md' }, sheetBody({ class: 'pt-4' }, dynamicChild(state, body))))
+  return { label: 'Join your other PCs', closeButton: false, body: () => dynamicChild(state, body), onClose: close }
 }

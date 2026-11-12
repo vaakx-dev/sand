@@ -15,6 +15,7 @@
   "dependencies": {
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"

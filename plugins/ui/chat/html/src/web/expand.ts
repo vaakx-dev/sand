@@ -1,3 +1,4 @@
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import type { HtmlRenderEntry } from '../contract'
 import { derive, div, keys, resizeObserver, sig } from '@vaakx-dev/vrui'
 import { columnWidth } from '../page/limits'
@@ -33,27 +34,26 @@ const zoomLevels = (height: number) => {
   }
 }
 
-export const expandedPage = (ctx: FrameContext, data: HtmlRenderEntry, html: string, height: number, close: () => void) => {
+export const expandedPage = (ctx: FrameContext, data: HtmlRenderEntry, html: string, height: number): SheetSpec => {
   const { kit } = ctx
   const zoom = zoomLevels(height)
   const frame = sandboxedFrame({ 'aria-label': data.title, src: hostPath, class: 'block h-full w-full border-0', onLoad: () => connection.show(html) })
   const connection = connectPage(ctx, frame, {})
 
-  return kit.viewerShell(
-    {
-      label: `Full screen ${data.title}`,
-      close,
-      onKeyDown: keys({ '+': zoom.zoomIn, '=': zoom.zoomIn, '-': zoom.zoomOut, '0': zoom.fit }),
-    },
-    kit.viewerBar(close, kit.headTitle(2, data.title), kit.zoomControls(zoom)),
-    div(
-      {
-        class: 'flex min-h-0 flex-1 overflow-auto',
-        onMount: node => {
-          resizeObserver(node, () => zoom.room.set({ width: node.clientWidth, height: node.clientHeight }))
+  return {
+    label: `Full screen ${data.title}`,
+    look: 'viewer',
+    onKeyDown: keys({ '+': zoom.zoomIn, '=': zoom.zoomIn, '-': zoom.zoomOut, '0': zoom.fit }),
+    head: close => kit.viewerBar(close, kit.headTitle(2, data.title), kit.zoomControls(zoom)),
+    body: () =>
+      div(
+        {
+          class: 'flex min-h-0 flex-1 overflow-auto',
+          onMount: node => {
+            resizeObserver(node, () => zoom.room.set({ width: node.clientWidth, height: node.clientHeight }))
+          },
         },
-      },
-      div({ class: 'm-auto shrink-0', onMount: connection.listen, style: { width: `${columnWidth}px`, height: `${height}px`, zoom: () => String(zoom.level.get()) } }, frame),
-    ),
-  )
+        div({ class: 'm-auto shrink-0', onMount: connection.listen, style: { width: `${columnWidth}px`, height: `${height}px`, zoom: () => String(zoom.level.get()) } }, frame),
+      ),
+  }
 }

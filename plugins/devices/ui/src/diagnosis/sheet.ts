@@ -1,4 +1,5 @@
 import { type PeerView, peersChange, peersList } from '@sand/devices-contract'
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, effect, span } from '@vaakx-dev/vrui'
 import { feed } from '../data/feed'
 import { toneDot } from '../status/dot'
@@ -43,8 +44,8 @@ const homePeers = (ui: Ui) => {
   return peers
 }
 
-export const diagnosisSheet = (ui: Ui, pc: string, close: () => void) => {
-  const { copyText, icon, overlay, primaryAction, secondaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ui.kit
+export const diagnosisSheet = (ui: Ui, pc: string, close: () => void): SheetSpec => {
+  const { copyText, icon, primaryAction, secondaryAction, sheetTitle } = ui.kit
   const { data } = ui
   const peers = homePeers(ui)
   const facts = derive((): Facts => {
@@ -73,20 +74,15 @@ export const diagnosisSheet = (ui: Ui, pc: string, close: () => void) => {
     ui.ctx.pcs.retry(pc)
     void peers.refresh()
   }
-  return overlay(
-    close,
-    sheet(
-      { 'aria-label': 'Why can’t I connect?', size: 'md' },
-      sheetHead({ title: 'Why can’t I connect?', close }),
-      sheetBody(
-        {},
-        dynamicChild(facts, current => div({ class: 'flex flex-col gap-6' }, summary(ui, current), attemptsSection(ui, current), adviceSection(ui, current))),
-      ),
-      sheetFoot(
-        secondaryAction({ onClick: () => void copy() }, icon('copy', 'sm'), 'Copy diagnostics'),
-        span({ class: 'flex-1' }),
-        primaryAction({ onClick: retry }, icon('reload', 'sm'), 'Retry now'),
-      ),
-    ),
-  )
+  return {
+    label: 'Why can’t I connect?',
+    head: () => sheetTitle('Why can’t I connect?'),
+    body: () => dynamicChild(facts, current => div({ class: 'flex flex-col gap-6' }, summary(ui, current), attemptsSection(ui, current), adviceSection(ui, current))),
+    foot: () => [
+      secondaryAction({ onClick: () => void copy() }, icon('copy', 'sm'), 'Copy diagnostics'),
+      span({ class: 'flex-1' }),
+      primaryAction({ onClick: retry }, icon('reload', 'sm'), 'Retry now'),
+    ],
+    onClose: close,
+  }
 }

@@ -1,6 +1,6 @@
 import type { Owner } from '@sand/engine/contract'
 import { running } from '@sand/reactive'
-import { byId, collectScope, disposeAll, div, mount, type Child } from '@vaakx-dev/vrui'
+import { byId, collectScope, disposeAll, div, mount, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 import { event, service, type Context, type Dispose } from 'drydock'
 
 export type ShellState = 'phone' | 'drawer' | 'wide'
@@ -147,14 +147,21 @@ export interface RouteSpec {
   render(route: () => Route): Screen
 }
 
-export type SheetLook = 'form' | 'list' | 'search'
+export type SheetSize = 'sm' | 'md' | 'lg'
+
+export type SheetLook = 'form' | 'bare' | 'list' | 'search' | 'viewer'
 
 export interface SheetSpec {
-  label: string
+  label: MaybeReactive<string>
   look?: SheetLook
-  head(close: () => void): Child
+  size?: SheetSize
+  closeButton?: false
+  alert?: boolean
+  head?(close: () => void): Child
   body(close: () => void): Child
   foot?(close: () => void): Child
+  onKeyDown?(event: KeyboardEvent): void
+  onClose?(): void
 }
 
 export interface SheetHandle {
@@ -204,7 +211,6 @@ export interface Shell {
   current(): Route
   state(): ShellState
   sheet(spec: SheetSpec): SheetHandle
-  cover(close: () => void): () => void
   aside(spec: Aside): Dispose
   showAside(id: string, open: boolean): void
   asideOpen(id: string): boolean
@@ -232,3 +238,46 @@ export const place = (ctx: Context, where: Place, view: HTMLElement | (() => HTM
       disposeAll(scope)
     }
   })
+
+export const sheetSlot = (ctx: Context) => {
+  let found: Shell | undefined
+  let current: { handle: SheetHandle; scope: Dispose[] } | undefined
+  let waiting: (() => SheetSpec) | undefined
+  const close = () => {
+    waiting = undefined
+    const shown = current
+    current = undefined
+    shown?.handle.close()
+    disposeAll(shown?.scope ?? [])
+  }
+  const open = (build: () => SheetSpec) => {
+    if (!running(ctx)) return
+    if (!found) return void (waiting = build)
+    waiting = undefined
+    const before = current
+    const { value: spec, scope } = collectScope(build)
+    const shown = {
+      scope,
+      handle: found.sheet({
+        ...spec,
+        onClose() {
+          if (current === shown) current = undefined
+          disposeAll(scope)
+          spec.onClose?.()
+        },
+      }),
+    }
+    current = shown
+    before?.handle.close()
+    disposeAll(before?.scope ?? [])
+  }
+  ctx.watch(shell, next => {
+    found = next
+    if (next && waiting) open(waiting)
+    return () => {
+      close()
+      found = undefined
+    }
+  })
+  return { open, close, isOpen: () => Boolean(current ?? waiting) }
+}

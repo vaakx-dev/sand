@@ -1,3 +1,4 @@
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, keys, type Derive } from '@vaakx-dev/vrui'
 import type { Draw } from '../gallery'
@@ -13,7 +14,7 @@ const flipButton = ({ floatButton, icon }: Kit, side: 'left' | 'right', title: s
     floatButton({ size: 'md', title, 'aria-label': title, disabled, onClick }, icon(side, 16)),
   )
 
-export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw, close: () => void) => {
+export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw): SheetSpec => {
   const many = model.images.length > 1
   const zoom = zoomState()
   const go = (move: () => void) => {
@@ -33,20 +34,24 @@ export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw, close: ()
     '0': zoom.fit,
   })
 
-  return kit.viewerShell(
-    { label: 'Image viewer', close, onKeyDown: shortcuts },
-    dynamicChild(model.current, index => {
-      const shown = model.images[index]
-      if (!shown) return null
-      const count = many ? `${index + 1} of ${model.images.length}` : ''
-      return div(
-        { class: 'flex min-h-0 flex-1 flex-col' },
-        viewerHead(kit, shown, count, zoom, close),
-        viewerStage(shown, draw, zoom, by => go(() => model.step(by)), close),
-      )
-    }),
-    many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, back),
-    many && flipButton(kit, 'right', 'Next (→)', model.atLast, next),
-    many && viewerStrip(kit, model, draw),
-  )
+  return {
+    label: 'Image viewer',
+    look: 'viewer',
+    onKeyDown: shortcuts,
+    body: close => [
+      dynamicChild(model.current, index => {
+        const shown = model.images[index]
+        if (!shown) return null
+        const count = many ? `${index + 1} of ${model.images.length}` : ''
+        return div(
+          { class: 'flex min-h-0 flex-1 flex-col' },
+          viewerHead(kit, shown, count, zoom, close),
+          viewerStage(shown, draw, zoom, by => go(() => model.step(by)), close),
+        )
+      }),
+      many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, back),
+      many && flipButton(kit, 'right', 'Next (→)', model.atLast, next),
+      many && viewerStrip(kit, model, draw),
+    ],
+  }
 }

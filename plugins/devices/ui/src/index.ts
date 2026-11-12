@@ -1,5 +1,7 @@
 import { pcMarks } from '@sand/devices-contract'
 import { owned } from '@sand/reactive'
+import { toastsOf } from '@sand/toasts/contract'
+import { sheetSlot, type SheetSpec } from '@sand/ui-shell/contract'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { commandSheet } from './add/command-sheet'
@@ -15,8 +17,6 @@ import { diagnosisSheet } from './diagnosis/sheet'
 import { inject } from './inject'
 import { joinOffer } from './join-offer/watch'
 import { devicesSettings } from './page'
-import { overlaySlot } from './shared/overlay'
-import { toastsOf } from '@sand/toasts/contract'
 import { createMarks } from './status/marks'
 import type { AddStep, Openers, Ui } from './ui'
 import { unpairedPage } from './unpaired/page'
@@ -30,8 +30,8 @@ export default definePlugin({
     owned(ctx, () => {
       const data = createData(ctx)
       const toasts = toastsOf(ctx)
-      const sheet = overlaySlot(ctx)
-      const why = overlaySlot(ctx, 130)
+      const sheet = sheetSlot(ctx)
+      const why = sheetSlot(ctx)
       const adding = sig(false)
       const phone = derive(() => {
         const state = data.paired.get()
@@ -42,7 +42,7 @@ export default definePlugin({
         adding.set(false)
         sheet.close()
       }
-      const showSheet = (view: () => HTMLElement, isAdd = false) => {
+      const showSheet = (view: () => SheetSpec, isAdd = false) => {
         adding.set(isAdd)
         sheet.open(view)
       }

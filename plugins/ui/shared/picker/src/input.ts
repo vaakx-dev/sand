@@ -1,8 +1,9 @@
+import type { Shell } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { form, keys, preventThen, sig } from '@vaakx-dev/vrui'
 import { openSheet } from './overlay'
 
-export const ask = (kit: Kit, cancels: Set<() => void>, title: string, value = '') =>
+export const ask = (kit: Kit, frame: Shell, cancels: Set<() => void>, title: string, value = '') =>
   new Promise<string | undefined>(resolve => {
     const { primaryAction, secondaryAction, sheetBody, sheetFoot, textInput } = kit
     const text = sig(value)
@@ -14,6 +15,7 @@ export const ask = (kit: Kit, cancels: Set<() => void>, title: string, value = '
     const cancel = () => finish()
     cancels.add(cancel)
     const close = openSheet(
+      frame,
       kit,
       { title, size: 'md', close: cancel, keydown: keys({ Escape: cancel }, { stop: true }) },
       form(

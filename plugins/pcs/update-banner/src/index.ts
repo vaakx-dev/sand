@@ -1,9 +1,9 @@
 import { pcs, wire } from '@sand/devices-contract'
-import { place } from '@sand/ui-shell/contract'
+import { sheetSlot } from '@sand/ui-shell/contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'
-import { definePlugin, type Dispose } from 'drydock'
+import { definePlugin } from 'drydock'
 import { createFleet } from './fleet/model'
 import { updatesPage } from './page'
 import { updateSheet } from './sheet/view'
@@ -14,15 +14,8 @@ export default definePlugin({
   inject: { wire, pcs, kit },
   apply(ctx) {
     const fleet = owned(ctx, () => createFleet(ctx))
-    let unplaceSheet: Dispose | undefined
-    const close = () => {
-      void unplaceSheet?.()
-      unplaceSheet = undefined
-    }
-    const open = () => {
-      close()
-      unplaceSheet = place(ctx, 'overlay', () => updateSheet(ctx.kit, fleet, close), 100)
-    }
+    const sheet = sheetSlot(ctx)
+    const open = () => sheet.open(() => updateSheet(ctx.kit, fleet, sheet.close))
     const dot = () => fleet.pending.get().some(pc => !pc.state?.later)
     ctx.watch(settings, found =>
       found?.page({ id: 'updates', label: 'Updates', intro: 'Keep sand current on every PC.', icon: 'reload', group: 'app', order: 70, dot, render: () => updatesPage(ctx.kit, fleet, open) }),

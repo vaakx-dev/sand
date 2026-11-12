@@ -1,6 +1,7 @@
 import { composer } from '@sand/composer/contract'
 import { wire, wireHello } from '@sand/devices-contract'
 import { toastsOf } from '@sand/toasts/contract'
+import { shell } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { media, sig } from '@vaakx-dev/vrui'
@@ -31,7 +32,7 @@ export default definePlugin({
               const added = await ctx.wire.call(stashAdd, { text, content, chat })
               entries.update(list => [added, ...list.filter(other => other.id !== added.id)])
             }),
-            found.shared('above', here => stashEntry({ kit: ctx.kit, entries, here, phone: () => phone.get(), remove, take }), 100),
+            found.shared('above', here => stashEntry({ kit: ctx.kit, entries, here, phone: () => phone.get(), frame: () => ctx.get(shell), remove, take }), 100),
           )
         : undefined,
     )

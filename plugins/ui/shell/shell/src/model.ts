@@ -32,7 +32,7 @@ export const panelWidth = 352
 
 export const cardHeight = 360
 
-const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover', aside: 'aside:' } as const
+const layers = { drawer: 'drawer', sheet: 'sheet', aside: 'aside:' } as const
 
 export const shellModel = (kit: Kit) => {
   const navs = registry<NavItem>()
@@ -46,7 +46,7 @@ export const shellModel = (kit: Kit) => {
   const width = sig(window.innerWidth)
   const height = sig(window.innerHeight)
   const layer = sig(addressLayer())
-  const sheet = sig<SheetSpec | undefined>(undefined)
+  const sheets = sig<SheetSpec[]>([])
   const openFolds = stored<string[]>('sand.shell.open-groups', [])
   const picked: Record<AsideKind, ReturnType<typeof stored<string | null>>> = {
     card: stored<string | null>('sand.shell.card', null),
@@ -106,24 +106,23 @@ export const shellModel = (kit: Kit) => {
     return size < deskWidth && (openPanel.get() || built?.split) ? 'drawer' : 'wide'
   })
 
-  let uncover: (() => void) | undefined
-  const followCover = () => {
-    const close = uncover
-    if (!close || layer.get() === layers.cover) return
-    uncover = undefined
-    close()
+  const dropSheets = () => {
+    const dropped = sheets.get()
+    if (!dropped.length) return
+    sheets.set([])
+    for (const spec of dropped) spec.onClose?.()
   }
 
   const enter = (name: string) => {
     pushLayer(name)
     layer.set(addressSettled() ? addressLayer() : undefined)
-    followCover()
+    if (name !== layers.sheet) dropSheets()
   }
 
   const leave = () => {
-    sheet.set(undefined)
     leaveLayer()
     layer.set(undefined)
+    dropSheets()
   }
 
   const drawerReach = derive(() => (phone.get() ? width.get() : sideWidth))
@@ -136,23 +135,21 @@ export const shellModel = (kit: Kit) => {
 
   const showSheet = (spec: SheetSpec) => {
     if (layer.get() !== layers.sheet) enter(layers.sheet)
-    sheet.set(spec)
+    sheets.update(all => [...all.filter(other => other !== spec), spec])
   }
-  const sheetShown = derive(() => (layer.get() === layers.sheet ? sheet.get() : undefined))
+  const sheetsShown = derive(() => (layer.get() === layers.sheet ? sheets.get() : []))
+  const closeSheet = (spec: SheetSpec) => {
+    const all = sheets.get()
+    if (!all.includes(spec)) return false
+    const rest = all.filter(other => other !== spec)
+    sheets.set(rest)
+    if (!rest.length && layer.get() === layers.sheet) leave()
+    return true
+  }
 
   const open = (route: Route, replace = false) => {
     if (layer.get()) leave()
     nav.go(route, replace)
-  }
-
-  const cover = (close: () => void) => {
-    enter(layers.cover)
-    uncover = close
-    return () => {
-      if (uncover !== close) return
-      uncover = undefined
-      if (layer.get() === layers.cover) leave()
-    }
   }
 
   const chatWidth = derive(() => width.get() - (state.get() === 'wide' ? sideWidth : 0) - (openPanel.get() ? panelWidth : 0))
@@ -229,11 +226,11 @@ export const shellModel = (kit: Kit) => {
     drawerDrag,
     drawerOpen,
     setDrawer,
-    sheetShown,
+    sheetsShown,
     showSheet,
-    cover,
-    closeSheet: (spec: SheetSpec) => {
-      if (sheet.get() === spec) leave()
+    closeSheet,
+    dismissSheet: (spec: SheetSpec) => {
+      if (closeSheet(spec)) spec.onClose?.()
     },
     shownAsides,
     openCard,
@@ -262,8 +259,7 @@ export const shellModel = (kit: Kit) => {
     back: nav.back,
     follow() {
       layer.set(addressLayer())
-      if (!layer.get()) sheet.set(undefined)
-      followCover()
+      if (layer.get() !== layers.sheet) dropSheets()
       nav.follow()
     },
   }

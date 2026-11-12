@@ -1,7 +1,8 @@
 import type { PagePairing } from '@sand/devices-contract'
+import { place } from '@sand/ui-shell/contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, sig, untrack } from '@vaakx-dev/vrui'
-import { overlaySlot } from '../shared/overlay'
+import type { Dispose } from 'drydock'
 import type { Ui } from '../ui'
 import { busyCard, type CardParts, deniedCard, expiredCard, failedCard, removedCard, waitingCard, wrongKindCard } from './cards'
 
@@ -34,7 +35,6 @@ const cover = (ui: Ui, parts: CardParts, state: () => PagePairing, error: () => 
   )
 
 export const unpairedPage = (ui: Ui) => {
-  const slot = overlaySlot(ui.ctx, 200)
   const asking = sig(false)
   const error = sig('')
   const state = ui.data.paired
@@ -59,8 +59,12 @@ export const unpairedPage = (ui: Ui) => {
     const current = state.get()
     if (autoAsk(current)) untrack(() => void ask())
   })
+  let unplace: Dispose | undefined
   effect(() => {
     const on = shown.get()
-    untrack(() => (on ? slot.open(() => cover(ui, parts, () => state.get(), () => error.get())) : slot.close()))
+    untrack(() => {
+      void unplace?.()
+      unplace = on ? place(ui.ctx, 'overlay', () => cover(ui, parts, () => state.get(), () => error.get()), 200) : undefined
+    })
   })
 }

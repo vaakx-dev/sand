@@ -1,9 +1,9 @@
 import { pcHello } from '@sand/devices-contract'
-import { shell } from '@sand/ui-shell/contract'
+import { shell, type SheetHandle } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { htmlPage, type HtmlRenderEntry } from '../contract'
-import { div, effect, mount, resource, show, sig } from '@vaakx-dev/vrui'
+import { div, effect, resource, show, sig } from '@vaakx-dev/vrui'
 import { hostPath } from '../page/protocol'
 import type { FrameContext } from './context'
 import { expandedPage } from './expand'
@@ -66,7 +66,7 @@ export const htmlFrame = (ctx: FrameContext, heights: FrameHeights, thread: stri
   const measured = sig<number | undefined>(undefined)
   const near = sig(false)
   const height = () => frameHeight(data, measured.get(), heights.get(data.id))
-  let closeExpanded: (() => void) | undefined
+  let expanded: SheetHandle | undefined
 
   const page = framedPage(ctx, thread, data, next => {
     measured.set(next)
@@ -74,15 +74,15 @@ export const htmlFrame = (ctx: FrameContext, heights: FrameHeights, thread: stri
   })
 
   const close = () => {
-    closeExpanded?.()
-    closeExpanded = undefined
+    expanded?.close()
+    expanded = undefined
   }
 
   const expand = () => {
     const html = page.html()
     if (html === undefined) return
     close()
-    closeExpanded = mount(document.body, expandedPage(ctx, data, html, height(), close))
+    expanded = ctx.get(shell)?.sheet(expandedPage(ctx, data, html, height()))
   }
 
   return div(

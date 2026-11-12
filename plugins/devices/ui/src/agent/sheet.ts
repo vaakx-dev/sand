@@ -1,4 +1,5 @@
 import type { AgentAccess, AgentPairing, ShareLink } from '@sand/devices-contract'
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import { errorMessage, oneLine } from '@sand/util'
 import { div, dynamicChild, keys, sig } from '@vaakx-dev/vrui'
 import { copyBox } from '../shared/parts'
@@ -67,19 +68,20 @@ const formView = (ui: Ui, made: (pairing: AgentPairing) => void) => {
   )
 }
 
-export const agentSheet = (ui: Ui, close: () => void) => {
-  const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ui.kit
+export const agentSheet = (ui: Ui, close: () => void): SheetSpec => {
+  const { primaryAction, sheetBody, sheetFoot, sheetTitle } = ui.kit
   const pairing = sig<AgentPairing | undefined>(undefined)
-  return overlay(
-    close,
-    sheet(
-      { 'aria-label': 'Add an agent', size: 'md' },
-      sheetHead({ title: () => (pairing.get() ? 'Agent added' : 'Add an agent'), close }),
+  return {
+    label: 'Add an agent',
+    look: 'bare',
+    head: () => sheetTitle(() => (pairing.get() ? 'Agent added' : 'Add an agent')),
+    body: () => [
       sheetBody(
         {},
         dynamicChild(pairing, made => (made ? madeView(ui, made) : formView(ui, next => pairing.set(next)))),
       ),
       dynamicChild(pairing, made => (made ? sheetFoot(primaryAction({ onClick: close }, 'Done')) : null)),
-    ),
-  )
+    ],
+    onClose: close,
+  }
 }

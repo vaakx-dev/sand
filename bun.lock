@@ -2270,6 +2270,7 @@
         "@sand/chats": "workspace:*",
         "@sand/media": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -2354,6 +2355,7 @@
         "@sand/server": "workspace:*",
         "@sand/toasts": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -2672,6 +2674,7 @@
       "dependencies": {
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

@@ -5,7 +5,7 @@ import type { Pulse } from '@sand/reactive'
 import { derive, dynamicChild, sig, type Sig } from '@vaakx-dev/vrui'
 import { projectAdd } from '../../contract'
 import type { ProjectsContext } from '../context'
-import type { Picking } from './icon'
+import { iconSheet, type Picking } from './icon'
 import { groupRow } from './row'
 
 const heading = (groups: ProjectGroup[]) => {
@@ -30,6 +30,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
   const { emptyState, settingsSection } = ctx.kit
   const showHidden = sig(false)
   const picking = sig<Picking>(undefined)
+  iconSheet(ctx, changes, picking)
   const source = derive(() => {
     changes.version.get()
     return { hidden: showHidden.get() }

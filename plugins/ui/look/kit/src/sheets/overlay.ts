@@ -1,3 +1,4 @@
+import type { SheetSize } from '@sand/ui-shell/contract'
 import { div, event, read, show, sig, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { closeButton } from '../buttons/close'
@@ -8,7 +9,7 @@ import { stableGutter } from '../scroll/gutter'
 import { floatingEdge } from '../surface'
 import { scrim } from './scrim'
 
-export type SheetSize = 'sm' | 'md' | 'lg'
+export type { SheetSize }
 
 export type SheetProps = Props<HTMLDivElement> & {
   size?: SheetSize
@@ -32,8 +33,6 @@ const backdrop =
     scrim({ close, from: document.activeElement, class: placement, onMouseDown: event(close, { self: true }) }, ...children)
 
 export const overlay = backdrop('items-end pt-12 sm:items-start sm:justify-center sm:px-3 sm:pt-20 sm:pb-3')
-
-export const railOverlay = backdrop('items-end pt-12 sm:items-start sm:justify-center sm:px-3 sm:pb-3 md:items-end md:justify-start md:pt-3 md:pl-16')
 
 export const screenOverlay = backdrop('pt-safe sm:items-start sm:justify-center sm:px-3 sm:pt-20 sm:pb-3')
 

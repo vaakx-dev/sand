@@ -59,8 +59,7 @@ import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
-import { bottomSheet } from './sheets/bottom'
-import { overlay, railOverlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
+import { overlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
@@ -94,7 +93,6 @@ export const kit = {
   badge,
   banner,
   barTitle,
-  bottomSheet,
   botFace,
   card,
   checkMark,
@@ -199,7 +197,6 @@ export const kit = {
   providerIcon,
   quietButton,
   quoteButton,
-  railOverlay,
   returnFocus,
   rowButton,
   rowDetail,

@@ -1,8 +1,8 @@
 import type { JoinRequest } from '@sand/devices-contract'
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import { div, dynamicChild } from '@vaakx-dev/vrui'
 import { deciding } from '../requests/decide'
 import { kindIcon, viaTailscale } from '../requests/words'
-import { alertDialog } from '../shared/dialog'
 import { centered } from '../shared/parts'
 import { pinCode } from '../shared/pin'
 import { leftWords } from '../shared/time'
@@ -30,26 +30,23 @@ const decision = (ui: Ui, request: JoinRequest, close: () => void) => {
   )
 }
 
-export const approveLanding = (ui: Ui, id: string, close: () => void) => {
-  const { closeButton, emptyState, errorState, loadingState, overlay, sheet, sheetBody } = ui.kit
+export const approveLanding = (ui: Ui, id: string, close: () => void): SheetSpec => {
+  const { emptyState, errorState, loadingState } = ui.kit
   const { pending } = ui.data.requests
-  return overlay(
-    close,
-    sheet(
-      { ...alertDialog('Allow a new device', `approve-${id}`), size: 'sm' },
-      div({ class: 'flex justify-end px-2 pt-2' }, closeButton({ surface: 'raised', onClick: close })),
-      sheetBody(
-        { id: `approve-${id}` },
-        dynamicChild(
-          () => ({ request: ui.data.requests.get(id), loaded: pending.loaded.get(), error: pending.error.get() }),
-          ({ request, loaded, error }) => {
-            if (request) return decision(ui, request, close)
-            if (error) return errorState({ text: `Couldn’t load the request: ${error}`, retry: () => void pending.refresh() })
-            if (!loaded) return loadingState({})
-            return emptyState({ text: 'This request has ended. Ask the other device to try again.' })
-          },
-        ),
+  return {
+    label: 'Allow a new device',
+    size: 'sm',
+    alert: true,
+    body: () =>
+      dynamicChild(
+        () => ({ request: ui.data.requests.get(id), loaded: pending.loaded.get(), error: pending.error.get() }),
+        ({ request, loaded, error }) => {
+          if (request) return decision(ui, request, close)
+          if (error) return errorState({ text: `Couldn’t load the request: ${error}`, retry: () => void pending.refresh() })
+          if (!loaded) return loadingState({})
+          return emptyState({ text: 'This request has ended. Ask the other device to try again.' })
+        },
       ),
-    ),
-  )
+    onClose: close,
+  }
 }
