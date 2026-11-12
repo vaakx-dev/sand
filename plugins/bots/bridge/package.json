@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-bridge",
   "version": "0.0.0",
-  "description": "Bots and threads work together: threads @ bots and see their replies, bot chats link threads with their live state, and a bot's subagents show in its chat",
+  "description": "Bots and threads work together: threads @ bots and see their replies, and a bot's subagents show in its chat",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

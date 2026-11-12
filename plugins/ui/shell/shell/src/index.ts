@@ -11,6 +11,7 @@ import { swipeGesture } from './integrations/touch'
 import { shellModel, type Model, type Placed } from './model'
 import { sheetHost } from './sheet'
 import { phoneView } from './phone'
+import { singleRow } from './rows'
 import { edgeSwipe } from './swipes'
 import { fitArea, keyboardArea } from './viewport'
 import type { Registry } from './registry'
@@ -91,6 +92,7 @@ export default definePlugin({
       subjectOf: route => model.subjectOf(route),
       chip: source => model.chips.add(source),
       chipBar: scope => chipBar(ctx.kit, model.chips.items, scope),
+      row: row => singleRow(model, row),
       mount: (where, view, order = 0) => model.places[where].add({ view, order }),
       swipe: way => edgeSwipe(model, way),
     }

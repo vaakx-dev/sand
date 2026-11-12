@@ -9,7 +9,7 @@ import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { draftRoute, threadOwners, threadRoute, threadView } from './contract'
 import { threadLinks } from './links'
-import { threadLive } from './live/status'
+import { mergedCheck } from './live/merged'
 import { threadRoutes } from './route'
 import { followStart } from './route/select'
 import { threadScreens } from './screens'
@@ -21,20 +21,20 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [threadsChange, threadSelect, projectsChange], [projects, threadOwners])
-    const live = threadLive(ctx)
+    const merged = mergedCheck(ctx)
     const dock = sig<Composer | undefined>(undefined)
     const screens = threadScreens(ctx, dock)
     const placeholder = () => {
       changes.version.get()
       if (ctx.threads.drafting()) return 'Describe the change.'
       const current = ctx.threads.current()
-      return current && live(current.id)?.status === 'merged' ? 'Ask a follow-up' : undefined
+      return current && merged(current) ? 'Ask a follow-up' : undefined
     }
     ctx.watch(composer, found => {
       dock.set(found)
       return found?.placeholder(placeholder)
     })
-    const view = threadViewService(ctx, screens, live)
+    const view = threadViewService(ctx, screens)
     ctx.provide(threadView, view)
     ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view)))
     ctx.watch(shell, found => found && threadRoutes(ctx, found, screens, changes))

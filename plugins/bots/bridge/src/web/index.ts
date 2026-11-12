@@ -1,8 +1,7 @@
 import { botViews, type BotViews } from '@sand/bots/contract'
-import { threadOwners, threadView } from '@sand/chat/contract'
+import { threadOwners } from '@sand/chat/contract'
 import { composer } from '@sand/composer/contract'
 import { contextChips } from '@sand/context/contract'
-import { markdownLinks } from '@sand/markdown/contract'
 import { transcript } from '@sand/transcript/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -11,7 +10,6 @@ import { replyCard } from './card'
 import { inject } from './context'
 import { botFace } from './face'
 import { threadOwnersOf } from './owners'
-import { threadLinks } from './reference'
 import { createRoster } from './roster'
 import { botTrigger } from './trigger'
 
@@ -20,7 +18,7 @@ const botOf = (data: Record<string, unknown>) => (typeof data.id === 'string' ? 
 export default definePlugin({
   name: 'bot-bridge-web',
   description:
-    "Shows bots and threads to each other: bot chats link threads with their live state, and @ in the composer hands a message to a bot",
+    "Shows bots and threads to each other: @ in the composer hands a message to a bot",
   inject,
   apply(ctx) {
     const roster = createRoster(ctx)
@@ -29,12 +27,6 @@ export default definePlugin({
       screens.set(found)
       return found && ctx.provide(threadOwners, threadOwnersOf(roster, found, ctx.shell))
     })
-    ctx.watch(
-      threadView,
-      view =>
-        view &&
-        ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view))),
-    )
     ctx.watch(composer, found => found?.trigger(botTrigger(roster), 5))
     ctx.watch(contextChips, found =>
       found?.register({

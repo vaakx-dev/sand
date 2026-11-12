@@ -223,6 +223,7 @@ export interface Shell {
   subjectOf(route: Route): Subject | undefined
   chip(source: ChipSource): Dispose
   chipBar(scope: ChipScope): HTMLElement
+  row(row: () => ShellRow): HTMLElement
   mount(where: Place, view: HTMLElement, order?: number): Dispose
   swipe(way: Way): Swipe | undefined
 }
