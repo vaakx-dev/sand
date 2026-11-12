@@ -11,7 +11,7 @@ const renameThread = async (ctx: ChatContext, id: string) => {
   const ask = ctx.get(picker)
   if (!thread || !ask) return
   const title = oneLine((await ask.input('Rename thread', thread.info.title)) ?? '')
-  if (title) await ctx.threads.rename(thread.id, title)
+  if (title) await ctx.threads.update(thread.id, { title })
 }
 
 const removeThread = async (ctx: ChatContext, shell: Shell, id: string) => {

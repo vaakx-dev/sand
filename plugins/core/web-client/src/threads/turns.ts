@@ -1,6 +1,7 @@
 import { promptLabel } from '@sand/chats/contract'
 import type { Wire } from '@sand/devices-contract'
-import { type SendResult, turnHold, turnInterrupt, turnWithdraw } from '@sand/turns-contract/contract'
+import { threadStop } from '@sand/orchestrator/contract'
+import { type SendResult, turnHold, turnWithdraw } from '@sand/turns-contract/contract'
 import type { OutboxItem, Turns } from '../contract'
 import type { createOutbox } from '../outbox/outbox'
 import { legacyTurns } from './legacy'
@@ -15,14 +16,13 @@ export const markStarted = (store: Store) => (item: OutboxItem, result: SendResu
 }
 
 export const createTurns = (wire: Wire, store: Store, outbox: ReturnType<typeof createOutbox>): Turns => {
-  const current: Turns = {
+  const current: Omit<Turns, 'stop'> = {
     async send(id, prompt, { label, settings, mode, clientRequestId = crypto.randomUUID() } = {}) {
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
       const item = { id: clientRequestId, session: id, pc: thread.device, prompt, mode, label: promptLabel(label ?? prompt), settings, at: Date.now() }
       await outbox.submit(item)
     },
-    interrupt: id => wire.call(turnInterrupt, { session: id }),
     withdraw: async (id, pending) => void (await wire.call(turnWithdraw, { session: id, pending })),
     hold: async (id, pending, held) => void (await wire.call(turnHold, { session: id, pending, held })),
   }
@@ -31,7 +31,7 @@ export const createTurns = (wire: Wire, store: Store, outbox: ReturnType<typeof 
 
   return {
     send: (id, prompt, options) => pick(id).send(id, prompt, options),
-    interrupt: id => pick(id).interrupt(id),
+    stop: id => wire.call(threadStop, { session: id }),
     withdraw: (id, pending) => pick(id).withdraw(id, pending),
     hold: (id, pending, held) => pick(id).hold(id, pending, held),
   }

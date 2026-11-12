@@ -38,4 +38,3 @@ export const loopSteer = request('loop.steer', {
   place,
 })
 export const loopUnsteer = request('loop.unsteer', { input: () => session().extend({ item: z.string() }), output: type<boolean>(), place })
-export const loopInterrupt = request('loop.interrupt', { input: session, output: type<boolean>(), place })

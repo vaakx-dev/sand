@@ -11,7 +11,7 @@ export interface SendOptions {
 
 export interface Turns {
   send(thread: string, prompt: Prompt, options?: SendOptions): Promise<void>
-  interrupt(thread: string): Promise<boolean>
+  stop(thread: string): Promise<boolean>
   withdraw(thread: string, id: string): Promise<void>
   hold(thread: string, id: string, held: boolean): Promise<void>
 }

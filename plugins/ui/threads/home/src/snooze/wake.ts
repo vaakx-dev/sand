@@ -1,7 +1,6 @@
-import { threadSelect, threadsChange, type Threads } from '@sand/web-client/contract'
+import { threadsChange, type Threads } from '@sand/web-client/contract'
 import { onTimeout } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { isBack } from './actions'
 
 const longestTimer = 2 ** 31 - 1
 const grace = 500
@@ -21,13 +20,7 @@ export const wakeTimer = (ctx: Context, threads: Threads, update: () => void) =>
     }, Math.min(next - now + grace, longestTimer))
   }
 
-  const seeBack = (id: string | undefined) => {
-    const thread = id ? threads.get(id) : undefined
-    if (thread && isBack(thread)) void threads.snooze(thread.id, null).catch(() => {})
-  }
-
   schedule()
   ctx.on(threadsChange, schedule)
-  ctx.on(threadSelect, seeBack)
   ctx.effect(() => () => stop?.())
 }

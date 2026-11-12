@@ -9,11 +9,7 @@ const place = 'thread'
 
 export const sessionsCreate = request('sessions.create', { input: () => z.object({ cwd: z.string() }), output: type<SessionInfo>(), place })
 export const sessionsQuick = request('sessions.quick', { input: () => z.object({}), output: type<SessionInfo>() })
-export const sessionRename = request('session.rename', { input: () => session().extend({ title: z.string() }), output: type<boolean>(), place })
 export const sessionRemove = request('session.remove', { input: session, output: type<boolean>(), place })
-export const sessionPin = request('session.pin', { input: () => session().extend({ pinned: z.boolean() }), output: type<boolean>(), place })
-export const sessionSettle = request('session.settle', { input: () => session().extend({ settled: z.boolean() }), output: type<boolean>(), place })
-export const sessionSnooze = request('session.snooze', { input: () => session().extend({ until: z.number().nullable() }), output: type<boolean>(), place })
 export const sessionOpen = request('session.open', { input: session, output: type<OpenedSession>(), place })
 export const sessionPage = request('session.page', {
   input: () => session().extend({ before: z.string(), limit: z.number().optional() }),

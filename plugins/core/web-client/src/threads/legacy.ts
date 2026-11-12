@@ -1,7 +1,7 @@
 import { type Prompt, promptLabel, type UserContent, type WireSession } from '@sand/chats/contract'
 import type { Wire, WireListen } from '@sand/devices-contract'
 import { helloActive, wireEvent } from '@sand/host-hub/contract'
-import { loopInterrupt, loopRun, loopSteer, loopUnsteer, type QueueState, queueChange } from '@sand/loop/contract'
+import { loopRun, loopSteer, loopUnsteer, type QueueState, queueChange } from '@sand/loop/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import { helloStarted } from '@sand/server/contract'
 import { helloTurnsApi, type PendingItem } from '@sand/turns-contract/contract'
@@ -42,7 +42,7 @@ export const listenLegacy = (wire: Wire, store: Store) =>
     ),
   )
 
-export const legacyTurns = (wire: Wire, store: Store): Turns => {
+export const legacyTurns = (wire: Wire, store: Store): Omit<Turns, 'stop'> => {
   const run = async (id: string, prompt: Prompt, settings?: SessionSettings) => {
     const thread = store.threads.get(id)!
     thread.turn = true
@@ -69,7 +69,6 @@ export const legacyTurns = (wire: Wire, store: Store): Turns => {
       if (thread.running && (await wire.call(loopSteer, { session: id, prompt, label: promptLabel(label ?? prompt) }))) return
       await run(id, prompt, settings)
     },
-    interrupt: id => wire.call(loopInterrupt, { session: id }),
     withdraw: async (id, item) => void (await wire.call(loopUnsteer, { session: id, item })),
     hold: async () => {
       throw new Error('Update sand on this PC to hold messages')

@@ -5,6 +5,7 @@ import { failure, type threadUpdate } from './contract'
 import { findThread } from './find'
 import { rowOf } from './list'
 import { matchSettings } from './settings'
+import { stopThread } from './stop'
 
 const moveToWorktree = (ctx: OrchestratorContext, id: string, branch: string | undefined) => {
   const found = ctx.get(worktrees)
@@ -19,6 +20,7 @@ export const updateThread = async (ctx: OrchestratorContext, { session, title, p
   if (title !== undefined) ctx.sessions.rename(id, title)
   if (pinned !== undefined) ctx.sessions.pin(id, pinned)
   if (snoozed !== undefined) ctx.sessions.snooze(id, snoozed)
+  if (settled) await stopThread(ctx, thread)
   if (settled !== undefined) await ctx.sessions.settle(id, settled)
   if (worktree || branch) await moveToWorktree(ctx, id, branch)
   return rowOf(ctx, ctx.sessions.list().find(summary => summary.id === id)!)

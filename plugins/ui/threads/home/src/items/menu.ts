@@ -21,7 +21,7 @@ const rename = async ({ ctx, threads }: MenuParts, thread: Thread) => {
   const found = ctx.get(palette)
   if (found) return found.open(renamePage(threads, thread))
   const name = oneLine((await ctx.get(picker)?.input('Rename thread', thread.info.title)) ?? '')
-  if (name && name !== thread.info.title) await threads.rename(thread.id, name)
+  if (name && name !== thread.info.title) await threads.update(thread.id, { title: name })
 }
 
 const remove = async ({ threads, shell }: MenuParts, thread: Thread) => {
@@ -40,7 +40,7 @@ const organiseActions = ({ ctx, threads }: MenuParts, thread: Thread): MenuActio
   const pinned = thread.info.pinned
   const settled = Boolean(thread.info.settled)
   return [
-    { id: 'pin', group: 'organise', label: pinned ? 'Unpin' : 'Pin', icon: 'pin', quick: true, active: pinned, run: () => attempt(ctx, "Couldn't pin", () => threads.pin(thread.id, !pinned)) },
+    { id: 'pin', group: 'organise', label: pinned ? 'Unpin' : 'Pin', icon: 'pin', quick: true, active: pinned, run: () => attempt(ctx, "Couldn't pin", () => threads.update(thread.id, { pinned: !pinned })) },
     {
       id: 'settle',
       group: 'organise',
@@ -48,7 +48,7 @@ const organiseActions = ({ ctx, threads }: MenuParts, thread: Thread): MenuActio
       icon: settled ? 'up' : 'check',
       quick: true,
       active: settled,
-      run: () => attempt(ctx, settled ? "Couldn't un-settle" : "Couldn't settle", () => threads.settle(thread.id, !settled)),
+      run: () => attempt(ctx, settled ? "Couldn't un-settle" : "Couldn't settle", () => threads.update(thread.id, { settled: !settled })),
     },
     snoozeAction(threads, thread),
   ]

@@ -5,11 +5,7 @@ import { existsSync } from 'node:fs'
 import {
   sessionBranches,
   sessionCheckout,
-  sessionPin,
   sessionRemove,
-  sessionRename,
-  sessionSettle,
-  sessionSnooze,
   sessionsQuick,
   sessionsCreate,
 } from '../contract/requests'
@@ -24,14 +20,7 @@ export const sessionRequests = (sessions: Sessions, wire: Pick<WireHost, 'handle
       return info(sessions.thread(cwd))
     }),
     wire.handle(sessionsQuick, () => info(sessions.quick())),
-    wire.handle(sessionRename, ({ session, title }) => {
-      sessions.rename(session, title)
-      return true
-    }),
     wire.handle(sessionRemove, ({ session }) => sessions.remove(session).then(done)),
-    wire.handle(sessionPin, ({ session, pinned }) => Boolean(sessions.pin(session, pinned))),
-    wire.handle(sessionSettle, ({ session, settled }) => sessions.settle(session, settled).then(done)),
-    wire.handle(sessionSnooze, ({ session, until }) => Boolean(sessions.snooze(session, until))),
     wire.handle(sessionCheckout, ({ session: id, entry }) => {
       session(id).checkout(entry)
       return true

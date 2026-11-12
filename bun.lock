@@ -1460,6 +1460,7 @@
         "@sand/jobs": "workspace:*",
         "@sand/loop": "workspace:*",
         "@sand/model": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/project": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",

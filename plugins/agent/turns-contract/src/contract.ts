@@ -98,6 +98,5 @@ export const turnSend = request('turn.send', {
   output: type<SendResult>(),
   place,
 })
-export const turnInterrupt = request('turn.interrupt', { input: () => session().extend({ turn: z.string().optional() }), output: type<boolean>(), place })
 export const turnWithdraw = request('turn.withdraw', { input: () => session().extend({ pending: z.string() }), output: type<boolean>(), place })
 export const turnHold = request('turn.hold', { input: () => session().extend({ pending: z.string(), held: z.boolean() }), output: type<boolean>(), place })

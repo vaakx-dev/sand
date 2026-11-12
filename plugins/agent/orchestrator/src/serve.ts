@@ -1,4 +1,3 @@
-import type { Session } from '@sand/chats/contract'
 import type { ConversationRef } from '@sand/engine/contract'
 import type { Actor, Caller, InputOf, Request } from '@sand/host-hub/contract'
 import { type Server, server, userWrote } from '@sand/server/contract'
@@ -24,21 +23,13 @@ import { findThread } from './find'
 import { listThreads } from './list'
 import type { Pcs } from './pcs'
 import type { Start } from './start'
+import { stopThread } from './stop'
 import { updateThread } from './update'
-
-const stopWait = 10_000
 
 const forwarded = (caller: Caller) => caller.kind === 'pc'
 
 export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, start: Start, pcs: Pcs) => {
   const thread = (id: string) => findThread(ctx, id)
-
-  const stop = async (session: Session) => {
-    const turn = ctx.turns.current(session)
-    if (!turn || !ctx.turns.interrupt(session, turn.id)) return false
-    await ctx.turns.wait(turn.id, 'end', AbortSignal.timeout(stopWait))
-    return true
-  }
 
   const begin = ({ pc, ...input }: InputOf<typeof threadStart>, caller: Caller) => {
     if (pc && !forwarded(caller)) return pcs.start(pc, input)
@@ -100,7 +91,7 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
       ),
       onOwner(found, historyRead, ({ session, bot, ...reading }, { actor }) => threads.read(conversationOf(session, bot, actor), reading)),
       onOwner(found, itemRead, ({ session, bot, item, offset }, { actor }) => threads.item(conversationOf(session, bot, actor), item, offset)),
-      onOwner(found, threadStop, ({ session: id }) => stop(thread(id))),
+      onOwner(found, threadStop, ({ session: id }) => stopThread(ctx, thread(id))),
       onOwner(found, threadUpdate, input => updateThread(ctx, input)),
     )
   })

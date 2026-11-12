@@ -7,7 +7,6 @@ import {
   turnChange,
   turnChangeWire,
   turnHold,
-  turnInterrupt,
   turnPending,
   turnPendingWire,
   type Turns,
@@ -40,7 +39,6 @@ export const serveTurns = (ctx: TurnsContext, { service, runner }: Served) => {
         if ((input.origin ?? 'user') === 'user') ctx.emit(userWrote, chat)
         return service.send(chat, input)
       }),
-      found.handle(turnInterrupt, ({ session: id, turn }) => service.interrupt(session(id), turn)),
       found.handle(turnWithdraw, ({ session: id, pending }) => service.withdraw(session(id), pending)),
       found.handle(turnHold, ({ session: id, pending, held }) => runner.hold(session(id), pending, held)),
     )
