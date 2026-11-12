@@ -2,7 +2,7 @@ import type { Row, Status } from '@sand/ui-shell/contract'
 import { clock, derive, div, dynamicChild, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
 import { largeRowTitle, metaLine, rowTitle } from '../heads/text'
-import { dot, spinner } from '../marks/marks'
+import { dot, elapsed, spinner } from '../marks/marks'
 import { runLooks } from '../marks/status'
 import { toneText, type Tone } from '../marks/tones'
 import { placeLook, type Surface } from '../surface'
@@ -17,10 +17,12 @@ const shortAge = (ms: number) => {
   return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`
 }
 
-export const age = (at: number) => {
+const ageText = (at: number) => {
   const now = clock(minute)
-  return span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => shortAge(Math.max(0, now.get() - at)))
+  return () => shortAge(Math.max(0, now.get() - at))
 }
+
+export const age = (at: number) => span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, ageText(at))
 
 const statusLooks: Partial<Record<Status, { label: string; tone: Tone }>> = {
   running: { label: 'Running', tone: 'run' },
@@ -32,11 +34,16 @@ const statusLooks: Partial<Record<Status, { label: string; tone: Tone }>> = {
   stopped: runLooks.stopped,
 }
 
-export const workStatus = (status: Status | undefined) => {
+const statusMark = (tone: Tone) => (tone === 'run' ? spinner('xs') : dot(tone))
+
+const timeOf = (tone: Tone | undefined, at: number) => (tone === 'run' ? elapsed(at) : ageText(at))
+
+const statusTime = (status: Status | undefined, at: number | undefined) => {
   const shown = status && statusLooks[status]
-  if (!shown) return null
-  const lead = shown.tone === 'run' ? spinner('xs') : dot(shown.tone)
-  return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs', toneText[shown.tone]] }, lead, shown.label)
+  const time = at === undefined ? shown?.label : timeOf(shown?.tone, at)
+  if (!time) return null
+  const tone = shown?.tone === 'run' ? toneText.run : 'text-neutral-500'
+  return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs tabular-nums', tone], title: shown?.label }, shown ? statusMark(shown.tone) : null, time)
 }
 
 export interface RowPlaceProps {
@@ -65,34 +72,29 @@ export type WorkRowProps = Props<HTMLButtonElement> & {
   surface?: Surface
 }
 
-const secondLine = (large: boolean, { detail, place, status, trail }: Pick<WorkRowBody, 'detail' | 'place' | 'status' | 'trail'>) => {
-  if (!detail && !place && !status && !trail) return null
-  const left = detail ? span({ class: 'min-w-0 truncate' }, detail) : (place ? span({ class: 'inline-flex max-w-1/2 shrink-0 items-center gap-1.5' }, place.mark ?? null, span({ class: 'min-w-0 truncate' }, place.label)) : null)
-  const trailing = trail ? span({ class: 'flex min-w-0 items-center gap-2' }, trail) : null
-  const right = status || trail ? span({ class: 'ml-auto flex min-w-0 items-center justify-end gap-2' }, trailing, workStatus(status)) : null
-  return div({ class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, right)
+const placeView = ({ mark, label }: RowPlaceProps) =>
+  span({ class: 'inline-flex max-w-1/2 shrink-0 items-center gap-1.5' }, mark ?? null, span({ class: 'min-w-0 truncate' }, label))
+
+const secondLine = (large: boolean, { detail, place, trail }: Pick<WorkRowBody, 'detail' | 'place' | 'trail'>) => {
+  if (!detail && !place && !trail) return null
+  const left = detail ? span({ class: 'min-w-0 truncate' }, detail) : (place ? placeView(place) : null)
+  const trailing = trail ? span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, trail) : null
+  return div({ class: ['flex min-w-0 items-center gap-2 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, trailing)
 }
 
-const endOf = (end: Child | undefined, at: number | undefined) => end ?? (at === undefined ? null : age(at))
+const metaOf = ({ end, status, at }: Pick<WorkRowBody, 'end' | 'status' | 'at'>) => end ?? statusTime(status, at)
 
 const titleOf = (title: Child, large: boolean) => span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title))
 
-const stackedBody = ({ title, lead, end, at, large = false, ...rest }: WorkRowBody) =>
+const stackedBody = ({ title, lead, large = false, ...rest }: WorkRowBody) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col gap-px' },
-    div({ class: 'flex min-w-0 items-center gap-2' }, lead ?? null, titleOf(title, large), endOf(end, at)),
+    div({ class: 'flex min-w-0 items-center gap-2' }, lead ?? null, titleOf(title, large), metaOf(rest)),
     secondLine(large, rest),
   )
 
-const lineBody = ({ title, lead, end, at, place, status, large = false }: WorkRowBody) =>
-  div(
-    { class: 'flex min-w-0 flex-1 items-center gap-2' },
-    lead ?? null,
-    place?.mark ?? null,
-    titleOf(title, large),
-    endOf(end, at),
-    workStatus(status),
-  )
+const lineBody = ({ title, lead, place, large = false, ...rest }: WorkRowBody) =>
+  div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, lead ?? null, place?.mark ?? null, titleOf(title, large), metaOf(rest))
 
 export const workRowBody = (body: WorkRowBody) => (body.form === 'line' ? lineBody(body) : stackedBody(body))
 
