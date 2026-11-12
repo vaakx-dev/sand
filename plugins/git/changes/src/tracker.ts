@@ -92,6 +92,7 @@ export const createTracker = (deps: ChangesDeps, send: (changes: ThreadChanges) 
     if (wanted ? current?.cwd === session.cwd : !current) return
     unfollow(session.id)
     if (wanted) followed.set(session.id, watch(session.id, session.cwd))
+    else schedule(session.id)
   }
 
   const forget = (id: string) => {
