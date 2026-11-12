@@ -2499,7 +2499,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/chat": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
         "@sand/inspector": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/threads-home": "workspace:*",
         "@sand/ui-kit": "workspace:*",

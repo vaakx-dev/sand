@@ -3,7 +3,8 @@ import { clock, derive, div, dynamicChild, p, read, span, type Child, type Maybe
 import { rowButton } from '../buttons/button'
 import { largeRowTitle, metaLine, rowTitle } from '../heads/text'
 import { dot, spinner } from '../marks/marks'
-import { toneText } from '../marks/tones'
+import { runLooks } from '../marks/status'
+import { toneText, type Tone } from '../marks/tones'
 import { placeLook, type Surface } from '../surface'
 
 const minute = 60_000
@@ -21,15 +22,18 @@ export const age = (at: number) => {
   return span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => shortAge(Math.max(0, now.get() - at)))
 }
 
-const attention: Partial<Record<Status, { label: string; tone: 'run' | 'warning' | 'success' }>> = {
+const statusLooks: Partial<Record<Status, { label: string; tone: Tone }>> = {
   running: { label: 'Running', tone: 'run' },
   merging: { label: 'Merging', tone: 'run' },
   waiting: { label: 'Needs you', tone: 'warning' },
   ready: { label: 'Ready', tone: 'success' },
+  done: runLooks.done,
+  failed: runLooks.failed,
+  stopped: runLooks.stopped,
 }
 
 export const workStatus = (status: Status | undefined) => {
-  const shown = status && attention[status]
+  const shown = status && statusLooks[status]
   if (!shown) return null
   const lead = shown.tone === 'run' ? spinner('xs') : dot(shown.tone)
   return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs', toneText[shown.tone]] }, lead, shown.label)
@@ -39,6 +43,8 @@ export interface RowPlaceProps {
   label: Child
   mark?: Child
 }
+
+export type RowForm = 'stacked' | 'line'
 
 export interface WorkRowBody {
   title: Child
@@ -50,6 +56,7 @@ export interface WorkRowBody {
   status?: Status
   trail?: Child
   large?: boolean
+  form?: RowForm
 }
 
 export type WorkRowProps = Props<HTMLButtonElement> & {
@@ -67,20 +74,30 @@ const secondLine = (large: boolean, { detail, place, status, trail }: Pick<WorkR
 
 const endOf = (end: Child | undefined, at: number | undefined) => end ?? (at === undefined ? null : age(at))
 
-export const workRowBody = ({ title, lead, end, at, large = false, ...rest }: WorkRowBody) =>
+const titleOf = (title: Child, large: boolean) => span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title))
+
+const stackedBody = ({ title, lead, end, at, large = false, ...rest }: WorkRowBody) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col gap-px' },
-    div(
-      { class: 'flex min-w-0 items-center gap-2' },
-      lead ?? null,
-      span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title)),
-      endOf(end, at),
-    ),
+    div({ class: 'flex min-w-0 items-center gap-2' }, lead ?? null, titleOf(title, large), endOf(end, at)),
     secondLine(large, rest),
   )
 
+const lineBody = ({ title, lead, end, at, place, status, large = false }: WorkRowBody) =>
+  div(
+    { class: 'flex min-w-0 flex-1 items-center gap-2' },
+    lead ?? null,
+    place?.mark ?? null,
+    titleOf(title, large),
+    endOf(end, at),
+    workStatus(status),
+  )
+
+export const workRowBody = (body: WorkRowBody) => (body.form === 'line' ? lineBody(body) : stackedBody(body))
+
 export interface RowBodyLook {
   large?: boolean
+  form?: RowForm
 }
 
 const sameLook = (shown: Row, next: Row) =>
@@ -103,10 +120,11 @@ const looksOf = (row: () => Row) => {
   })
 }
 
-const bodyOf = (row: Row, large: boolean) =>
+const bodyOf = (row: Row, { large, form }: RowBodyLook) =>
   workRowBody({
     title: row.label,
     large,
+    form,
     lead: row.lead?.(),
     end: row.end ? span({ class: 'flex shrink-0 tabular-nums' }, metaLine(row.end)) : undefined,
     at: row.at,
@@ -116,7 +134,7 @@ const bodyOf = (row: Row, large: boolean) =>
     trail: row.trail?.(),
   })
 
-export const rowBody = (row: () => Row, { large = false }: RowBodyLook = {}) => dynamicChild(looksOf(row), shown => bodyOf(shown, large))
+export const rowBody = (row: () => Row, look: RowBodyLook = {}) => dynamicChild(looksOf(row), shown => bodyOf(shown, look))
 
 export const workRow = ({ current = false, large = false, surface = 'page', class: extra, ...props }: WorkRowProps, body: Child) =>
   rowButton(
