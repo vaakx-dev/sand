@@ -1,3 +1,4 @@
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
 import { derive, dynamicChild, show } from '@vaakx-dev/vrui'
@@ -21,8 +22,8 @@ const runTitle = (fleet: Fleet) => {
   return `${done} of ${plural(run.keys.length, 'PC')} updated`
 }
 
-export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void) => {
-  const { loadingState, openTab, overlay, quietButton, sheet, sheetBody, sheetHead } = kit
+export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void): SheetSpec => {
+  const { loadingState, openTab, quietButton, sheetBody, sheetTitle } = kit
   const mode = derive(() => modeOf(fleet))
   const chooseTitle = () => {
     const target = fleet.target.get()
@@ -30,23 +31,21 @@ export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void) => {
   }
   const title = () => (mode.get() === 'run' ? runTitle(fleet) : chooseTitle())
   const notes = () => fleet.target.get()?.notesUrl
-  return overlay(
-    close,
-    sheet(
-      { 'aria-label': 'Update sand', size: 'md' },
-      sheetHead({
-        title,
-        close,
-        actions: show(
-          () => mode.get() === 'choose' && !!notes(),
-          () => quietButton({ surface: 'raised', onClick: () => openTab(notes() ?? '') }, 'Release notes'),
-        ),
-      }),
+  return {
+    label: 'Update sand',
+    look: 'bare',
+    head: () => [
+      sheetTitle(title),
+      show(
+        () => mode.get() === 'choose' && !!notes(),
+        () => quietButton({ surface: 'raised', onClick: () => openTab(notes() ?? '') }, 'Release notes'),
+      ),
+    ],
+    body: () =>
       dynamicChild(mode, current => {
         if (current === 'run') return progressBody(kit, fleet, close)
         if (current === 'choose') return chooseBody(kit, fleet, close)
         return sheetBody({}, loadingState({ flush: true, text: 'Looking for a newer sand…' }))
       }),
-    ),
-  )
+  }
 }

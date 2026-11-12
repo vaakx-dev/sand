@@ -1,5 +1,6 @@
 import type { DeviceRecord } from '@sand/devices-contract'
-import { derive, dynamicChild, effect, sig } from '@vaakx-dev/vrui'
+import type { SheetSpec } from '@sand/ui-shell/contract'
+import { derive, dynamicChild, effect, show, sig } from '@vaakx-dev/vrui'
 import { doneBlock } from '../shared/parts'
 import type { AddStep, Ui } from '../ui'
 import type { AddDone, AddView } from './done'
@@ -13,8 +14,8 @@ const titles: Record<AddStep, string> = { list: 'Add', phone: 'Add a phone or br
 
 const isDone = (view: AddView): view is AddDone => typeof view !== 'string'
 
-export const addSheet = (ui: Ui, start: AddStep, close: () => void) => {
-  const { overlay, primaryAction, secondaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ui.kit
+export const addSheet = (ui: Ui, start: AddStep, close: () => void): SheetSpec => {
+  const { icon, iconButton, primaryAction, secondaryAction, sheetBody, sheetFoot, sheetTitle } = ui.kit
   const view = sig<AddView>(start)
   const joined = sig<DeviceRecord[]>([])
   const step = derive(() => {
@@ -44,21 +45,23 @@ export const addSheet = (ui: Ui, start: AddStep, close: () => void) => {
     return null
   }
 
-  return overlay(
-    close,
-    sheet(
-      { 'aria-label': 'Add', size: 'md' },
-      sheetHead({
-        title: () => (isDone(view.get()) ? '' : titles[step.get() as AddStep]),
-        close,
-        back: () => go('list'),
-        backShown: () => step.get() !== 'list' && step.get() !== 'done',
-      }),
+  return {
+    label: 'Add',
+    look: 'bare',
+    head: () => [
+      show(
+        () => step.get() !== 'list' && step.get() !== 'done',
+        () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: () => go('list') }, icon('back', 'md')),
+      ),
+      sheetTitle(() => (isDone(view.get()) ? '' : titles[step.get() as AddStep])),
+    ],
+    body: () => [
       sheetBody({}, dynamicChild(step, body)),
       dynamicChild(
         derive(() => `${step.get()}:${joined.get().length > 0}`),
         () => foot(step.get()),
       ),
-    ),
-  )
+    ],
+    onClose: close,
+  }
 }

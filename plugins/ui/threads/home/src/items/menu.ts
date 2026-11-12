@@ -1,15 +1,12 @@
 import { threadRoute } from '@sand/chat/contract'
 import type { Drafts } from '@sand/composer/contract'
-import { palette } from '@sand/palette/contract'
-import { picker } from '@sand/picker/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { MenuAction, Shell } from '@sand/ui-shell/contract'
-import { oneLine } from '@sand/util'
 import type { Projects, Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { renamePage } from '../palette/session'
 import { snoozeAction } from '../snooze/actions'
 import { attempt } from './failure'
+import { canRename, renameThread } from './rename'
 
 export interface MenuParts {
   ctx: Context
@@ -17,13 +14,6 @@ export interface MenuParts {
   threads: Threads
   projects: Projects
   shell: Shell
-}
-
-const rename = async ({ ctx, threads }: MenuParts, thread: Thread) => {
-  const found = ctx.get(palette)
-  if (found) return found.open(renamePage(threads, thread))
-  const name = oneLine((await ctx.get(picker)?.input('Rename thread', thread.info.title)) ?? '')
-  if (name && name !== thread.info.title) await threads.update(thread.id, { title: name })
 }
 
 const remove = async ({ threads, shell }: MenuParts, thread: Thread) => {
@@ -34,8 +24,8 @@ const remove = async ({ threads, shell }: MenuParts, thread: Thread) => {
 
 const openActions = (parts: MenuParts, thread: Thread): MenuAction[] => [
   { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => parts.kit.openTab(parts.shell.link({ kind: threadRoute, id: thread.id })) },
-  ...(parts.ctx.get(palette) || parts.ctx.get(picker)
-    ? [{ id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(parts.ctx, "Couldn't rename", () => rename(parts, thread)) }]
+  ...(canRename(parts.ctx)
+    ? [{ id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(parts.ctx, "Couldn't rename", () => renameThread(parts.ctx, parts.threads, thread)) }]
     : []),
 ]
 

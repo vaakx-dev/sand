@@ -83,7 +83,7 @@ const phoneSwipe = (model: Model, way: Way) => {
 }
 
 export const edgeSwipe = (model: Model, way: Way): Swipe | undefined => {
-  if (model.sheetShown.get()) return undefined
+  if (model.sheetsShown.get().length) return undefined
   const state = model.state.get()
   if (state === 'drawer') return way === 'left' || way === 'right' ? drawerSwipe(model) : undefined
   if (state !== 'phone') return undefined

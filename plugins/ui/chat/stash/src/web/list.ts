@@ -1,5 +1,6 @@
 import { contentName } from '@sand/attachments/web/contract'
 import type { ComposerView } from '@sand/composer/contract'
+import type { Shell } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { ago, oneLine } from '@sand/util'
 import { div, list, span, type Sig } from '@vaakx-dev/vrui'
@@ -10,6 +11,7 @@ export interface ListParts {
   entries: Sig<Entry[]>
   here: ComposerView
   phone: () => boolean
+  frame(): Shell | undefined
   remove(entry: Entry): Promise<unknown>
   take(entry: Entry): void
 }

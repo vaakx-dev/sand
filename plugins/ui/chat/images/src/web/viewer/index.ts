@@ -1,24 +1,20 @@
 import type { ImageViewer } from '../../contract'
-import { mount } from '@vaakx-dev/vrui'
+import { shell, type SheetHandle } from '@sand/ui-shell/contract'
 import type { ImagesContext } from '../context'
 import { galleryOf, type Draw, type Picture } from './gallery'
 import { viewerDialog } from './view/dialog'
 import { viewerModel } from './view/model'
 
 export const createImageViewer = (ctx: ImagesContext): ImageViewer => {
-  let closeOpen: (() => void) | undefined
+  let open: SheetHandle | undefined
 
-  ctx.effect(() => () => closeOpen?.())
+  ctx.effect(() => () => open?.close())
 
   const show = (images: Picture[], start: number, thread?: string) => {
-    closeOpen?.()
+    const before = open
     const draw: Draw = (picture, options) => ctx.mediaView.image(picture.source, thread, { ...options, alt: picture.name })
-    const close = () => {
-      unmount()
-      closeOpen = undefined
-    }
-    const unmount = mount(document.body, viewerDialog(ctx.kit, viewerModel(images, start), draw, close))
-    closeOpen = close
+    open = ctx.get(shell)?.sheet(viewerDialog(ctx.kit, viewerModel(images, start), draw))
+    before?.close()
   }
 
   return {

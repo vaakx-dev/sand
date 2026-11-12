@@ -22,7 +22,7 @@ export const sessionSource = (parts: SessionParts, kit: Kit): PaletteSource => (
     const { threads } = parts
     if (query.startsWith('/')) return []
     const current = threads.current()
-    const actions = current ? sessionActions(kit, threads, current) : []
+    const actions = current ? sessionActions(parts.ctx, kit, threads, current) : []
     if (!query.trim()) return [...actions, ...sessionItems(parts, 'Recent').slice(0, 5)]
     return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts, startChat(parts)), ...sessionItems(parts, 'Chats')]
   },

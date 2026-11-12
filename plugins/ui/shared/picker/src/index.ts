@@ -1,3 +1,4 @@
+import { shell, type Shell } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'
 import { media } from '@vaakx-dev/vrui'
@@ -16,15 +17,18 @@ export default definePlugin({
     const fine = owned(ctx, () => media('(pointer: fine)'))
     let closed = false
 
-    const turn = <T>(open: () => Promise<T | undefined>) => {
-      const next = queue.then(() => (closed ? undefined : open()))
+    const turn = <T>(open: (frame: Shell) => Promise<T | undefined>) => {
+      const next = queue.then(() => {
+        const frame = ctx.get(shell)
+        return closed || !frame ? undefined : open(frame)
+      })
       queue = next.catch(() => {})
       return next
     }
 
     const host: Picker = {
-      choose: (title, items) => turn(() => choose(ctx.kit, cancels, fine, title, items)),
-      input: (title, value) => turn(() => ask(ctx.kit, cancels, title, value)),
+      choose: (title, items) => turn(frame => choose(ctx.kit, frame, cancels, fine, title, items)),
+      input: (title, value) => turn(frame => ask(ctx.kit, frame, cancels, title, value)),
     }
 
     ctx.effect(() => () => {

@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { place } from '@sand/ui-shell/contract'
+import { shell } from '@sand/ui-shell/contract'
 import { form, listen, preventThen, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { SshPrompt } from '../contract'
@@ -31,14 +31,15 @@ const fieldView = (kit: Kit, prompt: SshPrompt, answer: Answer) => {
 
 export const askSheet = (ctx: Context, kit: Kit) => (prompt: SshPrompt, signal: AbortSignal) =>
   new Promise<string | null>(resolve => {
+    const frame = ctx.get(shell)
+    if (!frame) return resolve(null)
     const answer: Answer = value => {
       unlisten()
-      void unplace()
+      sheet.close()
       resolve(value)
     }
     const close = () => answer(null)
     const body = prompt.confirm ? confirmView : fieldView
-    const view = () => kit.overlay(close, kit.sheet({ size: 'sm', 'aria-label': 'SSH' }, kit.sheetHead({ title: 'SSH', close }), ...body(kit, prompt, answer)))
-    const unplace = place(ctx, 'overlay', view)
+    const sheet = frame.sheet({ label: 'SSH', look: 'bare', size: 'sm', head: () => kit.sheetTitle('SSH'), body: () => body(kit, prompt, answer), onClose: close })
     const unlisten = listen(signal, 'abort', close, { once: true })
   })

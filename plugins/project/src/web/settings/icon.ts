@@ -1,7 +1,9 @@
 import type { ProjectIcon } from '../../contract'
+import type { Pulse } from '@sand/reactive'
+import { shell } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { div, dynamicChild, portal, show, type Child, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import type { Entry } from './actions'
 
@@ -54,29 +56,20 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
         shapeTile(kit, group, { look: { shape: option, hue }, chosen: option === shape, label: option ? `Dunes ${option}` : 'Default dunes', pick: () => save(iconOf(option, hue)) }),
       ),
     )
-  const close = () => picking.set(undefined)
-  return kit.overlay(
-    close,
-    kit.sheet(
-      { 'aria-label': `Icon for ${group.name}`, size: 'sm' },
-      kit.sheetHead({ title: `Icon for ${group.name}`, close }),
-      kit.sheetBody(
-        {},
-        div({ class: 'flex items-center justify-between gap-2' }, kit.metaLine('Shape'), kit.quietButton({ size: 'sm', surface: 'raised', onClick: moreIdeas }, 'More shapes')),
-        dynamicChild(
-          picking.map(value => value?.page ?? 0),
-          shapeTiles,
-        ),
-        kit.metaLine('Colour'),
-        tiles(
-          ...hues.map(option =>
-            hueTile(kit, group, { look: { shape, hue: option.hue }, chosen: option.hue === hue, label: option.name, pick: () => save(iconOf(shape, option.hue)) }),
-          ),
-        ),
-        kit.quietButton({ size: 'sm', surface: 'raised', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, 'Reset to default'),
+  return [
+    div({ class: 'flex items-center justify-between gap-2' }, kit.metaLine('Shape'), kit.quietButton({ size: 'sm', surface: 'raised', onClick: moreIdeas }, 'More shapes')),
+    dynamicChild(
+      picking.map(value => value?.page ?? 0),
+      shapeTiles,
+    ),
+    kit.metaLine('Colour'),
+    tiles(
+      ...hues.map(option =>
+        hueTile(kit, group, { look: { shape, hue: option.hue }, chosen: option.hue === hue, label: option.name, pick: () => save(iconOf(shape, option.hue)) }),
       ),
     ),
-  )
+    kit.quietButton({ size: 'sm', surface: 'raised', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, 'Reset to default'),
+  ]
 }
 
 export const iconEntries = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>): Entry[] => {
@@ -86,8 +79,26 @@ export const iconEntries = (ctx: ProjectsContext, group: ProjectGroup, picking: 
   return [{ label: 'Change icon…', icon: 'sparkles', run }]
 }
 
-export const iconSheet = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) =>
-  show(
-    picking.map(value => value?.project === group.id),
-    () => portal(document.body, iconPicker(ctx, group, picking)),
-  )
+export const iconSheet = (ctx: ProjectsContext, changes: Pulse, picking: Sig<Picking>) => {
+  const project = picking.map(value => value?.project)
+  effect(() => {
+    const id = project.get()
+    const frame = untrack(() => ctx.get(shell))
+    if (!id || !frame) return
+    const group = derive(() => {
+      changes.version.get()
+      return ctx.projects.groups({ hidden: true }).find(found => found.id === id)
+    })
+    const title = () => `Icon for ${group.get()?.name ?? ''}`
+    const handle = untrack(() =>
+      frame.sheet({
+        label: title,
+        size: 'sm',
+        head: () => ctx.kit.sheetTitle(title),
+        body: () => dynamicChild(group, found => (found ? div({ class: 'contents' }, ...iconPicker(ctx, found, picking)) : null)),
+        onClose: () => picking.set(undefined),
+      }),
+    )
+    return () => handle.close()
+  })
+}

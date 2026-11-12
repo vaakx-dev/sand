@@ -1,3 +1,4 @@
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import { platformWords } from '../requests/words'
 import { removeAction } from '../shared/remove'
 import { dateWords } from '../shared/time'
@@ -50,24 +51,15 @@ const removeSection = (ui: Ui, pc: string, close: () => void) => {
   )
 }
 
-export const detailsSheet = (ui: Ui, pc: string, close: () => void) => {
-  const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ui.kit
+export const detailsSheet = (ui: Ui, pc: string, close: () => void): SheetSpec => {
+  const { primaryAction, sheetTitle } = ui.kit
   const name = () => ui.data.nameOf(pc)
   const home = pc === ui.data.homeId()
-  return overlay(
-    close,
-    sheet(
-      { 'aria-label': name, size: 'md' },
-      sheetHead({ title: name, close }),
-      sheetBody(
-        {},
-        nameField(ui, pc),
-        statusBlock(ui, pc),
-        routesSection(ui, pc),
-        ...pcSwitches(ui, pc),
-        home ? null : removeSection(ui, pc, close),
-      ),
-      sheetFoot(primaryAction({ onClick: close }, 'Done')),
-    ),
-  )
+  return {
+    label: name,
+    head: () => sheetTitle(name),
+    body: () => [nameField(ui, pc), statusBlock(ui, pc), routesSection(ui, pc), ...pcSwitches(ui, pc), home ? null : removeSection(ui, pc, close)],
+    foot: () => primaryAction({ onClick: close }, 'Done'),
+    onClose: close,
+  }
 }

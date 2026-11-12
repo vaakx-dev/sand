@@ -6,7 +6,7 @@ import { layer } from '../layer'
 import { modal } from '../layers/stack'
 
 export interface ViewerShellProps extends Omit<Props<HTMLDivElement>, 'label'> {
-  label: string
+  label: MaybeReactive<string>
   close(): void
 }
 

@@ -1,4 +1,5 @@
 import type { Picked, PickItem } from '../contract'
+import type { Shell } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, keys, list, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import { openSheet } from '../overlay'
@@ -13,7 +14,7 @@ const results = <T>(kit: Kit, model: PickModel<T>) =>
     div({ class: 'min-h-0 flex-1 overflow-auto px-2 pb-2' }),
   )
 
-export const choose = <T>(kit: Kit, cancels: Set<() => void>, fine: Sig<boolean>, title: string, items: PickItem<T>[]) =>
+export const choose = <T>(kit: Kit, frame: Shell, cancels: Set<() => void>, fine: Sig<boolean>, title: string, items: PickItem<T>[]) =>
   new Promise<Picked<T> | undefined>(resolve => {
     const { emptyState, searchRow } = kit
     const finish = (picked?: Picked<T>) => {
@@ -33,6 +34,7 @@ export const choose = <T>(kit: Kit, cancels: Set<() => void>, fine: Sig<boolean>
     })
 
     const close = openSheet(
+      frame,
       kit,
       { title, size: 'lg', close: model.cancel, keydown: keys({ ...model.box.keyMap, Escape: model.cancel }, { stop: true }) },
       search,

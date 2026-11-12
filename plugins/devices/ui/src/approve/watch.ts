@@ -1,7 +1,7 @@
 import { afterTyping } from '@sand/composer/contract'
 import type { JoinRequest, PairSettled } from '@sand/devices-contract'
+import { sheetSlot } from '@sand/ui-shell/contract'
 import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
-import { overlaySlot } from '../shared/overlay'
 import type { Ui } from '../ui'
 import { approveLanding } from './landing'
 import { approvePrompt } from './prompt'
@@ -15,8 +15,8 @@ const elsewhereText = (ui: Ui, settled: PairSettled, request: JoinRequest) => {
 }
 
 export const approvals = (ui: Ui, adding: () => boolean) => {
-  const prompt = overlaySlot(ui.ctx, 150)
-  const landing = overlaySlot(ui.ctx, 160)
+  const prompt = sheetSlot(ui.ctx)
+  const landing = sheetSlot(ui.ctx)
   const later = sig(new Set<string>())
   const approval = ui.data.changes.read(() => ui.ctx.pcs.approval())
   const paired = derive(() => ui.data.paired.get().phase === 'paired')

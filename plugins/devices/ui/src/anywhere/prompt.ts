@@ -1,7 +1,6 @@
-import { place } from '@sand/ui-shell/contract'
+import { place, sheetSlot } from '@sand/ui-shell/contract'
 import { derive, effect, stored, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
-import { overlaySlot } from '../shared/overlay'
 import type { Ui } from '../ui'
 import { anywhereSheet } from './sheet'
 
@@ -13,7 +12,7 @@ export const anywherePrompt = (ui: Ui) => {
   const { banner, primaryAction } = ui.kit
   const dismissed = stored('sand.anywhere.dismissed', false)
   const doneSeen = stored(`sand.anywhere.done.${location.origin}`, false)
-  const sheet = overlaySlot(ui.ctx, 120)
+  const sheet = sheetSlot(ui.ctx)
   const device = derive(() => {
     const state = ui.data.paired.get()
     return state.phase === 'paired' ? state.device : undefined

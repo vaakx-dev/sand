@@ -81,7 +81,6 @@ export default definePlugin({
         model.showSheet(spec)
         return { close: () => model.closeSheet(spec) }
       },
-      cover: close => model.cover(close),
       aside: spec => model.asides.add(spec),
       showAside: (id, open) => model.showAside(id, open),
       asideOpen(id) {
