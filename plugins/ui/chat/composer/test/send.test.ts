@@ -29,7 +29,9 @@ test('a message sent again after its answer was lost reaches sand once', async (
   const model = createModel(chatTarget(chat), [], sig(undefined))
   model.text.set('ship it')
 
-  await model.send()
+  const sent = model.send()
+  expect(model.text.get()).toBe('')
+  await sent
   expect(model.failure.get()?.text).toContain('Your message is still here')
   expect(model.text.get()).toBe('ship it')
 

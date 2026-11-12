@@ -5,19 +5,14 @@ import type { SendOptions } from '@sand/web-client/contract'
 import { derive, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { commandChar } from './complete/detect'
 import { boundTriggers, type Triggers } from './complete/registry'
-import type { Command } from './contract'
+import type { Command, ComposerContent } from './contract'
 import type { Saved } from './drafts/store'
-import { createRecords } from './records'
+import { contextOf, createRecords } from './records'
 import { createHolds } from './send/holds'
 import type { Outgoing, Target } from './target'
 
-interface Typed {
-  text: string
-  items: Held[]
-}
-
 interface Retry {
-  typed: Typed
+  draft: Saved
   options: Outgoing
 }
 
@@ -25,6 +20,8 @@ const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettin
   const { model, effort, speed } = { ...settings, ...patch }
   return { ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }
 }
+
+const sendError = (error: unknown) => `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}.`
 
 export const createModel = (target: Target, registries: Triggers[], shelves: Sig<Shelves | undefined>) => {
   const text = sig('')
@@ -38,6 +35,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
   const picked = sig<SessionSettings>({})
   const failure = sig<{ text: string; retry?: Retry } | undefined>(undefined)
   const sending = sig(false)
+  const outgoing = sig<Saved | undefined>(undefined)
   const running = derive(() => target.running())
   const delivery = derive(() => target.delivery())
   const pcName = derive(() => target.pcName())
@@ -51,24 +49,47 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     picked.set({})
   }
 
+  const fill = (saved: Saved) => {
+    records.list.set(saved.records ?? [])
+    text.set(saved.text)
+    attached.set(saved.items)
+    picked.set(saved.settings ?? {})
+  }
+
+  const reset = () => {
+    clear()
+    failure.set(undefined)
+    outgoing.set(undefined)
+  }
+
   const fail = (message: string) => failure.set({ text: message })
 
-  const couldNotSend = (outgoing: Retry, error: unknown) =>
-    failure.set({ text: `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}. Your message is still here.`, retry: outgoing })
+  const typed = (): Saved => ({ text: text.get(), items: attached.get(), records: records.linked(text.get()), settings: picked.get() })
 
-  const typed = (): Typed => ({ text: text.get(), items: attached.get() })
+  const draft = (): Saved => (empty.get() ? (outgoing.get() ?? typed()) : typed())
 
-  const unchanged = (before: Typed) => {
+  const unchanged = (before: Saved) => {
     const now = typed()
     return now.text === before.text && now.items.length === before.items.length && now.items.every((item, at) => item === before.items[at])
   }
 
-  const requestId = () => {
-    const failed = failure.get()?.retry
-    return failed && unchanged(failed.typed) ? failed.options.clientRequestId : crypto.randomUUID()
+  const putBack = (saved: Saved, message: string, retry?: Retry) => {
+    const restored = empty.get()
+    if (restored) fill(saved)
+    failure.set({ text: restored ? `${message} Your message is still here.` : message, retry })
   }
 
-  const upload = () => shelf.get()?.upload() ?? Promise.resolve([])
+  const requestId = () => {
+    const failed = failure.get()?.retry
+    return failed && unchanged(failed.draft) ? failed.options.clientRequestId : crypto.randomUUID()
+  }
+
+  const upload = (items: Held[]) => shelf.get()?.upload(items) ?? Promise.resolve([])
+
+  const content = async (saved: Saved): Promise<ComposerContent> => {
+    const items = await upload(saved.items)
+    return { text: saved.text.trim(), content: [...items, ...contextOf(saved.records)] }
+  }
 
   const attempt = async (busy: boolean, task: () => Promise<void>, failed: (error: unknown) => void) => {
     failure.set(undefined)
@@ -93,14 +114,21 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
 
   const triggers = boundTriggers(registries, command => void runCommand(command))
 
-  const sendPrompt = (outgoing: Retry) => {
-    const task = async () => {
-      const items = await upload()
-      const value = outgoing.typed.text.trim()
-      await target.send(value, [...items, ...records.content(value)], picked.get(), outgoing.options)
-      if (unchanged(outgoing.typed)) clear()
+  const deliver = async ({ draft: saved, options }: Retry) => {
+    const prompt = await content(saved)
+    await target.send(prompt.text, prompt.content, saved.settings ?? {}, options)
+  }
+
+  const sendPrompt = (retry: Retry) => {
+    outgoing.set(retry.draft)
+    if (unchanged(retry.draft)) clear()
+    const ours = () => outgoing.get() === retry.draft
+    const settle = (error?: unknown) => {
+      if (!ours()) return
+      outgoing.set(undefined)
+      if (error) putBack(retry.draft, sendError(error), retry)
     }
-    return attempt(true, task, error => couldNotSend(outgoing, error))
+    return attempt(true, () => deliver(retry).then(() => settle()), settle)
   }
 
   const send = async (mode?: SendOptions['mode']) => {
@@ -110,8 +138,8 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     const command = value.startsWith(commandChar) ? triggers.named(value.slice(1)) : undefined
     if (command && !withAttachments) return runCommand(command)
     if (!value && !withAttachments) return target.interrupt().catch(error => fail(errorMessage(error)))
-    if ((value || withAttachments) && !target.ready(picked.get())) return
-    return sendPrompt({ typed: typed(), options: { mode, clientRequestId: requestId() } })
+    if (!target.ready(picked.get())) return
+    return sendPrompt({ draft: typed(), options: { mode, clientRequestId: requestId() } })
   }
 
   return {
@@ -119,7 +147,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     text,
     attached,
     shelf,
-    upload,
+    content,
     records,
     triggers,
     picked,
@@ -135,8 +163,12 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     send,
     resend: sendPrompt,
     clear,
+    fill,
+    reset,
+    putBack,
     fail,
-    draft: (): Saved => ({ text: text.get(), items: attached.get(), records: records.linked(text.get()), settings: picked.get() }),
+    draft,
+    upload,
   }
 }
 

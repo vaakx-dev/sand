@@ -7,6 +7,7 @@ import type { InputOf } from '@sand/host-hub/contract'
 import type { threadUpdate } from '@sand/orchestrator/contract'
 import type { Mark } from '@sand/server/contract'
 import type { Dispose } from 'drydock'
+import type { OutboxItem } from './outbox'
 
 export interface ToolProgress {
   running: Set<string>
@@ -36,6 +37,7 @@ export interface Thread {
   tools: ToolProgress
   step?: ToolCallBlock
   pending: PendingItem[]
+  sending: OutboxItem[]
   context?: ContextUsage
   ended?: TurnResult
   version: number

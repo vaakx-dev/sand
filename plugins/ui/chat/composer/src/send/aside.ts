@@ -1,7 +1,6 @@
 import { errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { AsideRun } from '../contract'
-import { createHandoff } from '../handoff'
 import type { Model } from '../model'
 
 export const createAsides = () => {
@@ -13,13 +12,13 @@ export const createAsides = () => {
   const ready = () => latest.get().length > 0
   const run = async (model: Model) => {
     const found = latest.get().at(-1)
-    const content = found && (await createHandoff(model, () => {}).snapshot())
-    if (!found || !content) return
+    if (!found || model.sending.get() || model.empty.get()) return
+    const draft = model.draft()
+    model.clear()
     try {
-      await found({ ...content, chat: model.target.name() })
-      model.clear()
+      await found({ ...(await model.content(draft)), chat: model.target.name() })
     } catch (error) {
-      model.fail(errorMessage(error))
+      model.putBack(draft, errorMessage(error))
     }
   }
   return { add, ready, run }

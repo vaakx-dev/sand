@@ -12,7 +12,7 @@ export interface ShelfPlace {
 export interface Shelf {
   attachable(): boolean
   rejected(): boolean
-  upload(): Promise<UserContent[]>
+  upload(items: Held[]): Promise<UserContent[]>
   pick(): void
   paste(text: string): boolean
   view(): HTMLElement

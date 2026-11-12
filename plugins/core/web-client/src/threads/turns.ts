@@ -22,7 +22,12 @@ export const createTurns = (wire: Wire, store: Store, outbox: ReturnType<typeof 
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
       const item = { id: clientRequestId, session: id, pc: thread.device, prompt, mode, label: promptLabel(label ?? prompt), settings, at: Date.now() }
-      await outbox.submit(item)
+      store.sending(id, [...thread.sending, item])
+      try {
+        await outbox.submit(item)
+      } finally {
+        store.sending(id, thread.sending.filter(other => other !== item))
+      }
     },
     stop: id => wire.call(threadStop, { session: id }),
     withdraw: (id, pending) => changePending(id, pending, 'withdraw'),
