@@ -1,4 +1,23 @@
-import { type BringInput, fsBrowse, fsMkdir, helloProjects, type Project, type ProjectList, type ProjectLook, type ProjectPatch, projectsAdd, projectsBring, projectsChange as projectsUpdate, projectsCreate, projectsIgnored, projectsInspect, projectsList, projectsRemove, projectsRoot, projectsUpdate as projectsPatch, sandHomeProject } from '@sand/project/contract'
+import {
+  type BringInput,
+  fsBrowse,
+  fsMkdir,
+  helloProjects,
+  type Project,
+  projectCreate,
+  type ProjectList,
+  type ProjectLook,
+  type ProjectPatch,
+  projectRemove,
+  projectRoot,
+  projectsBring,
+  projectsChange as projectsUpdate,
+  projectsIgnored,
+  projectsInspect,
+  projectsList,
+  projectUpdate,
+  sandHomeProject,
+} from '@sand/project/contract'
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import type { Context } from 'drydock'
@@ -85,22 +104,25 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
     return copyEntry(lists, project, device, copy)
   }
 
-  const registered = async (asked: Promise<Project>, device: string) => {
-    const project = await asked
+  const listed = async (asked: Promise<{ project: string }>, device: string) => {
+    const { project } = await asked
     await refresh(device)
-    return entryFor(project, device)
+    const found = lists.get(device)?.projects.find(candidate => candidate.id === project)
+    if (!found) throw new Error("The project was added, but this page couldn't load it yet. Reload to see it.")
+    return entryFor(found, device)
   }
 
-  const brought = async ({ to, ...input }: BringInput & { to: string }) => {
-    const { project } = await wire.call(projectsBring, input, to, { timeout: bringTimeout })
-    await refresh(to)
-    const found = lists.get(to)?.projects.find(listed => listed.id === project)
-    if (!found) throw new Error("The copy was added, but this page couldn't load it yet. Reload to see it.")
-    return entryFor(found, to)
-  }
+  const brought = ({ to, ...input }: BringInput & { to: string }) => listed(wire.call(projectsBring, input, to, { timeout: bringTimeout }), to)
+
+  const created = (input: { folder?: string; name?: string; copyOf?: string }, device: string) => listed(wire.call(projectCreate, input, device), device)
 
   const update = async (target: ProjectGroup, patch: ProjectPatch) => {
-    await wire.call(projectsPatch, { project: target.id, patch }, store.here())
+    await wire.call(projectUpdate, { project: target.id, ...patch }, store.here())
+    await refreshHere()
+  }
+
+  const remove = async (project: string, pc?: string) => {
+    await wire.call(projectRemove, { project, ...(pc && { pc }) }, store.here())
     await refreshHere()
   }
 
@@ -119,24 +141,19 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
     browse: (path, device) => wire.call(fsBrowse, { path }, device),
     mkdir: (path, device) => wire.call(fsMkdir, { path }, device),
     inspect: (path, device) => wire.call(projectsInspect, { path }, device),
-    add: (path, device, project) => registered(wire.call(projectsAdd, { path, ...(project ? { project } : {}) }, device), device),
+    add: (path, device, project) => created({ folder: path, ...(project && { copyOf: project }) }, device),
     ignoredFiles: (path, device) => wire.call(projectsIgnored, { path }, device),
     bring: brought,
     rename: (target, name) => update(target, { name }),
     hide: (target, hidden) => update(target, { hidden }),
     setIcon: (target, icon) => update(target, { icon }),
-    async remove(target) {
-      await wire.call(projectsRemove, { project: target.id }, store.here())
-      await refreshHere()
-    },
-    async removeCopy(entry) {
-      await wire.call(projectsRemove, { project: entry.project, device: entry.device }, store.here())
-      await refreshHere()
-    },
+    remove: target => remove(target.id),
+    removeCopy: entry => remove(entry.project, entry.device),
     async setRoot(root, device) {
-      set(device, await wire.call(projectsRoot, { root }, device))
+      await wire.call(projectRoot, { folder: root }, device)
+      await refresh(device)
     },
-    create: (name, device) => registered(wire.call(projectsCreate, { name }, device), device),
+    create: (name, device) => created({ name }, device),
   }
 
   return { projects, refresh, forget, restore, kept: () => Object.fromEntries(lists) }

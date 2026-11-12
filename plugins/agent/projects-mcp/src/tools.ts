@@ -2,7 +2,7 @@ import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { isAbsolute, resolve } from 'node:path'
 import { z } from 'zod'
-import { projectCreate, projectRemove, projectRoot, projectRows, projectUpdate } from './contract'
+import { projectCreate, projectRemove, projectRoot, projectRows, projectUpdate } from '@sand/project/contract'
 
 const group: McpGroup = { name: 'projects', label: 'Projects', summary: 'list, add, create, rename, hide and remove projects, and set where new ones go' }
 
