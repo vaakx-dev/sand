@@ -15,13 +15,12 @@ interface ClaudeOptions {
   plans: PlanRegistry
   media: Media
   maxTokens: number
-  retries: number
   inspect(account: string): ((response: Response) => void) | undefined
 }
 
 export type Claude = ReturnType<typeof createClaude>
 
-export const createClaude = ({ accounts, plans, media, maxTokens, retries, inspect }: ClaudeOptions) => {
+export const createClaude = ({ accounts, plans, media, maxTokens, inspect }: ClaudeOptions) => {
   const prepare = async (account: string, request: LLMRequest, settings: ClaudeSettings) => {
     const credential = await accounts.auth(account)
     if (credential.type === 'api_key') return keyCall(credential, request, settings, media)
@@ -45,7 +44,7 @@ export const createClaude = ({ accounts, plans, media, maxTokens, retries, inspe
       const call = await prepare(account, request, settings)
       const limited = 'speed' in call.payload ? atNormalSpeed(call) : undefined
       const response = await reaching(call.url, accounts.label(account), signal, () =>
-        send(call.url, init(call, call.payload), { retries, signal, inspect: inspect(account), limited }),
+        send(call.url, init(call, call.payload), { signal, inspect: inspect(account), limited }),
       )
       if (!response.body) throw new Error('Empty response body')
       const replies = read(events(response.body))

@@ -32,7 +32,6 @@ import { loginState } from './state'
 const refreshEvery = 60_000
 const discoverEvery = 6 * 3_600_000
 const maxTokens = 64_000
-const retries = 4
 const streamIdleMs = 20 * 60_000
 
 export default definePlugin({
@@ -69,9 +68,9 @@ export default definePlugin({
       report: error => ctx.report(error),
     })
     const inspect = (account: string) => limits.inspect(plans.api(account))
-    const claude = createClaude({ accounts, plans, media: ctx.media, maxTokens, retries, inspect })
-    const openai = createOpenAI({ accounts, plans, media: ctx.media, retries, inspect })
-    const compat = createCompat({ retries, media: ctx.media })
+    const claude = createClaude({ accounts, plans, media: ctx.media, maxTokens, inspect })
+    const openai = createOpenAI({ accounts, plans, media: ctx.media, inspect })
+    const compat = createCompat({ media: ctx.media })
 
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, plans, catalog, claude, openai, compat, bridges, limits })
