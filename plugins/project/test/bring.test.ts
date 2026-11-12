@@ -14,7 +14,7 @@ import { projectRoot } from '../src/registry/root'
 import { projectStore } from '../src/registry/store'
 
 const model = { id: 'fake', models: ['m'], replies: [] }
-const othersOff = ['bots', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates'].map(id => `${id} = false`)
+const othersOff = ['bots', 'notifications', 'updates'].map(id => `${id} = false`)
 
 const sands: Sand[] = []
 
@@ -33,8 +33,8 @@ const write = (folder: string, files: Record<string, string>) => {
   }
 }
 
-const pc = async (off: string[] = []) => {
-  const sand = await startSand([model], { config: `[features]\n${[...othersOff, ...off].join('\n')}` })
+const pc = async (chosen: string[] = ['git = true']) => {
+  const sand = await startSand([model], { config: `[features]\n${[...othersOff, ...chosen].join('\n')}` })
   sands.push(sand)
   const device = (await loadPcIdentity(sand.home)).id
   const store = await projectStore(sand.home, error => {
@@ -84,7 +84,7 @@ let bare: Pc
 beforeAll(async () => {
   far = await pc()
   near = await pc()
-  bare = await pc(['attachments = false', 'git = false'])
+  bare = await pc(['attachments = false'])
   link(near, far)
   link(bare, far)
 })

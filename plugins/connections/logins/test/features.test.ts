@@ -6,12 +6,12 @@ import { expect, test } from 'bun:test'
 import { type AskAnswer, answerEntry, logins, loginsState, secretEntry, secretSave } from '../src/contract'
 import { answer, botEntries, call, idle, models, said } from './fixture'
 
-const offTopLevel = ['threads', 'calendar', 'computers', 'pcs', 'notifications', 'outside', 'updates']
+const offTopLevel = ['threads', 'notifications', 'updates']
 
 test('with threads off and bots on, logins loads, serves its state and saves a secret a bot asks for to that bot', async () => {
   const replies = [[call('request_secret', { title: 'Deploy token', reason: 'To deploy', once: false })], [said('Saved.')]]
   const sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], {
-    config: `[features]\n${offTopLevel.map(id => `${id} = false`).join('\n')}`,
+    config: `[features]\nlogins = true\n${offTopLevel.map(id => `${id} = false`).join('\n')}`,
   })
   try {
     expect(sand.problems()).toEqual([])

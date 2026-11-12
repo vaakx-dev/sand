@@ -1,7 +1,7 @@
 import { startSand, type Sand } from '@sand/harness'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
-import { guessChange, guessesSet, guessRead } from '../src/contract'
+import { guessChange, guessRead } from '../src/contract'
 
 let sand: Sand
 
@@ -11,7 +11,6 @@ const said = (text: string) => ({ type: 'text', text }) as const
 
 const start = async (source: Source) => {
   sand = await startSand([source], { plugins: ['agent/guesses'] })
-  await sand.ask(guessesSet, { on: true })
   return sand.chat(`${source.id}/m`)
 }
 

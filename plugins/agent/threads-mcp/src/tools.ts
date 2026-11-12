@@ -108,8 +108,9 @@ const replies = "Its reply doesn't come back to you on its own: read it with thr
 export const threadTools: McpTool[] = [
   {
     name: 'thread_list',
-    description: "List sand's threads on all your reachable PCs, newest first, with each one's status; pc names the PC a thread is on when it isn't this one",
+    description: "List sand's threads, newest first, with each one's status.",
     input: listInput,
+    parts: [{ feature: 'pcs', description: "It lists the threads on all your reachable PCs; pc names the PC a thread is on when it isn't this one." }],
     access: 'read',
     group: group.name,
     run: (input, { call }) => call(threadList, input),
@@ -119,10 +120,17 @@ export const threadTools: McpTool[] = [
     description: [
       'Start a new sand thread with a first message: user-facing work that the user sees in their thread list and can join. It works on its own. Returns its id at once.',
       'Start one when the user asks for a thread; to hand off work of your own, start a subagent with the agent tool instead.',
-      'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
       `${replies}.`,
     ].join(' '),
     input: startInput,
+    parts: [
+      { feature: 'pcs', fields: ['pc'] },
+      {
+        feature: 'worktrees',
+        fields: ['worktree', 'branch', 'from'],
+        description: 'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
+      },
+    ],
     access: 'operate',
     group: group.name,
     run: async ({ clientRequestId, from, prompt, files, ...input }, { call, here }) =>
@@ -173,8 +181,9 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof pendingInput>,
   {
     name: 'thread_update',
-    description: "Rename, pin, snooze or settle a thread, change its model, effort or fast mode, or move it into its own git worktree; returns the thread as thread_list shows it",
+    description: 'Rename, pin, snooze or settle a thread, or change its model, effort or fast mode; returns the thread as thread_list shows it.',
     input: updateInput,
+    parts: [{ feature: 'worktrees', fields: ['worktree', 'branch'], description: 'With worktree, it moves the thread into its own git worktree and branch.' }],
     access: 'operate',
     group: group.name,
     run: ({ thread, snoozeUntil, fast, ...patch }, { call }) =>

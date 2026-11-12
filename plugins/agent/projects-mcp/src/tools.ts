@@ -47,8 +47,7 @@ const rootInput = z.object({
   pc: pc.describe('Another of your PCs, by name (default: this PC)'),
 })
 
-const removeRules =
-  "Remove a project from sand on every PC, or with pc only forget its folder on that PC. Folders and files stay where they are. Returns the project as project_list shows it, or removed: true once it's gone"
+const removeRules = "Remove a project from sand. Folders and files stay where they are. Returns removed: true once it's gone."
 
 const folderOf = (folder: string | undefined, here: string | undefined) => (folder && here && !isAbsolute(folder) && !folder.startsWith('~') ? resolve(here, folder) : folder)
 
@@ -56,8 +55,9 @@ export const projectTools: McpTool[] = [
   {
     name: 'project_list',
     description:
-      "List sand's projects by name: each one's folder on this PC, its folders on your other PCs (otherPcs), its git remote and whether it is hidden. Start threads in one with thread_start's project",
+      "List sand's projects by name: each one's folder on this PC, its git remote and whether it is hidden. Start threads in one with thread_start's project.",
     input: listInput,
+    parts: [{ feature: 'pcs', description: 'otherPcs lists its folders on your other PCs.' }],
     access: 'read',
     group: group.name,
     run: (_, { call }) => call(projectRows, {}),
@@ -65,8 +65,16 @@ export const projectTools: McpTool[] = [
   {
     name: 'project_create',
     description:
-      'Add a folder as a project, or create an empty one. Returns the project as project_list shows it. sameRemote lists projects with the same git remote; if the folder is really a copy of one, remove this project and add the folder again with copyOf',
+      'Add a folder as a project, or create an empty one. Returns the project as project_list shows it.',
     input: createInput,
+    parts: [
+      { feature: 'git', fields: ['git'] },
+      {
+        feature: 'pcs',
+        fields: ['copyOf', 'pc'],
+        description: 'sameRemote lists projects with the same git remote; if the folder is really a copy of one, remove this project and add the folder again with copyOf.',
+      },
+    ],
     access: 'operate',
     group: group.name,
     run: ({ folder, ...input }, { call, here }) => call(projectCreate, { ...input, folder: input.pc ? folder : folderOf(folder, here) }),
@@ -83,14 +91,16 @@ export const projectTools: McpTool[] = [
     name: 'project_remove',
     description: removeRules,
     input: removeInput,
+    parts: [{ feature: 'pcs', fields: ['pc'], description: 'It removes it on every PC; with pc it only forgets its folder on that PC and returns the project as project_list shows it.' }],
     access: 'operate',
     group: group.name,
     run: (input, { call }) => call(projectRemove, input),
   } satisfies McpTool<typeof removeInput>,
   {
     name: 'project_root',
-    description: 'Read or change the folder where new empty projects go on a PC; returns it',
+    description: 'Read or change the folder where new empty projects go; returns it.',
     input: rootInput,
+    parts: [{ feature: 'pcs', fields: ['pc'] }],
     access: 'operate',
     group: group.name,
     run: ({ folder, ...input }, { call, here }) => call(projectRoot, { ...input, folder: input.pc ? folder : folderOf(folder, here) }),

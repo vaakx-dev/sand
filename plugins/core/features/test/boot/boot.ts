@@ -27,7 +27,7 @@ const watched = { sessions, bots, calendars, computers, engine, llm, tools, sche
 type Name = keyof typeof watched
 
 export const boot = (on: string[], off: string[] = [], sources: Parameters<typeof startSand>[0] = on.some(id => ['threads', 'bots', 'computers'].includes(id)) ? [model] : []) => {
-  const lines = [...new Set([...topLevel.filter(id => !on.includes(id)), ...off])].map(id => `${id} = false`)
+  const lines = [...topLevel.map(id => `${id} = ${on.includes(id) && !off.includes(id)}`), ...off.filter(id => !topLevel.includes(id)).map(id => `${id} = false`)]
   return startSand(sources, { config: `[features]\n${lines.join('\n')}` })
 }
 

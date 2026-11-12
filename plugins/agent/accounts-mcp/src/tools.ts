@@ -6,11 +6,12 @@ import { z } from 'zod'
 const group: McpGroup = {
   name: 'accounts',
   label: 'Model accounts',
-  summary: 'sign in and out of model accounts, save API keys, add local model servers and share accounts with your other PCs',
+  summary: 'sign in and out of model accounts, save API keys and add local model servers',
 }
 
-const state =
-  'Returns every account (id, label, whether it is signed in, how, whether it is shared, and any pending sign-in, conflict or error), the accounts your other PCs share and the PCs using this one. Keys and tokens never come back'
+const state = 'Returns every account (id, label, whether it is signed in, how, and any pending sign-in or error). Keys and tokens never come back.'
+
+const shared = { feature: 'pcs', description: 'It also says whether each is shared, and lists the accounts your other PCs share and the PCs using this one.' }
 
 const account = z.string().min(1).describe('The account id, from account_list')
 
@@ -38,6 +39,7 @@ const shareInput = z.object({ account, shared: z.boolean().describe('Whether you
 const listTool: McpTool<typeof listInput> = {
   name: 'account_list',
   description: `List the model accounts on this PC: the API keys, sign-in plans and local servers sand uses for models. ${state}`,
+  parts: [shared],
   input: listInput,
   access: 'read',
   group: group.name,
@@ -46,8 +48,15 @@ const listTool: McpTool<typeof listInput> = {
 
 const signInTool: McpTool<typeof startInput> = {
   name: 'account_sign_in',
-  description: `Start signing in to a plan account. Then hand the user the account's pending sign-in: for "device", the URL and the code to enter there; for "paste", the URL, then ask for the code it shows and call account_finish_sign_in; for "browser", the URL. Check account_list to see it finish. When it reports a conflict, ask the user, then call again with anyway or call account_cancel_sign_in. ${state}`,
+  description: `Start signing in to a plan account. Then hand the user the account's pending sign-in: for "device", the URL and the code to enter there; for "paste", the URL, then ask for the code it shows and call account_finish_sign_in; for "browser", the URL. Check account_list to see it finish. ${state}`,
   input: startInput,
+  parts: [
+    {
+      feature: 'pcs',
+      fields: ['anyway'],
+      description: `When it reports a conflict with an account another PC shares, ask the user, then call again with anyway or call account_cancel_sign_in. ${shared.description}`,
+    },
+  ],
   access: 'operate',
   group: group.name,
   run: (input, { call }) => call(loginStart, input),
@@ -56,6 +65,7 @@ const signInTool: McpTool<typeof startInput> = {
 const finishTool: McpTool<typeof finishInput> = {
   name: 'account_finish_sign_in',
   description: `Finish a "paste" sign-in with the code the user copied from the sign-in page. ${state}`,
+  parts: [shared],
   input: finishInput,
   secret: ['code'],
   access: 'operate',
@@ -66,6 +76,7 @@ const finishTool: McpTool<typeof finishInput> = {
 const cancelTool: McpTool<typeof accountInput> = {
   name: 'account_cancel_sign_in',
   description: `Stop a sign-in that is still waiting, or clear its conflict or error. ${state}`,
+  parts: [shared],
   input: accountInput,
   access: 'operate',
   group: group.name,
@@ -75,6 +86,7 @@ const cancelTool: McpTool<typeof accountInput> = {
 const keyTool: McpTool<typeof keyInput> = {
   name: 'account_save_key',
   description: `Save an Anthropic, OpenAI or OpenRouter API key the user gave you, replacing the one saved before. ${state}`,
+  parts: [shared],
   input: keyInput,
   secret: ['key'],
   access: 'operate',
@@ -85,6 +97,7 @@ const keyTool: McpTool<typeof keyInput> = {
 const serverTool: McpTool<typeof serverInput> = {
   name: 'account_save_server',
   description: `Add a local or self-hosted model server, like Ollama or LM Studio, or change one, and check that it answers. ${state}`,
+  parts: [shared],
   input: serverInput,
   secret: ['key'],
   access: 'operate',
@@ -104,6 +117,7 @@ const findServersTool: McpTool<typeof listInput> = {
 const signOutTool: McpTool<typeof accountInput> = {
   name: 'account_sign_out',
   description: `Sign out of an account, forget its saved key, or remove a model server. ${state}`,
+  parts: [shared],
   input: accountInput,
   access: 'operate',
   group: group.name,
@@ -113,6 +127,8 @@ const signOutTool: McpTool<typeof accountInput> = {
 const shareTool: McpTool<typeof shareInput> = {
   name: 'account_share',
   description: `Let your other PCs use an account saved on this PC, or stop them. ${state}`,
+  feature: 'pcs',
+  parts: [shared],
   input: shareInput,
   access: 'operate',
   group: group.name,
