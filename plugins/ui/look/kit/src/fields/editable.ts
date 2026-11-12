@@ -1,14 +1,16 @@
 import { errorMessage } from '@sand/util'
-import { div, dynamicChild, show, sig, type Child } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, sig, type Child } from '@vaakx-dev/vrui'
 import { linkButton, primaryAction, quietButton } from '../buttons/button'
 import { errorText } from '../notes/notes'
 import { pageSection } from '../rows/section'
+import { emptyState } from '../states/states'
 import { textArea } from './field'
 
 export interface EditableProps {
   title?: string
   text(): string
-  view(): Child
+  view(text: string): Child
+  empty: Child
   save(text: string): Promise<unknown>
   rows?: number
   maxLength: number
@@ -49,6 +51,8 @@ export const editable = (props: EditableProps) => {
         primaryAction({ size: 'sm', disabled: () => saving.get() || draft.get() === props.text(), onClick: save }, 'Save'),
       ),
     )
+  const written = derive(() => props.text().trim())
+  const shown = () => dynamicChild(written, text => (text ? div({ class: 'text-sm text-neutral-100' }, props.view(text)) : emptyState({ text: props.empty })))
   return pageSection(
     {
       title: props.title,
@@ -57,6 +61,6 @@ export const editable = (props: EditableProps) => {
         () => linkButton({ class: 'text-sm', onClick: start }, 'Edit'),
       ),
     },
-    dynamicChild(editing, open => (open ? editor() : div({ class: 'text-sm text-neutral-400' }, props.view()))),
+    dynamicChild(editing, open => (open ? editor() : shown())),
   )
 }

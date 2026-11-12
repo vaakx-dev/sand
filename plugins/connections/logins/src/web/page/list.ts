@@ -47,7 +47,7 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
       ),
       show(
         () => !logins.get().length,
-        () => emptyState({ flush: true, text: 'None yet. Add a website login or a key below, or pick one from a password manager.' }),
+        () => emptyState({ text: 'No logins yet.' }),
       ),
     ),
     addSection(kit, parts),

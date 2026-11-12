@@ -5,7 +5,7 @@ import { panel } from '@sand/panel/contract'
 import { wireValues } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
 import type { Subject } from '@sand/ui-shell/contract'
-import { derive, div, dynamicChild, p } from '@vaakx-dev/vrui'
+import { div } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 
 export default definePlugin({
@@ -21,12 +21,6 @@ export default definePlugin({
     })
     const planOf = (bot: string) => plans(bot) ?? ''
 
-    const view = (text: () => string) =>
-      dynamicChild(
-        derive(() => text().trim()),
-        found => (found ? div({ class: 'flex flex-col gap-2 text-neutral-100' }, ...ctx.markdown.nodes(found)) : p({}, 'No plan yet. The bot writes one here as it takes on work.')),
-      )
-
     const render = (subject: () => Subject) => {
       const bot = subject().session
       const text = () => planOf(bot)
@@ -34,7 +28,8 @@ export default definePlugin({
         { class: 'p-4' },
         ctx.kit.editable({
           text,
-          view: () => view(text),
+          view: plan => div({ class: 'flex flex-col gap-2' }, ...ctx.markdown.nodes(plan)),
+          empty: 'No plan yet.',
           save: plan => ctx.wire.call(planWrite, { bot, text: plan }),
           rows: 16,
           maxLength: planLimit,

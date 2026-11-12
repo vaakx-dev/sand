@@ -30,7 +30,7 @@ export const installedSection = (kit: Kit, source: SyncSource) => {
       ),
       show(
         () => source.state.get()?.plugins.length === 0,
-        () => emptyState({ flush: true, text: 'Plugins you customise or add are shared with your other PCs' }),
+        () => emptyState({ text: 'Plugins you customise or add are shared with your other PCs' }),
       ),
     ),
   )

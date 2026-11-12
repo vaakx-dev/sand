@@ -57,7 +57,7 @@ export const routesSection = (ui: Ui, pc: string) => {
     dropMarker(drag.dragging, () => entries.get().length),
     show(
       () => !entries.get().length,
-      () => emptyState({ flush: true, text: 'sand doesn’t know any way to reach this PC yet.' }),
+      () => emptyState({ text: 'sand doesn’t know any way to reach this PC yet.' }),
     ),
   )
 }

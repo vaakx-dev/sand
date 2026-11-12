@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { list, prevent, show, span, type Sig } from '@vaakx-dev/vrui'
+import { div, list, prevent, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Suggestion } from './merge'
 import type { Completion } from './model'
 
@@ -50,7 +50,7 @@ export const completionView = (kit: Kit, completion: Completion) => {
     list(completion.items.map(rowsOf), keyOf, row => rowView(kit, completion, row)),
     show(
       () => !completion.items.get().length && Boolean(completion.hint.get()),
-      () => emptyState({ surface: 'raised', text: () => completion.hint.get() ?? '' }),
+      () => div({ class: 'px-2' }, emptyState({ text: () => completion.hint.get() ?? '' })),
     ),
   ]
 }

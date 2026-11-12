@@ -96,6 +96,7 @@ export interface ShellGroup {
   action?: GroupAction
   folded?: boolean
   rows: ShellRow[]
+  empty?: string
 }
 
 export interface ShellSection {

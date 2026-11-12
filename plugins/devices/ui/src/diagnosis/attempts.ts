@@ -56,6 +56,6 @@ export const attemptsSection = (ui: Ui, facts: Facts) => {
     { title: last ? `What sand tried · ${agoWords(last)}` : 'What sand tried' },
     ...(routes.length
       ? routes.map(entry => attemptRow(ui, facts, entry, latest.get(entry.route.key)))
-      : [emptyState({ flush: true, text: 'sand doesn’t know any address for it yet.' })]),
+      : [emptyState({ text: 'sand doesn’t know any address for it yet.' })]),
   )
 }

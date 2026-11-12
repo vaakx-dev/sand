@@ -102,7 +102,7 @@ const settings = () => {
     kit.settingsRow({ title: 'Sound' }, kit.segmented([{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }], 'on', () => {}, { label: 'Sound' })),
     kit.settingsRow({ title: 'Default model', detail: 'Used when a thread does not pick one' }, kit.pickerButton({ 'aria-label': 'Default model' }, 'Opus 5.5 · High')),
     kit.listRow({ surface: 'group', title: 'Quiet hours', meta: 'From 22:00 to 7:00', trail: kit.chevron(() => false), onClick: () => {} }),
-    kit.emptyState({ surface: 'group', text: 'No devices muted' }),
+    kit.emptyState({ text: 'No devices muted.' }),
   )
 }
 
@@ -195,7 +195,7 @@ const gallery = () =>
       kit.toolCard({ icon: kit.icon('x', 'sm'), verb: 'Ran', target: 'bun test cache', failed: true }),
       line(...(['added', 'modified', 'deleted', 'renamed'] as const).map(kind => kit.fileKindMark(kind)), kit.progressSteps(4, 2), kit.spinner(), kit.working()),
     ),
-    block('Empty', kit.emptyBlock({ icon: 'inbox', title: 'Nothing waiting', text: 'Threads that need you show here.' })),
+    block('Empty', kit.emptyState({ text: 'Nothing needs you.', action: { label: 'Open threads', run: () => {} } })),
   )
 
 mount(document.body, { theme: theme(sandPalette), mode: sand.mode, class: sand.page }, gallery())

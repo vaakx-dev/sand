@@ -74,7 +74,7 @@ export const listView = (kit: Kit, parts: ListParts) => {
       ...groups.map(group => groupView(kit, group.label, inGroup(group.id), parts)),
       show(
         () => !shown.get().length,
-        () => kit.emptyState({ text: 'No settings match.' }),
+        () => div({ class: 'px-2' }, kit.emptyState({ text: 'Nothing matches.' })),
       ),
     ),
   )

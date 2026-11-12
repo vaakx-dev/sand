@@ -43,16 +43,12 @@ const statusView = (kit: Kit, talk: Conversation, status: () => BotStatus | unde
 }
 
 const emptyChat = (kit: Kit, bot: () => BotSummary | undefined) =>
-  div(
-    { class: 'flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center' },
-    div(
-      { class: 'max-w-sm' },
-      kit.secondaryText(() => (bot()?.job.trim() ? 'Send a message to start.' : 'Say what it should take care of, and it writes that down as its job.')),
-    ),
-  )
+  kit.emptyState({ text: () => (bot()?.job.trim() ? 'No messages yet.' : 'No messages yet. Say what it should take care of.') })
 
-const waiting = (kit: Kit, talk: Conversation, state: 'loading' | 'failed') =>
-  state === 'loading' ? kit.loadingState() : kit.errorState({ text: () => talk.failure.get() ?? '', retry: talk.retry })
+const stateView = (kit: Kit, talk: Conversation, bot: () => BotSummary | undefined, state: 'loading' | 'failed' | 'empty') => {
+  if (state === 'empty') return emptyChat(kit, bot)
+  return state === 'loading' ? kit.loadingState() : kit.errorState({ text: () => talk.failure.get() ?? '', retry: talk.retry })
+}
 
 export const chatView = (parts: ChatParts) => {
   const { ctx, id, talk, bot } = parts
@@ -87,10 +83,7 @@ export const chatView = (parts: ChatParts) => {
         () => talk.loading.get() && talk.more.get(),
         () => div({ class: 'flex justify-center py-2 text-neutral-500' }, kit.spinner('sm')),
       ),
-      dynamicChild(state, shown => {
-        if (shown === 'loading' || shown === 'failed') return div({ class: [kit.pageColumn, 'px-4 py-4'] }, waiting(kit, talk, shown))
-        return shown === 'empty' ? emptyChat(kit, bot) : null
-      }),
+      dynamicChild(state, shown => (shown === 'rows' ? null : div({ class: [kit.pageColumn, 'px-4 py-4'] }, stateView(kit, talk, bot, shown)))),
       div(
         { class: [kit.pageColumn, 'flex flex-col px-4 pt-4'], hidden: () => state.get() !== 'rows' },
         list(rows, row => row.key, rowNode, rowList),

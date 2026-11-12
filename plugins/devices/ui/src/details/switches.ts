@@ -14,7 +14,7 @@ export const pcSwitches = (ui: Ui, pc: string) => {
     if (online.get()) untrack(() => void settings.refresh())
   })
   const whenOnline = (rows: () => Child[]) =>
-    dynamicChild(online, on => (on ? div({ class: 'contents' }, ...rows()) : emptyState({ flush: true, text: `Connect to ${name()} to change this.` })))
+    dynamicChild(online, on => (on ? div({ class: 'contents' }, ...rows()) : emptyState({ text: `Connect to ${name()} to change this.` })))
   return [
     show(
       () => !settings.tailscale.missing.get(),

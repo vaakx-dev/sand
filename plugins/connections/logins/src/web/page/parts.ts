@@ -50,7 +50,7 @@ export const loadedRows = <S, T>(kit: Kit, source: Resource<S>, items: Derive<T[
   return dynamicChild(phase, shown => {
     if (shown === 'loading') return loadingState({ flush: true })
     if (shown === 'failed') return errorState({ flush: true, text: () => errorMessage(source.error.get()), retry: source.refetch })
-    if (shown === 'empty') return emptyState({ flush: true, text: empty })
+    if (shown === 'empty') return emptyState({ text: empty })
     return rows()
   })
 }

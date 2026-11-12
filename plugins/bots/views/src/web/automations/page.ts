@@ -2,6 +2,7 @@ import { botName, type BotSummary } from '@sand/bots/contract'
 import type { Screen } from '@sand/ui-shell/contract'
 import { derive, div, list, show, type Sig } from '@vaakx-dev/vrui'
 import { automationsOf, type Parts } from '../parts'
+import { noAutomations } from './empty'
 import { automationRow } from './row'
 
 const botBlock = (parts: Parts, bot: Sig<BotSummary>) => {
@@ -36,7 +37,7 @@ export const automationsScreen = (parts: Parts): Screen => {
         list(busy, bot => bot.id, bot => botBlock(parts, bot), div({ class: 'flex flex-col gap-8' })),
         show(
           () => parts.store.bots.get() !== undefined && !busy.get().length,
-          () => kit.emptyState({ text: 'Nothing runs by itself yet. Ask a bot to check something on a schedule, or to watch a page or folder.', flush: true }),
+          () => noAutomations(kit),
         ),
       ),
   }

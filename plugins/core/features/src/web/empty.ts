@@ -9,18 +9,14 @@ const fillingShell = ['threads', 'bots', 'calendar']
 
 const emptyRoute = 'empty'
 
-const emptyView = ({ primaryAction, setupHeading, setupNote, setupScreen }: Kit, open: () => void) =>
-  setupScreen(
-    setupHeading('Nothing here yet'),
-    setupNote('Turn on a feature like Threads, Bots or Calendar to use sand here.'),
-    primaryAction({ onClick: open }, 'Choose features'),
-  )
+const emptyView = ({ emptyState, pageBody }: Kit, open: () => void) =>
+  pageBody({}, emptyState({ text: 'No features are on.', action: { label: 'Choose features', run: open } }))
 
 export const emptyHome = (ctx: Context, kit: Kit, store: FeatureStore) => {
   const open = () => ctx.get(settings)?.open('features')
   const whileBare = () => {
     const bare = derive(() => store.choice.get() !== undefined && fillingShell.every(id => !store.feature(id)?.on))
-    return show(bare, () => div({ class: 'flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto px-5 py-10 text-center' }, emptyView(kit, open)))
+    return show(bare, () => emptyView(kit, open))
   }
   ctx.watch(shell, found =>
     found?.route({

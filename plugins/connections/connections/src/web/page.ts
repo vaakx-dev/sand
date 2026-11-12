@@ -72,7 +72,7 @@ const content = (kit: Kit, model: ConnectionsModel, state: Sig<ConnectionState |
       any =>
         any
           ? settingsSection({ title: 'Connect' }, rowList(kinds, kind => kind.id, kind => kindRow(kit, model, kind)))
-          : emptyState({ flush: true, text: 'No plugin offers connections yet. Turn on one that does, like Calendar, in Settings → Features.' }),
+          : emptyState({ text: 'Nothing to connect. Turn on Calendar in Settings → Features.' }),
     ),
     sheetText(() =>
       state.get()?.keychain ? 'Kept encrypted, with the key in the system keychain.' : 'Kept encrypted, with the key in connections.key in the sand home.',

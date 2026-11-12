@@ -250,6 +250,10 @@ const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, lo
       row => rowView(model, menu, row, look),
       div({ class: 'flex flex-col gap-px' }),
     ),
+    show(
+      () => !listed.get().group.rows.length && Boolean(listed.get().group.empty),
+      () => div({ class: 'px-2' }, model.kit.emptyState({ text: () => listed.get().group.empty })),
+    ),
     group.folded && action ? show(shown, () => foldAction(model, action)) : null,
   )
 }

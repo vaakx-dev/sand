@@ -62,7 +62,7 @@ import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScr
 import { bottomSheet } from './sheets/bottom'
 import { overlay, railOverlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
-import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
+import { emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
 import { diffBlock } from './tools/diff-block'
@@ -129,7 +129,6 @@ export const kit = {
   dropdown,
   editable,
   elapsed,
-  emptyBlock,
   emptyState,
   errorState,
   errorText,
