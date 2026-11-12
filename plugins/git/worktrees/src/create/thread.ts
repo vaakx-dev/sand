@@ -4,30 +4,16 @@ import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { repoAt } from '../repo/local'
 import { infoOf } from '../sessions/info'
-import { withSessions } from '../sessions/inside'
 import { resolveBase } from './base'
 import { rolledBack } from './rollback'
 import { branchWorktree, createWorktree, discardWorktree } from './worktree'
-
-const threadInExisting = async (deps: WorktreeDeps, path: string): Promise<SessionInfo> => {
-  const local = await repoAt(deps.repos, path)
-  await deps.store.ready()
-  const session = deps.sessions.thread(path, { project: deps.projectOf(local.main) })
-  const record = deps.store.containing(path)
-  if (record) {
-    record.sessions = withSessions(record.sessions, [session.id])
-    await deps.store.save()
-    await deps.changed(record.main)
-  }
-  return infoOf(session)
-}
 
 const newRecord = (deps: WorktreeDeps, main: string, defaultBranch: string | undefined, { branch, from }: WorktreeThreadInput) => {
   if (branch) return branchWorktree(deps, { main, branch, ...(from ? { base: from } : {}) })
   return resolveBase(deps.git, main, defaultBranch, from).then(base => createWorktree(deps, { main, start: base.start, base: base.name }))
 }
 
-const threadInNew = async (deps: WorktreeDeps, input: WorktreeThreadInput): Promise<SessionInfo> => {
+export const threadIn = async (deps: WorktreeDeps, input: WorktreeThreadInput): Promise<SessionInfo> => {
   const local = await repoAt(deps.repos, input.cwd)
   await deps.store.ready()
   const record = await deps.queue(local.main, () => newRecord(deps, local.main, local.defaultBranch, input))
@@ -48,4 +34,3 @@ const startThread = async (deps: WorktreeDeps, record: WorktreeRecord, main: str
   }
 }
 
-export const threadIn = (deps: WorktreeDeps, input: WorktreeThreadInput) => (input.existing ? threadInExisting(deps, input.existing) : threadInNew(deps, input))

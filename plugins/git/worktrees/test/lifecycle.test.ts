@@ -1,5 +1,5 @@
 import { startSand, type Sand } from '@sand/harness'
-import { worktrees, worktreesRemove, worktreesRestore, worktreesThread } from '@sand/worktrees/contract'
+import { worktrees, worktreesRemove, worktreesRestore } from '@sand/worktrees/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -29,7 +29,7 @@ test('a thread started on an existing branch gets its own worktree, and removing
   sand = await startSand([], { plugins: ['core/watch', 'git/runner', 'git/git', 'git/worktrees'] })
   const repo = await makeRepo(sand.home)
 
-  const { cwd: path } = await sand.ask(worktreesThread, { cwd: repo, branch: 'feature' })
+  const { cwd: path } = await sand.app.get(worktrees)!.thread({ cwd: repo, branch: 'feature' })
   expect(path.startsWith(join(sand.home, 'worktrees'))).toBe(true)
   expect(git(path, 'branch', '--show-current')).toBe('feature')
 

@@ -37,6 +37,7 @@ const startInput = z.object({
   pc: z.string().optional().describe('Another of your PCs to start it on, by name; cwd is then a folder on that PC (default: this PC)'),
   cwd: z.string().optional().describe('The folder the thread works in, on the PC it starts on (default: yours; a bot with one project starts it there)'),
   project: z.string().optional().describe('A project id to work in instead of a folder, from project_list'),
+  quick: z.literal(true).optional().describe('Start it with no project, in a scratch folder of its own, instead of cwd or project'),
   title: z.string().optional(),
   model: z.string().optional().describe('A model id or name (default: sand’s default model)'),
   effort: z.string().optional().describe('Reasoning effort, such as low, medium or high'),
@@ -90,8 +91,8 @@ const waitInput = z.object({
 
 const requestId = (given: string | undefined) => given ?? Bun.randomUUIDv7()
 
-const folderOf = ({ cwd, project, pc }: z.output<typeof startInput>, here: string | undefined) => {
-  if (pc || !here) return cwd
+const folderOf = ({ cwd, project, quick, pc }: z.output<typeof startInput>, here: string | undefined) => {
+  if (quick || pc || !here) return cwd
   if (cwd !== undefined) return resolve(here, cwd)
   return project ? undefined : here
 }

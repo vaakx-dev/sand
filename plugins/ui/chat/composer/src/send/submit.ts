@@ -23,10 +23,12 @@ export const interrupt = async (ctx: ComposerContext) => {
 
 export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Outgoing) => {
   const current = ctx.threads.current()
+  const prompt = promptOf(text, attachments)
+  const label = labelOf(text, attachments)
+  if (current) return ctx.turns.send(current.id, prompt, { label, ...options })
   const draft = ctx.threads.drafting()
-  const thread = current ?? (draft && (await ctx.threads.create(draft)))
-  if (!thread) throw new Error('Pick a project for a new thread first')
-  await ctx.turns.send(thread.id, promptOf(text, attachments), { label: labelOf(text, attachments), settings: current ? undefined : settings, ...options })
+  if (!draft) throw new Error('Pick a project for a new thread first')
+  await ctx.threads.start(draft, { prompt, label, settings })
 }
 
 const typedContent = (content: UserContent[]) =>

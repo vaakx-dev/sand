@@ -1,8 +1,8 @@
-import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput } from '@sand/chats/contract'
+import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
-import { sessionSettings, type SettingsPatch } from '@sand/model/contract'
+import { type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
@@ -41,10 +41,13 @@ export type ItemRead = Named & HistoryItemPage
 export interface StartInput {
   cwd?: string
   project?: string
+  quick?: true
   prompt: Prompt
+  label?: string
   title?: string
   model?: string
   effort?: string
+  speed?: SessionSettings['speed']
   worktree?: boolean
   branch?: string
   base?: string
@@ -89,7 +92,7 @@ export interface OwnerKind {
 }
 
 export interface Orchestrator {
-  start(input: StartInput): Promise<Sent>
+  start(input: StartInput, adopt?: (session: Session) => void): Promise<Sent>
   send(thread: string, input: SendInput): Promise<Sent>
   wait(thread: string, until: WaitUntil, signal: AbortSignal, by?: ConversationRef): Promise<ThreadState>
   read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
@@ -150,10 +153,13 @@ export const threadStart = request('thread.start', {
   input: () => z.object({
     cwd: z.string().optional(),
     project: z.string().optional(),
+    quick: z.literal(true).optional(),
     prompt: prompt(),
+    label: z.string().optional(),
     title: z.string().optional(),
     model: z.string().optional(),
     effort: z.string().optional(),
+    speed: sessionSettings().shape.speed,
     worktree: z.boolean().optional(),
     branch: z.string().min(1).optional(),
     base: z.string().min(1).optional(),

@@ -10,9 +10,7 @@ import {
   worktreesSetup,
   worktreesSizes,
   worktreesStatus,
-  worktreesThread,
 } from './contract'
-import { threadIn } from './create/thread'
 import { globalDefault, workspaceDefaults } from './defaults'
 import type { WorktreeDeps } from './deps'
 import { listWorktrees } from './list/list'
@@ -23,7 +21,6 @@ import type { Survey } from './status/survey'
 export const serveWorktrees = (server: Server, deps: WorktreeDeps, survey: Survey) =>
   joinDisposers(
     server.handle(worktreesList, ({ cwd }) => listWorktrees(deps, cwd)),
-    server.handle(worktreesThread, request => threadIn(deps, request)),
     server.handle(worktreesRemove, request => removeWorktree(deps, request)),
     server.handle(worktreesRestore, request => restoreWorktree(deps, request)),
     server.handle(worktreesSetup, ({ path, ...request }) => deps.setups.request(path, request)),
