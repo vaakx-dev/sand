@@ -159,11 +159,6 @@ const iconInput = lazy(() => z.object({
   hue: z.number().min(0).lt(360).optional(),
 }))
 
-const patchInput = lazy(() => z.object({
-  name: z.string().optional(),
-  hidden: z.boolean().optional(),
-  icon: iconInput().nullable().optional(),
-}))
 
 const pathInput = lazy(() => z.object({ path: z.string() }))
 
@@ -180,11 +175,6 @@ export type ProjectOffer = z.infer<ReturnType<typeof offerInput>>
 export const projectsList = request('projects.list', { input: () => z.object({}), output: type<ProjectList>() })
 export const helloProjects = helloField<ProjectList>('projects')
 export const projectsInspect = request('projects.inspect', { input: pathInput, output: type<ProjectFolder>() })
-export const projectsAdd = request('projects.add', { input: () => z.object({ path: z.string(), project: z.string().optional() }), output: type<Project>() })
-export const projectsUpdate = request('projects.update', { input: () => z.object({ project: z.string(), patch: patchInput() }), output: type<Project>() })
-export const projectsRemove = request('projects.remove', { input: () => z.object({ project: z.string(), device: z.string().optional() }), output: type<void>() })
-export const projectsRoot = request('projects.root', { input: () => z.object({ root: z.string() }), output: type<ProjectList>() })
-export const projectsCreate = request('projects.create', { input: () => z.object({ name: z.string() }), output: type<Project>() })
 export const projectsSync = request('projects.sync', { input: () => z.object({ projects: z.array(z.unknown()) }), output: type<Project[]>(), callers: 'pc' })
 
 export const createInput = lazy(() => z.object({
@@ -210,6 +200,14 @@ export const runtimeProjectCreate = request('projects.runtime.create', { input: 
 export const runtimeProjectUpdate = request('projects.runtime.update', { input: updateInput, output: type<ProjectRow>(), callers: runtime })
 export const runtimeProjectRemove = request('projects.runtime.remove', { input: removeInput, output: type<ProjectRow | RemovedProject>(), callers: runtime })
 export const runtimeProjectRoot = request('projects.runtime.root', { input: rootInput, output: type<{ root: string }>(), callers: runtime })
+
+const pc = lazy(() => z.string().min(1).optional())
+
+export const projectRows = request('project.rows', { input: () => z.object({}), output: type<ProjectRow[]>(), callers: 'any' })
+export const projectCreate = request('project.create', { input: () => createInput().extend({ pc: pc() }), output: type<CreatedProject>(), callers: 'any' })
+export const projectUpdate = request('project.update', { input: updateInput, output: type<ProjectRow>(), callers: 'any' })
+export const projectRemove = request('project.remove', { input: removeInput, output: type<ProjectRow | RemovedProject>(), callers: 'any' })
+export const projectRoot = request('project.root', { input: () => rootInput().extend({ pc: pc() }), output: type<{ root: string }>(), callers: 'any' })
 
 export const filesList = request('files.list', { input: () => z.object({ cwd: z.string().optional() }), output: type<string[]>(), place: 'thread' })
 export const filesGrep = request('files.grep', { input: () => z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>(), place: 'thread' })

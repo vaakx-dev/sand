@@ -42,7 +42,7 @@ export default definePlugin({
     }
 
     const pcs = () => [{ id: device, name: ctx.thisPc.name() }, ...(ctx.get(peers)?.list() ?? [])]
-    const setups = [...projectRequests({ hub: ctx.hub, registry, root, list, placeChanged }), ...manageRequests({ hub: ctx.hub, registry, root, device, pcs, git, placeChanged })]
+    const setups = [...projectRequests({ hub: ctx.hub, registry, list }), ...manageRequests({ hub: ctx.hub, registry, root, device, pcs, git, placeChanged })]
     for (const setup of setups) ctx.effect(setup)
     ctx.watch(gitRunner, found => {
       if (found) registry.refresh().catch(report)
