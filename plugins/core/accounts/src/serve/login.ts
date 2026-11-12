@@ -1,3 +1,4 @@
+import { callerAllowed, type Caller } from '@sand/host-hub/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import {
@@ -10,12 +11,14 @@ import {
   loginShared,
   loginStart,
   loginStatus,
+  type LoginAccount,
   type LoginConflict,
   type LoginState,
 } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { Login } from '../auth/login'
 import type { PlanRegistry } from '../auth/plans'
+import { withoutUserinfo } from '../auth/servers'
 
 interface LoginExtras {
   plans: PlanRegistry
@@ -25,6 +28,11 @@ interface LoginExtras {
 }
 
 const unknown = (account: string) => new Error(`Unknown account "${account}"`)
+
+const withoutLogins = (account: LoginAccount): LoginAccount => (account.url ? { ...account, url: withoutUserinfo(account.url) } : account)
+
+const stateFor = (state: LoginState, caller: Caller): LoginState =>
+  callerAllowed('user', caller.kind) ? state : { ...state, accounts: state.accounts.map(withoutLogins) }
 
 export const serveLogin = (server: Server, accounts: Accounts, login: Login, extras: LoginExtras) => {
   const known = async (account: string) => {
@@ -40,9 +48,9 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
 
   const withState =
     <T>(run: (input: T) => Promise<unknown>) =>
-    async (input: T) => {
+    async (input: T, caller: Caller) => {
       await run(input)
-      return extras.state()
+      return stateFor(extras.state(), caller)
     }
 
   const start = async (account: string, anyway: boolean) => {
@@ -60,7 +68,7 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
       }),
     ),
     server.handle(loginStart, withState(({ account, anyway }) => start(planId(account), anyway === true))),
-    server.handle(loginFinish, withState(({ account, code }) => login.finish(planId(account), code))),
+    server.handle(loginFinish, withState(({ account, code }) => login.finish(planId(account), code.trim()))),
     server.handle(loginKey, withState(({ account, key, baseUrl }) => login.key(account, key.trim(), (baseUrl ?? '').trim()))),
     server.handle(loginServer, withState(draft => login.server(draft))),
     server.handle(loginDetect, () => login.detect()),

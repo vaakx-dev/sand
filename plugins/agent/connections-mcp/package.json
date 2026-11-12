@@ -1,0 +1,24 @@
+{
+  "name": "@sand/connections-mcp",
+  "version": "0.0.0",
+  "description": "sand's connection tools, defined once for its own threads and bots and for outside agents over MCP: list, connect and disconnect accounts at other services, like calendars",
+  "type": "module",
+  "sand": {
+    "feature": "connections",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Connection tools",
+    "summary": "Lets your threads, your bots and outside agents connect and disconnect your accounts at other services, without ever seeing a token or password"
+  },
+  "dependencies": {
+    "@sand/connections": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

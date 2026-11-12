@@ -6,6 +6,10 @@ import type { ServerEntry } from './store'
 
 const ports: Record<string, ServerProvider> = { '11434': 'ollama', '1234': 'lmstudio' }
 
+const userinfo = /\b(https?:\/\/)[^\s/@]*@/gi
+
+export const withoutUserinfo = (text: string) => text.replace(userinfo, '$1')
+
 const slug = (name: string) =>
   name
     .toLowerCase()
@@ -44,7 +48,7 @@ export const serverEntry = (draft: ServerDraft, servers: ServerEntry[], taken: (
   return { id, name, url, provider, ...(key && { key }), ...(before?.shared !== undefined && { shared: before.shared }) }
 }
 
-export const checkServer = async (server: ServerEntry) => {
+const reachProblem = async (server: ServerEntry) => {
   try {
     const response = await fetch(`${server.url}/models`, {
       headers: { accept: 'application/json', ...(server.key && bearer(server.key)) },
@@ -55,4 +59,9 @@ export const checkServer = async (server: ServerEntry) => {
   } catch (error) {
     return `Couldn't reach ${server.name} at ${server.url}: ${errorMessage(error)}`
   }
+}
+
+export const checkServer = async (server: ServerEntry) => {
+  const problem = await reachProblem(server)
+  return problem && withoutUserinfo(problem)
 }
