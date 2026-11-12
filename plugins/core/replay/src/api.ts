@@ -1,7 +1,10 @@
 import type { Plan } from '@sand/accounts/contract'
 import { anthropicStream } from './anthropic'
-import type { Reply, Script } from './contract'
+import type { Part, Reply, Script } from './contract'
 import { planModels } from './models'
+
+const refused = ({ status, error, headers }: Extract<Part, { type: 'status' }>) =>
+  Response.json({ type: 'error', error: { type: error, message: `replay answered ${status}` } }, { status, headers })
 
 export const replayApi = (script: Script, base: () => string) => {
   const { id, label = id, replies } = script
@@ -24,6 +27,8 @@ export const replayApi = (script: Script, base: () => string) => {
     const body = await request.text()
     bodies.push(body)
     const reply: Reply = queue.shift() ?? [{ type: 'error', message: `${label} has no scripted reply left` }]
+    const refusal = reply.find(part => part.type === 'status')
+    if (refusal) return refused(refusal)
     const stream = anthropicStream(reply, JSON.parse(body).model, () => `${id}-${++calls}`)
     return new Response(stream, { headers: { 'content-type': 'text/event-stream' } })
   }

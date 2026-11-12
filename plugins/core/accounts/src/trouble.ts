@@ -25,9 +25,17 @@ const codeOf = (error: unknown): string | undefined => {
 
 const busy = ({ status, type }: ApiError) => (status === undefined ? busyStreamErrors.has(type) : busyStatuses.has(status) || status >= 500)
 
+const rateLimited = ({ status, usageLimit }: ApiError) => status === 429 && !usageLimit
+
+const apiTrouble = (provider: string, error: ApiError) => {
+  if (rateLimited(error)) return new ProviderTrouble(`${provider} is rate limiting sand (${error.message})`, error.waitMs, { cause: error })
+  if (busy(error)) return new ProviderTrouble(`${provider} is busy or having trouble (${error.message})`, error.waitMs, { cause: error })
+  return error
+}
+
 export const troubleOf = (provider: string, error: unknown) => {
-  if (error instanceof ApiError && busy(error)) return new ProviderTrouble(`${provider} is busy or having trouble (${error.message})`, { cause: error })
+  if (error instanceof ApiError) return apiTrouble(provider, error)
   const code = codeOf(error)
-  if (code && droppedCodes.has(code)) return new ProviderTrouble(`The connection to ${provider} dropped (${code})`, { cause: error })
+  if (code && droppedCodes.has(code)) return new ProviderTrouble(`The connection to ${provider} dropped (${code})`, undefined, { cause: error })
   return error
 }

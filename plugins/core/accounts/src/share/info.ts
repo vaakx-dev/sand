@@ -24,7 +24,7 @@ export interface ShareInfo {
 
 export type ShareFailure = 'lost' | 'trouble'
 
-export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: string; detail?: string; kind?: ShareFailure }
+export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: string; detail?: string; kind?: ShareFailure; waitMs?: number }
 
 export const sharedIds = (accounts: Accounts) => accounts.ids().filter(accounts.shared)
 

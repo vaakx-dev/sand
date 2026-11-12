@@ -48,7 +48,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
   const pause = async (trouble: ProviderTrouble, tries: number) => {
     const pauseMs = troublePausesMs[tries]
     if (pauseMs === undefined) throw new Error(`${trouble.message}. sand tried ${tries + 1} times and gave up.`, { cause: trouble })
-    await untilAborted(Bun.sleep(pauseMs), signal)
+    await untilAborted(Bun.sleep(trouble.waitMs ?? pauseMs), signal)
     return tries + 1
   }
 

@@ -14,7 +14,8 @@ const kindOf = (error: unknown): ShareFailure | undefined => {
 const errorLine = (error: unknown): ShareLine => {
   const detail = detailOf(error)
   const kind = kindOf(error)
-  return { type: 'error', message: errorMessage(error), ...(detail && { detail }), ...(kind && { kind }) }
+  const waitMs = error instanceof ProviderTrouble ? error.waitMs : undefined
+  return { type: 'error', message: errorMessage(error), ...(detail && { detail }), ...(kind && { kind }), ...(waitMs && { waitMs }) }
 }
 
 export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEvent>, signal: AbortSignal) => {

@@ -33,13 +33,13 @@ async function* lines(body: ReadableStream<Uint8Array>, name: string, signal?: A
   }
 }
 
-const failureOf = ({ message, detail, kind }: ErrorLine, name: string) => {
+const failureOf = ({ message, detail, kind, waitMs }: ErrorLine, name: string) => {
   const text = `On ${name}: ${message}`
   switch (kind) {
     case 'lost':
       return new ThreadLost(text)
     case 'trouble':
-      return new ProviderTrouble(text)
+      return new ProviderTrouble(text, waitMs)
     default:
       return new AccountError(text, detail)
   }
