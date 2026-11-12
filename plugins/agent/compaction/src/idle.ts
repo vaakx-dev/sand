@@ -5,7 +5,7 @@ import type { CompactionContext, Compactor } from './compact'
 import type { Tracker } from './measure/tracker'
 
 const beforeExpiry = 0.9
-const worthCompacting = 100_000
+const worthCompacting = 128_000
 const shortLived = new Set<ChatKind | undefined>(['agent', 'quick'])
 
 export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracker: Tracker) => {
