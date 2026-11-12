@@ -1,5 +1,4 @@
 import type { Pulse } from '@sand/reactive'
-import type { PressAt } from '@sand/ui-kit/contract'
 import type { Shell } from '@sand/ui-shell/contract'
 import type { Thread } from '@sand/web-client/contract'
 import { div, show, span, type Sig } from '@vaakx-dev/vrui'
@@ -35,23 +34,12 @@ const parentCrumb = (ctx: ChatContext, shell: Shell, parent: Sig<ParentLink | un
     span({ class: 'shrink-0' }, '/'),
   )
 
-const below = (event: MouseEvent): PressAt | undefined => {
-  const from = event.currentTarget
-  if (!(from instanceof HTMLElement)) return undefined
-  const box = from.getBoundingClientRect()
-  return { x: box.left, y: box.bottom + 4, touch: event instanceof PointerEvent && event.pointerType === 'touch', from }
-}
-
 const titleMenu = (ctx: ChatContext, shell: Shell, id: string, title: Sig<string>) => {
   const { barTitle, contextMenu, plainButton } = ctx.kit
   const menu = contextMenu()
   const spec = () => ({ title: title.get(), actions: threadActions(ctx, shell, id) })
-  const openBelow = (event: MouseEvent) => {
-    const at = below(event)
-    if (at) menu.open({ ...at, ...spec() })
-  }
   return barTitle(
-    plainButton({ class: 'max-w-full truncate rounded-sm', title, 'aria-haspopup': 'menu', ...menu.target(spec, openBelow) }, title),
+    plainButton({ class: 'max-w-full truncate rounded-sm', title, 'aria-haspopup': 'menu', ...menu.target(spec, event => menu.openBelow(event, spec)) }, title),
     menu.view(),
   )
 }

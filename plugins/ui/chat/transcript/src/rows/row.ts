@@ -1,15 +1,13 @@
 import type { ContextLink, ContextRecord } from '@sand/chats/contract'
 import type { Markdown, MarkdownImage } from '@sand/markdown/contract'
-import type { Item, MediaImage, MenuKit, RendererRegistry, Row, Surface } from '../contract'
-import type { Kit } from '@sand/ui-kit/contract'
+import type { Item, MediaImage, RendererRegistry, Row, Surface } from '../contract'
+import { selectingIn, type Kit } from '@sand/ui-kit/contract'
 import { div, media, sig, type Child } from '@vaakx-dev/vrui'
-import { selectingIn } from '../integrations/select'
 
 export interface RowContext extends Surface {
   kit: Kit
   registry: RendererRegistry
   markdown: Markdown
-  menus: MenuKit
   media: MediaImage
   image: MarkdownImage
   chip(link: ContextLink, record?: ContextRecord): Child

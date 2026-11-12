@@ -8,7 +8,6 @@ import { quoteJump } from './integrations/quote-jump'
 import { liveItems } from './items/items'
 import { field, resultText } from './items/results'
 import { settledItems, userItems, type DescribeSettings } from './items/settled'
-import { menuKit } from './menus'
 import { openStates } from './open'
 import { itemRows } from './rows'
 import type { RowContext } from './rows/row'
@@ -18,7 +17,6 @@ import { errorBody, outputText, truncatedNote } from './tools/notes'
 export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, images: Images): TranscriptParts => {
   const custom = (type: string) => Boolean(registry.entryRenderer(type))
   const describe: DescribeSettings = settings => ctx.get(models)?.summary(settings)
-  const menus = menuKit(ctx.kit)
   const chip = drawChip(ctx)
   return {
     version: registry.version,
@@ -27,7 +25,7 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
     prompt: (entry, parts) => userItems(entry, parts, true, custom),
     rows(surface) {
       const { kit, markdown } = ctx
-      const context: RowContext = { ...surface, kit, registry, markdown, menus, chip, media: images.image, image: images.replyImage(surface.conversation) }
+      const context: RowContext = { ...surface, kit, registry, markdown, chip, media: images.image, image: images.replyImage(surface.conversation) }
       return {
         item: item => itemRows(item, context),
         user: (item, actions, note) => userMessage(item, context, actions, note),

@@ -19,14 +19,16 @@ const favouriteRow = (page: Page, row: Sig<ModelInfo>, unstar: (model: ModelInfo
   const { kit } = page.ctx
   const { contextMenu, settingsRow } = kit
   const menu = contextMenu()
+  const spec = () => menuOf(page, row.get(), unstar)
   return settingsRow(
     {
-      ...menu.target(() => menuOf(page, row.get(), unstar)),
+      ...menu.target(spec),
       lead: logo(kit, untrack(() => row.get().provider)),
       title: () => row.get().label,
       detail: () => whereText(row.get()),
     },
     starButton(kit, untrack(() => row.get().label), true, () => unstar(row.get())),
+    menu.button(spec),
     menu.view(),
   )
 }

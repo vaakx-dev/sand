@@ -45,6 +45,7 @@ const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarge
     dynamicChild(current, isCurrent =>
       isCurrent ? choiceCheck(true) : quietButton({ size: 'sm', disabled: busy, onClick: restore }, 'Restore'),
     ),
+    menu.button(spec, { size: 'sm' }),
   )
 }
 

@@ -2,24 +2,18 @@ import type { MenuAction } from '@sand/ui-shell/contract'
 import { mount, stopThen } from '@vaakx-dev/vrui'
 import { controlButton } from '../buttons/button'
 import { placeLook } from '../surface'
-import { menuLayer } from './menu'
+import { belowOf, menuLayer } from './menu'
 
 export interface ConfirmButtonProps {
   action: MenuAction
   disabled?: () => boolean
 }
 
-const open = (from: HTMLElement, touch: boolean, action: MenuAction) => {
-  const box = from.getBoundingClientRect()
-  const request = { x: box.left, y: box.bottom, touch, from, title: action.label, actions: [action], step: action.id }
-  const close = mount(document.body, menuLayer(request, () => close()))
-}
-
 export const confirm = (event: MouseEvent) => {
-  const from = event.currentTarget
-  const touch = event instanceof PointerEvent && event.pointerType === 'touch'
+  const at = belowOf(event)
   return (action: MenuAction) => {
-    if (from instanceof HTMLElement) open(from, touch, action)
+    if (!at) return
+    const close = mount(document.body, menuLayer({ ...at, title: action.label, actions: [action], step: action.id }, () => close()))
   }
 }
 
