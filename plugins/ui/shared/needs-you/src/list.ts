@@ -8,11 +8,11 @@ export const createList = (): Needs => {
       sources.update(all => [...all.filter(other => other.id !== source.id), source])
       return () => sources.update(all => all.filter(other => other !== source))
     },
-    list: () =>
-      sources
-        .get()
-        .flatMap(source => source.items())
-        .toSorted((a, b) => a.at - b.at || a.id.localeCompare(b.id)),
+    list: () => {
+      const found = sources.get().map(source => source.items())
+      const items = found.flatMap(listed => listed ?? []).toSorted((a, b) => a.at - b.at || a.id.localeCompare(b.id))
+      return items.length || found.every(listed => listed !== undefined) ? items : undefined
+    },
     open() {},
   }
 }

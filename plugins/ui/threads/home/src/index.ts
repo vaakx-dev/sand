@@ -53,7 +53,7 @@ export default definePlugin({
       row,
     })
     ctx.provide(draftPlaces, { choose: draft => chooseDraftPlace(parts, draft) })
-    const groups = owned(ctx, () => derive(() => threadGroups(entries.get(), limit.get(), more, () => newThread(parts))))
+    const groups = owned(ctx, () => derive(() => threadGroups({ entries: entries.get(), known: ctx.threads.known(), limit: limit.get(), more, start: () => newThread(parts) })))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
     ctx.watch(markdownLinks, found => found?.scheme(threadLinks({ kit: ctx.kit, shell: ctx.shell, row, open: thread => openThread(ctx, ctx.shell, thread) })))
     ctx.watch(needs, found => {

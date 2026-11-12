@@ -37,7 +37,9 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   const asking = new Set<string>()
   const changed = () => ctx.emit(modelsChange)
 
-  const catalogOf = (device = store.device()) => catalogs.get(device) ?? catalogs.get(store.here()) ?? empty
+  const knownCatalog = (device = store.device()) => catalogs.get(device) ?? catalogs.get(store.here())
+
+  const catalogOf = (device?: string) => knownCatalog(device) ?? empty
 
   const refreshDefaults = () =>
     void wire.call(settingsGet, { settings: {} }).then(state => {
@@ -89,7 +91,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   const labelOn = (device: string, { model, effort, speed }: SessionSettings) =>
     [infoOn(device, model)?.label ?? model ?? 'Choose a model', catalogOf(device).levels.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
       .filter(Boolean)
-      .join(' · ')
+      .join(' ï¿½ ')
 
   const summary = (settings: SessionSettings) => {
     const model = settings.model ?? catalogOf().defaults.model
@@ -102,6 +104,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   return {
     device: () => store.device(),
     list: () => catalogOf().models,
+    known: () => knownCatalog() !== undefined,
     sources: () => catalogOf().sources,
     levels: () => catalogOf().levels,
     info: id => infoOn(store.device(), id),

@@ -17,7 +17,7 @@ describe('needs list', () => {
     const host = createList()
     host.source({ id: 'a', items: () => [need('a1', 300), need('a2', 100)] })
     host.source({ id: 'b', items: () => [need('b1', 200)] })
-    expect(host.list().map(item => item.id)).toEqual(['a2', 'b1', 'a1'])
+    expect(host.list()?.map(item => item.id)).toEqual(['a2', 'b1', 'a1'])
   })
 
   test('settling removes an item when its source stops listing it', () => {
@@ -27,6 +27,23 @@ describe('needs list', () => {
     expect(host.list()).toHaveLength(1)
     waiting = []
     expect(host.list()).toEqual([])
+  })
+
+  test('an empty list stays unknown while a source has not loaded', () => {
+    const host = createList()
+    let loaded: Need[] | undefined
+    host.source({ id: 'a', items: () => [] })
+    host.source({ id: 'b', items: () => loaded })
+    expect(host.list()).toBeUndefined()
+    loaded = []
+    expect(host.list()).toEqual([])
+  })
+
+  test('known needs show while another source is still loading', () => {
+    const host = createList()
+    host.source({ id: 'a', items: () => [need('a1', 100)] })
+    host.source({ id: 'b', items: () => undefined })
+    expect(host.list()?.map(item => item.id)).toEqual(['a1'])
   })
 
   test('disposing a source removes its needs', () => {

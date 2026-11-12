@@ -22,12 +22,12 @@ export interface Need {
 
 export interface NeedSource {
   id: string
-  items(): Need[]
+  items(): Need[] | undefined
 }
 
 export interface Needs {
   source(source: NeedSource): Dispose
-  list(): Need[]
+  list(): Need[] | undefined
   open(): void
 }
 

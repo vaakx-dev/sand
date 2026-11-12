@@ -5,7 +5,7 @@ import type { Page } from './page'
 import { logo, whereText } from './parts'
 
 export const sourcesKey = (page: Page) =>
-  JSON.stringify([page.ctx.models.sources(), favouritesOf(page.ctx.models.list()).map(model => model.label)])
+  JSON.stringify([page.ctx.models.known(), page.ctx.models.sources(), favouritesOf(page.ctx.models.list()).map(model => model.label)])
 
 const favouritesRow = (page: Page) => {
   const { kit } = page.ctx
@@ -31,13 +31,13 @@ const sourceRow = (page: Page, source: SourceInfo) => {
 }
 
 const noAccounts = (page: Page) =>
-  page.ctx.kit.emptyState({ text: 'No accounts yet.', action: accountsAction(page, 'Add an account') })
+  page.ctx.models.known() ? [page.ctx.kit.emptyState({ text: 'No accounts yet.', action: accountsAction(page, 'Add an account') })] : []
 
 export const sourcesSection = (page: Page) => {
   const { settingsSection } = page.ctx.kit
   const sources = page.ctx.models.sources()
   return settingsSection(
     { title: 'In the picker' },
-    ...(sources.length ? [favouritesRow(page), ...sources.map(source => sourceRow(page, source))] : [noAccounts(page)]),
+    ...(sources.length ? [favouritesRow(page), ...sources.map(source => sourceRow(page, source))] : noAccounts(page)),
   )
 }

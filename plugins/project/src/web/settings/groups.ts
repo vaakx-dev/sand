@@ -26,8 +26,10 @@ const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) => {
     : null
 }
 
+const emptyRows = (ctx: ProjectsContext) => (ctx.projects.known() ? [ctx.kit.emptyState({ text: 'No projects yet. Add a project to start threads in its folder.' })] : [])
+
 export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: Pulse) => {
-  const { emptyState, settingsSection } = ctx.kit
+  const { settingsSection } = ctx.kit
   const showHidden = sig(false)
   const picking = sig<Picking>(undefined)
   iconSheet(ctx, changes, picking)
@@ -39,7 +41,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
     const groups = ctx.projects.groups({ hidden })
     return settingsSection(
       { title: heading(groups), action: [hiddenToggle(ctx, showHidden), addButton(ctx)] },
-      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : [emptyState({ text: 'No projects yet. Add a project to start threads in its folder.' })]),
+      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : emptyRows(ctx)),
     )
   })
 }

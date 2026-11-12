@@ -28,8 +28,8 @@ export const page = ({ entry, preload }: Bundle, pc: string, off: string[]) => `
   <link rel="manifest" href="/manifest.webmanifest">
   ${firstPaintStyle}
   ${preloads(preload)}
+  <script type="module" blocking="render" src="${attribute(entry)}"></script>
 </head>
 <body>
-  <script type="module" src="${attribute(entry)}"></script>
 </body>
 </html>`

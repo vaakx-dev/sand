@@ -32,13 +32,13 @@ export default definePlugin({
         order: 10,
         look: 'alert',
         keys: 'mod+j',
-        count: () => items.get().length,
+        count: () => items.get()?.length ?? 0,
         summary: () => {
-          const count = items.get().length
+          const count = items.get()?.length ?? 0
           return `${count} ${count === 1 ? 'needs' : 'need'} you`
         },
         detail: () => {
-          const first = items.get()[0]
+          const first = items.get()?.[0]
           return first ? `${first.who}: ${first.title}` : ''
         },
         to: { kind },

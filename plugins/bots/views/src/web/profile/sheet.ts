@@ -45,7 +45,7 @@ const nameField = (parts: Parts, id: string, bot: Bot) => {
 const jobBlock = (parts: Parts, id: string, bot: Bot) =>
   parts.ctx.kit.editable({
     title: 'Job',
-    text: () => bot()?.job ?? '',
+    text: () => bot()?.job,
     view: job => p({ class: 'whitespace-pre-wrap wrap-anywhere' }, job),
     empty: 'No job yet.',
     save: job => parts.store.update(id, { job }),

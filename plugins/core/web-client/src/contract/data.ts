@@ -6,6 +6,7 @@ import type { SkillSummary } from '@sand/skills/contract'
 export interface Models {
   device(): string
   list(): ModelInfo[]
+  known(): boolean
   sources(): SourceInfo[]
   levels(): EffortLevel[]
   info(id?: string): ModelInfo | undefined
