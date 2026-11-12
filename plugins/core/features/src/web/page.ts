@@ -60,7 +60,7 @@ const row = (kit: Kit, store: FeatureStore, features: Feature[], { feature, dept
   const apply = (next: boolean) => store.apply({ [id]: next })
   const turnOff = { id: 'off', label: 'Turn off', danger: true, confirm: warning, run: () => apply(false) }
   const flip = (event: MouseEvent) => {
-    if (warning) return confirm(event, turnOff)
+    if (warning) return confirm(event)(turnOff)
     void apply(!on)
   }
   return settingsRow(

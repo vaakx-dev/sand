@@ -183,3 +183,14 @@ test('an exited shell drains its last output, says where it ended, and stays lis
   expect(fixture.terminals.list({ session: 's1' })).toEqual([])
   expect(() => fixture.terminals.attach({ id, viewer: 'v1', from: 0, ...size }, caller)).toThrow('That terminal has closed')
 })
+
+test('a terminal is busy while its shell runs a command, and an ended one never is', async () => {
+  const fixture = setup()
+  const id = await opened(fixture)
+  const shell = fixture.shells[0]!
+  expect(await fixture.terminals.busy({ id })).toBe(false)
+  shell.running = true
+  expect(await fixture.terminals.busy({ id })).toBe(true)
+  shell.events.exit(0)
+  expect(await fixture.terminals.busy({ id })).toBe(false)
+})

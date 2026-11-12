@@ -75,6 +75,7 @@ export const terminalInput = request('terminal.input', {
 export const terminalAck = request('terminal.ack', { input: () => z.object({ id: id(), viewer: viewer(), offset: z.number().int().min(0) }), output: type<void>(), place: 'thread' })
 export const terminalResize = request('terminal.resize', { input: () => z.object({ id: id(), viewer: viewer(), ...size() }), output: type<void>(), place: 'thread' })
 export const terminalDetach = request('terminal.detach', { input: () => z.object({ id: id(), viewer: viewer() }), output: type<void>(), place: 'thread' })
+export const terminalBusy = request('terminal.busy', { input: () => z.object({ id: id() }), output: type<boolean>(), place: 'thread' })
 export const terminalClose = request('terminal.close', { input: () => z.object({ id: id() }), output: type<void>(), place: 'thread' })
 
 export const terminalOutput = wireEvent<Frame>('terminal.output')

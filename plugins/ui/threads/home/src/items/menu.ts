@@ -79,5 +79,5 @@ export const threadMenu = (parts: MenuParts, id: string): MenuAction[] => {
 }
 
 export const draftMenu = (drafts: Drafts, id: string): MenuAction[] => [
-  { id: 'discard', label: 'Discard draft', icon: 'x', quick: true, danger: true, run: () => drafts.remove(id) },
+  { id: 'discard', label: 'Discard draft', icon: 'x', quick: true, danger: true, confirm: 'Discard this draft? Its text is lost.', run: () => drafts.remove(id) },
 ]

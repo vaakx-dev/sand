@@ -7,6 +7,7 @@ import { isReply } from './replay'
 export interface Pty {
   write(data: string): void
   resize(size: Size): void
+  busy(): Promise<boolean>
   kill(): void
 }
 
@@ -193,6 +194,8 @@ export const createTerminals = (pc: Pc, outbox: Outbox, later: Later) => {
       found.caller = undefined
       fitGrid(terminal)
     },
+
+    busy: async ({ id }: { id: string }) => (await need(id).pty?.busy()) ?? false,
 
     close: ({ id }: { id: string }) => remove(need(id)),
 

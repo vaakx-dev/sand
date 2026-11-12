@@ -22,7 +22,7 @@ const discard = (model: RowModel, label: string) => ({
 
 const menu = (kit: Kit, model: RowModel, close: () => void) => {
   const choose = (action: Action) => (event: MouseEvent) => {
-    if (action.id === 'discard') kit.confirm(event, discard(model, action.label))
+    if (action.id === 'discard') kit.confirm(event)(discard(model, action.label))
     else void model.run(action.id, 'report')
     close()
   }
