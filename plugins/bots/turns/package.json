@@ -34,6 +34,7 @@
     "@sand/compaction": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/harness": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/memory": "workspace:*",
     "@sand/replay": "workspace:*"
