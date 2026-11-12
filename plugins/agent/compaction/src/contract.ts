@@ -1,3 +1,4 @@
+import type { LLMRequest, Usage } from '@sand/accounts/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
@@ -37,6 +38,7 @@ export interface CompactionRecord {
 }
 
 export interface CompactionBrief {
+  prepare?(request: LLMRequest): Promise<Usage | undefined>
   format(): Promise<string>
   check?(reply: string): string | undefined
   accept(reply: string): Promise<string>

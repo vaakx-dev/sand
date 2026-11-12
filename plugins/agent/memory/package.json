@@ -14,12 +14,15 @@
     "summary": "Lets threads and bots remember what they learn, in files you can read and edit"
   },
   "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

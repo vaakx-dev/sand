@@ -1,3 +1,4 @@
+import type { LLMRequest, Usage } from '@sand/accounts/contract'
 import { type CompactionBrief, summaryFormat } from '@sand/compaction/contract'
 import { type MemoryRef, type MemoryStore, memoryLimit, type Note, noteAbout, noteLimit, noteName } from './contract'
 
@@ -43,7 +44,13 @@ const written = (reply: string): Note[] =>
 const revealed = (notes: Note[]) =>
   `You changed notes you haven't seen. Here they are now; write each one whole:\n\n${notes.map(({ name, text }) => `<current-note name="${name}">\n${text.trim()}\n</current-note>`).join('\n\n')}`
 
-const memoryCompaction = (store: MemoryStore, ref: MemoryRef): CompactionBrief => {
+interface CompactionOptions {
+  store: MemoryStore
+  ref: MemoryRef
+  check(request: LLMRequest): Promise<Usage | undefined>
+}
+
+const memoryCompaction = ({ store, ref, check }: CompactionOptions): CompactionBrief => {
   let shownMemory = ''
   let known = new Map<string, string>()
   const shown = new Set<string>()
@@ -78,6 +85,7 @@ const memoryCompaction = (store: MemoryStore, ref: MemoryRef): CompactionBrief =
   }
 
   return {
+    prepare: check,
     async format() {
       const [text, notes] = await Promise.all([store.read(ref), store.notes(ref)])
       shownMemory = text.trim()

@@ -77,20 +77,27 @@ test('when a bot compacts, it rewrites its memory from all it drops and summariz
   expect(firstText(next)).not.toContain('<memory>')
 })
 
-test('near its context limit, a bot rewrites its memory and summarizes on the side, and its next turn starts from both', async () => {
+test('near its context limit, a bot checks its memory in the same cached chat, then rewrites it and summarizes on the side, and its next turn starts from both', async () => {
   const notes = 'Ana and I keep our notes here. '.repeat(3000)
   const full = { type: 'usage', input: 160_000, output: 10 } as const
-  sand = await start([[said('Noted.')], [said('Noted.'), full], [said(`<summary>\n${summary}\n</summary>\n\n<memory>\n${remembered}\n</memory>`)], [said('Booked.')]])
+  const fix = { type: 'call', name: 'memory', input: { command: 'str_replace', path: '/memories/memory.md', old_str: 'Porto', new_str: 'Lisbon' } } as const
+  const rewritten = said(`<summary>\n${summary}\n</summary>\n\n<memory>\n${remembered}\n</memory>`)
+  sand = await start([[said('Noted.')], [said('Noted.'), full], [fix], [said('Fixed.')], [rewritten], [said('Booked.')]])
   const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
+  await memory().write(mine(bot.id), '- Lives in Porto.')
 
   await talk(bot.id, `Remember: no meetings before 10.\n${notes}`)
   await talk(bot.id, `More notes.\n${notes}`)
   for (let tries = 0; tries < 300 && (await sand.ask(memoryRead, mine(bot.id))) !== `${remembered}\n`; tries++) await Bun.sleep(10)
   await talk(bot.id, 'Book lunch with Ana on Friday')
 
-  const [, last, compaction, next] = bodies()
+  const [, last, check, , compaction, next] = bodies()
+  expect(check.system).toEqual(last.system)
+  expect(check.messages[0].content[0].text).toBe(last.messages[0].content[0].text)
+  expect(JSON.stringify(check.messages.at(-1))).toContain('fix or drop what is wrong')
   expect(compaction.system).toEqual(last.system)
   expect(compaction.messages[0].content[0].text).toBe(last.messages[0].content[0].text)
+  expect(compaction.messages.at(-1).content.at(-1).text).toContain('<current-memory>\n- Lives in Lisbon.\n</current-memory>')
   expect(next.system[0].text).toContain(`<memory>\n${remembered}\n</memory>`)
   expect(firstText(next)).toContain(summary)
 })
@@ -123,9 +130,9 @@ test("a bot's notes are Markdown files in its notes folder, removed when emptied
   expect(existsSync(path)).toBe(false)
 })
 
-test('when a bot compacts, it writes what it learned about its work as notes, lists them in its instructions and looks them up', async () => {
+test('when a bot compacts, it writes what it learned about its work as notes, lists them in its instructions and finds the paragraphs that match a search', async () => {
   const note = '<note name="deploys">\nHow deploys go and what broke them.\n\n## Rollback\n- A failed migration needs a manual rollback (2026-11-02).\n</note>'
-  const lookup = { type: 'call', name: 'memory', input: { command: 'view', path: '/memories/notes/deploys.md' } } as const
+  const lookup = { type: 'call', name: 'memory', input: { command: 'search', query: 'rollback migration' } } as const
   sand = await start([[said('Noted.')], [overflow], [compacted(remembered, note)], [lookup], [said('Rolled back.')]])
   const bot = await sand.ask(botCreate, { name: 'Ops', models: { main: { model: 'fake/m' }, quick: {} } })
 
@@ -139,7 +146,7 @@ test('when a bot compacts, it writes what it learned about its work as notes, li
   ])
   expect(next.system[0].text).toContain('- /memories/notes/deploys.md: How deploys go and what broke them.')
   expect(next.system[0].text).not.toContain('manual rollback')
-  expect(JSON.stringify(after.messages.at(-1))).toContain('## Rollback\\n     4\\t- A failed migration needs a manual rollback')
+  expect(after.messages.at(-1).content[0].content[0].text).toBe('/memories/notes/deploys.md:\n## Rollback\n- A failed migration needs a manual rollback (2026-11-02).')
 })
 
 test('a note the bot changes without having seen it is shown to it, and it writes it whole', async () => {
