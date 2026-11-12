@@ -1,14 +1,17 @@
 import { div, effect, untrack } from '@vaakx-dev/vrui'
-import { drawerReach, type Model } from './model'
+import type { Model } from './model'
 
 const slides = (model: Model) => model.state.get() !== 'wide'
+
+const edge = (model: Model) => (model.phone.get() ? '' : 'shadow-xl dark:ring-1 dark:ring-neutral-700')
 
 export const drawerLook = (model: Model) => {
   const { drawerDrag, drawerOpen, kit } = model
   if (!slides(model)) return 'relative'
   return [
     kit.layer.drawer,
-    'absolute inset-y-0 left-0 shadow-xl dark:ring-1 dark:ring-neutral-700',
+    'absolute inset-y-0 left-0',
+    edge(model),
     drawerDrag.get() === undefined ? 'transition-transform duration-300 ease-out' : 'transition-none',
     drawerOpen.get() ? '' : '-translate-x-full',
   ]
@@ -25,7 +28,7 @@ export const scrim = (model: Model) => {
     class: () => (shown() ? [model.kit.layer.drawer, 'absolute inset-0 bg-black/60 transition-opacity duration-300'] : 'hidden'),
     style: () => {
       const px = model.drawerDrag.get()
-      return px === undefined ? null : { opacity: String(px / drawerReach), transition: 'none' }
+      return px === undefined ? null : { opacity: String(px / model.drawerReach.get()), transition: 'none' }
     },
     onClick: () => model.setDrawer(false),
   })

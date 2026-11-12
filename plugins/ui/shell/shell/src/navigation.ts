@@ -1,26 +1,19 @@
 import { backAddress } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
-import { ownEntry, recordPlace, requestedPlace, sameScreen, samePlace, type Place } from './address'
+import { ownEntry, recordPlace, requestedPlace, samePlace, type Place } from './address'
 import { homeRoute, type Route } from './contract'
 
 const home: Route = { kind: homeRoute }
 
-export const navigation = (known: (kind: string) => boolean, stacking: () => boolean) => {
-  const place = sig<Place>(requestedPlace())
-  if (!ownEntry()) recordPlace(place.get(), true)
-
-  const stackAfter = (stack: Route[], route: Route) => {
-    if (route.kind === homeRoute) return []
-    if (!stacking()) return [route]
-    const at = stack.findIndex(other => sameScreen(other, route))
-    return [...(at < 0 ? stack : stack.slice(0, at)), route]
-  }
+export const navigation = (known: (kind: string) => boolean, landing: () => Route) => {
+  const fresh = !ownEntry()
+  const place = sig<Place>(requestedPlace(fresh ? landing() : home))
+  if (fresh) recordPlace(place.get(), true)
 
   const go = (route: Route, replace: boolean) => {
-    const now = place.get()
-    const target = known(route.kind) ? route : home
+    const { depth } = place.get()
     const pushed = !replace || !ownEntry()
-    const next = { route: target, stack: stackAfter(now.stack, target), depth: pushed ? now.depth + 1 : now.depth }
+    const next = { route: known(route.kind) ? route : home, depth: pushed ? depth + 1 : depth }
     recordPlace(next, replace)
     place.set(next)
   }
@@ -29,14 +22,12 @@ export const navigation = (known: (kind: string) => boolean, stacking: () => boo
     place,
     go,
     back() {
-      const { stack, depth } = place.get()
-      if (depth > 0) backAddress()
-      else go(stack.at(-2) ?? home, true)
+      if (place.get().depth > 0) backAddress()
+      else go(home, true)
     },
     follow() {
       const next = requestedPlace()
-      const now = place.get()
-      if (samePlace(next, now)) return
+      if (samePlace(next, place.get())) return
       place.set(next)
     },
   }
