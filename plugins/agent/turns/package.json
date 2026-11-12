@@ -1,7 +1,7 @@
 {
   "name": "@sand/turns",
   "version": "0.0.0",
-  "description": "Runs each chat's turns on the engine and serves them to pages: send, steer, queue, interrupt and follow turns",
+  "description": "Runs each chat's turns on the engine and streams them to pages",
   "type": "module",
   "sand": {
     "feature": "threads",
@@ -14,7 +14,6 @@
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/engine": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/provider-threads": "workspace:*",

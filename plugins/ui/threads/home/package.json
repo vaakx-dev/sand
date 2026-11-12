@@ -25,7 +25,6 @@
     "@sand/picker": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",

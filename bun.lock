@@ -226,19 +226,6 @@
         "@sand/replay": "workspace:*",
       },
     },
-    "plugins/agent/loop": {
-      "name": "@sand/loop",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/chats": "workspace:*",
-        "@sand/host-hub": "workspace:*",
-        "@sand/model": "workspace:*",
-        "@sand/turns-contract": "workspace:*",
-        "@sand/util": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
-      },
-    },
     "plugins/agent/mcp": {
       "name": "@sand/mcp",
       "version": "0.0.0",
@@ -553,7 +540,6 @@
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/engine": "workspace:*",
-        "@sand/loop": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/prompt": "workspace:*",
         "@sand/provider-threads": "workspace:*",
@@ -579,7 +565,6 @@
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/model": "workspace:*",
-        "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -1393,7 +1378,6 @@
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/html": "workspace:*",
-        "@sand/loop": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/turns-contract": "workspace:*",
         "@sand/util": "workspace:*",
@@ -1457,7 +1441,6 @@
         "@sand/host-hub": "workspace:*",
         "@sand/html": "workspace:*",
         "@sand/jobs": "workspace:*",
-        "@sand/loop": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/project": "workspace:*",
@@ -2679,7 +2662,6 @@
         "@sand/project": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/settings": "workspace:*",
-        "@sand/turns-contract": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
@@ -2937,8 +2919,6 @@
     "@sand/ledger": ["@sand/ledger@workspace:plugins/core/ledger"],
 
     "@sand/logins": ["@sand/logins@workspace:plugins/connections/logins"],
-
-    "@sand/loop": ["@sand/loop@workspace:plugins/agent/loop"],
 
     "@sand/markdown": ["@sand/markdown@workspace:plugins/ui/chat/markdown"],
 

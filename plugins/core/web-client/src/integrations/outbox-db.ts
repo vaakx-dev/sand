@@ -1,8 +1,6 @@
 import { collectScope, disposeAll, listen } from '@vaakx-dev/vrui'
 import type { OutboxItem } from '../contract'
-import type { OutboxSaved, SavedPc } from '../outbox/outbox'
-
-type StoreName = 'items' | 'pcs'
+import type { OutboxSaved } from '../outbox/outbox'
 
 let database: Promise<IDBDatabase> | undefined
 
@@ -22,7 +20,6 @@ const connect = () => {
   const opening = indexedDB.open('sand-outbox', 1)
   return settled(opening, () => {
     opening.result.createObjectStore('items')
-    opening.result.createObjectStore('pcs')
   })
 }
 
@@ -32,14 +29,10 @@ const open = () =>
     throw error
   }))
 
-const store = async (name: StoreName, mode: IDBTransactionMode) => (await open()).transaction(name, mode).objectStore(name)
+const items = async (mode: IDBTransactionMode) => (await open()).transaction('items', mode).objectStore('items')
 
 export const outboxDb: OutboxSaved = {
-  load: async () => ({
-    items: await settled<OutboxItem[]>((await store('items', 'readonly')).getAll()),
-    pcs: await settled<SavedPc[]>((await store('pcs', 'readonly')).getAll()),
-  }),
-  put: async item => void (await settled((await store('items', 'readwrite')).put(item, item.id))),
-  remove: async id => settled((await store('items', 'readwrite')).delete(id)),
-  remember: async pc => void (await settled((await store('pcs', 'readwrite')).put(pc, pc.pc))),
+  load: async () => settled<OutboxItem[]>((await items('readonly')).getAll()),
+  put: async item => void (await settled((await items('readwrite')).put(item, item.id))),
+  remove: async id => settled((await items('readwrite')).delete(id)),
 }

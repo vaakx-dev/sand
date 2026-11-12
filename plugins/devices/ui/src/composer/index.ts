@@ -11,7 +11,7 @@ export const composerParts = (ui: Ui) => {
   const place = threadPlace(ui)
   const state = connectionState(ui, place.pc)
   const pcs = pcEntry(ui, place)
-  const waitsInOutbox = () => !place.draft.get() && Boolean(ui.ctx.get(outbox)?.accepts(place.pc.get()))
+  const waitsInOutbox = () => !place.draft.get() && Boolean(ui.ctx.get(outbox))
   ui.ctx.watch(composer, found => {
     if (!found) return
     const unhold = found.hold(() => (waitsInOutbox() ? undefined : state.holdReason()))

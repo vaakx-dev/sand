@@ -1,12 +1,17 @@
-import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt } from '@sand/chats/contract'
+import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
+import { sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
 export const outsideOrigins = ['cli', 'mcp'] as const
+
+export const pendingActions = ['withdraw', 'hold', 'release'] as const
+
+export type PendingAction = (typeof pendingActions)[number]
 
 const actorOrigins: Record<Actor['owner'], TurnOrigin> = { thread: 'agent', bot: 'bot' }
 
@@ -69,6 +74,8 @@ export const reportOf = ({ from: { owner, id }, label, status, at, result }: Rep
 export interface SendInput {
   prompt: Prompt
   mode?: SendMode
+  label?: string
+  settings?: SettingsPatch
   origin: TurnOrigin
   clientRequestId: string
   from?: ConversationRef
@@ -134,8 +141,8 @@ export const readLimit = 200
 const place = 'thread'
 const callers = 'any'
 const session = lazy(() => z.object({ session: z.string() }))
-const prompt = lazy(() => z.string().min(1))
-const origin = lazy(() => z.enum(outsideOrigins))
+const prompt = lazy(() => promptInput().refine(given => given.length > 0, 'Write a message'))
+const origin = lazy(() => z.enum(['user', ...outsideOrigins]))
 const clientRequestId = lazy(() => z.string().min(1))
 
 export const threadStart = request('thread.start', {
@@ -158,8 +165,21 @@ export const threadStart = request('thread.start', {
   place,
 })
 export const threadSend = request('thread.send', {
-  input: () => session().extend({ prompt: prompt(), mode: z.enum(sendModes).optional(), origin: origin(), clientRequestId: clientRequestId() }),
+  input: () => session().extend({
+    prompt: prompt(),
+    mode: z.enum(sendModes).optional(),
+    label: z.string().optional(),
+    settings: sessionSettings().optional(),
+    origin: origin(),
+    clientRequestId: clientRequestId(),
+  }),
   output: type<Sent>(),
+  callers,
+  place,
+})
+export const threadPending = request('thread.pending', {
+  input: () => session().extend({ pending: z.string().min(1), action: z.enum(pendingActions) }),
+  output: type<boolean>(),
   callers,
   place,
 })

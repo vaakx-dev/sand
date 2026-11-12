@@ -1,6 +1,6 @@
 import type { ConversationRef } from '@sand/engine/contract'
 import type { Actor, Caller, InputOf, Request } from '@sand/host-hub/contract'
-import { type Server, server, userWrote } from '@sand/server/contract'
+import { type Server, server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { adoptBy, checkSend, checkWait } from './acting'
 import type { OrchestratorContext } from './context'
@@ -12,6 +12,7 @@ import {
   type Orchestrator,
   originOf,
   threadList,
+  threadPending,
   threadSend,
   threadStart,
   threadStop,
@@ -23,6 +24,7 @@ import { findThread } from './find'
 import { listThreads } from './list'
 import type { Pcs } from './pcs'
 import type { Start } from './start'
+import { changePending } from './pending'
 import { stopThread } from './stop'
 import { updateThread } from './update'
 
@@ -39,7 +41,6 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
 
   const send = ({ session: id, ...input }: InputOf<typeof threadSend>, { actor }: Caller) => {
     checkSend(ctx, actor, id)
-    if (!actor) ctx.emit(userWrote, thread(id))
     return threads.send(id, { ...input, origin: originOf(actor, input.origin), ...(actor && { from: actor }) })
   }
 
@@ -91,6 +92,7 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
       ),
       onOwner(found, historyRead, ({ session, bot, ...reading }, { actor }) => threads.read(conversationOf(session, bot, actor), reading)),
       onOwner(found, itemRead, ({ session, bot, item, offset }, { actor }) => threads.item(conversationOf(session, bot, actor), item, offset)),
+      onOwner(found, threadPending, ({ session: id, pending, action }) => changePending(ctx, thread(id), pending, action)),
       onOwner(found, threadStop, ({ session: id }) => stopThread(ctx, thread(id))),
       onOwner(found, threadUpdate, input => updateThread(ctx, input)),
     )

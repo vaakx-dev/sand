@@ -1,6 +1,6 @@
 import { historyItem, historyReading } from '@sand/chats/contract'
 import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
-import { historyRead, itemRead, readLimit, threadList, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
+import { historyRead, itemRead, pendingActions, readLimit, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import { sendModes } from '@sand/turns-contract/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
@@ -59,6 +59,12 @@ const sendInput = z.object({
 })
 
 const stopInput = z.object({ thread })
+
+const pendingInput = z.object({
+  thread,
+  pending: z.string().min(1).describe('The pending id thread_send returned'),
+  action: z.enum(pendingActions).describe('withdraw: drop it; hold: keep it from running; release: let a held one run'),
+})
 
 const updateInput = z.object({
   thread,
@@ -141,6 +147,14 @@ export const threadTools: McpTool[] = [
     group: group.name,
     run: async ({ thread }, { call }) => ({ thread, stopped: await call(threadStop, { session: thread }) }),
   } satisfies McpTool<typeof stopInput>,
+  {
+    name: 'thread_pending',
+    description: 'Withdraw, hold or release a message that waits for a thread: one thread_send steered or queued',
+    input: pendingInput,
+    access: 'operate',
+    group: group.name,
+    run: async ({ thread, pending, action }, { call }) => ({ thread, pending, changed: await call(threadPending, { session: thread, pending, action }) }),
+  } satisfies McpTool<typeof pendingInput>,
   {
     name: 'thread_update',
     description: "Rename, pin, snooze or settle a thread, change its model, effort or fast mode, or move it into its own git worktree; returns the thread as thread_list shows it",

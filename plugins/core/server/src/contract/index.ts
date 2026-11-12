@@ -17,8 +17,6 @@ export const pagesChange = event<(pages: number) => void>('server.pages')
 
 export const pageLeft = event<(caller: Caller) => void>('server.page.left')
 
-export const userWrote = event<(session: Session) => void>('user.wrote')
-
 export const sessionOpened = event<(opened: OpenedSession, session: Session) => OpenedSession>('session.opened')
 
 export const sessionCarry = event<(types: string[]) => string[]>('session.carry')

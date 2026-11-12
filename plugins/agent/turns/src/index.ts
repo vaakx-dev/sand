@@ -4,7 +4,6 @@ import { needs } from '@sand/tools/contract'
 import { turns, type Turns } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { threadBrief } from './brief'
-import { serveLoop } from './compat'
 import { inject } from './context'
 import { threadConversations, threadTurn } from './conversations'
 import { serveTurns } from './serve'
@@ -36,11 +35,11 @@ export default definePlugin({
       wait: async (turn, until, signal) => threadTurn(await runner.wait(turn, until, signal)),
       pending: runner.pending,
       withdraw: runner.withdraw,
+      hold: runner.hold,
     }
 
     ctx.provide(turns, service)
     serveTurns(ctx, { service, runner })
-    serveLoop(ctx, service)
     ctx.on(sessionBusy, session => Boolean(runner.current(session)))
     ctx.on(sessionSettle, session => ctx.providerThreads.release(session))
     ctx.on(sessionRemove, id => {

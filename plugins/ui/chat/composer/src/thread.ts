@@ -13,7 +13,7 @@ import type { Delivery, Target } from './target'
 const deliveryOf = (ctx: ComposerContext): Delivery => {
   const pc = sendDevice(ctx)
   if (ctx.get(wire)?.ready(pc) ?? true) return 'now'
-  return ctx.threads.current() && ctx.get(outbox)?.accepts(pc) ? 'queued' : 'unreachable'
+  return ctx.threads.current() && ctx.get(outbox) ? 'queued' : 'unreachable'
 }
 
 export const threadSettings = (ctx: ComposerContext, picked: SessionSettings): SessionSettings => {

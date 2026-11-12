@@ -15,7 +15,6 @@ export interface OutboxItem {
 }
 
 export interface Outbox {
-  accepts(pc: string): boolean
   list(pc: string): OutboxItem[]
   sending(id: string): boolean
   send(id: string): Promise<void>

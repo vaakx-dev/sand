@@ -5,21 +5,10 @@ import type { Outbox, OutboxItem } from '../contract'
 import { after } from '../detached'
 import type { Link } from './link'
 
-export interface SavedPc {
-  pc: string
-  turnsApi: boolean
-}
-
-export interface Saved {
-  items: OutboxItem[]
-  pcs: SavedPc[]
-}
-
 export interface OutboxSaved {
-  load(): Promise<Saved>
+  load(): Promise<OutboxItem[]>
   put(item: OutboxItem): Promise<void>
   remove(id: string): Promise<void>
-  remember(pc: SavedPc): Promise<void>
 }
 
 interface OutboxOptions {
@@ -44,13 +33,11 @@ const byAge = (a: OutboxItem, b: OutboxItem) => a.at - b.at
 
 export const createOutbox = ({ link, saved, sent, changed }: OutboxOptions) => {
   const items = new Map<string, OutboxItem>()
-  const turnsApi = new Map<string, boolean>()
   const sending = new Set<string>()
   const flushing = new Set<string>()
 
-  const restore = (found: Saved) => {
-    for (const item of found.items) if (!items.has(item.id)) items.set(item.id, item)
-    for (const { pc, turnsApi: api } of found.pcs) if (!turnsApi.has(pc)) turnsApi.set(pc, api)
+  const restore = (found: OutboxItem[]) => {
+    for (const item of found) if (!items.has(item.id)) items.set(item.id, item)
     changed()
   }
 
@@ -74,7 +61,7 @@ export const createOutbox = ({ link, saved, sent, changed }: OutboxOptions) => {
 
   const deliver = async (item: OutboxItem) => {
     const { id, session, prompt, mode, label, settings } = item
-    const input = { session, prompt, mode, label, settings, clientRequestId: id }
+    const input = { session, prompt, mode, label, settings, origin: 'user', clientRequestId: id } as const
     for (let attempt = 1; ; attempt++) {
       try {
         return sent(item, await link.send(item.pc, input))
@@ -131,17 +118,9 @@ export const createOutbox = ({ link, saved, sent, changed }: OutboxOptions) => {
     }
   }
 
-  const greeted = (pc: string) => {
-    const api = link.turnsApi(pc)
-    if (turnsApi.get(pc) !== api) {
-      turnsApi.set(pc, api)
-      void saved.remember({ pc, turnsApi: api })
-    }
-    return loaded.then(() => flush(pc))
-  }
+  const greeted = (pc: string) => loaded.then(() => flush(pc))
 
   const service: Outbox = {
-    accepts: pc => turnsApi.get(pc) ?? false,
     list,
     sending: id => sending.has(id),
     async send(id) {

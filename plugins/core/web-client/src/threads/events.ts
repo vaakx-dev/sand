@@ -15,7 +15,6 @@ import type { Wire, WireListen } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
 import type { Thread } from '../contract'
 import { stale } from './hello'
-import { listenLegacy } from './legacy'
 import { jobEndWire, jobStartWire } from '@sand/jobs/contract'
 import { addLog, catchUp, clearTurn } from './live'
 import type { Store } from './store'
@@ -49,7 +48,6 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
   }
 
   return joinDisposers(
-    listenLegacy(wire, store),
     wire.on(turnPendingWire, ([id, pending]) => store.pending(id, pending), everyPc),
     wire.on(contextChange, ([id, usage]) => store.context(id, usage), everyPc),
     wire.on(sessionUpdateWire, (session, device) => store.changed(thread(session, device).id), everyPc),
