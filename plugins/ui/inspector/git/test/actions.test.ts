@@ -22,7 +22,7 @@ const local = (patch: Partial<GitRepoLocal> = {}): GitRepoLocal => ({
   ...patch,
 })
 
-const remote = (patch: Partial<GitRemote> = {}): GitRemote => ({ remote: 'origin', ahead: 0, behind: 0, base: 'origin/main', behindBase: 0, aheadBase: 0, ...patch })
+const remote = (patch: Partial<GitRemote> = {}): GitRemote => ({ ahead: 0, behind: 0, base: 'origin/main', behindBase: 0, aheadBase: 0, ...patch })
 
 const labels = (facts: GitFacts) => actionsFor(facts).map(action => action.label)
 

@@ -1,7 +1,7 @@
 import type { GitLocal, GitRepo, GitStatus } from './contract'
 import { listBranches } from './branches/list'
 import { createDefaults } from './default/defaults'
-import { readLayout } from './status/layout'
+import { createLayouts } from './status/layout'
 import { readLocal } from './status/local'
 import { readWorktrees } from './status/worktrees'
 import { createWatches, type WatchDeps } from './watch/watches'
@@ -12,21 +12,25 @@ export interface GitRepoHost {
   close(): void
 }
 
-const local = async (cwd: string): Promise<GitLocal> => {
-  const layout = await readLayout(cwd)
-  return layout ? readLocal(layout) : { repo: false }
-}
+const notRepo: GitLocal = { repo: false }
 
 export const createGitRepo = (deps: WatchDeps): GitRepoHost => {
-  const defaults = createDefaults()
-  const watches = createWatches(deps, defaults.forget)
+  const layouts = createLayouts()
+  const defaults = createDefaults(layouts)
+  const watches = createWatches(deps, { layouts, defaults })
   return {
     repo: {
       status: watches.status,
-      local,
-      layout: readLayout,
+      async local(cwd) {
+        const layout = await layouts.read(cwd)
+        return layout ? (await readLocal(layout, defaults.branchOf(layout))).local : notRepo
+      },
+      layout: layouts.read,
       worktrees: readWorktrees,
-      branches: listBranches,
+      async branches(cwd, query, limit) {
+        const layout = await layouts.read(cwd)
+        return layout ? listBranches(layout.root, defaults.branchOf(layout), query, limit) : { branches: [], total: 0 }
+      },
       defaultBranch: defaults.branch,
       base: defaults.base,
       refresh: watches.refresh,
@@ -37,6 +41,7 @@ export const createGitRepo = (deps: WatchDeps): GitRepoHost => {
     close() {
       watches.close()
       defaults.clear()
+      layouts.clear()
     },
   }
 }

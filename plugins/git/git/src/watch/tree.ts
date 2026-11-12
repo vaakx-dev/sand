@@ -4,7 +4,7 @@ import type { Watcher } from '@sand/watch/contract'
 import { existsSync } from 'node:fs'
 import { type GitLayout, type GitLocal, gitLocalChange, type GitRemote, gitRemoteChange, type GitStatus } from '../contract'
 import { GitError } from '@sand/git-runner/contract'
-import { readLocal } from '../status/local'
+import { type LocalRead, readLocal } from '../status/local'
 import { type FetchInfo, readRemote } from '../status/remote'
 import { debounceMs, inGitDir, inWorkingTree } from './filters'
 import { serialized } from './serial'
@@ -13,6 +13,7 @@ export interface TreeDeps {
   watcher: Watcher
   broadcast: WireHost['broadcast']
   fetched(commonDir: string): FetchInfo
+  defaultBranch(layout: GitLayout): Promise<string | undefined>
   localChanged(cwd: string, local: GitLocal): void
   report(error: unknown): void
 }
@@ -67,28 +68,29 @@ export const watchTree = (layout: GitLayout, deps: TreeDeps): Tree => {
 
   const gone = (error: unknown) => !existsSync(layout.root) || (error instanceof GitError && error.reason === 'not-a-repo')
 
-  const readLocalOrGone = async (): Promise<GitLocal> => {
+  const readLocalOrGone = async (): Promise<LocalRead | undefined> => {
     try {
-      return await readLocal(layout)
+      return await readLocal(layout, deps.defaultBranch(layout))
     } catch (error) {
-      if (gone(error)) return { repo: false }
+      if (gone(error)) return undefined
       throw error
     }
   }
 
   const read = async (withRemote: boolean, force: boolean) => {
     const before = local
-    const next = await readLocalOrGone()
+    const found = await readLocalOrGone()
     readAt = Date.now()
     if (stopped) return
-    setLocal(next, force)
-    if (!next.repo) {
+    setLocal(found?.local ?? { repo: false }, force)
+    if (!found) {
       remote = undefined
       remotePrint = ''
       return
     }
+    const next = found.local
     if (!withRemote && !force && !headMoved(before, next)) return
-    const nextRemote = await readRemote(next, deps.fetched(layout.commonDir))
+    const nextRemote = await readRemote(next, found.upstream, deps.fetched(layout.commonDir))
     if (!stopped) setRemote(nextRemote, force)
   }
 
