@@ -1,3 +1,4 @@
+import { UsageLimited } from '@sand/accounts/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
 import { type Conversation, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
@@ -10,14 +11,20 @@ import type { Owned } from '../owned'
 import type { Holding } from '../store/pending'
 import type { Begun } from './start'
 
-const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed' }
+const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed', limited: 'failed' }
 
 const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'all', error: 'all' }
 
 const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail === 'string' && error.detail) || undefined
 
-const resultOf = <C extends Conversation>(run: TurnRun<C>, stopReason: TurnResult['stopReason'], failure?: { error: unknown }): TurnResult => {
+interface Outcome {
+  stopReason: TurnResult['stopReason']
+  failure?: { error: unknown }
+}
+
+const resultOf = <C extends Conversation>(run: TurnRun<C>, { stopReason, failure }: Outcome): TurnResult => {
   const detail = failure && detailOf(failure.error)
+  const resetsAt = failure?.error instanceof UsageLimited ? failure.error.resetsAt : undefined
   return {
     stopReason,
     usage: run.usage,
@@ -25,13 +32,11 @@ const resultOf = <C extends Conversation>(run: TurnRun<C>, stopReason: TurnResul
     steps: run.steps,
     ...(failure && { error: errorMessage(failure.error) }),
     ...(detail && { detail }),
+    ...(resetsAt && { resetsAt }),
   }
 }
 
-interface Outcome {
-  stopReason: TurnResult['stopReason']
-  failure?: { error: unknown }
-}
+const failed = (error: unknown): Outcome => ({ stopReason: error instanceof UsageLimited ? 'limited' : 'error', failure: { error } })
 
 export interface Driven {
   result: TurnResult
@@ -47,14 +52,14 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
       run.signal.throwIfAborted()
       return await runReact({ signal: run.signal, hooks }, 'calls' in begun ? begun : undefined)
     } catch (error) {
-      return run.signal.aborted ? { stopReason: 'interrupted' } : { stopReason: 'error', failure: { error } }
+      return run.signal.aborted ? { stopReason: 'interrupted' } : failed(error)
     }
   }
 
   const close = (run: TurnRun<C>, result: TurnResult, partial: Message | undefined) =>
     ctx.ledger.tx(() => {
       const { conversation, info } = run
-      const ending: TurnEnding = { stopReason: result.stopReason, ...(result.error && { error: result.error }) }
+      const ending: TurnEnding = { stopReason: result.stopReason, ...(result.error && { error: result.error }), ...(result.resetsAt && { resetsAt: result.resetsAt }) }
       const status = statuses[result.stopReason] ?? 'completed'
       if (!stores.turns.finish(info.id, leases.holder, { ...ending, status, ...(result.detail && { detail: result.detail }) })) return false
       const turn = { turn: info.id }
@@ -63,10 +68,10 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
       return stores.pending.settle(conversation, holdings[result.stopReason] ?? 'none')
     })
 
-  const end = (run: TurnRun<C>, { stopReason, failure }: Outcome) => {
+  const end = (run: TurnRun<C>, outcome: Outcome) => {
     const partial = run.partial.message()
     if (partial) run.reply = textOf(partial.content)
-    const result = resultOf(run, stopReason, failure)
+    const result = resultOf(run, outcome)
     if (close(run, result, partial)) announce.pending(run.conversation)
     return result
   }

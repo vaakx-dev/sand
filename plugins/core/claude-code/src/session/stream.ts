@@ -1,6 +1,11 @@
-import { type AppOutput, cacheLifetimes, type Usage, writtenTtl } from '@sand/accounts/contract'
+import { type AppOutput, cacheLifetimes, type Usage, UsageLimited, writtenTtl } from '@sand/accounts/contract'
 import type { StopReason } from '@sand/chats/contract'
 import { fieldsOf, type Json } from '../cli/connection'
+
+interface Limit {
+  rejected: boolean
+  resetsAt?: number
+}
 
 const prefix = /^mcp__sand__/
 
@@ -14,10 +19,37 @@ const usageOf = (raw: Json, long: number): Usage => ({
 
 const longWrites = (raw: Json) => Number(fieldsOf(raw.cache_creation).ephemeral_1h_input_tokens ?? 0)
 
+const resultText = (result: Json) => (typeof result.result === 'string' && result.result ? result.result : `Claude Code stopped: ${String(result.subtype)}`)
+
+const resetOf = (info: Json) => {
+  const seconds = Number(info.resetsAt)
+  return seconds > 0 ? seconds * 1000 : undefined
+}
+
+const failureOf = (result: Json, { rejected, resetsAt }: Limit) =>
+  rejected || result.api_error_status === 429 ? new UsageLimited(resultText(result), resetsAt) : new Error(resultText(result))
+
+const createLimit = () => {
+  let seen: Limit = { rejected: false }
+  return {
+    read(info: Json) {
+      if (info.status !== 'rejected') return
+      const reset = resetOf(info) ?? seen.resetsAt
+      seen = { rejected: true, ...(reset && { resetsAt: Math.max(reset, seen.resetsAt ?? 0) }) }
+    },
+    take() {
+      const taken = seen
+      seen = { rejected: false }
+      return taken
+    },
+  }
+}
+
 export const createReader = (output: AppOutput) => {
   let calls = 0
   let long = 0
   let stop: StopReason = 'end_turn'
+  const limit = createLimit()
 
   const streamEvent = (event: Json) => {
     if (event.type === 'message_start') {
@@ -40,6 +72,7 @@ export const createReader = (output: AppOutput) => {
   }
 
   const assistant = (message: Json) => {
+    limit.read(fieldsOf(fieldsOf(message.api_error_params).rate_limit_info))
     const content = fieldsOf(message.message).content
     for (const block of Array.isArray(content) ? content.map(fieldsOf) : []) {
       if (block.type !== 'tool_use') continue
@@ -52,10 +85,12 @@ export const createReader = (output: AppOutput) => {
     read(message: Json) {
       if (message.type === 'stream_event') streamEvent(fieldsOf(message.event))
       if (message.type === 'assistant') assistant(message)
+      if (message.type === 'rate_limit_event') limit.read(fieldsOf(message.rate_limit_info))
     },
     finish(result: Json) {
-      if (result.subtype === 'success') return output.finish(stop)
-      output.fail(new Error(typeof result.result === 'string' && result.result ? result.result : `Claude Code stopped: ${String(result.subtype)}`))
+      const limited = limit.take()
+      if (result.subtype === 'success' && !result.is_error) return output.finish(stop)
+      output.fail(failureOf(result, limited))
     },
   }
 }

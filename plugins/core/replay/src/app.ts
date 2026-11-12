@@ -1,4 +1,4 @@
-import type { AppCall, AppOutput, AppPlan, AppSession, AppSetup, ProviderCapabilities } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, type AppPlan, type AppSession, type AppSetup, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
 import type { ToolResultContent } from '@sand/chats/contract'
 import { appendFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -49,6 +49,8 @@ export const replayApp = (script: Script, folder: string) => {
             break
           case 'error':
             return out.fail(new Error(part.message))
+          case 'limit':
+            return out.fail(new UsageLimited(`${label} is out of usage`, part.resetInMs && Date.now() + part.resetInMs))
           case 'crash':
             return out.exit(new Error(`${label} crashed`))
           case 'hold':

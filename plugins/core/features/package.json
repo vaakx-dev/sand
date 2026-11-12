@@ -35,6 +35,7 @@
           "web-tools",
           "logins",
           "usage",
+          "usage-resume",
           "palette",
           "picker",
           "mcp",
@@ -90,6 +91,7 @@
           "web-tools",
           "logins",
           "usage",
+          "usage-resume",
           "palette",
           "mcp",
           "html"
@@ -383,6 +385,16 @@
         "stops": "Plan limits, cost and tokens are no longer shown.",
         "needs": [
           "models"
+        ]
+      },
+      "usage-resume": {
+        "kind": "capability",
+        "label": "Resume at reset",
+        "summary": "A chat that runs out of usage picks up again by itself when it resets, and what you send it meanwhile waits until then",
+        "stops": "A chat that runs out of usage stays stopped until you send it something again.",
+        "needs": [
+          "engine",
+          "schedules"
         ]
       },
       "palette": {

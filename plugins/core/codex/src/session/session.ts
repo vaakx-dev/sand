@@ -1,6 +1,7 @@
-import type { AppAside, AppOutput, AppSession, AppSetup, HandoffBlock } from '@sand/accounts/contract'
+import { type AppAside, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, UsageLimited } from '@sand/accounts/contract'
 import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
+import { limitsOf, resetOf } from '../account/limits'
 import { threadConfig } from '../server/args'
 import type { Pool, ThreadServer } from '../server/pool'
 import { fieldsOf, type Json, RpcError } from '../server/rpc'
@@ -41,7 +42,18 @@ const asideOf = (reply: Json): AppAside => {
   return { text: typeof reply.text === 'string' ? reply.text : '', usage: { input: input - cached, cacheRead: cached, output: Number(reply.outputTokens ?? 0) } }
 }
 
-const failure = (turn: Json) => new Error(String(fieldsOf(turn.error).message ?? 'Codex stopped this turn'))
+const failureText = (turn: Json) => String(fieldsOf(turn.error).message ?? 'Codex stopped this turn')
+
+const usageLimited = (turn: Json) => fieldsOf(turn.error).codexErrorInfo === 'usageLimitExceeded'
+
+const readReset = (pool: Pool) =>
+  pool.request('account/rateLimits/read', {}).then(
+    read => resetOf(limitsOf(read.rateLimits)),
+    () => undefined,
+  )
+
+const failure = async (pool: Pool, turn: Json) =>
+  usageLimited(turn) ? new UsageLimited(failureText(turn), await readReset(pool)) : new Error(failureText(turn))
 
 const mcpServers = async (server: ThreadServer, cwd: string) => Object.keys(fieldsOf(fieldsOf((await server.request('config/read', { cwd })).config).mcp_servers))
 
@@ -100,7 +112,7 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
       stopped.resolve()
       stopped = undefined
     } else if (turn.status === 'completed') output.finish()
-    else output.fail(failure(turn))
+    else void failure(pool, turn).then(output.fail)
   }
 
   const notify = (method: string, params: Json) => {

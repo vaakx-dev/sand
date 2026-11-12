@@ -1,4 +1,4 @@
-import { type LLMEvent, ProviderTrouble, ThreadLost } from '../contract'
+import { type LLMEvent, ProviderTrouble, ThreadLost, UsageLimited } from '../contract'
 import { AccountError } from '../errors'
 import type { ShareLine } from '../share/info'
 
@@ -33,13 +33,15 @@ async function* lines(body: ReadableStream<Uint8Array>, name: string, signal?: A
   }
 }
 
-const failureOf = ({ message, detail, kind, waitMs }: ErrorLine, name: string) => {
+const failureOf = ({ message, detail, kind, waitMs, resetsAt }: ErrorLine, name: string) => {
   const text = `On ${name}: ${message}`
   switch (kind) {
     case 'lost':
       return new ThreadLost(text)
     case 'trouble':
       return new ProviderTrouble(text, waitMs)
+    case 'limited':
+      return new UsageLimited(text, resetsAt)
     default:
       return new AccountError(text, detail)
   }

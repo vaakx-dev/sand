@@ -16,7 +16,10 @@ const endings: Record<string, { text: string; tone: NoticeTone }> = {
   lost: { text: 'Sand stopped during this turn', tone: 'error' },
   refusal: { text: 'The model declined to continue', tone: 'error' },
   max_tokens: { text: 'Stopped at the output token limit', tone: 'error' },
+  limited: { text: 'Out of usage', tone: 'error' },
 }
+
+export const endingType = (stopReason: string) => `turn-ending:${stopReason}`
 
 const settingsText = (settings: SessionSettings) =>
   [settings.model ?? 'no model chosen', settings.effort && `${settings.effort} effort`, settings.speed === 'fast' && 'fast'].filter(Boolean).join(' · ')
@@ -73,6 +76,8 @@ export const settledItems = (owner: Owner, path: Entry[], custom: (type: string)
 
   const ending = (entry: Entry) => {
     const { stopReason, error } = entry.data as TurnEnding
+    const type = endingType(stopReason)
+    if (custom(type)) return list.emit({ kind: 'custom', key: entry.id, entry: { ...entry, type } })
     const known = endings[stopReason]
     if (known) list.emit({ kind: 'notice', key: entry.id, text: error ? `${known.text}: ${error}` : known.text, tone: known.tone })
   }

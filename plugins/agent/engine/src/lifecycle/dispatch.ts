@@ -1,4 +1,4 @@
-import type { Conversation } from '../contract'
+import { type Conversation, turnHold } from '../contract'
 import type { EngineContext } from '../context'
 import type { Owned } from '../owned'
 import type { Drive } from './run'
@@ -20,7 +20,7 @@ export const createDispatch = <C extends Conversation>(ctx: EngineContext, { con
     if (!running() || stores.turns.current(conversation)) return
     if (conversations.held?.(conversation)) return
     const next = stores.pending.next(conversation)
-    if (!next) return
+    if (!next || (await ctx.bail(turnHold, conversation, next.origin, 'dispatch'))) return
     const opening = await opener.prepare(conversation, next.prompt, next.origin).catch(() => undefined)
     if (!opening) return hold(conversation, next.id)
     const started = ctx.ledger.tx(() =>
