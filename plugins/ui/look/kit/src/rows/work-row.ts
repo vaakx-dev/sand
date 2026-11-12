@@ -43,7 +43,7 @@ const statusTime = (status: Status | undefined, at: number | undefined) => {
   const time = at === undefined ? shown?.label : timeOf(shown?.tone, at)
   if (!time) return null
   const tone = shown?.tone === 'run' ? toneText.run : 'text-neutral-500'
-  return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs tabular-nums', tone], title: shown?.label }, shown ? statusMark(shown.tone) : null, time)
+  return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs', tone], title: shown?.label }, shown ? statusMark(shown.tone) : null, time)
 }
 
 export interface RowPlaceProps {
@@ -79,7 +79,7 @@ const secondLine = (large: boolean, { detail, place, trail }: Pick<WorkRowBody, 
   if (!detail && !place && !trail) return null
   const left = detail ? span({ class: 'min-w-0 truncate' }, detail) : (place ? placeView(place) : null)
   const trailing = trail ? span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, trail) : null
-  return div({ class: ['flex min-w-0 items-center gap-2 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, trailing)
+  return div({ class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, trailing)
 }
 
 const metaOf = ({ end, status, at }: Pick<WorkRowBody, 'end' | 'status' | 'at'>) => end ?? statusTime(status, at)
