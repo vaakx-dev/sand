@@ -6,8 +6,6 @@ import type { Context } from 'drydock'
 import { projectMemoryExchange, projectMemoryPut, projectMemorySpace, type Revision } from './contract'
 import type { Replica } from './replica'
 
-const ROUND_MS = 120_000
-
 const syncAcrossPcs = (ctx: Context, replica: Replica) => {
   const exchange = async (linked: Peers, pc: string) => {
     const { revisions, wanted } = await linked.call(pc, projectMemoryExchange, { versions: await replica.versions() })
@@ -15,16 +13,19 @@ const syncAcrossPcs = (ctx: Context, replica: Replica) => {
     if (wanted.length) await linked.call(pc, projectMemoryPut, { revisions: await replica.revisions(wanted) })
   }
 
-  const round = (linked: Peers, pc: string) =>
-    exchange(linked, pc).catch(error => {
-      if (!isPcUnavailable(error)) ctx.report(error)
-    })
+  const reportFailure = (error: unknown) => {
+    if (!isPcUnavailable(error)) ctx.report(error)
+  }
+
+  const round = (linked: Peers, pc: string) => exchange(linked, pc).catch(reportFailure)
 
   const roundAll = (linked: Peers) => Promise.all(linked.connected().map(pc => round(linked, pc)))
 
   const push = async (revisions: Revision[]) => {
     const linked = ctx.get(peers)
-    if (linked && revisions.length) await linked.callEach(projectMemoryPut, { revisions })
+    if (!linked || !revisions.length) return
+    const outcomes = await linked.callEach(projectMemoryPut, { revisions })
+    for (const outcome of outcomes) if (!outcome.ok) reportFailure(outcome.error)
   }
 
   ctx.on(memoryStore, ({ space, id }) => {
@@ -41,11 +42,7 @@ const syncAcrossPcs = (ctx: Context, replica: Replica) => {
   ctx.watch(peers, linked => {
     if (!linked) return
     void roundAll(linked)
-    const timer = setInterval(() => void roundAll(linked), ROUND_MS)
-    return joinDisposers(
-      linked.onOpen(pc => void round(linked, pc)),
-      () => clearInterval(timer),
-    )
+    return linked.onOpen(pc => void round(linked, pc))
   })
 }
 
