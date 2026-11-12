@@ -40,4 +40,5 @@ export const applyHello = (store: Store, read: HelloRead, device: string) => {
   const sync = read(helloSync)
   if (sync) store.synced.set(device, sync)
   else store.synced.delete(device)
+  if (device === store.here()) store.know()
 }

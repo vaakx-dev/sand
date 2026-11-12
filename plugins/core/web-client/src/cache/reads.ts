@@ -3,6 +3,7 @@ import { transact, under, type PickStore } from '../integrations/indexed-db'
 import { emptyMeta, type CachedThread, type Meta, type SummaryRecord, type TailRecord } from './records'
 
 export interface CachedScope {
+  kept: boolean
   meta: Meta
   summaries: SummaryRecord[]
   asked?: CachedThread
@@ -31,6 +32,7 @@ export const readScope = (scope: string, asked: string | undefined) =>
     const summaries = pick('threads').getAll(under(scope))
     const thread = asked ? cachedThread(pick, scope, asked) : undefined
     return (): CachedScope => ({
+      kept: meta.result !== undefined,
       meta: { ...emptyMeta(), ...(meta.result as Meta | undefined) },
       summaries: summaries.result as SummaryRecord[],
       asked: thread?.(),

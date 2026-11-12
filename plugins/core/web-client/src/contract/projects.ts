@@ -38,6 +38,7 @@ export interface ProjectShown {
 
 export interface Projects {
   list(): ProjectEntry[]
+  known(): boolean
   groups(options?: { hidden?: boolean }): ProjectGroup[]
   get(id: string): ProjectGroup | undefined
   group(path: string, device: string): ProjectGroup | undefined

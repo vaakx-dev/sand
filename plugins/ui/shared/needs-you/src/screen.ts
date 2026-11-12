@@ -3,6 +3,8 @@ import { errorMessage } from '@sand/util'
 import { div, dynamicChild, list, show, sig, type Derive } from '@vaakx-dev/vrui'
 import type { Need, NeedAction, NeedKind } from './contract'
 
+type State = 'unknown' | 'some' | 'none'
+
 interface Group {
   kind: NeedKind
   label: string
@@ -51,11 +53,22 @@ const group = (kit: Kit, items: Derive<Need[]>, { kind, label }: Group) => {
 
 const empty = (kit: Kit) => kit.emptyPage({ title: 'Nothing needs you', text: 'Sign-ins, clashes and finished work show up here.' })
 
-export const needsScreen = (kit: Kit, items: Derive<Need[]>) =>
-  kit.pageBody(
-    {},
-    dynamicChild(
-      items.map(all => all.length > 0),
-      some => (some ? div({ class: 'flex min-w-0 flex-col' }, ...groups.map(found => group(kit, items, found))) : empty(kit)),
-    ),
-  )
+const stateOf = (all: Need[] | undefined): State => {
+  if (!all) return 'unknown'
+  return all.length ? 'some' : 'none'
+}
+
+const content = (kit: Kit, items: Derive<Need[] | undefined>, state: State) => {
+  switch (state) {
+    case 'unknown':
+      return null
+    case 'some': {
+      const known = items.map(all => all ?? [])
+      return div({ class: 'flex min-w-0 flex-col' }, ...groups.map(found => group(kit, known, found)))
+    }
+    case 'none':
+      return empty(kit)
+  }
+}
+
+export const needsScreen = (kit: Kit, items: Derive<Need[] | undefined>) => kit.pageBody({}, dynamicChild(items.map(stateOf), state => content(kit, items, state)))

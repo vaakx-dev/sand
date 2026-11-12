@@ -10,17 +10,22 @@ const toggled = (list: string[], id: string) => (list.includes(id) ? list.filter
 const botRows = ({ kit, bots }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
   const roster = bots()
   if (!roster) return kit.emptyState({ text: 'Bots are off. Turn them on in Settings → Add-ons.' })
-  const listed = derive(() => roster.list())
+  const listed = derive(() => roster.list() ?? [])
+  const state = derive(() => {
+    const bots = roster.list()
+    if (!bots) return 'unknown'
+    return bots.length ? 'some' : 'none'
+  })
   const botRow = (bot: Sig<BotSummary>) =>
     kit.checkRow({
       title: () => botName(bot.get()),
       checked: () => login.get().bots.includes(bot.get().id),
       onToggle: () => change({ bots: toggled(login.get().bots, bot.get().id) }),
     })
-  return dynamicChild(
-    derive(() => listed.get().length > 0),
-    some => (some ? kit.rowList(listed, bot => bot.id, botRow) : kit.emptyState({ text: 'No bots yet.' })),
-  )
+  return dynamicChild(state, shown => {
+    if (shown === 'unknown') return null
+    return shown === 'some' ? kit.rowList(listed, bot => bot.id, botRow) : kit.emptyState({ text: 'No bots yet.' })
+  })
 }
 
 const threadRows = ({ kit, threads }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {

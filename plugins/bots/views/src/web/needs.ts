@@ -6,10 +6,11 @@ const title = 'Needs a sign-in or key in its chat.'
 
 export const botNeeds = (parts: Parts): NeedSource => ({
   id: 'bots',
-  items: (): Need[] =>
-    (parts.store.bots.get() ?? [])
-      .filter(bot => bot.status === 'waiting')
-      .map(bot => ({
+  items: () =>
+    parts.store.bots
+      .get()
+      ?.filter(bot => bot.status === 'waiting')
+      .map((bot): Need => ({
         id: `bot:${bot.id}`,
         kind: 'secret',
         who: botName(bot),

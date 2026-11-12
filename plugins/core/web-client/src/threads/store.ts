@@ -55,6 +55,7 @@ export class Store {
   private starts = new Map<string, (() => void)[]>()
   private dirty = new Set<string>()
   private listed = false
+  known = false
   private keys = new WeakMap<Thread, string>()
   private frame: (() => void) | undefined
 
@@ -106,6 +107,12 @@ export class Store {
     this.threads.set(info.id, thread)
     this.changed(info.id, true)
     return thread
+  }
+
+  know() {
+    if (this.known) return
+    this.known = true
+    this.changed(undefined, true)
   }
 
   pending(id: string, items: PendingItem[]) {

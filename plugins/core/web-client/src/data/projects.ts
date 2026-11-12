@@ -137,6 +137,7 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
 
   const projects: Projects = {
     list: () => all().flatMap(found => found.locations),
+    known: () => lists.has(store.here()),
     groups: options => all().filter(found => options?.hidden || !found.hidden),
     get,
     group,

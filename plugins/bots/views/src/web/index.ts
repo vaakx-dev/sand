@@ -68,7 +68,7 @@ export default definePlugin({
     }
 
     ctx.provide(botViews, { open: parts.open })
-    ctx.provide(botRoster, { list: () => parts.store.bots.get() ?? [], find: parts.store.find })
+    ctx.provide(botRoster, { list: () => parts.store.bots.get(), find: parts.store.find })
     ctx.provide(botProfile, { section: sections.add })
     ctx.provide(botAutomations, { source: automationSources.add })
 

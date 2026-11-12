@@ -8,7 +8,15 @@ const newest = (entries: Entry[]) => entries.toSorted((a, b) => Number(Boolean(b
 const group = (id: string, label: string, entries: Entry[], extra?: Partial<ShellGroup>): ShellGroup[] =>
   entries.length ? [{ id, label, rows: entries.map(entry => entry.row), ...extra }] : []
 
-export const threadGroups = (entries: Entry[], limit: number, more: () => void, start: () => void): ShellGroup[] => {
+interface GroupsInput {
+  entries: Entry[]
+  known: boolean
+  limit: number
+  more(): void
+  start(): void
+}
+
+export const threadGroups = ({ entries, known, limit, more, start }: GroupsInput): ShellGroup[] => {
   const settled = newest(entries.filter(entry => entry.settled))
   const snoozed = newest(entries.filter(entry => entry.snoozed && !entry.settled))
   const open = entries.filter(entry => !entry.snoozed && !entry.settled)
@@ -16,7 +24,7 @@ export const threadGroups = (entries: Entry[], limit: number, more: () => void, 
   const active = newest(open.filter(entry => entry.row.status !== 'running'))
   const hidden = settled.length - limit
   return [
-    { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row), ...(!entries.length && { empty: 'No threads yet.' }) },
+    { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row), ...(known && !entries.length && { empty: 'No threads yet.' }) },
     ...group('working', 'Working', working),
     ...group('snoozed', 'Snoozed', snoozed, { folded: true }),
     ...group('settled', 'Settled', settled.slice(0, limit), {

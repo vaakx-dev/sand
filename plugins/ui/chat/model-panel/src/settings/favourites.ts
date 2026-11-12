@@ -37,6 +37,7 @@ export const favouritesPage = (page: Page) => {
   const { emptyState, rowList, settingsSection, starMark } = page.ctx.kit
   const removed = sig(new Set<string>())
   const all = page.changes.read(() => page.ctx.models.list())
+  const known = page.changes.read(() => page.ctx.models.known())
   const models = derive(() => {
     const gone = removed.get()
     return favouritesOf(all.get()).filter(model => !gone.has(model.id))
@@ -54,7 +55,7 @@ export const favouritesPage = (page: Page) => {
     settingsSection(
       {},
       show(
-        models.map(found => !found.length),
+        () => known.get() && !models.get().length,
         () => emptyState({ text: 'No favourites yet.', action: { label: 'Choose an account', run: () => page.go({ kind: 'top' }) } }),
       ),
       rowList(models, model => model.id, row => favouriteRow(page, row, unstar)),

@@ -31,7 +31,7 @@ test('the page loads the entry and its shared chunks up front, and code imported
   const upFront = [built.entry, ...built.preload]
   const holding = (marker: string) => [...built.assets].filter(([, asset]) => text(asset.body).includes(marker)).map(([path]) => path)
 
-  expect(html).toContain(`<script type="module" src="${built.entry}">`)
+  expect(html).toContain(`<script type="module" blocking="render" src="${built.entry}">`)
   for (const path of built.preload) expect(html).toContain(`<link rel="modulepreload" href="${path}">`)
   expect(holding('shared-marker').every(path => upFront.includes(path))).toBe(true)
   expect(holding('lazy-marker')).toHaveLength(1)

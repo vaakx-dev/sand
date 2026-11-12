@@ -9,7 +9,7 @@ import { textArea } from './field'
 export interface EditableProps {
   title?: string
   note?: Child
-  text(): string
+  text(): string | undefined
   view(text: string): Child
   empty: Child
   save(text: string): Promise<unknown>
@@ -24,7 +24,7 @@ export const editable = (props: EditableProps) => {
   const saving = sig(false)
   const failure = sig('')
   const start = () => {
-    draft.set(props.text())
+    draft.set(props.text() ?? '')
     failure.set('')
     editing.set(true)
   }
@@ -49,11 +49,15 @@ export const editable = (props: EditableProps) => {
       div(
         { class: 'flex justify-end gap-2' },
         quietButton({ size: 'sm', onClick: () => editing.set(false) }, 'Cancel'),
-        primaryAction({ size: 'sm', disabled: () => saving.get() || draft.get() === props.text(), onClick: save }, 'Save'),
+        primaryAction({ size: 'sm', disabled: () => saving.get() || draft.get() === (props.text() ?? ''), onClick: save }, 'Save'),
       ),
     )
-  const written = derive(() => props.text().trim())
-  const shown = () => dynamicChild(written, text => (text ? div({ class: 'text-sm text-neutral-100' }, props.view(text)) : emptyState({ text: props.empty })))
+  const written = derive(() => props.text()?.trim())
+  const writtenView = (text: string | undefined) => {
+    if (text === undefined) return null
+    return text ? div({ class: 'text-sm text-neutral-100' }, props.view(text)) : emptyState({ text: props.empty })
+  }
+  const shown = () => dynamicChild(written, writtenView)
   return pageSection(
     {
       title: props.title,

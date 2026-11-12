@@ -160,7 +160,7 @@ export interface BotViews {
 export const botViews = service<BotViews>('botViews')
 
 export interface BotRoster {
-  list(): BotSummary[]
+  list(): BotSummary[] | undefined
   find(id: string): BotSummary | undefined
 }
 

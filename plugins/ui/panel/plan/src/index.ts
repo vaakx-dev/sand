@@ -19,15 +19,12 @@ export default definePlugin({
       change: planChangeWire,
       changed: payload => payload,
     })
-    const planOf = (bot: string) => plans(bot) ?? ''
-
     const render = (subject: () => Subject) => {
       const bot = subject().session
-      const text = () => planOf(bot)
       return div(
         { class: 'p-4' },
         ctx.kit.editable({
-          text,
+          text: () => plans(bot),
           view: plan => div(...ctx.markdown.nodes(plan, { size: 'compact' })),
           empty: 'No plan yet.',
           save: plan => ctx.wire.call(planWrite, { bot, text: plan }),

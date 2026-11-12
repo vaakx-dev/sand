@@ -65,6 +65,7 @@ export interface Threads {
   show(chat: OpenChat): void
   drafting(): DraftTarget | undefined
   list(): Thread[]
+  known(): boolean
   get(id: string): Thread | undefined
   current(): Thread | undefined
   children(id: string): Thread[]

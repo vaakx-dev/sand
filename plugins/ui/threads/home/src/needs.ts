@@ -13,7 +13,7 @@ import { openThread } from './open'
 export interface NeedsParts {
   ctx: Context
   kit: Kit
-  threads: { list(): Thread[]; get(id: string): Thread | undefined }
+  threads: { list(): Thread[]; known(): boolean; get(id: string): Thread | undefined }
   projects: Projects
   shell: Shell
   changes: Changes
@@ -38,7 +38,7 @@ const fixPrompt = (clashes: string[]) =>
 
 const listed = (parts: NeedsParts) => {
   parts.pulse.version.get()
-  return visibleThreads(parts.threads.list()).filter(thread => !thread.info.settled)
+  return parts.threads.known() ? visibleThreads(parts.threads.list()).filter(thread => !thread.info.settled) : undefined
 }
 
 const opener = (parts: NeedsParts, thread: Thread): NeedAction => ({ label: 'Open', run: () => openThread(parts.ctx, parts.shell, thread.id) })
@@ -68,8 +68,8 @@ const conflictNeed = (parts: NeedsParts, thread: Thread, change: ThreadChanges, 
 
 export const conflictNeeds = (parts: NeedsParts) => ({
   id: 'conflicts',
-  items: (): Need[] =>
-    listed(parts).flatMap(thread => {
+  items: () =>
+    listed(parts)?.flatMap(thread => {
       const change = parts.changes.get(thread.id)
       const trouble = mergeTrouble(change)
       return change && trouble ? [conflictNeed(parts, thread, change, trouble)] : []
@@ -109,7 +109,7 @@ const reviewNeed = (parts: NeedsParts, thread: Thread): Need => ({
 
 export const reviewNeeds = (parts: NeedsParts) => ({
   id: 'review',
-  items: (): Need[] => listed(parts).flatMap(thread => (thread.running || parts.changes.get(thread.id)?.state !== 'ready' ? [] : [reviewNeed(parts, thread)])),
+  items: () => listed(parts)?.flatMap(thread => (thread.running || parts.changes.get(thread.id)?.state !== 'ready' ? [] : [reviewNeed(parts, thread)])),
 })
 
 const secretNeed = (parts: NeedsParts, thread: Thread, call: string, asked: string): Need => ({
@@ -125,8 +125,8 @@ const secretNeed = (parts: NeedsParts, thread: Thread, call: string, asked: stri
 
 export const secretNeeds = (parts: NeedsParts) => ({
   id: 'secrets',
-  items: (): Need[] =>
-    listed(parts).flatMap(thread => {
+  items: () =>
+    listed(parts)?.flatMap(thread => {
       const waiting = thread.waiting
       return waiting?.kind === 'secret' ? [secretNeed(parts, thread, waiting.call, waiting.title)] : []
     }),
