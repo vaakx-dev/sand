@@ -2834,6 +2834,7 @@
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/jobs": "workspace:*",
+        "@sand/markdown": "workspace:*",
         "@sand/needs-you": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/panel": "workspace:*",

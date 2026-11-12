@@ -1,4 +1,5 @@
 import { pcHello } from '@sand/devices-contract'
+import type { ShellRow } from '@sand/ui-shell/contract'
 import { threadChange, type Threads } from '@sand/web-client/contract'
 import { sig, untrack, type Child } from '@vaakx-dev/vrui'
 import { service, type Context, type Dispose } from 'drydock'
@@ -17,6 +18,7 @@ export interface RowPart {
 
 export interface ThreadRows {
   part(part: RowPart): Dispose
+  row(thread: string): ShellRow | undefined
 }
 
 export const threadRows = service<ThreadRows>('threadRows')

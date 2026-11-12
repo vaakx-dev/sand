@@ -86,6 +86,8 @@ const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: Thr
   moved: draft.updated,
 })
 
+export const threadRow = (parts: MenuParts, thread: Thread, sources: RowSources) => threadEntry(parts, thread, runningJobs(parts.ctx, parts.threads), sources).row
+
 export const threadEntries = (parts: MenuParts, sources: RowSources): Entry[] => {
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, sources.looks, saved, draft)) : []

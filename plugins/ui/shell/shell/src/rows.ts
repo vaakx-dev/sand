@@ -188,20 +188,20 @@ const sameLook = (shown: ShellRow, next: ShellRow) =>
   shown.place?.label === next.place?.label &&
   shown.place?.mark === next.place?.mark
 
-const looksOf = (row: Sig<ShellRow>) => {
+const looksOf = (row: () => ShellRow) => {
   let shown: ShellRow | undefined
   return derive(() => {
-    const next = row.get()
+    const next = row()
     if (!shown || !sameLook(shown, next)) shown = next
     return shown
   })
 }
 
-export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, look: RowLook) => {
+const rowView = (model: Model, menu: ContextMenu, row: () => ShellRow, look: RowLook) => {
   const { workRow, workRowBody } = model.kit
-  const current = () => model.isCurrent(row.get().to)
+  const current = () => model.isCurrent(row().to)
   return workRow(
-    { current, large: look.phone, ...rowMenu(menu, () => row.get(), () => model.open(row.get().to)) },
+    { current, large: look.phone, ...rowMenu(menu, row, () => model.open(row().to)) },
     dynamicChild(looksOf(row), shown =>
       workRowBody({
         title: shown.label,
@@ -216,6 +216,11 @@ export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, loo
       }),
     ),
   )
+}
+
+export const singleRow = (model: Model, row: () => ShellRow) => {
+  const menu = model.kit.contextMenu()
+  return div({ class: 'contents' }, dynamicChild(model.phone, phone => rowView(model, menu, row, { phone })), menu.view())
 }
 
 const foldHeading = (model: Model, key: string, group: () => ShellGroup) => {
@@ -247,7 +252,7 @@ const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, lo
     list(
       derive(() => (shown() ? listed.get().group.rows : [])),
       row => row.id,
-      row => rowView(model, menu, row, look),
+      row => rowView(model, menu, () => row.get(), look),
       div({ class: 'flex flex-col gap-px' }),
     ),
     show(
