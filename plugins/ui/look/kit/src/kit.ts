@@ -25,7 +25,7 @@ import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { botFace } from './marks/face'
 import { monogram } from './marks/monogram'
-import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
+import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot } from './marks/marks'
 import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
@@ -34,7 +34,6 @@ import { stepMark } from './marks/state-marks'
 import { statusBadge, statusLabel } from './marks/status'
 import { toneText } from './marks/tones'
 import { chipButton, chipPopover } from './menus/chip'
-import { chipRow } from './menus/chip-row'
 import { countChip } from './menus/count-chip'
 import { dropdown } from './menus/dropdown'
 import { pickerButton } from './menus/picker'
@@ -50,7 +49,7 @@ import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
 import { cardCaption, cardItem, cardRule } from './rows/card-item'
-import { dayDivider, shortAge, workRow, workRowBody, workStatus } from './rows/work-row'
+import { age, dayDivider, workRow, workRowBody, workStatus } from './rows/work-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { pageSection } from './rows/section'
 import { segmented } from './rows/settings'
@@ -90,6 +89,7 @@ const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSys
 
 export const kit = {
   actionTones,
+  age,
   appIcon,
   badge,
   bannerTitle,
@@ -103,7 +103,6 @@ export const kit = {
   chevron,
   chipButton,
   chipPopover,
-  chipRow,
   choiceCheck,
   choiceChips,
   choiceItem,
@@ -233,7 +232,6 @@ export const kit = {
   sheetText: secondaryText,
   sheetTitle,
   shine,
-  shortAge,
   cardCaption,
   cardItem,
   cardRule,
@@ -272,6 +270,5 @@ export const kit = {
   workRow,
   workRowBody,
   workStatus,
-  working,
   zoomControls,
 }

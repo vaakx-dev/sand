@@ -1,8 +1,7 @@
 import { threadScheme, type ThreadLive, type ThreadView } from '@sand/chat/contract'
 import type { LinkScheme } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { ago } from '@sand/util'
-import { clock, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 
 type Live = () => ThreadLive | undefined
 
@@ -19,25 +18,13 @@ const stateMark = (kit: Kit, live: Live) =>
     status => (status ? kit.statusIcon(status) : kit.stateIcon('idle')),
   )
 
-const age = (live: Live) => {
-  const now = clock(60_000)
-  return span({ class: 'tabular-nums' }, () => {
-    now.get()
-    return ago(live()?.at)
-  })
-}
-
 const row = (kit: Kit, live: Live, label: string, open: () => void) =>
   div(
     { class: '-mx-2' },
-    kit.listRow({
-      lead: stateMark(kit, live),
-      title: () => live()?.title ?? label,
-      meta: () => live()?.note ?? '',
-      trail: age(live),
-      touch: true,
-      onClick: open,
-    }),
+    kit.workRow(
+      { onClick: open },
+      dynamicChild(live, shown => kit.workRowBody({ title: shown?.title ?? label, detail: shown?.note, status: shown?.status, at: shown?.at })),
+    ),
   )
 
 const inline = (kit: Kit, live: Live, label: string, open: () => void) =>

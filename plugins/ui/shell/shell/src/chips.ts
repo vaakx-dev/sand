@@ -19,17 +19,14 @@ const chipsOf = (sources: ChipSource[]) => {
 }
 
 const itemRow = (kit: Kit, item: ChipItem, close: () => void) => {
-  const { action, open } = item
-  return kit.chipRow({
-    title: item.label,
-    lead: item.status ? kit.statusIcon(item.status) : item.icon ? kit.icon(item.icon, 'sm') : undefined,
-    meta: item.meta,
-    action: action && kit.primaryAction({ size: 'sm', disabled: () => action.busy?.() ?? false, onClick: () => void action.run() }, action.label),
-    onClick: open && (() => {
-      close()
-      open()
-    }),
-  })
+  const choose = () => {
+    close()
+    item.open()
+  }
+  return kit.workRow(
+    { role: 'menuitem', surface: 'raised', onClick: choose },
+    kit.workRowBody({ title: item.label, lead: item.icon && kit.icon(item.icon, 'sm'), detail: item.detail, status: item.status, at: item.at }),
+  )
 }
 
 const tones: Partial<Record<Status, string>> = {

@@ -1,4 +1,5 @@
 import { sand, sandPalette } from '@sand/ui-theme/contract'
+import type { Status } from '@sand/ui-shell/contract'
 import { div, h2, mount, p, section, sig, span, theme, type Child } from '@vaakx-dev/vrui'
 import { kit } from '../../src/kit'
 import type { DiffLine } from '../../src/tools/lcs'
@@ -34,28 +35,14 @@ const tabs = () => {
   )
 }
 
+const chipItem = (title: string, status: Status, detail?: string) =>
+  kit.workRow({ surface: 'raised', onClick: () => {} }, kit.workRowBody({ title, detail, status, at: Date.now() - 180_000 }))
+
 const chips = () =>
   line(
-    kit.countChip({
-      label: 'Waiting',
-      count: 1,
-      lead: kit.stateIcon('waiting'),
-      items: () => [kit.chipRow({ title: 'Add the refund webhook', lead: kit.stateIcon('waiting', 'sm', true), meta: 'partial refunds?', onClick: () => {} }),
-        kit.chipRow({
-          title: "These files changed in the project too and don't merge cleanly with this thread's changes",
-          lead: kit.stateIcon('waiting', 'sm', true),
-          meta: 'Which version should win when both sides edited the same lines?',
-          onClick: () => {},
-        }),
-      ],
-    }),
-    kit.countChip({
-      label: 'Ready',
-      count: 1,
-      lead: kit.stateIcon('ready'),
-      items: () => [kit.chipRow({ title: 'Fix the flaky cache test', lead: kit.stateIcon('ready'), action: kit.primaryAction({ size: 'sm' }, 'Merge'), onClick: () => {} })],
-    }),
-    kit.countChip({ label: 'Working', count: 2, lead: kit.stateIcon('running'), items: () => [kit.chipRow({ title: 'Speed up PNG encoding', meta: '3m' })] }),
+    kit.countChip({ label: 'Waiting', count: 1, lead: kit.stateIcon('waiting'), items: () => [chipItem('Add the refund webhook', 'waiting', 'partial refunds?')] }),
+    kit.countChip({ label: 'Ready', count: 1, lead: kit.stateIcon('ready'), items: () => [chipItem('Fix the flaky cache test', 'ready')] }),
+    kit.countChip({ label: 'Working', count: 1, lead: kit.stateIcon('running'), items: () => [chipItem('Speed up PNG encoding', 'running')] }),
   )
 
 const choices = () => {
@@ -171,7 +158,7 @@ const gallery = () =>
     block('Choice list', choices()),
     block('Segmented', kit.segmented([{ value: 'chat', label: 'Chat' }, { value: 'project', label: 'Project' }], 'chat', () => {}, { label: 'View' })),
     block('Fields', kit.textInput({ placeholder: 'Name' }), line(kit.searchField({ placeholder: 'Search bots and chats' }))),
-    block('Card', kit.card({ meta: 'Weekdays at 9:00', actions: [kit.secondaryAction({ size: 'sm' }, 'Edit'), kit.primaryAction({ size: 'sm' }, 'Run now')] }, p({ class: 'text-sm' }, 'Triage new issues'))),
+    block('Card', kit.card({ title: 'Fix the flaky cache test', at: Date.now() - 720_000 }, p({ class: 'text-sm' }, 'Ready to review'))),
     block('Diff block', kit.diffBlock('src/cache/store.ts', diff)),
     block('Sheet', sheetSample()),
     block('Page sections', pageSections()),
@@ -193,7 +180,7 @@ const gallery = () =>
       'Tool steps',
       kit.toolCard({ icon: kit.icon('search', 'sm'), verb: 'Read', target: 'src/cache/store.ts' }),
       kit.toolCard({ icon: kit.icon('x', 'sm'), verb: 'Ran', target: 'bun test cache', failed: true }),
-      line(...(['added', 'modified', 'deleted', 'renamed'] as const).map(kind => kit.fileKindMark(kind)), kit.progressSteps(4, 2), kit.spinner(), kit.working()),
+      line(...(['added', 'modified', 'deleted', 'renamed'] as const).map(kind => kit.fileKindMark(kind)), kit.progressSteps(4, 2), kit.spinner()),
     ),
     block('Empty', kit.emptyState({ text: 'Nothing needs you.', action: { label: 'Open threads', run: () => {} } })),
   )

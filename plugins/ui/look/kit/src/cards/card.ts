@@ -1,18 +1,20 @@
-import { div, type Child } from '@vaakx-dev/vrui'
-import { metaLook } from '../heads/text'
+import { div, span, type Child } from '@vaakx-dev/vrui'
+import { age } from '../rows/work-row'
 
 export interface CardProps {
-  meta?: Child
-  actions?: Child
+  title: Child
+  lead?: Child
+  at?: number
 }
 
-export const card = ({ meta, actions }: CardProps, ...body: Child[]) =>
+export const card = ({ title, lead, at }: CardProps, ...body: Child[]) =>
   div(
-    { class: 'flex min-w-0 flex-col gap-2 py-2' },
-    body.length > 0 ? div({ class: 'min-w-0' }, ...body) : null,
+    { class: 'flex min-w-0 flex-col gap-2 rounded-lg bg-neutral-800 px-4 py-3' },
     div(
-      { class: 'flex min-w-0 flex-wrap items-center gap-2' },
-      div({ class: ['flex min-w-0 flex-1 items-center gap-2', metaLook] }, meta ?? null),
-      div({ class: 'ml-auto flex shrink-0 items-center gap-2' }, actions ?? null),
+      { class: 'flex min-w-0 items-center gap-2' },
+      lead ?? null,
+      span({ class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, title),
+      at === undefined ? null : age(at),
     ),
+    ...body,
   )

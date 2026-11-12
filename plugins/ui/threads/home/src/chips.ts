@@ -1,5 +1,4 @@
 import type { Pulse } from '@sand/reactive'
-import { duration } from '@sand/util'
 import type { ChipItem, ChipScope, ChipSource, Shell } from '@sand/ui-shell/contract'
 import type { Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
@@ -11,7 +10,6 @@ export interface ChipParts {
   shell: Shell
   threads: Threads
   pulse: Pulse
-  now(): number
 }
 
 const startOf = (thread: Thread) => thread.started ?? (thread.jobs.size ? Math.min(...thread.jobs.values()) : undefined)
@@ -39,7 +37,7 @@ const working = (parts: ChipParts): ChipSource => ({
   items: scope =>
     scoped(parts, scope)
       .filter(thread => thread.running && !thread.waiting)
-      .map(thread => item(parts, thread, { status: 'running', meta: () => duration(Math.max(0, parts.now() - (startOf(thread) ?? parts.now()))) })),
+      .map(thread => item(parts, thread, { status: 'running', at: startOf(thread) })),
 })
 
 export const chipSources = (parts: ChipParts) => [working(parts)]

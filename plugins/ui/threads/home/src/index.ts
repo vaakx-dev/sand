@@ -10,7 +10,7 @@ import { kit } from '@sand/ui-kit/contract'
 import { settings } from '@sand/settings/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
-import { clock, sig, stored } from '@vaakx-dev/vrui'
+import { sig, stored } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
 import { threadRows, type RowPart } from './contract'
@@ -59,9 +59,8 @@ export default definePlugin({
     })
     ctx.provide(draftPlaces, { choose: draft => chooseDraftPlace(parts, draft) })
     const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get(), looks }, botThreads.get()), limit.get(), more, () => newThread(parts))))
-    const now = owned(ctx, () => clock(1000))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
-    for (const source of chipSources({ ...parts, pulse: events, now: () => now.get() })) ctx.effect(() => ctx.shell.chip(source))
+    for (const source of chipSources({ ...parts, pulse: events })) ctx.effect(() => ctx.shell.chip(source))
     ctx.watch(needs, found => {
       if (!found) return
       const needParts = { ...parts, wire: ctx.wire, changes, pulse: events }
@@ -69,7 +68,7 @@ export default definePlugin({
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
     })
-    ctx.watch(palette, found => found?.source(sessionSource(parts, ctx.kit)))
+    ctx.watch(palette, found => found?.source(sessionSource({ ...parts, changes }, ctx.kit)))
     wakeTimer(ctx, ctx.threads, events.bump)
   },
 })

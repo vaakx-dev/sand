@@ -38,7 +38,7 @@ export const loadItems = async (page: PalettePage, query: string) => {
 
 export type Entry = { key: string; group: string } | { key: string; item: PaletteItem; position: number }
 
-const rowKey = (item: PaletteItem) => [item.group, item.id, item.label, item.detail, item.meta, item.busy, item.disabled, item.actions?.length].join('\u0000')
+const rowKey = (item: PaletteItem) => [item.group, item.id, item.label, item.detail, item.meta, item.status, item.at, item.disabled, item.actions?.length].join('\u0000')
 
 export const entries = (items: PaletteItem[]) => {
   const shown: Entry[] = []
