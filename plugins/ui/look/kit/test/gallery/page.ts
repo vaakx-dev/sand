@@ -87,7 +87,7 @@ const settings = () => {
     { title: 'Notifications', note: 'When sand tells you that work needs you.' },
     kit.settingsRow({ title: 'Ask before merging', detail: 'Each bot asks first' }, kit.toggleSwitch({ on, onClick: () => on.set(!on.get()), 'aria-label': 'Ask before merging' })),
     kit.settingsRow({ title: 'Sound' }, kit.segmented([{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }], 'on', () => {}, { label: 'Sound' })),
-    kit.settingsRow({ title: 'Default model', detail: 'Used when a thread does not pick one' }, kit.pickerButton({ 'aria-label': 'Default model' }, 'Opus 5.5 · High')),
+    kit.settingsRow({ title: 'Project', detail: 'Where the new thread starts' }, kit.pickerButton({ 'aria-label': 'Project', lead: kit.projectIcon('harbor') }, 'harbor')),
     kit.settingsRow({ title: 'Quiet hours', detail: 'From 22:00 to 7:00', onOpen: () => {} }),
     kit.emptyState({ text: 'No devices muted.' }),
   )

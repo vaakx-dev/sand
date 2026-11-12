@@ -1,7 +1,7 @@
 {
   "name": "@sand/threads-home",
   "version": "0.0.0",
-  "description": "Open threads in the sidebar, newest first, with pin and snooze; New thread picks a project and opens a new chat; the running, needs-you and ready counts; threads and projects in Search",
+  "description": "Open threads in the sidebar, newest first, with pin and snooze; New thread opens a new chat in the last project, and its header picks another; the running, needs-you and ready counts; threads and projects in Search",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -22,7 +22,6 @@
     "@sand/needs-you": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
-    "@sand/project": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",

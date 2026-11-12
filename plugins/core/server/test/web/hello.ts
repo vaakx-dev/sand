@@ -96,7 +96,6 @@ test('the page works while a plugin never answers its part of the hello, or thro
   const page = await paired.newPage()
   await page.goto(origin)
   await page.getByRole('button', { name: 'New thread' }).first().click()
-  await page.getByRole('dialog', { name: 'New thread' }).getByText('No project', { exact: true }).click()
   await page.getByRole('textbox').first().waitFor()
   await page.getByRole('textbox').first().fill('hello')
   await page.getByRole('button', { name: 'Send' }).click({ timeout: 10_000 })

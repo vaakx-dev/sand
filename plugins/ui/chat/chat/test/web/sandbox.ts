@@ -43,6 +43,5 @@ export const startSandbox = async (replies: Reply[]) => {
 
 export const newChat = async (page: Page) => {
   await page.getByRole('button', { name: 'New thread' }).first().click()
-  await page.getByRole('dialog', { name: 'New thread' }).getByText('No project', { exact: true }).click()
   await page.getByRole('textbox').first().waitFor()
 }

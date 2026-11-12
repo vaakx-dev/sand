@@ -5,7 +5,7 @@ import { picker } from '@sand/picker/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { MenuAction, Shell } from '@sand/ui-shell/contract'
 import { oneLine } from '@sand/util'
-import type { Thread, Threads } from '@sand/web-client/contract'
+import type { Projects, Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { renamePage } from '../palette/session'
 import { snoozeAction } from '../snooze/actions'
@@ -15,6 +15,7 @@ export interface MenuParts {
   ctx: Context
   kit: Kit
   threads: Threads
+  projects: Projects
   shell: Shell
 }
 

@@ -1,7 +1,7 @@
 import { draftRoute } from '@sand/chat/contract'
 import { composer } from '@sand/composer/contract'
 import type { Shell } from '@sand/ui-shell/contract'
-import type { Threads } from '@sand/web-client/contract'
+import type { Projects, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { chosen } from '../integrations/chosen'
 
@@ -9,6 +9,7 @@ export interface StartParts {
   ctx: Context
   shell: Shell
   threads: Threads
+  projects: Projects
 }
 
 export type Start = (path: string, device: string) => void

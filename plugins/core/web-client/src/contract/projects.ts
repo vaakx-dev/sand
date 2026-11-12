@@ -23,13 +23,25 @@ export interface ProjectGroup {
   locations: ProjectEntry[]
 }
 
+export interface ProjectRef {
+  path?: string
+  device?: string
+  project?: string | null
+  quick?: boolean
+}
+
+export interface ProjectShown {
+  name: string
+  icon?: ProjectLook
+  quick?: boolean
+}
+
 export interface Projects {
   list(): ProjectEntry[]
   groups(options?: { hidden?: boolean }): ProjectGroup[]
   get(id: string): ProjectGroup | undefined
   group(path: string, device: string): ProjectGroup | undefined
-  name(path: string, device: string): string
-  icon(path: string, device: string): ProjectLook | undefined
+  shown(ref: ProjectRef): ProjectShown
   groupIcon(group: ProjectGroup): ProjectLook | undefined
   place(device: string): ProjectPlace
   browse(path: string, device: string): Promise<FolderListing>

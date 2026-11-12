@@ -1,6 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
+import type { ProjectShown } from '@sand/web-client/contract'
 import type { Child } from '@vaakx-dev/vrui'
-import type { ProjectInfo, RowPart, RowThread } from '../contract'
+import type { RowPart, RowThread } from '../contract'
 
 const markSize = 14
 
@@ -9,7 +10,7 @@ export class RowLooks {
   private trails = new Map<string, () => Child[]>()
   private parts: RowPart[] = []
 
-  mark(kit: Kit, { name, icon }: ProjectInfo) {
+  mark(kit: Kit, { name, icon }: ProjectShown) {
     const key = `${name}\0${JSON.stringify(icon ?? null)}`
     const found = this.marks.get(key) ?? (() => kit.projectIcon(name, icon, markSize))
     this.marks.set(key, found)

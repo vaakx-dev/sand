@@ -1,16 +1,15 @@
 import { pcs } from '@sand/devices-contract'
-import { folderName } from '@sand/util'
-import { projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
+import type { ProjectEntry, ProjectGroup, ProjectShown } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { findGroup, quickName } from '../contract'
+import type { StartParts } from '../launch/start'
 
 export interface Place {
   id: string
-  name: string
+  shown: ProjectShown
   path: string
   device: string
   updated: number
-  group?: ProjectGroup
+  group: ProjectGroup
   away?: boolean
 }
 
@@ -23,13 +22,13 @@ export const otherLocations = (ctx: Context, group: ProjectGroup, device: string
     .filter(location => location.device !== device && usable(ctx, location))
     .filter((location, index, all) => all.findIndex(other => other.device === location.device) === index)
 
-const groupPlace = (ctx: Context, group: ProjectGroup, device: string): Place | undefined => {
+const groupPlace = ({ ctx, projects }: StartParts, group: ProjectGroup, device: string): Place | undefined => {
   const here = group.locations.find(location => location.device === device && !location.missing)
   const location = here ?? group.locations.find(location => usable(ctx, location))
   if (!location) return undefined
   return {
     id: group.id,
-    name: group.name || folderName(location.path),
+    shown: projects.shown({ path: location.path, device: location.device, project: group.id }),
     path: location.path,
     device: location.device,
     updated: group.updated,
@@ -38,25 +37,18 @@ const groupPlace = (ctx: Context, group: ProjectGroup, device: string): Place | 
   }
 }
 
-const quickPlace = (device: string): Place => ({ id: `${device}\0quick`, name: quickName, path: '', device, updated: 0 })
-
-export const currentPlace = (ctx: Context, threads: Threads): Place => {
-  const device = threads.device()
+const currentProject = ({ threads, projects }: StartParts) => {
   const current = threads.current()
-  const path = current?.info.kind === 'quick' ? '' : threads.cwd()
-  if (!path) return quickPlace(device)
-  const group = findGroup(ctx, path, device, current?.info.project)
-  return { id: group?.id ?? `${device}\0${path}`, name: group?.name || folderName(path), path, device, updated: group?.updated ?? 0, group }
+  if (!current || current.info.kind === 'quick') return undefined
+  return current.info.project ?? projects.group(current.info.cwd, current.device)?.id
 }
 
-export const places = (ctx: Context, threads: Threads): Place[] => {
-  const found = ctx.get(projects)
-  if (!found) return [currentPlace(ctx, threads)].filter(place => place.path)
-  const device = threads.device()
-  const here = currentPlace(ctx, threads).id
-  return found
+export const places = (parts: StartParts): Place[] => {
+  const device = parts.threads.device()
+  const here = currentProject(parts)
+  return parts.projects
     .groups()
-    .flatMap(group => groupPlace(ctx, group, device) ?? [])
+    .flatMap(group => groupPlace(parts, group, device) ?? [])
     .sort((a, b) => Number(b.id === here) - Number(a.id === here) || Number(a.away ?? false) - Number(b.away ?? false) || b.updated - a.updated)
 }
 
@@ -67,4 +59,4 @@ export const awayPcName = (ctx: Context, device: string) => {
 
 export const pcName = (ctx: Context, device: string) => ctx.get(pcs)?.name(device) ?? 'This PC'
 
-export const pcNames = (ctx: Context, place: Place) => [...new Set((place.group?.locations ?? [place]).map(location => pcName(ctx, location.device)))]
+export const pcNames = (ctx: Context, place: Place) => [...new Set(place.group.locations.map(location => pcName(ctx, location.device)))]
