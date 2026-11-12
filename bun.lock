@@ -2551,15 +2551,17 @@
       "name": "@sand/ui-kit",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/paths": "workspace:*",
         "@sand/project": "workspace:*",
+        "@sand/skills": "workspace:*",
         "@sand/ui-shell": "workspace:*",
+        "@sand/ui-theme": "workspace:*",
         "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "lucide": "^1.52.0",
       },
       "devDependencies": {
-        "@sand/ui-theme": "workspace:*",
         "playwright": "^1.64.1",
       },
     },

@@ -46,8 +46,11 @@ const themeVariables = (colors: Colors): [string, string][] =>
     ...Object.entries(group.values ?? {}),
   ])
 
+const roleVariables = (colors: Colors): [string, string][] =>
+  Object.entries(colors).flatMap(([role, shades]) => Object.entries(shades).flatMap(([shade, value]): [string, string][] => (value ? [[`--vrui-color-${role}-${shade}`, value]] : [])))
+
 export const rootRule = (colors: Colors, mode: string) =>
-  `:where(:root){color-scheme:${mode};${themeVariables(colors)
+  `:where(:root){color-scheme:${mode};${[...themeVariables(colors), ...roleVariables(colors)]
     .map(([name, value]) => `${name}:${value};`)
     .join('')}}`
 

@@ -27,7 +27,7 @@ interface ImageFile {
   size: number
 }
 
-const fullPath = (path: string, base: string) => {
+export const fullPath = (path: string, base: string) => {
   if (fileUrl.test(path)) return Bun.fileURLToPath(path)
   return isAbsolute(path) ? path : resolve(base, path)
 }
