@@ -1,11 +1,9 @@
-import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { modelSettings, type SessionSettings } from '@sand/model/contract'
 import { subModel } from '@sand/sub-model/contract'
 import type { AgentsContext } from './context'
 import type { AgentDefinition, AgentLimits, AgentMeta, AgentRequest, AgentResult } from './contract'
 import type { Resolve } from './layers'
-import { childSettings } from './settings'
 import { slots } from './slots'
 import { agentTitle } from './title'
 
@@ -33,9 +31,11 @@ export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: Ru
     return definition
   }
 
-  const parentSettings = (parent: Session): SessionSettings | undefined => {
-    const effective = ctx.get(modelSettings)?.effective(parent)
-    return effective && { model: effective.model, effort: effective.effort, speed: effective.speed }
+  const childSettings = (parent: Session, asked: SessionSettings) => {
+    const settings = ctx.get(modelSettings)
+    const inherited = settings?.effective(parent)
+    const matched = settings?.match(asked, inherited?.model)
+    return inherited && { model: inherited.model, effort: inherited.effort, speed: inherited.speed, ...matched }
   }
 
   const create = async (request: AgentRequest, definition: AgentDefinition | undefined, scope: AgentMeta) => {
@@ -43,10 +43,10 @@ export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: Ru
     const sub = ctx.get(subModel)
     const tier = request.model || definition?.model ? undefined : definition?.tier
     const own = definition ?? {}
-    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...own } : own
-    const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
+    const preset: SessionSettings = tier && sub?.has(tier) ? { ...sub.settings(tier), ...own } : own
+    const settings = childSettings(parent, { model: request.model ?? preset.model, effort: request.effort ?? preset.effort, speed: preset.speed })
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
-    if (settings) ctx.get(modelSettings)?.update(session, settings)
+    if (settings) ctx.get(modelSettings)?.change(session, settings)
     limits.give(session, scope)
     return session
   }

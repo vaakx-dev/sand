@@ -71,6 +71,9 @@ const updateInput = z.object({
     .optional()
     .describe('Move it into its own new git worktree and branch, taking its uncommitted changes. A thread in a turn, such as you, moves when the turn ends'),
   branch: z.string().min(1).optional().describe('A name for the new branch of its worktree (default: named from its work). Implies worktree'),
+  model: z.string().min(1).optional().describe('Switch it to this model, by id or name (see model_list). A thread in a turn, such as you, switches when the turn ends'),
+  effort: z.string().min(1).optional().describe("Its effort level, such as low, medium or high, if its model has effort levels"),
+  fast: z.boolean().optional().describe('Turn fast mode on or off, if its model has it'),
 })
 
 const waitInput = z.object({
@@ -140,12 +143,17 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof stopInput>,
   {
     name: 'thread_update',
-    description: 'Rename, pin, snooze or settle a thread, or move it into its own git worktree; returns the thread as thread_list shows it',
+    description: "Rename, pin, snooze or settle a thread, change its model, effort or fast mode, or move it into its own git worktree; returns the thread as thread_list shows it",
     input: updateInput,
     access: 'operate',
     group: group.name,
-    run: ({ thread, snoozeUntil, ...patch }, { call }) =>
-      call(threadUpdate, { session: thread, ...patch, ...(snoozeUntil !== undefined && { snoozed: snoozeUntil === null ? null : Date.parse(snoozeUntil) }) }),
+    run: ({ thread, snoozeUntil, fast, ...patch }, { call }) =>
+      call(threadUpdate, {
+        session: thread,
+        ...patch,
+        ...(snoozeUntil !== undefined && { snoozed: snoozeUntil === null ? null : Date.parse(snoozeUntil) }),
+        ...(fast !== undefined && { speed: fast ? 'fast' : 'normal' }),
+      }),
   } satisfies McpTool<typeof updateInput>,
   {
     name: 'history_read',

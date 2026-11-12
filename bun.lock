@@ -304,6 +304,20 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/agent/models-mcp": {
+      "name": "@sand/models-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/mcp-server": "workspace:*",
+        "@sand/model": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/orchestrator": {
       "name": "@sand/orchestrator",
       "version": "0.0.0",
@@ -2052,6 +2066,7 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/model-panel": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/skills": "workspace:*",
         "@sand/ui-kit": "workspace:*",
@@ -2942,6 +2957,8 @@
     "@sand/model-picker": ["@sand/model-picker@workspace:plugins/ui/shared/model-picker"],
 
     "@sand/model-setup": ["@sand/model-setup@workspace:plugins/ui/shared/model-setup"],
+
+    "@sand/models-mcp": ["@sand/models-mcp@workspace:plugins/agent/models-mcp"],
 
     "@sand/needs-you": ["@sand/needs-you@workspace:plugins/ui/shared/needs-you"],
 

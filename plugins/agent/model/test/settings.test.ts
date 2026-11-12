@@ -1,4 +1,4 @@
-import { defaultsSet, modelSettings, settingsSet } from '@sand/model/contract'
+import { defaultsSet, modelSettings } from '@sand/model/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, beforeEach, expect, test } from 'bun:test'
 
@@ -52,16 +52,9 @@ test('a default change in the middle of a turn leaves the turn on its model', as
 
 test('a model picked during a turn applies from the next turn', async () => {
   const chat = sand.chat(opus)
-  duringGate(() => sand.ask(settingsSet, { session: chat.id, patch: { model: deepseek } }))
+  duringGate(() => sand.app.get(modelSettings)?.change(chat, { model: deepseek }))
 
   expect((await sand.turns.run(chat, 'one')).text).toBe('A one')
   expect(effective(chat.id)).toBe(deepseek)
   expect((await sand.turns.run(chat, 'two')).text).toBe('B one')
-})
-
-test('a turn runs every step on the model it started with', async () => {
-  const chat = sand.chat(opus)
-  duringGate(() => sand.app.get(modelSettings)?.update(chat, { model: deepseek }))
-
-  expect((await sand.turns.run(chat, 'one')).text).toBe('A one')
 })

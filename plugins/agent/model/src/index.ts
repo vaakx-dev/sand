@@ -7,9 +7,8 @@ import { createChoices } from './choices'
 import { modelSettings } from './contract'
 import { createDefaults } from './defaults'
 import { canonical } from './effective'
-import { flagSettings } from './flags'
+import { matchSettings } from './match'
 import { serveSettings } from './serve'
-import { updateSettings } from './settings'
 
 export default definePlugin({
   name: 'model',
@@ -24,8 +23,8 @@ export default definePlugin({
       select: choices.select,
       state: choices.state,
       defaults: () => canonical(current(), defaults.get()),
-      update: updateSettings,
-      flags: flags => flagSettings(flags, current()),
+      change: choices.change,
+      match: (asked, near) => matchSettings(asked, current(), near),
     })
     ctx.on(turnEnd, session => choices.settle(session))
     ctx.watch(server, found => (found ? serveSettings(ctx, found, choices, defaults) : undefined))

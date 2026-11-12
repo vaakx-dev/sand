@@ -1,5 +1,6 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessionEntry, sessions, type Sessions } from '@sand/chats/contract'
+import type { Actor } from '@sand/host-hub/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
@@ -14,12 +15,13 @@ import {
   modelSettingsChange,
   modelSettingsDefaults,
   settingsChange,
+  modelsList,
   settingsGet,
-  settingsSet,
   type SettingsPatch,
 } from './contract'
 import type { Defaults } from './defaults'
 import { canonical } from './effective'
+import { modelRows } from './list'
 import { knownPatch } from './settings'
 
 const hellos = (ctx: Context, server: Server, defaults: Defaults) =>
@@ -30,13 +32,19 @@ const hellos = (ctx: Context, server: Server, defaults: Defaults) =>
     server.hello(helloDefaults, () => canonical(ctx.get(llm), defaults.get())),
   )
 
+const callerThread = (actor: Actor | undefined) => (actor?.owner === 'thread' ? actor.id : undefined)
+
 const serveThreadSettings = (ctx: Context, server: Server, choices: Choices, threads: Sessions) => {
   const shareSettings = (id: string) => {
     const session = threads.open(id)
     if (session) server.broadcast(settingsChange, [id, choices.state(session)])
   }
+  const currentModel = (id: string | undefined) => {
+    const session = id === undefined ? undefined : threads.open(id)
+    return session && choices.effective(session).model
+  }
   return joinDisposers(
-    server.handle(settingsSet, ({ session, patch }) => choices.change(threads.require(session), knownPatch(patch))),
+    server.handle(modelsList, ({ thread }, { actor }) => modelRows(ctx.get(llm), currentModel(thread ?? callerThread(actor)))),
     ctx.on(modelSettingsChange, session => shareSettings(session.id)),
     ctx.on(sessionEntry, (session, entry) => {
       if (entry.type === 'settings') shareSettings(session.id)

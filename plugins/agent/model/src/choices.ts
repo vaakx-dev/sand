@@ -40,6 +40,7 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
   }
 
   const change = (session: Session, patch: SettingsPatch) => {
+    if (!Object.keys(patch).length) return
     const current = settingsOf(session)
     if (!running(session)) {
       pending.delete(session.id)

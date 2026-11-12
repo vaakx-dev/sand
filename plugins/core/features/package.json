@@ -62,7 +62,7 @@
       },
       "threads-mcp": {
         "label": "Threads for outside agents",
-        "summary": "Outside agents start, message and read threads and manage projects over MCP",
+        "summary": "Outside agents start, message and read threads, manage projects and list models over MCP",
         "parent": "threads",
         "needs": [
           "mcp-server"

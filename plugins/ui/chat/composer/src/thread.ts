@@ -1,6 +1,7 @@
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
-import { settingsSet, type EffectiveSettings, type SessionSettings, type SettingsPatch } from '@sand/model/contract'
+import type { EffectiveSettings, SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelButton } from '@sand/model-panel/contract'
+import { threadUpdate } from '@sand/orchestrator/contract'
 import { pulse } from '@sand/reactive'
 import { errorMessage } from '@sand/util'
 import { models, modelsChange, outbox, outboxChange, threadChange, threadSelect } from '@sand/web-client/contract'
@@ -33,7 +34,7 @@ export const nextSettings = (ctx: ComposerContext, picked: SessionSettings): Ses
 export const chooseSettings = (ctx: ComposerContext, model: Model) => (patch: SettingsPatch) => {
   const session = ctx.threads.current()?.id
   if (!session) return model.choose(patch)
-  void ctx.get(wire)?.call(settingsSet, { session, patch }).catch(error => model.fail(errorMessage(error)))
+  void ctx.get(wire)?.call(threadUpdate, { session, ...patch }).catch(error => model.fail(errorMessage(error)))
 }
 
 export const threadTarget = (ctx: ComposerContext): Target => {

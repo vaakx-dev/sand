@@ -1,0 +1,24 @@
+{
+  "name": "@sand/models-mcp",
+  "version": "0.0.0",
+  "description": "sand's model tools, defined once for its own threads and bots and for outside agents over MCP: list the models they can use",
+  "type": "module",
+  "sand": {
+    "feature": "threads-mcp",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Model tools",
+    "summary": "Lets your threads, your bots and outside agents list the models they can use"
+  },
+  "dependencies": {
+    "@sand/mcp-server": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

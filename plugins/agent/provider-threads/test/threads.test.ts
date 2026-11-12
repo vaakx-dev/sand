@@ -21,7 +21,7 @@ const sent = (source: string) => sand.requests(source).map(uncached)
 
 const api = (id: string, replies: Source['replies']): Source => ({ id, api: 'anthropic', models: ['m'], replies })
 
-const use = (chat: Session, model: string) => sand.app.get(modelSettings)!.update(chat, { model })
+const use = (chat: Session, model: string) => sand.app.get(modelSettings)!.change(chat, { model })
 
 const query = (sql: string) => sand.app.get(ledger)!.db.query(sql).all()
 
