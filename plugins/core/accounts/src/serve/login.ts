@@ -60,7 +60,7 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
       }),
     ),
     server.handle(loginStart, withState(({ account, anyway }) => start(planId(account), anyway === true))),
-    server.handle(loginFinish, withState(({ account, code }) => login.finish(planId(account), code))),
+    server.handle(loginFinish, withState(({ account, code }) => login.finish(planId(account), code.trim()))),
     server.handle(loginKey, withState(({ account, key, baseUrl }) => login.key(account, key.trim(), (baseUrl ?? '').trim()))),
     server.handle(loginServer, withState(draft => login.server(draft))),
     server.handle(loginDetect, () => login.detect()),

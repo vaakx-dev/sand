@@ -98,6 +98,20 @@
       "name": "@sand/vault",
       "version": "0.0.0",
     },
+    "plugins/agent/accounts-mcp": {
+      "name": "@sand/accounts-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/ask": {
       "name": "@sand/ask",
       "version": "0.0.0",
@@ -153,6 +167,20 @@
       "devDependencies": {
         "@sand/harness": "workspace:*",
         "@sand/replay": "workspace:*",
+      },
+    },
+    "plugins/agent/connections-mcp": {
+      "name": "@sand/connections-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/connections": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
       },
     },
     "plugins/agent/context": {
@@ -2742,6 +2770,8 @@
 
     "@sand/accounts": ["@sand/accounts@workspace:plugins/core/accounts"],
 
+    "@sand/accounts-mcp": ["@sand/accounts-mcp@workspace:plugins/agent/accounts-mcp"],
+
     "@sand/advanced": ["@sand/advanced@workspace:plugins/ui/shared/advanced"],
 
     "@sand/ask": ["@sand/ask@workspace:plugins/agent/ask"],
@@ -2823,6 +2853,8 @@
     "@sand/config": ["@sand/config@workspace:plugins/core/config"],
 
     "@sand/connections": ["@sand/connections@workspace:plugins/connections/connections"],
+
+    "@sand/connections-mcp": ["@sand/connections-mcp@workspace:plugins/agent/connections-mcp"],
 
     "@sand/context": ["@sand/context@workspace:plugins/agent/context"],
 

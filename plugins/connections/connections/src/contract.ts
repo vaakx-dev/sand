@@ -128,18 +128,21 @@ export const connectionFlowWire = wireEvent<FlowEnd>('connection.flow')
 
 const kind = lazy(() => z.string().min(1))
 
-export const connectionState = request('connections.state', { input: () => z.object({}), output: type<ConnectionState>() })
+export const connectionState = request('connections.state', { input: () => z.object({}), output: type<ConnectionState>(), callers: 'any' })
 export const connectionClient = request('connections.client', {
   input: () => z.object({ kind: kind(), id: z.string().trim().min(1).max(500), secret: z.string().trim().max(500).optional() }),
   output: type<ConnectionState>(),
+  callers: 'any',
 })
 export const connectionStart = request('connections.start', {
   input: () => z.object({ kind: kind(), readOnly: z.boolean().optional() }),
   output: type<{ flow: string; url: string }>(),
+  callers: 'any',
 })
-export const connectionCancel = request('connections.cancel', { input: () => z.object({ flow: z.string() }), output: type<boolean>() })
+export const connectionCancel = request('connections.cancel', { input: () => z.object({ flow: z.string() }), output: type<boolean>(), callers: 'any' })
 export const connectionSave = request('connections.save', {
   input: () => z.object({ kind: kind(), values: z.record(z.string(), z.string().max(4000)) }),
   output: type<Account>(),
+  callers: 'any',
 })
-export const connectionRemove = request('connections.remove', { input: () => z.object({ account: z.string() }), output: type<ConnectionState>() })
+export const connectionRemove = request('connections.remove', { input: () => z.object({ account: z.string() }), output: type<ConnectionState>(), callers: 'any' })

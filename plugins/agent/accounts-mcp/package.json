@@ -1,0 +1,24 @@
+{
+  "name": "@sand/accounts-mcp",
+  "version": "0.0.0",
+  "description": "sand's model account tools, defined once for its own threads and bots and for outside agents over MCP: list accounts, sign in and out, save API keys, add local servers and share accounts with your other PCs",
+  "type": "module",
+  "sand": {
+    "feature": "models",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Model account tools",
+    "summary": "Lets your threads, your bots and outside agents sign in to model accounts, save API keys and add local servers, without ever seeing a key or token"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}
