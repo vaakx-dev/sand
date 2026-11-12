@@ -1,7 +1,6 @@
 import type { Actor } from '@sand/host-hub/contract'
-import { agentLimits } from '@sand/subagents/contract'
 import type { OrchestratorContext } from './context'
-import { failure } from './contract'
+import { agentLimits, failure } from './contract'
 import { findThread } from './find'
 import type { Adopt } from './start'
 

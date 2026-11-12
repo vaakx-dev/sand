@@ -146,10 +146,12 @@ export class Store {
   changed(id?: string, list = false) {
     const thread = id ? this.threads.get(id) : undefined
     if (thread) {
-      thread.running = thread.turn || thread.jobs.size > 0
+      const was = thread.running
+      thread.running = thread.turn || thread.jobs.size > 0 || this.runningChild(thread.id)
       thread.version++
       this.dirty.add(thread.id)
       for (const watcher of this.watchers) watcher.changed(thread.id)
+      if (thread.running !== was && thread.info.parent) this.changed(thread.info.parent)
     }
     this.listed ||= list
     this.frame ??= nextFrame(() => this.flush())
@@ -157,6 +159,11 @@ export class Store {
 
   dispose() {
     this.frame?.()
+  }
+
+  private runningChild(id: string) {
+    for (const thread of this.threads.values()) if (thread.info.parent === id && thread.running) return true
+    return false
   }
 
   private relisted(id: string) {

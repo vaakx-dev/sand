@@ -1,5 +1,5 @@
 import type { Session } from '@sand/chats/contract'
-import type { AgentMeta } from './contract'
+import type { AgentMeta } from '@sand/orchestrator/contract'
 
 export type Meta = (session: Session) => AgentMeta | undefined
 

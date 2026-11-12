@@ -32,7 +32,7 @@ export const createParking = (deps: WorktreeDeps) => {
   const parking = new Map<string, Promise<void>>()
 
   const settled = (session: Session) => {
-    if (session.kind !== 'thread' || !session.settled) return
+    if (session.kind === 'quick' || !session.settled) return
     const run = parkNow(deps, session)
       .catch(error => deps.report(new Error(`Kept the worktree of a settled thread: ${errorMessage(error)}`)))
       .finally(() => parking.delete(session.id))
@@ -40,7 +40,7 @@ export const createParking = (deps: WorktreeDeps) => {
   }
 
   const resume = async (session: Session) => {
-    if (session.kind !== 'thread') return
+    if (session.kind === 'quick') return
     await parking.get(session.id)
     await resumeNow(deps, session)
   }

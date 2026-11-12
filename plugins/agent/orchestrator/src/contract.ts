@@ -54,6 +54,7 @@ export interface StartInput {
   origin: TurnOrigin
   clientRequestId: string
   from?: ConversationRef
+  subagent?: { call: string }
 }
 
 export interface Notice {
@@ -106,6 +107,20 @@ export interface Orchestrator {
 }
 
 export const orchestrator = service<Orchestrator>('orchestrator')
+
+export interface AgentMeta {
+  name?: string
+  depth: number
+  tools?: string[]
+}
+
+export interface AgentLimits {
+  child(parent: Session | undefined, name?: string, tools?: string[]): AgentMeta
+  give(session: Session, meta: AgentMeta): void
+  covers(caller: Session, target: Session): boolean
+}
+
+export const agentLimits = service<AgentLimits>('agentLimits')
 
 export const threadStarted = event<(thread: string, starter: ConversationRef) => void>('thread.started')
 

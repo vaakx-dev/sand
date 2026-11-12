@@ -22,7 +22,7 @@ const input = z.object({
   until: z
     .string()
     .optional()
-    .describe("A case-insensitive regex for background commands' output, like 'listening on|ready'. Returns as soon as their output matches it or one of them exits"),
+    .describe("A case-insensitive regex for their output, like 'listening on|ready'. Returns as soon as their output matches it or one of them exits"),
   timeout_ms: z.number().int().positive().max(maxTimeout).optional().describe(`Give up waiting after this long (default ${defaultTimeout}, max ${maxTimeout})`),
 })
 
@@ -44,7 +44,7 @@ const settle = (ctx: JobsContext, wait: Wait, session: Session, timeout: number,
   new Promise<string>(resolve => {
     const { entries, pattern } = wait
     const spoke = () => ctx.turns.pending(session).some(item => item.kind === 'steer' && item.origin === 'user')
-    const matches = ({ job, spec }: Entry, length: number) => !!pattern && job.status === 'running' && pattern.test(Bun.stripANSI(spec.output?.(length) ?? ''))
+    const matches = ({ job, spec }: Entry, length: number) => !!pattern && job.status === 'running' && pattern.test(Bun.stripANSI(spec.output(length)))
     const matched = ({ job }: Entry) => `${job.id} output matched; it keeps running.`
     const finish = (reason: string) => {
       clearTimeout(timer)
@@ -78,7 +78,7 @@ const settle = (ctx: JobsContext, wait: Wait, session: Session, timeout: number,
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    "Wait for background jobs to finish and get their results: an agent's report, or a command's exit code and last output. Set any to return at the first finished job, so you can review each report as it lands and wait again on the rest. Set until to a regex to return the moment a background command's output matches it, like 'listening on|ready' right after starting a server with run_background, instead of sleeping and polling. Returns early on timeout or when the user sends a message; jobs keep running then. Jobs whose results it returns send no <task-notification>.",
+    "Wait for background commands to finish and get their exit code and last output. Set any to return at the first finished one, then wait again on the rest. Set until to a regex to return the moment a background command's output matches it, like 'listening on|ready' right after starting a server with run_background, instead of sleeping and polling. Returns early on timeout or when the user sends a message; jobs keep running then. Jobs whose results it returns send no <task-notification>.",
   group,
   input,
   effect: 'read',
@@ -88,7 +88,6 @@ export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): To
     const session = ctx.sessions.require(conversation.id)
     const entries = jobs.map(id => store.own(session.id, id))
     const pattern = until === undefined ? undefined : new RegExp(until, 'i')
-    if (pattern && !entries.some(({ spec }) => spec.output)) throw new Error('until matches the output of background commands, and none of these jobs is one')
     const stopProgress = showProgress(ctx, entries, progress)
     const reason = await settle(ctx, { entries, early: any || !!pattern, pattern }, session, timeout_ms, signal)
     stopProgress()
@@ -96,10 +95,10 @@ export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): To
     const reports = entries.map(({ job, spec, output }) => {
       if (job.status !== 'running') {
         delivery.withdraw(job.id)
-        return `${jobLine(ctx.sessions, job)}\n${clipResult(output ?? '')}`
+        return `${jobLine(job)}\n${clipResult(output ?? '')}`
       }
-      if (pattern && spec.output) return `${jobLine(ctx.sessions, job)}\n${spec.output(matchedTail)}`
-      return jobLine(ctx.sessions, job)
+      if (pattern) return `${jobLine(job)}\n${spec.output(matchedTail)}`
+      return jobLine(job)
     })
     return [reason, ...reports].join('\n\n')
   },

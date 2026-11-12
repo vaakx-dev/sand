@@ -115,6 +115,7 @@ export const threadTools: McpTool[] = [
     name: 'thread_start',
     description: [
       'Start a new sand thread with a first message: user-facing work that the user sees in their thread list and can join. It works on its own. Returns its id at once.',
+      'Start one when the user asks for a thread; to hand off work of your own, start a subagent with the agent tool instead.',
       'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
       `${reported}; otherwise use thread_wait`,
     ].join(' '),

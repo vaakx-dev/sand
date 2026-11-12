@@ -1,7 +1,7 @@
 {
   "name": "@sand/subagents",
   "version": "0.0.0",
-  "description": "Sub-agents: the agent tool, agent definitions, tool limits and the models tool",
+  "description": "Subagents: the agent tool, agent definitions, tool limits and the models tool",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -12,13 +12,14 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Agents",
-    "summary": "Sub-agents the agent can start as background jobs"
+    "summary": "Subagents the agent starts to work on a task in their own chat"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/jobs": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/reactive": "workspace:*",

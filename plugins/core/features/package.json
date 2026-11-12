@@ -14,7 +14,7 @@
     "features": {
       "threads": {
         "label": "Threads",
-        "summary": "Work with agents in your project folders, with sub-agents and background jobs",
+        "summary": "Work with agents in your project folders, with subagents and background commands",
         "needs": [
           "engine",
           "models",

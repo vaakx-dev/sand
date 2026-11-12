@@ -10,16 +10,13 @@ interface Run {
   started: number
 }
 
-const looseHelpers = (threads: Threads, jobOrigins: Set<string>) =>
-  threads.list().filter(thread => thread.info.kind === 'agent' && thread.running && !(thread.info.origin && jobOrigins.has(thread.info.origin)))
-
 const runningRuns = (ctx: Context, threads: Threads): Run[] => {
-  const running = (ctx.get(jobs)?.list() ?? []).filter(job => job.status === 'running')
-  const origins = new Set(running.flatMap(job => job.origin ?? []))
   const ownerOf = (thread: Thread | undefined) => visibleAncestor(threads, thread)?.id
+  const commands = (ctx.get(jobs)?.list() ?? []).filter(job => job.status === 'running')
+  const subagents = threads.list().filter(thread => thread.info.kind === 'agent' && thread.turn)
   return [
-    ...running.map(job => ({ owner: ownerOf(threads.get(job.parent)) ?? job.parent, started: job.started })),
-    ...looseHelpers(threads, origins).map(thread => ({ owner: ownerOf(thread), started: thread.started ?? thread.info.created })),
+    ...commands.map(job => ({ owner: ownerOf(threads.get(job.parent)) ?? job.parent, started: job.started })),
+    ...subagents.map(thread => ({ owner: ownerOf(thread), started: thread.started ?? thread.info.created })),
   ]
 }
 

@@ -17,7 +17,7 @@ export const threadIn = async (deps: WorktreeDeps, input: WorktreeThreadInput): 
   const local = await repoAt(deps.repos, input.cwd)
   await deps.store.ready()
   const record = await deps.queue(local.main, () => newRecord(deps, local.main, local.defaultBranch, input))
-  const session = await startThread(deps, record, local.main)
+  const session = await startThread(deps, record, local.main, input)
   record.sessions = [session.id]
   if (record.setup) record.setup.session = session.id
   await deps.setups.start(record)
@@ -26,9 +26,10 @@ export const threadIn = async (deps: WorktreeDeps, input: WorktreeThreadInput): 
   return infoOf(session)
 }
 
-const startThread = async (deps: WorktreeDeps, record: WorktreeRecord, main: string) => {
+const startThread = async (deps: WorktreeDeps, record: WorktreeRecord, main: string, { open }: WorktreeThreadInput) => {
+  const project = deps.projectOf(main)
   try {
-    return deps.sessions.thread(record.path, { project: deps.projectOf(main) })
+    return open ? open(record.path, project) : deps.sessions.thread(record.path, { project })
   } catch (error) {
     throw await rolledBack(error, () => deps.queue(main, () => discardWorktree(deps, record)))
   }

@@ -88,7 +88,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
 
   const topLevel = (id: string) => {
     const session = sessions.require(id)
-    if (session.kind === 'agent') throw new Error(`Chat ${id} is a sub-agent`)
+    if (session.kind === 'agent') throw new Error(`Chat ${id} is a subagent`)
     return session
   }
 
@@ -112,10 +112,8 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
       const id = Bun.randomUUIDv7()
       return create({ id, cwd: tasks.folder(id), project: null, kind: 'quick' })
     },
-    agent({ parent, title, origin }) {
-      const { cwd, project } = sessions.require(parent)
-      return create({ cwd, project, kind: 'agent', parent, title, origin: origin ?? null })
-    },
+    agent: ({ parent, cwd, project, title, origin }) =>
+      create({ cwd, project: project === undefined ? projectOf(cwd) : checked(project), kind: 'agent', parent: parent ?? null, title, origin: origin ?? null }),
     children,
     update(id, patch) {
       const session = sessions.require(id)
@@ -126,13 +124,13 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
       if (session.settled !== settled) hooks.settle(session)
       return session
     },
-    relocate: (id, relocation) => relocate(topLevel(id), relocation),
+    relocate: (id, relocation) => relocate(sessions.require(id), relocation),
     rename(id, title) {
       sessions.update(id, { title })
     },
     pin: (id, pinned) => sessions.update(topLevel(id).id, pinPatch(pinned)),
     async settle(id, settled) {
-      const session = topLevel(id)
+      const session = sessions.require(id)
       if (!settled) return sessions.update(id, { settled: null })
       await close(session)
       return sessions.update(id, { settled: Date.now(), pinned: false, snoozed: null })

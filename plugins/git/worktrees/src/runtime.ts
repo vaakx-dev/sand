@@ -89,7 +89,7 @@ export default definePlugin({
     ctx.on(sessionSettle, parking.settled)
     ctx.on(turnPrompt, (_content, session) => parking.resume(session).catch(report), { priority: 100 })
     ctx.on(turnStart, (session, prompt) => {
-      if (session.kind !== 'thread') return
+      if (session.kind === 'quick') return
       nameOnFirstTurn(deps, session, textOf(prompt.content)).catch(error =>
         report(new Error(`Kept the temporary branch name in ${session.cwd}: ${errorMessage(error)}`)),
       )
