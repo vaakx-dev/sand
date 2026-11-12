@@ -17,6 +17,8 @@ export interface DropdownProps {
   class?: ClassValue
   menuClass?: ClassValue
   flat?: boolean
+  width?: string
+  open?: Sig<boolean>
 }
 
 const edges: Record<Edge, string> = { left: 'left-0', right: 'right-0' }
@@ -48,8 +50,9 @@ const shiftOnScreen = (node: HTMLElement, shift: number) => {
   return Math.max(margin, Math.min(base, innerWidth - width - margin)) - base
 }
 
-export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus = false, class: extra, menuClass, flat }: DropdownProps) => {
-  const open = sig(false)
+const sized = (width?: string) => (width ? { width, maxWidth: `calc(100vw - ${margin * 2}px)` } : {})
+
+export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus = false, class: extra, menuClass, flat, width, open = sig(false) }: DropdownProps) => {
   const close = () => open.set(false)
   const anchor: HTMLElement = div(
     { class: ['relative flex min-w-0', extra], onMouseDown: keepFocus ? preventThen() : undefined },
@@ -63,8 +66,8 @@ export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus =
         close,
         {
           flat,
-          class: [edges[edge], 'w-max max-w-80 overflow-y-auto', menuClass],
-          style: () => ({ ...sides[side.get()], translate: `${shift.get()}px 0`, maxHeight: room.get() === undefined ? undefined : `${room.get()}px` }),
+          class: [edges[edge], width ? 'overflow-y-auto' : 'w-max max-w-80 overflow-y-auto', menuClass],
+          style: () => ({ ...sides[side.get()], ...sized(width), translate: `${shift.get()}px 0`, maxHeight: room.get() === undefined ? undefined : `${room.get()}px` }),
           onMount: node => {
             onRaf(() => {
               const chosen = sideFor(placement, anchor, node.scrollHeight)

@@ -12,7 +12,7 @@ export interface Models {
   defaults(): SessionSettings
   state(thread?: string): SettingsState | undefined
   settings(thread?: string): EffectiveSettings | undefined
-  label(settings: EffectiveSettings): string
+  label(settings: SessionSettings): string
   summary(settings: SessionSettings): string
   describe(thread?: string): string | undefined
 }

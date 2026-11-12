@@ -1,5 +1,4 @@
 import {
-  type EffectiveSettings,
   helloDefaults,
   helloLevels,
   helloModels,
@@ -87,23 +86,17 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
     return known
   }
 
-  const labelOn = (device: string, settings: EffectiveSettings) =>
-    [
-      infoOn(device, settings.model)?.label ?? settings.model,
-      catalogOf(device).levels.find(level => level.id === settings.effort)?.label,
-      settings.speed === 'fast' && 'Fast',
-    ]
+  const labelOn = (device: string, { model, effort, speed }: SessionSettings) =>
+    [infoOn(device, model)?.label ?? model ?? 'Choose a model', catalogOf(device).levels.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
       .filter(Boolean)
-      .join(' · ')
+      .join(' � ')
 
   const summary = (settings: SessionSettings) => {
-    const catalog = catalogOf()
-    const model = settings.model ?? catalog.defaults.model
+    const model = settings.model ?? catalogOf().defaults.model
+    if (!model) return 'no model chosen'
     const known = infoOn(store.device(), model)
     const effort = settings.effort && known?.efforts.includes(settings.effort) ? settings.effort : undefined
-    return [known?.label ?? model ?? 'no model chosen', catalog.levels.find(level => level.id === effort)?.label, settings.speed === 'fast' && known?.fast && 'Fast']
-      .filter(Boolean)
-      .join(' · ')
+    return labelOn(store.device(), { model, ...(effort && { effort }), ...(settings.speed === 'fast' && known?.fast && { speed: 'fast' }) })
   }
 
   return {

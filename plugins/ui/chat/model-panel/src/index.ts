@@ -19,9 +19,12 @@ export default definePlugin({
     const changes = modelChanges(ctx)
     const slots = createSlots()
 
-    ctx.provide(modelButtonService, modelButton(ctx, changes))
+    const button = modelButton(ctx, changes)
+    ctx.provide(modelButtonService, button)
     ctx.provide(modelTargetsService, modelTargets())
-    ctx.watch(paletteService, palette => (palette ? ctx.watch(composerService, composer => composer && palette.source(modelSource(ctx, composer))) : undefined))
+    ctx.watch(paletteService, palette =>
+      palette ? ctx.watch(composerService, composer => composer && palette.source(modelSource(ctx, composer, () => void button.open()))) : undefined,
+    )
     ctx.provide(modelDefaults, { slot: slots.add })
     ctx.watch(settingsService, settings =>
       settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', group: 'agents', order: 20, render: () => modelsPage(ctx, changes, slots) }),

@@ -2,6 +2,7 @@ import { botPatch, type BotPatch, type BotSummary, type Computer, type ModelPoli
 import { pcs } from '@sand/devices-contract'
 import { modelPicker, type PickerTarget } from '@sand/model-picker/contract'
 import { dollars } from '@sand/util'
+import { models as modelsService } from '@sand/web-client/contract'
 import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 import { applyChoice, effective } from '../models'
 import type { Parts } from '../parts'
@@ -15,10 +16,8 @@ const tiers: { tier: Tier; title: string; detail: string }[] = [
   { tier: 'quick', title: 'Quick model', detail: 'Small jobs, like summaries and titles' },
 ]
 
-const plainChoice = (parts: Parts, bot: BotSummary | undefined, tier: Tier) => {
-  const { model, effort } = effective(bot?.models[tier] ?? {}, parts.defaults.get())
-  return [model ?? 'Default model', effort].filter(Boolean).join(' · ')
-}
+const plainChoice = (parts: Parts, bot: BotSummary | undefined, tier: Tier) =>
+  parts.ctx.get(modelsService)?.label(effective(bot?.models[tier] ?? {}, parts.defaults.get())) ?? ''
 
 const modelRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void, { tier, title, detail }: (typeof tiers)[number]) => {
   const { kit } = parts.ctx
@@ -33,7 +32,7 @@ const modelRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void, { tie
       if (models) save({ models: { ...models, [tier]: applyChoice(models[tier], patch) } })
     },
   })
-  return kit.settingsRow({ title, detail }, picker ? picker.button(target(picker), title) : kit.metaLine(() => plainChoice(parts, bot(), tier)))
+  return kit.settingsRow({ title, detail }, picker ? picker.button(target(picker), { label: title }) : kit.metaLine(() => plainChoice(parts, bot(), tier)))
 }
 
 interface ComputerChoice {

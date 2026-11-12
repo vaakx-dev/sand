@@ -3,7 +3,7 @@ import { defaultsSet, type SettingsPatch } from '@sand/model/contract'
 import type { PickerTarget } from '@sand/model-picker/contract'
 import type { Page } from './page'
 
-const save = (page: Page, patch: SettingsPatch) => void page.run(defaultsSet, { patch })
+const save = (page: Page, patch: SettingsPatch) => void page.run(() => page.ctx.wire.call(defaultsSet, { patch }))
 
 export const makeDefault = (page: Page, model: ModelInfo) => save(page, { model: model.id })
 
@@ -16,7 +16,7 @@ export const defaultsSection = (page: Page) => {
   const { settingsRow, settingsSection } = page.ctx.kit
   return settingsSection(
     { title: 'Defaults' },
-    settingsRow({ title: 'Model' }, page.ctx.modelPicker.button(defaultsTarget(page), 'Default model')),
+    settingsRow({ title: 'Model' }, page.ctx.modelPicker.button(defaultsTarget(page), { label: 'Default model' })),
     page.slots.host(),
   )
 }

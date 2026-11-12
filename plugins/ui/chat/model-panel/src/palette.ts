@@ -1,8 +1,7 @@
 import type { ModelInfo } from '@sand/accounts/contract'
 import type { Picked } from '@sand/model-picker/contract'
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
-import { sourceName } from '@sand/model-picker/contract'
-import { matching, tokens } from '@sand/util'
+import { matching } from '@sand/util'
 import type { PanelContext } from './context'
 import type { ModelTarget } from './contract'
 
@@ -11,26 +10,17 @@ interface Row {
   words: string
 }
 
-const modelRows = (ctx: PanelContext, target: ModelTarget, shown?: Picked): Row[] => {
-  const defaults = ctx.models.defaults()
-  const sources = ctx.models.sources()
-  return ctx.models.list().map(model => {
-    const source = sources.find(known => known.id === model.source)
-    const from = source ? sourceName(source) : undefined
-    const detail = [model.id === shown?.model && 'current', model.id === defaults.model && 'default', model.context ? tokens(model.context) : undefined]
-    return {
-      item: {
-        id: `model:${model.id}`,
-        group: 'Model',
-        icon: 'sparkles',
-        label: `Use ${model.label}`,
-        detail: detail.filter(Boolean).join(' · '),
-        run: () => target.choose({ model: model.id }),
-      },
-      words: `model ${model.id} ${model.label} ${from ?? ''}`,
-    }
-  })
-}
+const changeRow = (ctx: PanelContext, open: () => void, shown: Picked): Row => ({
+  item: {
+    id: 'model:change',
+    group: 'Model',
+    icon: 'sparkles',
+    label: 'Change model',
+    detail: ctx.models.label(shown),
+    run: open,
+  },
+  words: `model change switch ${ctx.models.label(shown)}`,
+})
 
 const effortRows = (ctx: PanelContext, target: ModelTarget, info: ModelInfo, shown?: Picked): Row[] =>
   ctx.models
@@ -62,18 +52,18 @@ const fastRow = (target: ModelTarget, shown?: Picked): Row => {
   }
 }
 
-const rows = (ctx: PanelContext, target: ModelTarget): Row[] => {
+const rows = (ctx: PanelContext, target: ModelTarget, open: () => void): Row[] => {
   const shown = ctx.modelPicker.resolve(target.settings())
   const info = ctx.models.info(shown.model)
-  return [...modelRows(ctx, target, shown), ...(info ? effortRows(ctx, target, info, shown) : []), ...(info?.fast ? [fastRow(target, shown)] : [])]
+  return [changeRow(ctx, open, shown), ...(info ? effortRows(ctx, target, info, shown) : []), ...(info?.fast ? [fastRow(target, shown)] : [])]
 }
 
-export const modelSource = (ctx: PanelContext, target: ModelTarget): PaletteSource => ({
+export const modelSource = (ctx: PanelContext, target: ModelTarget, open: () => void): PaletteSource => ({
   id: 'model',
   order: 15,
   items(query) {
     if (query.startsWith('/') || !query.trim()) return []
-    const all = rows(ctx, target)
+    const all = rows(ctx, target, open)
     return matching(
       all.map(row => `${row.item.label} ${row.words}`),
       query,

@@ -1,6 +1,6 @@
 import type { wire } from '@sand/devices-contract'
 import { firstRun, type FirstRun } from '@sand/features/contract'
-import { defaultsSet } from '@sand/model/contract'
+import { defaultsSet, type SessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
 import type { models } from '@sand/web-client/contract'
 import { derive, sig } from '@vaakx-dev/vrui'
@@ -14,7 +14,7 @@ const setupSteps = 2
 
 export const setupState = (ctx: SetupContext) => {
   const step = sig<SetupStep | undefined>(undefined)
-  const model = sig<string | undefined>(undefined)
+  const choice = sig<SessionSettings>({})
   const busy = sig(false)
   const error = sig('')
   const run = sig<FirstRun | undefined>(undefined)
@@ -34,19 +34,22 @@ export const setupState = (ctx: SetupContext) => {
   }
 
   const start = () => {
-    model.set(ctx.models.defaults().model)
+    choice.set(ctx.models.defaults())
     error.set('')
-    if (!model.get()) return step.set('model')
+    if (!choice.get().model) return step.set('model')
     onward()
   }
 
+  const choose = ({ model, effort, speed }: SettingsPatch) =>
+    choice.update(current => ({ ...current, ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }))
+
   const saveModel = async () => {
-    const id = model.get()
-    if (!id) return
+    const patch = choice.get()
+    if (!patch.model) return
     busy.set(true)
     error.set('')
     try {
-      await ctx.wire.call(defaultsSet, { patch: { model: id } })
+      await ctx.wire.call(defaultsSet, { patch })
       finish()
     } catch (failure) {
       error.set(errorMessage(failure))
@@ -57,14 +60,15 @@ export const setupState = (ctx: SetupContext) => {
 
   return {
     step,
-    model,
+    choice,
+    choose,
     busy,
     error,
     total,
     start,
     saveModel: () => void saveModel(),
     skipModel: () => {
-      model.set(undefined)
+      choice.set({})
       finish()
     },
     close,

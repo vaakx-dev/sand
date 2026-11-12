@@ -1,5 +1,4 @@
 import type { SourceInfo } from '@sand/accounts/contract'
-import type { Request } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import type { Pulse } from '@sand/reactive'
 import { sig } from '@vaakx-dev/vrui'
@@ -14,16 +13,16 @@ export const createPage = (ctx: PanelContext, changes: Pulse, slots: Slots) => {
 
   const fail = (error: unknown) => problem.set(errorMessage(error))
 
-  const call = <I, O>(request: Request<I, O>, input: I) => {
+  const call = <T>(work: () => Promise<T>) => {
     problem.set('')
-    return ctx.wire.call(request, input)
+    return work()
   }
 
-  const run = <I, O>(request: Request<I, O>, input: I) => call(request, input).catch(fail)
+  const run = <T>(work: () => Promise<T>) => call(work).catch(fail)
 
   const source = (id: string): SourceInfo | undefined => ctx.models.sources().find(found => found.id === id)
 
-  return { ctx, changes, slots, problem, view, fail, call, run, source, go: (next: View) => view.set(next) }
+  return { ctx, catalog: ctx.modelPicker.catalog, changes, slots, problem, view, fail, call, run, source, go: (next: View) => view.set(next) }
 }
 
 export type Page = ReturnType<typeof createPage>
