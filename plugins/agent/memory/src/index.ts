@@ -1,5 +1,5 @@
 import { llm } from '@sand/accounts/contract'
-import { compactionBrief } from '@sand/compaction/contract'
+import { compactionBrief, systemParts } from '@sand/compaction/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { promptSections } from '@sand/prompt/contract'
 import { server } from '@sand/server/contract'
@@ -10,7 +10,7 @@ import { memoryCheck } from './check'
 import { memoryCompaction } from './compaction'
 import { memory, memoryChange, memoryChangeWire, memoryNoteWrite, memoryRead, type MemoryFiles, type MemoryRef, type MemorySpace, memoryStore, memoryWrite } from './contract'
 import { createStore } from './files'
-import { memorySection } from './prompt'
+import { memorySection, memorySectionLength } from './prompt'
 import { memoryTool } from './tool'
 
 export default definePlugin({
@@ -58,6 +58,13 @@ export default definePlugin({
       const found = placed(conversation)
       return found ? [...sections, await memorySection(store, found.space, found.ref)] : sections
     })
+    ctx.watch(systemParts, found =>
+      found?.add({
+        name: 'Memory',
+        tone: 'orange',
+        chars: system => [...spaces.values()].reduce((sum, space) => sum + memorySectionLength(system, space), 0),
+      }),
+    )
     ctx.effect(() => ctx.tools.register(memoryTool(store, of)))
     ctx.watch(server, found => {
       if (!found) return

@@ -924,6 +924,7 @@
       "dependencies": {
         "@sand/bots": "workspace:*",
         "@sand/chat": "workspace:*",
+        "@sand/compaction": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
