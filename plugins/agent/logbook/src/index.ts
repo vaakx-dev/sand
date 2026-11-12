@@ -1,3 +1,4 @@
+import { planDoneRule } from '@sand/bot-plan/contract'
 import { bots } from '@sand/bots/contract'
 import { sessions } from '@sand/chats/contract'
 import type { Actor } from '@sand/host-hub/contract'
@@ -38,6 +39,7 @@ export default definePlugin({
       return projects.length === 1 ? (projects[0] ?? null) : null
     }
 
+    ctx.on(planDoneRule, () => 'When an item is done, take it out of the plan and log it in the Logbook with logbook_add.')
     ctx.watch(mcpTools, found => found && offerLogbookTools(found))
     ctx.watch(
       server,

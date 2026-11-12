@@ -16,6 +16,7 @@
     "summary": "Keeps a dated record of finished work that threads and bots add to and search"
   },
   "dependencies": {
+    "@sand/bot-plan": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",

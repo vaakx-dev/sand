@@ -10,8 +10,8 @@ import { writeAtomic } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { planChangeWire, planRead, planWrite } from './contract'
-import { planSection } from './prompt'
+import { planChangeWire, planDoneRule, planRead, planWrite } from './contract'
+import { doneRule, planSection } from './prompt'
 import { offerPlanTools } from './tools'
 
 export default definePlugin({
@@ -43,7 +43,7 @@ export default definePlugin({
     const brief = async (bot: string) => {
       const text = await read(bot)
       seen.set(bot, text)
-      return planSection(text)
+      return planSection(text, await ctx.waterfall(planDoneRule, doneRule))
     }
 
     const changedElsewhere = async (bot: string) => seen.get(bot) !== (await read(bot))

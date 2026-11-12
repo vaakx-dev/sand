@@ -13,7 +13,7 @@ const writeInput = z.object({
 
 const readRules = `Read a bot's plan: the Markdown file of what's happening in its work, what's next and what's blocked, which the user reads and can edit. It's empty until the bot writes one. Read it before you change it.`
 
-const writeRules = `Write a bot's plan, replacing the whole file. A bot leaves out bot to write its own, and writes it whenever its work changes: when it starts or finishes something, or starts waiting on someone or something. When an item is done, take it out and log it in the Logbook with logbook_add.
+const writeRules = `Write a bot's plan, replacing the whole file. A bot leaves out bot to write its own, and writes it whenever its work changes: when it starts or finishes something, or starts waiting on someone or something. When an item is done, take it out.
 
 One bullet per item. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note; each link shows its thread's live state, so don't add status headings. An item with no thread stays plain, with what it waits on:
 
