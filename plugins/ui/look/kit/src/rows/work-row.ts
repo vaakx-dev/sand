@@ -67,8 +67,9 @@ export type WorkRowProps = Props<HTMLButtonElement> & {
 
 const secondLine = (large: boolean, { detail, place, status, trail }: Pick<WorkRowBody, 'detail' | 'place' | 'status' | 'trail'>) => {
   if (!detail && !place && !status && !trail) return null
-  const left = detail ? span({ class: 'min-w-0 truncate' }, detail) : (place ? span({ class: 'inline-flex min-w-0 items-center gap-1.5' }, place.mark ?? null, span({ class: 'min-w-0 truncate' }, place.label)) : null)
-  const right = status || trail ? span({ class: 'ml-auto flex min-w-0 shrink-0 items-center justify-end gap-2' }, workStatus(status), trail) : null
+  const left = detail ? span({ class: 'min-w-0 truncate' }, detail) : (place ? span({ class: 'inline-flex max-w-1/2 shrink-0 items-center gap-1.5' }, place.mark ?? null, span({ class: 'min-w-0 truncate' }, place.label)) : null)
+  const trailing = trail ? span({ class: 'flex min-w-0 items-center gap-2' }, trail) : null
+  const right = status || trail ? span({ class: 'ml-auto flex min-w-0 items-center justify-end gap-2' }, trailing, workStatus(status)) : null
   return div({ class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, right)
 }
 
