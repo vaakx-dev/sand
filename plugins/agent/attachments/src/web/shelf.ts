@@ -78,8 +78,7 @@ export const createShelf = (ctx: ShelfContext, attachable: Derive<boolean>, item
   return {
     attachable: () => attachable.get(),
     rejected: () => items.get().some(tooLarge),
-    async upload() {
-      const held = items.get()
+    async upload(held) {
       await Promise.all(held.flatMap(item => (item instanceof File ? [send(item)] : [])))
       const content = held.flatMap(item => (item instanceof File ? (uploaded.get(item) ?? []) : [item]))
       if (content.length < held.length) throw new Error('a file could not be uploaded')

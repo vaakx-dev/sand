@@ -45,12 +45,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
   const restore = async (next: Key) => {
     const saved = await store.load(next.id)
     if (next !== key) return
-    if (!isBlank(saved) && model.empty.get()) {
-      model.records.list.set(saved.records ?? [])
-      model.text.set(saved.text)
-      model.attached.set(saved.items)
-      model.picked.set(saved.settings ?? {})
-    }
+    if (!isBlank(saved) && model.empty.get()) model.fill(saved)
     ready = true
   }
 
@@ -82,8 +77,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
     keep(true)
     key = next
     ready = false
-    model.clear()
-    model.failure.set(undefined)
+    model.reset()
     switched()
     if (next) void restore(next)
   }
@@ -101,7 +95,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
 
   effect(() => {
     if (model.sending.get()) {
-      sent = key ? { id: key.id, text: untrack(() => model.text.get()) } : undefined
+      sent = key ? { id: key.id, text: untrack(() => model.draft().text) } : undefined
       return
     }
     const done = sent

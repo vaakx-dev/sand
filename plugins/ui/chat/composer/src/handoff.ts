@@ -4,9 +4,7 @@ import type { Model } from './model'
 export const createHandoff = (model: Model, focusEnd: () => void) => ({
   async snapshot(): Promise<ComposerContent | undefined> {
     if (model.sending.get() || model.empty.get()) return undefined
-    const content = await model.upload()
-    const text = model.text.get().trim()
-    return { text, content: [...content, ...model.records.content(text)] }
+    return model.content(model.draft())
   },
   restore({ text, content }: ComposerContent) {
     const typed = model.text.get().trim()

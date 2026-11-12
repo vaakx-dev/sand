@@ -12,14 +12,14 @@ export const isBlank = (saved: Saved) => !saved.text.trim() && !saved.items.leng
 
 const newer = (local: Saved | undefined, far: Draft | undefined) => ((far?.updated ?? 0) > (local?.updated ?? 0) ? far : local)
 
-export const createStore = (remote: () => DraftStore | undefined, upload: () => Promise<UserContent[]>) => {
+export const createStore = (remote: () => DraftStore | undefined, upload: (items: Held[]) => Promise<UserContent[]>) => {
   const memory = new Map<string, Saved>()
   const versions = new Map<string, number>()
 
   const send = async (key: string, saved: Saved, version: number) => {
     const found = remote()
     if (!found) return
-    const draft = isBlank(saved) ? undefined : { ...saved, items: await upload() }
+    const draft = isBlank(saved) ? undefined : { ...saved, items: await upload(saved.items) }
     if (versions.get(key) === version) await found.write(key, draft)
   }
 

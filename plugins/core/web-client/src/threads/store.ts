@@ -2,7 +2,7 @@ import type { ContextUsage } from '@sand/compaction/contract'
 import type { SettingsState } from '@sand/model/contract'
 import type { SessionInfo, SessionSummary } from '@sand/chats/contract'
 import type { PendingItem } from '@sand/turns-contract/contract'
-import { type DraftTarget, type Thread, threadChange, threadsChange } from '../contract'
+import { type DraftTarget, type OutboxItem, type Thread, threadChange, threadsChange } from '../contract'
 import type { Context } from 'drydock'
 import { nextFrame } from '../detached'
 
@@ -37,6 +37,7 @@ const blank = (info: SessionSummary, device: string): Thread => ({
   live: [],
   tools: { running: new Set(), results: new Map(), logs: new Map() },
   pending: [],
+  sending: [],
   version: 0,
 })
 
@@ -112,6 +113,13 @@ export class Store {
     const thread = this.threads.get(id)
     if (!thread) return
     thread.pending = items
+    this.changed(id)
+  }
+
+  sending(id: string, items: OutboxItem[]) {
+    const thread = this.threads.get(id)
+    if (!thread) return
+    thread.sending = items
     this.changed(id)
   }
 

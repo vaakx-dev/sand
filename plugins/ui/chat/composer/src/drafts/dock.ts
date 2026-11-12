@@ -11,11 +11,7 @@ export const dockDrafts = (key: string, model: Model, remote: () => DraftStore |
     if (!remote()) return
     ready = false
     void store.load(key).then(saved => {
-      if (!isBlank(saved) && model.empty.get()) {
-        model.records.list.set(saved.records ?? [])
-        model.text.set(saved.text)
-        model.attached.set(saved.items)
-      }
+      if (!isBlank(saved) && model.empty.get()) model.fill(saved)
       ready = true
     })
   })
