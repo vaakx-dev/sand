@@ -1,6 +1,6 @@
 import { sand, sandPalette } from '@sand/ui-theme/contract'
 import type { Status } from '@sand/ui-shell/contract'
-import { div, h2, mount, p, section, sig, span, theme, type Child } from '@vaakx-dev/vrui'
+import { div, h2, mount, section, sig, span, theme, type Child } from '@vaakx-dev/vrui'
 import { kit } from '../../src/kit'
 import type { DiffLine } from '../../src/tools/lcs'
 
@@ -171,7 +171,18 @@ const gallery = () =>
     block('Choice list', choices()),
     block('Segmented', kit.segmented([{ value: 'chat', label: 'Chat' }, { value: 'project', label: 'Project' }], 'chat', () => {}, { label: 'View' })),
     block('Fields', kit.field({ label: 'Name', hint: 'Shown in the sidebar' }, kit.textInput({ placeholder: 'Optional' })), line(kit.searchField({ placeholder: 'Search bots and chats' }))),
-    block('Card', kit.card({ title: 'Fix the flaky cache test', at: Date.now() - 720_000 }, p({ class: 'text-sm' }, 'Ready to review'))),
+    block(
+      'Action item',
+      kit.actionItem(
+        {
+          title: 'Fix the flaky cache test',
+          lead: kit.roundMark('success', kit.icon('check', 'sm')),
+          at: Date.now() - 720_000,
+          actions: [kit.primaryAction({}, 'Merge'), kit.quietButton({}, 'Review')],
+        },
+        span({}, 'Done. ', kit.emphasis('4 files'), ', +38 −12.'),
+      ),
+    ),
     block('Diff block', kit.diffBlock('src/cache/store.ts', diff)),
     block('Sheet', sheetSample()),
     block('Page sections', pageSections()),
@@ -189,7 +200,8 @@ const gallery = () =>
       kit.toolCard({ icon: kit.icon('x', 'sm'), verb: 'Ran', target: 'bun test cache', failed: true }),
       line(...(['added', 'modified', 'deleted', 'renamed'] as const).map(kind => kit.fileKindMark(kind)), kit.progressSteps(4, 2), kit.spinner()),
     ),
-    block('Empty', kit.emptyState({ text: 'Nothing needs you.', action: { label: 'Open threads', run: () => {} } })),
+    block('Empty', kit.emptyState({ text: 'No devices muted.', action: { label: 'Open devices', run: () => {} } })),
+    block('Empty page', kit.emptyPage({ title: 'Nothing here yet', text: 'Finished work shows up here.' })),
   )
 
 mount(

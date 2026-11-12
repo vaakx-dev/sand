@@ -20,6 +20,7 @@
     "@sand/jobs": "workspace:*",
     "@sand/needs-you": "workspace:*",
     "@sand/palette": "workspace:*",
+    "@sand/panel": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/toasts": "workspace:*",

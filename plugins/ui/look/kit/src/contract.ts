@@ -25,7 +25,6 @@ export interface MenuRequest extends PressAt, MenuSpec {
   expand?: string
 }
 
-export type { CardProps } from './cards/card'
 export type { ContextMenu } from './context-menu/menu'
 export type { EditableProps } from './fields/editable'
 export type { TextAreaProps } from './fields/field'
@@ -46,6 +45,7 @@ export type { CountChipProps } from './menus/count-chip'
 export type { PickerButtonProps } from './menus/picker'
 export type { RunStatus } from './marks/status'
 export type { BannerProps, BannerTone } from './notes/banner'
+export type { ActionItemProps } from './rows/action-item'
 export type { CheckRowProps } from './rows/check-row'
 export type { ChoiceInput, ListChoice } from './rows/choice-list'
 export type { ListRowProps } from './rows/list-row'

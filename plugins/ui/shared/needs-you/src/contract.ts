@@ -3,17 +3,21 @@ import { service, type Dispose } from 'drydock'
 
 export type NeedKind = 'secret' | 'conflict' | 'review'
 
+export interface NeedAction {
+  label: string
+  run(): void | Promise<unknown>
+}
+
 export interface Need {
   id: string
   kind: NeedKind
   who: string
-  mark?(): Child
+  mark(): Child
   title: string
+  text?(): Child
   at: number
-  thread?: string
-  owner?: string
-  open?(): void
-  render(): Child
+  main: NeedAction
+  second?: NeedAction
 }
 
 export interface NeedSource {

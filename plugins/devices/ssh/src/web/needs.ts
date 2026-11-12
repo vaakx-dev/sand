@@ -1,11 +1,11 @@
 import type { Need, NeedSource } from '@sand/needs-you/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, type Sig } from '@vaakx-dev/vrui'
+import type { Sig } from '@vaakx-dev/vrui'
 import type { SshState } from '../contract'
 
-const title = 'Needs your password or host key to connect'
+const title = 'Can’t connect until you enter its password.'
 
-export const sshNeeds = (kit: Kit, state: Sig<SshState>, open: () => void): NeedSource => {
+export const sshNeeds = (kit: Kit, state: Sig<SshState>, reconnect: (pc: string) => Promise<void>): NeedSource => {
   const since = new Map<string, number>()
   const firstSeen = (pc: string) => {
     const at = since.get(pc) ?? Date.now()
@@ -19,15 +19,10 @@ export const sshNeeds = (kit: Kit, state: Sig<SshState>, open: () => void): Need
       id: `ssh:${machine.pc}`,
       kind: 'secret',
       who: machine.name,
+      mark: () => kit.roundMark('neutral', kit.icon('monitor', 'sm')),
       title,
       at: firstSeen(machine.pc),
-      open,
-      render: () =>
-        div(
-          { class: 'flex flex-col gap-2' },
-          div({ class: 'text-sm text-neutral-200' }, title),
-          div({ class: 'flex justify-end' }, kit.quietButton({ size: 'sm', onClick: open }, 'Open Devices')),
-        ),
+      main: { label: 'Enter password', run: () => reconnect(machine.pc) },
     }))
   }
   return { id: 'ssh', items }

@@ -44,7 +44,7 @@ export default definePlugin({
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
     ctx.watch(needs, found => {
       if (!found) return
-      const needParts = { ...parts, wire: ctx.wire, changes, pulse: events }
+      const needParts = { ...parts, changes, pulse: events }
       const sources = [reviewNeeds(needParts), conflictNeeds(needParts), secretNeeds(needParts)]
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
