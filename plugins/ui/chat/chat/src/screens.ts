@@ -1,5 +1,5 @@
 import type { Composer } from '@sand/composer/contract'
-import type { Route } from '@sand/ui-shell/contract'
+import { type Route, shell } from '@sand/ui-shell/contract'
 import { threadChange, type Thread } from '@sand/web-client/contract'
 import { div, dynamicChild, type Child, type Sig } from '@vaakx-dev/vrui'
 import { claims } from './claims'
@@ -23,7 +23,10 @@ export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefin
 
   const screen = (route: Route, look: string, ...children: Child[]) => {
     const node = div({ class: ['flex min-h-0 flex-1 flex-col', look] }, ...children, dock())
-    claim(node, () => claimRoute(ctx, route))
+    claim(node, () => {
+      const found = ctx.get(shell)
+      if (found) claimRoute(ctx, found, route)
+    })
     return node
   }
 

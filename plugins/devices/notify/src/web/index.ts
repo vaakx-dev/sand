@@ -3,7 +3,8 @@ import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { settings } from '@sand/settings/contract'
 import { toasts } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
-import { threads } from '@sand/web-client/contract'
+import { shell } from '@sand/ui-shell/contract'
+import { threadRouteKind } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { helloMomentsOff, helloPushKey, notifyMomentsOff, notifyNotice } from '../contract'
@@ -45,7 +46,7 @@ export default definePlugin({
     )
     ctx.effect(() =>
       onNoticeOpen(target => {
-        if ('thread' in target) void ctx.get(threads)?.select(target.thread)
+        if ('thread' in target) ctx.get(shell)?.open({ kind: threadRouteKind, id: target.thread })
         else ctx.get(botViews)?.open(target.bot)
       }),
     )

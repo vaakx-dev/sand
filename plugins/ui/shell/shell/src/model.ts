@@ -1,8 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { addressLayer, addressSettled, leaveLayer, pushLayer } from '@sand/web-client/contract'
 import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
-import { sameScreen, screenKey } from './address'
-import { homeRoute, type Aside, type AsideKind, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState, type SubjectSource } from './contract'
+import { nowhere, sameScreen, screenKey } from './address'
+import { type Aside, type AsideKind, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState, type SubjectSource } from './contract'
 import { navigation } from './navigation'
 import { registry } from './registry'
 import { screenCache } from './screens'
@@ -34,8 +34,6 @@ export const cardHeight = 360
 
 const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover', aside: 'aside:' } as const
 
-const home: Route = { kind: homeRoute }
-
 export const shellModel = (kit: Kit) => {
   const navs = registry<NavItem>()
   const sections = registry<ShellSection>()
@@ -62,15 +60,20 @@ export const shellModel = (kit: Kit) => {
   const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
   const known = (kind: string) => Boolean(specFor(kind))
   const phone = derive(() => width.get() < phoneWidth)
-  const landing = () => (untrack(() => phone.get()) ? (lastChat.get() ?? home) : home)
-  const nav = navigation(kind => untrack(() => known(kind)), landing)
+  const landing = derive((): Route => {
+    const last = lastChat.get()
+    if (last && known(last.kind)) return last
+    const spec = routes.items.get().find(found => found.lands)
+    return spec ? { kind: spec.kind } : nowhere
+  })
+  const nav = navigation(kind => untrack(() => known(kind)), () => untrack(() => landing.get()))
 
   const current = derive(() => {
     const { route } = nav.place.get()
-    return known(route.kind) ? route : home
+    return known(route.kind) ? route : landing.get()
   })
-  const before = sig<Route>(home)
-  let last = home
+  const before = sig<Route>(nowhere)
+  let last = nowhere
   effect(() => {
     const now = current.get()
     if (now.kind !== last.kind) untrack(() => before.set(last))
@@ -200,7 +203,7 @@ export const shellModel = (kit: Kit) => {
   const subjectOf = (route: Route) => subjects.get().reduce<ReturnType<SubjectSource>>((found, source) => found ?? source(route), undefined)
   effect(() => {
     const route = current.get()
-    if (route.kind !== homeRoute && subjectOf(route)) untrack(() => lastChat.set(route))
+    if (subjectOf(route)) untrack(() => lastChat.set(route))
   })
 
   return {
@@ -252,6 +255,11 @@ export const shellModel = (kit: Kit) => {
     toggleFold: (key: string) => openFolds.update(keys => (keys.includes(key) ? keys.filter(other => other !== key) : [...keys, key])),
     isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())) && (to.tab === undefined || to.tab === current.get().tab),
     open,
+    land(forget?: Route) {
+      const last = lastChat.get()
+      if (forget && last && sameScreen(forget, last)) lastChat.set(null)
+      open(landing.get(), true)
+    },
     leaveNav: () => open(before.get()),
     back: nav.back,
     follow() {

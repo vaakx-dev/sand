@@ -54,10 +54,10 @@ describe.each(phones)('on a $name', size => {
 
   const openPlain = () => pick('Plain screen', 'fixture/plain')
 
-  test('opening sand lands on Home, and a sidebar row replaces the chat in the address with no back arrow', async () => {
+  test('opening sand lands on the landing screen, and a sidebar row replaces the chat in the address with no back arrow', async () => {
     const { page } = phone
     expect(await state(page)).toBe('phone')
-    expect(await screen(page)).toBe('home')
+    expect(await screen(page, 'fixture-start')).toBe('fixture-start')
     await openPlain()
     const address = new URL(page.url()).searchParams
     expect([address.get('view'), address.get('id'), address.get('keep')]).toEqual(['fixture', 'plain', '1'])
@@ -244,7 +244,7 @@ test('opening sand again lands in the last chat', async () => {
   const fresh = await touchBrowser()
   try {
     const { page } = await openAt(fresh.context, sand.url, phones[0]!)
-    expect(await screen(page)).toBe('home')
+    expect(await screen(page, 'fixture-start')).toBe('fixture-start')
     await tap(page, 'Show the sidebar')
     await page.getByRole('button', { name: /Chat screen/ }).filter({ visible: true }).last().click()
     expect(await screen(page, 'fixture/chat')).toBe('fixture/chat')

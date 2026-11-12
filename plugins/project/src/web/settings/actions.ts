@@ -2,8 +2,9 @@ import { composer } from '@sand/composer/contract'
 import { picker, type Picker } from '@sand/picker/contract'
 import { settings } from '@sand/settings/contract'
 import type { IconName } from '@sand/ui-kit/contract'
+import { shell } from '@sand/ui-shell/contract'
 import { oneLine } from '@sand/util'
-import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
+import { draftRouteKind, type ProjectEntry, type ProjectGroup } from '@sand/web-client/contract'
 import { projectAdd } from '../../contract'
 import type { ProjectsContext } from '../context'
 import { byRecent } from './places'
@@ -22,8 +23,9 @@ const rename = async (ctx: ProjectsContext, ask: Picker, group: ProjectGroup) =>
 
 export const startable = (ctx: ProjectsContext, entry: ProjectEntry) => !entry.missing && ctx.pcs.online(entry.device)
 
-export const openAt = async (ctx: ProjectsContext, entry: Pick<ProjectEntry, 'path' | 'device'>) => {
-  await ctx.threads.draft(entry.path, entry.device)
+export const openAt = (ctx: ProjectsContext, entry: Pick<ProjectEntry, 'path' | 'device'>) => {
+  const { id } = ctx.threads.plan({ cwd: entry.path, device: entry.device })
+  ctx.get(shell)?.open({ kind: draftRouteKind, id })
   ctx.get(settings)?.close()
   ctx.get(composer)?.focus()
 }

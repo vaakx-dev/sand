@@ -26,7 +26,6 @@ export const submit = async (ctx: ComposerContext, text: string, attachments: Us
   const draft = ctx.threads.drafting()
   const thread = current ?? (draft && (await ctx.threads.create(draft)))
   if (!thread) throw new Error('Pick a project for a new thread first')
-  if (!current) await ctx.threads.select(thread.id, { replace: true })
   await ctx.turns.send(thread.id, promptOf(text, attachments), { label: labelOf(text, attachments), settings: current ? undefined : settings, ...options })
 }
 

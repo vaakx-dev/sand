@@ -3,7 +3,7 @@ import type { FileIndex, LimitsFeed, Models, SkillIndex } from './data'
 import type { DeviceCache } from './device'
 import type { Outbox } from './outbox'
 import type { Projects } from './projects'
-import type { Threads, ThreadVisit } from './threads'
+import type { Threads } from './threads'
 import type { Turns } from './turns'
 
 export * from './address'
@@ -26,7 +26,8 @@ export const deviceCache = service<DeviceCache>('deviceCache')
 
 export const threadsChange = event<() => void>('threads.change')
 export const threadChange = event<(id: string) => void>('thread.change')
-export const threadSelect = event<(id: string | undefined, visit: ThreadVisit) => void>('thread.select')
+export const threadSelect = event<(id: string | undefined) => void>('thread.select')
+export const draftStarted = event<(draft: string, thread: string) => void>('draft.started')
 export const modelsChange = event<() => void>('models.change')
 export const limitsChange = event<() => void>('limits.change')
 export const skillsChange = event<() => void>('skills.change')

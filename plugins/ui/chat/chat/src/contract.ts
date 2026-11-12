@@ -1,10 +1,11 @@
 import type { Entry } from '@sand/chats/contract'
 import type { Status } from '@sand/ui-shell/contract'
+import { draftRouteKind, threadRouteKind } from '@sand/web-client/contract'
 import { service } from 'drydock'
 
-export const threadRoute = 'thread'
+export const threadRoute = threadRouteKind
 
-export const draftRoute = 'draft'
+export const draftRoute = draftRouteKind
 
 export const threadScheme = 'thread'
 
@@ -37,3 +38,9 @@ export interface ThreadOwners {
 }
 
 export const threadOwners = service<ThreadOwners>('threadOwners')
+
+export interface DraftPlaces {
+  choose(draft: string): void
+}
+
+export const draftPlaces = service<DraftPlaces>('draftPlaces')

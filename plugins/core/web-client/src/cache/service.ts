@@ -1,10 +1,9 @@
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { onIdle } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { type Thread, threadSelect } from '../contract'
+import { addressedThread, type Thread, threadSelect } from '../contract'
 import { after } from '../detached'
 import { onPcHello } from '../greeted'
-import { requestedSession } from '../threads/address'
 import type { Store } from '../threads/store'
 import { autosave } from './autosave'
 import { createDevice } from './device'
@@ -37,7 +36,7 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
   let forgotten = false
 
   const restore = async () => {
-    const asked = requestedSession()
+    const asked = addressedThread()
     const cached = await readScope(scope, asked)
     if (settled) return
     restoreScope(store, cached)

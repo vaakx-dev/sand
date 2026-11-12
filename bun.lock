@@ -1548,6 +1548,7 @@
         "@sand/toasts": "workspace:*",
         "@sand/turns-contract": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
@@ -2360,6 +2361,7 @@
         "@sand/jobs": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -2676,7 +2678,6 @@
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/jobs": "workspace:*",
-        "@sand/model-panel": "workspace:*",
         "@sand/needs-you": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",
@@ -2687,16 +2688,6 @@
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/threads/project-picker": {
-      "name": "@sand/project-picker",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/threads-home": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -2990,8 +2981,6 @@
     "@sand/print": ["@sand/print@workspace:plugins/core/print"],
 
     "@sand/project": ["@sand/project@workspace:plugins/project"],
-
-    "@sand/project-picker": ["@sand/project-picker@workspace:plugins/ui/threads/project-picker"],
 
     "@sand/projects-mcp": ["@sand/projects-mcp@workspace:plugins/agent/projects-mcp"],
 

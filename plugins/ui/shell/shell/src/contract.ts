@@ -11,8 +11,6 @@ export interface Route {
   tab?: string
 }
 
-export const homeRoute = 'home'
-
 export const statuses = ['waiting', 'ready', 'merging', 'running', 'merged', 'done'] as const
 
 export type Status = (typeof statuses)[number]
@@ -144,6 +142,7 @@ export interface Screen {
 export interface RouteSpec {
   kind: string
   order?: number
+  lands?: boolean
   render(route: () => Route): Screen
 }
 
@@ -161,7 +160,9 @@ export interface SheetHandle {
   close(): void
 }
 
-export type ChipScope = { kind: 'general' } | { kind: 'owner'; owner: string }
+export interface ChipScope {
+  owner: string
+}
 
 export interface ChipAction {
   label: string
@@ -202,6 +203,8 @@ export interface Shell {
   section(section: ShellSection): Dispose
   route(spec: RouteSpec): Dispose
   open(route: Route, options?: { replace?: boolean }): void
+  land(options?: { forget?: Route }): void
+  link(route: Route): string
   back(): void
   current(): Route
   state(): ShellState

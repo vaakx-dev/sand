@@ -6,7 +6,7 @@ export const owned = (ctx: Context, thread: string) => Boolean(ctx.get(threadOwn
 
 export const inScope = (ctx: Context, scope: ChipScope, thread: string) => {
   const owner = ctx.get(threadOwners)?.owner(thread)
-  return scope.kind === 'general' ? !owner : owner?.id === scope.owner
+  return owner?.id === scope.owner
 }
 
 export const openThread = (ctx: Context, shell: Shell, thread: string) => {

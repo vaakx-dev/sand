@@ -29,7 +29,8 @@ export const pcEntry = (ui: Ui, { pc, draft }: ThreadPlace) => {
     if (!target || choice.blocked || choice.cwd === undefined || choice.view.id === target.device) return
     const found = ui.ctx.get(threads)
     if (!found) return
-    void ui.toasts.attempt(`Couldn’t move the draft to ${choice.view.name}`, found.draft(choice.cwd, choice.view.id, target.id).then(() => ui.ctx.get(composer)?.focus()))
+    found.plan({ id: target.id, cwd: choice.cwd, device: choice.view.id })
+    ui.ctx.get(composer)?.focus()
   }
 
   const row = (choice: PcChoice) =>

@@ -1,5 +1,5 @@
 import type { Occurrence, Target } from '@sand/calendar/contract'
-import { homeRoute, shell, type Route, type Shell } from '@sand/ui-shell/contract'
+import { shell, type Route, type Shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
 import { div, dynamicChild, effect, resizeObserver, scoped, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -15,7 +15,7 @@ import { weekView } from './week'
 
 const narrowBelow = 560
 
-const homeOrder = 500
+const landingOrder = 500
 
 const targetOf = (event: Occurrence): Target => ({ calendar: event.calendar, id: event.id, ...(event.original && { original: event.original }) })
 
@@ -99,8 +99,7 @@ export default definePlugin({
       found
         ? joinDisposers(
             found.nav({ id: 'calendar', label: 'Calendar', icon: 'calendar', order: 20, place: 'nav', to: { kind: calendarKind } }),
-            found.route({ kind: calendarKind, render: route => screen(found, route) }),
-            found.route({ kind: homeRoute, order: homeOrder, render: route => screen(found, route) }),
+            found.route({ kind: calendarKind, order: landingOrder, lands: true, render: route => screen(found, route) }),
           )
         : undefined,
     )

@@ -15,6 +15,7 @@
     "summary": "Notifies this phone or browser when a turn finishes, fails or needs you on any of your PCs"
   },
   "dependencies": {
+    "@sand/ui-shell": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",

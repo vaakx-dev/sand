@@ -40,13 +40,13 @@ export interface Thread {
   version: number
 }
 
-export type ThreadVisit = 'push' | 'replace' | 'restore'
-
 export interface DraftTarget {
   id: string
   cwd: string
   device: string
 }
+
+export type OpenChat = { thread: string } | { draft: string }
 
 
 export type ThreadChange = Omit<InputOf<typeof threadUpdate>, 'session'>
@@ -54,20 +54,19 @@ export type ThreadChange = Omit<InputOf<typeof threadUpdate>, 'session'>
 export interface Threads {
   cwd(): string
   device(): string
-  draft(cwd: string, device: string, id?: string, options?: { replace?: boolean }): Promise<void>
+  plan(target: Omit<DraftTarget, 'id'> & { id?: string }): DraftTarget
+  show(chat: OpenChat): void
   drafting(): DraftTarget | undefined
   list(): Thread[]
   get(id: string): Thread | undefined
   current(): Thread | undefined
   children(id: string): Thread[]
-  create(target: Omit<DraftTarget, 'id'> & { id?: string }): Promise<Thread>
+  create(target: DraftTarget): Promise<Thread>
   update(id: string, change: ThreadChange): Promise<void>
   remove(id: string): Promise<void>
-  select(id: string | undefined, options?: { replace?: boolean }): Promise<void>
   watch(id: string): Dispose
   load(id: string): Promise<Thread | undefined>
   path(id: string, options?: { carried?: boolean }): Entry[]
-  link(id: string): string
   older(id: string): boolean
   page(id: string): Promise<void>
   findLast(id: string, test: (entry: Entry) => boolean): Promise<Entry | undefined>

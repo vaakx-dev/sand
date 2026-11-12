@@ -10,7 +10,7 @@ const firstSentence = (text: string) => oneLine(/^[^\n]*?[.!?](?=\s|$)/.exec(tex
 
 export const subAgentOf = (chats: Threads | undefined, thread: string, call: string) => chats?.children(thread).find(chat => chat.info.origin === call)
 
-export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats: () => Threads | undefined): ToolRenderer => {
+export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats: () => Threads | undefined, openChat: (thread: string) => void): ToolRenderer => {
   const outcomes: Record<WireJob['status'], ToolBadge | undefined> = {
     running: undefined,
     done: undefined,
@@ -29,7 +29,7 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
 
   const open = (tool: ToolView): MenuAction[] => {
     const chat = subAgentOf(chats(), tool.thread, tool.call.id)
-    return chat ? [{ id: 'open', label: 'Open sub-agent', icon: 'right', group: 'open', tile: true, run: () => chats()?.select(chat.id) }] : []
+    return chat ? [{ id: 'open', label: 'Open sub-agent', icon: 'right', group: 'open', tile: true, run: () => openChat(chat.id) }] : []
   }
 
   return {

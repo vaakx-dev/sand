@@ -68,7 +68,7 @@ beforeAll(async () => {
   await Bun.sleep(1000)
   state = JSON.stringify(await pairing.storageState())
   await replied(other, 'message 1')
-  await other.waitForURL(/session=/)
+  await other.waitForURL(/view=thread/)
   thread = other.url()
   for (let n = 2; n <= seeded; n++) await replied(other, `message ${n}`)
 }, 180_000)

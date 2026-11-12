@@ -1,7 +1,7 @@
 {
   "name": "@sand/threads-home",
   "version": "0.0.0",
-  "description": "Open threads in the sidebar, newest first, with pin and snooze, Home as the new-thread screen with a slot for its pickers, the running, needs-you and ready counts, and threads and projects in Search",
+  "description": "Open threads in the sidebar, newest first, with pin and snooze; New thread picks a project and opens a new chat; the running, needs-you and ready counts; threads and projects in Search",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,8 +9,8 @@
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
-    "label": "Threads home",
-    "summary": "Your open threads in the sidebar, newest first, Home as the new-thread screen, and counts for what's running, needs you or is ready"
+    "label": "Thread list",
+    "summary": "Your open threads in the sidebar, newest first, New thread, and counts for what's running, needs you or is ready"
   },
   "dependencies": {
     "@sand/changes": "workspace:*",
@@ -19,7 +19,6 @@
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/jobs": "workspace:*",
-    "@sand/model-panel": "workspace:*",
     "@sand/needs-you": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",

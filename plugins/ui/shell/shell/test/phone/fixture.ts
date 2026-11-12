@@ -87,6 +87,7 @@ export default definePlugin({
       }),
     )
     ctx.effect(() => frame.route({ kind: 'fixture', render: screen }))
+    ctx.effect(() => frame.route({ kind: 'fixture-start', lands: true, render: () => ({ head: () => 'Start', main: () => p('Start screen') }) }))
     ctx.effect(() => frame.subject(route => (route.kind === 'fixture' && route.id === 'chat' ? { session: 'fixture-chat', owner: 'thread', device: 'fixture' } : undefined)))
     ctx.effect(() => frame.aside(aside))
     ctx.effect(() => frame.aside(panel))
