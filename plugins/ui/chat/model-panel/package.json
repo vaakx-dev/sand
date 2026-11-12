@@ -16,7 +16,6 @@
     "@sand/accounts": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/model-picker": "workspace:*",
     "@sand/palette": "workspace:*",

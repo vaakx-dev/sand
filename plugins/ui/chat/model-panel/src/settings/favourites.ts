@@ -1,4 +1,4 @@
-import { modelsPref, modelsRemove, type ModelInfo } from '@sand/accounts/contract'
+import type { ModelInfo } from '@sand/accounts/contract'
 import { favouritesOf } from '@sand/model-picker/contract'
 import { derive, div, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { settingsMenu } from './menu'
@@ -11,8 +11,8 @@ const whereText = (model: ModelInfo) => (model.via ? `On ${model.via}` : '')
 const menuOf = (page: Page, model: ModelInfo, unstar: (model: ModelInfo) => void) =>
   settingsMenu(page, model, {
     toggleFavourite: () => unstar(model),
-    toggleHidden: () => void page.run(modelsPref, { model: model.id, hidden: !model.hidden }),
-    ...(model.added && { remove: () => void page.run(modelsRemove, { model: model.id }) }),
+    toggleHidden: () => void page.run(() => page.catalog.hide(model.id, !model.hidden)),
+    ...(model.added && { remove: () => void page.run(() => page.catalog.remove(model.id)) }),
   })
 
 const favouriteRow = (page: Page, row: Sig<ModelInfo>, unstar: (model: ModelInfo) => void) => {
@@ -41,7 +41,7 @@ export const favouritesPage = (page: Page) => {
   })
   const unstar = (model: ModelInfo) => {
     removed.update(set => new Set(set).add(model.id))
-    page.call(modelsPref, { model: model.id, favourite: false }).catch(failure => {
+    page.call(() => page.catalog.favourite(model.id, false)).catch(failure => {
       page.fail(failure)
       removed.update(set => new Set([...set].filter(id => id !== model.id)))
     })

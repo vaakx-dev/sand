@@ -2,6 +2,7 @@ import { models, modelsChange } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 import { pickerButton } from './button'
+import { modelCatalog } from './catalog'
 import { modelPicker, type ModelPicker } from './contract'
 import { inject, type Picker } from './deps'
 import { modelMenu } from './model-menu'
@@ -18,13 +19,15 @@ export default definePlugin({
       ctx,
       changes: pulse(ctx, [modelsChange], [models]),
       pcs: owned(ctx, () => pcStatus(ctx)),
+      catalog: modelCatalog(ctx),
     }
     const service: ModelPicker = {
       panel: (target, close, options) => modelPanel(picker, target, close, options),
-      button: (target, label) => pickerButton(picker, target, label),
+      button: (target, options) => pickerButton(picker, target, options),
       resolve: settings => resolve(ctx, settings),
       online: pc => picker.pcs.online(pc),
       menu: input => modelMenu(ctx.kit, input),
+      catalog: picker.catalog,
     }
     ctx.provide(modelPicker, service)
   },

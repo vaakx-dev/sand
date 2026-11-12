@@ -22,6 +22,6 @@ export const modelRow = (rows: Rows) => {
   return settingsRow(
     { title: 'Sub model', detail: 'For background jobs; falls back to Model' },
     show(() => Boolean(rows.state.get()?.models.fast), clear),
-    rows.ctx.modelPicker.button(fastTarget(rows), 'Sub model'),
+    rows.ctx.modelPicker.button(fastTarget(rows), { label: 'Sub model' }),
   )
 }

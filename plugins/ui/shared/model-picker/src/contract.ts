@@ -20,12 +20,33 @@ export interface PanelOptions {
   flash?: boolean
 }
 
+export type ButtonLook = 'field' | 'row'
+
+export interface ButtonOptions {
+  label: string
+  look?: ButtonLook
+  opened?: boolean
+  opener?(open: () => void): () => void
+}
+
+export interface ModelCatalog {
+  list(source: string): Promise<ModelInfo[]>
+  add(source: string, name: string): Promise<ModelInfo>
+  remove(model: string): Promise<void>
+  favourite(model: string, on: boolean): Promise<void>
+  hide(model: string, hidden: boolean): Promise<void>
+  showNew(source: string, show: boolean): Promise<void>
+  seen(source: string): Promise<void>
+  refresh(source?: string): Promise<void>
+}
+
 export interface ModelPicker {
   panel(target: PickerTarget, close: () => void, options?: PanelOptions): Child
-  button(target: PickerTarget, label: string): HTMLElement
+  button(target: PickerTarget, options: ButtonOptions): HTMLElement
   resolve(settings: SessionSettings): Picked
   online(pc: string): boolean | undefined
   menu(input: ModelMenuInput): MenuSpec
+  catalog: ModelCatalog
 }
 
 export interface ModelMenuInput {

@@ -1,8 +1,6 @@
-import { modelsSeen } from '@sand/accounts/contract'
-import { wire } from '@sand/devices-contract'
 import { derive, div, dynamicChild, effect } from '@vaakx-dev/vrui'
 import type { PanelOptions, PickerTarget } from '../contract'
-import type { Picker, PickerContext } from '../deps'
+import type { Picker } from '../deps'
 import { effortBar, fastRow } from './effort'
 import { modelList } from './list'
 import { rail } from './rail'
@@ -10,13 +8,13 @@ import { readScene } from './scene'
 import { findModels, modelSearch } from './search'
 import { openView, type View } from './view'
 
-const markSeen = (ctx: PickerContext, view: View) =>
+const markSeen = ({ ctx, catalog }: Picker, view: View) =>
   effect(() => {
     const at = view.at.get()
     if (view.query.get() || view.seen.has(at)) return
     if (!ctx.models.sources().find(source => source.id === at)?.fresh) return
     view.seen.add(at)
-    void ctx.get(wire)?.call(modelsSeen, { source: at }, ctx.models.device()).catch(() => undefined)
+    void catalog.seen(at).catch(() => undefined)
   })
 
 const refocus = (view: View, node: HTMLElement) => {
@@ -46,7 +44,7 @@ const body = (picker: Picker, target: PickerTarget, view: View, close: () => voi
 export const modelPanel = (picker: Picker, target: PickerTarget, close: () => void, { flash = false }: PanelOptions = {}) => {
   const { ctx, changes, pcs } = picker
   const view = openView(ctx, target)
-  markSeen(ctx, view)
+  markSeen(picker, view)
   pcs.refresh()
   const pickFirst = () => {
     const scene = readScene(picker, target, view, close)
