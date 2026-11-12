@@ -9,4 +9,5 @@ export const botOwner = (bots: Bots, turns: BotTurns): OwnerKind => ({
   label: bot => bots.get(bot)?.name || undefined,
   history: bot => (bots.get(bot) ? bots.conversation(bot).entries() : undefined),
   project: bot => soleProject(bots.get(bot)?.projects ?? []),
+  folder: bot => (bots.get(bot) ? bots.folder(bot) : undefined),
 })

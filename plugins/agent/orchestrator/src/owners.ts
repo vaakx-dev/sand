@@ -27,6 +27,7 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
       },
       label: id => ctx.sessions.open(id)?.title,
       history: id => ctx.sessions.open(id)?.path(),
+      folder: id => ctx.sessions.open(id)?.cwd,
     }),
   )
 
@@ -52,6 +53,7 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
       return entries
     },
     home: (from: ConversationRef | undefined) => from && kinds.get(from.owner)?.project?.(from.id),
+    folder: (from: ConversationRef) => kinds.get(from.owner)?.folder?.(from.id),
     async notify(thread: string, notice: Notice) {
       const starter = starters.of(thread)
       return starter ? deliver(starter, notice) : false

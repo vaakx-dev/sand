@@ -1,7 +1,7 @@
 import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
-import type { MenuAction, Status } from '@sand/ui-shell/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
@@ -165,28 +165,6 @@ export interface BotRoster {
 }
 
 export const botRoster = service<BotRoster>('botRoster')
-
-export interface BotTab {
-  ref: string
-  title: string
-  status: Status
-  note: string
-  at: number
-  project?: string | null
-}
-
-export interface BotTabSource {
-  scheme: string
-  list(bot: string): BotTab[]
-  get(ref: string): BotTab | undefined
-  render(ref: string): HTMLElement
-}
-
-export interface BotTabs {
-  source(source: BotTabSource): Dispose
-}
-
-export const botTabs = service<BotTabs>('botTabs')
 
 export interface BotProfileSection {
   id: string

@@ -1,4 +1,5 @@
 import type { Session } from '@sand/chats/contract'
+import type { ConversationRef } from '@sand/engine/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
@@ -32,7 +33,7 @@ type Open = (cwd: string, project?: string | null) => Session
 
 export type Adopt = (session: Session) => void
 
-const parentOf = (ctx: OrchestratorContext, { from }: StartInput) => (from?.owner === 'thread' ? ctx.sessions.open(from.id) : undefined)
+const parentOf = (ctx: OrchestratorContext, { from }: Pick<StartInput, 'from'>) => (from?.owner === 'thread' ? ctx.sessions.open(from.id) : undefined)
 
 const inheritedSettings = (ctx: OrchestratorContext, parent: Session | undefined): SessionSettings => {
   if (!parent) return {}
@@ -52,9 +53,19 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     return (cwd, project) => ctx.sessions.agent({ ...(from.owner === 'thread' && { parent: from.id }), cwd, project, title: title ?? '', origin: subagent.call })
   }
 
+  const subagentPlace = (from: ConversationRef) => {
+    const parent = parentOf(ctx, { from })
+    if (parent) return { cwd: parent.cwd, project: parent.project }
+    const project = owners.home(from)
+    if (project) return folderOf(ctx, { project })
+    const cwd = owners.folder(from)
+    return cwd ? { cwd } : undefined
+  }
+
   const folderFor = (input: StartInput) => {
-    const parent = input.subagent && input.cwd === undefined && input.project === undefined && parentOf(ctx, input)
-    return parent ? { cwd: parent.cwd, project: parent.project } : folderOf(ctx, placeOf(input))
+    const { subagent, from, cwd, project } = input
+    const placed = subagent && from && cwd === undefined && project === undefined ? subagentPlace(from) : undefined
+    return placed ?? folderOf(ctx, placeOf(input))
   }
 
   const inFolder = (input: StartInput) => {

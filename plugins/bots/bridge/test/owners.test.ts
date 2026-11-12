@@ -10,7 +10,6 @@ const roster: Roster = {
   list: () => [atlas],
   find: id => (id === atlas.id ? atlas : undefined),
   starterOf: thread => ({ t1: 'b1', t2: 'gone' })[thread],
-  startedBy: bot => (bot === 'b1' ? ['t1'] : []),
 }
 
 const prompt = (content: UserContent[]): Entry => ({ id: 'e1', session: 't1', parent: null, at: 1, seq: 1, type: 'message', data: { role: 'user', content } })

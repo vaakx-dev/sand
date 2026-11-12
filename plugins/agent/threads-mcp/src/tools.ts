@@ -23,6 +23,9 @@ const listInput = z.object({
   cwd: z.string().optional().describe('Only threads in this folder'),
   project: z.string().optional().describe('Only threads in this project'),
   mine: z.boolean().optional().describe("Only threads you started (sand's own threads and bots)"),
+  bot: z.string().optional().describe('Only threads this bot started'),
+  thread: z.string().optional().describe('Only threads this thread started'),
+  subagents: z.boolean().optional().describe('List subagents instead of threads; with mine, bot or thread, the subagents that one started'),
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many, newest first (default 50)'),
 })
 

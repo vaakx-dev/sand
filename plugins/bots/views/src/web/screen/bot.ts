@@ -4,13 +4,14 @@ import type { Route, Screen } from '@sand/ui-shell/contract'
 import { div, show, span, untrack } from '@vaakx-dev/vrui'
 import { chatView } from '../chat/view'
 import type { Parts } from '../parts'
+import { botStatus } from '../work'
 
 const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 
-const faceStateOf = (parts: Parts, bot: BotSummary | undefined): FaceState | undefined => {
+const faceStateOf = (bot: BotSummary | undefined): FaceState | undefined => {
   if (!bot) return undefined
-  const status = parts.work.status(bot)
-  if (status === 'running' || status === 'merging') return 'running'
+  const status = botStatus(bot)
+  if (status === 'running') return 'running'
   if (status === 'waiting') return 'waiting'
   return undefined
 }
@@ -24,7 +25,7 @@ const missing = (parts: Parts) =>
 const headerOf = (parts: Parts, id: string) => {
   const { kit } = parts.ctx
   const bot = () => parts.store.find(id)
-  const faceState = () => faceStateOf(parts, bot())
+  const faceState = () => faceStateOf(bot())
   const title = () => botName(bot() ?? { name: '' })
   return div(
     { class: 'flex min-w-0 flex-1 items-center gap-3' },

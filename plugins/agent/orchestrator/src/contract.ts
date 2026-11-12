@@ -90,6 +90,7 @@ export interface OwnerKind {
   label(id: string): string | undefined
   history(id: string): HistoryEntry[] | undefined
   project?(id: string): string | undefined
+  folder?(id: string): string | undefined
 }
 
 export interface Orchestrator {
@@ -226,6 +227,8 @@ export const threadList = request('thread.list', {
     project: z.string().optional(),
     mine: z.boolean().optional(),
     bot: z.string().optional(),
+    thread: z.string().optional(),
+    subagents: z.boolean().optional(),
     limit: z.number().int().min(1).max(readLimit).optional(),
   }),
   output: type<ThreadRow[]>(),

@@ -765,7 +765,6 @@
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -2415,6 +2414,7 @@
       "name": "@sand/inspector-helpers",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/chat": "workspace:*",
         "@sand/inspector": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
@@ -2453,21 +2453,6 @@
         "@sand/inspector": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/inspector/threads": {
-      "name": "@sand/inspector-threads",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/chat": "workspace:*",
-        "@sand/inspector": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/ui-shell": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
@@ -2982,8 +2967,6 @@
     "@sand/inspector-model": ["@sand/inspector-model@workspace:plugins/ui/inspector/model"],
 
     "@sand/inspector-pc": ["@sand/inspector-pc@workspace:plugins/ui/inspector/pc"],
-
-    "@sand/inspector-threads": ["@sand/inspector-threads@workspace:plugins/ui/inspector/threads"],
 
     "@sand/jobs": ["@sand/jobs@workspace:plugins/agent/jobs"],
 
