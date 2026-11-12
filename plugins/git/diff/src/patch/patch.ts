@@ -15,7 +15,7 @@ export const readPatch = async (tools: DiffGit, { cwd, scope, path, from }: Patc
   const renamed = from && from !== path ? from : undefined
   const paths = renamed ? [renamed, path] : [path]
   const args = diffArgs(range, ['--patch'], paths)
-  const { value: output } = await readRange(git, range, paths, env => git.lines(range.repo.root, args, maxLines, { env, read: true }))
+  const { value: output } = await readRange(git, range, paths, env => git.lines(range.root, args, maxLines, { env, read: true }))
   if (output.code !== 0) throw new Error(git.classify({ code: output.code, out: '', err: output.err }, args).message)
   const named = { path, ...(renamed ? { from: renamed } : {}) }
   if (output.lines.length >= maxLines || size(output.lines) > maxChars) return { ...named, hunks: [], tooLarge: true }

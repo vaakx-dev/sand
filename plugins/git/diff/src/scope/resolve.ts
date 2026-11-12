@@ -1,77 +1,83 @@
 import type { GitRunner } from '@sand/git-runner/contract'
 import type { DiffScope } from '../contract'
-import { commitOf, type DiffGit, emptyTree, treeOf } from '../git'
-
-interface Repo {
-  root: string
-  head?: string
-  branch?: string
-}
+import { commitOf, type DiffGit, emptyTree, isRevision, treeOf } from '../git'
 
 export interface Range {
-  repo: Repo
+  root: string
   from: string
   to?: string
   base?: string
   baseLabel?: string
 }
 
-const uncommitted = async (git: GitRunner, repo: Repo): Promise<Range> =>
-  repo.head ? { repo, from: repo.head, base: repo.head } : { repo, from: await emptyTree(git, repo.root) }
-
-const ofCommit = async (git: GitRunner, repo: Repo, revision: string): Promise<Range> => {
-  const commit = await commitOf(git, repo.root, revision)
-  if (!commit) throw new Error(`Couldn't find commit ${revision}.`)
-  const parent = await commitOf(git, repo.root, `${commit}^1`)
-  return parent ? { repo, from: parent, to: commit, base: parent } : { repo, from: await emptyTree(git, repo.root), to: commit }
+const revision = (name: string) => {
+  if (!isRevision(name)) throw new Error(`${name} isn't a commit name.`)
+  return name
 }
 
-const treeish = async (git: GitRunner, repo: Repo, revision: string) => {
-  const found = (await commitOf(git, repo.root, revision)) ?? (await treeOf(git, repo.root, revision))
-  if (!found) throw new Error(`Couldn't find ${revision} in this repository.`)
+const fromHead = async (git: GitRunner, root: string, head: string | undefined): Promise<Range> =>
+  head ? { root, from: head, base: head } : { root, from: await emptyTree(git, root) }
+
+const uncommitted = async (git: GitRunner, root: string) => fromHead(git, root, await commitOf(git, root, 'HEAD'))
+
+const since = (root: string, commit: string): Range => ({ root, from: revision(commit), base: commit })
+
+const ofCommit = async (git: GitRunner, root: string, name: string): Promise<Range> => {
+  const [commit, parent] = await git.commits(root, [revision(name), `${name}^1`])
+  if (!commit) throw new Error(`Couldn't find commit ${name}.`)
+  return parent ? { root, from: parent, to: commit, base: parent } : { root, from: await emptyTree(git, root), to: commit }
+}
+
+const treeish = async (git: GitRunner, root: string, name: string) => {
+  const found = (await commitOf(git, root, name)) ?? (await treeOf(git, root, name))
+  if (!found) throw new Error(`Couldn't find ${name} in this repository.`)
   return found
 }
 
-const ofRange = async (git: GitRunner, repo: Repo, from: string, to: string): Promise<Range> => {
-  const [start, end] = await Promise.all([treeish(git, repo, from), treeish(git, repo, to)])
-  return { repo, from: start, to: end, base: start }
+const ofRange = async (git: GitRunner, root: string, from: string, to: string): Promise<Range> => {
+  const [start, end] = await Promise.all([treeish(git, root, from), treeish(git, root, to)])
+  return { root, from: start, to: end, base: start }
 }
 
-const forkFrom = (git: GitRunner, repo: Repo, head: string, commit: string) => git.maybe(repo.root, ['merge-base', head, commit], { read: true })
+const forkFrom = (git: GitRunner, root: string, head: string, commit: string) => git.maybe(root, ['merge-base', head, commit], { read: true })
 
-const ofNamed = async (git: GitRunner, repo: Repo, head: string, name: string): Promise<Range | undefined> => {
-  const commit = await commitOf(git, repo.root, name)
+const ofNamed = async (git: GitRunner, root: string, name: string): Promise<Range> => {
+  const [head, commit] = await git.commits(root, ['HEAD', revision(name)])
+  if (!head) return fromHead(git, root, head)
   if (!commit) throw new Error(`Couldn't find ${name} in this repository.`)
-  const fork = await forkFrom(git, repo, head, commit)
-  return fork ? { repo, from: fork, base: fork, baseLabel: name } : undefined
+  const fork = await forkFrom(git, root, head, commit)
+  return fork ? { root, from: fork, base: fork, baseLabel: name } : fromHead(git, root, head)
 }
 
-const ofDefault = async ({ git, repos }: DiffGit, repo: Repo, head: string): Promise<Range | undefined> => {
-  const base = await repos.base(repo.root)
-  if (!base) return undefined
-  const fork = await forkFrom(git, repo, head, base.commit)
-  if (!fork || (repo.branch === base.branch && fork === head)) return undefined
-  return { repo, from: fork, base: fork, baseLabel: base.label }
+const currentBranch = async (git: GitRunner, root: string) => (await git.maybe(root, ['symbolic-ref', '-q', '--short', 'HEAD'], { read: true })) || undefined
+
+const ofDefault = async ({ git, repos }: DiffGit, root: string): Promise<Range> => {
+  const [head, base] = await Promise.all([commitOf(git, root, 'HEAD'), repos.base(root)])
+  const fork = head && base && (await forkFrom(git, root, head, base.commit))
+  if (!fork || !base) return fromHead(git, root, head)
+  if (fork === head && (await currentBranch(git, root)) === base.branch) return fromHead(git, root, head)
+  return { root, from: fork, base: fork, baseLabel: base.label }
 }
 
-const ofBranch = (tools: DiffGit, repo: Repo, name?: string) => {
-  if (!repo.head) return undefined
-  return name ? ofNamed(tools.git, repo, repo.head, name) : ofDefault(tools, repo, repo.head)
-}
-
-const readRepo = async ({ git, repos }: DiffGit, cwd: string): Promise<Repo> => {
+const rootOf = async ({ repos }: DiffGit, cwd: string) => {
   const layout = await repos.layout(cwd)
   if (!layout) throw new Error("This folder isn't a git repository.")
-  const { root } = layout
-  const [head, branch] = await Promise.all([commitOf(git, root, 'HEAD'), git.maybe(root, ['symbolic-ref', '-q', '--short', 'HEAD'], { read: true })])
-  return { root, head, branch: branch || undefined }
+  return layout.root
 }
 
 export const resolveScope = async (tools: DiffGit, cwd: string, scope: DiffScope): Promise<Range> => {
   const { git } = tools
-  const repo = await readRepo(tools, cwd)
-  if (scope.kind === 'commit') return ofCommit(git, repo, scope.commit)
-  if (scope.kind === 'range') return ofRange(git, repo, scope.from, scope.to)
-  if (scope.kind === 'all') return (await ofBranch(tools, repo, scope.base)) ?? uncommitted(git, repo)
-  return uncommitted(git, repo)
+  const root = await rootOf(tools, cwd)
+  switch (scope.kind) {
+    case 'since':
+      return since(root, scope.commit)
+    case 'commit':
+      return ofCommit(git, root, scope.commit)
+    case 'range':
+      return ofRange(git, root, scope.from, scope.to)
+    case 'all':
+      return scope.base ? ofNamed(git, root, scope.base) : ofDefault(tools, root)
+    case 'uncommitted':
+      return uncommitted(git, root)
+  }
 }

@@ -48,6 +48,7 @@ export default definePlugin({
       },
       queue: (main, task) => byRepo(pathKey(main), task),
       changed: id => tracker.publish(id),
+      show: changes => tracker.show(changes),
       report,
     }
     const troubled = new Set<string>()

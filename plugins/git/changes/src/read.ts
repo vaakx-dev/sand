@@ -1,35 +1,38 @@
-import type { GitBase } from '@sand/git/contract'
 import type { DiffList } from '@sand/git-diff/contract'
 import type { ThreadChanges } from './contract'
 import type { ChangesDeps } from './deps'
-import { branchOf, combine, commitOf, forkPoint, snapshot } from './git'
+import { type Branches, branchesOf, combine, forkPoint, snapshot } from './git'
 
 export interface Work {
   root: string
   main: string
   target?: string
+  tip?: string
   fork: string
 }
 
-const forkRefs = (target: string | undefined, base: GitBase | undefined) => [
-  ...(target ? [`refs/heads/${target}`, `refs/heads/${target}@{upstream}`] : []),
-  ...(base ? [base.ref, `refs/heads/${base.branch}`] : []),
-]
+const forkRefs = ({ upstreams }: Branches, target: string | undefined, defaultBranch: string | undefined) => {
+  const own = target ? [`refs/heads/${target}`, upstreams.get(`refs/heads/${target}`)] : []
+  const base = defaultBranch ? [`refs/remotes/origin/${defaultBranch}`, `refs/heads/${defaultBranch}`] : []
+  return [...own, ...base].filter(ref => ref !== undefined)
+}
 
 export const workOf = async ({ git, repos }: ChangesDeps, cwd: string): Promise<Work | undefined> => {
   const layout = await repos.layout(cwd)
   if (!layout?.worktree) return undefined
-  const [target, base] = await Promise.all([branchOf(git, layout.main), repos.base(layout.main)])
-  const fork = await forkPoint(git, layout.root, forkRefs(target, base))
-  return fork ? { root: layout.root, main: layout.main, target, fork } : undefined
+  const [branches, defaultBranch] = await Promise.all([branchesOf(git, layout.main), repos.defaultBranch(layout.main)])
+  const target = branches.current
+  const commits = forkRefs(branches, target, defaultBranch).flatMap(ref => branches.commits.get(ref) ?? [])
+  const fork = await forkPoint(git, layout.root, commits)
+  const tip = target && branches.commits.get(`refs/heads/${target}`)
+  return fork ? { root: layout.root, main: layout.main, target, ...(tip && { tip }), fork } : undefined
 }
 
-export const diffOf = (deps: ChangesDeps, work: Work) => deps.diffs.list(work.root, { kind: 'all', base: work.fork })
+export const diffOf = (deps: ChangesDeps, work: Work) => deps.diffs.list(work.root, { kind: 'since', commit: work.fork })
 
 const clash = (paths: string[]) => `These files changed in the project too and don't merge cleanly: ${paths.join(', ')}`
 
-const conflictsOf = async ({ git }: ChangesDeps, { root, main, target, fork }: Work) => {
-  const tip = target && (await commitOf(git, main, `refs/heads/${target}`))
+const conflictsOf = async ({ git }: ChangesDeps, { root, main, tip, fork }: Work) => {
   if (!tip) return []
   return (await combine(git, main, fork, tip, await snapshot(git, root))).conflicts ?? []
 }

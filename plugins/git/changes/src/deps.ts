@@ -18,5 +18,6 @@ export interface ChangesDeps {
   settle(session: string): Promise<void>
   queue<T>(main: string, task: () => Promise<T>): Promise<T>
   changed(session: string): Promise<ThreadChanges>
+  show(changes: ThreadChanges): Promise<ThreadChanges>
   report(error: unknown): void
 }

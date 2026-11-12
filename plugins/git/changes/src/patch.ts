@@ -8,5 +8,5 @@ export const patchOf = async (deps: ChangesDeps, { session, path, from }: InputO
   if (merged) return deps.diffs.patch({ cwd: merged.main, scope: { kind: 'commit', commit: merged.commit }, path, from })
   const work = await workOf(deps, deps.sessions.require(session).cwd)
   if (!work) throw new Error("This thread doesn't have its own worktree, so it has no changes to show.")
-  return deps.diffs.patch({ cwd: work.root, scope: { kind: 'all', base: work.fork }, path, from })
+  return deps.diffs.patch({ cwd: work.root, scope: { kind: 'since', commit: work.fork }, path, from })
 }

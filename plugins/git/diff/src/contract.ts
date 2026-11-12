@@ -7,6 +7,7 @@ import { z } from 'zod'
 export type DiffScope =
   | { kind: 'all'; base?: string }
   | { kind: 'uncommitted' }
+  | { kind: 'since'; commit: string }
   | { kind: 'commit'; commit: string }
   | { kind: 'range'; from: string; to: string }
 
@@ -50,6 +51,7 @@ export interface DiffPatch {
 const scope = lazy(() => z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('all'), base: z.string().optional() }),
   z.object({ kind: z.literal('uncommitted') }),
+  z.object({ kind: z.literal('since'), commit: z.string() }),
   z.object({ kind: z.literal('commit'), commit: z.string() }),
   z.object({ kind: z.literal('range'), from: z.string(), to: z.string() }),
 ]))

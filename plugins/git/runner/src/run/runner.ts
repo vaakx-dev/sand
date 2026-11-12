@@ -1,5 +1,6 @@
 import type { GitRunner } from '../contract'
 import { classify } from './classify'
+import { commits } from './commits'
 import { problem, problemOf } from './error'
 import { gitLines } from './lines'
 import { remoteUrl } from './remote'
@@ -12,6 +13,7 @@ export const runner: GitRunner = {
   output: gitOutput,
   maybe: gitMaybe,
   lines: gitLines,
+  commits,
   classify: (result, args, what) => problemOf(classify(result, args, what)),
   problem,
   remoteUrl,
