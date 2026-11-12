@@ -80,4 +80,28 @@ test('a dirty project folder is refused and a conflict ends in conflict, and nei
   expect(git(repo, 'status', '--porcelain')).toBe('')
   expect(git(worktree, 'show', 'HEAD:notes.txt')).toBe('one\nthread\nthree')
   expect(sand.sessions.require(thread).settled).toBeNull()
+
+  await sand.sessions.settle(thread, true)
+  expect(await sand.ask(changesList, { sessions: [thread] })).toEqual([expect.objectContaining({ session: thread, state: 'none' })])
+})
+
+test("work already squashed onto the project's branch counts as merged, and only the rest is left to merge", async () => {
+  const { repo, thread, worktree } = await start()
+  await Bun.write(join(worktree, 'notes.txt'), 'one\n2\nthree\n')
+  git(worktree, 'commit', '-q', '-am', 'second line')
+  await Bun.write(join(worktree, 'notes.txt'), 'one\n2\n3\n')
+  git(worktree, 'commit', '-q', '-am', 'third line')
+  await Bun.write(join(repo, 'notes.txt'), 'one\n2\n3\n')
+  git(repo, 'commit', '-q', '-am', 'Tidy the notes (#1)')
+  await Bun.write(join(repo, 'notes.txt'), 'one\nzwei\n3\n')
+  git(repo, 'commit', '-q', '-am', 'later edit')
+
+  expect(await sand.ask(changesList, { sessions: [thread] })).toEqual([expect.objectContaining({ state: 'merged', files: [expect.objectContaining({ path: 'notes.txt' })] })])
+
+  await Bun.write(join(worktree, 'todo.txt'), 'later\n')
+  expect(await sand.ask(changesList, { sessions: [thread] })).toEqual([expect.objectContaining({ state: 'ready', files: [expect.objectContaining({ path: 'todo.txt' })], add: 1, del: 0 })])
+
+  expect(await sand.ask(changesMerge, { session: thread })).toMatchObject({ state: 'merged', add: 1, del: 0 })
+  expect(await Bun.file(join(repo, 'notes.txt')).text()).toBe('one\nzwei\n3\n')
+  expect(await Bun.file(join(repo, 'todo.txt')).text()).toBe('later\n')
 })

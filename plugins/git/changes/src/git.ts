@@ -8,6 +8,24 @@ export interface Branches {
 
 export type Combined = { tree: string; conflicts?: never } | { conflicts: string[] }
 
+export interface Pending {
+  tree: string
+  landed: Set<string>
+}
+
+interface RawChange {
+  path: string
+  mode: string
+  blob: string
+  after: string
+}
+
+interface Landing {
+  root: string
+  fork: string
+  bases: string[]
+}
+
 const read = { read: true }
 
 const branchFormat = '--format=%(HEAD)%00%(refname)%00%(objectname)%00%(upstream)'
@@ -15,6 +33,10 @@ const branchFormat = '--format=%(HEAD)%00%(refname)%00%(objectname)%00%(upstream
 const addAll = ['-c', 'core.splitIndex=false', 'add', '--all']
 
 const unknownOption = 129
+
+const rawMeta = /^:(\d+) \d+ ([0-9a-f]+) ([0-9a-f]+) \S+$/
+
+const rawFlags = ['--raw', '-z', '--no-abbrev', '--no-renames']
 
 const rowsOf = (out: string) =>
   out.split(/\r?\n/).flatMap(line => {
@@ -43,10 +65,37 @@ const allChanges = async (git: GitRunner, dir: string) =>
 export const forkPoint = async (git: GitRunner, dir: string, commits: string[]) =>
   commits.length ? git.maybe(dir, ['merge-base', 'HEAD', ...new Set(commits)], read) : undefined
 
-export const snapshot = (git: GitRunner, dir: string) =>
-  git.withTempIndex(dir, async env => {
-    await git.ok(dir, addAll, { env, what: "Couldn't read the thread's changes" })
-    return git.ok(dir, ['write-tree'], { env, what: "Couldn't read the thread's changes" })
+const rawChanges = (out: string): RawChange[] => {
+  const tokens = out.split('\0')
+  return tokens.flatMap((token, at) => {
+    const meta = rawMeta.exec(token)
+    const path = tokens[at + 1]
+    return meta && path ? [{ path, mode: meta[1]!, blob: meta[2]!, after: meta[3]! }] : []
+  })
+}
+
+const stateKey = ({ path, after }: RawChange) => `${path}\0${after}`
+
+const landedStates = async (git: GitRunner, { root, fork, bases }: Landing) =>
+  new Set(rawChanges(await git.ok(root, ['log', '--format=', ...rawFlags, ...new Set(bases), `^${fork}`], { read: true, what: "Couldn't read the project's history" })).map(stateKey))
+
+const landedChanges = async (git: GitRunner, landing: Landing, changes: RawChange[]) => {
+  if (!changes.length) return []
+  const landed = await landedStates(git, landing)
+  return changes.filter(change => landed.has(stateKey(change)))
+}
+
+const asForkEntries = (changes: RawChange[]) => changes.map(({ mode, blob, path }) => `${mode} ${blob}\t${path}\0`).join('')
+
+export const pendingOf = (git: GitRunner, landing: Landing): Promise<Pending> =>
+  git.withTempIndex(landing.root, async env => {
+    const what = "Couldn't read the thread's changes"
+    const { root, fork } = landing
+    await git.ok(root, addAll, { env, what })
+    const changes = rawChanges(await git.ok(root, ['diff', '--cached', ...rawFlags, fork], { env, what }))
+    const landed = await landedChanges(git, landing, changes)
+    if (landed.length) await git.ok(root, ['update-index', '-z', '--index-info'], { env, input: asForkEntries(landed), what })
+    return { tree: await git.ok(root, ['write-tree'], { env, what }), landed: new Set(landed.map(change => change.path)) }
   })
 
 export const commitAll = async (git: GitRunner, dir: string, message: string) => {

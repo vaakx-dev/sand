@@ -24,6 +24,7 @@ const itemOf = (source: ImageSource): SignItem =>
 
 export const createSigner = (wire: Wire, threads: Threads) => {
   const links = new Map<string, Link>()
+  const local = new Map<string, Link>()
   const flying = new Map<string, Promise<Link>>()
   const batches = new Map<string, Batch>()
 
@@ -70,13 +71,18 @@ export const createSigner = (wire: Wire, threads: Threads) => {
     return undefined
   }
 
+  const localLink = (source: ImageSource) => ('block' in source ? local.get(source.block.hash) : undefined)
+
   return {
-    cached: (source: ImageSource, thread?: string) => freshLink(keyOf(itemOf(source), thread)),
+    remember(hash: string, blob: Blob) {
+      if (!local.has(hash)) local.set(hash, { src: URL.createObjectURL(blob), expires: Infinity })
+    },
+    cached: (source: ImageSource, thread?: string) => localLink(source) ?? freshLink(keyOf(itemOf(source), thread)),
     sign(source: ImageSource, thread?: string, again = false): Promise<Link> {
       const item = itemOf(source)
       if (!('src' in item) && !item.hash) return Promise.reject(new Error('This image was never stored'))
       const key = keyOf(item, thread)
-      const known = again ? undefined : (freshLink(key) ?? flying.get(key))
+      const known = again ? undefined : (localLink(source) ?? freshLink(key) ?? flying.get(key))
       if (known) return Promise.resolve(known)
       links.delete(key)
       const signing = request(item, thread).then(signed => {
@@ -90,6 +96,10 @@ export const createSigner = (wire: Wire, threads: Threads) => {
       }
       void signing.then(land, land)
       return signing
+    },
+    close() {
+      for (const { src } of local.values()) URL.revokeObjectURL(src)
+      local.clear()
     },
   }
 }

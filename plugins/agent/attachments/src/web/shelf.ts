@@ -48,6 +48,7 @@ export const createShelf = (ctx: ShelfContext, attachable: Derive<boolean>, item
     try {
       const content = await uploadFile(ctx.wire, place.device(), file, done => sent.update(map => withEntry(map, file, done)))
       uploaded.set(file, content)
+      if (content.type === 'image') ctx.get(mediaView)?.remember(content.hash, file)
     } catch (error) {
       failed.update(map => withEntry(map, file, `Upload failed: ${errorMessage(error)}`))
     } finally {

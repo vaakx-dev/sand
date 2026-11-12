@@ -20,6 +20,7 @@ export const scaledSrc = (src: string, height?: number, maxHeight?: number) => {
   const pixels = Math.ceil(maxHeight * Math.min(globalThis.devicePixelRatio || 1, sharpest))
   if (pixels >= height) return src
   const url = new URL(src)
+  if (url.protocol === 'blob:') return src
   url.searchParams.set('h', String(pixels))
   return url.href
 }

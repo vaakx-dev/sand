@@ -50,7 +50,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
   const within = sig(false)
   const suggestion = derive(() => {
     const chat = model.target.chat()
-    if (!chat || !model.empty.get() || model.running.get()) return undefined
+    if (!chat || !model.empty.get() || model.sending.get() || model.running.get()) return undefined
     return suggesters.of(chat)
   })
 

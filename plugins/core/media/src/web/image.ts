@@ -44,6 +44,7 @@ const picture = (source: ImageSource, link: Link, options: ImageOptions, broke: 
 }
 
 export const createImages = (kit: Kit, signer: Signer): MediaView => ({
+  remember: (hash, blob) => signer.remember(hash, blob),
   image(source, thread, options = {}) {
     const direct = 'src' in source && unsigned.test(source.src)
     const first = (): Shown => {

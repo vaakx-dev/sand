@@ -17,6 +17,7 @@ export interface ImageOptions {
 
 export interface MediaView {
   image(source: ImageSource, thread: string | undefined, options?: ImageOptions): HTMLElement
+  remember(hash: string, blob: Blob): void
 }
 
 export const mediaView = service<MediaView>('mediaView')
