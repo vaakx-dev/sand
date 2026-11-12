@@ -180,13 +180,7 @@ export interface ChipScope {
   owner: string
 }
 
-export interface ChipItem {
-  id: string
-  label: string
-  status?: Status
-  icon?: string
-  detail?: Child
-  at?: number
+export interface ChipItem extends Row {
   open(): void
 }
 

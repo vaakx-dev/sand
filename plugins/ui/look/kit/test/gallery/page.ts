@@ -36,7 +36,7 @@ const tabs = () => {
 }
 
 const chipItem = (title: string, status: Status, detail?: string) =>
-  kit.workRow({ surface: 'raised', onClick: () => {} }, kit.workRowBody({ title, detail, status, at: Date.now() - 180_000 }))
+  kit.workRow({ surface: 'raised', onClick: () => {} }, kit.rowBody(() => ({ id: title, label: title, detail: detail === undefined ? undefined : () => detail, status, at: Date.now() - 180_000 })))
 
 const chips = () =>
   line(
@@ -153,12 +153,14 @@ const gallery = () =>
       'Work row',
       kit.workRow(
         { current: true },
-        kit.workRowBody({
-          title: 'Add retry with backoff to the tide table fetcher',
-          end: kit.workStatus('ready'),
-          place: { label: 'harbor', mark: kit.projectIcon('harbor', {}, 14) },
-          trail: [kit.monoMeta('sand/tide-table-retry-with-backoff'), kit.badge('success', '#214')],
-        }),
+        kit.rowBody(() => ({
+          id: 'tide-table',
+          label: 'Add retry with backoff to the tide table fetcher',
+          at: Date.now() - 720_000,
+          status: 'ready',
+          place: { label: 'harbor', mark: () => kit.projectIcon('harbor', {}, 14) },
+          trail: () => [kit.monoMeta('sand/tide-table-retry-with-backoff'), kit.badge('success', '#214')],
+        })),
       ),
     ),
     block('Group heading', kit.groupHeading('Bots', { icon: 'plus', label: 'New bot', onClick: () => {} })),
