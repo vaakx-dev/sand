@@ -23,7 +23,7 @@ export const navigation = (known: (kind: string) => boolean, landing: () => Rout
     go,
     back() {
       if (place.get().depth > 0) backAddress()
-      else go(home, true)
+      else go(landing(), true)
     },
     follow() {
       const next = requestedPlace()

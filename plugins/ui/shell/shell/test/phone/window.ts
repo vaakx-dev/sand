@@ -202,13 +202,22 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page)).toBe('fixture/plain')
   })
 
-  test('Settings opens as the window, a page goes deeper, and back walks out', async () => {
+  test('Settings opens as the window, a page goes deeper, and Back or browser back walks out', async () => {
     const { page } = phone
+    const plugins = () => page.getByRole('button', { name: 'Plugins', exact: true }).filter({ visible: true }).click()
     await openPlain()
     await tap(page, 'Show the sidebar')
     await tap(page, 'Settings')
     expect(await screen(page, 'settings')).toBe('settings')
-    await page.getByRole('button', { name: 'Plugins', exact: true }).filter({ visible: true }).click()
+    await plugins()
+    expect(await screen(page, 'settings/plugins')).toBe('settings/plugins')
+    await tap(page, 'Back')
+    expect(await screen(page, 'settings')).toBe('settings')
+    await tap(page, 'Back')
+    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    await tap(page, 'Show the sidebar')
+    await tap(page, 'Settings')
+    await plugins()
     expect(await screen(page, 'settings/plugins')).toBe('settings/plugins')
     await page.goBack()
     expect(await screen(page, 'settings')).toBe('settings')

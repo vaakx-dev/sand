@@ -6,10 +6,14 @@ import type { Built } from './screens'
 
 const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 
-export const toolButton = (model: Model, label: string, glyph: string, onClick: () => void) =>
+const toolButton = (model: Model, label: string, glyph: string, onClick: () => void) =>
   model.kit.iconButton({ title: label, 'aria-label': label, onClick }, model.kit.icon(glyph))
 
 const sidebarButton = (model: Model) => toolButton(model, 'Show the sidebar', 'sidebar', () => model.setDrawer(true))
+
+const backButton = (model: Model) => toolButton(model, 'Back', 'back', () => model.back())
+
+const leadButton = (model: Model, built: Built | undefined) => (built?.nav ? backButton(model) : sidebarButton(model))
 
 export const deskFrames = (model: Model, built: Built) =>
   div(
@@ -32,4 +36,4 @@ export const deskFrames = (model: Model, built: Built) =>
   )
 
 export const phoneFrame = (model: Model, built: Built | undefined) =>
-  section({ class: fill }, bar(sidebarButton(model), built?.head ?? div({ class: 'flex-1' }), asideToggles(model)), div({ class: fill }, built?.main ?? null))
+  section({ class: fill }, bar(leadButton(model, built), built?.head ?? div({ class: 'flex-1' }), asideToggles(model)), div({ class: fill }, built?.main ?? null))
