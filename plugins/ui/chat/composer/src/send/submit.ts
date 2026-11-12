@@ -1,4 +1,5 @@
-import { labelOf, promptOf } from '@sand/attachments/web/contract'
+import { promptOf } from '@sand/attachments/contract'
+import { labelOf } from '@sand/attachments/web/contract'
 import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import { models } from '@sand/web-client/contract'

@@ -570,6 +570,7 @@
       "name": "@sand/threads-mcp",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/attachments": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
@@ -797,6 +798,7 @@
       "name": "@sand/bots-mcp",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/attachments": "workspace:*",
         "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/mcp-server": "workspace:*",
