@@ -17,7 +17,7 @@ const readRules = `Read your plan: the Markdown file the user reads to see where
 
 const writeRules = `Write your plan, replacing the whole file. Keep it current: update it when you start or finish work, or wait on someone or something, and drop done items that no longer matter. A bot leaves out bot to write its own.
 
-One bullet per item. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note; the Project page groups linked items by each thread's state, so don't add status headings. An item with no thread stays plain, with what it waits on:
+One bullet per item. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note; each link shows its thread's live state, so don't add status headings. An item with no thread stays plain, with what it waits on:
 
 - [Fix the login bug](${threadScheme}:0b6c2e1a): tests running
 - Hotel quote: asked the hotel, reply due Friday`

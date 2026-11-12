@@ -1,3 +1,4 @@
+import type { Owner } from '@sand/engine/contract'
 import { running } from '@sand/reactive'
 import { byId, collectScope, disposeAll, div, mount, type Child } from '@vaakx-dev/vrui'
 import { event, service, type Context, type Dispose } from 'drydock'
@@ -120,6 +121,7 @@ export interface Aside {
 
 export interface Subject {
   session: string
+  owner: Owner
   device: string
   cwd?: string
   draft?: boolean

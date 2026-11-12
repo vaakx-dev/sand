@@ -12,6 +12,7 @@
     "summary": "The sidebar, the screens features open in it, and on phones a stack of screens you swipe back through"
   },
   "dependencies": {
+    "@sand/engine": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

@@ -2,8 +2,10 @@ import { memoryWrite } from '@sand/bot-memory/contract'
 import { botConversation, botCreate, botDelete, botGet, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botOpen, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
+import { contextChange, contextGet } from '@sand/compaction/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
 import { media } from '@sand/media/contract'
+import { server } from '@sand/server/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { resolve } from 'node:path'
@@ -53,6 +55,23 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   const { entries } = await ask(botConversation, { bot: bot.id })
   expect(messages(entries).map(message => message.role)).toEqual(['user', 'assistant'])
   expect(sand.sessions.list()).toEqual([])
+})
+
+test("a bot's context usage is served and broadcast, like a thread's", async () => {
+  const { ask, app } = await start([[said('Noted.'), { type: 'usage', input: 1200, output: 30 }]])
+  const broadcast: unknown[] = []
+  const hub = app.get(server)
+  if (!hub) throw new Error('server did not start')
+  hub.broadcast = (event, payload) => {
+    if (event.id === contextChange.id) broadcast.push(payload)
+  }
+  const bot = await ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
+  await ask(botSend, { bot: bot.id, prompt: 'Buy milk', clientRequestId: 'one' })
+  await settled(bot.id)
+
+  const usage = await ask(contextGet, { session: bot.id, owner: 'bot' })
+  expect(usage?.used).toBe(1230)
+  expect(broadcast).toContainEqual([bot.id, expect.objectContaining({ used: 1230 })])
 })
 
 test('a failed turn marks the bot failed, and deleting a bot forgets its turns', async () => {

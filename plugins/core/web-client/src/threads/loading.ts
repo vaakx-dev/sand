@@ -29,7 +29,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     const pending = opened.pending ?? (opened.queue && legacyPending(opened.queue))
     if (pending) store.pending(thread.id, pending)
     if (opened.settings) store.settings.set(thread.id, opened.settings)
-    void wire.call(contextGet, { session: thread.id }).then(usage => store.context(thread.id, usage), () => {})
+    void wire.call(contextGet, { session: thread.id, owner: 'thread' }).then(usage => store.context(thread.id, usage), () => {})
     store.changed(thread.id, true)
     ctx.emit(modelsChange)
     return thread

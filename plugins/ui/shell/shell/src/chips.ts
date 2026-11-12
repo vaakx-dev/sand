@@ -1,7 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { ChipItem, ChipScope, ChipSource, Status } from './contract'
-import { statusIcon } from './marks'
 
 interface Chip {
   key: string
@@ -23,7 +22,7 @@ const itemRow = (kit: Kit, item: ChipItem, close: () => void) => {
   const { action, open } = item
   return kit.chipRow({
     title: item.label,
-    lead: item.status ? statusIcon(kit, item.status) : item.icon ? kit.icon(item.icon, 'sm') : undefined,
+    lead: item.status ? kit.statusIcon(item.status) : item.icon ? kit.icon(item.icon, 'sm') : undefined,
     meta: item.meta,
     action: action && kit.primaryAction({ size: 'sm', disabled: () => action.busy?.() ?? false, onClick: () => void action.run() }, action.label),
     onClick: open && (() => {

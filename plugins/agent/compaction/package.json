@@ -19,7 +19,6 @@
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",
-    "@sand/model": "workspace:*",
     "@sand/provider-threads": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/usage": "workspace:*",

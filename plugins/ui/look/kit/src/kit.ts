@@ -9,6 +9,7 @@ import { card } from './cards/card'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
+import { editable } from './fields/editable'
 import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { pageBody } from './heads/page-body'
@@ -28,7 +29,7 @@ import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressStep
 import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
-import { stateIcon } from './marks/state-icon'
+import { stateIcon, statusIcon } from './marks/state-icon'
 import { stepMark } from './marks/state-marks'
 import { statusBadge, statusLabel } from './marks/status'
 import { toneText } from './marks/tones'
@@ -126,6 +127,7 @@ export const kit = {
   doneMark,
   dot,
   dropdown,
+  editable,
   elapsed,
   emptyBlock,
   emptyState,
@@ -244,6 +246,7 @@ export const kit = {
   stableGutter,
   starMark,
   stateIcon,
+  statusIcon,
   statusBadge,
   statusBanner,
   statusLabel,

@@ -61,7 +61,7 @@ export const launch = (parts: LaunchParts) => {
     shell.subject(({ kind }) => {
       pulse.version.get()
       const draft = threads.drafting()
-      return [homeRoute, newThreadRoute].includes(kind) && draft ? { session: draft.id, device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
+      return [homeRoute, newThreadRoute].includes(kind) && draft ? { session: draft.id, owner: 'thread', device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
     }),
   )
   ctx.watch(modelTargets, targets =>

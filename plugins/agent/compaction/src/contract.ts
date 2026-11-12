@@ -54,4 +54,4 @@ export const contextUsage = event<(conversation: Conversation, usage: ContextUsa
 
 export const contextChange = wireEvent<[session: string, usage: ContextUsage]>('context.change')
 
-export const contextGet = request('context.get', { input: () => z.object({ session: z.string() }), output: type<ContextUsage | undefined>(), place: 'thread' })
+export const contextGet = request('context.get', { input: () => z.object({ session: z.string(), owner: z.enum(['thread', 'bot']) }), output: type<ContextUsage | undefined>(), place: 'thread' })

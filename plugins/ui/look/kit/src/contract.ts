@@ -26,6 +26,7 @@ export interface MenuRequest extends PressAt, MenuSpec {
 
 export type { CardProps } from './cards/card'
 export type { ContextMenu } from './context-menu/menu'
+export type { EditableProps } from './fields/editable'
 export type { TextAreaProps } from './fields/field'
 export type { Direction } from './gesture/direction'
 export type { Drag } from './gesture/follow'
