@@ -18,7 +18,14 @@ const notesOf = async (memory: BotMemory, bot: string) => {
   return `What you learned about your work, by topic. Look one up with note_read before work it may cover:\n\n${index}`
 }
 
-const jobOf = (bot: BotSummary) => (bot.job.trim() ? [`## Your job\n\n${bot.job.trim()}`] : [])
+const NO_JOB = `## Your job
+
+You have no job yet.
+- If the user hasn't said what they want you for, ask, in one or two short questions at most.
+- If their message is a task, do it first, then offer to take on that kind of work as your job.
+- Once you know what you're for, write your job with bot_update, and a name if you have none. After that, change your job only when the user asks.`
+
+const jobOf = (bot: BotSummary) => (bot.job.trim() ? `## Your job\n\n${bot.job.trim()}` : NO_JOB)
 
 const projectsOf = ({ projects }: BotSummary, files: ProjectFiles | undefined) => {
   if (!projects.length) return []
@@ -35,5 +42,5 @@ const whoOf = (name: string) => (name ? `You are ${name}, one of the user's bots
 
 export const instructions = async (bot: BotSummary, memory: BotMemory, files: ProjectFiles | undefined): Promise<Own> => ({
   intro: whoOf(bot.name),
-  parts: [...jobOf(bot), ...projectsOf(bot, files), `## Your memory\n\n${await memoryOf(memory, bot.id)}`, `## Your notes\n\n${await notesOf(memory, bot.id)}`],
+  parts: [jobOf(bot), ...projectsOf(bot, files), `## Your memory\n\n${await memoryOf(memory, bot.id)}`, `## Your notes\n\n${await notesOf(memory, bot.id)}`],
 })

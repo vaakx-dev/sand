@@ -7,6 +7,8 @@ import type { CodeAnswer, SecretAnswer, Waits } from '../waits'
 
 export const group = 'logins'
 
+export const signInGroup = 'sign-in'
+
 export interface ToolDeps {
   logins: LoginsRuntime
   sessions(): Sessions | undefined

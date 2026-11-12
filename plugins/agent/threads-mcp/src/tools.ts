@@ -150,9 +150,9 @@ export const threadTools: McpTool[] = [
   {
     name: 'history_read',
     description: [
-      'Read or search the history of a thread, a bot, or, leaving both out, your own: what was said and when, what was done, and the notifications that came in, including what compaction or a model switch left out of your context.',
-      'Each item has its seq, when it happened and its turn; more says there are items past the page: older ones, or newer ones when after is set.',
-      'Pass item to read one item in full; a long one comes in parts, continued from nextOffset',
+      'Read or search the history of a thread, a bot, or with neither your own: messages, actions and notifications, including what compaction or a model switch dropped from your context.',
+      'Items have a seq, time and turn; more means there are items past the page (older, or newer when after is set).',
+      'Pass item to read one in full; a long one comes in parts, continued from nextOffset.',
     ].join(' '),
     input: historyInput,
     access: 'read',

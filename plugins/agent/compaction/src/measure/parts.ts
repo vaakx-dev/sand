@@ -1,7 +1,7 @@
 import type { LLMRequest } from '@sand/accounts/contract'
 import type { Block } from '@sand/chats/contract'
 import type { ContextParts } from '../contract'
-import { charsOf } from './estimate'
+import { charsOf, toolsChars } from './estimate'
 
 const charsOfAll = (blocks: Block[]) => blocks.reduce((sum, block) => sum + charsOf(block), 0)
 
@@ -10,7 +10,7 @@ const sharesOf = ({ system, tools, messages }: LLMRequest): ContextParts => {
   const results = charsOfAll(blocks.filter(block => block.type === 'tool_result'))
   return {
     system: system.length,
-    tools: JSON.stringify(tools).length,
+    tools: toolsChars(tools),
     conversation: charsOfAll(blocks) - results,
     results,
   }

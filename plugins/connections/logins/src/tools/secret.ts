@@ -18,12 +18,12 @@ const input = z.object({
   once: z
     .boolean()
     .describe(
-      'True for a value needed only once, such as a code sent by email or text or a single-use token: it is held for one use and never saved, unless the user chooses to. False for one worth keeping, such as a password or API key: it is saved as a login.',
+      'True for a one-use value, like an emailed or texted code: held for one use, not saved unless the user chooses. False for a password or API key: saved as a login.',
     ),
 })
 
 const description =
-  'Ask the user for a secret in a private card and wait until they answer: an API key or token, or with site a website login (username and password). Use this instead of asking for a secret in chat; you never see the value. It becomes one of the logins, saved or for one use only: pass a key to Shell with its logins parameter, or fill a website login into the browser with login_fill.'
+  'Ask the user for a secret in a private card and wait for the answer: an API key or token, or with site a website login. Use this instead of asking for a secret in chat; you never see the value. It becomes a login: pass a key to shell with its logins parameter, or fill a website login with login_fill.'
 
 const unanswered: Record<Unanswered, string> = {
   declined: 'The user declined. Go on without it, or ask what to do instead.',
