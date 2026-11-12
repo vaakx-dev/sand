@@ -1,16 +1,18 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import type { RemoveCheck, RemoveResult } from '../contract'
 import { rolledBack } from '../create/rollback'
 import type { WorktreeDeps } from '../deps'
 import { dropStash, restoreStash, stashChanges } from '../move/carry'
 import type { WorktreeRecord } from '../records/schema'
-import { currentBranch, headCommit } from '../repo/refs'
 import { longGitMs } from '../repo/timeout'
 import { threadsIn, withSessions } from '../sessions/inside'
 import { relocateAll } from '../sessions/relocate'
-import { lossMessage, removeCheck } from './check'
+import { lossMessage, removeCheck, tipOf } from './check'
 import { dropKeptHead, keepHead } from './kept-head'
-import { clearLeftover, isWorktree } from './leftover'
+import { clearFolder, clearLeftover } from './leftover'
 import { keptNote, removedNote } from './notes'
+import { putBack, setAside } from './trash'
 
 export interface RemoveRequest {
   path: string
@@ -21,12 +23,6 @@ export type RemovedNote = (record: WorktreeRecord, branch: string | undefined, c
 
 const loses = ({ uncommitted, unpushed }: RemoveCheck) => uncommitted > 0 || unpushed > 0
 
-const lastHead = async (deps: WorktreeDeps, record: WorktreeRecord, exists: boolean) => {
-  if (exists) return headCommit(deps.git, record.path)
-  if (!record.branch) return undefined
-  return deps.git.maybe(record.main, ['rev-parse', '--verify', '--quiet', `refs/heads/${record.branch}^{commit}`], { read: true })
-}
-
 const moveThreadsOut = async (deps: WorktreeDeps, record: WorktreeRecord, branch: string | undefined, note: RemovedNote) => {
   const inside = threadsIn(deps.sessions, record.path).map(session => session.id)
   const away = await relocateAll(deps, inside, record.path, record.main, cwd => note(record, branch, cwd))
@@ -35,10 +31,37 @@ const moveThreadsOut = async (deps: WorktreeDeps, record: WorktreeRecord, branch
   throw new Error(`Couldn't move the threads out, so the worktree stays: ${[...away.failed, ...back.failed].join('; ')}`)
 }
 
-const detach = async (deps: WorktreeDeps, record: WorktreeRecord, exists: boolean) => {
-  const args = exists ? ['worktree', 'remove', '--force', record.path] : ['worktree', 'prune']
-  await deps.git.ok(record.main, args, { timeoutMs: longGitMs, what: "Couldn't remove the worktree" })
+const removing = { timeoutMs: longGitMs, what: "Couldn't remove the worktree" }
+
+const prune = (deps: WorktreeDeps, record: WorktreeRecord) => deps.git.ok(record.main, ['worktree', 'prune'], removing)
+
+const removeInPlace = async (deps: WorktreeDeps, record: WorktreeRecord) => {
+  await deps.git.ok(record.main, ['worktree', 'remove', '--force', record.path], removing)
   await clearLeftover(record.path)
+}
+
+const removeAside = async (deps: WorktreeDeps, record: WorktreeRecord, aside: string) => {
+  try {
+    await prune(deps, record)
+  } catch (error) {
+    await putBack(aside, record.path)
+    throw error
+  }
+  clearFolder(aside).catch(deps.report)
+}
+
+const movable = async (deps: WorktreeDeps, record: WorktreeRecord) => {
+  const layout = await deps.repos.layout(record.path)
+  return layout !== undefined && !existsSync(join(layout.gitDir, 'locked'))
+}
+
+const detach = async (deps: WorktreeDeps, record: WorktreeRecord, exists: boolean) => {
+  if (!exists) {
+    await prune(deps, record)
+    return clearLeftover(record.path)
+  }
+  const aside = (await movable(deps, record)) ? await setAside(deps.folder, record.path) : undefined
+  return aside ? removeAside(deps, record, aside) : removeInPlace(deps, record)
 }
 
 const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: string) => {
@@ -46,12 +69,12 @@ const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: 
 }
 
 const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean, note: RemovedNote): Promise<RemoveResult> => {
-  const check = await removeCheck(deps, record)
+  const tip = await tipOf(deps, record)
+  const check = await removeCheck(deps, record, tip)
   if (check.running || (loses(check) && !force)) return { removed: false, check, message: lossMessage(check, deps.keepDays.removed) }
-  const exists = isWorktree(record.path)
-  const head = (await lastHead(deps, record, exists)) || record.head
-  const branch = exists ? await currentBranch(deps.git, record.path) : record.branch
-  const saved = check.uncommitted ? await stashChanges(deps.git, record.path) : undefined
+  const { exists, branch } = tip
+  const head = tip.head || record.head
+  const saved = check.uncommitted ? await stashChanges(deps.git, record.path, check.uncommitted) : undefined
   const kept = saved?.commit ?? head
   await deps.setups.forget(record.path)
   let moved: string[] = []

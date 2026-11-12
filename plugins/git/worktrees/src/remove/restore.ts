@@ -8,8 +8,8 @@ import type { WorktreeDeps } from '../deps'
 import { recordedWorktree } from '../list/shape'
 import { applyStash } from '../move/carry'
 import type { WorktreeRecord } from '../records/schema'
+import { addWorktree } from '../repo/add'
 import { branchExists } from '../repo/refs'
-import { longGitMs } from '../repo/timeout'
 import { relocateAll } from '../sessions/relocate'
 import { planSteps } from '../setup/plan'
 import { doneStep, freshSetup } from '../setup/state'
@@ -45,7 +45,7 @@ const addBack = async (deps: WorktreeDeps, record: WorktreeRecord) => {
   if (existsSync(record.path)) throw new Error(`${record.path} already exists. Move it away to restore the worktree.`)
   const args = await addArgs(deps.git, record)
   await mkdir(dirname(record.path), { recursive: true })
-  await deps.git.ok(record.main, ['worktree', 'add', ...args], { timeoutMs: longGitMs, what: "Couldn't restore the worktree" })
+  await addWorktree(deps.git, record.main, args, "Couldn't restore the worktree")
   if (await appliedSaved(deps, record)) await dropKeptHead(deps.git, record).catch(deps.report)
   delete record.removed
   delete record.head

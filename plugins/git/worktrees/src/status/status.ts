@@ -2,9 +2,7 @@ import type { GitRunner } from '@sand/git-runner/contract'
 import type { WorktreeStatus } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
-import { removeCheck } from '../remove/check'
-import { isWorktree } from '../remove/leftover'
-import { currentBranch } from '../repo/refs'
+import { removeCheck, tipOf } from '../remove/check'
 
 export const liveRecords = async (deps: WorktreeDeps) => {
   await deps.store.ready()
@@ -18,12 +16,9 @@ const beyondBase = async (git: GitRunner, { path, base }: WorktreeRecord) => {
 }
 
 const statusOf = async (deps: WorktreeDeps, record: WorktreeRecord): Promise<WorktreeStatus> => {
-  const exists = isWorktree(record.path)
-  const [check, branch, ahead] = await Promise.all([
-    removeCheck(deps, record),
-    exists ? currentBranch(deps.git, record.path) : record.branch,
-    exists ? beyondBase(deps.git, record) : undefined,
-  ])
+  const tip = await tipOf(deps, record)
+  const [check, ahead] = await Promise.all([removeCheck(deps, record, tip), tip.exists ? beyondBase(deps.git, record) : undefined])
+  const { branch } = tip
   return {
     path: record.path,
     main: record.main,

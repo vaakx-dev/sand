@@ -4,12 +4,12 @@ import { join } from 'node:path'
 
 export const isWorktree = (path: string) => existsSync(join(path, '.git'))
 
-const clear = async (path: string): Promise<void> => {
+export const clearFolder = async (path: string): Promise<void> => {
   const info = await lstat(path).catch(() => undefined)
   if (!info) return
   if (info.isSymbolicLink()) return unlinkLink(path)
   if (!info.isDirectory()) return unlink(path)
-  for (const name of await readdir(path)) await clear(join(path, name))
+  for (const name of await readdir(path)) await clearFolder(join(path, name))
   await rmdir(path)
 }
 
@@ -22,5 +22,5 @@ const unlinkLink = async (path: string) => {
 
 export const clearLeftover = async (path: string) => {
   if (isWorktree(path)) return
-  await clear(path)
+  await clearFolder(path)
 }

@@ -9,7 +9,7 @@ import { repoAt } from '../repo/local'
 import { checkedNewBranch, headCommit } from '../repo/refs'
 import { infoOf } from '../sessions/info'
 import { sameFolderIn } from '../sessions/relocate'
-import { applyStash, type Carried, dropStash, restoreStash, stashChanges } from './carry'
+import { applyStash, type Carried, changedFiles, dropStash, restoreStash, stashChanges } from './carry'
 import { moveNote } from './note'
 
 export interface MoveRequest {
@@ -39,7 +39,7 @@ const makeWorktree = async (deps: WorktreeDeps, local: GitRepoLocal, request: Mo
   const head = await headCommit(deps.git, local.root)
   if (!head) throw new Error('Make a first commit before moving this thread to a worktree.')
   const branch = request.branch === undefined ? undefined : await checkedNewBranch(deps.git, local.root, request.branch)
-  const carried = await stashChanges(deps.git, local.root)
+  const carried = await stashChanges(deps.git, local.root, await changedFiles(deps.git, local.root))
   const base = local.branch ?? shortSha(head)
   let record: WorktreeRecord
   try {
