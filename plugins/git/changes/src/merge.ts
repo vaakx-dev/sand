@@ -18,7 +18,7 @@ const squash = async ({ git, report }: ChangesDeps, { work, target, tree, title 
   const [tip] = await git.commits(work.root, [`refs/heads/${target}`])
   if (!tip) throw new Error(`Couldn't find the tip of ${target}.`)
   const combined = await combine(git, work.main, work.fork, tip, tree)
-  if (combined.conflicts) return undefined
+  if (combined.conflicts.length) return undefined
   const commit = await git.ok(work.main, ['commit-tree', combined.tree, '-p', tip, '-m', title], { what: "Couldn't make the merge commit" })
   await git.ok(work.main, ['merge', '--ff-only', '--quiet', commit], { what: "Couldn't bring the merged work into the project folder" })
   await git.ok(work.root, ['reset', '--hard', '--quiet', commit], { what: "The work is merged, but the thread's worktree couldn't catch up" }).catch(report)
