@@ -1,7 +1,7 @@
 {
   "name": "@sand/plugins-mcp",
   "version": "0.0.0",
-  "description": "sand's plugin tools, defined once for its own threads and bots and for outside agents over MCP: list plugins and web extensions with their status and errors, and show one in detail",
+  "description": "sand's plugin tools, defined once for its own threads and bots and for outside agents over MCP: list plugins and web extensions with their status and errors, show one in detail, and reload them",
   "type": "module",
   "sand": {
     "feature": "threads-mcp",
@@ -9,11 +9,12 @@
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
     "label": "Plugin tools",
-    "summary": "Lets your threads, your bots and outside agents see sand's plugins, their status and their errors"
+    "summary": "Lets your threads, your bots and outside agents see sand's plugins, their status and their errors, and reload them"
   },
   "dependencies": {
     "@sand/mcp-server": "workspace:*",
     "@sand/plugins": "workspace:*",
+    "@sand/reload": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

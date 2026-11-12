@@ -1,5 +1,6 @@
 import { sessions } from '@sand/chats/contract'
-import { type ClientMessage, createHandlers, hello, parseInput } from '@sand/host-hub/contract'
+import { type Caller, type ClientMessage, createHandlers, hello, parseInput, type Request } from '@sand/host-hub/contract'
+import { hostChannel } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { helloSafe, pageLeft, pagesChange, type Server, server as serverService, uiFocus, uiWatch } from './contract'
 import { inject } from './context'
@@ -62,13 +63,18 @@ export default definePlugin({
     ctx.effect(() => hellos.register(helloSafe, () => ctx.cli.safe))
     ctx.watch(sessions, found => found && serveThreads(ctx, found, handlers, stream))
 
+    const ask = <I, O>(request: Request<I, O>, input: I, caller: Caller) => {
+      const host = ctx.get(hostChannel)
+      return host && caller.kind === 'agent' && !handlers.has(request.id) ? host.ask(request, input, caller) : handlers.ask(request, input, caller)
+    }
+
     const server: Server = {
       route: routes.route,
       handle: handlers.handle,
       broadcast: (event, payload) => send(event, payload),
       hello: hellos.register,
       pages: sockets.pages,
-      ask: handlers.ask,
+      ask,
       tell: (caller, event, payload) => send(event, payload, socket => socket.data === caller),
     }
     ctx.provide(serverService, server)

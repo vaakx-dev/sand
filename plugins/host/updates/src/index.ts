@@ -55,7 +55,7 @@ export default definePlugin({
       },
       store,
     )
-    for (const setup of updateRequests(ctx.hub, updater)) ctx.effect(setup)
+    for (const setup of updateRequests(ctx.hub, updater, () => ctx.get(peers))) ctx.effect(setup)
     for (const setup of repairRequests(ctx.hub, { self: () => ctx.get(thisPc)?.id, peers: () => ctx.get(peers) })) ctx.effect(setup)
     ctx.effect(() => {
       updater.start()

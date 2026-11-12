@@ -1,0 +1,21 @@
+{
+  "name": "@sand/updates-mcp",
+  "version": "0.0.0",
+  "description": "sand's update tools, defined once for its own threads and bots and for outside agents over MCP: see whether a newer sand is out, install it on any of your PCs, restart into it and pick the release channel",
+  "type": "module",
+  "sand": {
+    "feature": "updates",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Update tools",
+    "summary": "Lets your threads, your bots and outside agents check for, install and restart into newer sand releases on your PCs"
+  },
+  "dependencies": {
+    "@sand/host-updates": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

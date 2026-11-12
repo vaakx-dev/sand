@@ -397,6 +397,7 @@
       "dependencies": {
         "@sand/mcp-server": "workspace:*",
         "@sand/plugins": "workspace:*",
+        "@sand/reload": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -636,6 +637,17 @@
         "@sand/host-hub": "workspace:*",
         "@sand/model": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/agent/updates-mcp": {
+      "name": "@sand/updates-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/host-updates": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
       },
     },
     "plugins/agent/usage": {
@@ -3102,6 +3114,8 @@
     "@sand/ui-theme": ["@sand/ui-theme@workspace:plugins/ui/look/theme"],
 
     "@sand/update-banner": ["@sand/update-banner@workspace:plugins/pcs/update-banner"],
+
+    "@sand/updates-mcp": ["@sand/updates-mcp@workspace:plugins/agent/updates-mcp"],
 
     "@sand/usage": ["@sand/usage@workspace:plugins/agent/usage"],
 

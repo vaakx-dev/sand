@@ -45,7 +45,7 @@ const pc = async (off: string[] = []) => {
   const host = createHandlers()
   const root = await projectRoot(sand.home)
   for (const setup of manageRequests({ hub: host, registry, root, device, pcs: () => [], git: runner, placeChanged() {} })) setup()
-  sand.app.provide(hostChannel, { call: (request, input) => host.ask(request, input, { device, kind: 'runtime' }), on: () => () => {} })
+  sand.app.provide(hostChannel, { call: (request, input) => host.ask(request, input, { device, kind: 'runtime' }), ask: host.ask, on: () => () => {} })
   return { sand, device, registry }
 }
 

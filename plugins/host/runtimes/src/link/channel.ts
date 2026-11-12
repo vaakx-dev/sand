@@ -1,4 +1,4 @@
-import type { WireEvent } from '@sand/host-hub/contract'
+import type { Caller, Request, WireEvent } from '@sand/host-hub/contract'
 import type { HostChannel, HostMessage, RuntimeMessage } from '../contract'
 
 interface Waiter {
@@ -8,6 +8,11 @@ interface Waiter {
 }
 
 type Listener = (payload: unknown) => void
+
+interface CallOptions {
+  timeout?: number
+  caller?: Caller
+}
 
 const defaultTimeout = 30_000
 
@@ -23,14 +28,17 @@ export const createHostChannel = (send: (message: RuntimeMessage) => void) => {
     return waiter
   }
 
+  const callHost = <I, O>(request: Request<I, O>, input: I, { timeout = defaultTimeout, caller }: CallOptions) =>
+    new Promise<O>((resolve, reject) => {
+      const id = ++next
+      const timer = setTimeout(() => take(id)?.reject(new Error(`the host didn't answer ${request.id} in time`)), timeout)
+      pending.set(id, { resolve: resolve as (value: unknown) => void, reject, timer })
+      send({ type: 'call', id, request: request.id, input, ...(caller && { caller }) })
+    })
+
   const channel: HostChannel = {
-    call: (request, input, timeout = defaultTimeout) =>
-      new Promise((resolve, reject) => {
-        const id = ++next
-        const timer = setTimeout(() => take(id)?.reject(new Error(`the host didn't answer ${request.id} in time`)), timeout)
-        pending.set(id, { resolve: resolve as (value: unknown) => void, reject, timer })
-        send({ type: 'call', id, request: request.id, input })
-      }),
+    call: (request, input, timeout) => callHost(request, input, { timeout }),
+    ask: (request, input, caller) => callHost(request, input, { caller }),
     on<P>(event: WireEvent<P>, listener: (payload: P) => void) {
       const set = listeners.get(event.id) ?? new Set<Listener>()
       const added = listener as Listener

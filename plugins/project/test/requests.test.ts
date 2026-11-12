@@ -23,7 +23,7 @@ beforeAll(async () => {
   const host = createHandlers()
   const root = await loadRoot(sand.home)
   for (const setup of manageRequests({ hub: host, registry, root, device, pcs: () => [{ id: device, name: 'Desk' }], git: () => undefined, placeChanged() {} })) setup()
-  sand.app.provide(hostChannel, { call: (request, input) => host.ask(request, input, { device, kind: 'runtime' }), on: () => () => {} })
+  sand.app.provide(hostChannel, { call: (request, input) => host.ask(request, input, { device, kind: 'runtime' }), ask: host.ask, on: () => () => {} })
 })
 
 afterAll(() => sand.stop())
