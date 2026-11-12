@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 100
+          fetch-depth: 0
       - name: Load Chrome from disk while the job sets up
         run: google-chrome --headless=new --dump-dom about:blank > /dev/null 2>&1 & echo $! > "$RUNNER_TEMP/chrome.pid"
       - uses: ./.github/actions/bun
@@ -28,7 +28,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prerelease=""
-          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME" $prerelease \
+          since="$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)"
+          gh release create "$GITHUB_REF_NAME" --verify-tag --latest --title "$GITHUB_REF_NAME" \
+            --generate-notes ${since:+--notes-start-tag "$since"} \
             "$RUNNER_TEMP/assets/sand.tar.gz" "$RUNNER_TEMP/assets/sand-build.json"
