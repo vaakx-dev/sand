@@ -1,11 +1,11 @@
-import { copyPlugin } from '@sand/plugin-files'
+import { copyPlugin, removeFolder, removePlugin } from '@sand/plugin-files'
 import { isRecord } from '@sand/util'
 import { exists } from '@sand/util/fs'
 import type { BuildInfo } from '@sand/util/release'
-import { lstat, rename, rm, rmdir, unlink } from 'node:fs/promises'
+import { lstat, rename } from 'node:fs/promises'
 import { join } from 'node:path'
 import { builtinPlugins } from './builtins'
-import { linkDependencies, unlinkDependencies } from './links'
+import { linkDependencies } from './links'
 import { writeCustomised } from './manifest'
 import type { KeptStore } from './store'
 import { builtinHash, type LibraryPaths, pluginsRoot } from './view'
@@ -44,8 +44,7 @@ export const libraryActions = ({ paths, kept, build, report }: ActionOptions) =>
         await linkDependencies(appRoot, builtin.folder, staging)
         await rename(staging, copy)
       } catch (error) {
-        await unlinkDependencies(staging).catch(() => {})
-        await rm(staging, { recursive: true, force: true })
+        await removeFolder(staging)
         throw error
       }
       await kept.forget(name)
@@ -55,13 +54,7 @@ export const libraryActions = ({ paths, kept, build, report }: ActionOptions) =>
     },
     async restore(name: string) {
       await builtinOf(name)
-      const copy = join(pluginsRoot(paths().home), name)
-      const info = await lstat(copy).catch(() => undefined)
-      if (info?.isSymbolicLink()) await unlink(copy).catch(() => rmdir(copy))
-      else if (info) {
-        await unlinkDependencies(copy)
-        await rm(copy, { recursive: true, force: true })
-      }
+      await removePlugin(paths().home, name)
       await kept.forget(name)
     },
     async relink() {

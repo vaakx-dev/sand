@@ -346,6 +346,20 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/agent/plugins-mcp": {
+      "name": "@sand/plugins-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/mcp-server": "workspace:*",
+        "@sand/plugins": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/projects-mcp": {
       "name": "@sand/projects-mcp",
       "version": "0.0.0",
@@ -1666,24 +1680,22 @@
       "dependencies": {
         "@sand/config": "workspace:*",
         "@sand/skills": "workspace:*",
-        "@sand/tools": "workspace:*",
-        "@sand/web": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
       },
     },
     "plugins/extend/plugins": {
       "name": "@sand/plugins",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/features": "workspace:*",
-        "@sand/host-health": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-plugin-library": "workspace:*",
         "@sand/host-plugin-sync": "workspace:*",
         "@sand/host-plugin-versions": "workspace:*",
         "@sand/reactive": "workspace:*",
+        "@sand/server": "workspace:*",
         "@sand/settings": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
@@ -1691,6 +1703,7 @@
         "@sand/web": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
       },
     },
     "plugins/extend/reload": {
@@ -2971,6 +2984,8 @@
     "@sand/plugin-files": ["@sand/plugin-files@workspace:packages/plugin-files"],
 
     "@sand/plugins": ["@sand/plugins@workspace:plugins/extend/plugins"],
+
+    "@sand/plugins-mcp": ["@sand/plugins-mcp@workspace:plugins/agent/plugins-mcp"],
 
     "@sand/print": ["@sand/print@workspace:plugins/core/print"],
 

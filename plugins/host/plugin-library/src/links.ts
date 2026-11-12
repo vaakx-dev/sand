@@ -1,10 +1,9 @@
-import { lstat, mkdir, readlink, realpath, rmdir, symlink, unlink } from 'node:fs/promises'
+import { removeLink } from '@sand/plugin-files'
+import { lstat, mkdir, readlink, realpath, symlink } from 'node:fs/promises'
 import { dirname, join, relative } from 'node:path'
 import { readManifest } from './manifest'
 
 const windows = process.platform === 'win32'
-
-const removeLink = (path: string) => unlink(path).catch(error => (windows ? rmdir(path) : Promise.reject(error)))
 
 const inside = (root: string, path: string) => !relative(root, path).startsWith('..')
 
@@ -30,14 +29,6 @@ const linkTo = async (path: string, target: string) => {
   if (!found.missing) await removeLink(path)
   await mkdir(dirname(path), { recursive: true })
   await symlink(target, path, windows ? 'junction' : 'dir')
-}
-
-export const unlinkDependencies = async (copy: string) => {
-  const manifest = await readManifest(copy)
-  for (const name of manifest?.dependencies ?? []) {
-    const path = join(copy, 'node_modules', name)
-    if ((await current(path)).target !== undefined) await removeLink(path)
-  }
 }
 
 export const linkDependencies = async (appRoot: string, builtin: string, copy: string) => {

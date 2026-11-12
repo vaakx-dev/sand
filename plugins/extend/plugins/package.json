@@ -1,28 +1,34 @@
 {
   "name": "@sand/plugins",
   "version": "0.0.0",
-  "description": "Plugins settings page: every built-in and user plugin, load errors, customised copies, past versions and plugin changes from your other PCs",
+  "description": "Plugins settings page and the plugin report: every built-in and user plugin with its status and load errors, customised copies, past versions and plugin changes from your other PCs",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
+    "runtime": "./src/serve.ts",
     "web": "./src/index.ts",
     "label": "Plugins page",
     "summary": "Browse and customise plugins, see which failed to load, restore past versions and review plugin changes from your other PCs"
   },
   "dependencies": {
+    "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/features": "workspace:*",
-    "@sand/host-health": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-plugin-library": "workspace:*",
     "@sand/host-plugin-sync": "workspace:*",
     "@sand/host-plugin-versions": "workspace:*",
     "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   }
 }

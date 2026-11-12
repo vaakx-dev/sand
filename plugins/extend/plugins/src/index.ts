@@ -3,8 +3,7 @@ import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { versionsSource } from './history/source'
 import { historyDetail, historyToggle } from './history/versions'
-import { failuresSource } from './library/failures'
-import { offSource } from './library/off'
+import { reportSource } from './library/report'
 import type { RowActions } from './library/row'
 import { librarySource } from './library/source'
 import { pluginsPage } from './page'
@@ -19,12 +18,11 @@ export default definePlugin({
     const sync = syncSource(ctx)
     const library = librarySource(ctx)
     const versions = versionsSource(ctx)
-    const failures = failuresSource(ctx)
-    const off = offSource(ctx)
+    const report = reportSource(ctx)
     const actions: RowActions = {
       busy: () => library.busy.get() !== undefined,
-      failure: failures.failure,
-      offNeeds: off.needs,
+      failure: report.failure,
+      offNeeds: report.offNeeds,
       historyToggle: (key, open) => historyToggle(ctx.kit, versions, key, open),
       historyDetail: (key, open) => historyDetail(ctx.kit, versions, key, open),
       hasHistory: key => versions.targets.get().some(item => item.key === key && item.versions.length > 0),

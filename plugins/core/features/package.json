@@ -62,7 +62,7 @@
       },
       "threads-mcp": {
         "label": "Threads for outside agents",
-        "summary": "Outside agents start, message and read threads, manage projects and list models over MCP",
+        "summary": "Outside agents start, message and read threads, manage projects, list models and inspect plugins over MCP",
         "parent": "threads",
         "needs": [
           "mcp-server"
@@ -365,8 +365,8 @@
       "extend": {
         "kind": "capability",
         "label": "Plugin writing",
-        "summary": "Agents list plugins and write new ones",
-        "stops": "Agents can't list plugins or write new ones.",
+        "summary": "Agents learn to write new plugins",
+        "stops": "Agents don't learn how to write plugins.",
         "needs": [
           "engine",
           "skills"

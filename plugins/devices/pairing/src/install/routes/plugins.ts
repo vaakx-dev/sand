@@ -1,6 +1,5 @@
 import type { HttpRoute } from '@sand/host-gateway/contract'
-import { executableList, pluginFiles } from '@sand/plugin-files'
-import { stat } from 'node:fs/promises'
+import { executableList, readPluginFiles } from '@sand/plugin-files'
 import { join } from 'node:path'
 import type { Installs } from '../installs'
 import { expired, installToken } from './token'
@@ -11,17 +10,14 @@ interface PluginsRouteOptions {
   shared: () => Promise<string[]>
 }
 
-const isExecutable = async (path: string) => process.platform !== 'win32' && ((await stat(path)).mode & 0o111) !== 0
-
 const pluginEntries = async (folder: string, plugins: string[]) => {
   const entries: Record<string, Uint8Array | string> = {}
   const executable: string[] = []
   for (const plugin of plugins) {
-    const root = join(folder, plugin)
-    for (const path of await pluginFiles(root)) {
-      const full = join(root, ...path.split('/'))
-      entries[`${plugin}/${path}`] = await Bun.file(full).bytes()
-      if (await isExecutable(full)) executable.push(`${plugin}/${path}`)
+    for (const file of await readPluginFiles(join(folder, plugin))) {
+      const name = `${plugin}/${file.path}`
+      entries[name] = file.bytes
+      if (file.executable) executable.push(name)
     }
   }
   if (executable.length) entries[executableList] = executable.join('\n')

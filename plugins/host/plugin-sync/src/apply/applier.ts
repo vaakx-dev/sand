@@ -1,16 +1,13 @@
 import type { VersionSource } from '@sand/host-plugin-versions/contract'
-import { installDependencies } from '@sand/plugin-files'
+import { installDependencies, removePlugin, writePlugin } from '@sand/plugin-files'
 import { serial } from '@sand/util'
-import { join } from 'node:path'
 import { pluginsFiles, type PluginOffer, type PluginSyncState } from '../contract'
 import { parseFiles } from '../state/parse'
 import type { PeerLink, PeerPc } from '../types'
-import { removePlugin } from './remove'
-import { writePlugin } from './write'
+import { decode } from './decode'
 
 interface Applier {
-  root: string
-  work: string
+  home: string
   link: PeerLink
   offers(): PluginOffer[]
   refresh(): Promise<void>
@@ -28,7 +25,7 @@ const fetchPlugin = async (link: PeerLink, record: PeerPc | undefined, offer: Pl
   return files
 }
 
-export const createApplier = ({ root, work, link, offers, refresh, swap, state, snapshot }: Applier) => {
+export const createApplier = ({ home, link, offers, refresh, swap, state, snapshot }: Applier) => {
   const queue = serial()
 
   const run = async (peer: string, plugins: string[]) => {
@@ -41,13 +38,13 @@ export const createApplier = ({ root, work, link, offers, refresh, swap, state, 
         const offer = offers().find(item => item.peer === peer && item.plugin === plugin)
         if (!offer) throw new Error('That change is no longer offered')
         if (offer.kind === 'removed') {
-          await removePlugin(root, work, plugin)
+          await removePlugin(home, plugin)
           applied = true
           continue
         }
-        await writePlugin(root, work, await fetchPlugin(link, record, offer))
+        const folder = await writePlugin({ home, plugin, files: decode(await fetchPlugin(link, record, offer)) })
         applied = true
-        await installDependencies(join(root, plugin))
+        await installDependencies(folder)
       }
     } catch (error) {
       failure = error

@@ -1,5 +1,5 @@
-import { executableList, installDependencies, safeRelative, validPluginName } from '@sand/plugin-files'
-import { chmod, stat } from 'node:fs/promises'
+import { executableList, installDependencies, type PluginFile, writePlugin } from '@sand/plugin-files'
+import { exists } from '@sand/util/fs'
 import { join } from 'node:path'
 import { installPaths } from '@sand/devices-contract'
 import { installEndpoint, type JoinGrant } from './remote'
@@ -24,37 +24,22 @@ const download = async (grant: JoinGrant): Promise<Uint8Array | undefined> => {
 
 const splitEntry = (name: string): [string, string] => {
   const slash = name.indexOf('/')
-  const plugin = slash > 0 ? name.slice(0, slash) : ''
-  const path = name.slice(slash + 1)
-  if (slash <= 0 || !validPluginName(plugin) || !safeRelative(path)) throw new Error(`unsafe plugin file in download: ${name}`)
-  return [plugin, path]
-}
-
-interface CopiedFile {
-  blob: Blob
-  executable: boolean
+  if (slash <= 0) throw new Error(`unsafe plugin file in download: ${name}`)
+  return [name.slice(0, slash), name.slice(slash + 1)]
 }
 
 const groupByPlugin = async (bytes: Uint8Array) => {
   const entries = await new Bun.Archive(bytes).files()
   const executable = new Set((await entries.get(executableList)?.text())?.split('\n') ?? [])
   entries.delete(executableList)
-  const plugins = new Map<string, Map<string, CopiedFile>>()
+  const plugins = new Map<string, PluginFile[]>()
   for (const [name, blob] of entries) {
     const [plugin, path] = splitEntry(name)
-    const files = plugins.get(plugin) ?? new Map<string, CopiedFile>()
-    files.set(path, { blob, executable: executable.has(name) })
-    plugins.set(plugin, files)
+    const file = { path, bytes: await blob.bytes(), executable: executable.has(name) }
+    plugins.set(plugin, [...(plugins.get(plugin) ?? []), file])
   }
   return plugins
 }
-
-const writeFile = async (path: string, file: CopiedFile) => {
-  await Bun.write(path, file.blob)
-  if (process.platform !== 'win32') await chmod(path, file.executable ? 0o755 : 0o644)
-}
-
-const exists = (path: string) => stat(path).then(() => true, () => false)
 
 export const copyPlugins = async (grant: JoinGrant, home: string): Promise<CopiedPlugins> => {
   const folder = join(home, 'plugins')
@@ -68,7 +53,7 @@ export const copyPlugins = async (grant: JoinGrant, home: string): Promise<Copie
       kept.push(plugin)
       continue
     }
-    for (const [path, file] of files) await writeFile(join(target, ...path.split('/')), file)
+    await writePlugin({ home, plugin, files })
     copied.push(plugin)
   }
   for (const plugin of copied) await installDependencies(join(folder, plugin))

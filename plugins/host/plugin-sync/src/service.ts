@@ -14,7 +14,6 @@ import type { PluginSync, PluginSyncOptions } from './types'
 export const createPluginSync = async (options: PluginSyncOptions): Promise<PluginSync> => {
   const { home, self, link } = options
   const root = join(home, 'plugins')
-  const work = join(home, 'plugin-sync')
   const store = await syncStore(home)
   let scan: PluginScan = await scanPlugins(root)
   let offers: PluginOffer[] = []
@@ -69,7 +68,7 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
     if (JSON.stringify(manifest()) !== before) void peers.round()
   }
 
-  const apply = createApplier({ root, work, link, offers: () => offers, refresh: rescan, swap: options.swap, state: view, snapshot: options.snapshot })
+  const apply = createApplier({ home, link, offers: () => offers, refresh: rescan, swap: options.swap, state: view, snapshot: options.snapshot })
 
   return {
     state: () => queue(async () => view()),
