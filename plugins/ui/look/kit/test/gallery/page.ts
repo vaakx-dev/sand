@@ -38,9 +38,22 @@ const tabs = () => {
 const chipItem = (title: string, status: Status, detail?: string) =>
   kit.workRow({ surface: 'raised', onClick: () => {} }, kit.rowBody(() => ({ id: title, label: title, detail: detail === undefined ? undefined : () => detail, status, at: Date.now() - 180_000 })))
 
+const branchItem = () =>
+  kit.workRow(
+    { surface: 'raised', onClick: () => {} },
+    kit.rowBody(() => ({
+      id: 'clashes',
+      label: 'Ignore landed work clashes',
+      status: 'running',
+      at: Date.now() - 60_000,
+      place: { label: 'harbor-tide-tables', mark: () => kit.projectIcon('harbor-tide-tables', {}, 14) },
+      trail: () => [kit.monoMeta(kit.icon('branch', 12), 'sand/ignore-landed-work-clashes-when-the-branch-was-merged')],
+    })),
+  )
+
 const chips = () =>
   line(
-    kit.countChip({ label: 'Waiting', count: 1, lead: kit.stateIcon('waiting'), items: () => [chipItem('Add the refund webhook', 'waiting', 'partial refunds?')] }),
+    kit.countChip({ label: 'Waiting', count: 2, lead: kit.stateIcon('waiting'), items: () => [chipItem('Add the refund webhook', 'waiting', 'partial refunds?'), branchItem()] }),
     kit.countChip({ label: 'Ready', count: 1, lead: kit.stateIcon('ready'), items: () => [chipItem('Fix the flaky cache test', 'ready')] }),
     kit.countChip({ label: 'Working', count: 1, lead: kit.stateIcon('running'), items: () => [chipItem('Speed up PNG encoding', 'running')] }),
   )
