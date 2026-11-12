@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Login, LoginsState } from '../../contract'
 import { addSection, type AddParts } from './add'
 import { placeOf } from './managers/catalog'
@@ -24,13 +24,12 @@ export const storageNote = ({ sheetText }: Kit, state: Sig<LoginsState | undefin
       : 'Logins saved in sand are kept encrypted, with the key in a key file in the sand home. Saved values are never shown again, only replaced.',
   )
 
-const loginRow = ({ chevron, icon, listRow }: Kit, login: Sig<Login>, open: (id: string) => void) =>
-  listRow({
-    lead: icon(kindIcons[login.get().kind], 'sm'),
+const loginRow = ({ icon, settingsRow }: Kit, login: Sig<Login>, open: (id: string) => void) =>
+  settingsRow({
+    lead: span({ class: 'inline-flex text-neutral-400' }, icon(kindIcons[login.get().kind], 'md')),
     title: () => login.get().name,
-    meta: () => summaryOf(login.get()),
-    trail: chevron(() => false),
-    onClick: () => open(login.get().id),
+    detail: () => summaryOf(login.get()),
+    onOpen: () => open(login.get().id),
   })
 
 const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>) => {

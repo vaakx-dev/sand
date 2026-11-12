@@ -4,7 +4,7 @@ import { externalSources, loginKinds, type External, type Login, type LoginKind 
 import { managers } from './managers/catalog'
 import { pickRows } from './managers/pick'
 import type { LoginsModel, NewLogin } from './model'
-import { editForm, field } from './parts'
+import { editForm } from './parts'
 
 export interface AddParts {
   model: LoginsModel
@@ -32,11 +32,11 @@ const websiteForm = (kit: Kit, save: (login: NewLogin) => Promise<unknown>, canc
   return editForm(
     kit,
     { save: 'Save login', ready: () => Boolean(site.get().trim() && username.get() && password.get()), submit, cancel },
-    field(kit, 'Site', { type: 'text', inputMode: 'url', placeholder: 'github.com', bindValue: site, onMount: node => node.focus() }),
-    field(kit, 'Name', { type: 'text', placeholder: 'Same as the site', bindValue: name }),
-    field(kit, 'Username or email', { type: 'text', autocomplete: 'username', bindValue: username }),
-    field(kit, 'Password', { type: 'password', autocomplete: 'current-password', bindValue: password }),
-    field(kit, 'Authenticator setup key or otpauth:// link', { type: 'password', placeholder: 'Only if the site asks for codes', bindValue: totp }),
+    kit.field({ label: 'Site' }, kit.textInput({ type: 'text', inputMode: 'url', placeholder: 'github.com', bindValue: site, onMount: node => node.focus() })),
+    kit.field({ label: 'Name' }, kit.textInput({ type: 'text', placeholder: 'Same as the site', bindValue: name })),
+    kit.field({ label: 'Username or email' }, kit.textInput({ type: 'text', autocomplete: 'username', bindValue: username })),
+    kit.field({ label: 'Password' }, kit.textInput({ type: 'password', autocomplete: 'current-password', bindValue: password })),
+    kit.field({ label: 'Authenticator setup key or otpauth:// link' }, kit.textInput({ type: 'password', placeholder: 'Only if the site asks for codes', bindValue: totp })),
   )
 }
 
@@ -47,8 +47,8 @@ const keyForm = (kit: Kit, save: (login: NewLogin) => Promise<unknown>, cancel: 
   return editForm(
     kit,
     { save: 'Save key', ready: () => Boolean(name.get().trim() && value.get()), submit, cancel },
-    field(kit, 'Name', { type: 'text', placeholder: 'GitHub token', bindValue: name, onMount: node => node.focus() }),
-    field(kit, 'Value', { type: 'password', bindValue: value }),
+    kit.field({ label: 'Name' }, kit.textInput({ type: 'text', placeholder: 'GitHub token', bindValue: name, onMount: node => node.focus() })),
+    kit.field({ label: 'Value' }, kit.textInput({ type: 'password', bindValue: value })),
   )
 }
 

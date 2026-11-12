@@ -3,7 +3,7 @@ import { derive, div, show, sig, span } from '@vaakx-dev/vrui'
 import { externalSources, type External, type SourceStatus } from '../../../contract'
 import { task } from '../../task'
 import type { LoginsModel } from '../model'
-import { editForm, field, rowProblem } from '../parts'
+import { editForm, rowProblem } from '../parts'
 import { managers, type Manager } from './catalog'
 
 type Status = SourceStatus['status']
@@ -37,7 +37,7 @@ const connectForm = (kit: Kit, { label, save, note, autocomplete }: Manager['con
     kit,
     { save, ready: () => Boolean(secret.get()), submit: () => connect(secret.get()), done: close, cancel: close },
     kit.secondaryText(note),
-    field(kit, label, { type: 'password', autocomplete, bindValue: secret, onMount: node => node.focus() }),
+    kit.field({ label }, kit.textInput({ type: 'password', autocomplete, bindValue: secret, onMount: node => node.focus() })),
   )
 }
 

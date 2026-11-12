@@ -1,4 +1,4 @@
-import { div, label } from '@vaakx-dev/vrui'
+import { div, span } from '@vaakx-dev/vrui'
 import type { PickerContext } from '../deps'
 import type { Scene } from './scene'
 
@@ -22,11 +22,10 @@ export const effortBar = (ctx: PickerContext, { shown, target }: Scene, flash: b
 }
 
 export const fastRow = ({ kit, shown, target }: Scene) => {
-  const { toggleSwitch } = kit
+  const { settingsRow, toggleSwitch } = kit
   const on = shown.speed === 'fast'
-  return label(
-    { class: 'flex min-h-10 items-center gap-3 px-2' },
-    div({ class: ['min-w-0 flex-1 text-sm', shown.supportsFast ? 'text-neutral-100' : 'text-neutral-500'] }, 'Fast mode'),
+  return settingsRow(
+    { title: span({ class: shown.supportsFast ? '' : 'text-neutral-500' }, 'Fast mode'), class: 'px-2' },
     toggleSwitch({ on, disabled: !shown.supportsFast, 'aria-label': 'Fast mode', onClick: () => target.set({ speed: on ? 'normal' : 'fast' }) }),
   )
 }

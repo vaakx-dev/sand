@@ -1,6 +1,7 @@
 import { div, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
 import { largeRowTitle, metaLine, metaLook, plainRowTitle, rowName, rowTitle } from '../heads/text'
+import { opensMark } from '../marks/marks'
 import { choiceCheck } from '../menus/menu-item'
 import { placeLook, type Surface } from '../surface'
 
@@ -10,6 +11,7 @@ export type ListRowProps = Omit<Props<HTMLButtonElement>, 'title'> & {
   meta?: Child
   lead?: Child
   trail?: Child
+  opens?: boolean
   actions?: Child
   current?: MaybeReactive<boolean>
   selected?: MaybeReactive<boolean>
@@ -43,7 +45,7 @@ const wrap = (row: HTMLElement, surface: Surface, actions: Child | undefined) =>
     actions === undefined ? null : span({ class: 'flex shrink-0 items-center gap-1' }, actions),
   )
 
-export const listRow = ({ title, overline, meta, lead, trail, actions, current, selected, expanded, tone, touch, large = false, surface = 'page', class: extra, ...props }: ListRowProps) => {
+export const listRow = ({ title, overline, meta, lead, trail, opens = false, actions, current, selected, expanded, tone, touch, large = false, surface = 'page', class: extra, ...props }: ListRowProps) => {
   const look = placeLook(false, surface, 'text-neutral-100', false)
   const row = rowButton(
     {
@@ -63,6 +65,7 @@ export const listRow = ({ title, overline, meta, lead, trail, actions, current, 
     lead ? span({ class: 'inline-flex shrink-0 text-neutral-400' }, lead) : null,
     div({ class: 'flex min-w-0 flex-1 flex-col' }, overline ? metaLine(overline) : null, titleOf(surface, tone, large)(title), meta ? metaOf(large, meta) : null),
     trail ? span({ class: ['flex shrink-0 items-center gap-2', metaLook] }, trail) : null,
+    opens ? opensMark() : null,
     selected === undefined ? null : choiceCheck(selected),
   )
   return actions === undefined && surface !== 'group' ? row : wrap(row, surface, actions)

@@ -1,13 +1,13 @@
 import type { SshHost, SshMachines, SshPrompt } from '@sand/devices-ssh/contract'
 import { errorMessage } from '@sand/util'
-import { div, dynamicChild, form, label, preventThen, registerInScope, sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, form, preventThen, registerInScope, sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import type { Step } from './run'
 
 type Asking = { prompt: SshPrompt; answer: (value: string | null) => void }
 
 const promptView = (ctx: ProjectsContext, { prompt, answer }: Asking) => {
-  const { primaryAction, secondaryAction, sheetText, textInput } = ctx.kit
+  const { field, primaryAction, secondaryAction, sheetText, textInput } = ctx.kit
   if (prompt.confirm) {
     return div(
       { class: 'flex flex-col gap-3' },
@@ -22,7 +22,7 @@ const promptView = (ctx: ProjectsContext, { prompt, answer }: Asking) => {
   const value = sig('')
   return form(
     { class: 'flex flex-col gap-3', onSubmit: preventThen(() => answer(value.get())) },
-    label({ class: 'flex flex-col gap-2' }, sheetText(prompt.text), textInput({ type: prompt.secret ? 'password' : 'text', bindValue: value, autofocus: true }, 'md')),
+    field({ label: prompt.text }, textInput({ type: prompt.secret ? 'password' : 'text', bindValue: value, autofocus: true }, 'md')),
     div(
       { class: 'flex justify-end gap-2' },
       secondaryAction({ type: 'button', onClick: () => answer(null) }, 'Cancel'),

@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { keys, label, sig, type Sig } from '@vaakx-dev/vrui'
+import { keys, sig, type Sig } from '@vaakx-dev/vrui'
 import { loginServer, type LoginAccount, type ServerDraft } from '../../contract'
 import { problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
@@ -12,7 +12,7 @@ const added = (control: LoginControl, before: Set<string>, url: string): LoginAc
 }
 
 export const serverStep = (kit: Kit, control: LoginControl, draft: ServerDraft, saved: () => void) => {
-  const { metaLine, primaryAction, sheetStep, textInput } = kit
+  const { field, primaryAction, sheetStep, textInput } = kit
   const name = sig(draft.name)
   const url = sig(draft.url)
   const key = sig('')
@@ -45,14 +45,13 @@ export const serverStep = (kit: Kit, control: LoginControl, draft: ServerDraft, 
     if (ready()) void save()
   }
 
-  const field = (value: Sig<string>, placeholder: string, title: string, type = 'text') =>
-    label({ class: 'flex flex-col gap-1' }, metaLine(title), textInput({ type, placeholder, bindValue: value, onKeyDown: keys({ Enter: submit }) }))
+  const entry = (value: Sig<string>, placeholder: string, type = 'text') => textInput({ type, placeholder, bindValue: value, onKeyDown: keys({ Enter: submit }) })
 
   return sheetStep(
     [
-      field(name, 'My box', 'Name'),
-      field(url, 'http://localhost:8080/v1', 'URL', 'url'),
-      field(key, 'Only if the server asks for one', 'API key (optional)', 'password'),
+      field({ label: 'Name' }, entry(name, 'My box')),
+      field({ label: 'URL' }, entry(url, 'http://localhost:8080/v1', 'url')),
+      field({ label: 'API key (optional)' }, entry(key, 'Only if the server asks for one', 'password')),
       problem(kit, () => error.get()),
     ],
     primaryAction({ disabled: () => !ready(), onClick: submit }, () => (busy.get() ? 'Checking…' : idleLabel)),

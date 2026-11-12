@@ -1,6 +1,9 @@
 import { div, list, span, type Child, type Derive, type Props, type Sig } from '@vaakx-dev/vrui'
+import { rowButton } from '../buttons/button'
 import { metaLook, rowNameLook } from '../heads/text'
+import { opensMark } from '../marks/marks'
 import { callout } from '../notes/notes'
+import { surfaceFill } from '../surface'
 
 const rowShell = 'py-3'
 
@@ -8,6 +11,7 @@ export type SettingsRowProps = Omit<Props<HTMLDivElement>, 'title'> & {
   title: Child
   detail?: Child
   lead?: Child
+  onOpen?: () => void
 }
 
 const rowLabel = (title: Child, detail?: Child) =>
@@ -17,12 +21,18 @@ const rowLabel = (title: Child, detail?: Child) =>
     detail ? div({ class: metaLook }, detail) : null,
   )
 
-export const settingsRow = ({ title, detail, lead, class: extra, ...props }: SettingsRowProps, ...controls: Child[]) => {
+const openerHover = surfaceFill('page').hover
+
+const opener = (onOpen: () => void, label: HTMLElement) =>
+  rowButton({ class: ['-mx-2 -my-1.5 flex-1 gap-3 rounded-md px-2 py-1.5 transition-colors', openerHover], onClick: onOpen }, label, opensMark())
+
+export const settingsRow = ({ title, detail, lead, onOpen, class: extra, ...props }: SettingsRowProps, ...controls: Child[]) => {
   const shown = controls.filter(control => control !== null && control !== undefined)
+  const label = rowLabel(title, detail)
   return div(
     { ...props, class: ['flex flex-wrap items-center gap-x-6 gap-y-2', rowShell, extra] },
     lead ?? null,
-    rowLabel(title, detail),
+    onOpen ? opener(onOpen, label) : label,
     shown.length ? div({ class: 'ml-auto flex shrink-0 flex-wrap items-center gap-2' }, ...shown) : null,
   )
 }

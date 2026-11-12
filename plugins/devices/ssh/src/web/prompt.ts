@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { place } from '@sand/ui-shell/contract'
-import { form, label, listen, preventThen, sig } from '@vaakx-dev/vrui'
+import { form, listen, preventThen, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { SshPrompt } from '../contract'
 
@@ -15,14 +15,14 @@ const confirmView = (kit: Kit, prompt: SshPrompt, answer: Answer) => {
 }
 
 const fieldView = (kit: Kit, prompt: SshPrompt, answer: Answer) => {
-  const { primaryAction, secondaryAction, sheetBody, sheetFoot, sheetText, textInput } = kit
+  const { field, primaryAction, secondaryAction, sheetBody, sheetFoot, textInput } = kit
   const value = sig('')
   return [
     form(
       { class: 'contents', onSubmit: preventThen(() => answer(value.get())) },
       sheetBody(
         {},
-        label({ class: 'flex flex-col gap-2' }, sheetText(prompt.text), textInput({ type: prompt.secret ? 'password' : 'text', bindValue: value, autofocus: true }, 'md')),
+        field({ label: prompt.text }, textInput({ type: prompt.secret ? 'password' : 'text', bindValue: value, autofocus: true }, 'md')),
       ),
       sheetFoot(secondaryAction({ type: 'button', onClick: () => answer(null) }, 'Cancel'), primaryAction({ type: 'submit' }, 'Continue')),
     ),

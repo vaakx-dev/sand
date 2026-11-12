@@ -4,7 +4,7 @@ import type { PlusEntry } from '../contract'
 import type { Plus } from './entries'
 
 export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void, attachable: () => boolean) => {
-  const { icon, iconButton, menuItem, menuSeparator, popover, pressOpens } = kit
+  const { icon, iconButton, menuItem, menuSeparator, opensMark, popover, pressOpens } = kit
   const open = sig(false)
   const close = () => open.set(false)
   const toggle = () => (entries.get().length ? open.update(value => !value) : choose())
@@ -24,7 +24,7 @@ export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void, attach
     menuItem(
       { icon: entry.icon(), onClick: () => enter(entry) },
       span({ class: 'min-w-0 flex-1 truncate' }, entry.label),
-      span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('right', 'sm')),
+      opensMark(),
     )
 
   const menu = () =>

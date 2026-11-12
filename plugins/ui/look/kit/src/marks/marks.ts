@@ -34,6 +34,8 @@ export const elapsed = (start: MaybeReactive<number | undefined>) => {
 
 export const chevron = (open: () => boolean, size: IconSize = 'sm') => span({ class: ['inline-flex shrink-0', () => (open() ? 'rotate-90' : '')] }, icon('right', size))
 
+export const opensMark = () => span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('right', 'sm'))
+
 export const okMark = (size: IconSize = 'sm') => span({ class: 'inline-flex shrink-0 text-success-400' }, icon('check', size))
 
 export const doneMark = () =>

@@ -11,6 +11,7 @@ import { confirm, confirmButton } from './context-menu/confirm'
 import { contextMenu, menuLayer } from './context-menu/menu'
 import { editable } from './fields/editable'
 import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
+import { field } from './fields/labelled'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
@@ -25,7 +26,7 @@ import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { botFace } from './marks/face'
 import { monogram } from './marks/monogram'
-import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot } from './marks/marks'
+import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, opensMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot } from './marks/marks'
 import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
@@ -135,6 +136,7 @@ export const kit = {
   errorText,
   expandRow,
   expandToggle,
+  field,
   floatButton,
   fileKindMark,
   firstRowBelow,
@@ -172,6 +174,7 @@ export const kit = {
   navButton,
   nearEnd,
   okMark,
+  opensMark,
   onPressOutside,
   openTab,
   optionProps,

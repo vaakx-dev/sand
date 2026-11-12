@@ -1,5 +1,5 @@
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, label, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 import { loginShared, type LoginAccount, type LoginState } from '../contract'
 import { accountLogo, howText } from './names'
 import { accountSpec, removeAction } from './account-menu'
@@ -8,14 +8,10 @@ import type { LoginControl } from './state'
 
 type Fix = (account: LoginAccount) => void
 
-const shareSwitch = ({ metaLine, toggleSwitch }: Kit, account: LoginAccount, control: LoginControl) => {
+const shareSwitch = ({ toggleSwitch }: Kit, account: LoginAccount, control: LoginControl) => {
   const busy = sig(false)
   const toggle = () => whileBusy(busy, () => control.run(loginShared, { account: account.id, shared: !account.shared }))
-  return label(
-    { class: 'flex items-center gap-2' },
-    metaLine('Share with my PCs'),
-    toggleSwitch({ on: account.shared, 'aria-label': `Share ${account.label} with my PCs`, disabled: busy, onClick: () => void toggle() }),
-  )
+  return toggleSwitch({ on: account.shared, title: 'Share with my PCs', 'aria-label': `Share ${account.label} with my PCs`, disabled: busy, onClick: () => void toggle() })
 }
 
 const serverDetail = ({ dot }: Kit, account: LoginAccount) =>
@@ -70,7 +66,7 @@ export const localSection = (kit: Kit, control: LoginControl, add: () => void, f
   const { contextMenu, emptyState, icon, loadingState, secondaryAction, settingsSection } = kit
   const menu = contextMenu()
   return settingsSection(
-    { title: 'On this PC', action: secondaryAction({ size: 'sm', onClick: add }, icon('plus', 'sm'), 'Add an account') },
+    { title: 'On this PC', note: 'Turn an account’s switch on to share it with your PCs.', action: secondaryAction({ size: 'sm', onClick: add }, icon('plus', 'sm'), 'Add an account') },
     menu.view(),
     dynamicChild(
       derive(() => {

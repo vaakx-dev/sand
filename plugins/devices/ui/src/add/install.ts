@@ -1,7 +1,7 @@
 import type { InstallGrant, InstallPlatform, PublishedRoute } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, sig, untrack } from '@vaakx-dev/vrui'
-import { copyBox, field } from '../shared/parts'
+import { copyBox } from '../shared/parts'
 import { lifeWords } from '../shared/time'
 import type { Ui } from '../ui'
 
@@ -21,7 +21,7 @@ const routeOver = (routes: PublishedRoute[], over: Over) => {
 const commandView = (ui: Ui, grant: InstallGrant, platform: InstallPlatform) =>
   div(
     { class: 'flex flex-col gap-4' },
-    field(ui.kit, platform === 'win32' ? 'Paste this into PowerShell on the new PC' : 'Paste this into a terminal on the new PC', copyBox(ui.kit, grant.command)),
+    ui.kit.field({ label: platform === 'win32' ? 'Paste this into PowerShell on the new PC' : 'Paste this into a terminal on the new PC' }, copyBox(ui.kit, grant.command)),
     ui.kit.sheetText(
       `It downloads sand from GitHub and joins your PCs, no Allow needed. The command works once, for ${lifeWords(grant.expires)}, even if you close this. Progress shows in your PCs list.`,
     ),
@@ -65,10 +65,9 @@ export const installStep = (ui: Ui) => {
 
   return div(
     { class: 'flex flex-col gap-4' },
-    field(ui.kit, 'What does the new PC run?', segmented(systems, platform, value => platform.set(value), { inset: true, label: 'System of the new PC', class: 'w-fit' })),
-    field(
-      ui.kit,
-      () => `The new PC reaches ${name()} over`,
+    ui.kit.field({ label: 'What does the new PC run?' }, segmented(systems, platform, value => platform.set(value), { inset: true, label: 'System of the new PC', class: 'w-fit' })),
+    ui.kit.field(
+      { label: () => `The new PC reaches ${name()} over` },
       dynamicChild(routes, list =>
         segmented(
           [

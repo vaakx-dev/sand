@@ -7,7 +7,7 @@ const savedNote = 'Saved encrypted as a login, which you can manage in Settings 
 const onceNote = 'Used once, then forgotten: it is never saved and never shows in the chat, and the agent uses it without seeing it.'
 
 const pendingCard = ({ kit, wire }: CardContext, target: Target, request: SecretRequest) => {
-  const { checkRow, primaryAction, secondaryAction, secondaryText, textInput } = kit
+  const { primaryAction, secondaryAction, secondaryText, settingsRow, textInput, toggleSwitch } = kit
   const { site, once } = request
   const username = sig('')
   const value = sig('')
@@ -34,7 +34,7 @@ const pendingCard = ({ kit, wire }: CardContext, target: Target, request: Secret
     cardText(kit, request.reason),
     ...fields,
     problem(kit, work),
-    once ? checkRow({ checked: keep, onToggle: () => keep.update(on => !on), title: 'Save for later', disabled: work.busy }) : null,
+    once ? settingsRow({ title: 'Save for later' }, toggleSwitch({ on: keep, 'aria-label': 'Save for later', disabled: work.busy, onClick: keep.toggle() })) : null,
     secondaryText(() => (keep.get() ? savedNote : onceNote)),
     cardActions(
       secondaryAction({ disabled: work.busy, onClick: () => void work.run(() => wire.call(askDecline, target)) }, 'Decline'),

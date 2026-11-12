@@ -1,7 +1,7 @@
 import { type OutgoingJoin, type PairLink, pairJoined } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, keys, sig } from '@vaakx-dev/vrui'
-import { copyBox, field } from '../shared/parts'
+import { copyBox } from '../shared/parts'
 import { pinCode } from '../shared/pin'
 import type { Ui } from '../ui'
 import type { AddDone } from './done'
@@ -26,7 +26,7 @@ const waitingFor = (ui: Ui, join: OutgoingJoin) =>
   div({ class: 'flex flex-col gap-2' }, ui.kit.waitingLine(`Tap Allow on ${join.name}. Check it shows this code:`), pinCode(join.code, 'sm'))
 
 export const linkStep = (ui: Ui, done: (result: AddDone) => void) => {
-  const { errorText, secondaryAction, sheetText, textInput } = ui.kit
+  const { field, secondaryAction, sheetText, textInput } = ui.kit
   const live = livePairLink(ui, 'pc')
   const pasted = sig('')
   const error = sig('')
@@ -60,23 +60,20 @@ export const linkStep = (ui: Ui, done: (result: AddDone) => void) => {
     { class: 'flex flex-col gap-4' },
     sheetText('For a PC that isn’t found. Do this on one of the two PCs only.'),
     field(
-      ui.kit,
-      'Copy this link to the other PC',
+      { label: 'Copy this link to the other PC' },
       dynamicChild(
         derive(() => ({ link: live.link.get(), failed: live.error.get() })),
         ({ link, failed }) => ownLink(ui, link, failed, live.retry),
       ),
     ),
     field(
-      ui.kit,
-      'Or paste the other PC’s link',
+      { label: 'Or paste the other PC’s link', error },
       div(
         { class: 'flex gap-2' },
         textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Link from the other PC', bindValue: pasted, onKeyDown: keys({ Enter: () => void connect() }) }),
         secondaryAction({ disabled: () => busy.get() || !pasted.get().trim(), onClick: () => void connect() }, 'Paste and connect'),
       ),
-      dynamicChild(error, text => (text ? errorText(text) : null)),
-      dynamicChild(waiting, join => (join ? waitingFor(ui, join) : null)),
     ),
+    dynamicChild(waiting, join => (join ? waitingFor(ui, join) : null)),
   )
 }

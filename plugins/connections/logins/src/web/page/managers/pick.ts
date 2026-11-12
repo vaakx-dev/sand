@@ -3,7 +3,7 @@ import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, onTimeout, show, sig, type Sig } from '@vaakx-dev/vrui'
 import type { External, Login, Pointer, SourceItem } from '../../../contract'
 import type { LoginsModel, PickedLogin } from '../model'
-import { editForm, field, kindIcons } from '../parts'
+import { editForm, kindIcons } from '../parts'
 import { managers } from './catalog'
 
 const typingMs = 250
@@ -59,8 +59,8 @@ const pickForm = (kit: Kit, item: SourceItem, save: (login: PickedLogin) => Prom
     kit,
     { save: 'Add login', ready: () => !website || Boolean(item.sites.length || site.get().trim()), submit, cancel: back },
     div({ class: 'flex flex-col' }, kit.rowTitle(item.name), kit.metaLine(metaOf(item))),
-    field(kit, 'Name', { type: 'text', placeholder: item.name, bindValue: name, onMount: node => node.focus() }),
-    website ? field(kit, 'Site', { type: 'text', inputMode: 'url', placeholder: item.sites[0] ?? 'github.com', bindValue: site }) : null,
+    kit.field({ label: 'Name' }, kit.textInput({ type: 'text', placeholder: item.name, bindValue: name, onMount: node => node.focus() })),
+    website ? kit.field({ label: 'Site' }, kit.textInput({ type: 'text', inputMode: 'url', placeholder: item.sites[0] ?? 'github.com', bindValue: site })) : null,
   )
 }
 
