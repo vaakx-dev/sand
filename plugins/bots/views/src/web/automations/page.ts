@@ -31,6 +31,7 @@ export const automationsScreen = (parts: Parts): Screen => {
   const busy = derive(() => (parts.store.bots.get() ?? []).filter(bot => automationsOf(parts, bot.id).length))
   return {
     head: () => 'Automations',
+    column: true,
     main: () =>
       kit.pageBody(
         {},

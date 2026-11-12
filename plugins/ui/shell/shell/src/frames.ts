@@ -35,7 +35,7 @@ export const deskFrames = (model: Model, built: Built) =>
           () => sidebarButton(model),
         ),
         backButton(model, built),
-        built.head,
+        built.column ? div({ class: 'flex min-w-0 flex-1' }, div({ class: [model.kit.bodyColumn, 'flex'] }, built.head)) : built.head,
         asideToggles(model),
       ),
       div({ class: () => [fill, model.roomy.get() ? 'pr-80' : ''] }, built.main),

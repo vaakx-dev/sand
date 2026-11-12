@@ -18,6 +18,7 @@ export interface Built {
   nav?: Nav
   back?: BackTo
   split: boolean
+  column: boolean
   scope: Dispose[]
 }
 
@@ -48,6 +49,7 @@ export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, ro
         ...(screen.nav && { nav: navOf(screen.nav) }),
         ...(screen.back && { back: screen.back }),
         split: Boolean(screen.split),
+        column: Boolean(screen.column),
       }
     })
     return { key, spec, ...value, scope }

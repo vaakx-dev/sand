@@ -144,6 +144,7 @@ export interface Screen {
   main(): HTMLElement
   nav?: ScreenNav
   split?: boolean
+  column?: boolean
 }
 
 export interface RouteSpec {
