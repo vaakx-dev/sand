@@ -6,13 +6,10 @@ export interface MoveNote {
   cwd: string
   record: WorktreeRecord
   carried: number
-  carry: boolean
 }
 
-const changesLine = ({ from, carried, carry }: MoveNote) => {
-  if (carried) return `The uncommitted changes (${plural(carried, 'file')}) came along, so ${from} no longer has them.`
-  return carry ? 'There were no uncommitted changes to bring along.' : `Uncommitted changes stayed behind in ${from}.`
-}
+const changesLine = ({ from, carried }: MoveNote) =>
+  carried ? `The uncommitted changes (${plural(carried, 'file')}) came along, so ${from} no longer has them.` : 'There were no uncommitted changes to bring along.'
 
 export const moveNote = (note: MoveNote) =>
   [

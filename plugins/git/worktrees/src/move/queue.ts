@@ -13,7 +13,7 @@ const checkMovable = async (deps: WorktreeDeps, session: Session) => {
   if (others.length) throw new Error(`Another thread is working in ${local.root}, and its uncommitted changes would move too. Start a new thread in a worktree instead.`)
 }
 
-const request = (session: string, branch: string | undefined) => ({ session, carry: true, ...(branch ? { branch } : {}) })
+const request = (session: string, branch: string | undefined) => ({ session, ...(branch ? { branch } : {}) })
 
 const failure = async (deps: WorktreeDeps, session: Session, branch: string | undefined) => {
   try {

@@ -15,7 +15,6 @@ import { moveNote } from './note'
 export interface MoveRequest {
   session: string
   branch?: string | undefined
-  carry: boolean
 }
 
 interface Moved {
@@ -40,7 +39,7 @@ const makeWorktree = async (deps: WorktreeDeps, local: GitRepoLocal, request: Mo
   const head = await headCommit(deps.git, local.root)
   if (!head) throw new Error('Make a first commit before moving this thread to a worktree.')
   const branch = request.branch === undefined ? undefined : await checkedNewBranch(deps.git, local.root, request.branch)
-  const carried = request.carry ? await stashChanges(deps.git, local.root) : undefined
+  const carried = await stashChanges(deps.git, local.root)
   const base = local.branch ?? shortSha(head)
   let record: WorktreeRecord
   try {
@@ -59,7 +58,7 @@ export const moveThread = async (deps: WorktreeDeps, request: MoveRequest): Prom
   await deps.store.ready()
   const { record, carried } = await deps.queue(local.main, () => makeWorktree(deps, local, request))
   const cwd = sameFolderIn(session.cwd, local.root, record.path)
-  const note = moveNote({ from: session.cwd, cwd, record, carried: carried?.files ?? 0, carry: request.carry })
+  const note = moveNote({ from: session.cwd, cwd, record, carried: carried?.files ?? 0 })
   const stuck = await relocateInto(deps, session.id, { cwd, project: session.project, note })
   if (!stuck) {
     record.sessions = [session.id]

@@ -87,11 +87,6 @@ export const worktreesThread = request('worktrees.thread', {
   place: 'thread',
 })
 
-export const worktreesMove = request('worktrees.move', {
-  input: () => z.object({ session: z.string(), branch: z.string().optional(), carry: z.boolean() }),
-  output: type<SessionInfo>(),
-})
-
 export const worktreesRemove = request('worktrees.remove', {
   input: () => z.object({ path: z.string(), force: z.boolean().optional() }),
   output: type<RemoveResult>(),
