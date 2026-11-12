@@ -212,3 +212,5 @@ export const startSand = (sources: Source[], options: SandOptions = {}) =>
 export const startLiveSand = (models: string[], options: SandOptions = {}) => start({ ids: models }, options)
 
 export type Sand = Awaited<ReturnType<typeof startSand>>
+
+export { pairPcs } from './pcs'

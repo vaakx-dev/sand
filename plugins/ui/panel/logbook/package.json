@@ -1,0 +1,26 @@
+{
+  "name": "@sand/panel-logbook",
+  "version": "0.0.0",
+  "description": "The side panel's Logbook tab: the dated record of finished work for the chat's project, searchable, with each entry editable",
+  "type": "module",
+  "sand": {
+    "feature": "threads",
+    "web": "./src/index.ts",
+    "label": "Logbook tab",
+    "summary": "Shows the Logbook in the side panel, where you can search, edit and remove entries"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/logbook": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

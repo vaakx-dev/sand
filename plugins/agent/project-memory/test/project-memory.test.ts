@@ -1,5 +1,4 @@
-import { PcUnavailable, type Peers, type PeerView, peers } from '@sand/devices-contract'
-import { startSand, type Sand } from '@sand/harness'
+import { pairPcs, startSand, type Sand } from '@sand/harness'
 import { memory, memoryChange, memoryRead, memoryStore, memoryWrite } from '@sand/memory/contract'
 import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
@@ -71,66 +70,6 @@ test("a thread tidies its project's memory when it compacts", async () => {
   expect(systemOf(bodies()[3])).toContain(`<memory>\n${learned}\n</memory>`)
 })
 
-interface Link {
-  peers: Peers
-  open(): void
-  drop(): void
-}
-
-const pcView = (id: string): PeerView => ({
-  id,
-  name: id,
-  status: { phase: 'connected', route: { key: 'lan', kind: 'lan', source: 'seed', url: `http://${id}` }, since: 0 },
-  routes: [],
-  attempts: [],
-})
-
-const link = (far: Sand, farId: string, nearId: string): Link => {
-  const view = pcView(farId)
-  const opens = new Set<(pc: string) => void>()
-  const asNear = far.askAs({ device: nearId, kind: 'pc' })
-  let up = true
-  const call: Peers['call'] = (_, request, input) => (up ? asNear(request, input) : Promise.reject(new PcUnavailable(farId, farId, { phase: 'offline' })))
-  return {
-    peers: {
-      list: () => [view],
-      get: pc => (pc === farId ? view : undefined),
-      connected: () => (up ? [farId] : []),
-      call,
-      callEach: (request, input) =>
-        call(farId, request, input).then(
-          value => [{ pc: farId, ok: true, value }],
-          (error: unknown) => [{ pc: farId, ok: false, error }],
-        ),
-      fetch: () => Promise.reject(new Error('no fetch')),
-      on: () => () => {},
-      hello: () => undefined,
-      directUrl: () => undefined,
-      retry() {},
-      onOpen(listener) {
-        opens.add(listener)
-        return () => void opens.delete(listener)
-      },
-      onChange: () => () => {},
-    },
-    open() {
-      up = true
-      for (const listener of opens) listener(farId)
-    },
-    drop() {
-      up = false
-    },
-  }
-}
-
-const pair = (home: Sand, box: Sand) => {
-  const toBox = link(box, 'box', 'home')
-  const toHome = link(home, 'home', 'box')
-  home.app.provide(peers, toBox.peers)
-  box.app.provide(peers, toHome.peers)
-  return { toBox, toHome }
-}
-
 const tiles = { space: 'project', id: 'tiles' }
 
 const nextMemory = (on: Sand, text: string) =>
@@ -155,7 +94,7 @@ test('what the user edits on one PC is what a thread on another PC sees, and wha
   sand = await start()
   const box = await start([[save], [said('Saved.')]])
   others.push(box)
-  pair(sand, box)
+  pairPcs(sand, box)
 
   const reachedBox = nextMemory(box, learned)
   await sand.ask(memoryWrite, { ...tiles, text: learned })
@@ -175,7 +114,7 @@ test('while the PCs are apart each keeps its own edits, and they merge when the 
   sand = await start()
   const box = await start()
   others.push(box)
-  const { toBox, toHome } = pair(sand, box)
+  const { toBox, toHome } = pairPcs(sand, box)
   const shared = nextMemory(box, 'Draft.')
   await sand.ask(memoryWrite, { ...tiles, text: 'Draft.' })
   await shared
