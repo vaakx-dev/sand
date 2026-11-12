@@ -47,6 +47,7 @@ export interface NoticeKind {
 export interface Transcript {
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
+  ending(stopReason: string, render: RenderEntry): Dispose
   notice(from: string, kind: NoticeKind): Dispose
 }
 
@@ -103,6 +104,7 @@ export interface RendererRegistry {
   readonly version: Sig<number>
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
+  ending(stopReason: string, render: RenderEntry): Dispose
   notice(from: string, kind: NoticeKind): Dispose
   toolRenderer(name: string): Required<ToolRenderer>
   entryRenderer(type: string): RenderEntry | undefined

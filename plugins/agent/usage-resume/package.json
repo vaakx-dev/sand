@@ -1,0 +1,36 @@
+{
+  "name": "@sand/usage-resume",
+  "version": "0.0.0",
+  "description": "Picks a thread, bot or subagent chat back up by itself when the usage its account ran out of resets, and holds what is sent to it until then",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "usage-resume",
+    "runtime": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Resume at reset",
+    "summary": "Chats that run out of usage pick up again when it resets"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/schedules": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/bot-turns": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

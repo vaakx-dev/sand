@@ -18,7 +18,7 @@ export type ConversationRef = Pick<Conversation, 'owner' | 'id'>
 
 export type TurnStatus = 'running' | 'waiting' | 'completed' | 'interrupted' | 'failed' | 'lost'
 
-export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'routine', 'print', 'cli', 'mcp', 'bot'] as const
+export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'routine', 'print', 'cli', 'mcp', 'bot', 'resume'] as const
 
 export type TurnOrigin = (typeof turnOrigins)[number]
 
@@ -29,17 +29,19 @@ export interface WaitReason {
 }
 
 export interface TurnResult {
-  stopReason: StopReason | 'interrupted' | 'error'
+  stopReason: StopReason | 'interrupted' | 'error' | 'limited'
   usage: Usage
   text: string
   steps: number
   error?: string
   detail?: string
+  resetsAt?: number
 }
 
 export interface TurnEnding {
   stopReason: TurnResult['stopReason'] | 'lost'
   error?: string
+  resetsAt?: number
 }
 
 export interface TurnInfo {
@@ -152,6 +154,7 @@ export interface Engine {
   attach<C extends Conversation>(conversations: Conversations<C>): Runner<C>
   turn(owner: Owner, id: string): TurnInfo | undefined
   open(conversation: ConversationRef): Conversation | undefined
+  send(conversation: ConversationRef, input: SendInput): Promise<SendResult> | undefined
 }
 
 export const engine = service<Engine>('engine')
@@ -175,6 +178,8 @@ export interface EntryViews {
 export const entryViews = service<EntryViews>('entryViews')
 
 export const turnOpen = event<(conversation: Conversation, turn: TurnInfo) => void>('conversation.turn.open')
+
+export const turnHold = event<(conversation: Conversation, origin: TurnOrigin) => true | undefined>('conversation.turn.hold')
 
 export const turnClose = event<(conversation: Conversation, result: TurnResult, turn: TurnInfo) => void>('conversation.turn.close')
 

@@ -26,9 +26,16 @@ const windowOf = (id: string, raw: Json): LimitWindow | undefined => {
   }
 }
 
+const exhausted = (window: LimitWindow) => window.used >= 1 || window.status === 'rejected'
+
 export const limitsOf = (snapshot: unknown): PlanLimits | undefined => {
   const limits = fieldsOf(snapshot)
   const windows = (['primary', 'secondary'] as const).flatMap(id => (limits[id] ? (windowOf(id, fieldsOf(limits[id])) ?? []) : []))
   if (!windows.length) return undefined
   return limits.rateLimitReachedType ? { windows, status: 'rejected' } : { windows }
+}
+
+export const resetOf = (limits: PlanLimits | undefined) => {
+  const resets = (limits?.windows ?? []).filter(exhausted).flatMap(window => window.resetsAt ?? [])
+  return resets.length ? Math.max(...resets) : undefined
 }

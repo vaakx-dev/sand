@@ -2,6 +2,7 @@ import type { NoticeKind, RenderEntry, RendererRegistry, RenderTool, ToolRendere
 import type { Kit } from '@sand/ui-kit/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
+import { endingType } from './items/settled'
 import { resolveRenderer } from './tools/resolve'
 
 export const rendererRegistry = (kit: Kit): RendererRegistry => {
@@ -35,6 +36,7 @@ export const rendererRegistry = (kit: Kit): RendererRegistry => {
     version,
     tool: (name, render) => add(tools, name, render),
     entry: (type, render) => add(entries, type, render),
+    ending: (stopReason, render) => add(entries, endingType(stopReason), render),
     notice: (from, kind) => add(notices, from, kind),
     toolRenderer,
     entryRenderer: type => entries.get(type),

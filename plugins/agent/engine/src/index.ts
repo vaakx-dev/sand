@@ -1,7 +1,7 @@
 import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { attachConversations } from './attach'
-import { type Conversation, engine, type Engine, entryViews, type Owner } from './contract'
+import { type Conversation, engine, type Engine, entryViews, type Owner, type SendInput, type SendResult } from './contract'
 import { inject } from './context'
 import { createLeases } from './lifecycle/lease'
 import { openStores } from './store'
@@ -15,6 +15,7 @@ interface Attached {
   sweep(): void
   recover(): void
   open(id: string): Conversation | undefined
+  send(id: string, input: SendInput): Promise<SendResult> | undefined
 }
 
 export default definePlugin({
@@ -40,12 +41,17 @@ export default definePlugin({
         const { owner } = conversations
         if (attached.has(owner)) throw new Error(`${owner} conversations are already attached`)
         const found = attachConversations(ctx, { stores, leases, running: () => settled && !stopped }, conversations, () => attached.delete(owner))
-        attached.set(owner, { ...found, open: id => conversations.open(id) })
+        const send = (id: string, input: SendInput) => {
+          const conversation = conversations.open(id)
+          return conversation && found.runner.send(conversation, input)
+        }
+        attached.set(owner, { ...found, open: id => conversations.open(id), send })
         found.recover()
         return found.runner
       },
       turn: (owner, id) => stores.turns.get(owner, id),
       open: ({ owner, id }) => attached.get(owner)?.open(id),
+      send: ({ owner, id }, input) => attached.get(owner)?.send(id, input),
     }
 
     if (!stopped) {

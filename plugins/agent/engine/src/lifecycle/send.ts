@@ -1,5 +1,5 @@
 import { promptLabel } from '@sand/chats/contract'
-import type { Conversation, SendInput, SendResult, TurnInfo } from '../contract'
+import { type Conversation, type SendInput, type SendResult, type TurnInfo, turnHold } from '../contract'
 import type { EngineContext } from '../context'
 import type { Owned } from '../owned'
 import type { Drive } from './run'
@@ -45,7 +45,7 @@ export const createSend = <C extends Conversation>(ctx: EngineContext, { convers
     const earlier = stores.receipts.get(conversation, input.clientRequestId)
     if (earlier) return earlier
     recover()
-    const held = conversations.held?.(conversation)
+    const held = conversations.held?.(conversation) || (await ctx.bail(turnHold, conversation, input.origin ?? 'user'))
     const routing: SendInput = held ? { ...input, mode: 'queue' } : input
     const opening = held || stores.turns.current(conversation) ? undefined : await opener.prepare(conversation, input.prompt, input.origin ?? 'user')
     const routed = store(conversation, routing, opening)

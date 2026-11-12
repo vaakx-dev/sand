@@ -22,6 +22,7 @@ const inputLimit = 800
 const notes: Partial<Record<TurnEnding['stopReason'], string>> = {
   interrupted: 'The user interrupted this turn.',
   lost: 'Sand stopped while this turn ran; it did not finish.',
+  limited: 'The account ran out of usage during this turn; it did not finish.',
 }
 
 const blockText = (block: Block | ToolReferenceBlock): string | undefined => {
