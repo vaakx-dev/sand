@@ -49,7 +49,11 @@ export default definePlugin({
       ctx,
       store: botStore(ctx),
       chats: conversations(ctx),
-      projects: owned(ctx, () => known.read(() => ctx.get(projects)?.groups({ hidden: true }) ?? [])),
+      projects: owned(ctx, () => known.read(() => ctx.projects.groups({ hidden: true }))),
+      shown(project) {
+        known.version.get()
+        return ctx.projects.shown({ project })
+      },
       defaults: owned(ctx, () => pulse(ctx, [modelsChange], [models]).read(() => effective({}, ctx.get(models)?.defaults() ?? {}))),
       advanced: owned(ctx, () => pulse(ctx, [], [advanced]).read(() => ctx.get(advanced)?.on() ?? false)),
       sections,

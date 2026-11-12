@@ -1,5 +1,5 @@
 import type { BotAutomation, BotAutomationSource, BotProfileSection, ModelChoice } from '@sand/bots/contract'
-import type { ProjectGroup } from '@sand/web-client/contract'
+import type { ProjectGroup, ProjectShown } from '@sand/web-client/contract'
 import type { Derive } from '@vaakx-dev/vrui'
 import type { Conversations } from './chat/conversations'
 import type { BotsContext } from './context'
@@ -11,6 +11,7 @@ export interface Parts {
   store: BotStore
   chats: Conversations
   projects: Derive<ProjectGroup[]>
+  shown(project: string): ProjectShown
   advanced: Derive<boolean>
   defaults: Derive<ModelChoice>
   sections: Registry<BotProfileSection>
@@ -22,6 +23,6 @@ export interface Parts {
 
 export const automationsOf = (parts: Parts, bot: string): BotAutomation[] => parts.automationSources.items.get().flatMap(source => source.list(bot))
 
-export const projectName = (parts: Parts, project: string) => parts.projects.get().find(group => group.id === project)?.name ?? 'Unknown project'
+export const projectName = (parts: Parts, project: string) => parts.shown(project).name
 
 export const projectNames = (parts: Parts, list: string[]) => list.map(project => projectName(parts, project)).join(', ')
