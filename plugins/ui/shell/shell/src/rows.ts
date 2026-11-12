@@ -89,34 +89,36 @@ const fieldNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
   )
 }
 
-const alertNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
+const alertButton = (model: Model, item: Sig<NavItem>, phone: boolean) => {
   const { dot, navButton, shortcutHint } = model.kit
   const current = navCurrent(model, item)
   const summary = () => item.get().summary?.() ?? `${item.get().count?.() ?? 0} ${item.get().label}`
-  return show(
-    () => (item.get().count?.() ?? 0) > 0,
-    () =>
-      navButton(
-        {
-          active: current,
-          'aria-current': () => (current() ? 'page' : 'false'),
-          size: phone ? 'lg' : 'md',
-          class: 'group w-full shrink-0 bg-warning-950/60 hover:bg-warning-950',
-          onClick: () => activate(model, item.get()),
-        },
-        span({ class: 'inline-flex shrink-0' }, dot('warning')),
-        span({ class: 'shrink-0 font-semibold whitespace-nowrap text-neutral-100' }, summary),
-        dynamicChild(
-          () => item.get().detail?.(),
-          detail => (detail ? span({ class: 'min-w-0 flex-1 truncate text-left font-normal text-neutral-400' }, () => `· ${item.get().detail?.() ?? ''}`) : null),
-        ),
-        dynamicChild(
-          () => (phone ? undefined : item.get().keys),
-          keys => (keys ? shortcutHint(keys) : null),
-        ),
-      ),
+  return navButton(
+    {
+      active: current,
+      'aria-current': () => (current() ? 'page' : 'false'),
+      size: phone ? 'lg' : 'md',
+      class: 'group w-full shrink-0 bg-warning-950/60 hover:bg-warning-950',
+      onClick: () => activate(model, item.get()),
+    },
+    span({ class: 'inline-flex shrink-0' }, dot('warning')),
+    span({ class: 'shrink-0 font-semibold whitespace-nowrap text-neutral-100' }, summary),
+    dynamicChild(
+      () => item.get().detail?.(),
+      detail => (detail ? span({ class: 'min-w-0 flex-1 truncate text-left font-normal text-neutral-400' }, () => `· ${item.get().detail?.() ?? ''}`) : null),
+    ),
+    dynamicChild(
+      () => (phone ? undefined : item.get().keys),
+      keys => (keys ? shortcutHint(keys) : null),
+    ),
   )
 }
+
+const alertNav = (model: Model, item: Sig<NavItem>, phone: boolean) =>
+  dynamicChild(
+    () => (item.get().count?.() ?? 0) > 0,
+    some => (some ? alertButton(model, item, phone) : fieldNav(model, item, phone)),
+  )
 
 export const navRow = (model: Model, item: Sig<NavItem>, phone: boolean) => {
   const look = item.get().look ?? 'row'
