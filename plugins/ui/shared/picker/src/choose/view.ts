@@ -39,7 +39,7 @@ export const choose = <T>(kit: Kit, cancels: Set<() => void>, fine: Sig<boolean>
       results(kit, model),
       show(
         model.shown.map(found => !found.length),
-        () => emptyState({ surface: 'raised', text: 'Nothing matches. Try fewer letters.' }),
+        () => div({ class: 'px-2' }, emptyState({ text: 'Nothing matches.' })),
       ),
     )
   })

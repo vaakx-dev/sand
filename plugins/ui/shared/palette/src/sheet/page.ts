@@ -68,6 +68,6 @@ export const pageBody = (kit: Kit, model: PageModel) => {
     failureLine(kit, model, true),
     results(kit, model, menu),
     menu.view(),
-    show(model.empty.map(Boolean), () => kit.emptyState({ surface: 'raised', text: () => model.empty.get() })),
+    show(model.empty.map(Boolean), () => div({ class: 'px-2' }, kit.emptyState({ text: () => model.empty.get() }))),
   )
 }

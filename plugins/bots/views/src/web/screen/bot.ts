@@ -14,11 +14,7 @@ const faceStateOf = (bot: BotSummary | undefined): FaceState | undefined => {
   return status === 'running' ? 'running' : undefined
 }
 
-const missing = (parts: Parts) =>
-  div(
-    { class: [fill, 'items-center justify-center px-6'] },
-    parts.ctx.kit.emptyState({ text: 'This bot is gone.' }),
-  )
+const missing = ({ ctx: { kit } }: Parts) => kit.pageBody({}, kit.emptyState({ text: 'This bot is gone.' }))
 
 const headerOf = (parts: Parts, id: string) => {
   const { kit } = parts.ctx

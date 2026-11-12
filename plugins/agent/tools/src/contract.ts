@@ -1,5 +1,5 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import type { Block, Message, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
+import { type Block, type Message, secretMark, type ToolCallBlock, type ToolResultBlock, type ToolResultContent } from '@sand/chats/contract'
 import type { Conversation, Owner, WaitReason } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service, type Dispose } from 'drydock'
@@ -59,8 +59,6 @@ export interface GroupState extends ToolGroup {
 }
 
 export type Secrets = ReadonlyMap<string, readonly string[]>
-
-export const secretMark = '[secret]'
 
 const withoutSecrets = (input: unknown, fields: readonly string[]) =>
   input && typeof input === 'object' && !Array.isArray(input)

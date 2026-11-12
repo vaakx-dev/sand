@@ -1,5 +1,5 @@
-import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import { secretMark, type Tool, type ToolContext } from './contract'
+import { secretMark, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
+import type { Tool, ToolContext } from './contract'
 import { errorMessage, plural, untilAborted } from '@sand/util'
 import { z } from 'zod'
 

@@ -1,6 +1,6 @@
 import type { SourceInfo } from '@sand/accounts/contract'
 import { div, dynamicChild, untrack } from '@vaakx-dev/vrui'
-import { accountsButton } from '../accounts'
+import { accountsAction } from '../accounts'
 import type { Page } from '../page'
 import { crumb, logo, sourceTitle } from '../parts'
 import { createCatalog } from './catalog'
@@ -14,10 +14,7 @@ const body = (page: Page, first: SourceInfo, latest: () => SourceInfo) => {
   return div({ class: 'flex flex-col gap-6' }, modelsSection(page.ctx.kit, first, catalog, filter), optionsSection(page, latest))
 }
 
-const gone = (page: Page) => {
-  const { emptyState, settingsSection } = page.ctx.kit
-  return settingsSection({}, emptyState({ surface: 'group', text: 'This account is no longer signed in.', action: accountsButton(page, 'Sign in again') }))
-}
+const gone = (page: Page) => page.ctx.kit.emptyState({ text: 'This account is signed out.', action: accountsAction(page, 'Sign in again') })
 
 export const sourcePage = (page: Page, id: string) => {
   const { kit } = page.ctx

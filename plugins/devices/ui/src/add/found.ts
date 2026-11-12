@@ -73,7 +73,7 @@ export const foundSection = (ui: Ui, useLink: () => void) => {
           rowList(pcs, pc => pc.id, pc => foundRow(ui, pc)),
           dynamicChild(
             derive(() => !pcs.get().length && !found.error.get()),
-            empty => (empty ? emptyState({ flush: true, text: 'No PCs found yet. Still looking…' }) : null),
+            empty => (empty ? emptyState({ text: 'No PCs found yet. Still looking…' }) : null),
           ),
           dynamicChild(found.error, error =>
             error ? errorState({ flush: true, text: `Couldn’t look for PCs: ${error}`, retry: () => void found.refresh() }) : null,

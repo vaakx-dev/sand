@@ -92,8 +92,8 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
       return stopped.promise
     },
     close() {
-      connection.close()
       dropAnswers()
+      return connection.close()
     },
   }
 }

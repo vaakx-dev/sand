@@ -1,7 +1,7 @@
 import { div, show, span, type Child } from '@vaakx-dev/vrui'
 import { secondaryAction } from '../buttons/button'
-import { metaLook, secondaryLook, secondaryText, sectionTitle } from '../heads/text'
-import { icon, type IconName } from '../icons/lucide'
+import { secondaryLook } from '../heads/text'
+import { icon } from '../icons/lucide'
 import { delayed } from '../page/delayed'
 import type { Surface } from '../surface'
 
@@ -10,9 +10,14 @@ export interface StateProps {
   flush?: boolean
 }
 
-export interface EmptyProps extends StateProps {
+export interface EmptyAction {
+  label: string
+  run(): void
+}
+
+export interface EmptyProps {
   text: Child
-  action?: Child
+  action?: EmptyAction
 }
 
 export interface ErrorProps extends StateProps {
@@ -27,8 +32,12 @@ const padOf = ({ surface = 'page', flush = false }: StateProps) => (flush ? 'py-
 export const loadingState = ({ text = 'Loading…', ...where }: StateProps & { text?: Child } = {}) =>
   show(delayed(true), () => div({ role: 'status', class: [padOf(where), 'text-sm text-neutral-500'] }, text))
 
-export const emptyState = ({ text, action, ...where }: EmptyProps) =>
-  div({ class: [padOf(where), 'flex flex-wrap items-center gap-x-3 gap-y-2', secondaryLook] }, span({ class: 'min-w-0' }, text), action ?? null)
+export const emptyState = ({ text, action }: EmptyProps) =>
+  div(
+    { class: ['flex flex-wrap items-center gap-x-3 gap-y-2 py-2', secondaryLook] },
+    span({ class: 'min-w-0' }, text),
+    action ? secondaryAction({ size: 'sm', onClick: () => action.run() }, action.label) : null,
+  )
 
 export const errorState = ({ text, retry, ...where }: ErrorProps) =>
   div(
@@ -36,20 +45,4 @@ export const errorState = ({ text, retry, ...where }: ErrorProps) =>
     span({ class: 'inline-flex shrink-0 text-danger-400' }, icon('alert', 16)),
     div({ class: 'min-w-0 flex-1 text-sm wrap-anywhere text-neutral-100' }, text),
     retry ? secondaryAction({ size: 'sm', onClick: retry }, 'Retry') : null,
-  )
-
-export interface BlockProps {
-  icon: IconName
-  title: Child
-  text: Child
-  action?: Child
-}
-
-export const emptyBlock = ({ icon: name, title, text, action }: BlockProps) =>
-  div(
-    { class: 'flex flex-col items-center gap-2 px-4 py-12 text-center' },
-    span({ class: ['mb-1 inline-flex', metaLook] }, icon(name, 20)),
-    sectionTitle(title),
-    div({ class: 'max-w-sm' }, secondaryText(text)),
-    action ? div({ class: 'mt-2 flex' }, action) : null,
   )

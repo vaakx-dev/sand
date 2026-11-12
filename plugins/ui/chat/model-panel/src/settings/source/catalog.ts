@@ -1,4 +1,4 @@
-import { modelsAdd, modelsCatalog, modelsPref, modelsRemove, modelsSeen, type ModelInfo } from '@sand/accounts/contract'
+import type { ModelInfo } from '@sand/accounts/contract'
 import { errorMessage } from '@sand/util'
 import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import { settingsMenu } from '../menu'
@@ -26,13 +26,13 @@ export const createCatalog = (page: Page, source: string) => {
     for (const model of list) if (model.fresh) fresh.add(model.id)
     if (seen) return
     seen = true
-    if (fresh.size) void page.run(modelsSeen, { source })
+    if (fresh.size) void page.run(() => page.catalog.seen(source))
   }
 
   const load = async () => {
     const mine = ++ticket
     try {
-      const list = await page.call(modelsCatalog, { source })
+      const list = await page.call(() => page.catalog.list(source))
       if (mine !== ticket) return
       if (pending) {
         stale = true
@@ -67,21 +67,21 @@ export const createCatalog = (page: Page, source: string) => {
 
   const setHidden = (model: ModelInfo, hidden: boolean) => {
     patch(model.id, found => ({ ...found, hidden }))
-    return send(page.call(modelsPref, { model: model.id, hidden }))
+    return send(page.call(() => page.catalog.hide(model.id, hidden)))
   }
 
   const setFavourite = (model: ModelInfo, favourite: boolean) => {
     patch(model.id, found => ({ ...found, favourite: favourite ? starred : undefined }))
-    return send(page.call(modelsPref, { model: model.id, favourite }))
+    return send(page.call(() => page.catalog.favourite(model.id, favourite)))
   }
 
   const remove = (model: ModelInfo) => {
     patch(model.id, () => undefined)
-    return send(page.call(modelsRemove, { model: model.id }))
+    return send(page.call(() => page.catalog.remove(model.id)))
   }
 
   const add = async (name: string) => {
-    const model = await page.call(modelsAdd, { source, name })
+    const model = await page.call(() => page.catalog.add(source, name))
     const known = models.get()?.some(found => found.id === model.id)
     if (known) patch(model.id, () => model)
     else models.set(arrange([...(models.get() ?? []), model]))

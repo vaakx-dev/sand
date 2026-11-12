@@ -15,7 +15,7 @@ interface Member {
 
 export interface ThreadServer {
   request(method: string, params?: Json): Promise<Json>
-  close(): void
+  close(): Promise<void>
 }
 
 const live = 4
@@ -94,7 +94,7 @@ export const createPool = (folder: string, version: string) => {
       },
       close() {
         members.delete(member)
-        rpc.close()
+        return rpc.close()
       },
     }
   }

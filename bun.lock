@@ -1475,6 +1475,7 @@
       "dependencies": {
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/paths": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -2267,7 +2268,6 @@
         "@sand/accounts": "workspace:*",
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
-        "@sand/host-hub": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/model-picker": "workspace:*",
         "@sand/palette": "workspace:*",
@@ -2592,6 +2592,7 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/features": "workspace:*",
         "@sand/model": "workspace:*",
+        "@sand/model-picker": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",

@@ -1,5 +1,7 @@
 import type { Message, ToolCallBlock, ToolResultBlock } from '..'
 
+export const secretMark = '[secret, hidden after use]'
+
 export const refused = 'Not run: the response was refused.'
 
 export const truncated = 'Not run: the response hit max_tokens before this call was complete. Retry with a smaller input.'

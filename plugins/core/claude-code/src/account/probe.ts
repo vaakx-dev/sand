@@ -9,7 +9,7 @@ export const probe = async <T>(work: (connection: Connection) => Promise<T>) => 
   try {
     return await work(connection)
   } finally {
-    connection.close()
+    void connection.close()
   }
 }
 

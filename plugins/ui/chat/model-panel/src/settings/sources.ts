@@ -1,7 +1,7 @@
 import type { SourceInfo } from '@sand/accounts/contract'
 import { favouritesOf } from '@sand/model-picker/contract'
 import { span } from '@vaakx-dev/vrui'
-import { accountsButton } from './accounts'
+import { accountsAction } from './accounts'
 import type { Page } from './page'
 import { linkRow, logo, whereText } from './parts'
 
@@ -35,7 +35,7 @@ const sourceRow = (page: Page, source: SourceInfo) => {
 }
 
 const noAccounts = (page: Page) =>
-  page.ctx.kit.emptyState({ surface: 'group', text: 'No accounts yet. Add one to choose models.', action: accountsButton(page, 'Add an account') })
+  page.ctx.kit.emptyState({ text: 'No accounts yet.', action: accountsAction(page, 'Add an account') })
 
 export const sourcesSection = (page: Page) => {
   const { settingsSection } = page.ctx.kit

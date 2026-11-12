@@ -41,9 +41,13 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
   }
 }
 
-export const botsGroup = (parts: Parts): ShellGroup => ({
-  id: 'bots',
-  label: 'Bots',
-  action: { label: 'New bot', icon: 'plus', run: parts.create },
-  rows: (parts.store.bots.get() ?? []).map(bot => rowOf(parts, bot)),
-})
+export const botsGroup = (parts: Parts): ShellGroup => {
+  const bots = parts.store.bots.get()
+  return {
+    id: 'bots',
+    label: 'Bots',
+    action: { label: 'New bot', icon: 'plus', run: parts.create },
+    rows: (bots ?? []).map(bot => rowOf(parts, bot)),
+    ...(bots?.length === 0 && { empty: 'No bots yet.' }),
+  }
+}

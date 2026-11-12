@@ -7,10 +7,8 @@ import { findModels } from './search'
 import { sourceTitle } from './source'
 import { FAVOURITES, type View } from './view'
 
-const empty = ({ kit, openSettings }: Scene, text: string, link?: string) => {
-  const { emptyState, linkButton } = kit
-  return emptyState({ surface: 'raised', text, action: link && openSettings ? linkButton({ onClick: openSettings }, link) : undefined })
-}
+const empty = ({ kit, openSettings }: Scene, text: string, link?: string) =>
+  div({ class: 'px-2' }, kit.emptyState({ text, action: link && openSettings ? { label: link, run: openSettings } : undefined }))
 
 const sourceList = (scene: Scene, source: SourceInfo) => {
   const { errorState, sectionHeading } = scene.kit

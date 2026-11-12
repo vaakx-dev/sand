@@ -23,7 +23,7 @@ export const phonesSection = (ui: Ui) => {
     rowList(list, device => device.id, device => phoneRow(ui, device)),
     show(
       () => devices.records.loaded.get() && !list.get().length,
-      () => emptyState({ flush: true, text: 'No phones or browsers yet.' }),
+      () => emptyState({ text: 'No phones or browsers yet.' }),
     ),
     dynamicChild(devices.records.error, error =>
       error ? errorState({ flush: true, text: `Couldn’t load your devices: ${error}`, retry: () => void devices.refresh() }) : null,

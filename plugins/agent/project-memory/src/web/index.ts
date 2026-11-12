@@ -5,7 +5,7 @@ import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite, type MemoryRef 
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { threads } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, p, sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, sig } from '@vaakx-dev/vrui'
 import { definePlugin, type Context } from 'drydock'
 import { projectMemorySpace } from '../contract'
 
@@ -40,11 +40,8 @@ const openSheet = (ctx: ProjectMemoryContext, ref: MemoryRef) => {
         ctx.kit.editable({
           title: 'Memory',
           text: () => text.get(),
-          view: () =>
-            dynamicChild(
-              derive(() => text.get().trim()),
-              found => (found ? div({ class: 'flex flex-col gap-2' }, ...ctx.markdown.nodes(found)) : p({}, 'Empty. Threads in this project write here as they learn.')),
-            ),
+          view: written => div({ class: 'flex flex-col gap-2' }, ...ctx.markdown.nodes(written)),
+          empty: 'Nothing remembered yet.',
           save: written => ctx.wire.call(memoryWrite, { ...ref, text: written }).then(() => text.set(written)),
           rows: 14,
           maxLength: memoryLimit,

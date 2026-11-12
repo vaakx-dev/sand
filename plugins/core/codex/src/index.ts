@@ -8,6 +8,7 @@ import { codexAccount } from './account/account'
 import { limitsOf } from './account/limits'
 import { installUrl } from './server/binary'
 import { createPool, type Pool } from './server/pool'
+import { sessionFiles } from './session/files'
 import { openSession, type SessionNeeds } from './session/session'
 import pkg from '../package.json'
 
@@ -34,6 +35,7 @@ const codexPlan = (needs: SessionNeeds): AppPlan => ({
   fixedTools: true,
   ...codexAccount(needs.pool),
   open: (setup, output, resume) => openSession(needs, setup, output, resume),
+  sessionFiles,
 })
 
 const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>

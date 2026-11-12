@@ -83,7 +83,7 @@ const resultRows = (kit: Kit, { items, failure, retry }: Search, texts: { lookin
   return dynamicChild(phase, current => {
     if (current === 'failed') return errorState({ flush: true, text: () => failure.get(), retry })
     if (current === 'loading') return loadingState({ flush: true, text: texts.looking })
-    if (current === 'empty') return emptyState({ flush: true, text: texts.empty })
+    if (current === 'empty') return emptyState({ text: texts.empty })
     return div(
       { class: 'contents' },
       rowList(
@@ -93,7 +93,7 @@ const resultRows = (kit: Kit, { items, failure, retry }: Search, texts: { lookin
       ),
       show(
         () => (items.get()?.length ?? 0) > shownItems,
-        () => emptyState({ flush: true, text: `Showing the first ${shownItems}. Type to narrow it down.` }),
+        () => emptyState({ text: `Showing the first ${shownItems}. Type to narrow it down.` }),
       ),
     )
   })
@@ -106,7 +106,7 @@ export const pickRows = (kit: Kit, model: LoginsModel, source: External, finish:
   const save = async (login: PickedLogin) => finish(await model.pick(login))
   const texts = {
     looking: `Searching ${name}…`,
-    empty: () => (search.query.get().trim() ? 'Nothing matches. Try another word.' : `Nothing in ${name} sand can use.`),
+    empty: () => (search.query.get().trim() ? 'Nothing matches.' : `Nothing in ${name} sand can use.`),
   }
   return dynamicChild(chosen, item =>
     item

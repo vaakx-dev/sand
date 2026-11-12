@@ -1,4 +1,4 @@
-import { modelsNewModels, modelsRefresh, type SourceInfo } from '@sand/accounts/contract'
+import type { SourceInfo } from '@sand/accounts/contract'
 import { ago } from '@sand/util'
 import { clock, div, sig, span } from '@vaakx-dev/vrui'
 import type { Page } from '../page'
@@ -15,7 +15,7 @@ const refreshLine = (page: Page, source: () => SourceInfo) => {
   const now = clock(30_000)
   const refresh = async () => {
     busy.set(true)
-    await page.run(modelsRefresh, { source: source().id })
+    await page.run(() => page.catalog.refresh(source().id))
     busy.set(false)
   }
   return div(
@@ -41,7 +41,7 @@ export const optionsSection = (page: Page, source: () => SourceInfo) => {
         toggleSwitch({
           on: show,
           'aria-label': 'Show new models automatically',
-          onClick: () => void page.run(modelsNewModels, { source: source().id, mode: show() ? 'hide' : 'show' }),
+          onClick: () => void page.run(() => page.catalog.showNew(source().id, !show())),
         }),
       ),
     ),

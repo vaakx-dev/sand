@@ -91,6 +91,7 @@ export const startRpc = ({ binary, args, onNotify, onRequest, onExit }: RpcOptio
       closed = true
       failAll(new Error('Codex was closed'))
       lines.close()
+      return lines.exited.then(() => {})
     },
   }
 }

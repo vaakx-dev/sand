@@ -54,6 +54,11 @@ const layered = (layer: string) => ({ ...addressState(), [layerKey]: layer })
 
 export const addressSettled = () => !waiting
 
+export const whenAddressSettled = (run: () => void) => {
+  if (waiting) waiting.push(run)
+  else run()
+}
+
 export const pushLayer = (layer: string) => {
   if (!waiting && addressLayer()) return history.replaceState(layered(layer), '', location.href)
   write(() => history.pushState(layered(layer), '', location.href))

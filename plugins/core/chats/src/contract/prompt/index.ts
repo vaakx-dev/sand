@@ -1,4 +1,4 @@
-export { callsOf, errorResult, refused, skip, truncated, unrecorded } from './calls'
+export { callsOf, errorResult, refused, secretMark, skip, truncated, unrecorded } from './calls'
 export { isModelContent, promptContent } from './content'
 export { contextLabel, contextLink, contextLinks, isContextRecord, linkedRecords, projectContext, type ContextLink, type ContextProjection, type ContextProjector } from './context'
 export { feedbackLine, feedbackOnly, noteBlock, stopFeedback } from './feedback'

@@ -1,6 +1,9 @@
 import { llmPlans } from '@sand/accounts/contract'
+import { paths } from '@sand/paths/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { z } from 'zod'
 import { replayApi } from './api'
 import { replayApp } from './app'
@@ -9,11 +12,14 @@ import { replayRequests, sourceSchema } from './contract'
 export default definePlugin({
   name: 'replay',
   description: 'Adds model sources that play scripted replies, tool calls and errors, for tests and sandboxes',
+  inject: { paths },
   config: z.object({ sources: z.array(sourceSchema).default([]) }).default({ sources: [] }),
   apply(ctx, { sources }) {
     let base = ''
     const apis = new Map(sources.flatMap(source => (source.api ? [[source.id, replayApi(source, () => base)] as const] : [])))
-    const apps = new Map(sources.flatMap(source => (source.api ? [] : [[source.id, replayApp(source)] as const])))
+    const folder = join(ctx.paths.home, 'replay')
+    mkdirSync(folder, { recursive: true })
+    const apps = new Map(sources.flatMap(source => (source.api ? [] : [[source.id, replayApp(source, folder)] as const])))
     ctx.effect(() => {
       if (!apis.size) return undefined
       const server = Bun.serve({
