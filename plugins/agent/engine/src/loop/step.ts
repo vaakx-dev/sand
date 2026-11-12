@@ -1,5 +1,6 @@
 import { type LLMEvent, StreamStalled } from '@sand/accounts/contract'
 import { type Message, noteBlock, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
+import { conceal } from '@sand/tools/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
 import type { Conversation, Step, TurnOrigin } from '../contract'
 import type { EngineContext } from '../context'
@@ -59,7 +60,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
   const record = ({ step, done: { message, usage, cacheTtlMs, source, native, delivered, finish } }: Sent) => {
     const { model } = step.request
     ctx.ledger.tx(() => {
-      const reply = append(message)
+      const reply = append(conceal(message, ctx.tools.secrets()))
       if (finish) conversation.append('finish', finish, turn)
       if (tokensOf(usage)) conversation.append('usage', usageRecord(ctx.llm.provider?.(model), model, usage, source), turn)
       run.usage = sumUsage(run.usage, usage)

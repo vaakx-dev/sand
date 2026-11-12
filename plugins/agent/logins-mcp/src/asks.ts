@@ -51,6 +51,7 @@ const secretTool: McpTool<typeof secretInput> = {
   description:
     'Answer a waiting request_secret for the user: a value for a key, or a username and password when it names a site. The asking thread or bot gets a login it may use, never the value',
   input: secretInput,
+  secret: ['value', 'username', 'password'],
   access: 'operate',
   group: group.name,
   run: async (input, { call }) => {
@@ -63,6 +64,7 @@ const codeTool: McpTool<typeof codeInput> = {
   name: 'login_answer_code',
   description: 'Answer a waiting login_code for the user: the code is filled into the sign-in page and never saved, or say the sign-in was approved on another device',
   input: codeInput,
+  secret: ['code'],
   access: 'operate',
   group: group.name,
   run: async (input, { call }) => {

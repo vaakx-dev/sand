@@ -41,6 +41,7 @@ const clientTool: McpTool<typeof clientInput> = {
   name: 'connection_set_client',
   description: `Set the OAuth client an OAuth kind signs in with, from the client ID (and secret) the user made by following the kind's setup steps. ${state}`,
   input: clientInput,
+  secret: ['secret'],
   access: 'operate',
   group: group.name,
   run: (input, { call }) => call(connectionClient, input),
@@ -70,6 +71,7 @@ const saveTool: McpTool<typeof saveInput> = {
   description:
     'Connect an account of a form kind, like an iCloud calendar with an app password, from the values the user gave you. sand checks them with the service first. Returns the connected account',
   input: saveInput,
+  secret: ['values'],
   access: 'operate',
   group: group.name,
   run: (input, { call }) => call(connectionSave, input),

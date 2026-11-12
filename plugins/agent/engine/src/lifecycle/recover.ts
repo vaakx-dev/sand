@@ -55,7 +55,10 @@ export const createRecovery = <C extends Conversation>(
     announce.pending(conversation)
   }
 
-  const rerunnable = (conversation: C) => (call: ToolCallBlock) => ctx.tools.effect(call, conversation) === 'read'
+  const rerunnable = (conversation: C) => {
+    const secrets = ctx.tools.secrets()
+    return (call: ToolCallBlock) => ctx.tools.effect(call, conversation) === 'read' && !secrets.has(call.name)
+  }
 
   const resume = (stale: Stale) => {
     const conversation = conversations.open(stale.conversation)

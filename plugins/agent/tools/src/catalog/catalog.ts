@@ -1,7 +1,7 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import type { Message, ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
-import type { GroupState, Offer, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
+import type { GroupState, Offer, Secrets, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
 import { z } from 'zod'
 import { run } from '../run'
 import type { Choices } from './choices'
@@ -98,6 +98,9 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return name === findName ? find(listed(scoped, 'on-demand', conversation)) : scoped.find(tool => tool.name === name)
   }
 
+  const secrets = (): Secrets =>
+    tools().reduce((found, { name, secret }) => (secret?.length ? found.set(name, [...new Set([...(found.get(name) ?? []), ...secret])]) : found), new Map<string, string[]>())
+
   const effect = (call: ToolCallBlock, conversation: Conversation) => {
     const tool = resolve(call.name, conversation)
     return tool && call.malformed === undefined ? (tool.effect ?? 'run') : undefined
@@ -105,6 +108,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const service: Tools = {
     register,
+    secrets,
     group,
     offer(owner, offer) {
       if (offers.has(owner)) throw new Error(`${owner} conversations already say what they offer tools`)

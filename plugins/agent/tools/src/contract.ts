@@ -1,5 +1,5 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import type { Message, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
+import type { Block, Message, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
 import type { Conversation, Owner, WaitReason } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service, type Dispose } from 'drydock'
@@ -30,6 +30,7 @@ export type Effect = (typeof effects)[number]
 export interface Tool<S extends ZodType = ZodType> {
   name: string
   description: string
+  secret?: string[]
   environment?: string
   group?: string
   always?: Owner[]
@@ -57,8 +58,29 @@ export interface GroupState extends ToolGroup {
   tools: string[]
 }
 
+export type Secrets = ReadonlyMap<string, readonly string[]>
+
+export const secretMark = '[secret]'
+
+const withoutSecrets = (input: unknown, fields: readonly string[]) =>
+  input && typeof input === 'object' && !Array.isArray(input)
+    ? Object.fromEntries(Object.entries(input).map(([key, value]) => [key, fields.includes(key) && value !== null ? secretMark : value]))
+    : input
+
+export const concealBlock = <B extends Block>(block: B, secrets: Secrets): B => {
+  const fields = block.type === 'tool_call' ? secrets.get(block.name) : undefined
+  if (block.type !== 'tool_call' || !fields) return block
+  return { ...block, input: withoutSecrets(block.input, fields), ...(block.malformed !== undefined && { malformed: secretMark }) }
+}
+
+export const conceal = (message: Message, secrets: Secrets): Message => {
+  if (!message.content.some(block => block.type === 'tool_call' && secrets.has(block.name))) return message
+  return { ...message, content: message.content.map(block => concealBlock(block, secrets)) }
+}
+
 export interface Tools {
   register(tool: Tool): Dispose
+  secrets(): Secrets
   group(group: ToolGroup): Dispose
   offer(owner: Owner, offer: Offer): Dispose
   groups(): GroupState[]

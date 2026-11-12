@@ -1,5 +1,5 @@
 import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import type { Tool, ToolContext } from './contract'
+import { secretMark, type Tool, type ToolContext } from './contract'
 import { errorMessage, plural, untilAborted } from '@sand/util'
 import { z } from 'zod'
 
@@ -21,7 +21,7 @@ export const run = async (
   context: Omit<ToolContext, 'call'>,
 ): Promise<ToolResultBlock> => {
   if (!tool) return result(call, `Unknown tool: ${call.name}`, true)
-  if (call.malformed !== undefined) return result(call, JSON.stringify({ INVALID_JSON: call.malformed }), true)
+  if (call.malformed !== undefined) return result(call, JSON.stringify({ INVALID_JSON: tool.secret?.length ? secretMark : call.malformed }), true)
   const parsed = tool.input.safeParse(call.input)
   if (!parsed.success) return result(call, `Invalid input:\n${z.prettifyError(parsed.error)}`, true)
   const timeoutMs = tool.timeoutMs ?? defaultTimeoutMs

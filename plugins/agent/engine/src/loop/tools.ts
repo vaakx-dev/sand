@@ -1,5 +1,5 @@
 import { errorResult, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
-import type { ToolContext } from '@sand/tools/contract'
+import { concealBlock, type ToolContext } from '@sand/tools/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import { type Conversation, type Conversations, toolContent } from '../contract'
 import type { EngineContext } from '../context'
@@ -9,18 +9,23 @@ export interface Report {
   output(call: ToolCallBlock, text: string): void
 }
 
+interface Calling {
+  call: ToolCallBlock
+  shown: ToolCallBlock
+}
+
 export type CallContext<C extends Conversation> = Omit<ToolContext, 'call' | 'progress' | 'conversation'> & { conversation: C }
 
 const settle = async <C extends Conversation>(
   ctx: EngineContext,
   conversations: Conversations<C>,
-  call: ToolCallBlock,
+  { call, shown }: Calling,
   context: CallContext<C>,
   report: Report,
 ) => {
   const progress = (text: string) => {
-    report.output(call, text)
-    conversations.toolProgress?.(call, text, context.conversation)
+    report.output(shown, text)
+    conversations.toolProgress?.(shown, text, context.conversation)
   }
   try {
     return await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
@@ -33,11 +38,11 @@ const settle = async <C extends Conversation>(
 const runCall = async <C extends Conversation>(
   ctx: EngineContext,
   conversations: Conversations<C>,
-  call: ToolCallBlock,
+  calling: Calling,
   context: CallContext<C>,
   report: Report,
 ) => {
-  const result = await settle(ctx, conversations, call, context, report)
+  const result = await settle(ctx, conversations, calling, context, report)
   return { ...result, content: await ctx.waterfall(toolContent, result.content, context.conversation) }
 }
 
@@ -49,9 +54,10 @@ const runTool = async <C extends Conversation>(
   report: Report,
 ) => {
   if (context.signal.aborted) return report.answer(errorResult(call, 'Not run: the user stopped the turn first.'))
-  conversations.toolStarted?.(call, context.conversation)
-  const result = await runCall(ctx, conversations, call, context, report)
-  report.answer((await conversations.toolDone?.(result, call, context.conversation)) ?? result)
+  const shown = concealBlock(call, ctx.tools.secrets())
+  conversations.toolStarted?.(shown, context.conversation)
+  const result = await runCall(ctx, conversations, { call, shown }, context, report)
+  report.answer((await conversations.toolDone?.(result, shown, context.conversation)) ?? result)
 }
 
 const batches = (calls: ToolCallBlock[], parallel: (call: ToolCallBlock) => boolean) =>

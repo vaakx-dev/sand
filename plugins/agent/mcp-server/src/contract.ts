@@ -14,6 +14,7 @@ export interface McpTool<S extends ZodObject = ZodObject> {
   name: string
   description: string
   input: S
+  secret?: (keyof output<S> & string)[]
   access: AgentAccess
   group?: string
   agents?: Actor['owner'][]
