@@ -54,7 +54,7 @@ export default definePlugin({
     )
     ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && (await changedElsewhere(conversation.id))) || undefined)
     ctx.on(botRemove, bot => void seen.delete(bot))
-    ctx.watch(systemParts, found => found?.add({ name: 'Plan', tone: 'warning', chars: planSectionLength }))
+    ctx.watch(systemParts, found => found?.add({ name: 'Plan', tone: 'sky', chars: planSectionLength }))
     ctx.watch(mcpTools, found => found && offerPlanTools(found))
     ctx.watch(server, found => {
       if (!found) return

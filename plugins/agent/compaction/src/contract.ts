@@ -4,7 +4,7 @@ import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service, type Dispose } from 'drydock'
 import { z } from 'zod'
 
-export type ContextTone = 'violet' | 'orange' | 'warning' | 'info' | 'accent' | 'success'
+export type ContextTone = 'violet' | 'orange' | 'sky' | 'info' | 'accent' | 'success'
 
 export interface ContextPart {
   name: string
