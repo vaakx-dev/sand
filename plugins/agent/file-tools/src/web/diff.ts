@@ -1,5 +1,6 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { isRecord } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import { readAtLine } from '../at-line'
 
@@ -9,6 +10,11 @@ interface Row {
   kind: Kind
   number: number | undefined
   text: string
+}
+
+interface Change {
+  path: string
+  rows: Row[]
 }
 
 const tones: Record<Kind, string> = {
@@ -51,23 +57,46 @@ const rowView = ({ kind, number, text }: Row) => [
   span({ class: ['pr-3 whitespace-pre-wrap wrap-anywhere', tones[kind]] }, text || ' '),
 ]
 
+const pathView = (path: string, first: boolean) => span({ class: ['px-3 pb-1 text-neutral-200', !first && 'pt-3'], style: { gridColumn: '1 / -1' } }, path)
+
+const changeInputs = (input: unknown): unknown[] => {
+  if (!isRecord(input)) return []
+  return Array.isArray(input.edits) ? input.edits : [input]
+}
+
 export const editRenderer = ({ fold }: Kit, { errorBody, field, resultText }: ToolViews): ToolRenderer => {
-  const rows = (tool: ToolView) =>
-    diffRows(field(tool.call.input, 'old_string'), field(tool.call.input, 'new_string'), tool.result ? readAtLine(resultText(tool.result)) : undefined)
-  const count = (tool: ToolView, kind: Kind) => rows(tool).filter(row => row.kind === kind).length
+  const changes = (tool: ToolView): Change[] => {
+    const lines = tool.result ? resultText(tool.result).split('\n') : []
+    return changeInputs(tool.call.input).map((change, index) => {
+      const path = field(change, 'path')
+      const start = lines[index] === undefined ? undefined : readAtLine(lines[index])
+      return { path, rows: diffRows(field(change, 'old_string'), field(change, 'new_string'), start) }
+    })
+  }
+  const paths = (tool: ToolView) => [...new Set(changes(tool).map(change => change.path))]
+  const count = (tool: ToolView, kind: Kind) =>
+    changes(tool)
+      .flatMap(change => change.rows)
+      .filter(row => row.kind === kind).length
+  const titledView = ({ path, rows }: Change, index: number) => [pathView(path, index === 0), ...rows.flatMap(rowView)]
   return {
     icon: 'pencil',
     verb: 'Edited',
     activeVerb: 'Editing',
-    label: tool => field(tool.call.input, 'path'),
+    label: tool => paths(tool).join(', '),
     meta: tool => `+${count(tool, 'add')} −${count(tool, 'del')}`,
-    copy: tool => field(tool.call.input, 'path'),
+    copy: tool => paths(tool).join('\n'),
     body(tool) {
       if (tool.result?.isError) return errorBody(tool)
-      const shown = rows(tool)
+      const shown = changes(tool)
+      const titled = shown.length > 1
+      const lines = shown.reduce((total, change) => total + change.rows.length + (titled ? 1 : 0), 0)
       return fold(
-        { lines: shown.length },
-        div({ class: 'grid overflow-hidden rounded-lg bg-neutral-800 py-2 font-mono text-xs', style: { gridTemplateColumns: 'auto 1fr' } }, shown.map(rowView)),
+        { lines },
+        div(
+          { class: 'grid overflow-hidden rounded-lg bg-neutral-800 py-2 font-mono text-xs', style: { gridTemplateColumns: 'auto 1fr' } },
+          titled ? shown.flatMap(titledView) : shown.flatMap(change => change.rows.flatMap(rowView)),
+        ),
       )
     },
   }

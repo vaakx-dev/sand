@@ -1,5 +1,5 @@
 import type { Item, ToolView } from '@sand/transcript/contract'
-import { plural } from '@sand/util'
+import { isRecord, plural } from '@sand/util'
 
 type Kind = 'read' | 'edit' | 'write' | 'search' | 'shell' | 'test' | 'build' | 'web' | 'helper' | 'skill' | 'page'
 
@@ -46,6 +46,8 @@ const phrases: Record<Kind, (count: number) => string> = {
 
 const shown = 3
 
+const fileKinds = new Set<Kind>(['read', 'edit', 'write'])
+
 const commandOf = (input: unknown) => (typeof input === 'object' && input && 'command' in input && typeof input.command === 'string' ? input.command : '')
 
 const kindOf = ({ call }: ToolView): Kind | undefined => {
@@ -57,14 +59,29 @@ const kindOf = ({ call }: ToolView): Kind | undefined => {
 const toolsIn = (work: Item[]): ToolView[] =>
   work.flatMap(item => (item.kind === 'tools' ? item.steps.flatMap(step => (step.kind === 'tool' ? [step.tool] : [])) : []))
 
+const pathsOf = (input: unknown): string[] => {
+  if (!isRecord(input)) return []
+  const own = typeof input.path === 'string' ? [input.path] : []
+  const changed = Array.isArray(input.edits) ? input.edits.flatMap(pathsOf) : []
+  return [...own, ...changed]
+}
+
+const keysOf = ({ call }: ToolView, kind: Kind) => {
+  const paths = fileKinds.has(kind) ? pathsOf(call.input) : []
+  return paths.length ? paths : [call.id]
+}
+
 export const summaryOf = (work: Item[]) => {
-  const counts = new Map<Kind, number>()
+  const done = new Map<Kind, Set<string>>()
   for (const tool of toolsIn(work)) {
     const kind = kindOf(tool)
-    if (kind) counts.set(kind, (counts.get(kind) ?? 0) + 1)
+    if (!kind) continue
+    const keys = done.get(kind) ?? new Set()
+    keysOf(tool, kind).forEach(key => keys.add(key))
+    done.set(kind, keys)
   }
-  return [...counts]
+  return [...done]
     .slice(0, shown)
-    .map(([kind, count]) => phrases[kind](count))
+    .map(([kind, keys]) => phrases[kind](keys.size))
     .join(', ')
 }
