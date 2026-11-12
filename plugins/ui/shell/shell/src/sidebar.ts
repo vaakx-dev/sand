@@ -1,9 +1,11 @@
-import { derive, div, dynamicChild, nav, span, type Derive, type Props } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, nav, span, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
 import { drawerLook, drawerOffset } from './drawer'
-import { toolButton } from './frames'
 import type { Model } from './model'
 import { brand, footRow, groupList, navList, quietNavList } from './rows'
 import type { Built, Nav } from './screens'
+
+const scroller = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
+  div({ ...props, class: ['flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-2', extra] }, ...children)
 
 const appList = (model: Model, screenNav: Derive<Nav | undefined>) => {
   const menu = model.kit.contextMenu()
@@ -13,7 +15,7 @@ const appList = (model: Model, screenNav: Derive<Nav | undefined>) => {
     navList(model, false),
     div(
       { class: 'relative flex min-h-0 flex-1 flex-col' },
-      div({ class: '-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-2' }, groupList(model, menu, { phone: false })),
+      scroller({ class: '-mx-2' }, groupList(model, menu, { phone: false })),
       model.kit.scrollFade('z-10'),
     ),
     quietNavList(model, false),
@@ -40,9 +42,9 @@ const phoneList = (model: Model) => {
   const menu = model.kit.contextMenu()
   return div(
     { class: 'flex min-h-0 flex-1 flex-col bg-neutral-950' },
-    div(
-      { class: 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-2 pt-2 pb-2', style: { scrollbarWidth: 'none' } },
-      div({ class: 'flex items-center justify-between' }, brand(model, true), toolButton(model, 'Hide the sidebar', 'sidebar', () => model.setDrawer(false))),
+    div({ class: 'flex shrink-0 items-center justify-between px-2 pt-2' }, brand(model, true), model.kit.closeButton({ title: 'Hide the sidebar', onClick: () => model.setDrawer(false) })),
+    scroller(
+      { class: 'overscroll-contain', style: { scrollbarWidth: 'none' } },
       navList(model, true),
       groupList(model, menu, { phone: true }),
     ),
