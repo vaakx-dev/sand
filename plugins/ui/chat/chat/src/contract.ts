@@ -1,4 +1,3 @@
-import type { Entry } from '@sand/chats/contract'
 import { draftRouteKind, threadRouteKind } from '@sand/web-client/contract'
 import { service } from 'drydock'
 
@@ -24,7 +23,6 @@ export interface ThreadOwner {
 
 export interface ThreadOwners {
   owner(thread: string): ThreadOwner | undefined
-  sender(thread: string, entry: Entry): ThreadOwner | undefined
 }
 
 export const threadOwners = service<ThreadOwners>('threadOwners')

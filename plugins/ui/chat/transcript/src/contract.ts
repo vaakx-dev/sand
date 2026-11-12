@@ -139,7 +139,6 @@ export interface Surface {
   reply?(text: string): MenuAction[]
   rewrite?(entry: string, text: string): MenuAction[]
   branchSwitch?(entry: string): Child
-  sender?(entry: string): string | undefined
 }
 
 export interface Rows {

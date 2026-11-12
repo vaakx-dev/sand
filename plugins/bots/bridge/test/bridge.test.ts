@@ -2,7 +2,7 @@ import { botCreate, type BotEntry } from '@sand/bots/contract'
 import { botSubagents, type BotReplyEntry } from '@sand/bot-bridge/contract'
 import { threadList } from '@sand/orchestrator/contract'
 import { botAwait, botOpen } from '@sand/bot-turns/contract'
-import { type Entry, type Message, type Session, textOf, type UserContent } from '@sand/chats/contract'
+import { type Entry, type Message, promptText, type Session, textOf, type UserContent } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { defaultsSet } from '@sand/model/contract'
@@ -121,10 +121,12 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
   const sent = await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow? Message me the answer." })
   expect(sent).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', detached: true })
   const [asked] = userMessages((await sand.ask(botOpen, { bot: bot.id })).entries)
-  expect(textOf(asked!.content)).toContain(`from the agent working in the user's thread "a thread" (id ${thread.id})`)
-  expect(textOf(asked!.content)).toContain('if it asks to hear back, message it with thread_send')
+  expect(promptText(asked!)).toBe(`[thread](sand-context://v1/thread/${recordsOf(asked!)[0]!.id}) What's on tomorrow? Message me the answer.`)
   expect(recordsOf(asked!)).toEqual([expect.objectContaining({ kind: 'thread', data: { id: thread.id, sent: true } })])
   expect(await sand.ask(botAwait, { bot: bot.id, turn: sent.turn, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Tomorrow: dentist at 9.' })
+  const botSaw = seenIn(sand.requests('botsrc')[0]!)
+  expect(botSaw).toContain(`from the agent working in the user's thread "" (id ${thread.id})`)
+  expect(botSaw).toContain('if it asks to hear back, message it with thread_send')
   await Bun.sleep(100)
   expect(userMessages(thread.path())).toEqual([])
 

@@ -1,7 +1,7 @@
-import { projectContext, sessions, type ContextProjection, type ContextProjector, type ContextRecord, type Session } from '@sand/chats/contract'
+import { projectContext, sessions, type ContextProjection, type ContextProjector, type ContextRecord, type UserContent } from '@sand/chats/contract'
 import { turnPrompt } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
-import { contextKinds, type ContextKind } from './contract'
+import { contextKinds, type ContextKind, type Reader } from './contract'
 import { fileKind } from './file'
 import { kindRegistry } from './registry'
 import { threadKind } from './thread'
@@ -20,20 +20,22 @@ export default definePlugin({
       return kinds.register(kind)
     }
 
-    const projectorOf = (session: Session) => (name: string): ContextProjector | undefined => {
+    const projectorOf = (reader: Reader) => (name: string): ContextProjector | undefined => {
       const kind = kinds.get(name)
       if (!kind) return undefined
       const project = (record: ContextRecord) =>
-        Promise.try(() => kind.project(record, session)).catch((error): ContextProjection => {
+        Promise.try(() => kind.project(record, reader)).catch((error): ContextProjection => {
           ctx.report(error)
           return { unavailable: 'Could not be read.' }
         })
       return { title: kind.title, project }
     }
 
-    ctx.provide(contextKinds, { register })
+    const project = (content: UserContent[], reader: Reader) => projectContext(content, projectorOf(reader))
+
+    ctx.provide(contextKinds, { register, project })
     ctx.effect(() => register(fileKind))
     ctx.effect(() => register(threadKind(ctx.sessions)))
-    ctx.on(turnPrompt, (content, session) => projectContext(content, projectorOf(session)), { priority: -10 })
+    ctx.on(turnPrompt, project, { priority: -10 })
   },
 })

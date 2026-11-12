@@ -22,8 +22,11 @@ export interface ChipKind {
 export interface ContextChips {
   register(kind: ChipKind): Dispose
   chip(link: ChipLink, record?: ContextRecord): HTMLElement
+  open(record: ContextRecord): void
 }
 
 export const contextChips = service<ContextChips>('contextChips')
 
 export const drawChip = (ctx: Pick<Context, 'get'>) => (link: ChipLink, record?: ContextRecord) => ctx.get(contextChips)?.chip(link, record) ?? span(link.label)
+
+export const openContext = (ctx: Pick<Context, 'get'>) => (record: ContextRecord) => ctx.get(contextChips)?.open(record)

@@ -11,13 +11,14 @@ export interface RowContext extends Surface {
   media: MediaImage
   image: MarkdownImage
   chip(link: ContextLink, record?: ContextRecord): Child
+  open(record: ContextRecord): void
 }
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row
 
 export const row = <T>(key: string, data: T, view: Row<T>['view']): Row<T> => ({ key, data, view })
 
-const pressable = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('a, button, input, textarea'))
+export const pressable = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('a, button, input, textarea'))
 
 export const tapReveal = () => {
   const tapped = sig(false)
