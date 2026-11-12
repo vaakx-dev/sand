@@ -130,6 +130,39 @@
           "bots-mcp"
         ]
       },
+      "side-panel": {
+        "label": "Side panel",
+        "summary": "A panel at a chat's right with tabs for its plan, memory, Logbook and changes"
+      },
+      "plan-tab": {
+        "label": "Plan tab",
+        "summary": "A bot's plan, live and editable",
+        "parent": "side-panel",
+        "needs": [
+          "bots"
+        ]
+      },
+      "memory-tab": {
+        "label": "Memory tab",
+        "summary": "A bot's memory and notes, or the shared memory of a thread's project, live and editable",
+        "parent": "side-panel"
+      },
+      "logbook-tab": {
+        "label": "Logbook tab",
+        "summary": "The record of finished work for the chat's project, searchable and editable",
+        "parent": "side-panel",
+        "needs": [
+          "threads"
+        ]
+      },
+      "changes-tab": {
+        "label": "Changes tab",
+        "summary": "The files a thread changed and their patches, with a count in Details",
+        "parent": "side-panel",
+        "needs": [
+          "git"
+        ]
+      },
       "calendar": {
         "label": "Calendar",
         "summary": "Your calendars in one place, for you and your agents",

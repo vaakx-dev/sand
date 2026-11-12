@@ -107,7 +107,7 @@ test('what the user edits on one PC is what a thread on another PC sees, and wha
   expect(systemOf(bodies(box)[0])).toContain(`<memory>
 ${learned}
 </memory>`)
-  expect(await sand.ask(memoryRead, tiles)).toBe(fromThread)
+  expect((await sand.ask(memoryRead, tiles)).text).toBe(fromThread)
 })
 
 test('while the PCs are apart each keeps its own edits, and they merge when the PCs reconnect, the later edit winning', async () => {
@@ -134,7 +134,7 @@ test('while the PCs are apart each keeps its own edits, and they merge when the 
   toBox.open()
   await merged
 
-  expect(await sand.ask(memoryRead, tiles)).toBe(learned)
-  expect(await box.ask(memoryRead, tiles)).toBe(learned)
+  expect((await sand.ask(memoryRead, tiles)).text).toBe(learned)
+  expect((await box.ask(memoryRead, tiles)).text).toBe(learned)
   expect(await noteIn(box, 'staging')).toBe('Staging resets nightly.')
 })

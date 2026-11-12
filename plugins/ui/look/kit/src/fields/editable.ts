@@ -8,6 +8,7 @@ import { textArea } from './field'
 
 export interface EditableProps {
   title?: string
+  note?: Child
   text(): string
   view(text: string): Child
   empty: Child
@@ -56,6 +57,7 @@ export const editable = (props: EditableProps) => {
   return pageSection(
     {
       title: props.title,
+      note: props.note,
       action: show(
         () => !editing.get(),
         () => linkButton({ class: 'text-sm', onClick: start }, 'Edit'),

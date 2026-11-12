@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "side-panel",
     "web": "./src/index.ts",
     "label": "Side panel",
     "summary": "A full-height panel at a chat's right with tabs, such as the thread's changes"

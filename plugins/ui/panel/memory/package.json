@@ -1,0 +1,27 @@
+{
+  "name": "@sand/panel-memory",
+  "version": "0.0.0",
+  "description": "The side panel's Memory tab: a bot's own memory and notes in its chat, or the project's shared memory in a thread's chat, live and editable",
+  "type": "module",
+  "sand": {
+    "feature": "memory-tab",
+    "web": "./src/index.ts",
+    "label": "Memory tab",
+    "summary": "Shows a chat's memory and notes in the side panel, where you can edit them"
+  },
+  "dependencies": {
+    "@sand/bot-memory": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/memory": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/project-memory": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

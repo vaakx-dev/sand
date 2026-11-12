@@ -4,7 +4,7 @@
   "description": "The files a thread changed: each file's patch in a side panel tab, and a row in Details that opens it",
   "type": "module",
   "sand": {
-    "feature": "git",
+    "feature": "changes-tab",
     "web": "./src/index.ts",
     "label": "Changes",
     "summary": "Shows the files a thread changed and their patches in the side panel, with a count in Details"
