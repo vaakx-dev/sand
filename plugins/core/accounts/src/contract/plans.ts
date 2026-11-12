@@ -99,12 +99,18 @@ export interface AppOutput {
   exit(error: Error): void
 }
 
+export interface AppAside {
+  text: string
+  usage: Partial<Usage>
+}
+
 export interface AppSession {
   id?: string
   send(content: ModelContent[], effort?: Effort): void
   steer?(content: ModelContent[]): void
   answer(id: string, result: ToolResultBlock): void
   inject?(handoff: HandoffBlock): Promise<boolean>
+  aside?(prompt: string, signal?: AbortSignal): Promise<AppAside>
   interrupt(): Promise<void>
   close(): Promise<void>
 }

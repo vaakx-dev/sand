@@ -5,6 +5,8 @@ import { join } from 'node:path'
 import type { NativeCall, Reply, Script } from './contract'
 import { planModels } from './models'
 
+const said = (reply: Reply) => reply.flatMap(part => (part.type === 'text' ? [part.text] : [])).join('')
+
 const textOf = (content: ToolResultContent[]) => content.map(block => (block.type === 'text' ? block.text : `[${block.type}]`)).join('\n')
 
 export const replayApp = (script: Script, folder: string) => {
@@ -84,6 +86,12 @@ export const replayApp = (script: Script, folder: string) => {
         if (!waiting.size) next()
       },
       ...(caps.inject && { inject: injecting }),
+      async aside(prompt) {
+        calls.push({ type: 'aside', text: prompt })
+        const reply = queue.shift()
+        if (!reply) throw new Error(`${label} has no scripted reply left`)
+        return { text: said(reply), usage: {} }
+      },
       async interrupt() {
         calls.push({ type: 'interrupt' })
       },

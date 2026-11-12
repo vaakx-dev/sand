@@ -36,7 +36,7 @@ const claudePlan = (needs: SessionNeeds): AppPlan => {
     signOut: signOutClaude,
     models: models.list,
     usage: readUsage,
-    open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume),
+    open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume ? { id: resume, start: 'resume' } : undefined),
     sessionFiles,
   }
 }

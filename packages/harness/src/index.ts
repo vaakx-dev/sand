@@ -1,7 +1,7 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
 import { cli, pluginProblems, sandConfig } from '@sand/config/contract'
-import { type Caller, createHandlers, type Request } from '@sand/host-hub/contract'
+import { type Caller, createHandlers, type Request, type WireEvent } from '@sand/host-hub/contract'
 import { hostChannel, runtime } from '@sand/host-runtimes/contract'
 import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
@@ -120,12 +120,20 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
     routes.set(path, handler)
     return () => void routes.delete(path)
   }
-  app.provide(server, { handle: wire.handle, broadcast() {}, tell() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
+  const listeners = new Map<string, ((payload: unknown) => void)[]>()
+  const broadcast = <P>(event: WireEvent<P>, payload: P) => {
+    const waiting = listeners.get(event.id) ?? []
+    listeners.delete(event.id)
+    waiting.forEach(listener => listener(payload))
+  }
+  const heard = <P>(event: WireEvent<P>) =>
+    new Promise<P>(resolve => listeners.set(event.id, [...(listeners.get(event.id) ?? []), payload => resolve(payload as P)]))
+  app.provide(server, { handle: wire.handle, broadcast, tell() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
   await (config === undefined ? loadPlugins(app, models, extra, options) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
   await modelsReady(app, models.ids)
-  return { wire, routes }
+  return { wire, routes, heard }
 }
 
 type PluginOptions = Record<string, Record<string, unknown>>
@@ -149,7 +157,7 @@ const start = async (models: Models, options: SandOptions) => {
     await app.dispose()
     if (!shared) rmSync(home, { recursive: true, force: true })
   }
-  const { wire, routes } = await boot(app, home, models, options).catch(async (error: unknown) => {
+  const { wire, routes, heard } = await boot(app, home, models, options).catch(async (error: unknown) => {
     await stop()
     throw error
   })
@@ -187,6 +195,7 @@ const start = async (models: Models, options: SandOptions) => {
     requests: (source: string) => need(app, replayRequests).bodies(source),
     native: (source: string) => need(app, replayRequests).native(source),
     ask: askAs({ device: 'page', kind: 'browser' }),
+    heard,
     askAs,
     fetch,
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {

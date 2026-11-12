@@ -72,8 +72,21 @@ export interface Command {
   run(): void | Promise<void>
 }
 
+export interface ChatRef {
+  owner: 'thread' | 'bot'
+  id: string
+  pc?: string
+}
+
+export interface Suggestion {
+  text: string
+  dismiss(): void
+}
+
+export type Suggester = (chat: ChatRef) => Suggestion | undefined
+
 export interface Chat {
-  key: string
+  ref: ChatRef
   name(): string
   skills: SkillPlace
   running(): boolean
@@ -106,6 +119,7 @@ export interface Composer {
   shared(where: ComposerSlot, view: SlotView, order?: number): Dispose
   aside(run: AsideRun): Dispose
   placeholder(text: () => string | undefined): Dispose
+  suggest(source: Suggester): Dispose
   hold(reason: SendHold): Dispose
   snapshot(): Promise<ComposerContent | undefined>
   restore(saved: ComposerContent): void

@@ -39,7 +39,7 @@ export type Script = z.output<typeof sourceSchema>
 export type NativeCall =
   | { type: 'open'; cwd: string; resume?: string }
   | { type: 'inject'; text: string }
-  | { type: 'send' | 'steer'; text: string }
+  | { type: 'send' | 'steer' | 'aside'; text: string }
   | { type: 'answer'; id: string; text: string }
   | { type: 'interrupt' | 'close' }
 

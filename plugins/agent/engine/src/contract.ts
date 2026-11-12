@@ -174,6 +174,10 @@ export interface EntryViews {
 
 export const entryViews = service<EntryViews>('entryViews')
 
+export const turnOpen = event<(conversation: Conversation, turn: TurnInfo) => void>('conversation.turn.open')
+
+export const turnClose = event<(conversation: Conversation, result: TurnResult, turn: TurnInfo) => void>('conversation.turn.close')
+
 export const turnContent = event<(content: UserContent[], conversation: Conversation) => UserContent[] | Promise<UserContent[]>>('turn.content')
 
 export const toolContent = event<(content: ToolResultContent[], conversation: Conversation) => ToolResultContent[] | Promise<ToolResultContent[]>>('tool.content')

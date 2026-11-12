@@ -94,6 +94,7 @@ export interface LLMRequest {
   thread?: ThreadRef
   delta?: Message[]
   handoff?: HandoffBlock
+  aside?: true
 }
 
 export interface Finish {

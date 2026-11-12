@@ -2,7 +2,7 @@ import { hasFiles } from '@sand/attachments/web/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
-import { div, dynamicChild, listen, media, onTimeout, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, listen, media, onTimeout, sig, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { createCompletion } from '../complete/model'
 import { createEditor } from '../editor/view'
@@ -14,6 +14,8 @@ import type { Asides } from '../send/aside'
 import { sendControl } from '../send/button'
 import { lastPrompt } from '../send/submit'
 import type { Source } from '../complete/registry'
+import { hint } from '../suggest/hint'
+import type { Suggesters } from '../suggest/sources'
 import type { Slots } from './slots'
 
 export interface FieldParts {
@@ -25,6 +27,7 @@ export interface FieldParts {
   typed: () => void
   placeholder: () => string
   asides: Asides
+  suggesters: Suggesters
 }
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
@@ -41,13 +44,34 @@ const shortcuts = (sources: Source[]) => {
 
 const saveKey = (event: KeyboardEvent) => (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 's'
 
-export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, asides }: FieldParts) => {
+export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, asides, suggesters }: FieldParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
   const within = sig(false)
+  const suggestion = derive(() => {
+    const chat = model.target.chat()
+    if (!chat || !model.empty.get() || model.running.get()) return undefined
+    return suggesters.of(chat)
+  })
+
+  const accept = () => {
+    const found = suggestion.get()
+    if (!found) return false
+    editor.replace(found.text)
+    editor.focusEnd()
+    return true
+  }
+
+  const dismiss = () => {
+    const found = suggestion.get()
+    found?.dismiss()
+    return Boolean(found)
+  }
 
   const escape = () => {
-    if (hasOpenLayer() || !model.running.get()) return false
+    if (hasOpenLayer()) return false
+    if (dismiss()) return true
+    if (!model.running.get()) return false
     void model.target.interrupt().catch(error => model.fail(errorMessage(error)))
     return true
   }
@@ -71,6 +95,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
   const keydown = (event: KeyboardEvent) => {
     if (event.isComposing) return false
     if (event.key === 'Escape') return escape()
+    if (event.key === 'Tab' && !modified(event)) return accept()
     if (event.key === 'ArrowUp') return recall(event)
     if (event.key !== 'Enter' || event.shiftKey || coarse.get()) return false
     if (!asides.ready()) void model.send()
@@ -92,7 +117,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
   const editor = createEditor({
     kit: ctx.kit,
     text: model.text,
-    placeholder,
+    hint: hint({ kit: ctx.kit, placeholder, suggestion: () => suggestion.get(), coarse: () => coarse.get(), accept }),
     keys: { keydown, keyup, paste, drop: hasFiles },
     typed,
     completion,

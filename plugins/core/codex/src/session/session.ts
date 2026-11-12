@@ -1,9 +1,10 @@
-import type { AppOutput, AppSession, AppSetup, HandoffBlock } from '@sand/accounts/contract'
+import type { AppAside, AppOutput, AppSession, AppSetup, HandoffBlock } from '@sand/accounts/contract'
 import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { threadConfig } from '../server/args'
 import type { Pool, ThreadServer } from '../server/pool'
 import { fieldsOf, type Json, RpcError } from '../server/rpc'
+import { untilAborted } from '@sand/util'
 import { inputItem, toolOutput } from './content'
 
 const methodMissing = -32601
@@ -28,6 +29,16 @@ const usageMeter = (output: AppOutput) => {
       })
     before = now
   }
+}
+
+const asideEffort = 'low'
+
+const noAside: AppAside = { text: '', usage: {} }
+
+const asideOf = (reply: Json): AppAside => {
+  const input = Number(reply.inputTokens ?? 0)
+  const cached = Number(reply.cachedInputTokens ?? 0)
+  return { text: typeof reply.text === 'string' ? reply.text : '', usage: { input: input - cached, cacheRead: cached, output: Number(reply.outputTokens ?? 0) } }
 }
 
 const failure = (turn: Json) => new Error(String(fieldsOf(turn.error).message ?? 'Codex stopped this turn'))
@@ -60,6 +71,7 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
   const meter = usageMeter(output)
   let running = false
   let turnId: string | undefined
+  let lastTurn: string | undefined
   let stopped: PromiseWithResolvers<void> | undefined
 
   const answerFor = (id: string) => {
@@ -82,6 +94,7 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
 
   const end = (turn: Json) => {
     running = false
+    lastTurn = turnId
     turnId = undefined
     if (stopped) {
       stopped.resolve()
@@ -132,6 +145,16 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
         return true
       } catch (error) {
         if (error instanceof RpcError && error.code === methodMissing) return false
+        throw error
+      }
+    },
+    async aside(prompt, signal) {
+      if (running || !lastTurn) return noAside
+      const sampled = server.request('thread/sample', { threadId, expectedTurnId: lastTurn, prompt, effort: asideEffort })
+      try {
+        return asideOf(await (signal ? untilAborted(sampled, signal) : sampled))
+      } catch (error) {
+        if (error instanceof RpcError && error.code === methodMissing) return noAside
         throw error
       }
     },

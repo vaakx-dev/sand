@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, effect, scoped, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, scoped, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Completion } from '../complete/model'
 import type { Records } from '../records'
 import type { DrawChip } from './chips/widget'
@@ -15,7 +15,7 @@ export interface EditorKeys {
 export interface EditorParts {
   kit: Kit
   text: Sig<string>
-  placeholder: () => string
+  hint: () => HTMLElement
   keys: EditorKeys
   typed(): void
   completion: Completion
@@ -37,6 +37,7 @@ export const loadEditor = () =>
 const insertedText = (event: InputEvent) => event.data ?? event.dataTransfer?.getData('text/plain') ?? ''
 
 export const createEditor = (parts: EditorParts) => {
+  const editorHint = parts.hint()
   const mounted = sig<Mounted | undefined>(undefined)
   const made = () => untrack(() => mounted.get())
   let early = ''
@@ -47,7 +48,7 @@ export const createEditor = (parts: EditorParts) => {
     if (existing) return existing
     const doc = untrack(() => parts.text.get()) + early
     early = ''
-    const editor = untrack(() => module.mountEditor(parts, doc))
+    const editor = untrack(() => module.mountEditor({ ...parts, hint: () => editorHint }, doc))
     mounted.set(editor)
     if (focused) editor.focusEnd()
     return editor
@@ -83,7 +84,7 @@ export const createEditor = (parts: EditorParts) => {
       onBlur: () => (focused = false),
       onBeforeInput: hold,
     },
-    span(parts.placeholder),
+    parts.hint(),
   )
   const node = div(
     { class: 'text-neutral-100 leading-relaxed' },

@@ -1,8 +1,8 @@
 import type { Effort } from '@sand/accounts/contract'
 
-interface Saved {
+export interface Saved {
   id: string
-  resume: boolean
+  start: 'new' | 'resume' | 'fork'
 }
 
 interface RunOptions {
@@ -11,7 +11,17 @@ interface RunOptions {
   saved?: Saved
 }
 
-const kept = (saved?: Saved) => (saved ? [saved.resume ? '--resume' : '--session-id', saved.id] : ['--no-session-persistence'])
+const kept = (saved?: Saved) => {
+  if (!saved) return ['--no-session-persistence']
+  switch (saved.start) {
+    case 'new':
+      return ['--session-id', saved.id]
+    case 'resume':
+      return ['--resume', saved.id]
+    case 'fork':
+      return ['--resume', saved.id, '--fork-session', '--no-session-persistence']
+  }
+}
 
 const locked = {
   CLAUDE_AGENT_SDK_MCP_NO_PREFIX: '1',

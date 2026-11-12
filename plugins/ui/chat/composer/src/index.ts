@@ -24,6 +24,7 @@ import { createPlaceholders } from './placeholder'
 import { createPlus } from './plus/entries'
 import { createAsides } from './send/aside'
 import { createSendMenu } from './send/menu'
+import { createSuggesters } from './suggest/sources'
 import { chatTarget } from './target'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
 import { createTyping } from './typing'
@@ -36,6 +37,7 @@ export default definePlugin({
     const shared = createSlots()
     const slots = createSlots(shared)
     const asides = createAsides()
+    const suggesters = createSuggesters()
     const store = sig<DraftStore | undefined>(undefined)
     const menu = createSendMenu()
     const plus = createPlus()
@@ -71,7 +73,7 @@ export default definePlugin({
       const chatOnly = createTriggers()
       chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
       const model = createModel(chatTarget(chat), [triggers, chatOnly], shelf)
-      dockDrafts(chat.key, model, () => store.get())
+      dockDrafts(`${chat.ref.owner}:${chat.ref.id}`, model, () => store.get())
       const parts = {
         ctx,
         model,
@@ -80,6 +82,7 @@ export default definePlugin({
         actions: () => [],
         typed: typing.typed,
         asides,
+        suggesters,
         placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
       }
       return { view: dock(parts, field(parts)), slot: own.add }
@@ -95,6 +98,7 @@ export default definePlugin({
       actions: menu.actions(model),
       typed: typing.typed,
       asides,
+      suggesters,
       placeholder: () => placeholders.text.get(),
     }
 
@@ -132,6 +136,7 @@ export default definePlugin({
       shared: shared.add,
       aside: asides.add,
       placeholder: placeholders.add,
+      suggest: suggesters.add,
       hold: reason => model.holds.add(reason),
       ...createHandoff(model, () => live()?.editor.focusEnd()),
       sendMenu: menu.add,

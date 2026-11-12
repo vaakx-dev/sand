@@ -3,7 +3,7 @@ import type { ShelfPlace } from '@sand/attachments/web/contract'
 import type { Entry, UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { SendOptions } from '@sand/web-client/contract'
-import type { Chat } from './contract'
+import type { Chat, ChatRef } from './contract'
 
 export type Delivery = 'now' | 'queued' | 'unreachable'
 
@@ -15,6 +15,7 @@ export interface Target {
   delivery(): Delivery
   pcName(): string
   name(): string
+  chat(): ChatRef | undefined
   path(): Entry[]
   ready(picked: SessionSettings): boolean
   send(text: string, content: UserContent[], picked: SessionSettings, options: Outgoing): Promise<void>
@@ -29,6 +30,7 @@ export const chatTarget = (chat: Chat): Target => ({
   delivery: () => 'now',
   pcName: () => 'sand',
   name: chat.name,
+  chat: () => chat.ref,
   path: chat.path,
   ready: () => true,
   send: (text, content, _picked, { clientRequestId }) => chat.send(promptOf(text, content), clientRequestId),

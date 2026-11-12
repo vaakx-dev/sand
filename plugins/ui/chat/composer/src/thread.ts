@@ -6,6 +6,7 @@ import { pulse } from '@sand/reactive'
 import { errorMessage } from '@sand/util'
 import { models, modelsChange, outbox, outboxChange, threadChange, threadSelect } from '@sand/web-client/contract'
 import type { ComposerContext } from './context'
+import type { ChatRef } from './contract'
 import type { Model } from './model'
 import { interrupt, modelMissing, sendDevice, submit } from './send/submit'
 import type { Delivery, Target } from './target'
@@ -46,6 +47,10 @@ export const threadTarget = (ctx: ComposerContext): Target => {
   const delivery = changes.read(() => deliveryOf(ctx))
   const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
   const name = changes.read(() => ctx.threads.current()?.info.title || 'New chat')
+  const chat = changes.read((): ChatRef | undefined => {
+    const id = ctx.threads.current()?.id
+    return id ? { owner: 'thread', id, pc: sendDevice(ctx) } : undefined
+  })
 
   return {
     place: { device: () => sendDevice(ctx), thread: () => ctx.threads.current()?.id },
@@ -53,6 +58,7 @@ export const threadTarget = (ctx: ComposerContext): Target => {
     delivery: () => delivery.get(),
     pcName: () => pcName.get(),
     name: () => name.get(),
+    chat: () => chat.get(),
     path() {
       const thread = ctx.threads.current()
       return thread ? ctx.threads.path(thread.id) : []
