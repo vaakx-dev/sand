@@ -90,7 +90,7 @@ test.each([
   const chat = sand.chat('a/m')
 
   await sand.turns.run(chat, 'one')
-  sand.app.get(modelSettings)!.update(chat, { model: 'n/m' })
+  sand.app.get(modelSettings)!.change(chat, { model: 'n/m' })
   await sand.turns.run(chat, 'two')
 
   expect(kinds()).toEqual([...expected])

@@ -22,7 +22,7 @@ export const serveLoop = (ctx: TurnsContext, service: Turns) => {
       found.handle(loopRun, ({ session: id, prompt, settings }) => {
         const chat = session(id)
         ctx.emit(userWrote, chat)
-        if (settings) ctx.modelSettings.update(chat, settings)
+        if (settings) ctx.modelSettings.change(chat, settings)
         return service.run(chat, prompt)
       }),
       found.handle(loopSteer, async ({ session: id, prompt, label }) => {

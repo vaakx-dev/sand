@@ -17,5 +17,3 @@ export const writeSettings = (session: Session, next: SessionSettings) => {
   if (!same(settingsOf(session), next)) session.append('settings', next)
   return next
 }
-
-export const updateSettings = (session: Session, patch: SettingsPatch) => writeSettings(session, clean({ ...settingsOf(session), ...patch }))

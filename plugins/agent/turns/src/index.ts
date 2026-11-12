@@ -25,7 +25,7 @@ export default definePlugin({
 
     const service: Turns = {
       send(session, { settings, ...input }) {
-        if (settings) ctx.modelSettings.update(session, settings)
+        if (settings) ctx.modelSettings.change(session, settings)
         return runner.send(session, input)
       },
       run: runner.run,

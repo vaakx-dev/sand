@@ -1,20 +1,12 @@
 import type { Session } from '@sand/chats/contract'
-import { errorMessage } from '@sand/util'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
 import { failure, type Sent, type StartInput, threadStarted } from './contract'
 import type { Owners } from './owners'
 import type { Receipts } from './receipts'
+import { matchSettings } from './settings'
 import type { Starters } from './starters'
-
-const settingsOf = (ctx: OrchestratorContext, { model, effort }: StartInput) => {
-  try {
-    return ctx.modelSettings.flags({ model, effort })
-  } catch (error) {
-    throw failure('invalid_request', errorMessage(error))
-  }
-}
 
 const folderOf = (ctx: OrchestratorContext, { cwd, project }: Pick<StartInput, 'cwd' | 'project'>) => {
   if ((cwd === undefined) === (project === undefined)) throw failure('invalid_request', 'Give either cwd or project')
@@ -60,11 +52,11 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
   }
 
   return async (input: StartInput, adopt?: Adopt): Promise<Sent> => {
-    const settings = settingsOf(ctx, input)
+    const settings = matchSettings(ctx, input)
     const prompt = owners.sign(input.prompt, input.from)
     const session = await threadFor(input, adopt)
     if (input.from && starters.put(session.id, input.from)) ctx.emit(threadStarted, session.id, input.from)
-    const sent = await ctx.turns.send(session, { prompt, origin: input.origin, clientRequestId: input.clientRequestId, ...(settings && { settings }) })
+    const sent = await ctx.turns.send(session, { prompt, origin: input.origin, clientRequestId: input.clientRequestId, settings })
     return { ...sent, thread: session.id }
   }
 }

@@ -4,7 +4,6 @@ import { errorMessage, parseFrontmatter } from '@sand/util'
 import { scanFolder } from '@sand/util/fs'
 import { basename, join } from 'node:path'
 import type { AgentDefinition } from './contract'
-import { parseEffort } from './settings'
 
 const list = (value: unknown) => {
   if (Array.isArray(value)) return value.map(String)
@@ -13,6 +12,13 @@ const list = (value: unknown) => {
       .split(',')
       .map(item => item.trim())
       .filter(Boolean)
+}
+
+const parseEffort = (value: unknown, efforts: Effort[]) => {
+  if (value === undefined || value === null) return undefined
+  const effort = efforts.find(known => known === value)
+  if (!effort) throw new Error(`effort must be one of ${efforts.join(', ')}`)
+  return effort
 }
 
 const parseTier = (value: unknown) => {

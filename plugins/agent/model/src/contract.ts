@@ -1,6 +1,5 @@
 import { efforts, type Effort, type EffortLevel, type ModelInfo, type SourceInfo, type Speed } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import type { CliFlags } from '@sand/config/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
@@ -46,9 +45,13 @@ export interface ModelSettings {
   select(session: Session): Selection | undefined
   state(session?: Session): SettingsState
   defaults(): SessionSettings
-  update(session: Session, patch: SessionSettings): SessionSettings
-  flags(flags: CliFlags): SessionSettings | undefined
+  change(session: Session, patch: SettingsPatch): void
+  match(asked: Asked, near?: string): SettingsPatch
 }
+
+export type Asked = { [K in keyof SessionSettings]?: (K extends 'speed' ? Speed : string) | null }
+
+export type ModelRow = Pick<ModelInfo, 'id' | 'label' | 'provider' | 'efforts' | 'defaultEffort' | 'context' | 'fast'> & { current?: true }
 
 export interface ModelsUpdate {
   models: ModelInfo[]
@@ -73,12 +76,17 @@ export const helloLevels = helloField<EffortLevel[]>('levels')
 const effort = lazy(() => z.enum(efforts))
 const speed = lazy(() => z.enum(['normal', 'fast']))
 export const sessionSettings = lazy(() => z.object({ model: z.string().optional(), effort: effort().optional(), speed: speed().optional() }))
-const patch = lazy(() => z.object({ model: z.string().nullish(), effort: effort().nullish(), speed: speed().nullish() }))
+const settingsPatch = lazy(() => z.object({ model: z.string().nullish(), effort: effort().nullish(), speed: speed().nullish() }))
 
 export const settingsGet = request('settings.get', {
   input: () => z.object({ session: z.string().optional(), settings: sessionSettings().optional() }),
   output: type<SettingsState>(),
   place: 'thread',
 })
-export const settingsSet = request('settings.set', { input: () => z.object({ session: z.string(), patch: patch() }), output: type<void>(), place: 'thread' })
-export const defaultsSet = request('defaults.set', { input: () => z.object({ patch: patch() }), output: type<void>(), place: 'thread' })
+export const defaultsSet = request('defaults.set', { input: () => z.object({ patch: settingsPatch() }), output: type<void>(), place: 'thread' })
+export const modelsList = request('models.list', {
+  input: () => z.object({ thread: z.string().optional() }),
+  output: type<ModelRow[]>(),
+  callers: 'any',
+  place: 'thread',
+})

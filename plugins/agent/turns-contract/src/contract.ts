@@ -23,7 +23,7 @@ import {
   type WaitUntil,
 } from '@sand/engine/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import { type SessionSettings, sessionSettings } from '@sand/model/contract'
+import { sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
@@ -45,7 +45,7 @@ export { sendModes, turnOrigins } from '@sand/engine/contract'
 
 export type TurnInfo = Omit<EngineTurn, 'owner' | 'conversation'> & { session: string }
 
-export type SendInput = EngineSend & { settings?: SessionSettings }
+export type SendInput = EngineSend & { settings?: SettingsPatch }
 
 export interface Turns {
   send(session: Session, input: SendInput): Promise<SendResult>

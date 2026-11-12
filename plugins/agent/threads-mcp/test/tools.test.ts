@@ -41,5 +41,8 @@ test('an outside agent starts a thread where it is once per request id, waits fo
   expect(await run('thread_update', { thread, snoozeUntil: later })).toMatchObject({ snoozed: Date.parse(later) })
   expect(await run('thread_update', { thread, settled: true })).toMatchObject({ settled: true })
   expect(await run('thread_update', { thread, settled: false, snoozeUntil: null })).toMatchObject({ settled: false })
+  await expect(run('thread_update', { thread, model: 'nope' })).rejects.toThrow('No model matches "nope"')
+  await run('thread_update', { thread, model: 'm', fast: true })
+  expect(sand.sessions.require(thread).latest('settings')?.data).toEqual({ model: 'fake/m', speed: 'fast' })
   await expect(run('thread_list', { mine: true })).rejects.toThrow("Only sand's own threads and bots")
 })

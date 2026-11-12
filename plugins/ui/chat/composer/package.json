@@ -22,6 +22,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/model-panel": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/ui-kit": "workspace:*",

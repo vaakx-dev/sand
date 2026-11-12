@@ -179,7 +179,7 @@ const start = async (models: Models, options: SandOptions) => {
     problems: () => pluginProblems(app),
     chat(model: string): Session {
       const session = need(app, sessions).thread(home)
-      need(app, modelSettings).update(session, { model })
+      need(app, modelSettings).change(session, { model })
       return session
     },
     requests: (source: string) => need(app, replayRequests).bodies(source),
