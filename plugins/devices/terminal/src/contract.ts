@@ -21,6 +21,7 @@ export interface Frame {
   id: string
   data: string
   end: number
+  grid: Size
   reset?: true
 }
 

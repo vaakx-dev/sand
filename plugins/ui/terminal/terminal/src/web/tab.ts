@@ -188,6 +188,7 @@ export const createTab = ({ place, wire, createScreen, colors, closed, known }: 
         screen.reset()
         if (stop === 'ended') stop = undefined
       }
+      screen.grid(frame.grid)
       fresh = false
       offset = applied.offset
       const at = offset
