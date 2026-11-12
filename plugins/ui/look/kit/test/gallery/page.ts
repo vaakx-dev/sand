@@ -178,11 +178,11 @@ const gallery = () =>
       kit.actionItem(
         {
           title: 'Fix the flaky cache test',
-          lead: kit.roundMark('success', kit.icon('check', 'sm')),
+          lead: kit.projectIcon('tide-table'),
           at: Date.now() - 720_000,
-          actions: [kit.primaryAction({}, 'Merge'), kit.quietButton({}, 'Review')],
+          actions: [kit.quietButton({ size: 'sm', strong: true }, 'Merge'), kit.quietButton({ size: 'sm' }, 'Review')],
         },
-        span({}, 'Done. ', kit.emphasis('4 files'), ', +38 −12.'),
+        span({}, 'Done. ', kit.emphasis('4 files'), ', ', span({ class: kit.toneText.success }, '+38'), ' ', span({ class: kit.toneText.danger }, '−12'), '.'),
       ),
     ),
     block('Diff block', kit.diffBlock('src/cache/store.ts', diff)),

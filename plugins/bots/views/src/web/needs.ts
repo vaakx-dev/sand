@@ -13,7 +13,7 @@ export const botNeeds = (parts: Parts): NeedSource => ({
         id: `bot:${bot.id}`,
         kind: 'secret',
         who: botName(bot),
-        mark: () => parts.ctx.kit.botFace(bot.id, bot.color, 32),
+        mark: () => parts.ctx.kit.botFace(bot.id, bot.color, 16),
         title,
         at: bot.last?.at ?? Date.now(),
         main: { label: 'Sign in', run: () => parts.open(bot.id) },

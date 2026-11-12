@@ -38,22 +38,8 @@ export const opensMark = () => span({ class: 'inline-flex shrink-0 text-neutral-
 
 export const okMark = (size: IconSize = 'sm') => span({ class: 'inline-flex shrink-0 text-success-400' }, icon('check', size))
 
-const roundTones: Record<Tone, string> = {
-  neutral: 'bg-neutral-800 text-neutral-400',
-  accent: 'bg-accent-950 text-accent-400',
-  success: 'bg-success-950 text-success-400',
-  warning: 'bg-warning-950 text-warning-400',
-  danger: 'bg-danger-950 text-danger-400',
-  merged: 'bg-violet-950 text-violet-400',
-  run: 'bg-info-950 text-info-400',
-}
-
-const roundSizes = { md: 'h-8 w-8', lg: 'h-10 w-10' }
-
-export const roundMark = (tone: Tone, glyph: Child, size: keyof typeof roundSizes = 'md') =>
-  span({ class: ['inline-flex shrink-0 items-center justify-center rounded-full', roundSizes[size], roundTones[tone]] }, glyph)
-
-export const doneMark = () => roundMark('success', icon('check', 'lg'), 'lg')
+export const doneMark = () =>
+  span({ class: 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-950 text-success-400' }, icon('check', 'lg'))
 
 export const starMark = (on: MaybeReactive<boolean>, size: IconSize = 'md') =>
   span(

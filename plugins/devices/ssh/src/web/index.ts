@@ -1,4 +1,4 @@
-import { pcs, wire, wireHello } from '@sand/devices-contract'
+import { pcMarks, pcs, wire, wireHello } from '@sand/devices-contract'
 import { needs } from '@sand/needs-you/contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
@@ -32,6 +32,6 @@ export default definePlugin({
     }
     ctx.provide(sshMachines, machines)
     ctx.watch(settings, found => found?.section({ page: 'devices', id: 'ssh', order: 10, render: () => sshSection(ctx.kit, machines, state) }))
-    ctx.watch(needs, found => found?.source(sshNeeds(ctx.kit, state, machines.reconnect)))
+    ctx.watch(needs, found => found?.source(sshNeeds(ctx.kit, () => ctx.get(pcMarks), state, machines.reconnect)))
   },
 })
