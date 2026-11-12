@@ -12,7 +12,7 @@ import { sshSection } from './section'
 
 export default definePlugin({
   name: 'devices-ssh',
-  description: 'SSH hosts on the page: keeps the home PC’s SSH hosts and machines fresh, and connects or reconnects one from its section in Devices settings, lists the ones waiting on a password in Needs you, asking for passwords and host keys when the caller doesn’t',
+  description: 'SSH hosts on the page: keeps the home PC’s SSH hosts and machines fresh, and connects or reconnects one from its section in Devices settings, lists the ones waiting on a password in Needs you and reconnects one from there, asking for passwords and host keys when the caller doesn’t',
   inject: { wire, pcs, kit },
   apply(ctx) {
     const state = sig<SshState>({ hosts: [], machines: [] })
@@ -32,6 +32,6 @@ export default definePlugin({
     }
     ctx.provide(sshMachines, machines)
     ctx.watch(settings, found => found?.section({ page: 'devices', id: 'ssh', order: 10, render: () => sshSection(ctx.kit, machines, state) }))
-    ctx.watch(needs, found => found?.source(sshNeeds(ctx.kit, state, () => ctx.get(settings)?.open('devices'))))
+    ctx.watch(needs, found => found?.source(sshNeeds(ctx.kit, state, machines.reconnect)))
   },
 })

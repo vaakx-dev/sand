@@ -1,5 +1,5 @@
 import { div, type Child, type Props, type Sig } from '@vaakx-dev/vrui'
-import { quietButton } from '../buttons/button'
+import { plainButton, quietButton } from '../buttons/button'
 import { chevron } from '../marks/marks'
 
 export const expandRow = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
@@ -11,3 +11,6 @@ export const expandToggle = (open: Sig<boolean>, label: Child) =>
     label,
     chevron(() => open.get()),
   )
+
+export const textToggle = (open: Sig<boolean>, label: Child) =>
+  plainButton({ class: 'rounded-sm underline hover:text-neutral-100', 'aria-expanded': () => String(open.get()), onClick: open.toggle() }, label)

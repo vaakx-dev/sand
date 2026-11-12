@@ -8,7 +8,8 @@ const need = (id: string, at: number, kind: Need['kind'] = 'secret'): Need => ({
   who: 'Wren',
   title: `Which ${id}?`,
   at,
-  render: () => null,
+  mark: () => null,
+  main: { label: 'Open', run: () => {} },
 })
 
 describe('needs list', () => {

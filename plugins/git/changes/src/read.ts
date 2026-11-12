@@ -19,7 +19,7 @@ export interface Split {
   landed: DiffFile[]
 }
 
-type State = Pick<ThreadChanges, 'state' | 'reason'>
+type State = Pick<ThreadChanges, 'state' | 'reason' | 'clashes'>
 
 const none: State = { state: 'none' }
 
@@ -64,7 +64,7 @@ const liveState = async (deps: ChangesDeps, session: Session, work: Work, split:
   if (!split.files.length) return split.landed.length ? { state: 'merged' } : none
   if (session.settled !== null || deps.busy(session.id)) return none
   const conflicts = await conflictsOf(deps, work, split.pending)
-  return conflicts.length ? { state: 'conflict', reason: clash(conflicts) } : { state: 'ready' }
+  return conflicts.length ? { state: 'conflict', reason: clash(conflicts), clashes: conflicts } : { state: 'ready' }
 }
 
 const unchanged = { files: [], add: 0, del: 0, ...none }

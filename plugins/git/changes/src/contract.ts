@@ -10,6 +10,7 @@ export interface ThreadChanges {
   project: string | null
   state: ChangeState
   reason?: string
+  clashes?: string[]
   files: DiffFile[]
   add: number
   del: number

@@ -17,6 +17,8 @@ export const secondaryLook = 'text-sm text-neutral-400'
 
 export const secondaryText = (...children: Child[]) => p({ class: secondaryLook }, ...children)
 
+export const emphasis = (...children: Child[]) => span({ class: 'font-medium text-neutral-100' }, ...children)
+
 const rowTitleSize = 'text-sm font-medium'
 
 const rowTitleTone = 'text-neutral-200 group-aria-current:text-neutral-100 group-aria-selected:text-neutral-100'
