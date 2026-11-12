@@ -12,6 +12,7 @@
     "summary": "Lets your threads, your bots and outside agents message, read and update your bots"
   },
   "dependencies": {
+    "@sand/attachments": "workspace:*",
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/mcp-server": "workspace:*",

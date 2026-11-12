@@ -13,6 +13,7 @@
     "web": "./src/web/index.ts"
   },
   "dependencies": {
+    "@sand/attachments": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",

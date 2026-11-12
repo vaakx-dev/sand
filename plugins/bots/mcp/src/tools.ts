@@ -1,3 +1,4 @@
+import { filesInput, promptWithFiles } from '@sand/attachments/contract'
 import { awaitBot, botInterrupt, botSend } from '@sand/bot-turns/contract'
 import { botCreate, botDelete, botList, botUpdate, jobLimit } from '@sand/bots/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
@@ -15,6 +16,7 @@ const bot = z.string().describe('The bot id')
 const sendInput = z.object({
   bot,
   prompt: z.string().min(1).describe('The task or question, with what the bot needs to know'),
+  files: filesInput(),
   timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Outside sand only: stop waiting after this long (default ${waitSeconds}) and get the turn as a handle; the bot keeps working`),
   clientRequestId: z.string().min(1).optional().describe('Any unique string; calling again with the same id returns the first result instead of asking twice'),
 })
@@ -57,8 +59,8 @@ export const botTools: McpTool[] = [
     input: sendInput,
     access: 'operate',
     group: group.name,
-    run: async ({ bot, prompt, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call, signal }) =>
-      awaitBot(call, await call(botSend, { bot, prompt, origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
+    run: async ({ bot, prompt, files, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call, signal, here }) =>
+      awaitBot(call, await call(botSend, { bot, prompt: await promptWithFiles(call, prompt, files, here), origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'bot_create',

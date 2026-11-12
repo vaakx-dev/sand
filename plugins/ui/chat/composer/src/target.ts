@@ -1,4 +1,5 @@
-import { promptOf, type ShelfPlace } from '@sand/attachments/web/contract'
+import { promptOf } from '@sand/attachments/contract'
+import type { ShelfPlace } from '@sand/attachments/web/contract'
 import type { Entry, UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { SendOptions } from '@sand/web-client/contract'

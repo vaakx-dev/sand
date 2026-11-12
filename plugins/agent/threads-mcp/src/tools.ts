@@ -1,3 +1,4 @@
+import { filesInput, promptWithFiles } from '@sand/attachments/contract'
 import { historyItem, historyReading } from '@sand/chats/contract'
 import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
 import { historyRead, itemRead, pendingActions, readLimit, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
@@ -34,6 +35,7 @@ const historyInput = z.object({
 
 const startInput = z.object({
   prompt: z.string().min(1).describe('The first message: the task, with what the thread needs to know'),
+  files: filesInput(),
   pc: z.string().optional().describe('Another of your PCs to start it on, by name; cwd is then a folder on that PC (default: this PC)'),
   cwd: z.string().optional().describe('The folder the thread works in, on the PC it starts on (default: yours; a bot with one project starts it there)'),
   project: z.string().optional().describe('A project id to work in instead of a folder, from project_list'),
@@ -55,6 +57,7 @@ const startInput = z.object({
 const sendInput = z.object({
   thread,
   prompt,
+  files: filesInput(),
   mode: z.enum(sendModes).optional().describe('auto (default): a running turn takes it at its next step, an idle thread starts a turn; queue: run it as the next turn'),
   clientRequestId,
 })
@@ -91,7 +94,7 @@ const waitInput = z.object({
 
 const requestId = (given: string | undefined) => given ?? Bun.randomUUIDv7()
 
-const folderOf = ({ cwd, project, quick, pc }: z.output<typeof startInput>, here: string | undefined) => {
+const folderOf = ({ cwd, project, quick, pc }: Pick<z.output<typeof startInput>, 'cwd' | 'project' | 'quick' | 'pc'>, here: string | undefined) => {
   if (quick || pc || !here) return cwd
   if (cwd !== undefined) return resolve(here, cwd)
   return project ? undefined : here
@@ -118,8 +121,15 @@ export const threadTools: McpTool[] = [
     input: startInput,
     access: 'operate',
     group: group.name,
-    run: ({ clientRequestId, from, ...input }, { call, here }) =>
-      call(threadStart, { ...input, ...(from && { base: from }), cwd: folderOf(input, here), origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
+    run: async ({ clientRequestId, from, prompt, files, ...input }, { call, here }) =>
+      call(threadStart, {
+        ...input,
+        prompt: await promptWithFiles(call, prompt, files, here),
+        ...(from && { base: from }),
+        cwd: folderOf(input, here),
+        origin: 'mcp',
+        clientRequestId: requestId(clientRequestId),
+      }),
   } satisfies McpTool<typeof startInput>,
   {
     name: 'thread_send',
@@ -127,7 +137,8 @@ export const threadTools: McpTool[] = [
     input: sendInput,
     access: 'operate',
     group: group.name,
-    run: ({ thread, clientRequestId, ...input }, { call }) => call(threadSend, { session: thread, ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
+    run: async ({ thread, clientRequestId, prompt, files, ...input }, { call, here }) =>
+      call(threadSend, { session: thread, ...input, prompt: await promptWithFiles(call, prompt, files, here), origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'thread_wait',
