@@ -1,11 +1,28 @@
 # sand
 
-sand is a coding agent that runs on your own PCs. Every part of it is a plugin, from the chat to the tools. Ask sand to change any part of itself, and it reloads the change without closing your chat.
+sand is an assistant you can change into whatever you need. Talk to it like any chat assistant: plan a trip, sort out a budget, write a letter. When you want it to work differently, ask it. Every part of sand is a plugin, so it can change its own sidebar, tools or look and reload the change without closing your chat.
 
-- Your projects are in the sidebar. Each project opens one chat with the agent, in that project's folder.
-- The browser is only a window. A chat keeps running when you close the tab, and you can open it on your phone, or anywhere through Tailscale.
-- You can pair several PCs. A project's chat runs on the PC that has the project.
-- sand works with a Claude or ChatGPT plan, the Claude Code or Codex apps, or API keys.
+It runs on your own PCs, and you can use it from your phone.
+
+![sand on a desktop, with bots and threads in the sidebar and a trip plan in the chat](docs/images/desktop.png)
+
+## Ask it to change itself
+
+Here sand adds a shopping list to its own sidebar. It writes a small plugin, reloads it, and the chat stays open.
+
+![sand writes a shopping list plugin and the list appears in the sidebar](docs/images/reload.gif)
+
+## Use it anywhere
+
+<p>
+  <img src="docs/images/phone-chat.png" alt="A chat about growing tomatoes on a phone" width="260">
+  <img src="docs/images/phone-sidebar.png" alt="Bots and threads in the sidebar on a phone" width="260">
+</p>
+
+- **Threads** are chats for anything. Put related ones in a project, a folder on your PC with the files they work on.
+- **Bots** take care of an ongoing job, like a morning brief or bill reminders, on a schedule or when something changes.
+- **Your phone and other PCs.** sand runs on your PC and the browser is only a window, so chats keep going when you close the tab. Pair your phone to pick them up there, and pair other PCs to run threads on them.
+- **Your models.** Use a Claude plan through the Claude Code app, a ChatGPT plan through the Codex app, or API keys.
 
 ## Install
 
@@ -21,7 +38,7 @@ On Windows, in PowerShell:
 irm https://vaakx-dev.github.io/sand/install.ps1 | iex
 ```
 
-The installer puts Bun and sand in `~/.sand`, adds `sand` to your PATH and opens sand in your browser. Sign in under Settings → Accounts. To pair a phone or another PC, open Settings → Devices.
+The installer puts Bun and sand in `~/.sand`, adds `sand` to your PATH and opens sand in your browser. Then open Settings → Accounts and choose how sand reaches a model. To pair a phone or another PC, open Settings → Devices.
 
 sand updates itself from Settings → Updates. On that page you can also switch to the nightly or dev builds.
 
