@@ -1,6 +1,7 @@
 import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite } from '@sand/bot-memory/contract'
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
 import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
+import { noAutomations } from '../automations/empty'
 import { automationRow } from '../automations/row'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
 import { advancedBlock } from './advanced'
@@ -45,11 +46,8 @@ const jobBlock = (parts: Parts, id: string, bot: Bot) =>
   parts.ctx.kit.editable({
     title: 'Job',
     text: () => bot()?.job ?? '',
-    view: () =>
-      dynamicChild(
-        derive(() => bot()?.job.trim() ?? ''),
-        job => (job ? p({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-100' }, job) : p({}, `No job yet. Tell ${nameOf(bot)} in chat what it should take care of.`)),
-      ),
+    view: job => p({ class: 'whitespace-pre-wrap wrap-anywhere' }, job),
+    empty: 'No job yet.',
     save: job => parts.store.update(id, { job }),
     rows: 8,
     maxLength: 20_000,
@@ -85,7 +83,7 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
     list(derive(chosen), project => project, project => row(project.get()), div({ class: 'flex flex-col' })),
     show(
       () => !chosen().length && !adding.get(),
-      () => kit.secondaryText('None. Without a project it works in chat and starts threads anywhere.'),
+      () => kit.emptyState({ text: 'No projects.' }),
     ),
     show(
       () => adding.get(),
@@ -111,7 +109,7 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
   )
 }
 
-const automationsBlock = (parts: Parts, id: string, bot: Bot) => {
+const automationsBlock = (parts: Parts, id: string) => {
   const { kit } = parts.ctx
   const menu = kit.contextMenu()
   const items = derive(() => automationsOf(parts, id))
@@ -123,14 +121,14 @@ const automationsBlock = (parts: Parts, id: string, bot: Bot) => {
         list(items, item => item.id, item => automationRow(kit, menu, item, 'raised'), div({ class: '-mx-2 flex flex-col' })),
         show(
           () => !items.get().length,
-          () => kit.secondaryText(() => `Nothing yet. Ask ${nameOf(bot)} to check something on a schedule, or to watch a page or folder.`),
+          () => noAutomations(kit),
         ),
         menu.view(),
       ),
   )
 }
 
-const memoryBlock = (parts: Parts, id: string, bot: Bot) => {
+const memoryBlock = (parts: Parts, id: string) => {
   const { kit, markdown } = parts.ctx
   const text = sig('')
   void parts.ctx.wire.call(memoryRead, { bot: id }).then(
@@ -145,11 +143,8 @@ const memoryBlock = (parts: Parts, id: string, bot: Bot) => {
     kit.editable({
       title: 'Memory',
       text: () => text.get(),
-      view: () =>
-        dynamicChild(
-          derive(() => text.get().trim()),
-          found => (found ? div({ class: 'flex flex-col gap-2' }, ...markdown.nodes(found)) : p({}, `Empty. ${nameOf(bot)} writes here as it learns.`)),
-        ),
+      view: memory => div({ class: 'flex flex-col gap-2' }, ...markdown.nodes(memory)),
+      empty: 'Nothing remembered yet.',
       save: memory => parts.ctx.wire.call(memoryWrite, { bot: id, text: memory }).then(() => text.set(memory)),
       rows: 10,
       maxLength: memoryLimit,
@@ -191,8 +186,8 @@ export const openProfile = (parts: Parts, id: string) => {
         { class: 'flex flex-col gap-6 pt-2' },
         jobBlock(parts, id, bot),
         projectsBlock(parts, id, bot),
-        automationsBlock(parts, id, bot),
-        memoryBlock(parts, id, bot),
+        automationsBlock(parts, id),
+        memoryBlock(parts, id),
         advancedBlock(parts, id, bot),
         list(parts.sections.items, section => section.id, section => section.get().render(id), div({ class: 'flex flex-col gap-6' })),
       ),

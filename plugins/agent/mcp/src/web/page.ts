@@ -34,7 +34,7 @@ const serverRows = (kit: Kit, servers: Sig<ServerState[] | undefined>) =>
               server => serverRow(kit, server),
             ),
           )
-        : kit.emptyBlock({ icon: 'server', title: 'No MCP servers yet', text: 'Servers you add in sand.toml show up here, each as a tool group on the Tools page.' }),
+        : kit.emptyState({ text: 'No MCP servers yet.' }),
   )
 
 export const serversPage = (kit: Kit, servers: Sig<ServerState[] | undefined>) =>

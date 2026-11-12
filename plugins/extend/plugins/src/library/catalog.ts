@@ -30,7 +30,7 @@ const toolbar = ({ searchField, segmented }: Kit, filter: PluginFilter) =>
   )
 
 export const catalogSection = (kit: Kit, source: LibrarySource, actions: RowActions) => {
-  const { emptyState, loadingState, quietButton } = kit
+  const { emptyState, loadingState } = kit
   const filter = pluginFilter(source, kit)
   return div(
     { class: 'flex flex-col gap-4' },
@@ -39,7 +39,7 @@ export const catalogSection = (kit: Kit, source: LibrarySource, actions: RowActi
     show(filter.loading, () => loadingState()),
     show(
       () => !filter.loading.get() && filter.groups.get().length === 0,
-      () => emptyState({ text: 'No plugins match your search', action: quietButton({ size: 'sm', onClick: filter.clear }, 'Clear search') }),
+      () => emptyState({ text: 'Nothing matches.', action: { label: 'Clear search', run: filter.clear } }),
     ),
   )
 }

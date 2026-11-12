@@ -51,13 +51,7 @@ const grouped = ({ from, to, events }: Shown) =>
     return found.length ? [{ day, events: found }] : []
   })
 
-const empty = (kit: Kit, add: () => void) =>
-  kit.emptyBlock({
-    icon: 'calendar',
-    title: 'Nothing in the next four weeks',
-    text: 'Add an event, or connect a calendar in Settings.',
-    action: kit.secondaryAction({ onClick: add }, 'New event'),
-  })
+const empty = (kit: Kit, add: () => void) => kit.emptyState({ text: 'Nothing in the next four weeks.', action: { label: 'New event', run: add } })
 
 export const agendaView = (kit: Kit, model: CalendarModel, parts: AgendaParts) =>
   dynamicChild(

@@ -9,7 +9,7 @@ const toggled = (list: string[], id: string) => (list.includes(id) ? list.filter
 
 const botRows = ({ kit, bots }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
   const roster = bots()
-  if (!roster) return kit.settingsRow({ title: 'Bots are off', detail: 'Turn on Bots in Settings → Features to choose which bots can use this login.' })
+  if (!roster) return kit.emptyState({ text: 'Bots are off. Turn them on in Settings → Features.' })
   const listed = derive(() => roster.list())
   const botRow = (bot: Sig<BotSummary>) =>
     kit.checkRow({
@@ -19,7 +19,7 @@ const botRows = ({ kit, bots }: PageParts, login: Derive<Login>, change: (patch:
     })
   return dynamicChild(
     derive(() => listed.get().length > 0),
-    some => (some ? kit.rowList(listed, bot => bot.id, botRow) : kit.emptyState({ flush: true, text: 'No bots yet. Make one in the Bots space, then choose it here.' })),
+    some => (some ? kit.rowList(listed, bot => bot.id, botRow) : kit.emptyState({ text: 'No bots yet.' })),
   )
 }
 

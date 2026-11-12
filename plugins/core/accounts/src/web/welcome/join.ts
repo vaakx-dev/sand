@@ -12,7 +12,7 @@ import { nextAction } from './next'
 const foundRows = (kit: Kit, joining: PcJoining) => {
   const { emptyState, icon, listRow, settingsSection } = kit
   const unpaired = joining.found.get().filter(pc => !pc.paired)
-  if (!unpaired.length) return emptyState({ flush: true, text: 'Looking for sand on your home wifi and Tailscale…' })
+  if (!unpaired.length) return emptyState({ text: 'Looking for sand on your home wifi and Tailscale…' })
   const row = (pc: DiscoveredPc) =>
     listRow({
       lead: icon('link'),
@@ -26,7 +26,7 @@ const foundRows = (kit: Kit, joining: PcJoining) => {
 const waitingNote = (kit: Kit, joining: PcJoining) => {
   const asked = joining.waiting.get()
   if (!asked) return null
-  return kit.emptyState({ flush: true, text: `Waiting for someone to tap Allow on a paired device. The code there reads ${asked.code}.` })
+  return kit.emptyState({ text: `Waiting for someone to tap Allow on a paired device. The code there reads ${asked.code}.` })
 }
 
 export const joinView = (kit: Kit, model: WelcomeModel) => {
@@ -50,7 +50,7 @@ const sharedFrom = (kit: Kit, state: LoginState | undefined, pc: JoinedPc) => {
   if (state && accounts.length) return settingsSection({}, accounts.map(account => remoteRow(kit, state, account)))
   const checked = state?.pcs.find(found => found.device === pc.id)?.checked
   if (!checked) return loadingState({ flush: true, text: `Looking for ${pc.name}'s accounts…` })
-  return emptyState({ flush: true, text: `${pc.name} doesn't share any accounts yet. Turn on "Share with my PCs" there, or sign in here.` })
+  return emptyState({ text: `${pc.name} doesn't share any accounts yet. Turn on "Share with my PCs" there, or sign in here.` })
 }
 
 export const joinedView = (kit: Kit, model: WelcomeModel, control: LoginControl, pc: JoinedPc) => {

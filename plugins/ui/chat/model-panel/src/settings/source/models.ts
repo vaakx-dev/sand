@@ -51,7 +51,7 @@ const status = ({ emptyState, errorState, loadingState }: Kit, catalog: Catalog,
       if (state === 'error') return errorState({ surface: 'group', text: () => catalog.error.get(), retry: () => void catalog.reload() })
       if (state === 'rows') return null
       if (state === 'loading') return loadingState({ surface: 'group' })
-      return emptyState({ surface: 'group', text: () => emptyText(catalog, filter) })
+      return emptyState({ text: () => emptyText(catalog, filter) })
     },
   )
 

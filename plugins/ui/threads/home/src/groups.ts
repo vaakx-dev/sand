@@ -16,7 +16,7 @@ export const threadGroups = (entries: Entry[], limit: number, more: () => void, 
   const active = newest(open.filter(entry => entry.row.status !== 'running'))
   const hidden = settled.length - limit
   return [
-    { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row) },
+    { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row), ...(!entries.length && { empty: 'No threads yet.' }) },
     ...group('working', 'Working', working),
     ...group('snoozed', 'Snoozed', snoozed, { folded: true }),
     ...group('settled', 'Settled', settled.slice(0, limit), {

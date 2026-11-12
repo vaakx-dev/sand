@@ -14,10 +14,7 @@ export const agentsSection = (ui: Ui) => {
     show(
       () => devices.records.loaded.get() && !list.get().length,
       () =>
-        emptyState({
-          flush: true,
-          text: served() ? 'No agents yet. Add one to use your threads from Claude Code, Codex or another MCP client.' : 'Turn on MCP server in Settings → Features to add an agent.',
-        }),
+        emptyState({ text: served() ? 'No agents yet.' : 'MCP server is off. Turn it on in Settings → Features.' }),
     ),
   )
 }

@@ -32,7 +32,7 @@ const favouriteRow = (page: Page, row: Sig<ModelInfo>, unstar: (model: ModelInfo
 }
 
 export const favouritesPage = (page: Page) => {
-  const { emptyState, rowList, secondaryAction, settingsSection, starMark } = page.ctx.kit
+  const { emptyState, rowList, settingsSection, starMark } = page.ctx.kit
   const removed = sig(new Set<string>())
   const all = page.changes.read(() => page.ctx.models.list())
   const models = derive(() => {
@@ -53,12 +53,7 @@ export const favouritesPage = (page: Page) => {
       {},
       show(
         models.map(found => !found.length),
-        () =>
-          emptyState({
-            surface: 'group',
-            text: 'No favourites yet. Star models in an account to keep them at the top of the picker.',
-            action: secondaryAction({ size: 'sm', onClick: () => page.go({ kind: 'top' }) }, 'Choose an account'),
-          }),
+        () => emptyState({ text: 'No favourites yet.', action: { label: 'Choose an account', run: () => page.go({ kind: 'top' }) } }),
       ),
       rowList(models, model => model.id, row => favouriteRow(page, row, unstar)),
     ),
