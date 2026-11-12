@@ -1,7 +1,7 @@
 {
   "name": "@sand/turns-contract",
   "version": "0.0.0",
-  "description": "The contract of the turns plugin: each turn of a chat, the messages waiting for it, and the requests and events pages use to send, steer, queue and follow turns",
+  "description": "The contract of the turns plugin: each turn of a chat, the messages waiting for it, and the events pages use to follow turns",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -15,8 +15,6 @@
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/util": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

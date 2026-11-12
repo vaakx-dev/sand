@@ -3,7 +3,6 @@ import {
   type Entry,
   type Message,
   type Prompt,
-  promptInput,
   type Session,
   type ToolCallBlock,
   type ToolResultBlock,
@@ -15,18 +14,14 @@ import {
   type PendingItem,
   type RunOptions,
   type SendInput as EngineSend,
-  sendModes,
   type SendResult,
   type TurnInfo as EngineTurn,
-  turnOrigins,
   type TurnResult,
   type WaitUntil,
 } from '@sand/engine/contract'
-import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import { sessionSettings, type SettingsPatch } from '@sand/model/contract'
-import { lazy } from '@sand/util'
+import { helloField, wireEvent } from '@sand/host-hub/contract'
+import type { SettingsPatch } from '@sand/model/contract'
 import { event, service } from 'drydock'
-import { z } from 'zod'
 
 export type {
   PendingItem,
@@ -57,6 +52,7 @@ export interface Turns {
   wait(turn: string, until: WaitUntil, signal?: AbortSignal): Promise<TurnInfo>
   pending(session: Session): PendingItem[]
   withdraw(session: Session, pending: string): boolean
+  hold(session: Session, pending: string, held: boolean): boolean
 }
 
 export const turns = service<Turns>('turns')
@@ -81,22 +77,3 @@ export const toolProgressWire = wireEvent<[call: ToolCallBlock, text: string, se
 export const toolResultWire = wireEvent<[result: ToolResultBlock, call: ToolCallBlock, session: WireSessionRef]>('tool.result')
 
 export const helloTurns = helloField<Record<string, TurnInfo>>('turns')
-export const helloTurnsApi = helloField<number>('turnsApi')
-
-const place = 'thread'
-const session = lazy(() => z.object({ session: z.string() }))
-
-export const turnSend = request('turn.send', {
-  input: () => session().extend({
-    prompt: promptInput(),
-    mode: z.enum(sendModes).optional(),
-    label: z.string().optional(),
-    origin: z.enum(turnOrigins).optional(),
-    clientRequestId: z.string().min(1),
-    settings: sessionSettings().optional(),
-  }),
-  output: type<SendResult>(),
-  place,
-})
-export const turnWithdraw = request('turn.withdraw', { input: () => session().extend({ pending: z.string() }), output: type<boolean>(), place })
-export const turnHold = request('turn.hold', { input: () => session().extend({ pending: z.string(), held: z.boolean() }), output: type<boolean>(), place })

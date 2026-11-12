@@ -11,11 +11,10 @@ const officePc = (refuse = new Set<string>()) => {
   const pc = { online: false, sent: [] as string[] }
   const link: Link = {
     ready: () => pc.online,
-    turnsApi: () => true,
     async send(_pc, input) {
       pc.sent.push(input.clientRequestId)
       if (refuse.delete(input.clientRequestId)) throw new Error('No chat with that id')
-      return { disposition: 'started', turn: 'turn' }
+      return { disposition: 'started', turn: 'turn', thread: input.session }
     },
   }
   return { pc, link }
@@ -24,10 +23,9 @@ const officePc = (refuse = new Set<string>()) => {
 const outbox = (link: Link) => {
   const stored = new Map<string, OutboxItem>()
   const saved: OutboxSaved = {
-    load: async () => ({ items: [], pcs: [] }),
+    load: async () => [],
     put: async item => void stored.set(item.id, item),
     remove: async id => void stored.delete(id),
-    remember: async () => {},
   }
   return { stored, box: createOutbox({ link, saved, sent: () => {}, changed: () => {} }) }
 }

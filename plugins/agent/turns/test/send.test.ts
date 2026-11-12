@@ -1,7 +1,7 @@
 import type { Session } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Source } from '@sand/replay/contract'
-import { type SendResult, turnHold } from '@sand/turns-contract/contract'
+import type { SendResult } from '@sand/turns-contract/contract'
 import { afterEach, expect, test } from 'bun:test'
 
 let sand: Sand
@@ -85,7 +85,7 @@ test('an interrupt holds the steers the turn had not taken, and resuming one sta
   await Bun.sleep(2_200)
   expect(sand.turns.current(chat)).toBeUndefined()
 
-  expect(await sand.ask(turnHold, { session: chat.id, pending: held!.id, held: false })).toBe(true)
+  expect(sand.turns.hold(chat, held!.id, false)).toBe(true)
   await idle(chat)
   expect(asked(chat).map(message => message.text)).toEqual(['go', 'actually, this'])
   expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Resumed.')] })

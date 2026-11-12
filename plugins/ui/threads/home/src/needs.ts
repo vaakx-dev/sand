@@ -1,8 +1,8 @@
 import { changesPatch } from '@sand/changes/contract'
 import type { Need } from '@sand/needs-you/contract'
-import { turnSend } from '@sand/turns-contract/contract'
 import { errorMessage, isRecord } from '@sand/util'
-import { turns, type Thread } from '@sand/web-client/contract'
+import type { Wire } from '@sand/devices-contract'
+import type { Thread, Turns } from '@sand/web-client/contract'
 import { div, dynamicChild, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { Changes } from './changes'
@@ -15,7 +15,8 @@ export interface NeedsParts {
   kit: import('@sand/ui-kit/contract').Kit
   threads: { list(): Thread[]; get(id: string): Thread | undefined }
   shell: Shell
-  wire: { call(req: typeof turnSend, input: unknown, pc?: string): Promise<unknown> }
+  wire: Wire
+  turns: Turns
   changes: Changes
   pulse: { version: { get(): number } }
 }
@@ -35,11 +36,7 @@ const choicesOf = (thread: Thread, call: string): string[] => {
   return []
 }
 
-const sendAnswer = (parts: NeedsParts, thread: Thread, text: string) => {
-  const service = parts.ctx.get(turns)
-  if (service) return service.send(thread.id, text)
-  return parts.wire.call(turnSend, { session: thread.id, prompt: text, clientRequestId: Bun.randomUUIDv7() }).then(() => undefined)
-}
+const sendAnswer = (parts: NeedsParts, thread: Thread, text: string) => parts.turns.send(thread.id, text)
 
 const changesView = (parts: NeedsParts, thread: Thread) => {
   const change = parts.changes.get(thread.id)
@@ -47,8 +44,8 @@ const changesView = (parts: NeedsParts, thread: Thread) => {
   const first = change.files[0]!
   const patch = sig<{ lines: string[] } | undefined>(undefined)
   const error = sig('')
-  void (parts.wire.call(changesPatch as never as typeof turnSend, { session: thread.id, path: first.path }, thread.device) as Promise<{ lines: string[] }>).then(
-    found => patch.set(found),
+  void parts.wire.call(changesPatch, { session: thread.id, path: first.path }, thread.device).then(
+    found => patch.set({ lines: found.hunks.flatMap(hunk => [hunk.header, ...hunk.lines]) }),
     err => error.set(errorMessage(err)),
   )
   return div(

@@ -9,7 +9,7 @@ import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
 import { settings } from '@sand/settings/contract'
 import { shell } from '@sand/ui-shell/contract'
-import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
+import { projects, projectsChange, threadSelect, threads, threadsChange, turns } from '@sand/web-client/contract'
 import { clock, sig, stored } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
@@ -26,7 +26,7 @@ import { wakeTimer } from './snooze/wake'
 export default definePlugin({
   name: 'threads-home',
   description: 'Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; Home is the new-thread screen with a slot for its pickers and the running, needs-you and ready counts; New thread in Search; threads and projects in Search',
-  inject: { kit, threads, shell, wire },
+  inject: { kit, threads, turns, shell, wire },
   apply(ctx) {
     const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs, threadOwners])
     const changes = changesModel(ctx, ctx.wire)
@@ -65,7 +65,7 @@ export default definePlugin({
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
     ctx.watch(needs, found => {
       if (!found) return
-      const sources = [reviewNeeds({ ...parts, wire: ctx.wire, changes, pulse: events }), questionNeeds({ ...parts, wire: ctx.wire, changes, pulse: events }), secretNeeds({ ...parts, wire: ctx.wire, changes, pulse: events })]
+      const sources = [reviewNeeds({ ...parts, wire: ctx.wire, turns: ctx.turns, changes, pulse: events }), questionNeeds({ ...parts, wire: ctx.wire, turns: ctx.turns, changes, pulse: events }), secretNeeds({ ...parts, wire: ctx.wire, turns: ctx.turns, changes, pulse: events })]
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
     })

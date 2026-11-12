@@ -1,9 +1,8 @@
 import { helloDelta, helloSessions, helloSync } from '@sand/server/contract'
 import { helloJobs } from '@sand/jobs/contract'
-import { helloTurns, helloTurnsApi, type TurnInfo } from '@sand/turns-contract/contract'
+import { helloTurns, type TurnInfo } from '@sand/turns-contract/contract'
 import type { Thread } from '../contract'
 import type { HelloRead } from '../greeted'
-import { legacyRunning } from './legacy'
 import { clearTurn } from './live'
 import type { Store } from './store'
 
@@ -14,10 +13,7 @@ export const stale = (thread: Thread) => {
 
 type Running = Partial<Pick<TurnInfo, 'started' | 'waiting'>>
 
-const runningOf = (read: HelloRead): Map<string, Running> => {
-  if (!read(helloTurnsApi)) return legacyRunning(read)
-  return new Map(Object.entries(read(helloTurns) ?? {}))
-}
+const runningOf = (read: HelloRead): Map<string, Running> => new Map(Object.entries(read(helloTurns) ?? {}))
 
 export const applyHello = (store: Store, read: HelloRead, device: string) => {
   const sessions = read(helloSessions) ?? []

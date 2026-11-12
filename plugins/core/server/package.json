@@ -20,7 +20,6 @@
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/html": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",

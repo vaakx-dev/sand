@@ -1,5 +1,5 @@
 import { startSand, type Sand } from '@sand/harness'
-import { historyRead, threadList, threadSend, threadStart, threadUpdate, waitThread } from '@sand/orchestrator/contract'
+import { historyRead, threadList, threadPending, threadSend, threadStart, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -48,6 +48,25 @@ test('settling a running thread stops its turn first', async () => {
 
   expect(await sand.ask(threadUpdate, { session: sent.thread, settled: true })).toMatchObject({ thread: sent.thread, settled: true })
   expect(sand.turns.get(sent.turn!)).toMatchObject({ status: 'interrupted' })
+})
+
+test('a message the page queues with a label waits as pending, and holding, releasing or withdrawing it is one call', async () => {
+  const base = await start([[{ type: 'hold' }]])
+  const { thread } = await sand.ask(threadStart, { ...base, prompt: 'go' })
+  const chat = sand.sessions.require(thread)
+  const prompt = [{ type: 'text', text: 'and then this' }] as const
+
+  const queued = await sand.ask(threadSend, { session: thread, prompt: [...prompt], mode: 'queue', label: 'Next step', origin: 'user', clientRequestId: 'next' })
+  if (queued.disposition === 'started') throw new Error('a busy thread started a second turn')
+  const pending = queued.pending
+  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, kind: 'queue', label: 'Next step', origin: 'user', held: false })])
+
+  expect(await sand.ask(threadPending, { session: thread, pending, action: 'hold' })).toBe(true)
+  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, held: true })])
+  expect(await sand.ask(threadPending, { session: thread, pending, action: 'release' })).toBe(true)
+  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, held: false })])
+  expect(await sand.ask(threadPending, { session: thread, pending, action: 'withdraw' })).toBe(true)
+  expect(sand.turns.pending(chat)).toEqual([])
 })
 
 test('a wait returns when the turn waits on the user, and waiting until the end goes on past it', async () => {
