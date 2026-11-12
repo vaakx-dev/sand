@@ -2499,6 +2499,7 @@
         "@sand/chat": "workspace:*",
         "@sand/inspector": "workspace:*",
         "@sand/reactive": "workspace:*",
+        "@sand/threads-home": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/web-client": "workspace:*",

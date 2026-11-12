@@ -2,7 +2,8 @@ import { threadOwners } from '@sand/chat/contract'
 import { inspector } from '@sand/inspector/contract'
 import { pulse } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
-import { type ChipSource, shell } from '@sand/ui-shell/contract'
+import { threadRows } from '@sand/threads-home/contract'
+import { type ChipSource, type Row, shell } from '@sand/ui-shell/contract'
 import { threadRouteKind, threads, threadsChange, type Thread } from '@sand/web-client/contract'
 import { derive, div, list } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -18,7 +19,7 @@ export default definePlugin({
   description: 'The subagents working in a thread or bot chat: listed in its Details, and counted as running above its composer',
   inject: { inspector, kit, threads },
   apply(ctx) {
-    const changes = pulse(ctx, [threadsChange], [threadOwners])
+    const changes = pulse(ctx, [threadsChange], [threadOwners, threadRows])
 
     const startedBy = (owner: string, subagent: Thread) => subagent.info.parent === owner || ctx.get(threadOwners)?.owner(subagent.id)?.id === owner
 
@@ -32,8 +33,12 @@ export default definePlugin({
 
     const open = (subagent: Thread) => ctx.get(shell)?.open({ kind: threadRouteKind, id: subagent.id })
 
-    const line = (subagent: Thread) =>
-      ctx.kit.cardItem({ lead: ctx.kit.dot('run'), end: ctx.kit.elapsed(startOf(subagent)), onClick: () => open(subagent) }, titleOf(subagent))
+    const rowOf = (subagent: Thread): Row => {
+      changes.version.get()
+      return ctx.get(threadRows)?.row(subagent.id) ?? { id: subagent.id, label: titleOf(subagent), status: 'running', at: startOf(subagent) }
+    }
+
+    const line = (subagent: Thread) => ctx.kit.workRow({ surface: 'raised', onClick: () => open(subagent) }, ctx.kit.rowBody(() => rowOf(subagent)))
 
     const render = (session: () => string) => {
       const running = derive(() => runningIn(session()))
@@ -50,7 +55,7 @@ export default definePlugin({
       title: 'Running subagents',
       order: 30,
       status: 'running',
-      items: ({ owner }) => runningIn(owner).map(subagent => ({ id: subagent.id, label: titleOf(subagent), status: 'running', at: startOf(subagent), open: () => open(subagent) })),
+      items: ({ owner }) => runningIn(owner).map(subagent => ({ ...rowOf(subagent), open: () => open(subagent) })),
     }
 
     ctx.effect(() =>

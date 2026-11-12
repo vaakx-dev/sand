@@ -35,7 +35,7 @@ const listening = (parts: Parts): ChipSource => ({
   items: ({ owner }) =>
     automationsOf(parts, owner)
       .filter(item => !item.paused)
-      .map(item => ({ id: item.id, label: item.title, icon: item.icon, detail: item.when, open: () => parts.profile(owner) })),
+      .map(item => ({ id: item.id, label: item.title, lead: () => parts.ctx.kit.icon(item.icon, 'sm'), detail: () => item.when, open: () => parts.profile(owner) })),
 })
 
 export default definePlugin({

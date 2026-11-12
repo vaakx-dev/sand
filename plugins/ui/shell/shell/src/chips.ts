@@ -18,15 +18,12 @@ const chipsOf = (sources: ChipSource[]) => {
   return [...byKey.values()]
 }
 
-const itemRow = (kit: Kit, item: ChipItem, close: () => void) => {
+const itemRow = (kit: Kit, item: () => ChipItem, close: () => void) => {
   const choose = () => {
     close()
-    item.open()
+    item().open()
   }
-  return kit.workRow(
-    { role: 'menuitem', surface: 'raised', onClick: choose },
-    kit.workRowBody({ title: item.label, lead: item.icon && kit.icon(item.icon, 'sm'), detail: item.detail, status: item.status, at: item.at }),
-  )
+  return kit.workRow({ role: 'menuitem', surface: 'raised', onClick: choose }, kit.rowBody(item))
 }
 
 const tones: Partial<Record<Status, string>> = {
@@ -75,7 +72,7 @@ const countView = (kit: Kit, chip: Sig<Chip>, scope: ChipScope) => {
               list(
                 items,
                 item => item.id,
-                item => div({ class: 'contents' }, itemRow(kit, item.get(), close)),
+                item => div({ class: 'contents' }, itemRow(kit, () => item.get(), close)),
                 div({ class: 'flex flex-col' }),
               ),
             ],
