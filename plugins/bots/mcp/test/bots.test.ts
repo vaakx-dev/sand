@@ -1,7 +1,7 @@
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { McpServer } from '@modelcontextprotocol/server'
-import { botSend } from '@sand/bot-turns/contract'
-import { botConversation, botCreate, type BotEntry, botList, botUpdate, changeEntry } from '@sand/bots/contract'
+import { botOpen, botSend } from '@sand/bot-turns/contract'
+import { botCreate, type BotEntry, botList, botUpdate, changeEntry } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -51,7 +51,7 @@ const use = async (conversation: Conversation, name: string, input: Record<strin
 }
 
 const userTexts = async (bot: string) =>
-  (await sand.ask(botConversation, { bot })).entries.flatMap((entry: BotEntry) =>
+  (await sand.ask(botOpen, { bot })).entries.flatMap((entry: BotEntry) =>
     entry.type === 'message' && (entry.data as Message).role === 'user' ? [textOf((entry.data as Message).content)] : [],
   )
 
@@ -82,7 +82,7 @@ test('a bot cannot message itself', async () => {
   expect(await use(asBot(bot.id), 'bot_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
 })
 
-const changes = async (bot: string) => (await sand.ask(botConversation, { bot })).entries.filter(entry => entry.type === changeEntry).map(entry => entry.data)
+const changes = async (bot: string) => (await sand.ask(botOpen, { bot })).entries.filter(entry => entry.type === changeEntry).map(entry => entry.data)
 
 test("a bot can pause another bot and change any bot's limit, its own too, and each change shows in that bot's chat with who made it", async () => {
   await start([])

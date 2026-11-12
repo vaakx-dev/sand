@@ -6,7 +6,6 @@ import type { Context } from 'drydock'
 import {
   botChange,
   botChangeWire,
-  botConversation,
   botCreate,
   botDelete,
   botEntry,
@@ -41,7 +40,6 @@ export const serveBots = (ctx: Context, service: Bots) => {
       found.handle(botCreate, spec => service.create(spec)),
       found.handle(botUpdate, ({ bot, patch }, caller) => service.update(botOf(bot, caller), patch, changerOf(caller))),
       found.handle(botDelete, ({ bot }) => service.remove(bot)),
-      found.handle(botConversation, ({ bot, ...range }) => service.conversation(bot).page(range)),
       ctx.on(botChange, bot => found.broadcast(botChangeWire, bot)),
       ctx.on(botRemove, id => found.broadcast(botRemoveWire, id)),
       ctx.on(botEntry, entry => found.broadcast(botEntryWire, entry)),

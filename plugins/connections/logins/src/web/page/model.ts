@@ -1,3 +1,4 @@
+import type { BotRoster } from '@sand/bots/contract'
 import type { Wire } from '@sand/devices-contract'
 import type { InputOf } from '@sand/host-hub/contract'
 import type { Kit } from '@sand/ui-kit/contract'
@@ -59,5 +60,5 @@ export interface PageParts {
   wire: Wire
   threads(): Threads | undefined
   model: LoginsModel
-  bots(): boolean
+  bots(): BotRoster | undefined
 }

@@ -1,4 +1,4 @@
-import { botColors, botConversation, botCreate, botDelete, botList, bots, botUpdate, freshColor } from '@sand/bots/contract'
+import { botColors, botCreate, botDelete, botList, bots, botUpdate, freshColor } from '@sand/bots/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
@@ -52,16 +52,16 @@ test("a bot's messages land in its own conversation, page from the newest or cat
   expect((await ask(botList, {})).find(listed => listed.id === first.id)?.last).toMatchObject({ role: 'assistant', text: 'Noted, all three, see notes.' })
   expect((await ask(botList, {})).find(listed => listed.id === second.id)?.last).toBeUndefined()
 
-  const newest = await ask(botConversation, { bot: first.id, limit: 2 })
+  const newest = conversation.page({ limit: 2 })
   expect(newest.more).toBe(true)
   expect(newest.entries.map(entry => entry.seq)).toEqual([3, 4])
-  const older = await ask(botConversation, { bot: first.id, before: 3 })
+  const older = conversation.page({ before: 3 })
   expect(older).toEqual({ entries: [expect.objectContaining({ seq: 1, data: { role: 'user', content: [{ type: 'text', text: 'one' }] } }), expect.objectContaining({ seq: 2 })], more: false })
-  expect((await ask(botConversation, { bot: second.id })).entries).toEqual([])
+  expect(app.get(bots)!.conversation(second.id).entries()).toEqual([])
 
-  const caughtUp = await ask(botConversation, { bot: first.id, after: 2 })
+  const caughtUp = conversation.page({ after: 2 })
   expect({ seqs: caughtUp.entries.map(entry => entry.seq), more: caughtUp.more }).toEqual({ seqs: [3, 4], more: false })
-  const gapped = await ask(botConversation, { bot: first.id, after: 1, limit: 2 })
+  const gapped = conversation.page({ after: 1, limit: 2 })
   expect({ seqs: gapped.entries.map(entry => entry.seq), more: gapped.more }).toEqual({ seqs: [3, 4], more: true })
 })
 
@@ -74,7 +74,7 @@ test('bots and their conversations survive a restart', async () => {
 
   const after = await start(shared)
   expect(await after.ask(botList, {})).toEqual([expect.objectContaining({ id: bot.id, color: 'green', last: expect.objectContaining({ text: 'Lunch with Ana on Friday' }) })])
-  expect((await after.ask(botConversation, { bot: bot.id })).entries).toHaveLength(1)
+  expect(after.app.get(bots)!.conversation(bot.id).entries()).toHaveLength(1)
 })
 
 test('a new bot takes a colour no other bot uses, then the least used, and can bring its own id', async () => {

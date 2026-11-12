@@ -3,8 +3,8 @@ import { definePlugin } from 'drydock'
 import { offerBotTools } from './tools'
 
 export default definePlugin({
-  name: 'bots-mcp-tools',
-  description: "Offers sand's bot tools to outside agents over MCP: list bots, hand them tasks, read their conversations, and rename them, write their jobs and set their projects",
+  name: 'bots-mcp',
+  description: "Offers sand's bot tools to its own threads and bots and to outside agents: list bots, hand them tasks, and rename them, write their jobs and set their limits",
   apply(ctx) {
     ctx.watch(mcpTools, found => found && offerBotTools(found))
   },

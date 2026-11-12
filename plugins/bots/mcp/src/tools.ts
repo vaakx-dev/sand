@@ -1,8 +1,8 @@
+import { awaitBot, botSend } from '@sand/bot-turns/contract'
+import { botList, botUpdate, jobLimit } from '@sand/bots/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { botUpdate, jobLimit } from '@sand/bots/contract'
-import { awaitBot, botAsk, botRoster } from './contract'
 import { rowOf } from './row'
 
 const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task, read its replies and change its job or limits" }
@@ -45,7 +45,7 @@ export const botTools: McpTool[] = [
     input: listInput,
     access: 'read',
     group: group.name,
-    run: (_, { call }) => call(botRoster, {}),
+    run: async (_, { call }) => (await call(botList, {})).map(rowOf),
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
@@ -54,7 +54,7 @@ export const botTools: McpTool[] = [
     access: 'operate',
     group: group.name,
     run: async ({ bot, prompt, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call, signal }) =>
-      awaitBot(call, await call(botAsk, { bot, prompt, origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
+      awaitBot(call, await call(botSend, { bot, prompt, origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'bot_update',

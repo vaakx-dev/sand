@@ -3,12 +3,9 @@
   "version": "0.0.0",
   "description": "sand's bot tools, defined once for its own threads and bots and for outside agents over MCP: list, message, read and update bots",
   "type": "module",
-  "exports": {
-    "./contract": "./src/contract.ts"
-  },
   "sand": {
     "feature": "bots-mcp",
-    "runtime": "./src/runtime/index.ts",
+    "runtime": "./src/index.ts",
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
     "label": "Bot tools",
@@ -17,13 +14,7 @@
   "dependencies": {
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
-    "@sand/chats": "workspace:*",
-    "@sand/engine": "workspace:*",
-    "@sand/host-hub": "workspace:*",
-    "@sand/ledger": "workspace:*",
     "@sand/mcp-server": "workspace:*",
-    "@sand/orchestrator": "workspace:*",
-    "@sand/server": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
@@ -31,7 +22,10 @@
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.4.0",
     "@modelcontextprotocol/server": "^2.4.0",
+    "@sand/chats": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/harness": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
     "@sand/replay": "workspace:*",
     "@sand/tools": "workspace:*"
   }

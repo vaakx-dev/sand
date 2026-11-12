@@ -98,6 +98,7 @@ export interface Orchestrator {
   started(owner: Owner): Record<string, string>
   notify(thread: string, notice: Notice): Promise<boolean>
   deliver(to: ConversationRef, notice: Notice): Promise<boolean>
+  sign(prompt: Prompt, from: ConversationRef | undefined): Prompt
   owner(owner: Owner, kind: OwnerKind): Dispose
 }
 

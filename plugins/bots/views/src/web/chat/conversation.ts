@@ -1,6 +1,6 @@
 import type { LiveBlock, LiveEvent } from '@sand/accounts/contract'
 import { botInterrupt, botOpen, botSend, type BotSnapshot } from '@sand/bot-turns/contract'
-import { botConversation, chatPath, type BotEntry } from '@sand/bots/contract'
+import { chatPath, type BotEntry } from '@sand/bots/contract'
 import { promptContent, saidText, textOf, type Message, type Prompt } from '@sand/chats/contract'
 import { applyLiveEvent } from '@sand/server/contract'
 import { errorMessage, isRecord } from '@sand/util'
@@ -98,7 +98,7 @@ export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRe
     if (!oldest || !more.get() || loading.get()) return
     loading.set(true)
     try {
-      const page = await ctx.wire.call(botConversation, { bot, before: oldest.seq })
+      const page = await ctx.wire.call(botOpen, { bot, before: oldest.seq })
       entries.update(list => merged(list ?? [], page.entries))
       more.set(page.more)
     } catch (error) {

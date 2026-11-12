@@ -1,5 +1,6 @@
+import { botOpen } from '@sand/bot-turns/contract'
 import { botWatchCreate, botWatchList, botWatchRemove } from '@sand/bot-watches/contract'
-import { botConversation, botCreate, botDelete, type BotEntry, botList } from '@sand/bots/contract'
+import { botCreate, botDelete, type BotEntry, botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -64,7 +65,7 @@ const use = async (bot: string, name: string, input: Record<string, unknown>) =>
 }
 
 const userTexts = async (bot: string) =>
-  (await sand.ask(botConversation, { bot })).entries.flatMap((entry: BotEntry) =>
+  (await sand.ask(botOpen, { bot })).entries.flatMap((entry: BotEntry) =>
     entry.type === 'message' && (entry.data as Message).role === 'user' ? [textOf((entry.data as Message).content)] : [],
   )
 
