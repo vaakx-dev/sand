@@ -8,7 +8,7 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { memoryCheck } from './check'
 import { memoryCompaction } from './compaction'
-import { memory, memoryChange, memoryChangeWire, memoryRead, type MemoryRef, type MemorySpace, memoryWrite } from './contract'
+import { memory, memoryChange, memoryStore, memoryChangeWire, memoryRead, type MemoryRef, type MemorySpace, memoryWrite } from './contract'
 import { createStore } from './files'
 import { memorySection } from './prompt'
 import { memoryTool } from './tool'
@@ -25,7 +25,11 @@ export default definePlugin({
       if (!found) throw new Error(`No memory space ${name}`)
       return found
     }
-    const store = createStore({ folder: ({ space, id }) => spaceOf(space).folder(id), changed: (ref, text) => ctx.emit(memoryChange, ref, text) })
+    const store = createStore({
+      folder: ({ space, id }) => spaceOf(space).folder(id),
+      changed: (ref, text) => ctx.emit(memoryChange, ref, text),
+      stored: ref => ctx.emit(memoryStore, ref),
+    })
     const placed = (conversation: Conversation) =>
       [...spaces.values()].flatMap(space => {
         const id = space.of(conversation)
