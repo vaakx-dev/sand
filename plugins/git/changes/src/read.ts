@@ -55,7 +55,7 @@ const clash = (paths: string[]) => `These files changed in the project too and d
 
 const conflictsOf = async ({ git }: ChangesDeps, { main, tip, fork }: Work, { tree }: Pending) => {
   if (!tip) return []
-  return (await combine(git, main, fork, tip, tree)).conflicts ?? []
+  return (await combine(git, main, fork, tip, tree)).conflicts
 }
 
 const liveState = async (deps: ChangesDeps, session: Session, work: Work, split: Split): Promise<State> => {

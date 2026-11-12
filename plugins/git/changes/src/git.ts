@@ -6,7 +6,10 @@ export interface Branches {
   upstreams: Map<string, string>
 }
 
-export type Combined = { tree: string; conflicts?: never } | { conflicts: string[] }
+export interface Combined {
+  tree: string
+  conflicts: string[]
+}
 
 export interface Pending {
   tree: string
@@ -76,13 +79,44 @@ const rawChanges = (out: string): RawChange[] => {
 
 const stateKey = ({ path, after }: RawChange) => `${path}\0${after}`
 
-const landedStates = async (git: GitRunner, { root, fork, bases }: Landing) =>
-  new Set(rawChanges(await git.ok(root, ['log', '--format=', ...rawFlags, ...new Set(bases), `^${fork}`], { read: true, what: "Couldn't read the project's history" })).map(stateKey))
+const history = { read: true, what: "Couldn't read the project's history" }
 
-const landedChanges = async (git: GitRunner, landing: Landing, changes: RawChange[]) => {
+export const combine = async (git: GitRunner, dir: string, fork: string, ours: string, theirs: string): Promise<Combined> => {
+  const args = ['merge-tree', '--write-tree', '--name-only', '--no-messages', '-z', `--merge-base=${fork}`, ours, theirs]
+  const result = await git.run(dir, args)
+  if (result.code === unknownOption) throw new Error('Merging needs git 2.40 or newer.')
+  if (result.code !== 0 && result.code !== 1) throw new Error(git.classify(result, args, "Couldn't merge the thread's changes").message)
+  const [tree = '', ...conflicts] = result.out.split('\0').filter(Boolean)
+  return { tree, conflicts }
+}
+
+const landedStates = async (git: GitRunner, { root, fork, bases }: Landing) =>
+  new Set(rawChanges(await git.ok(root, ['log', '--format=', ...rawFlags, ...new Set(bases), `^${fork}`], history)).map(stateKey))
+
+const aheadBases = async (git: GitRunner, { root, fork, bases }: Landing) => {
+  const unique = [...new Set(bases)]
+  const ahead = await Promise.all(unique.map(base => git.ok(root, ['rev-list', '--max-count=1', base, `^${fork}`], history)))
+  return unique.filter((_, at) => ahead[at])
+}
+
+const changedByMerging = async (git: GitRunner, { root, fork }: Landing, base: string, tree: string) => {
+  const merged = await combine(git, root, fork, base, tree)
+  return new Set((await git.ok(root, ['diff-tree', '-r', '-z', '--name-only', '--no-renames', merged.tree, base], history)).split('\0'))
+}
+
+const absorbedPaths = async (git: GitRunner, landing: Landing, tree: string) => {
+  const bases = await aheadBases(git, landing)
+  const changed = await Promise.all(bases.map(base => changedByMerging(git, landing, base, tree)))
+  return (path: string) => changed.some(paths => !paths.has(path))
+}
+
+const landedChanges = async (git: GitRunner, landing: Landing, changes: RawChange[], tree: string) => {
   if (!changes.length) return []
-  const landed = await landedStates(git, landing)
-  return changes.filter(change => landed.has(stateKey(change)))
+  const states = await landedStates(git, landing)
+  const seen = (change: RawChange) => states.has(stateKey(change))
+  if (changes.every(seen)) return changes
+  const absorbed = await absorbedPaths(git, landing, tree)
+  return changes.filter(change => seen(change) || absorbed(change.path))
 }
 
 const asForkEntries = (changes: RawChange[]) => changes.map(({ mode, blob, path }) => `${mode} ${blob}\t${path}\0`).join('')
@@ -93,8 +127,10 @@ export const pendingOf = (git: GitRunner, landing: Landing): Promise<Pending> =>
     const { root, fork } = landing
     await git.ok(root, addAll, { env, what })
     const changes = rawChanges(await git.ok(root, ['diff', '--cached', ...rawFlags, fork], { env, what }))
-    const landed = await landedChanges(git, landing, changes)
-    if (landed.length) await git.ok(root, ['update-index', '-z', '--index-info'], { env, input: asForkEntries(landed), what })
+    const tree = await git.ok(root, ['write-tree'], { env, what })
+    const landed = await landedChanges(git, landing, changes, tree)
+    if (!landed.length) return { tree, landed: new Set<string>() }
+    await git.ok(root, ['update-index', '-z', '--index-info'], { env, input: asForkEntries(landed), what })
     return { tree: await git.ok(root, ['write-tree'], { env, what }), landed: new Set(landed.map(change => change.path)) }
   })
 
@@ -102,13 +138,4 @@ export const commitAll = async (git: GitRunner, dir: string, message: string) =>
   if (!(await allChanges(git, dir))) return
   await git.ok(dir, addAll, { what: "Couldn't commit the thread's changes" })
   await git.ok(dir, ['commit', '--quiet', '--no-verify', '-m', message], { what: "Couldn't commit the thread's changes" })
-}
-
-export const combine = async (git: GitRunner, dir: string, fork: string, ours: string, theirs: string): Promise<Combined> => {
-  const args = ['merge-tree', '--write-tree', '--name-only', '--no-messages', '-z', `--merge-base=${fork}`, ours, theirs]
-  const result = await git.run(dir, args)
-  if (result.code === unknownOption) throw new Error('Merging needs git 2.40 or newer.')
-  if (result.code !== 0 && result.code !== 1) throw new Error(git.classify(result, args, "Couldn't merge the thread's changes").message)
-  const [tree = '', ...paths] = result.out.split('\0').filter(Boolean)
-  return result.code === 0 ? { tree } : { conflicts: paths }
 }

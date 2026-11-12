@@ -52,13 +52,19 @@ export const createTracker = (deps: ChangesDeps, send: (changes: ThreadChanges) 
       .catch(deps.report)
   }
 
+  const outOfWorktree = (id: string) => {
+    if (sent.has(id)) schedule(id)
+    return false
+  }
+
   const watch = (id: string, cwd: string): Followed => {
     let stop: Dispose | undefined
     let stopped = false
     const layoutOf = async () => ((await mayBeWorktree(cwd)) ? deps.repos.layout(cwd) : undefined)
     const worktree = layoutOf().then(
       layout => {
-        if (stopped || !layout?.worktree) return false
+        if (stopped) return false
+        if (!layout?.worktree) return outOfWorktree(id)
         stop = joinDisposers(
           deps.repos.watchLocal(layout.root, () => schedule(id)),
           deps.repos.watchLocal(layout.main, () => schedule(id)),
