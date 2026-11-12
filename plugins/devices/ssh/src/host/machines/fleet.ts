@@ -8,6 +8,7 @@ import { createSupervisor, type LinkStatus, type OpenLink, type Supervisor } fro
 export interface FleetDeps extends LinkDeps {
   routes(): PeerRoutes | undefined
   changed(): void
+  needsYou(pc: string, error: string): void
 }
 
 const idle: LinkStatus = { state: 'connecting' }
@@ -49,6 +50,7 @@ export const createFleet = (deps: FleetDeps) => {
       background: () => createAnswers({ saved: secrets.of(pc), rejected: text => void secrets.drop(pc, text) }),
       publish: link => publish(pc, link),
       changed: deps.changed,
+      needsYou: error => deps.needsYou(pc, error),
       sleep,
       random: Math.random,
       now: Date.now,

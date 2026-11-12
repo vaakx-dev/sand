@@ -34,6 +34,7 @@ const setup = (openings: Opening[]) => {
       return () => void published.push(-link.lport)
     },
     changed: () => {},
+    needsYou: () => {},
     sleep: ms => {
       sleeps.push(ms)
       clock += ms

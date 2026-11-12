@@ -11,7 +11,7 @@ import type { Roster } from './roster'
 
 const notes: Partial<Record<BotAnswer['status'], string>> = {
   queued: 'Waiting its turn',
-  waiting: 'Waiting for you in its chat',
+  waiting: 'Needs you in its chat',
   interrupted: 'Stopped',
   failed: "Couldn't answer",
   lost: "Couldn't answer",

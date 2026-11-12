@@ -11,9 +11,7 @@ const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 const faceStateOf = (bot: BotSummary | undefined): FaceState | undefined => {
   if (!bot) return undefined
   const status = botStatus(bot)
-  if (status === 'running') return 'running'
-  if (status === 'waiting') return 'waiting'
-  return undefined
+  return status === 'running' ? 'running' : undefined
 }
 
 const missing = (parts: Parts) =>

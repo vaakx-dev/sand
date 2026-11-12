@@ -9,7 +9,7 @@ import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
 import { settings } from '@sand/settings/contract'
 import { shell } from '@sand/ui-shell/contract'
-import { projects, projectsChange, threadSelect, threads, threadsChange, turns } from '@sand/web-client/contract'
+import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { clock, sig, stored } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
@@ -19,14 +19,14 @@ import { pageSize, threadGroups } from './groups'
 import { threadEntries } from './items/items'
 import { RowLooks } from './items/looks'
 import { chooseDraftPlace, newThread } from './launch/launch'
-import { questionNeeds, reviewNeeds, secretNeeds } from './needs'
+import { conflictNeeds, reviewNeeds, secretNeeds } from './needs'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
 
 export default definePlugin({
   name: 'threads-home',
-  description: 'Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread picks a project and opens a new chat; the running, needs-you and ready counts; New thread in Search; threads and projects in Search',
-  inject: { kit, threads, turns, shell, wire },
+  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread picks a project and opens a new chat; the running count above a bot's chat; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search",
+  inject: { kit, threads, shell, wire },
   apply(ctx) {
     const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs, threadOwners])
     const changes = changesModel(ctx, ctx.wire)
@@ -61,10 +61,11 @@ export default definePlugin({
     const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get(), looks }, botThreads.get()), limit.get(), more, () => newThread(parts))))
     const now = owned(ctx, () => clock(1000))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
-    for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
+    for (const source of chipSources({ ...parts, pulse: events, now: () => now.get() })) ctx.effect(() => ctx.shell.chip(source))
     ctx.watch(needs, found => {
       if (!found) return
-      const sources = [reviewNeeds({ ...parts, wire: ctx.wire, turns: ctx.turns, changes, pulse: events }), questionNeeds({ ...parts, wire: ctx.wire, turns: ctx.turns, changes, pulse: events }), secretNeeds({ ...parts, wire: ctx.wire, turns: ctx.turns, changes, pulse: events })]
+      const needParts = { ...parts, wire: ctx.wire, changes, pulse: events }
+      const sources = [reviewNeeds(needParts), conflictNeeds(needParts), secretNeeds(needParts)]
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
     })

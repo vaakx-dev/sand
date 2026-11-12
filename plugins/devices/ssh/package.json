@@ -19,6 +19,8 @@
     "@sand/host-daemon": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/needs-you": "workspace:*",
+    "@sand/devices-notify": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/vault": "workspace:*",

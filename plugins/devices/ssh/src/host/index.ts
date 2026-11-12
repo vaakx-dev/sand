@@ -1,4 +1,5 @@
 import { peerRoutes, peers as peersService, registry as registryService, thisPc as thisPcService } from '@sand/devices-contract'
+import { notify } from '@sand/devices-notify/contract'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hostHttp } from '@sand/host-gateway/contract'
 import { hub as hubService } from '@sand/host-hub/contract'
@@ -43,7 +44,12 @@ export default definePlugin({
     }
     const changed = () => hub.broadcast(sshStateChange, state(), 'user')
 
-    const fleet = createFleet({ ssh, store, secrets, localPort, routes: () => ctx.get(peerRoutes), changed })
+    const needsYou = (pc: string, error: string) =>
+      void ctx
+        .get(notify)
+        ?.send({ kind: 'needs', title: registry.get(pc)?.name ?? store.get(pc)?.name ?? 'SSH machine', text: `Needs your password or host key to connect: ${error}` })
+        .catch(failure => ctx.report(failure))
+    const fleet = createFleet({ ssh, store, secrets, localPort, routes: () => ctx.get(peerRoutes), changed, needsYou })
     ctx.effect(() => fleet.stop)
     const hosts = createHostList(join(homedir(), '.ssh'), ssh, changed)
     ctx.effect(() => hosts.stop)

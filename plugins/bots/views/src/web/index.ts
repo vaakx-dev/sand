@@ -1,6 +1,7 @@
 import { advanced } from '@sand/advanced/contract'
 import { botAutomations, botName, botProfile, botRoster, botRoute, botViews, changeEntry, type BotAutomationSource, type BotProfileSection, type ChangeEntry } from '@sand/bots/contract'
 import { modelTargets } from '@sand/model-panel/contract'
+import { needs } from '@sand/needs-you/contract'
 import { palette, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { transcript } from '@sand/transcript/contract'
@@ -20,6 +21,7 @@ import { registry } from './registry'
 import { botScreen } from './screen/bot'
 import { botsGroup } from './sidebar'
 import { botStore } from './store'
+import { botNeeds } from './needs'
 import { modelTarget } from './target'
 
 const automationsRoute = 'automations'
@@ -37,7 +39,7 @@ const listening = (parts: Parts): ChipSource => ({
 
 export default definePlugin({
   name: 'bot-views',
-  description: "Bots in the sidebar; each bot's screen with its chat and the model it runs with; its profile, New bot, Automations and the Listening chip",
+  description: "Bots in the sidebar; each bot's screen with its chat and the model it runs with; its profile, New bot, Automations and the Listening chip; bots waiting on you in Needs you",
   inject,
   apply(ctx) {
     const sections = registry<BotProfileSection>()
@@ -68,6 +70,7 @@ export default definePlugin({
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
     ctx.effect(() => ctx.shell.route({ kind: automationsRoute, render: () => automationsScreen(parts) }))
     ctx.effect(() => ctx.shell.chip(listening(parts)))
+    ctx.watch(needs, found => found?.source(botNeeds(parts)))
     ctx.effect(() =>
       ctx.shell.subject(({ kind, id }) => {
         const device = ctx.get(threads)?.device()

@@ -22,6 +22,7 @@
     "@sand/model": "workspace:*",
     "@sand/model-panel": "workspace:*",
     "@sand/model-picker": "workspace:*",
+    "@sand/needs-you": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
