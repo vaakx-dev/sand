@@ -1,8 +1,7 @@
 import type { Media } from '@sand/media/contract'
-import type { LLMRequest } from '../contract'
+import { type LLMRequest, loadedTools } from '../contract'
 import type { ToolNames } from './names'
 import { type CompatTarget, isOpenRouter } from './target'
-import { loadedTools } from '../http/deferred'
 import { chatMessages } from './messages'
 
 const functions = (request: LLMRequest, names: ToolNames) =>

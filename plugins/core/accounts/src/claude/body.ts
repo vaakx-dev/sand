@@ -1,7 +1,7 @@
 import { type Block, type ContextBlock, fileText, type MediaBlock, type Message, type ToolReferenceBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import type { Effort, LLMRequest, ToolSpec } from '../contract'
-import { loadedTools, withoutReferences } from '../http/deferred'
+import { type Effort, type LLMRequest, loadedTools, type ToolSpec } from '../contract'
+import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
 import { isReasoning } from '../reasoning'
 

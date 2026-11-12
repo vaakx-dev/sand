@@ -5,6 +5,7 @@ import {
   type Delivery,
   type LLMEvent,
   type LLMRequest,
+  loadedTools,
   type NativeRef,
   ThreadLost,
   type ThreadRef,
@@ -13,7 +14,6 @@ import {
 import { isModelContent, type Message, type ModelContent } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import { stat } from 'node:fs/promises'
-import { loadedTools } from '../http/deferred'
 import { deliver } from './deliver'
 import { createSignals, type Signals } from './signals'
 import { readStep } from './step'
