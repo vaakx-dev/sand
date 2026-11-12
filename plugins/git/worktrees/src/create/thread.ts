@@ -2,7 +2,7 @@ import type { SessionInfo } from '@sand/chats/contract'
 import type { WorktreeThreadInput } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
-import { repoAt } from '../repo/local'
+import { mainAt } from '../repo/local'
 import { infoOf } from '../sessions/info'
 import { resolveBase } from './base'
 import { rolledBack } from './rollback'
@@ -14,15 +14,15 @@ const newRecord = (deps: WorktreeDeps, main: string, defaultBranch: string | und
 }
 
 export const threadIn = async (deps: WorktreeDeps, input: WorktreeThreadInput): Promise<SessionInfo> => {
-  const local = await repoAt(deps.repos, input.cwd)
-  await deps.store.ready()
-  const record = await deps.queue(local.main, () => newRecord(deps, local.main, local.defaultBranch, input))
-  const session = await startThread(deps, record, local.main, input)
+  const main = await mainAt(deps.repos, input.cwd)
+  const [defaultBranch] = await Promise.all([deps.repos.defaultBranch(main), deps.store.ready()])
+  const record = await deps.queue(main, () => newRecord(deps, main, defaultBranch, input))
+  const session = await startThread(deps, record, main, input)
   record.sessions = [session.id]
   if (record.setup) record.setup.session = session.id
   await deps.setups.start(record)
   deps.proposals.offer(record).catch(deps.report)
-  await deps.changed(local.main, record.path)
+  await deps.changed(main, record.path)
   return infoOf(session)
 }
 

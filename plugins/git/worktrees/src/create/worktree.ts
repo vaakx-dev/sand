@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
+import { addWorktree } from '../repo/add'
 import { branchExists } from '../repo/refs'
 import { longGitMs } from '../repo/timeout'
 import { planSteps } from '../setup/plan'
@@ -33,11 +34,11 @@ interface Addition {
   adopted?: true
 }
 
-const addWorktree = async (deps: WorktreeDeps, addition: Addition): Promise<WorktreeRecord> => {
+const add = async (deps: WorktreeDeps, addition: Addition): Promise<WorktreeRecord> => {
   const { main, path, args, branch, base, temp, adopted } = addition
   const plan = await planSteps(main)
   await mkdir(dirname(path), { recursive: true })
-  await deps.git.ok(main, ['worktree', 'add', ...args], { timeoutMs: longGitMs, what: "Couldn't create the worktree" })
+  await addWorktree(deps.git, main, args, "Couldn't create the worktree")
   const record: WorktreeRecord = {
     id: crypto.randomUUID(),
     path,
@@ -61,7 +62,7 @@ const addWorktree = async (deps: WorktreeDeps, addition: Addition): Promise<Work
 export const createWorktree = async (deps: WorktreeDeps, { main, start, base, branch }: NewWorktree): Promise<WorktreeRecord> => {
   const place = await freePlace(deps.git, deps.folder, main, deps.prefix)
   const name = branch ?? place.branch
-  return addWorktree(deps, {
+  return add(deps, {
     main,
     path: place.path,
     args: ['--no-track', '-b', name, place.path, start],
@@ -74,7 +75,7 @@ export const createWorktree = async (deps: WorktreeDeps, { main, start, base, br
 export const branchWorktree = async (deps: WorktreeDeps, { main, branch, base }: BranchWorktree): Promise<WorktreeRecord> => {
   if (!(await branchExists(deps.git, main, branch))) throw new Error(`There's no local branch called ${branch}.`)
   const place = await freePlace(deps.git, deps.folder, main, deps.prefix)
-  return addWorktree(deps, {
+  return add(deps, {
     main,
     path: place.path,
     args: [place.path, branch],

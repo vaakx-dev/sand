@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { dropKeptHead } from '../remove/kept-head'
+import { emptyStaleTrash } from '../remove/trash'
 import { dayMs, tidyWorktree } from './tidy'
 
 const firstMs = 60_000
@@ -21,6 +22,7 @@ const sweepRecord = async (deps: WorktreeDeps, record: WorktreeRecord, now: numb
 const sweepAll = async (deps: WorktreeDeps) => {
   await deps.store.ready()
   const now = Date.now()
+  await emptyStaleTrash(deps.folder, now).catch(deps.report)
   for (const record of deps.store.all()) {
     await sweepRecord(deps, record, now).catch(error => deps.report(new Error(`Couldn't clean up the worktree at ${record.path}: ${errorMessage(error)}`)))
   }

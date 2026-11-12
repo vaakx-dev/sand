@@ -30,8 +30,7 @@ const findStash = async (git: GitRunner, dir: string, message: string): Promise<
   return entry && { ref: entry.ref, commit: entry.commit }
 }
 
-export const stashChanges = async (git: GitRunner, root: string): Promise<Carried | undefined> => {
-  const files = await changedFiles(git, root)
+export const stashChanges = async (git: GitRunner, root: string, files: number): Promise<Carried | undefined> => {
   if (!files) return undefined
   const message = `sand-move-${crypto.randomUUID()}`
   await git.ok(root, ['stash', 'push', '--include-untracked', '--message', message], { what: "Couldn't set your changes aside" })
