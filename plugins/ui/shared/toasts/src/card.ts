@@ -1,8 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, effect, onTimeout, sig, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Toast } from './contract'
 import { isSticky, type Entry } from './model'
-import { actionRow, outputBlock, toneMark } from './parts'
+import { actionButton, bannerTone, outputBlock } from './parts'
 
 const autoDismissMs = 6000
 
@@ -12,33 +12,31 @@ const autoDismiss = (entry: Entry, paused: () => boolean, dismiss: () => void) =
     onTimeout(dismiss, autoDismissMs)
   })
 
-const isOneLine = ({ detail, output, actions }: Toast) => !detail && !output && !actions?.length
+const toastBanner = (kit: Kit, { tone, title, detail, output, actions = [] }: Toast, dismiss: () => void) =>
+  kit.banner(
+    {
+      tone: bannerTone[tone],
+      title,
+      ...(detail && { detail }),
+      actions: actions.map(action => actionButton(kit, action, dismiss)),
+      dismiss,
+      class: 'shadow-xl',
+    },
+    ...(output ? [outputBlock(kit, output)] : []),
+  )
 
 export const toastCard = (kit: Kit, entry: Entry, dismiss: () => void) => {
   const hovered = sig(false)
   const focused = sig(false)
-  const toast = () => entry.toast.get()
   autoDismiss(entry, () => hovered.get() || focused.get(), dismiss)
   return div(
     {
-      role: () => (toast().tone === 'danger' ? 'alert' : 'status'),
-      class: [
-        'pointer-events-auto flex max-w-md gap-2 rounded-xl bg-neutral-800 px-3 py-2 shadow-xl animate-rise',
-        () => (isOneLine(toast()) ? 'items-center' : 'items-start'),
-      ],
+      class: 'pointer-events-auto max-w-md animate-rise',
       onMouseEnter: () => hovered.set(true),
       onMouseLeave: () => hovered.set(false),
       onFocusIn: () => focused.set(true),
       onFocusOut: () => focused.set(false),
     },
-    dynamicChild(() => toast().tone, tone => toneMark(kit, tone)),
-    div(
-      { class: 'flex min-w-0 flex-1 flex-col gap-1' },
-      span({ class: 'wrap-anywhere' }, () => toast().title),
-      dynamicChild(() => toast().detail, detail => (detail ? div({ class: 'wrap-anywhere whitespace-pre-wrap' }, kit.secondaryText(detail)) : null)),
-      dynamicChild(() => toast().output, output => (output ? outputBlock(kit, output) : null)),
-      dynamicChild(() => toast().actions, actions => (actions?.length ? actionRow(kit, actions, dismiss) : null)),
-    ),
-    kit.closeButton({ title: 'Dismiss', size: 'sm', surface: 'raised', onClick: dismiss }),
+    dynamicChild(entry.toast, toast => toastBanner(kit, toast, dismiss)),
   )
 }

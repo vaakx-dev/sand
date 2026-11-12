@@ -1,7 +1,7 @@
 import { botViews } from '@sand/bots/contract'
 import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { settings } from '@sand/settings/contract'
-import { toasts } from '@sand/toasts/contract'
+import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { threadRouteKind } from '@sand/web-client/contract'
@@ -14,7 +14,7 @@ import { notificationsPage } from './page'
 export default definePlugin({
   name: 'devices-notify',
   description: 'Notifications on this device: the Settings page that turns them on, a notification when the page is hidden, and opening the thread or bot when one is tapped',
-  inject: { wire, pcs, kit, toasts },
+  inject: { wire, pcs, kit },
   apply(ctx) {
     const record = () => {
       const pairing = ctx.pcs.pairing()
@@ -30,7 +30,7 @@ export default definePlugin({
     })
     ctx.effect(() => ctx.wire.on(notifyMomentsOff, kinds => off.set(kinds)))
 
-    const page = { kit: ctx.kit, wire: ctx.wire, toasts: ctx.toasts, on, key, off, device: () => record()?.name ?? 'This device' }
+    const page = { kit: ctx.kit, wire: ctx.wire, toasts: toastsOf(ctx), on, key, off, device: () => record()?.name ?? 'This device' }
     ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', intro: 'When sand tells you that something needs you, and on which devices.', icon: 'bell', group: 'accounts', order: 26, render: () => notificationsPage(page) }))
 
     if (support() !== 'ready') return

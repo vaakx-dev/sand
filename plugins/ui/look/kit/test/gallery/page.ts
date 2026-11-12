@@ -164,8 +164,8 @@ const gallery = () =>
     block('Page sections', pageSections()),
     block(
       'Notes',
-      kit.callout('warning', 'This PC is offline.'),
-      kit.statusBanner({}, kit.bannerTitle('Waiting for a PC')),
+      kit.banner({ tone: 'warning', title: 'This PC is offline.', detail: 'Messages wait until it’s back.', actions: [kit.secondaryAction({ size: 'sm' }, 'Retry now')] }),
+      kit.banner({ icon: 'spinner', title: 'Waiting for a PC', dismiss: () => {} }),
       kit.codeBlock({ copy: () => 'bun run check' }, 'bun run check'),
       line(kit.badge('success', 'Merged'), kit.statusBadge('failed'), kit.keycap('⌘K'), kit.lineStat(12, 3)),
     ),

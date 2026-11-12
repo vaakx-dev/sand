@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Data } from './data'
 import type { UiContext } from './inject'
-import type { Toasts } from './shared/toasts'
+import type { Toasts } from '@sand/toasts/contract'
 
 export type AddStep = 'list' | 'phone' | 'install' | 'link'
 

@@ -9,5 +9,5 @@ export const renameDevice = async (ui: Ui, device: DeviceRecord) => {
   const input = ui.ctx.get(picker)
   if (!input) return
   const name = oneLine((await input.input('Rename device', device.name)) ?? '')
-  if (name && name !== device.name) await ui.toasts.attempt(`Couldn’t rename ${device.name}`, ui.data.devices.rename(device.id, name))
+  if (name && name !== device.name) await ui.toasts.attempt(`Couldn’t rename ${device.name}`, () => ui.data.devices.rename(device.id, name))
 }

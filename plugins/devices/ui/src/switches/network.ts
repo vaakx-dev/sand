@@ -1,9 +1,9 @@
-import { derive, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, show, sig } from '@vaakx-dev/vrui'
 import type { PcSettings } from '../data/pc-settings'
 import type { Ui } from '../ui'
 
 export const networkRows = (ui: Ui, settings: PcSettings, name: () => string) => {
-  const { callout, errorState, loadingState, primaryAction, rowDetail, settingsRow, toggleSwitch } = ui.kit
+  const { banner, errorState, loadingState, primaryAction, rowDetail, settingsRow, toggleSwitch } = ui.kit
   const { network } = settings
   const busy = sig(false)
   const confirming = sig(false)
@@ -17,7 +17,7 @@ export const networkRows = (ui: Ui, settings: PcSettings, name: () => string) =>
   const apply = async (on: boolean) => {
     confirming.set(false)
     busy.set(true)
-    await ui.toasts.attempt(`Couldn’t change who can reach ${name()}`, settings.setScope(on ? 'network' : 'local'))
+    await ui.toasts.attempt(`Couldn’t change who can reach ${name()}`, () => settings.setScope(on ? 'network' : 'local'))
     busy.set(false)
   }
   const toggle = () => {
@@ -41,11 +41,11 @@ export const networkRows = (ui: Ui, settings: PcSettings, name: () => string) =>
     ),
     show(confirming, () =>
       rowDetail(
-        callout(
-          'warning',
-          span({ class: 'min-w-0 flex-1' }, `${ui.device()} reaches ${name()} over your network, so it will lose its connection.`),
-          primaryAction({ size: 'sm', onClick: () => void apply(false) }, 'Turn off anyway'),
-        ),
+        banner({
+          tone: 'warning',
+          title: `${ui.device()} reaches ${name()} over your network, so it will lose its connection.`,
+          actions: [primaryAction({ size: 'sm', onClick: () => void apply(false) }, 'Turn off anyway')],
+        }),
       ),
     ),
   ]

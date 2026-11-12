@@ -23,6 +23,7 @@
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
+    "@sand/toasts": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",

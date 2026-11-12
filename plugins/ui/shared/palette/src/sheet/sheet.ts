@@ -7,7 +7,7 @@ import { pageModel, type PageModel } from './model'
 import type { PageMemory, PageNav } from './nav'
 import { pageBody, pageKeys } from './page'
 
-const pageNav = (stack: Sig<PalettePage[]>): PageNav => {
+const pageNav = (stack: Sig<PalettePage[]>, fail: (error: unknown) => void): PageNav => {
   const held = new Set<PalettePage>()
   const memories = new WeakMap<PalettePage, PageMemory>()
   const top = () => stack.get().at(-1)
@@ -24,7 +24,7 @@ const pageNav = (stack: Sig<PalettePage[]>): PageNav => {
     close(page) {
       if (!page || top() === page) stack.set([])
     },
-    fail: error => console.error(error),
+    fail,
     isTop: page => top() === page,
     hold(page) {
       held.add(page)
@@ -38,8 +38,8 @@ const pageNav = (stack: Sig<PalettePage[]>): PageNav => {
   }
 }
 
-const shownModel = (kit: Kit, stack: Sig<PalettePage[]>, query: () => string) => {
-  const nav = pageNav(stack)
+const shownModel = (kit: Kit, stack: Sig<PalettePage[]>, query: () => string, fail: (error: unknown) => void) => {
+  const nav = pageNav(stack, fail)
   const model = sig<PageModel | undefined>(undefined)
   let opening = true
   effect(() => {
@@ -67,8 +67,8 @@ const scrolled = (look: SheetLook, model: PageModel, body: HTMLElement) =>
     ? body
     : div({ class: () => ['flex min-h-0 flex-col overflow-y-auto overscroll-contain px-2 pb-2', look === 'list' && model.searching.get() && 'h-screen sm:h-auto'] }, body)
 
-export const searchSheet = (kit: Kit, shell: Shell, stack: Sig<PalettePage[]>, query: () => string) => {
-  const model = shownModel(kit, stack, query)
+export const searchSheet = (kit: Kit, shell: Shell, stack: Sig<PalettePage[]>, query: () => string, fail: (error: unknown) => void) => {
+  const model = shownModel(kit, stack, query, fail)
   const shown = (render: (found: PageModel) => HTMLElement) => dynamicChild(model, found => (found ? render(found) : null))
   const closedByShell = () => () => {
     if (stack.get().length) stack.set([])

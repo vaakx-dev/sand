@@ -1,35 +1,29 @@
-import { div, dynamicChild, span } from '@vaakx-dev/vrui'
+import { dynamicChild } from '@vaakx-dev/vrui'
 import type { Ui } from '../ui'
 import type { ConnectionState, Trouble } from './state'
 
 const waiting = new Set<Trouble>(['checking', 'catching-up', 'trying'])
 
 const tryingLine = (ui: Ui, state: ConnectionState, retry: boolean) => {
-  const { secondaryAction, spinner } = ui.kit
-  return div(
-    { role: 'status', class: 'flex min-h-6 items-start gap-2 pb-1' },
-    span({ class: 'inline-flex h-6 shrink-0 items-center' }, spinner('md')),
-    span({ class: 'min-w-0 flex-1 leading-6' }, state.headline),
-    retry && secondaryAction({ size: 'sm', onClick: () => ui.ctx.pcs.retry(state.pc.get()) }, 'Retry now'),
-  )
+  const { banner, secondaryAction } = ui.kit
+  return banner({
+    icon: 'spinner',
+    title: state.headline,
+    actions: retry ? [secondaryAction({ size: 'sm', onClick: () => ui.ctx.pcs.retry(state.pc.get()) }, 'Retry now')] : [],
+  })
 }
 
 const downBlock = (ui: Ui, state: ConnectionState, stopped: boolean) => {
-  const { icon, quietButton, secondaryAction } = ui.kit
-  return div(
-    { role: stopped ? 'alert' : 'status', class: 'flex flex-col gap-2 pb-1' },
-    div(
-      { class: ['flex min-h-6 items-start gap-2', stopped ? 'text-danger-400' : 'text-warning-400'] },
-      span({ class: 'inline-flex h-6 shrink-0 items-center' }, icon('alert', 'md')),
-      span({ class: 'min-w-0 flex-1 leading-6' }, state.headline),
-    ),
-    div({ class: 'pl-6 text-neutral-400' }, state.detail),
-    div(
-      { class: 'flex flex-wrap items-center gap-2 pl-6' },
+  const { banner, quietButton, secondaryAction } = ui.kit
+  return banner({
+    tone: stopped ? 'danger' : 'warning',
+    title: state.headline,
+    detail: state.detail,
+    actions: [
       secondaryAction({ size: 'sm', onClick: () => ui.ctx.pcs.retry(state.pc.get()) }, 'Retry now'),
       quietButton({ size: 'sm', surface: 'raised', onClick: () => ui.open.why(state.pc.get()) }, 'Why?'),
-    ),
-  )
+    ],
+  })
 }
 
 export const connectionBanner = (ui: Ui, state: ConnectionState) =>

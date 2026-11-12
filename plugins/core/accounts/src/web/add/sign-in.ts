@@ -1,5 +1,5 @@
 import type { Kit, Surface } from '@sand/ui-kit/contract'
-import { clock, div, keys, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
+import { clock, div, keys, sig, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import { loginFinish, type LoginAccount, type LoginPending } from '../../contract'
 import { planName } from '../names'
 import { hostOf, openLink, problem, whileBusy } from '../parts'
@@ -26,16 +26,14 @@ export const phaseOf = (account: LoginAccount | undefined): Phase => {
 const step = ({ countMark, secondaryText }: Kit, number: number, text: string, ...extra: Child[]) =>
   div({ class: 'flex items-center gap-3' }, countMark(number), div({ class: 'min-w-0 flex-1' }, secondaryText(text)), ...extra)
 
-const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
+const conflictView = ({ banner, primaryAction, secondaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
   const pc = account.conflict?.pc ?? 'Another PC'
   return sheetStep(
-    callout(
-      'warning',
-      span(
-        { class: 'min-w-0 flex-1' },
-        `${pc} already shares a ${planName(account)} account with this PC. A second sign-in to the same account would keep logging the other one out.`,
-      ),
-    ),
+    banner({
+      tone: 'warning',
+      title: `${pc} already shares a ${planName(account)} account with this PC.`,
+      detail: 'A second sign-in to the same account would keep logging the other one out.',
+    }),
     secondaryAction({ disabled: busy, onClick: actionsFor.anyway }, 'Sign in here anyway'),
     primaryAction({ disabled: busy, onClick: actionsFor.keep }, `Keep using ${pc}'s`),
   )

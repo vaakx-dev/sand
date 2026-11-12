@@ -40,7 +40,7 @@ export const joinOfferSheet = (ui: Ui, dismiss: () => void, close: () => void) =
     const [first] = pc.urls
     if (!first) return
     busy.set(true)
-    const started = await ui.toasts.attempt(`Couldn’t ask ${pc.name} to let ${here()} in`, ui.data.joins.join(first.url, first.id))
+    const started = await ui.toasts.attempt(`Couldn’t ask ${pc.name} to let ${here()} in`, () => ui.data.joins.join(first.url, first.id))
     busy.set(false)
     if (started?.code) state.set({ step: 'wait', join: started })
   }

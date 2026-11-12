@@ -2,7 +2,7 @@ import { inspector } from '@sand/inspector/contract'
 import type { Subject } from '@sand/ui-shell/contract'
 import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { pulse } from '@sand/reactive'
-import { type Toasts, toasts } from '@sand/toasts/contract'
+import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { sig, span, stored } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -20,7 +20,7 @@ export default definePlugin({
     const editors = sig<Editor[]>([])
     const picked = stored('sand.editor', '')
     let asked: string | undefined
-    let notices: Toasts | undefined
+    const notices = toastsOf(ctx)
 
     const load = (device: string) => {
       asked = device
@@ -38,14 +38,11 @@ export default definePlugin({
     const current = () => editors.get().find(editor => editor.id === picked.get()) ?? editors.get()[0]
     const open = ({ device, cwd = '' }: Subject, editor: Editor) => {
       picked.set(editor.id)
-      ctx.wire.call(editorOpen, { cwd, editor: editor.id }, device).catch(error => notices?.error('editor-open', `Couldn't open the folder in ${editor.label}`, error))
+      ctx.wire.call(editorOpen, { cwd, editor: editor.id }, device).catch(error => notices.error(`Couldn't open the folder in ${editor.label}`, error))
     }
 
     ctx.on(wireHello, () => {
       if (asked !== undefined) load(asked)
-    })
-    ctx.watch(toasts, found => {
-      notices = found
     })
     ctx.effect(() =>
       ctx.inspector.row({

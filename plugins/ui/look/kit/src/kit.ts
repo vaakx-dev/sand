@@ -43,8 +43,8 @@ import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
 import { menuLabel, menuReason } from './menus/reason'
 import { navActionIcon } from './nav/action-icon'
 import { sideColumn } from './nav/side-column'
-import { bannerTitle, statusBanner } from './notes/banner'
-import { callout, errorText } from './notes/notes'
+import { banner } from './notes/banner'
+import { errorText } from './notes/notes'
 import { checkRow } from './rows/check-row'
 import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
@@ -93,11 +93,10 @@ export const kit = {
   age,
   appIcon,
   badge,
-  bannerTitle,
+  banner,
   barTitle,
   bottomSheet,
   botFace,
-  callout,
   card,
   checkMark,
   checkRow,
@@ -249,7 +248,6 @@ export const kit = {
   stateIcon,
   statusIcon,
   statusBadge,
-  statusBanner,
   statusLabel,
   statusLine,
   stepMark,

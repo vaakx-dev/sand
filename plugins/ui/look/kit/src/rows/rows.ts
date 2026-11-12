@@ -1,8 +1,8 @@
-import { div, list, span, type Child, type Derive, type Props, type Sig } from '@vaakx-dev/vrui'
+import { div, list, type Child, type Derive, type Props, type Sig } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
 import { metaLook, rowNameLook } from '../heads/text'
 import { opensMark } from '../marks/marks'
-import { callout } from '../notes/notes'
+import { banner } from '../notes/banner'
 import { surfaceFill } from '../surface'
 
 const rowShell = 'py-3'
@@ -46,5 +46,5 @@ export const rowDetail = (...children: Child[]) => div({ class: 'flex min-w-0 fl
 
 export const rowWarning = (text: Child, ...actions: Child[]) =>
   rowDetail(
-    callout('warning', span({ class: 'min-w-0 flex-1' }, text), actions.length ? div({ class: 'flex shrink-0 flex-wrap items-center gap-2' }, ...actions) : null),
+    banner({ tone: 'warning', title: text, actions }),
   )

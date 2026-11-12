@@ -1,5 +1,5 @@
 import { type PairLink, pairJoined } from '@sand/devices-contract'
-import { derive, div, dynamicChild, effect, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, sig } from '@vaakx-dev/vrui'
 import { centered, copyBox } from '../shared/parts'
 import { qrCode } from '../shared/qr'
 import type { Ui } from '../ui'
@@ -17,18 +17,17 @@ const reachNote = (reach: Reach) =>
   reach === 'anywhere' ? 'The phone needs Tailscale, signed in to your account.' : 'The phone can only use sand while it’s on your home wifi.'
 
 const turnOnCallout = (ui: Ui) => {
-  const { callout, secondaryAction } = ui.kit
+  const { banner, secondaryAction } = ui.kit
   const busy = sig(false)
   const turnOn = async () => {
     busy.set(true)
-    await ui.toasts.attempt('Couldn’t turn on Reach from anywhere', ui.data.home.setHttps(true))
+    await ui.toasts.attempt('Couldn’t turn on Reach from anywhere', () => ui.data.home.setHttps(true))
     busy.set(false)
   }
-  return callout(
-    { tone: 'neutral', icon: 'info' },
-    span({ class: 'min-w-0 flex-1' }, 'To use it anywhere, turn on Reach from anywhere first.'),
-    secondaryAction({ size: 'sm', disabled: busy, onClick: () => void turnOn() }, 'Turn on'),
-  )
+  return banner({
+    title: 'To use it anywhere, turn on Reach from anywhere first.',
+    actions: [secondaryAction({ size: 'sm', disabled: busy, onClick: () => void turnOn() }, 'Turn on')],
+  })
 }
 
 const linkView = (ui: Ui, link: PairLink, reach: Reach, url: string) =>

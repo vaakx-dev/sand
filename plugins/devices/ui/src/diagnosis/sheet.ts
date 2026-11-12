@@ -66,8 +66,8 @@ export const diagnosisSheet = (ui: Ui, pc: string, close: () => void) => {
   })
   const copy = async () => {
     const copied = await copyText(diagnosticsText(facts.get()))
-    if (copied) ui.toasts.ok('Diagnostics copied')
-    else ui.toasts.fail('Couldn’t copy the diagnostics', new Error('the browser refused to write to the clipboard'))
+    if (copied) ui.toasts.show({ tone: 'success', title: 'Diagnostics copied' })
+    else ui.toasts.error('Couldn’t copy the diagnostics', new Error('the browser refused to write to the clipboard'))
   }
   const retry = () => {
     ui.ctx.pcs.retry(pc)

@@ -18,7 +18,7 @@ const turnOnAnywhere = (ui: Ui, facts: Facts): AdviceAction | undefined => {
   if (!facts.view?.online) return undefined
   return {
     label: `Turn on for ${facts.name}`,
-    run: () => void ui.toasts.attempt(`Couldn’t turn on Reach from anywhere on ${facts.name}`, ui.ctx.wire.call(tailscaleSet, { https: true }, facts.pc)),
+    run: () => void ui.toasts.attempt(`Couldn’t turn on Reach from anywhere on ${facts.name}`, () => ui.ctx.wire.call(tailscaleSet, { https: true }, facts.pc)),
   }
 }
 

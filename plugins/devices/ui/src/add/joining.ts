@@ -14,8 +14,8 @@ export const reportJoins = (ui: Ui, shown: () => boolean) =>
   ui.data.joins.onResult((result, join) => {
     const name = nameOf(ui, result, join)
     if (result.outcome === 'cancelled') return
-    if (result.outcome !== 'approved') return ui.toasts.bad(unjoinedText(name, result.outcome, result.error))
-    if (!shown()) ui.toasts.ok(`${name} joined your PCs`)
+    if (result.outcome !== 'approved') return ui.toasts.show({ tone: 'danger', title: unjoinedText(name, result.outcome, result.error) })
+    if (!shown()) ui.toasts.show({ tone: 'success', title: `${name} joined your PCs` })
   })
 
 export const whenJoined = (ui: Ui, joined: (title: string, text: string) => void) =>

@@ -10,7 +10,7 @@ import type { Ui } from '../ui'
 
 export const approvePrompt = (ui: Ui, request: JoinRequest, later: () => void) => {
   const { metaLine, overlay, primaryAction, secondaryAction, sheet, sheetBody, sheetFoot, sheetHead, sheetText } = ui.kit
-  const { busy, allow, deny } = deciding(ui, () => request, device => ui.toasts.ok(`Allowed ${device.name}`))
+  const { busy, allow, deny } = deciding(ui, () => request, device => ui.toasts.show({ tone: 'success', title: `Allowed ${device.name}` }))
   const now = ui.data.now
   const described = `approve-${request.id}`
   return overlay(

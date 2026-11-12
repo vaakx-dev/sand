@@ -13,7 +13,7 @@ export const livePairLink = (ui: Ui, kind: 'device' | 'pc') => {
   const { home } = ui.data
   const routes = derive(() => JSON.stringify([home.network.value.get()?.routes, home.tailscale.value.get()?.httpsUrl]))
 
-  const cancel = (token: string) => void ui.toasts.attempt('Couldn’t cancel the old link', ui.ctx.wire.call(pairCancel, { token }))
+  const cancel = (token: string) => void ui.toasts.attempt('Couldn’t cancel the old link', () => ui.ctx.wire.call(pairCancel, { token }))
 
   const create = async () => {
     const before = untrack(() => link.get())

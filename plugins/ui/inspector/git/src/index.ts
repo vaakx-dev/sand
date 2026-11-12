@@ -1,7 +1,7 @@
 import { inspector } from '@sand/inspector/contract'
 import type { Subject } from '@sand/ui-shell/contract'
 import { wire } from '@sand/devices-contract'
-import { toasts } from '@sand/toasts/contract'
+import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { threads } from '@sand/web-client/contract'
 import { onInterval, sig, type Sig, untrack } from '@vaakx-dev/vrui'
@@ -19,14 +19,13 @@ export default definePlugin({
   inject: { inspector, kit, wire },
   apply(ctx) {
     const model = gitModel(ctx, ctx.wire)
+    const notices = toastsOf(ctx)
 
     const titleOf = ({ session }: Subject, { local }: GitFacts) =>
       ctx.get(threads)?.get(session)?.info.title.trim() || (local.branch ? `Changes on ${local.branch}` : 'Changes')
 
     const report = (id: ActionId, title: string, error: unknown) => {
-      const shown = ctx.get(toasts)
-      if (shown) shown.error(`inspector-git:${id}`, title, error)
-      else ctx.report(error)
+      notices.error(title, error, { id: `inspector-git:${id}` })
     }
 
     const runner = (subject: () => Subject, busy: Sig<string | undefined>) => async (id: ActionId, failure: Failure) => {
@@ -48,7 +47,7 @@ export default definePlugin({
       busy.set(step.busy)
       try {
         const done = await step.run()
-        ctx.get(toasts)?.show({ tone: 'success', ...done })
+        notices.show({ tone: 'success', ...done })
       } catch (error) {
         if (failure === 'raise') throw error
         report(id, step.failed, error)
