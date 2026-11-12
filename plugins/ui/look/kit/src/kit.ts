@@ -67,7 +67,8 @@ import { diffRow } from './tools/diff'
 import { diffBlock } from './tools/diff-block'
 import { fold, toolBody, toolCard } from './tools/tool-card'
 import { editing, selecting } from './gesture/busy'
-import { direction } from './gesture/direction'
+import { alongWay, direction } from './gesture/direction'
+import { fromSystemEdge } from './gesture/edge'
 import { follow } from './gesture/follow'
 import { canScrollToward } from './gesture/scroll'
 import { onPressOutside, popupTrigger, pressOpens } from './layers/outside'
@@ -84,7 +85,7 @@ import { openTab } from './page/tab'
 import { firstRowBelow, keepAnchor, loadAbove, nearEnd, toEnd } from './scroll/end'
 import { followEnd } from './scroll/follow'
 
-const gesture = { canScrollToward, direction, editing, follow, selecting }
+const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, selecting }
 
 export const kit = {
   actionTones,

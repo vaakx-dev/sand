@@ -76,7 +76,9 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.shell.subject(({ kind, id }) => {
         const device = ctx.get(threads)?.device()
-        return kind === botRoute && id && device ? { session: id, device } : undefined
+        if (kind !== botRoute || !id || !device) return undefined
+        const folder = parts.store.find(id)?.folder
+        return { session: id, device, ...(folder && { cwd: folder }) }
       }),
     )
     ctx.watch(modelTargets, targets =>

@@ -38,6 +38,15 @@ const aside: Aside = {
   render: route => div({ class: 'p-2' }, div({}, () => `Details of ${route().kind}/${route().id ?? ''}`), div({ class: 'mt-2' }, 'Details content')),
 }
 
+const drawer: Aside = {
+  id: 'fixture-drawer',
+  kind: 'drawer',
+  label: 'Fixture terminal',
+  icon: 'term',
+  shows: route => route.kind === 'fixture',
+  render: () => div({ class: 'p-2' }, 'Terminal content'),
+}
+
 export default definePlugin({
   name: 'shell-fixture',
   description: 'Routes, rows and a sheet for testing the shell',
@@ -68,5 +77,6 @@ export default definePlugin({
     )
     ctx.effect(() => frame.route({ kind: 'fixture', render: screen }))
     ctx.effect(() => frame.aside(aside))
+    ctx.effect(() => frame.aside(drawer))
   },
 })

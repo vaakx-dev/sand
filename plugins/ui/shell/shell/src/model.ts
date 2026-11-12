@@ -14,6 +14,15 @@ export interface Placed {
 
 export type StackDrag = number | 'back' | undefined
 
+export type Axis = 'x' | 'y'
+
+export interface Pull {
+  id: string
+  axis: Axis
+  px: number
+  held: boolean
+}
+
 export const phoneWidth = 600
 
 export const deskWidth = 1000
@@ -55,6 +64,7 @@ export const shellModel = (kit: Kit) => {
   }
   const drawerDrag = sig<number | undefined>(undefined)
   const stackDrag = sig<StackDrag>(undefined)
+  const pull = sig<Pull | undefined>(undefined)
   const leaving = sig<Route[]>([])
 
   const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
@@ -123,7 +133,7 @@ export const shellModel = (kit: Kit) => {
     layer.set(undefined)
   }
 
-  const drawerOpen = derive(() => state.get() === 'drawer' && layer.get() === layers.drawer)
+  const drawerOpen = derive(() => (state.get() === 'drawer' || (state.get() === 'phone' && pushed.get().length > 0)) && layer.get() === layers.drawer)
   const setDrawer = (open: boolean) => {
     if (open === drawerOpen.get()) return
     if (open) enter(layers.drawer)
@@ -158,36 +168,34 @@ export const shellModel = (kit: Kit) => {
   const setCardOpen = (show: boolean) => (floats.get() ? cardsOpen : popsOpen).update(all => ({ ...all, [threadKey.get()]: show }))
   const roomy = derive(() => Boolean(openCard.get()))
 
-  const asideSheets = new Map<string, SheetSpec>()
-  const asideSheet = (spec: Aside) => {
-    const found = asideSheets.get(spec.id)
-    if (found) return found
-    const made: SheetSpec = { label: spec.label, look: 'list', head: () => null, body: () => spec.render(() => beside.get()) }
-    asideSheets.set(spec.id, made)
-    return made
-  }
   const opened: Record<AsideKind, typeof openCard> = { card: openCard, panel: openPanel, drawer: openDrawer }
 
   const asideShown = (spec: Aside) => {
-    if (!phone.get()) return (spec.kind === 'card' && !floats.get() ? openPop : opened[spec.kind]).get()?.id === spec.id
-    if (spec.kind !== 'card') return pushedAside.get()?.id === spec.id
-    const shown = sheetShown.get()
-    return shown !== undefined && shown === asideSheets.get(spec.id)
+    if (phone.get()) return pushedAside.get()?.id === spec.id
+    return (spec.kind === 'card' && !floats.get() ? openPop : opened[spec.kind]).get()?.id === spec.id
   }
 
   const showAside = (id: string, show: boolean) => {
     const spec = asides.items.get().find(found => found.id === id)
     if (!spec) return
-    if (!phone.get() && spec.kind === 'card') return setCardOpen(show)
-    if (!phone.get()) return picked[spec.kind].set(show ? id : '')
-    if (spec.kind !== 'card') {
-      if (show) open({ kind: asideKind, id })
-      else if (pushedAside.get()?.id === id) nav.back()
-      return
-    }
-    if (show) showSheet(asideSheet(spec))
-    else if (sheetShown.get() === asideSheets.get(id)) leave()
+    if (phone.get() && show) return open({ kind: asideKind, id })
+    if (phone.get()) return pushedAside.get()?.id === id ? nav.back() : undefined
+    if (spec.kind === 'card') return setCardOpen(show)
+    picked[spec.kind].set(show ? id : '')
   }
+
+  const axisOf = (route: Route | undefined): Axis =>
+    route?.kind === asideKind && asides.items.get().find(spec => spec.id === route.id)?.kind === 'drawer' ? 'y' : 'x'
+  const topAxis = derive(() => axisOf(pushed.get().at(-1)))
+  const rightAsides = derive(() => shownAsides.get().filter(spec => spec.kind !== 'drawer'))
+  const nextRight = () => {
+    const top = pushedAside.get()
+    if (!top) return rightAsides.get()[0]
+    const shown = rightAsides.get()
+    const at = shown.indexOf(top)
+    return at < 0 ? undefined : shown[at + 1]
+  }
+  const bottomAside = () => (pushedAside.get() ? undefined : shownAsides.get().find(spec => spec.kind === 'drawer'))
 
   const subjectOf = (route: Route) => subjects.get().reduce<ReturnType<SubjectSource>>((found, source) => found ?? source(route), undefined)
 
@@ -209,6 +217,11 @@ export const shellModel = (kit: Kit) => {
     alive,
     leaving,
     stackDrag,
+    pull,
+    axisOf,
+    topAxis,
+    nextRight,
+    bottomAside,
     drawerDrag,
     drawerOpen,
     setDrawer,

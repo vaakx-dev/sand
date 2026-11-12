@@ -73,6 +73,7 @@ export interface JobEntry {
 }
 
 export interface BotSummary extends Bot {
+  folder: string
   status: BotStatus
   spent: number
   hold?: BotHold

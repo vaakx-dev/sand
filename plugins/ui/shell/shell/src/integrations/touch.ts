@@ -1,6 +1,6 @@
 import type { Drag, Kit } from '@sand/ui-kit/contract'
 import { listen } from '@vaakx-dev/vrui'
-import type { Swipe } from '../contract'
+import type { Swipe, Way } from '../contract'
 
 const edge = 24
 
@@ -10,6 +10,7 @@ interface Press {
   x: number
   y: number
   target: EventTarget | null
+  way?: Way
   drag?: Drag
 }
 
@@ -19,13 +20,13 @@ const browserEdge = (x: number) => !installed() && (x < edge || x > document.doc
 
 const blocked = ({ hasOpenLayer, gesture }: Kit, target: EventTarget | null) => hasOpenLayer(true) || gesture.editing(target) || gesture.selecting()
 
-const startDrag = ({ gesture }: Kit, press: Press, { clientX }: Touch, time: number, begin: () => Swipe | undefined) => {
-  if (gesture.canScrollToward(press.target, clientX - press.x)) return
-  const swipe = begin()
-  return swipe && gesture.follow(swipe, clientX, time)
+const startDrag = ({ gesture }: Kit, press: Press, way: Way, { clientX, clientY }: Touch, time: number, begin: (way: Way) => Swipe | undefined) => {
+  if (gesture.fromSystemEdge(way, press.x, press.y) || gesture.canScrollToward(press.target, way)) return
+  const swipe = begin(way)
+  return swipe && gesture.follow(swipe, gesture.alongWay(way, clientX, clientY), time)
 }
 
-export const swipeGesture = (kit: Kit, begin: () => Swipe | undefined) => {
+export const swipeGesture = (kit: Kit, begin: (way: Way) => Swipe | undefined) => {
   let press: Press | undefined
 
   const release = ({ timeStamp }: TouchEvent) => {
@@ -51,18 +52,14 @@ export const swipeGesture = (kit: Kit, begin: () => Swipe | undefined) => {
     (event: TouchEvent) => {
       const [touch] = event.touches
       if (!press || !touch) return
-      if (press.drag) {
-        press.drag.move(touch.clientX, event.timeStamp)
+      if (press.drag && press.way) {
+        press.drag.move(kit.gesture.alongWay(press.way, touch.clientX, touch.clientY), event.timeStamp)
         return
       }
-      const dx = touch.clientX - press.x
-      const way = kit.gesture.direction(dx, touch.clientY - press.y)
+      const way = kit.gesture.direction(touch.clientX - press.x, touch.clientY - press.y)
       if (way === 'undecided') return
-      if (way !== 'sideways') {
-        press = undefined
-        return
-      }
-      press.drag = startDrag(kit, press, touch, event.timeStamp, begin)
+      press.way = way
+      press.drag = startDrag(kit, press, way, touch, event.timeStamp, begin)
       if (!press.drag) press = undefined
     },
     passive,
