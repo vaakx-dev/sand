@@ -9,6 +9,8 @@ const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 export const toolButton = (model: Model, label: string, glyph: string, onClick: () => void) =>
   model.kit.iconButton({ title: label, 'aria-label': label, onClick }, model.kit.icon(glyph))
 
+const sidebarButton = (model: Model) => toolButton(model, 'Show the sidebar', 'sidebar', () => model.setDrawer(true))
+
 export const deskFrames = (model: Model, built: Built) =>
   div(
     { class: 'flex min-h-0 min-w-0 flex-1' },
@@ -17,7 +19,7 @@ export const deskFrames = (model: Model, built: Built) =>
       bar(
         show(
           () => model.state.get() === 'drawer',
-          () => toolButton(model, 'Show the sidebar', 'sidebar', () => model.setDrawer(true)),
+          () => sidebarButton(model),
         ),
         built.head,
         asideToggles(model),
@@ -29,13 +31,5 @@ export const deskFrames = (model: Model, built: Built) =>
     asidePanel(model),
   )
 
-export const phoneFrame = (model: Model, built: Built) =>
-  section(
-    { class: fill },
-    bar(
-      toolButton(model, 'Back', 'back', () => model.back()),
-      built.head,
-      asideToggles(model),
-    ),
-    div({ class: fill }, built.main),
-  )
+export const phoneFrame = (model: Model, built: Built | undefined) =>
+  section({ class: fill }, bar(sidebarButton(model), built?.head ?? div({ class: 'flex-1' }), asideToggles(model)), div({ class: fill }, built?.main ?? null))

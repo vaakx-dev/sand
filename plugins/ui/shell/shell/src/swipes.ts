@@ -1,5 +1,5 @@
 import type { Aside, Swipe, Way } from './contract'
-import { asideKind, drawerReach, type Axis, type Model } from './model'
+import type { Axis, Model } from './model'
 
 const projection = 180
 
@@ -9,76 +9,78 @@ const passes = (px: number, velocity: number, reach: number) => px + velocity * 
 
 const reachOf = (model: Model, axis: Axis) => (axis === 'y' ? model.height.get() : model.width.get())
 
-const stackSwipe = (model: Model): Swipe => {
-  const reach = reachOf(model, model.topAxis.get())
+const pullSwipe = (model: Model, spec: Aside): Swipe => {
+  const reach = reachOf(model, model.axisOf(spec))
   let px = 0
   return {
     move(delta) {
-      px = clamp(delta, 0, reach)
-      model.stackDrag.set(px)
+      px = clamp(-delta, 0, reach)
+      model.pull.set({ id: spec.id, px, held: true })
     },
     end(velocity) {
-      if (px > 0 && passes(px, velocity, reach)) {
-        model.stackDrag.set('back')
-        return model.back()
-      }
-      model.stackDrag.set(undefined)
+      model.pull.set(undefined)
+      if (px > 0 && passes(px, -velocity, reach)) model.showAside(spec.id, true)
     },
   }
 }
 
-const pullSwipe = (model: Model, spec: Aside, axis: Axis): Swipe => {
-  const reach = reachOf(model, axis)
-  let px = 0
-  const show = (held: boolean) => {
-    model.pull.set({ id: spec.id, axis, px, held })
-    if (axis === 'x') model.stackDrag.set(held ? -px : undefined)
-  }
+const dismissSwipe = (model: Model, spec: Aside): Swipe => {
+  const reach = reachOf(model, model.axisOf(spec))
+  let px = reach
   return {
     move(delta) {
-      px = clamp(-delta, 0, reach)
-      show(true)
+      px = clamp(reach - delta, 0, reach)
+      model.pull.set({ id: spec.id, px, held: true })
     },
     end(velocity) {
-      if (px > 0 && passes(px, -velocity, reach)) return model.open({ kind: asideKind, id: spec.id })
-      px = 0
-      show(false)
+      model.pull.set(undefined)
+      if (px < reach && passes(reach - px, velocity, reach)) model.showAside(spec.id, false)
     },
   }
 }
 
 const drawerSwipe = (model: Model): Swipe => {
-  const from = model.drawerOpen.get() ? drawerReach : 0
+  const reach = model.drawerReach.get()
+  const from = model.drawerOpen.get() ? reach : 0
   let px = from
   return {
     move(delta) {
-      px = clamp(from + delta, 0, drawerReach)
+      px = clamp(from + delta, 0, reach)
       model.drawerDrag.set(px)
     },
     end(velocity) {
       model.drawerDrag.set(undefined)
-      model.setDrawer(passes(px, velocity, drawerReach))
+      model.setDrawer(passes(px, velocity, reach))
     },
   }
 }
 
-const sidewaysOnPhone = (model: Model, way: Way) => {
-  if (model.drawerOpen.get()) return way === 'left' ? drawerSwipe(model) : undefined
-  if (way === 'right') return model.pushedAside.get() ? stackSwipe(model) : drawerSwipe(model)
-  const next = model.nextRight()
-  return next && pullSwipe(model, next, 'x')
+const dismissWay: Record<Axis, Way> = { x: 'right', y: 'down' }
+
+const pullTo = (model: Model, spec: Aside | undefined) => spec && pullSwipe(model, spec)
+
+const coveredSwipe = (model: Model, cover: Aside, way: Way) => {
+  if (way === dismissWay[model.axisOf(cover)]) return dismissSwipe(model, cover)
+  return way === 'left' ? pullTo(model, model.nextRight()) : undefined
 }
 
-const verticalOnPhone = (model: Model, way: Way) => {
-  if (model.drawerOpen.get()) return undefined
-  if (way === 'down') return model.topAxis.get() === 'y' ? stackSwipe(model) : undefined
-  const below = model.bottomAside()
-  return below && pullSwipe(model, below, 'y')
+const openingSwipe = (model: Model, way: Way) => {
+  switch (way) {
+    case 'right':
+      return drawerSwipe(model)
+    case 'left':
+      return pullTo(model, model.nextRight())
+    case 'up':
+      return pullTo(model, model.bottomAside())
+    case 'down':
+      return undefined
+  }
 }
 
 const phoneSwipe = (model: Model, way: Way) => {
-  if (model.pushed.get().length === 0) return undefined
-  return way === 'left' || way === 'right' ? sidewaysOnPhone(model, way) : verticalOnPhone(model, way)
+  if (model.drawerOpen.get()) return way === 'left' ? drawerSwipe(model) : undefined
+  const cover = model.coverAside.get()
+  return cover ? coveredSwipe(model, cover, way) : openingSwipe(model, way)
 }
 
 export const edgeSwipe = (model: Model, way: Way): Swipe | undefined => {

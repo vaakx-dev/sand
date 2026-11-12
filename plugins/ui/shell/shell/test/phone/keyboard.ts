@@ -41,6 +41,7 @@ beforeAll(async () => {
   sand = await startSandbox()
   ;({ browser, context } = await touchBrowser())
   const { page } = await openAt(context, sand.url, size)
+  await page.getByRole('button', { name: 'Show the sidebar' }).click()
   await page.getByRole('button', { name: /Plain screen/ }).click()
   await page.getByText('Fixture plain').waitFor()
   screen = page.url()

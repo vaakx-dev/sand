@@ -4,7 +4,7 @@ import { definePlugin } from 'drydock'
 
 const unbroken = 'x'.repeat(300)
 
-const titles: Record<string, string> = { plain: 'Plain screen', split: 'Split screen' }
+const titles: Record<string, string> = { plain: 'Plain screen', split: 'Split screen', chat: 'Chat screen' }
 
 const lines = Array.from({ length: 40 }, (_, line) => p({ class: 'py-2' }, `Line ${line} of a long screen.`))
 
@@ -36,6 +36,16 @@ const aside: Aside = {
   icon: 'eye',
   shows: route => route.kind === 'fixture',
   render: route => div({ class: 'p-2' }, div({}, () => `Details of ${route().kind}/${route().id ?? ''}`), div({ class: 'mt-2' }, 'Details content')),
+}
+
+const panel: Aside = {
+  id: 'fixture-panel',
+  kind: 'panel',
+  label: 'Fixture panel',
+  icon: 'panel',
+  order: 1,
+  shows: route => route.kind === 'fixture',
+  render: () => div({ class: 'p-2' }, 'Panel content'),
 }
 
 const drawer: Aside = {
@@ -70,13 +80,16 @@ export default definePlugin({
             rows: [
               { id: 'plain', label: 'Plain screen', status: 'running', at: Date.now() - 4 * 60_000, to: { kind: 'fixture', id: 'plain' } },
               { id: 'split', label: 'Split screen', status: 'waiting', to: { kind: 'fixture', id: 'split' } },
+              { id: 'chat', label: 'Chat screen', to: { kind: 'fixture', id: 'chat' } },
             ],
           },
         ],
       }),
     )
     ctx.effect(() => frame.route({ kind: 'fixture', render: screen }))
+    ctx.effect(() => frame.subject(route => (route.kind === 'fixture' && route.id === 'chat' ? { session: 'fixture-chat', owner: 'thread', device: 'fixture' } : undefined)))
     ctx.effect(() => frame.aside(aside))
+    ctx.effect(() => frame.aside(panel))
     ctx.effect(() => frame.aside(drawer))
   },
 })

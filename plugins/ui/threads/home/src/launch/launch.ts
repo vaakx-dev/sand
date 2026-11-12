@@ -9,7 +9,7 @@ import { newChatPage } from '../palette/projects'
 import { newThreadHome, type HomeHeadPart } from '../contract'
 import { currentPick } from './picks'
 import { newThreadScreen } from './screen'
-import { newThreadRoute, startChat, type StartParts } from './start'
+import { startChat, type StartParts } from './start'
 
 export interface LaunchParts extends StartParts {
   kit: Kit
@@ -26,7 +26,7 @@ export const newThread = (parts: StartParts) => {
 export const launch = (parts: LaunchParts) => {
   const { ctx, kit, shell, threads, pulse } = parts
   const pick = owned(ctx, () => pulse.read(() => currentPick(ctx, threads)))
-  const showing = () => [homeRoute, newThreadRoute].includes(shell.current().kind)
+  const showing = () => shell.current().kind === homeRoute
   const found = sig<Composer | undefined>(undefined)
   const head = sig<HomeHeadPart[]>([])
   ctx.watch(composerService, service => found.set(service))
@@ -61,7 +61,7 @@ export const launch = (parts: LaunchParts) => {
     shell.subject(({ kind }) => {
       pulse.version.get()
       const draft = threads.drafting()
-      return [homeRoute, newThreadRoute].includes(kind) && draft ? { session: draft.id, owner: 'thread', device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
+      return kind === homeRoute && draft ? { session: draft.id, owner: 'thread', device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
     }),
   )
   ctx.watch(modelTargets, targets =>
@@ -72,5 +72,4 @@ export const launch = (parts: LaunchParts) => {
     }),
   )
   ctx.effect(() => shell.route({ kind: homeRoute, render: screen }))
-  ctx.effect(() => shell.route({ kind: newThreadRoute, render: screen }))
 }

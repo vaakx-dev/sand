@@ -188,7 +188,7 @@ export interface ChipSource {
   items(scope: ChipScope): ChipItem[]
 }
 
-export type Place = 'overlay' | 'top' | 'home'
+export type Place = 'overlay' | 'top'
 
 export type Way = 'left' | 'right' | 'up' | 'down'
 

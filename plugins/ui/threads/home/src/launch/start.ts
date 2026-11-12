@@ -10,9 +10,7 @@ export interface StartParts {
   threads: Threads
 }
 
-export const newThreadRoute = 'new-thread'
-
-export const openNewThread = ({ shell }: StartParts) => shell.open({ kind: shell.state() === 'phone' ? newThreadRoute : homeRoute })
+export const openNewThread = ({ shell }: StartParts) => shell.open({ kind: homeRoute })
 
 export const startChat = (parts: StartParts, path: string, device: string) => {
   chosen.set({ path, device })

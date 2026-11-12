@@ -1,7 +1,7 @@
 {
   "name": "@sand/ui-shell",
   "version": "0.0.0",
-  "description": "The app's frame: sidebar, screens and their routes, the phone stack, sheets and the chips above composers",
+  "description": "The app's frame: sidebar, screens and their routes, phone covers, sheets and the chips above composers",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Shell",
-    "summary": "The sidebar, the screens features open in it, and on phones a stack of screens you swipe back through"
+    "summary": "The sidebar, the screens features open in it, and on phones the sidebar and side views as covers you swipe over the chat"
   },
   "dependencies": {
     "@sand/engine": "workspace:*",

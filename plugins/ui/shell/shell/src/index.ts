@@ -9,7 +9,7 @@ import { deskView } from './desk'
 import { swipeGesture } from './integrations/touch'
 import { shellModel, type Model, type Placed } from './model'
 import { sheetHost } from './sheet'
-import { phoneView } from './stack'
+import { phoneView } from './phone'
 import { edgeSwipe } from './swipes'
 import { fitArea, keyboardArea } from './viewport'
 import type { Registry } from './registry'
@@ -45,7 +45,7 @@ const shellView = (model: Model) => {
 
 export default definePlugin({
   name: 'shell',
-  description: "The app's frame: sidebar, screens and their routes, the phone stack, sheets and the chips above composers",
+  description: "The app's frame: sidebar, screens and their routes, phone covers, sheets and the chips above composers",
   inject: { kit },
   apply(ctx) {
     const model = owned(ctx, () => shellModel(ctx.kit))

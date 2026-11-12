@@ -12,13 +12,10 @@ export interface Placed {
   order: number
 }
 
-export type StackDrag = number | 'back' | undefined
-
 export type Axis = 'x' | 'y'
 
 export interface Pull {
   id: string
-  axis: Axis
   px: number
   held: boolean
 }
@@ -26,8 +23,6 @@ export interface Pull {
 export const phoneWidth = 600
 
 export const deskWidth = 1000
-
-export const drawerReach = 288
 
 export const roomyMain = 912
 
@@ -37,9 +32,7 @@ export const panelWidth = 352
 
 export const cardHeight = 360
 
-export const asideKind = 'aside'
-
-const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover' } as const
+const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover', aside: 'aside:' } as const
 
 const home: Route = { kind: homeRoute }
 
@@ -50,7 +43,7 @@ export const shellModel = (kit: Kit) => {
   const chips = registry<ChipSource>()
   const asides = registry<Aside>()
   const subjects = sig<SubjectSource[]>([])
-  const places: Record<Place, ReturnType<typeof registry<Placed>>> = { overlay: registry(), top: registry(), home: registry() }
+  const places: Record<Place, ReturnType<typeof registry<Placed>>> = { overlay: registry(), top: registry() }
 
   const width = sig(window.innerWidth)
   const height = sig(window.innerHeight)
@@ -63,14 +56,14 @@ export const shellModel = (kit: Kit) => {
     drawer: stored<string | null>('sand.shell.drawer', ''),
   }
   const drawerDrag = sig<number | undefined>(undefined)
-  const stackDrag = sig<StackDrag>(undefined)
   const pull = sig<Pull | undefined>(undefined)
-  const leaving = sig<Route[]>([])
+  const lastChat = stored<Route | null>('sand.shell.last-chat', null)
 
   const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
-  const known = (kind: string) => (kind === asideKind ? phone.get() : Boolean(specFor(kind)))
+  const known = (kind: string) => Boolean(specFor(kind))
   const phone = derive(() => width.get() < phoneWidth)
-  const nav = navigation(kind => untrack(() => known(kind)), () => untrack(() => phone.get()))
+  const landing = () => (untrack(() => phone.get()) ? (lastChat.get() ?? home) : home)
+  const nav = navigation(kind => untrack(() => known(kind)), landing)
 
   const current = derive(() => {
     const { route } = nav.place.get()
@@ -83,28 +76,25 @@ export const shellModel = (kit: Kit) => {
     if (now.kind !== last.kind) untrack(() => before.set(last))
     last = now
   })
-  const pushed = derive(() => (current.get().kind === homeRoute ? [] : nav.place.get().stack.filter(route => known(route.kind))))
 
-  const beside = derive(() => (current.get().kind === asideKind ? (pushed.get().at(-2) ?? home) : current.get()))
-  const shownAsides = derive(() => asides.items.get().filter(spec => spec.shows(beside.get())))
+  const shownAsides = derive(() => asides.items.get().filter(spec => spec.shows(current.get())))
   const openOf = (kind: AsideKind) =>
     derive(() => {
       if (phone.get()) return undefined
       const id = picked[kind].get()
       return shownAsides.get().find(spec => spec.kind === kind && (id === null || spec.id === id))
     })
-  const threadKey = derive(() => screenKey(beside.get()))
+  const threadKey = derive(() => screenKey(current.get()))
   const cardsOpen = stored<Record<string, boolean>>('sand.shell.card-open', {})
   const popsOpen = sig<Record<string, boolean>>({})
   const cardSpec = openOf('card')
   const openPanel = openOf('panel')
   const openDrawer = openOf('drawer')
-  const pushedAside = derive(() => (current.get().kind === asideKind ? asides.items.get().find(spec => spec.id === current.get().id) : undefined))
 
-  const routeOf = (key: string) => (phone.get() ? pushed.get() : [current.get()]).find(route => screenKey(route) === key)
+  const routeOf = (key: string) => (screenKey(current.get()) === key ? current.get() : undefined)
   const screens = screenCache(specFor, routeOf, text => kit.barTitle(text))
   const screen = () => screens.get(current.get())
-  const alive = derive(() => new Set((phone.get() ? [...pushed.get(), ...leaving.get()] : [current.get()]).map(screenKey)))
+  const alive = derive(() => new Set([screenKey(current.get())]))
 
   const state = derive<ShellState>(() => {
     const size = width.get()
@@ -133,7 +123,8 @@ export const shellModel = (kit: Kit) => {
     layer.set(undefined)
   }
 
-  const drawerOpen = derive(() => (state.get() === 'drawer' || (state.get() === 'phone' && pushed.get().length > 0)) && layer.get() === layers.drawer)
+  const drawerReach = derive(() => (phone.get() ? width.get() : sideWidth))
+  const drawerOpen = derive(() => state.get() !== 'wide' && layer.get() === layers.drawer)
   const setDrawer = (open: boolean) => {
     if (open === drawerOpen.get()) return
     if (open) enter(layers.drawer)
@@ -170,34 +161,47 @@ export const shellModel = (kit: Kit) => {
 
   const opened: Record<AsideKind, typeof openCard> = { card: openCard, panel: openPanel, drawer: openDrawer }
 
+  const coverId = derive(() => {
+    const name = layer.get()
+    return phone.get() && name?.startsWith(layers.aside) ? name.slice(layers.aside.length) : undefined
+  })
+  const coverAside = derive(() => shownAsides.get().find(spec => spec.id === coverId.get()))
+  const covered = derive(() => drawerOpen.get() || Boolean(coverAside.get()))
+
   const asideShown = (spec: Aside) => {
-    if (phone.get()) return pushedAside.get()?.id === spec.id
+    if (phone.get()) return coverId.get() === spec.id
     return (spec.kind === 'card' && !floats.get() ? openPop : opened[spec.kind]).get()?.id === spec.id
+  }
+
+  const showCover = (id: string, show: boolean) => {
+    if (show) return enter(`${layers.aside}${id}`)
+    if (coverId.get() === id) leave()
   }
 
   const showAside = (id: string, show: boolean) => {
     const spec = asides.items.get().find(found => found.id === id)
     if (!spec) return
-    if (phone.get() && show) return open({ kind: asideKind, id })
-    if (phone.get()) return pushedAside.get()?.id === id ? nav.back() : undefined
+    if (phone.get()) return showCover(id, show)
     if (spec.kind === 'card') return setCardOpen(show)
     picked[spec.kind].set(show ? id : '')
   }
 
-  const axisOf = (route: Route | undefined): Axis =>
-    route?.kind === asideKind && asides.items.get().find(spec => spec.id === route.id)?.kind === 'drawer' ? 'y' : 'x'
-  const topAxis = derive(() => axisOf(pushed.get().at(-1)))
-  const rightAsides = derive(() => shownAsides.get().filter(spec => spec.kind !== 'drawer'))
+  const axisOf = (spec: Aside): Axis => (spec.kind === 'drawer' ? 'y' : 'x')
+  const rightAsides = derive(() => shownAsides.get().filter(spec => axisOf(spec) === 'x'))
   const nextRight = () => {
-    const top = pushedAside.get()
+    const top = coverAside.get()
     if (!top) return rightAsides.get()[0]
     const shown = rightAsides.get()
     const at = shown.indexOf(top)
     return at < 0 ? undefined : shown[at + 1]
   }
-  const bottomAside = () => (pushedAside.get() ? undefined : shownAsides.get().find(spec => spec.kind === 'drawer'))
+  const bottomAside = () => (coverAside.get() ? undefined : shownAsides.get().find(spec => axisOf(spec) === 'y'))
 
   const subjectOf = (route: Route) => subjects.get().reduce<ReturnType<SubjectSource>>((found, source) => found ?? source(route), undefined)
+  effect(() => {
+    const route = current.get()
+    if (route.kind !== homeRoute && subjectOf(route)) untrack(() => lastChat.set(route))
+  })
 
   return {
     kit,
@@ -211,17 +215,16 @@ export const shellModel = (kit: Kit) => {
     phone,
     state,
     current,
-    pushed,
     screen,
     screens,
     alive,
-    leaving,
-    stackDrag,
     pull,
     axisOf,
-    topAxis,
     nextRight,
     bottomAside,
+    coverAside,
+    covered,
+    drawerReach,
     drawerDrag,
     drawerOpen,
     setDrawer,
@@ -237,8 +240,6 @@ export const shellModel = (kit: Kit) => {
     height,
     openPanel,
     openDrawer,
-    pushedAside,
-    beside,
     asideShown,
     showAside,
     roomy,
@@ -257,7 +258,6 @@ export const shellModel = (kit: Kit) => {
       layer.set(addressLayer())
       if (!layer.get()) sheet.set(undefined)
       followCover()
-      stackDrag.set(undefined)
       nav.follow()
     },
   }

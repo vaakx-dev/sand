@@ -1,16 +1,12 @@
-import { isRecord } from '@sand/util'
 import { addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/contract'
 import { homeRoute, type Route } from './contract'
 
 export interface Place {
   route: Route
-  stack: Route[]
   depth: number
 }
 
 const params = { kind: 'view', id: 'id', tab: 'tab' } as const
-
-const stackKey = 'shellStack'
 
 const depthKey = 'shellDepth'
 
@@ -25,17 +21,11 @@ const routeOf = (value: Record<string, unknown>): Route[] => {
   return kind ? [{ kind, ...(id !== undefined && { id }), ...(tab !== undefined && { tab }) }] : []
 }
 
-const savedStack = (value: unknown) => (Array.isArray(value) ? value.flatMap(item => (isRecord(item) ? routeOf(item) : [])) : [])
-
-export const requestedPlace = (): Place => {
-  const { [params.kind]: kind = homeRoute, [params.id]: id, [params.tab]: tab } = addressParams()
-  const [route = { kind: homeRoute }] = routeOf({ kind, id, tab })
-  const state = addressState()
-  const saved = savedStack(state[stackKey])
-  const top = saved.at(-1)
-  const stack = top && sameScreen(top, route) ? [...saved.slice(0, -1), route] : route.kind === homeRoute ? [] : [route]
-  const depth = state[depthKey]
-  return { route, stack, depth: typeof depth === 'number' ? depth : 0 }
+export const requestedPlace = (fallback: Route = { kind: homeRoute }): Place => {
+  const { [params.kind]: kind, [params.id]: id, [params.tab]: tab } = addressParams()
+  const [route = fallback] = routeOf({ kind, id, tab })
+  const depth = addressState()[depthKey]
+  return { route, depth: typeof depth === 'number' ? depth : 0 }
 }
 
 export const ownEntry = () => typeof addressState()[depthKey] === 'number'
@@ -44,7 +34,7 @@ export const samePlace = (a: Place, b: Place) => JSON.stringify(a) === JSON.stri
 
 const urlOf = ({ kind, id, tab }: Route) => ({ [params.kind]: kind === homeRoute ? undefined : kind, [params.id]: id, [params.tab]: tab })
 
-const stateOf = ({ stack, depth }: Place) => ({ [stackKey]: stack, [depthKey]: depth })
+const stateOf = ({ depth }: Place) => ({ [depthKey]: depth })
 
 export const recordPlace = (place: Place, replace: boolean) => {
   if (replace) updateAddress(urlOf(place.route), stateOf(place))
