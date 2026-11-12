@@ -48,7 +48,7 @@ export const botAwait = request('bot.await', {
   output: type<BotAnswer>(),
   callers: 'any',
 })
-export const botInterrupt = request('bot.interrupt', { input: one, output: type<boolean>() })
+export const botInterrupt = request('bot.interrupt', { input: one, output: type<boolean>(), callers: 'any' })
 export const botOpen = request('bot.open', {
   input: () =>
     one().extend({

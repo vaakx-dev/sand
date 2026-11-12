@@ -4,7 +4,7 @@ import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { serveWatches } from './serve'
-import { offerTools } from './tools'
+import { offerWatchTools } from '../tools'
 import { owner } from './view'
 import { wakeBot } from './wake'
 
@@ -18,7 +18,7 @@ export default definePlugin({
     ctx.on(botRemove, bot => {
       for (const watch of ctx.watches.list(owner, bot)) ctx.watches.remove(watch.id)
     })
-    ctx.watch(mcpTools, found => found && offerTools(ctx, found))
+    ctx.watch(mcpTools, found => found && offerWatchTools(found))
     ctx.watch(server, found => found && serveWatches(ctx, found))
   },
 })

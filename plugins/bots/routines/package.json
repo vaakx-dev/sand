@@ -9,6 +9,8 @@
   "sand": {
     "feature": "routines",
     "runtime": "./src/index.ts",
+    "host": "./src/host.ts",
+    "cli": "./src/host.ts",
     "web": "./src/web/index.ts",
     "label": "Bot routines",
     "summary": "Lets your bots remind you and do things on a schedule"
@@ -20,9 +22,9 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
     "@sand/schedules": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/tools": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
@@ -32,6 +34,7 @@
   "devDependencies": {
     "@sand/engine": "workspace:*",
     "@sand/harness": "workspace:*",
-    "@sand/replay": "workspace:*"
+    "@sand/replay": "workspace:*",
+    "@sand/tools": "workspace:*"
   }
 }

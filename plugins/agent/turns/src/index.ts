@@ -10,7 +10,6 @@ import { serveTurns } from './serve'
 
 const found = (info: EngineTurn | undefined) => info && threadTurn(info)
 
-const offered = needs.filter(need => need !== 'routines')
 
 export default definePlugin({
   name: 'turns',
@@ -18,7 +17,7 @@ export default definePlugin({
   inject,
   apply(ctx) {
     ctx.effect(() => ctx.providerThreads.brief('thread', threadBrief(ctx)))
-    ctx.effect(() => ctx.tools.offer('thread', () => offered))
+    ctx.effect(() => ctx.tools.offer('thread', () => needs))
     const runner = ctx.engine.attach(threadConversations(ctx))
     ctx.effect(() => runner.detach)
 

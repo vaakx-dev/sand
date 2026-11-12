@@ -17,7 +17,7 @@ export interface ToolContext {
 
 export type ToolOutput = string | ToolResultContent[]
 
-export const needs = ['thread', 'folder', 'pc', 'computer', 'routines'] as const
+export const needs = ['thread', 'folder', 'pc', 'computer'] as const
 
 export type Need = (typeof needs)[number]
 

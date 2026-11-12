@@ -6,7 +6,7 @@ export const owner = 'routines'
 
 const content = z.object({ name: z.string(), instructions: z.string() })
 
-export interface NewRoutine {
+export interface RoutineSpec {
   name: string
   instructions: string
   when: When
@@ -19,17 +19,17 @@ export const routineOf = (schedule: Schedule): Routine => {
 }
 
 export const createRoutines = (schedules: Schedules) => {
-  const known = (id: string, bot?: string) => {
+  const known = (id: string) => {
     const schedule = schedules.get(id)
-    if (!schedule || schedule.owner !== owner || (bot !== undefined && schedule.subject !== bot)) throw new Error(`No routine ${id}`)
+    if (schedule?.owner !== owner) throw new Error(`No routine ${id}`)
     return schedule
   }
 
   return {
-    list: (bot: string) => schedules.list(owner, bot).map(routineOf),
-    create: (bot: string, { name, instructions, ...timing }: NewRoutine) => routineOf(schedules.create({ owner, subject: bot, ...timing, data: { name, instructions } })),
-    pause: (id: string, paused: boolean, bot?: string) => routineOf(schedules.pause(known(id, bot).id, paused)),
-    remove: (id: string, bot?: string) => schedules.remove(known(id, bot).id),
+    list: (bot?: string) => schedules.list(owner, bot).map(routineOf),
+    create: (bot: string, { name, instructions, ...timing }: RoutineSpec) => routineOf(schedules.create({ owner, subject: bot, ...timing, data: { name, instructions } })),
+    pause: (id: string, paused: boolean) => routineOf(schedules.pause(known(id).id, paused)),
+    remove: (id: string) => schedules.remove(known(id).id),
     forget(bot: string) {
       for (const schedule of schedules.list(owner, bot)) schedules.remove(schedule.id)
     },
