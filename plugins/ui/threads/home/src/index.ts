@@ -9,7 +9,7 @@ import { owned, pulse } from '@sand/reactive'
 import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
-import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
+import { projects, projectsChange, threadSelect, threads, threadsChange, type Thread } from '@sand/web-client/contract'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
@@ -39,12 +39,12 @@ export default definePlugin({
     const sources = () => ({ changes, trail: trail.get(), looks })
     const entries = owned(ctx, () => events.read(() => threadEntries(parts, sources())))
     const listed = owned(ctx, () => derive(() => new Map(entries.get().map(entry => [entry.row.id, entry.row]))))
-    const unlistedRow = (id: string) => {
+    const rowOf = (thread: Thread) => listed.get().get(thread.id) ?? threadRow(parts, thread, sources())
+    const row = (id: string) => {
       events.version.get()
       const thread = ctx.threads.get(id)
-      return thread && threadRow(parts, thread, sources())
+      return thread && rowOf(thread)
     }
-    const row = (id: string) => listed.get().get(id) ?? unlistedRow(id)
     ctx.provide(threadRows, {
       part(part) {
         trail.update(found => [...found, part].toSorted(byOrder))
@@ -63,7 +63,7 @@ export default definePlugin({
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
     })
-    ctx.watch(palette, found => found?.source(sessionSource({ ...parts, changes }, ctx.kit)))
+    ctx.watch(palette, found => found?.source(sessionSource({ ...parts, rowOf }, ctx.kit)))
     wakeTimer(ctx, ctx.threads, events.bump)
   },
 })

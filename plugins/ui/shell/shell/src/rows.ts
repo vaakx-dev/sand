@@ -177,45 +177,10 @@ export const footRow = (model: Model, phone: boolean) =>
     ),
   )
 
-const sameLook = (shown: ShellRow, next: ShellRow) =>
-  shown.label === next.label &&
-  shown.end === next.end &&
-  shown.at === next.at &&
-  shown.status === next.status &&
-  shown.lead === next.lead &&
-  shown.detail === next.detail &&
-  shown.trail === next.trail &&
-  shown.place?.label === next.place?.label &&
-  shown.place?.mark === next.place?.mark
-
-const looksOf = (row: () => ShellRow) => {
-  let shown: ShellRow | undefined
-  return derive(() => {
-    const next = row()
-    if (!shown || !sameLook(shown, next)) shown = next
-    return shown
-  })
-}
-
 const rowView = (model: Model, menu: ContextMenu, row: () => ShellRow, look: RowLook) => {
-  const { workRow, workRowBody } = model.kit
+  const { workRow, rowBody } = model.kit
   const current = () => model.isCurrent(row().to)
-  return workRow(
-    { current, large: look.phone, ...rowMenu(menu, row, () => model.open(row().to)) },
-    dynamicChild(looksOf(row), shown =>
-      workRowBody({
-        title: shown.label,
-        large: look.phone,
-        lead: shown.lead?.(),
-        end: shown.end ? span({ class: 'flex shrink-0 tabular-nums' }, model.kit.metaLine(shown.end)) : undefined,
-        at: shown.at,
-        detail: shown.detail?.(),
-        place: shown.place && { label: shown.place.label, mark: shown.place.mark?.() },
-        status: shown.status,
-        trail: shown.trail?.(),
-      }),
-    ),
-  )
+  return workRow({ current, large: look.phone, ...rowMenu(menu, row, () => model.open(row().to)) }, rowBody(row, { large: look.phone }))
 }
 
 export const singleRow = (model: Model, row: () => ShellRow) => {

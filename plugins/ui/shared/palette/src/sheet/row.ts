@@ -1,5 +1,6 @@
 import type { PaletteItem } from '../contract'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import type { Row } from '@sand/ui-shell/contract'
 import { span, untrack, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { actionsMenu } from './actions'
 import type { PageModel } from './model'
@@ -10,8 +11,7 @@ const lead = ({ icon, projectIcon }: Kit, item: PaletteItem) => {
   return item.icon ? icon(item.icon, 16) : undefined
 }
 
-const workView = (kit: Kit, item: PaletteItem, props: Props<HTMLButtonElement>, large: boolean) =>
-  kit.workRow({ ...props, surface: 'raised', large }, kit.workRowBody({ title: item.label, detail: item.detail, status: item.status, at: item.at, large }))
+const workView = (kit: Kit, row: () => Row, props: Props<HTMLButtonElement>, large: boolean) => kit.workRow({ ...props, surface: 'raised', large }, kit.rowBody(row, { large }))
 
 const listView = (kit: Kit, item: PaletteItem, props: Props<HTMLButtonElement>, large: boolean) =>
   kit.listRow({
@@ -37,5 +37,5 @@ export const rowView = (kit: Kit, item: PaletteItem, position: MaybeReactive<num
     disabled: item.disabled,
   }
   const large = !untrack(() => wide.get())
-  return item.at === undefined ? listView(kit, item, props, large) : workView(kit, item, props, large)
+  return item.row ? workView(kit, item.row, props, large) : listView(kit, item, props, large)
 }
