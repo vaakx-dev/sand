@@ -133,28 +133,26 @@ describe.each(phones)('on a $name', size => {
     expect(await chatScroll(page)).toBe(scrolled)
   })
 
-  test('a swipe up at the end of a chat covers it with the terminal, and a swipe down puts it away', async () => {
+  test('vertical swipes never open the terminal; its button does, and a swipe down puts it away', async () => {
     const { page } = phone
     await openPlain()
-    await scrollChat(page, 0)
-    await swipe(phone, [size.width / 2, mid()], [size.width / 2, mid() - 200])
-    expect(await cover(page, 'Fixture terminal')).toBe(false)
     await scrollChat(page, 'end')
     await swipe(phone, [size.width / 2, mid()], [size.width / 2, 60])
+    await swipe(phone, [size.width / 2, size.height - 4], [size.width / 2, 60])
+    expect(await cover(page, 'Fixture terminal')).toBe(false)
+    await tap(page, 'Fixture terminal')
     expect(await cover(page, 'Fixture terminal', true)).toBe(true)
     await swipe(phone, [size.width / 2, 120], [size.width / 2, size.height - 60])
     expect(await cover(page, 'Fixture terminal', false)).toBe(false)
     expect(await screen(page)).toBe('fixture/plain')
   })
 
-  test('swipes from the right and bottom edges belong to the phone', async () => {
+  test('a swipe from the right edge belongs to the phone', async () => {
     const { page } = phone
     await openPlain()
     await scrollChat(page, 'end')
     await swipe(phone, [size.width - 4, mid()], [30, mid()])
     expect(await cover(page, 'Fixture details')).toBe(false)
-    await swipe(phone, [size.width / 2, size.height - 4], [size.width / 2, 60])
-    expect(await cover(page, 'Fixture terminal')).toBe(false)
   })
 
   test('a sideways swipe over a wide table scrolls the table first', async () => {
