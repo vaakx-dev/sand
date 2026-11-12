@@ -3,6 +3,7 @@ import type { Server } from '@sand/server/contract'
 import type { Tool } from '@sand/tools/contract'
 import type { ZodObject } from 'zod'
 import type { McpTool } from '../contract'
+import { resultText } from '../result'
 
 const longestWait = 3_600_000
 const waitGrace = 60_000
@@ -26,6 +27,6 @@ export const agentTool = <S extends ZodObject>(server: Server, { name, descripti
       signal,
       ...(conversation.owner === 'thread' && { here: cwd }),
     })
-    return JSON.stringify(answer)
+    return resultText(answer)
   },
 })

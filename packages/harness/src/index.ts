@@ -79,9 +79,11 @@ sources = ${tomlValue(sources)}
 ${config}
 `
 
+const noHost = () => Promise.reject(new Error('No host in tests'))
+
 const hostStubs = (app: Context) => {
   app.provide(runtime, { id: 'test', access: () => 'denied', caller: () => undefined, listening() {}, swap() {}, owns: () => true })
-  app.provide(hostChannel, { call: () => Promise.reject(new Error('No host in tests')), on: () => () => {} })
+  app.provide(hostChannel, { call: noHost, ask: noHost, on: () => () => {} })
 }
 
 const loadPlugins = async (app: Context, { replay }: Models, extra: string[], options: PluginOptions) => {

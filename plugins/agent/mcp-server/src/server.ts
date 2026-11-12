@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/server'
 import type { AgentAccess } from '@sand/devices-contract'
 import { type Call, failure, failureOf } from '@sand/orchestrator/contract'
 import type { McpTool } from './contract'
+import { resultText } from './result'
 
 export type Use = <T>(work: (call: Call) => Promise<T>) => Promise<T>
 
@@ -15,7 +16,7 @@ const annotations: Record<AgentAccess, { readOnlyHint?: boolean; destructiveHint
   operate: { destructiveHint: false, openWorldHint: false },
 }
 
-const answer = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value) }] })
+const answer = (value: unknown) => ({ content: [{ type: 'text' as const, text: resultText(value) }] })
 
 const respond = async (work: () => Promise<unknown>) => {
   try {

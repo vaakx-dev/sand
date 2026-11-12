@@ -1,9 +1,10 @@
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { pluginsReport, pluginsShow } from '@sand/plugins/contract'
+import { pluginsReload } from '@sand/reload/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
 
-const group: McpGroup = { name: 'plugins', label: 'sand plugins', summary: "inspect sand's plugins and web extensions and their errors" }
+const group: McpGroup = { name: 'plugins', label: 'sand plugins', summary: "inspect sand's plugins and web extensions and their errors, and reload them" }
 
 const listInput = z.object({})
 
@@ -28,6 +29,18 @@ const showTool: McpTool<typeof showInput> = {
   run: (input, { call }) => call(pluginsShow, input),
 }
 
-const offerPluginTools = (tools: McpTools) => joinDisposers(tools.group(group), tools.register(listTool), tools.register(showTool))
+const reloadInput = z.object({})
 
-export { listTool, offerPluginTools, showTool }
+const reloadTool: McpTool<typeof reloadInput> = {
+  name: 'plugin_reload',
+  description:
+    "Reload every sand plugin from disk into a fresh runtime, like the Reload button. Running threads and bots, you included, finish their turns in the old runtime first. Check the result with plugin_list",
+  input: reloadInput,
+  access: 'operate',
+  group: group.name,
+  run: (input, { call }) => call(pluginsReload, input),
+}
+
+const offerPluginTools = (tools: McpTools) => joinDisposers(tools.group(group), tools.register(listTool), tools.register(showTool), tools.register(reloadTool))
+
+export { listTool, offerPluginTools, reloadTool, showTool }

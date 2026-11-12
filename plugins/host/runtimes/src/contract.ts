@@ -1,5 +1,5 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
-import { request, type, wireEvent, type WireEvent, type Request as WireRequest } from '@sand/host-hub/contract'
+import { type Caller, request, type, wireEvent, type WireEvent, type Request as WireRequest } from '@sand/host-hub/contract'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -38,6 +38,7 @@ export interface HostCall {
   id: number
   request: string
   input: unknown
+  caller?: Caller
 }
 
 export interface HostAnswer {
@@ -62,6 +63,7 @@ export type HostMessage =
 
 export interface HostChannel {
   call<I, O>(request: WireRequest<I, O>, input: I, timeout?: number): Promise<O>
+  ask<I, O>(request: WireRequest<I, O>, input: I, caller: Caller): Promise<O>
   on<P>(event: WireEvent<P>, listener: (payload: P) => void): Dispose
 }
 
