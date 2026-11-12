@@ -12,7 +12,7 @@ interface ViewParts {
   saveNote(note: Note): Promise<unknown>
 }
 
-const written = ({ markdown }: ViewParts) => (text: string) => div({ class: 'flex flex-col gap-2' }, ...markdown.nodes(text))
+const written = ({ markdown }: ViewParts) => (text: string) => div(...markdown.nodes(text, { size: 'compact' }))
 
 const memoryBlock = (parts: ViewParts) =>
   parts.kit.editable({

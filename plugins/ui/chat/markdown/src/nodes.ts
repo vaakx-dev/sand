@@ -1,3 +1,4 @@
+import type { MarkdownSize } from './contract'
 import { a, div, el, em, h1, h2, h3, h4, h5, h6, li, ol, p, span, strong, table, tbody, td, th, thead, tr, ul } from '@vaakx-dev/vrui'
 
 export type Inline = Node | string
@@ -10,13 +11,18 @@ const block = 'mb-3 last:mb-0'
 
 const headings = [h1, h2, h3, h4, h5, h6]
 
+const HEADING_LOOKS: Record<MarkdownSize, string> = {
+  reading: 'mt-5 mb-1.5 text-base leading-snug font-semibold first:mt-0 last:mb-0',
+  compact: 'mt-4 mb-1 text-xs font-semibold text-neutral-400 first:mt-0 last:mb-0',
+}
+
 const alignments: Record<Align, string> = { left: 'text-left', center: 'text-center', right: 'text-right' }
 
 export const paragraph = (children: Inline[]) => p({ class: block }, children)
 
-export const heading = (level: number, children: Inline[]) => {
+export const heading = (level: number, children: Inline[], size: MarkdownSize = 'reading') => {
   const tag = headings[level - 1] ?? h6
-  return tag({ class: 'mt-5 mb-1.5 text-base leading-snug font-semibold first:mt-0 last:mb-0' }, children)
+  return tag({ class: HEADING_LOOKS[size] }, children)
 }
 
 export const thematicBreak = () => el('hr', { class: 'my-5 border-t border-neutral-800 first:mt-0 last:mb-0' })

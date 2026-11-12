@@ -15,7 +15,7 @@ interface Block {
 
 type Parser = (lines: string[], start: number, scope: Scope) => Block | undefined
 
-const titled = (level: number, content: string, scope: Scope) => heading(level, inline(content, scope))
+const titled = (level: number, content: string, scope: Scope) => heading(level, inline(content, scope), scope.size)
 
 const fenced: Parser = (lines, start, scope) => {
   const open = fence.exec(lines[start]!)
