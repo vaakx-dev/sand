@@ -6,9 +6,9 @@ sand is an assistant you can change into whatever you need. Talk to it like any 
 
 ## Ask it to change itself
 
-Here sand is asked for a focus timer. It writes a small plugin and reloads it, a working timer appears, and the chat stays open.
+Here sand is asked for a Deadlines page. It reads three syllabi, writes a new page into itself and reloads, and the page is in the sidebar while the chat stays open.
 
-![sand writes a focus timer plugin and a working 25-minute timer appears in the app](docs/images/reload.gif)
+![sand builds itself a Deadlines page from three course syllabi, and two deadlines get ticked off](docs/images/reload.gif)
 
 ## Use it anywhere
 
