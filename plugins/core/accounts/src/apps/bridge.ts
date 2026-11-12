@@ -14,6 +14,7 @@ import {
 import { isModelContent, type Message, type ModelContent } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import { stat } from 'node:fs/promises'
+import { blankFiles, secretValues } from './blank'
 import { deliver } from './deliver'
 import { createSignals, type Signals } from './signals'
 import { readStep } from './step'
@@ -72,7 +73,12 @@ export const createBridge = (plan: AppPlan, home: string) => {
   const drop = (key: string, entry: Live) => {
     forget(key, entry)
     entry.signals.close()
-    entry.session.close()
+    return entry.session.close()
+  }
+
+  const blankCopy = async (key: string, entry: Live, values: string[]) => {
+    await drop(key, entry)
+    if (entry.session.id) await blankFiles((await plan.sessionFiles?.(entry.session.id)) ?? [], values)
   }
 
   const rest = (key: string, entry: Live) => {
@@ -187,7 +193,9 @@ export const createBridge = (plan: AppPlan, home: string) => {
       }
       entry.done = true
       entry.waiting = event.stopReason === 'tool_use' ? callsOf(event.message) : []
-      rest(key, entry)
+      const secrets = secretValues(event.message, request.tools)
+      if (secrets.length) await blankCopy(key, entry, secrets)
+      else rest(key, entry)
       const native = nativeOf(entry, thread)
       yield { ...event, ...(native && { native }), ...(delivered && { delivered }) }
     }
@@ -203,7 +211,7 @@ export const createBridge = (plan: AppPlan, home: string) => {
       yield* readStep(() => signals.next(signal), request.model)
     } finally {
       signals.close()
-      session.close()
+      void session.close()
     }
   }
 

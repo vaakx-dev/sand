@@ -1,11 +1,13 @@
-import type { AppOutput, AppPlan, AppSession, AppSetup, ProviderCapabilities } from '@sand/accounts/contract'
+import type { AppCall, AppOutput, AppPlan, AppSession, AppSetup, ProviderCapabilities } from '@sand/accounts/contract'
 import type { ToolResultContent } from '@sand/chats/contract'
+import { appendFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
 import type { NativeCall, Reply, Script } from './contract'
 import { planModels } from './models'
 
 const textOf = (content: ToolResultContent[]) => content.map(block => (block.type === 'text' ? block.text : `[${block.type}]`)).join('\n')
 
-export const replayApp = (script: Script) => {
+export const replayApp = (script: Script, folder: string) => {
   const { id, label = id, replies, resume, inject } = script
   const queue = [...replies]
   const injects = [...inject]
@@ -14,8 +16,15 @@ export const replayApp = (script: Script) => {
   let opened = 0
   const caps: ProviderCapabilities = { native: true, resume, inject: inject.length > 0, steer: true, reconfigure: [], processScope: 'thread', cacheTtlMs: 5 * 60_000 }
 
+  const fileOf = (native: string) => join(folder, `${native}.jsonl`)
+
   const session = (setup: AppSetup, out: AppOutput, reopened?: string): AppSession => {
     const waiting = new Set<string>()
+    const native = reopened ?? (setup.persist ? `${id}-thread-${++opened}` : undefined)
+
+    const keep = (call: AppCall) => {
+      if (native) appendFileSync(fileOf(native), `${JSON.stringify(call)}\n`)
+    }
 
     const play = (reply: Reply) => {
       for (const part of reply) {
@@ -29,6 +38,7 @@ export const replayApp = (script: Script) => {
           case 'call': {
             const call = { id: part.id ?? `${id}-${++made}`, name: part.name, input: part.input }
             waiting.add(call.id)
+            keep(call)
             out.call(call)
             break
           }
@@ -61,7 +71,6 @@ export const replayApp = (script: Script) => {
       return true
     }
 
-    const native = reopened ?? (setup.persist ? `${id}-thread-${++opened}` : undefined)
     return {
       ...(native && { id: native }),
       send(content) {
@@ -78,7 +87,9 @@ export const replayApp = (script: Script) => {
       async interrupt() {
         calls.push({ type: 'interrupt' })
       },
-      close: () => void calls.push({ type: 'close' }),
+      async close() {
+        calls.push({ type: 'close' })
+      },
     }
   }
 
@@ -95,6 +106,7 @@ export const replayApp = (script: Script) => {
     signIn: () => Promise.reject(new Error(`${label} needs no sign-in`)),
     signOut: async () => {},
     models: async () => planModels(script),
+    sessionFiles: async native => (existsSync(fileOf(native)) ? [fileOf(native)] : []),
     async open(setup, out, reopened) {
       calls.push({ type: 'open', cwd: setup.cwd, ...(reopened && { resume: reopened }) })
       return session(setup, out, reopened)

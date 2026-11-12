@@ -86,6 +86,7 @@ export const connect = async ({ args, env, cwd, handle, onMessage, onExit }: Con
       closed = true
       failAll(new Error('Claude Code was closed'))
       lines.close()
+      return lines.exited.then(() => {})
     },
   }
 }

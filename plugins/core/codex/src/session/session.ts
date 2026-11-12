@@ -144,7 +144,7 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
     },
     close() {
       dropAnswers()
-      server.close()
+      return server.close()
     },
   }
 }

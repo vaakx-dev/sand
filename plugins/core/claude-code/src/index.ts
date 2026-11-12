@@ -6,6 +6,7 @@ import { readUsage } from './account/probe'
 import { signInClaude } from './account/sign-in'
 import { readStatus, signOutClaude } from './account/status'
 import { installUrl } from './cli/binary'
+import { sessionFiles } from './session/files'
 import { openSession, type SessionNeeds } from './session/session'
 
 const caps: ProviderCapabilities = {
@@ -36,6 +37,7 @@ const claudePlan = (needs: SessionNeeds): AppPlan => {
     models: models.list,
     usage: readUsage,
     open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume),
+    sessionFiles,
   }
 }
 
