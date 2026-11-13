@@ -141,8 +141,7 @@ test('an unanswered question denies its call at the deadline, and a late allow l
 
   service(sand).answer(question.id, 'once')
   expect(service(sand).questions()).toEqual([])
-  await until(() => ran.length > 0)
-  await sand.turns.wait(sand.turns.current(chat)!.id, 'end')
+  await until(() => ran.length > 0 && sand.turns.current(chat) === undefined)
   expect(ran).toEqual(['send_mail bob'])
 
   const next = nextAsk(sand)
