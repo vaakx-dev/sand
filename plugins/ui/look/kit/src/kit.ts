@@ -52,7 +52,7 @@ import { expandRow, expandToggle, textToggle } from './rows/expand'
 import { actionItem } from './rows/action-item'
 import { listRow } from './rows/list-row'
 import { cardCaption, cardItem, cardRule } from './rows/card-item'
-import { age, dayDivider, rowBody, workRow, workStatus } from './rows/work-row'
+import { age, dayDivider, rowBody, workRow } from './rows/work-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { pageSection } from './rows/section'
 import { segmented } from './rows/settings'
@@ -268,6 +268,5 @@ export const kit = {
   withDot,
   rowBody,
   workRow,
-  workStatus,
   zoomControls,
 }
