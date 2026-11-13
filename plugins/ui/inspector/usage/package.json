@@ -1,16 +1,15 @@
 {
   "name": "@sand/inspector-usage",
   "version": "0.0.0",
-  "description": "The inspector's usage row: what a thread and its subagents cost, per model, and the plan limits of the account it runs on",
+  "description": "The inspector's usage row: what a thread and its subagents cost, per model",
   "type": "module",
   "sand": {
     "feature": "usage",
     "web": "./src/index.ts",
     "label": "Usage row",
-    "summary": "Shows what a thread cost and the limits of its plan"
+    "summary": "Shows what a thread cost, per model"
   },
   "dependencies": {
-    "@sand/accounts": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/inspector": "workspace:*",
     "@sand/reactive": "workspace:*",

@@ -9,7 +9,7 @@ import { threadUsage } from './summary/thread'
 
 export default definePlugin({
   name: 'usage',
-  description: 'Token and cost totals and plan limits for the usage page, thread details and sand usage',
+  description: 'Token and cost totals and plan limits for the usage page and sand usage, and what each thread cost',
   inject: { sessions },
   apply(ctx) {
     const refreshLimits = () => {

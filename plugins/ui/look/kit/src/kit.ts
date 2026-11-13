@@ -51,7 +51,7 @@ import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle, textToggle } from './rows/expand'
 import { actionItem } from './rows/action-item'
 import { listRow } from './rows/list-row'
-import { cardCaption, cardItem, cardRule } from './rows/card-item'
+import { cardCaption, cardFold, cardItem, cardRule } from './rows/card-item'
 import { age, dayDivider, rowBody, workRow } from './rows/work-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { pageSection } from './rows/section'
@@ -234,6 +234,7 @@ export const kit = {
   sheetTitle,
   shine,
   cardCaption,
+  cardFold,
   cardItem,
   cardRule,
   shortcutHint,

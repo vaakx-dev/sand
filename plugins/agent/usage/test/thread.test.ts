@@ -14,9 +14,9 @@ const finished = async (chat: Session, count: number) => {
   throw new Error('The turns never finished')
 }
 
-test("a thread's usage adds up its own turns and its subagents' turns, per model, with the account they ran on", async () => {
+test("a thread's usage adds up its own turns and its subagents' turns, per model", async () => {
   sand = await startSand(
-    [{ id: 'fake', label: 'Fake Plan', models: ['big', 'small'], price: { input: 1, output: 10, cacheRead: 0, cacheWrite: 0 }, replies: [[...reply(1_000, 100)], [...reply(2_000, 200)]] }],
+    [{ id: 'fake', models: ['big', 'small'], price: { input: 1, output: 10, cacheRead: 0, cacheWrite: 0 }, replies: [[...reply(1_000, 100)], [...reply(2_000, 200)]] }],
     { plugins: ['agent/usage'] },
   )
   const thread = sand.chat('fake/big')
@@ -35,5 +35,4 @@ test("a thread's usage adds up its own turns and its subagents' turns, per model
     ['small', 1, 1],
   ])
   expect(usage.total.cost).toBeCloseTo((3_500 * 1 + 350 * 10) / 1_000_000)
-  expect(usage.account?.label).toBe('Fake Plan')
 })

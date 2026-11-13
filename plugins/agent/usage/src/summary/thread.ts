@@ -1,11 +1,10 @@
 import type { LLM } from '@sand/accounts/contract'
 import type { Sessions } from '@sand/chats/contract'
 import { grouped } from '@sand/util'
-import type { ThreadAccount, ThreadModel, ThreadUsage } from '../contract'
+import type { ThreadModel, ThreadUsage } from '../contract'
 import { isBilled } from '../contract/billed'
-import { limitsOf } from '../limits'
 import { byCost, emptyTotals } from '../records'
-import { type AccountId, identityResolver } from './identity'
+import { identityResolver } from './identity'
 import { modelLabels, nameOf } from './models'
 import { addUsage } from './totals'
 import { turnsOf } from './turns'
@@ -23,16 +22,11 @@ const familyOf = (sessions: Sessions, root: string) => {
   return family
 }
 
-const accountOf = (id: AccountId, llm?: LLM): ThreadAccount => {
-  const limits = limitsOf(llm).find(found => found.source === id.source && found.pc === id.pc)
-  return { label: id.label, ...(id.pcName && { pcName: id.pcName }), ...(limits && { limits }) }
-}
-
 export const threadUsage = ({ sessions, llm }: ThreadSources, session: string): ThreadUsage => {
   const identify = identityResolver(llm)
   const labelOf = modelLabels(llm)
   const entries = familyOf(sessions, session).flatMap(id => sessions.entriesIn(id, 'usage'))
-  const turns = turnsOf(entries).toSorted((first, second) => first.at - second.at)
+  const turns = turnsOf(entries)
   const total = emptyTotals()
   const models = new Map<string, Tally>()
   for (const turn of turns) {
@@ -43,11 +37,9 @@ export const threadUsage = ({ sessions, llm }: ThreadSources, session: string): 
     if (turn.session !== session) model.helpers.add(turn.session)
     for (const totals of [total, model]) addUsage(totals, turn.usage, price, isBilled(id.billing))
   }
-  const last = turns.at(-1)
   return {
     session,
     total,
     models: [...models.values()].map(({ helpers, ...model }) => ({ ...model, subagents: helpers.size })).sort(byCost),
-    ...(last && { account: accountOf(identify(last), llm) }),
   }
 }

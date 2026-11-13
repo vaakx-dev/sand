@@ -77,17 +77,10 @@ export interface ThreadModel extends UsageTotals {
   subagents: number
 }
 
-export interface ThreadAccount {
-  label: string
-  pcName?: string
-  limits?: Limits
-}
-
 export interface ThreadUsage {
   session: string
   total: UsageTotals
   models: ThreadModel[]
-  account?: ThreadAccount
 }
 
 export const usageThread = request('usage.thread', { input: () => z.object({ session: z.string() }), output: type<ThreadUsage>() })

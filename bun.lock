@@ -2631,7 +2631,6 @@
       "name": "@sand/inspector-usage",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/accounts": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/inspector": "workspace:*",
         "@sand/reactive": "workspace:*",

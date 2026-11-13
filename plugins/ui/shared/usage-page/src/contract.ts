@@ -13,4 +13,4 @@ export interface UsageViews {
 
 export const usageViews = service<UsageViews>('usageViews')
 
-export { modelShades, type Shade, swatch, TONE_FILL, TONE_TEXT, type Tone, toneOf } from './look'
+export { modelShades, type Shade, swatch } from './look'
