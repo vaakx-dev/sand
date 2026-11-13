@@ -1,3 +1,4 @@
+import { compactTimeoutMs, contextCompact } from '@sand/compaction/contract'
 import type { CliValues } from '@sand/config/contract'
 import {
   type Call,
@@ -11,7 +12,7 @@ import {
   waitThread,
 } from '@sand/orchestrator/contract'
 import { resolve } from 'node:path'
-import { printItems, printRows, printState, printStop } from './print'
+import { printCompact, printItems, printRows, printState, printStop } from './print'
 
 type Action = (call: Call) => Promise<number>
 
@@ -95,6 +96,14 @@ const stop: Parse = ([session, ...rest], flags) => {
   }
 }
 
-const parsers = new Map(Object.entries({ start, send, wait, show, list, stop }))
+const compact: Parse = ([session, ...rest], flags) => {
+  if (!session || rest.length) return undefined
+  return async call => {
+    printCompact(session, await call(contextCompact, { session, owner: 'thread' }, { timeout: compactTimeoutMs }), flags.json)
+    return 0
+  }
+}
+
+const parsers = new Map(Object.entries({ start, send, wait, show, list, stop, compact }))
 
 export const threadAction = ([name = '', ...args]: string[], values: CliValues, cwd: string) => parsers.get(name)?.(args, flagsOf(values), cwd)

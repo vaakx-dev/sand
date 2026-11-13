@@ -1,7 +1,7 @@
 {
   "name": "@sand/compaction",
   "version": "0.0.0",
-  "description": "Summarizes a thread or bot conversation in the background as its context nears the limit, or when it sits idle until its prompt cache is about to expire, puts the summary in place at the next turn, and reports context usage",
+  "description": "Summarizes a thread or bot conversation in the background as its context nears the limit, or when it sits idle until its prompt cache is about to expire, puts the summary in place at the next turn, compacts on request from /compact, agents and the CLI, and reports context usage",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,12 +10,15 @@
     "feature": "compaction",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
     "label": "Compaction",
     "summary": "Summarizes a long chat before their context fills up"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",

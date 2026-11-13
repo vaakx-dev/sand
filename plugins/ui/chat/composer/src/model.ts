@@ -112,7 +112,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
   const runCommand = (command: Command) => {
     const before = text.get()
     text.set('')
-    return attempt(false, async () => command.run(), error => {
+    return attempt(false, async () => command.run(target.chat()), error => {
       if (!text.get()) text.set(before)
       fail(errorMessage(error))
     })

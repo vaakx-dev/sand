@@ -69,7 +69,7 @@ export interface Trigger<T extends TriggerItem = TriggerItem> {
 export interface Command {
   name: string
   description: string
-  run(): void | Promise<void>
+  run(chat: ChatRef | undefined): void | Promise<void>
 }
 
 export interface ChatRef {
