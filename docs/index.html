@@ -105,9 +105,8 @@
   .head .lede { margin: 0 0 6px; }
 
   .anywhere { display: grid; grid-template-columns: auto 1fr; gap: 64px; align-items: center; }
-  .phones { display: flex; gap: 18px; }
+  .phones { display: flex; align-items: flex-start; gap: 18px; }
   .phones img { width: 230px; height: auto; border-radius: 30px; border: 1px solid var(--line); box-shadow: 0 30px 60px -30px rgba(0,0,0,.7); }
-  .phones img + img { margin-top: 48px; }
   .points { display: grid; margin: 34px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line-soft); }
   .points li { display: grid; grid-template-columns: 130px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
   .points b { font-weight: 500; color: var(--text); }
@@ -147,7 +146,6 @@
     section.block { padding: 72px 0; }
     .phones { gap: 12px; }
     .phones img { width: calc(50% - 6px); border-radius: 22px; }
-    .phones img + img { margin-top: 32px; }
     .points li { grid-template-columns: 1fr; gap: 4px; }
     .features { grid-template-columns: 1fr; gap: 20px; }
     .final { padding-top: 96px; }
