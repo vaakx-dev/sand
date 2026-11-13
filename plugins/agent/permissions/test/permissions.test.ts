@@ -197,3 +197,25 @@ test('a thread a bot started asks before using a saved login, even past an allow
   expect(ran).toEqual(['sign_in bank'])
   expect(service(sand).settings().rules).toEqual([])
 })
+
+test('a question about a tool that says nothing of its calls still reads as plain words, never raw input', async () => {
+  const sand = await start([[call('team_post', { to: 'team', note: 'Lunch at noon', pin: true })], [said('Posted.')]])
+  sand.app.get(tools)!.register({
+    name: 'team_post',
+    description: 'Post a note to the team board. Everyone on the team sees it.',
+    input: z.object({ to: z.string(), note: z.string(), pin: z.boolean() }),
+    effect: 'send',
+    run: () => 'posted',
+  })
+  const chat = sand.chat('fake/m')
+  service(sand).setMode({ owner: 'thread', id: chat.id }, 'ask')
+  const asked = nextAsk(sand)
+  const turn = sand.turns.run(chat, 'tell the team about lunch')
+  const question = await asked
+  expect(question.summary).toContain('Post a note to the team board')
+  expect(question.summary).toContain('Lunch at noon')
+  expect(question.summary).toContain('team')
+  expect(question.summary).not.toContain('{')
+  service(sand).answer(question.id, 'deny')
+  await turn
+})

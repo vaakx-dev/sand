@@ -8,6 +8,7 @@ import type { Review, ReviewRequest } from './review'
 import type { Scope, Scopes } from './scope'
 import type { Stores } from './store'
 import type { Logged } from './store/decisions'
+import { wording } from './wording'
 
 export interface GateDeps {
   stores: Stores
@@ -56,7 +57,7 @@ export const createGate = (deps: GateDeps): Gate => {
       tool: tool.name,
       effect: act.effect,
       ...(act.uses && { uses: act.uses }),
-      summary: oneLine(act.summary ?? JSON.stringify(shown.input), SUMMARY_CHARS),
+      summary: oneLine(wording(act, tool, shown.input), SUMMARY_CHARS),
       key: keyOf(tool.name, call.input),
       mode: scope.mode,
       once: false,
