@@ -1,7 +1,7 @@
 - TypeScript on Bun; prefer Bun APIs over Node ones.
 - Don't write doc files (READMEs, design docs, notes) unless asked.
 - Everything is a plugin. drydock stays agent-agnostic.
-- A plugin's `package.json` `sand` field names an entry file for each place it runs: `host` (`sand serve`), `runtime` (the process behind the page), `print` (`sand -p`), `cli` (the other commands) and `web` (the page). The config plugin loads what the current place lists; the app picks no plugins. User plugins in `<home>/plugins` load only in the runtime.
+- A plugin's `package.json` `sand` field names an entry file for each place it runs: `host` (the background server), `runtime` (the process behind the page), `print` (`sand -p`), `cli` (the other commands) and `web` (the page). The config plugin loads what the current place lists; the app picks no plugins. User plugins in `<home>/plugins` load only in the runtime.
 - Each plugin owns its wire contract in `src/contract.ts`, built with `request` and `wireEvent` from `@sand/host-hub/contract`.
 - Other packages import a plugin only through its contract, so a plugin's `exports` list its contract and nothing else (config also exports `.`, the entry the app loads). Helpers other plugins need go in its contract, or in a library under `packages/` when they're generic. `bun run check` enforces this and fails on imports across packages by path, unused `@sand/*` dependencies and import cycles between packages.
 - Register everything through `ctx` so unloading cleans it up.
@@ -15,7 +15,7 @@
 
 ## Test on your own sand
 
-Never stop, restart or reload the live sand (`~/.sand`, port 4317). `sand` on the PATH is the installed build, so run this source with `bun run sand`.
+Never stop, restart or reload the live sand (`~/.sand`, port 4317). `sand` on the PATH is the installed build, so run this source with `bun run sand`. Never run plain `sand`: it opens the owner's browser. `sand serve` starts sand in the background if needed and prints a paired link without opening anything.
 
 - `bun run sand sandbox` starts a throwaway sand from this source in a temp home, on a free port and off the network, with the user's plugins and model. It prints the home, a link that opens the web UI paired (use Playwright), and the stop command. Delete the home after stopping it.
 - `bun run sand --home "<sandbox home>" -p "<prompt>"` runs one prompt in it, without the web UI. Flags go before `-p`. Use it to check the agent loop and server-side features; don't build or adapt features for `-p`.

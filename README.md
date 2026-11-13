@@ -23,6 +23,8 @@ irm https://vaakx-dev.github.io/sand/install.ps1 | iex
 
 The installer puts Bun and sand in `~/.sand`, adds `sand` to your PATH and opens sand in your browser. Sign in under Settings → Accounts. To pair a phone or another PC, open Settings → Devices.
 
+Run `sand` to start sand in the background if it isn't running and open it in your browser. `sand serve` does the same without opening anything and prints a link that opens it paired, for scripts and agents.
+
 sand updates itself from Settings → Updates. On that page you can also switch to the nightly or dev builds.
 
 ## Working on sand

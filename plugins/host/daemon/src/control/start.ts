@@ -29,7 +29,7 @@ export const start = async (home: string, { wait = 30_000, stopOnFail = false, s
   await pcKeys(home)
   const [bun, main] = await hostCommand(home)
   const output = openLog(log)
-  const child = Bun.spawn([bun, main, '--home', home, 'serve'], {
+  const child = Bun.spawn([bun, main, '--home', home, 'host'], {
     cwd: homedir(),
     env: withSafe({ ...process.env }, safe),
     detached: true,

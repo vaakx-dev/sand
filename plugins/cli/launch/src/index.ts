@@ -2,12 +2,12 @@ import { cliCommands } from '@sand/cli-commands/contract'
 import { cli } from '@sand/config/contract'
 import { daemon } from '@sand/host-daemon/contract'
 import { definePlugin } from 'drydock'
-import { launch } from './launch'
+import { launch, serve } from './launch'
 import { sandbox } from './sandbox'
 
 export default definePlugin({
   name: 'cli-launch',
-  description: 'The sand command: starts sand in the background if needed and opens it in the browser',
+  description: 'The sand and sand serve commands: start sand in the background if needed, and open it in the browser or print its paired link',
   inject: { cli, cliCommands, daemon },
   apply(ctx) {
     ctx.effect(() =>
@@ -20,6 +20,17 @@ export default definePlugin({
           '                 already paired so it needs no link or QR code',
         ].join('\n'),
         run: () => launch(ctx.daemon, ctx.cli.safe),
+      }),
+    )
+    ctx.effect(() =>
+      ctx.cliCommands.register({
+        name: 'serve',
+        summary: 'start sand in the background if needed and print its paired link, opening nothing',
+        usage: [
+          'sand serve [--safe]             start sand in the background if needed and print a link that opens it paired;',
+          '                                it opens nothing, so scripts and agents use it',
+        ].join('\n'),
+        run: () => serve(ctx.daemon, ctx.cli.safe),
       }),
     )
     ctx.effect(() =>

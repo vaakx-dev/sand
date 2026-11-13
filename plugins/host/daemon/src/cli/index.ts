@@ -24,10 +24,6 @@ export default definePlugin({
       ctx.cliCommands.register({
         name: 'stop',
         summary: 'stop the background sand',
-        usage: [
-          'sand serve                      run sand in the foreground (it restarts plugins without dropping the page)',
-          'sand stop                       stop the background sand',
-        ].join('\n'),
         run: () => stopCommand(home),
       }),
     )

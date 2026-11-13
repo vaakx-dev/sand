@@ -2,7 +2,7 @@
 
 ## Run from a clone
 
-You need Bun and git. Clone this repository, run `bun install` in it, and then run `bun run sand`. sand starts in the background and opens in your browser.
+You need Bun and git. Clone this repository, run `bun install` in it, and then run `bun run sand`. sand starts in the background and opens in your browser. `bun run sand serve` starts it without opening anything and prints a link that opens it paired; scripts and agents use that.
 
 ## Run the checks
 
