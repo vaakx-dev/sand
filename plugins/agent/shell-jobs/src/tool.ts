@@ -25,6 +25,8 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
     const job = jobs.start({
       parent: sessions.require(conversation.id),
       label: label ?? oneLine(command, 80),
+      command,
+      cwd,
       origin: call.id,
       work: commandWork(ctx, runner, command, cwd, output),
       read: output.read,

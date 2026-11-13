@@ -1,5 +1,6 @@
 import { pcHello } from '@sand/devices-contract'
-import type { ShellRow } from '@sand/ui-shell/contract'
+import type { Kit } from '@sand/ui-kit/contract'
+import type { MenuAction, ShellRow } from '@sand/ui-shell/contract'
 import { threadChange, type Thread, type Threads } from '@sand/web-client/contract'
 import { sig, untrack, type Child } from '@vaakx-dev/vrui'
 import { service, type Context, type Dispose } from 'drydock'
@@ -22,6 +23,8 @@ export interface ThreadRows {
 }
 
 export const threadRows = service<ThreadRows>('threadRows')
+
+export const copyPathAction = (kit: Kit, path: string): MenuAction => ({ id: 'copy-path', group: 'copy', label: 'Copy path', icon: 'folder', run: () => kit.copyText(path) })
 
 export interface FactsSpec<K, T> {
   key(source: K): string

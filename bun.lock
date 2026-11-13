@@ -2542,6 +2542,7 @@
         "@sand/chat": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/inspector": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/threads-home": "workspace:*",

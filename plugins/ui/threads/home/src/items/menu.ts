@@ -4,6 +4,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import type { MenuAction, Shell } from '@sand/ui-shell/contract'
 import type { Projects, Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
+import { copyPathAction } from '../contract'
 import { snoozeAction } from '../snooze/actions'
 import { attempt } from './failure'
 import { canRename, renameThread } from './rename'
@@ -49,7 +50,7 @@ const organiseActions = ({ ctx, threads }: MenuParts, thread: Thread): MenuActio
 
 const copyActions = ({ kit, shell }: MenuParts, thread: Thread): MenuAction[] => [
   { id: 'copy-link', group: 'copy', label: 'Copy link', icon: 'link', run: () => kit.copyText(shell.link({ kind: threadRoute, id: thread.id })) },
-  { id: 'copy-path', group: 'copy', label: 'Copy path', icon: 'folder', run: () => kit.copyText(thread.info.cwd) },
+  copyPathAction(kit, thread.info.cwd),
 ]
 
 const deleteAction = (parts: MenuParts, thread: Thread): MenuAction => ({
