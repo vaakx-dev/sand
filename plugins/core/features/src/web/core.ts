@@ -15,7 +15,7 @@ const corePage = (kit: Kit, store: FeatureStore) => {
       const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent && !addonIds.has(feature.id))
       return div(
         { class: 'contents' },
-        kit.settingsSection({ title: 'Core' }, ...tops.flatMap(top => tree(features, top)).map(item => row(kit, store, choice, item))),
+        kit.settingsSection({}, ...tops.flatMap(top => tree(features, top)).map(item => row(kit, store, choice, item))),
         kit.settingsSection(
           { title: 'Shared parts' },
           ...features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, choice, { feature, depth: 0 })),
