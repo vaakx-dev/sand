@@ -12,7 +12,7 @@
     },
     "apps/sand": {
       "name": "sand",
-      "version": "0.1.0-alpha.7",
+      "version": "0.1.0-beta.1",
       "bin": {
         "sand": "./src/main.ts",
       },
