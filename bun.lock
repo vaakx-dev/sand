@@ -2662,6 +2662,30 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/inspector/usage": {
+      "name": "@sand/inspector-usage",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/inspector": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
+        "@sand/usage": "workspace:*",
+        "@sand/usage-page": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/ui/look/kit": {
       "name": "@sand/ui-kit",
       "version": "0.0.0",
@@ -3227,6 +3251,8 @@
     "@sand/inspector-model": ["@sand/inspector-model@workspace:plugins/ui/inspector/model"],
 
     "@sand/inspector-pc": ["@sand/inspector-pc@workspace:plugins/ui/inspector/pc"],
+
+    "@sand/inspector-usage": ["@sand/inspector-usage@workspace:plugins/ui/inspector/usage"],
 
     "@sand/jobs": ["@sand/jobs@workspace:plugins/agent/jobs"],
 

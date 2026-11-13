@@ -6,7 +6,7 @@ import { kit } from '@sand/ui-kit/contract'
 import type { Subject } from '@sand/ui-shell/contract'
 import { tokens } from '@sand/util'
 import { threadChange, threads, threadsChange } from '@sand/web-client/contract'
-import { derive, div, list, show, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, list, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 
 interface Look {
@@ -66,22 +66,14 @@ export default definePlugin({
           breakdownLine('bg-neutral-800', 'Free', () => tokens(Math.max(0, usage().window - usage().used))),
           div({ class: 'py-px text-neutral-500' }, () => `Compacts at ${tokens(usage().limit)}`),
         )
-      return div(
-        { class: 'rounded-lg hover:bg-neutral-700' },
-        ctx.kit.plainButton(
-          { class: 'group flex w-full flex-col gap-2 p-2 text-left', 'aria-expanded': () => String(open.get()), onClick: () => open.update(shown => !shown) },
-          div(
-            { class: 'flex w-full items-center justify-between text-xs text-neutral-400' },
-            span('Context'),
-            span(span({ class: 'font-medium text-neutral-100' }, () => tokens(usage().used)), () => ` of ${tokens(usage().window)}`),
-          ),
-          div(
-            { class: 'relative h-1 w-full' },
-            list(parts, part => part.name, segment, div({ class: 'flex h-full w-full gap-px overflow-hidden rounded-full bg-neutral-800' })),
-            span({ class: 'absolute -top-1 h-3 w-px bg-neutral-600', style: () => `left:${percent(usage().limit, usage().window)}`, title: () => `Compacts at ${tokens(usage().limit)}` }),
-          ),
+      return ctx.kit.cardFold(
+        { open, label: 'Context', value: [span({ class: 'font-medium text-neutral-100' }, () => tokens(usage().used)), () => ` of ${tokens(usage().window)}`] },
+        div(
+          { class: 'relative h-1 w-full' },
+          list(parts, part => part.name, segment, div({ class: 'flex h-full w-full gap-px overflow-hidden rounded-full bg-neutral-800' })),
+          span({ class: 'absolute -top-1 h-3 w-px bg-neutral-600', style: () => `left:${percent(usage().limit, usage().window)}`, title: () => `Compacts at ${tokens(usage().limit)}` }),
         ),
-        show(open, breakdown),
+        breakdown,
       )
     }
 

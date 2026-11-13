@@ -1,4 +1,4 @@
-import { div, media, span, type Child, type Props } from '@vaakx-dev/vrui'
+import { div, media, show, span, type Child, type Props, type Sig } from '@vaakx-dev/vrui'
 import { plainButton } from '../buttons/button'
 import { icon } from '../icons/lucide'
 
@@ -34,3 +34,20 @@ export const cardItem = ({ lead, end, menu = false, mono = false, class: extra, 
 export const cardRule = () => div({ role: 'separator', class: 'mx-2 my-1 h-px bg-neutral-700' })
 
 export const cardCaption = (...children: Child[]) => div({ class: 'flex min-w-0 items-center px-2 pt-1.5 pb-1 text-xs text-neutral-500' }, ...children)
+
+export interface CardFoldProps {
+  open: Sig<boolean>
+  label: Child
+  value: Child
+}
+
+export const cardFold = ({ open, label, value }: CardFoldProps, summary: Child, detail: () => HTMLElement) =>
+  div(
+    { class: 'rounded-lg hover:bg-neutral-700' },
+    plainButton(
+      { class: 'group flex w-full flex-col gap-2 p-2 text-left', 'aria-expanded': () => String(open.get()), onClick: () => open.update(shown => !shown) },
+      div({ class: 'flex w-full items-center justify-between text-xs text-neutral-400' }, span(label), span(value)),
+      summary,
+    ),
+    show(open, detail),
+  )

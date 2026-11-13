@@ -6,6 +6,7 @@ export * from '../records'
 export { billedCost } from './billed'
 export { usageCost } from './cost'
 export { periodLabel, periodTitle } from './period'
+export { threadUsage } from '../summary/thread'
 
 export type UsageBucket = 'hour' | 'day'
 
@@ -68,6 +69,19 @@ export interface UsageSummary extends UsageQuery {
   projects: ProjectUsage[]
   unpriced: UnpricedModel[]
   limits?: Limits
+}
+
+export interface ThreadModel extends UsageTotals {
+  name: string
+  label: string
+  provider: string
+  subagents: number
+}
+
+export interface ThreadUsage {
+  session: string
+  total: UsageTotals
+  models: ThreadModel[]
 }
 
 export const usageSummary = request('usage.summary', {

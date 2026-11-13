@@ -97,4 +97,5 @@ export interface Sessions {
   list(): SessionSummary[]
   synced(since: string | null, active: string[]): SyncedSummaries
   entriesOfType(type: string): Entry[]
+  entriesIn(session: string, type: string): Entry[]
 }

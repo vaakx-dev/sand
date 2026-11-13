@@ -3,22 +3,11 @@ import { leftOf, percent } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import type { Forecast } from '../../data/forecast/project'
 import { accountName, type Share } from '../../data/plans'
-import { elapsedOf, type Tone, toneOf, whenText } from './pace'
+import { elapsedOf, TONE_FILL, TONE_TEXT, type Tone, toneOf } from '../../look'
+import { whenText } from './pace'
 
 export interface Segment extends Share {
   forecast?: Forecast
-}
-
-const FILLS: Record<Tone, string> = {
-  even: 'bg-neutral-600',
-  ahead: 'bg-warning-400/45',
-  out: 'bg-danger-400/20',
-}
-
-export const TONE_TEXT: Record<Tone, string> = {
-  even: 'text-neutral-100',
-  ahead: 'text-warning-400',
-  out: 'text-danger-400',
 }
 
 const resetText = (window: LimitWindow, tone: Tone) => {
@@ -33,7 +22,7 @@ const paceTick = (window: LimitWindow, now: number) => {
 }
 
 const segmentView = ({ account, window, forecast }: Segment, named: boolean, now: number) => {
-  const tone = toneOf(window, now, forecast)
+  const tone = toneOf(window, now, forecast?.outAt)
   const left = leftOf(window)
   return div(
     {
@@ -44,7 +33,7 @@ const segmentView = ({ account, window, forecast }: Segment, named: boolean, now
       'aria-valuemin': 0,
       'aria-valuemax': 100,
     },
-    div({ class: ['absolute inset-y-0 left-0 rounded-md', FILLS[tone]], style: { width: `${(tone === 'out' ? 1 : left) * 100}%` } }),
+    div({ class: ['absolute inset-y-0 left-0 rounded-md', TONE_FILL[tone]], style: { width: `${(tone === 'out' ? 1 : left) * 100}%` } }),
     paceTick(window, now),
     div(
       { class: 'relative flex h-full items-center gap-1.5 px-2 text-xs whitespace-nowrap tabular-nums' },
@@ -58,7 +47,7 @@ const segmentView = ({ account, window, forecast }: Segment, named: boolean, now
 const phoneResets = (segments: Segment[], now: number) =>
   div(
     { class: 'flex w-full gap-1 sm:hidden' },
-    segments.map(({ window, forecast }) => span({ class: 'min-w-0 flex-1 truncate px-2 text-xs text-neutral-500 tabular-nums' }, resetText(window, toneOf(window, now, forecast)))),
+    segments.map(({ window, forecast }) => span({ class: 'min-w-0 flex-1 truncate px-2 text-xs text-neutral-500 tabular-nums' }, resetText(window, toneOf(window, now, forecast?.outAt)))),
   )
 
 export const limitBar = (segments: Segment[], now: number) =>

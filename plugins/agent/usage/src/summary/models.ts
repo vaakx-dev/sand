@@ -7,10 +7,17 @@ import type { Turn } from './turns'
 
 export const nameOf = (model: string) => model.slice(model.indexOf('/') + 1)
 
-export const modelBook = (llm?: LLM) => {
+export const modelLabels = (llm?: LLM) => {
   const labels = new Map<string, string>()
-  const labelOf = (model: string, name: string) =>
-    grouped(labels, model, () => llm?.find?.(model)?.label ?? llm?.find?.(name)?.label ?? name)
+  return (model: string) =>
+    grouped(labels, model, () => {
+      const name = nameOf(model)
+      return llm?.find?.(model)?.label ?? llm?.find?.(name)?.label ?? name
+    })
+}
+
+export const modelBook = (llm?: LLM) => {
+  const labelOf = modelLabels(llm)
   const models = new Map<string, ModelUsage>()
   const unpriced = new Map<string, UnpricedModel>()
 
@@ -25,7 +32,7 @@ export const modelBook = (llm?: LLM) => {
       ...emptyTotals(),
       model: turn.model,
       name,
-      label: labelOf(turn.model, name),
+      label: labelOf(turn.model),
       provider: id.provider,
       account: id.key,
     }))

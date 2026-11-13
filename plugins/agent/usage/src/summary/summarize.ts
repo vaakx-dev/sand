@@ -25,7 +25,7 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
   const projects = projectBook(infos)
   const total = emptyTotals()
 
-  for (const turn of turnsOf(sessions.entriesOfType?.('usage') ?? [])) {
+  for (const turn of turnsOf(sessions.entriesOfType('usage'))) {
     if (turn.at < query.since) continue
     const id = identify(turn)
     const price = llm?.price?.(turn.model)
