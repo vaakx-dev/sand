@@ -1,31 +1,15 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
 import type { Merged } from '../data/types'
+import type { Metric } from '../format'
 import { usageModel, type UsageDeps, type UsageModel } from '../model'
-import type { Tab } from '../prefs'
-import { limitsView } from './accounts'
-import { spendView } from './spend'
-import { statusLine } from './status'
+import { breakdownView } from './breakdown'
+import { unpricedNote } from './notices'
+import { plansSection } from './plans'
+import { spendSection } from './spend'
 import { toolbar } from './toolbar'
 
 type BodyState = Merged | 'waiting' | 'empty' | 'missing'
-
-const noUsage = ({ emptyState }: Kit) => emptyState({ text: 'No usage yet.' })
-
-const pending = ({ loadingState }: Kit) => loadingState()
-
-const limits = (kit: Kit, usage: Merged, model: UsageModel) =>
-  div(
-    { class: 'flex flex-col gap-6' },
-    limitsView(usage.accounts, {
-      kit,
-      now: model.now,
-      nameOf: model.nameOf,
-      history: model.history,
-      windows: model.windows,
-      setWindow: model.setWindow,
-    }),
-  )
 
 const stateOf = (model: UsageModel): BodyState => {
   const usage = model.usage.get()
@@ -34,22 +18,31 @@ const stateOf = (model: UsageModel): BodyState => {
   return model.notices.get().length ? 'missing' : 'empty'
 }
 
-const bodyOf = (kit: Kit, state: BodyState, tab: Tab, model: UsageModel) => {
-  if (typeof state === 'object') return tab === 'usage' ? limits(kit, state, model) : spendView(kit, state, model, tab)
-  if (state === 'waiting') return pending(kit)
-  return state === 'empty' ? noUsage(kit) : null
+const sections = (kit: Kit, usage: Merged, model: UsageModel, metric: Metric) =>
+  div(
+    { class: 'flex flex-col gap-10' },
+    plansSection(usage.accounts, { kit, now: model.now, history: model.history }),
+    spendSection(kit, usage, model, metric),
+    usage.total.turns ? breakdownView({ kit, usage, nameOf: model.nameOf }, model.breakdown, metric) : null,
+    metric === 'cost' && usage.unpriced.length ? div({ class: 'flex flex-col gap-2' }, usage.unpriced.map(item => unpricedNote(kit, item))) : null,
+  )
+
+const bodyOf = (kit: Kit, state: BodyState, model: UsageModel, metric: Metric) => {
+  if (typeof state === 'object') return sections(kit, state, model, metric)
+  if (state === 'waiting') return kit.loadingState()
+  return state === 'empty' ? kit.emptyState({ text: 'No usage yet.' }) : null
 }
 
 export const usagePage = (kit: Kit, deps: UsageDeps) => {
   const model = usageModel(deps)
   return div(
-    { class: 'flex w-full flex-col gap-6' },
-    div({ class: 'flex flex-col gap-2' }, toolbar(kit, model), statusLine(kit, model)),
+    { class: 'flex w-full flex-col gap-8' },
+    toolbar(kit, model),
     div(
       { class: ['transition', () => (model.busy.get() && model.usage.get() ? 'opacity-75' : '')] },
       dynamicChild(
-        derive(() => ({ state: stateOf(model), tab: model.tab.get() })),
-        ({ state, tab }) => bodyOf(kit, state, tab, model),
+        derive(() => ({ state: stateOf(model), metric: model.metric.get() })),
+        ({ state, metric }) => bodyOf(kit, state, model, metric),
       ),
     ),
   )

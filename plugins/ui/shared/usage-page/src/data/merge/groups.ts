@@ -18,9 +18,10 @@ export const mergePeriods = (parts: PcSummary[]) => {
   const byKey = new Map<string, PeriodUsage>()
   for (const { summary } of parts)
     for (const period of summary.periods) {
-      const into = grouped(byKey, period.key, (): PeriodUsage => ({ ...emptyTotals(), key: period.key, accounts: {} }))
+      const into = grouped(byKey, period.key, (): PeriodUsage => ({ ...emptyTotals(), key: period.key, accounts: {}, models: {} }))
       addTotals(into, period)
       for (const [key, totals] of Object.entries(period.accounts)) addRecord(into.accounts, key, totals)
+      for (const [name, totals] of Object.entries(period.models)) addRecord(into.models, name, totals)
     }
   return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key))
 }

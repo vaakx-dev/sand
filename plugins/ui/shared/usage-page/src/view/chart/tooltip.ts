@@ -2,8 +2,7 @@ import { periodTitle, type UsageBucket } from '@sand/usage/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, portal, span, type Child } from '@vaakx-dev/vrui'
 import { metricText, type Metric } from '../../format'
-import { seriesName } from './legend'
-import type { Series } from './series'
+import { type Series, swatch } from './series'
 
 export interface Hover {
   index: number
@@ -25,6 +24,8 @@ const placement = ({ x, y }: Pick<Hover, 'x' | 'y'>) => {
 
 const tipRow = ({ metaLine, rowTitle }: Kit, label: Child, value: string) =>
   div({ class: 'flex items-center justify-between gap-4' }, metaLine(label), span({ class: 'tabular-nums' }, rowTitle(value)))
+
+const seriesName = (series: Series) => span({ class: 'inline-flex min-w-0 items-center gap-2' }, swatch(series), span({ class: 'truncate' }, series.label))
 
 const tipBox = ({ layer, metaLine }: Kit, at: Pick<Hover, 'x' | 'y'>, title: string, ...rows: Child[]) =>
   portal(
@@ -49,7 +50,7 @@ export const tooltip = (kit: Kit, hover: Hover, key: string, bucket: UsageBucket
     kit,
     hover,
     periodTitle(key, bucket),
-    series.map(line => tipRow(kit, seriesName(kit, line), metricText(valueAt(line), metric))),
+    series.filter(valueAt).map(line => tipRow(kit, seriesName(line), metricText(valueAt(line), metric))),
     series.length > 1 ? div({ class: 'mt-2 font-medium' }, tipRow(kit, 'Total', metricText(total, metric))) : null,
   )
 }

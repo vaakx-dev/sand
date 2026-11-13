@@ -46,11 +46,11 @@ export interface ModelUsage extends UsageTotals {
 export interface PeriodUsage extends UsageTotals {
   key: string
   accounts: Record<string, UsageTotals>
+  models: Record<string, UsageTotals>
 }
 
 export interface ProjectUsage extends UsageTotals {
   cwd: string
-  accounts: string[]
 }
 
 export interface UnpricedModel {

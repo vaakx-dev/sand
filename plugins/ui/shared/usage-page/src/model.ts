@@ -31,7 +31,7 @@ const stale = 60_000
 const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export const usageModel = (deps: UsageDeps) => {
-  const { range, pc, tab } = usagePrefs()
+  const { range, pc, metric } = usagePrefs()
   const signature = derive(() => JSON.stringify(deps.pcs()))
   const pcs = derive(() => {
     signature.get()
@@ -42,7 +42,6 @@ export const usageModel = (deps: UsageDeps) => {
   const breakdown = sig<Breakdown>('projects')
   const checking = sig(false)
   const now = clock(30_000)
-  const windows = sig(new Map<string, string>())
 
   effect(() => {
     range.get()
@@ -118,7 +117,7 @@ export const usageModel = (deps: UsageDeps) => {
   return {
     range,
     pc,
-    tab,
+    metric,
     breakdown,
     checking,
     now,
@@ -127,11 +126,8 @@ export const usageModel = (deps: UsageDeps) => {
     notices,
     busy: fleet.busy,
     pcs,
-    windows,
     nameOf: (id: string) => nameOf(id) ?? id,
-    refresh,
-    checkLimits: () => checkWith(refresh),
-    setWindow: (account: string, window: string) => windows.set(new Map(windows.get()).set(account, window)),
+    reload: () => checkWith(refresh),
   }
 }
 

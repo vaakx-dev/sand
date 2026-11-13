@@ -1,33 +1,56 @@
-import { usageRanges } from '@sand/usage/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div } from '@vaakx-dev/vrui'
+import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import type { Metric } from '../../format'
 import type { UsageModel } from '../../model'
+import { pageRanges } from '../../prefs'
 import { rangeLabel } from '../../range'
-import { breakdownView } from '../breakdown'
-import { chartView } from '../chart'
-import { unpricedRow } from '../notices'
-import { figures } from './figures'
+import { plot } from '../chart/plot'
+import { seriesOf } from '../chart/series'
+import { billing, headline, modelList, tokenFigures } from './figures'
 
-const periodPicker = ({ segmented }: Kit, model: UsageModel) =>
-  segmented(
-    usageRanges.map(value => ({ value, label: rangeLabel(value) })),
-    model.range,
-    value => model.range.set(value),
-    { label: 'Period' },
+const METRICS: { value: Metric; label: string }[] = [
+  { value: 'cost', label: 'Cost' },
+  { value: 'tokens', label: 'Tokens' },
+]
+
+const controls = ({ segmented }: Kit, model: UsageModel) =>
+  div(
+    { class: 'flex flex-wrap items-center gap-2' },
+    segmented(
+      pageRanges.map(value => ({ value, label: rangeLabel(value) })),
+      model.range,
+      value => model.range.set(value),
+      { label: 'Period' },
+    ),
+    segmented(METRICS, model.metric, value => model.metric.set(value), { label: 'Measure' }),
   )
 
-const overview = (kit: Kit, usage: Merged, metric: Metric) =>
-  kit.sectionRow({}, div({ class: 'flex min-w-0 flex-1 flex-col gap-4 py-2' }, figures(kit, usage, metric), chartView(kit, usage, metric)))
+const sectionHead = (kit: Kit, model: UsageModel) =>
+  div({ class: 'mb-4 flex flex-wrap items-center gap-x-2 gap-y-3' }, kit.sectionTitle('Spend'), span({ class: 'flex-1' }), controls(kit, model))
 
-export const spendView = (kit: Kit, usage: Merged, model: UsageModel, metric: Metric) => {
-  const { emptyState, settingsSection } = kit
-  const head = { title: `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric}`, action: periodPicker(kit, model) }
-  if (!usage.total.turns) return settingsSection(head, emptyState({ text: 'No usage in this range.' }))
+const overview = (kit: Kit, usage: Merged, metric: Metric) => {
+  const { keys, series } = seriesOf(kit, usage, metric)
+  const chart = div(
+    { class: 'flex min-w-0 flex-1 flex-col gap-2' },
+    span({ class: 'text-sm text-neutral-200' }, metric === 'cost' ? 'Daily cost' : 'Daily tokens'),
+    plot(kit, { bucket: usage.bucket, keys, series, metric }),
+  )
+  const rule = div({ class: 'h-px bg-neutral-700' })
   return div(
     { class: 'flex flex-col gap-6' },
-    settingsSection(head, overview(kit, usage, metric), metric === 'cost' ? usage.unpriced.map(item => unpricedRow(kit, item)) : null),
-    breakdownView({ kit, usage }, model.breakdown, metric),
+    div(
+      { class: 'flex flex-col gap-5 md:flex-row md:gap-8' },
+      div({ class: 'flex min-w-0 shrink-0 flex-col gap-5 md:w-64' }, headline(usage, metric), metric === 'cost' ? billing(usage) : null, rule, modelList(series, metric)),
+      chart,
+    ),
+    tokenFigures(kit, usage),
   )
 }
+
+export const spendSection = (kit: Kit, usage: Merged, model: UsageModel, metric: Metric) =>
+  div(
+    { class: 'flex min-w-0 flex-col' },
+    sectionHead(kit, model),
+    usage.total.turns ? overview(kit, usage, metric) : kit.emptyState({ text: 'No usage in this range.' }),
+  )

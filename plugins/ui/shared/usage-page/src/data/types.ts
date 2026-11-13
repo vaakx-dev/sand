@@ -18,14 +18,12 @@ export interface Account extends AccountUsage {
 
 export interface Project extends UsageTotals {
   name: string
-  accounts: string[]
   machines: string[]
 }
 
 export interface PcUsage extends UsageTotals {
   id: string
   name: string
-  accounts: string[]
 }
 
 export interface Merged {

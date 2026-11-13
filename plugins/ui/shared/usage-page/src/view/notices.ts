@@ -20,8 +20,9 @@ const noticeText = (notice: Notice, now: Sig<number>) => {
 export const offlineNotices = ({ dot, secondaryText }: Kit, notices: Notice[], now: Sig<number>) =>
   notices.map(notice => div({ class: 'flex items-center gap-2' }, dot('neutral'), secondaryText(noticeText(notice, now))))
 
-export const unpricedRow = ({ settingsRow }: Kit, item: UnpricedModel) =>
-  settingsRow({
-    title: `${item.model} has no price`,
-    detail: `${tokens(item.tokens)} tokens are left out of cost. Add a price under [plugins.accounts.prices] in sand.toml`,
-  })
+export const unpricedNote = ({ icon }: Kit, item: UnpricedModel) =>
+  div(
+    { class: 'flex items-start gap-2 text-xs text-neutral-500' },
+    span({ class: 'inline-flex pt-px' }, icon('info', 'sm')),
+    span(span({ class: 'text-neutral-200' }, `${item.model} has no price,`), ` so its ${tokens(item.tokens)} tokens are left out of cost. Add one under [plugins.accounts.prices] in sand.toml.`),
+  )

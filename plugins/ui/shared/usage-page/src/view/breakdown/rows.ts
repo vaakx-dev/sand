@@ -1,7 +1,7 @@
 import { emptyTotals, periodTitle, type UsageTotals } from '@sand/usage/contract'
 import { grouped } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { addTotals, including } from '../../data/totals'
+import { addTotals } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { metricValue, type Metric } from '../../format'
 
@@ -14,24 +14,23 @@ export interface Row {
   name: string
   note?: string
   hint?: string
-  accounts: string[]
   totals: UsageTotals
 }
 
 export interface RowSource {
   kit: Kit
   usage: Merged
+  nameOf(pc: string): string
 }
 
-const projectRows = ({ usage }: RowSource): Row[] =>
-  usage.projects.map(project => ({ key: project.name, name: project.name, accounts: project.accounts, totals: project }))
+const projectRows = ({ usage, nameOf }: RowSource): Row[] =>
+  usage.projects.map(project => ({ key: project.name, name: project.name, note: project.machines.map(nameOf).join(', '), totals: project }))
 
 const modelRows = ({ usage }: RowSource): Row[] => {
   const byModel = new Map<string, Row>()
   for (const model of usage.models) {
-    const row = grouped(byModel, model.name, (): Row => ({ key: model.name, name: model.label, hint: model.name, accounts: [], totals: emptyTotals() }))
+    const row = grouped(byModel, model.name, (): Row => ({ key: model.name, name: model.label, hint: model.name, totals: emptyTotals() }))
     addTotals(row.totals, model)
-    including(row.accounts, [model.account])
   }
   return [...byModel.values()]
 }
@@ -39,9 +38,9 @@ const modelRows = ({ usage }: RowSource): Row[] => {
 const accountRows = ({ usage }: RowSource): Row[] =>
   usage.accounts
     .filter(account => account.turns)
-    .map(account => ({ key: account.key, name: account.label, note: account.pcName, accounts: [account.key], totals: account }))
+    .map(account => ({ key: account.key, name: account.label, note: account.pcName, totals: account }))
 
-const pcRows = ({ usage }: RowSource): Row[] => usage.pcs.map(pc => ({ key: pc.id, name: pc.name, accounts: pc.accounts, totals: pc }))
+const pcRows = ({ usage }: RowSource): Row[] => usage.pcs.map(pc => ({ key: pc.id, name: pc.name, totals: pc }))
 
 const periodRows = ({ usage }: RowSource): Row[] =>
   usage.periods
@@ -50,7 +49,6 @@ const periodRows = ({ usage }: RowSource): Row[] =>
     .map(period => ({
       key: period.key,
       name: periodTitle(period.key, usage.bucket),
-      accounts: Object.keys(period.accounts).filter(key => period.accounts[key]?.turns),
       totals: period,
     }))
 
