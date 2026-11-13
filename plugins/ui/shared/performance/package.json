@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "usage",
     "runtime": "./src/runtime.ts",
     "web": "./src/web/index.ts",
     "label": "Performance",
