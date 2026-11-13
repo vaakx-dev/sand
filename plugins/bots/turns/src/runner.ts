@@ -47,7 +47,7 @@ export const botConversations = (ctx: BotTurnsContext, live: Live, queued: (bot:
     overflow: (conversation, turn, error, signal) => ctx.bail(contextOverflow, conversation, turn, error, signal),
     changed(turn) {
       if (turn.ended) live.clear(turn.conversation)
-      ctx.bots.status(turn.conversation, statuses[turn.status])
+      ctx.bots.status(turn.conversation, statuses[turn.status], turn.waiting?.kind)
     },
     streamed: (event, conversation) => live.push(conversation.id, event),
     queued: conversation => queued(conversation.id),

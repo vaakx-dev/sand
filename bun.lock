@@ -933,6 +933,7 @@
         "@sand/paths": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/sub-model": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/usage": "workspace:*",
         "@sand/util": "workspace:*",

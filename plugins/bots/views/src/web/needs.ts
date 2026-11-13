@@ -9,7 +9,7 @@ export const botNeeds = (parts: Parts): NeedSource => ({
   items: () =>
     parts.store.bots
       .get()
-      ?.filter(bot => bot.status === 'waiting')
+      ?.filter(bot => bot.status === 'waiting' && bot.waiting === 'secret')
       .map((bot): Need => ({
         id: `bot:${bot.id}`,
         kind: 'secret',
