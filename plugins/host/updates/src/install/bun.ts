@@ -1,5 +1,5 @@
 import { allowThroughFirewall } from '@sand/boot/setup'
-import { replaceFile } from '@sand/util/fs'
+import { moveFresh } from '@sand/util/fs'
 import { bunBinary, validVersion } from '@sand/util/release'
 import { chmod, mkdir, rm } from 'node:fs/promises'
 import { dirname } from 'node:path'
@@ -30,7 +30,7 @@ const place = async (path: string, version: string, binary: Uint8Array) => {
     if (process.platform !== 'win32') await chmod(temp, 0o755)
     const found = await bunVersion(temp)
     if (found !== version) throw new Error(`the Bun ${version} download does not run${found ? ` (it says ${found})` : ''}`)
-    await replaceFile(temp, path)
+    await moveFresh(temp, path)
   } finally {
     await rm(temp, { force: true }).catch(() => {})
   }

@@ -1,6 +1,6 @@
 import type { Feature, Features } from '@sand/config/contract'
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import { serial } from '@sand/util'
+import { errorMessage, serial } from '@sand/util'
 import type { AddonListing, AddonStamp } from '@sand/util/release'
 import type { Addon, AddonSource, FeatureChoice } from '../contract'
 import { catalogCache, type Shelf } from './catalog'
@@ -30,7 +30,16 @@ interface Known {
   offers: Map<string, Offer>
 }
 
+interface BatchWords {
+  verb: string
+  done: string
+  left: string
+}
+
 type Freshness = 'recent' | 'fresh'
+
+const INSTALL_WORDS: BatchWords = { verb: 'install', done: 'Installed and turned on', left: 'Not installed' }
+const UPDATE_WORDS: BatchWords = { verb: 'update', done: 'Updated', left: 'Not updated' }
 
 const byLabel = (a: Addon, b: Addon) => a.label.localeCompare(b.label)
 
@@ -119,6 +128,28 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
 
   const download = ({ listing, source, url }: Offer) => installFolder({ root, listing, catalogUrl: url, source: source.id })
 
+  const downloadAll = async (offers: Offer[]) => {
+    const done: Offer[] = []
+    for (const offer of offers) {
+      const failure = await download(offer).then(
+        () => undefined,
+        (error: unknown) => error,
+      )
+      if (failure) return { done, failure: { offer, error: failure } }
+      done.push(offer)
+    }
+    return { done }
+  }
+
+  const downloadOrReport = async (offers: Offer[], words: BatchWords) => {
+    const { done, failure } = await downloadAll(offers)
+    if (!failure) return { done }
+    const labels = (some: Offer[]) => listed(some.map(({ listing }) => listing.label))
+    const finished = done.length ? ` ${words.done}: ${labels(done)}.` : ''
+    const error = new Error(`Couldn't ${words.verb} ${failure.offer.listing.label}: ${errorMessage(failure.error)}.${finished} ${words.left}: ${labels(offers.slice(done.length))}.`)
+    return { done, error }
+  }
+
   const install = (ids: string[]) =>
     queue(async () => {
       const state = await known('fresh')
@@ -126,8 +157,11 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
       const here = (id: string) => state.stamps.has(id) || state.features.some(feature => feature.id === id)
       const unknown = wanted.filter(id => !here(id) && !state.offers.has(id))
       if (unknown.length) throw new Error(`No add-on named ${listed(unknown)}`)
-      for (const offer of fitting(wanted.filter(id => !here(id)).map(id => state.offers.get(id)!))) await download(offer)
-      await reload(Object.fromEntries(wanted.map(id => [id, true])))
+      const offers = fitting(wanted.filter(id => !here(id)).map(id => state.offers.get(id)!))
+      const { done, error } = await downloadOrReport(offers, INSTALL_WORDS)
+      const landed = new Set(done.map(({ listing }) => listing.id))
+      await reload(Object.fromEntries(wanted.filter(id => here(id) || landed.has(id)).map(id => [id, true])))
+      if (error) throw error
       return choice()
     })
 
@@ -138,8 +172,9 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
       if (missing.length) throw new Error(`${listed(missing)} isn't a downloaded add-on`)
       const offers = ids.flatMap(id => offerFrom(state, id, state.stamps.get(id)!.source) ?? [])
       const stale = fitting(offers).filter(({ listing }) => listing.hash !== state.stamps.get(listing.id)?.hash)
-      for (const offer of stale) await download(offer)
-      if (stale.length) await reload({})
+      const { done, error } = await downloadOrReport(stale, UPDATE_WORDS)
+      if (done.length) await reload({})
+      if (error) throw error
       return choice()
     })
 

@@ -1,7 +1,6 @@
 import { errorMessage, uuid } from '@sand/util'
-import { removeFolder } from '@sand/util/fs'
+import { isMissing, moveFresh, removeFolder } from '@sand/util/fs'
 import { addonFolders, type AddonListing, type AddonStamp, addonStampFile } from '@sand/util/release'
-import { rename } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { z } from 'zod'
 
@@ -40,13 +39,24 @@ const unpack = async (bytes: Uint8Array, folder: string) => {
 
 const stampOf = ({ id, version, hash, sha256: fingerprint }: AddonListing, source: string): AddonStamp => ({ id, source, version, hash, sha256: fingerprint })
 
+const setAside = (target: string, old: string) =>
+  moveFresh(target, old).then(
+    () => true,
+    (error: unknown) => {
+      if (isMissing(error)) return false
+      throw error
+    },
+  )
+
 const replace = async (staging: string, target: string) => {
   const old = `${staging}-old`
-  const had = await rename(target, old).then(
-    () => true,
-    () => false,
-  )
-  await rename(staging, target)
+  const had = await setAside(target, old)
+  try {
+    await moveFresh(staging, target)
+  } catch (error) {
+    if (had) await moveFresh(old, target)
+    throw error
+  }
   if (had) await removeFolder(old)
 }
 
