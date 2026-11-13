@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, onInterval, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, onInterval, sig } from '@vaakx-dev/vrui'
 import { ranges } from '../../contract'
 import type { Model } from '../model'
 import { offRow, pcCard } from './pc'
@@ -15,11 +15,7 @@ const guardSwitch = (kit: Kit, model: Model) =>
       'aria-label': 'Memory guard',
       onClick: () => void model.setGuard(!model.guard.get()),
     }),
-    div(
-      { class: 'flex min-w-0 flex-col' },
-      span({ class: 'text-sm font-medium text-neutral-100' }, 'Memory guard'),
-      span({ class: 'text-xs text-neutral-500' }, 'When a PC runs very low on memory, sand stops the chat using the most'),
-    ),
+    div({ class: 'flex min-w-0 flex-col text-sm' }, kit.emphasis('Memory guard'), kit.secondaryText('When a PC runs very low on memory, sand stops the chat using the most')),
   )
 
 const rangeChoice = (kit: Kit, model: Model) =>
