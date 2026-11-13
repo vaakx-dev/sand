@@ -1,4 +1,5 @@
 import { botRoster } from '@sand/bots/contract'
+import { waitLines } from '@sand/chat/contract'
 import { inspector } from '@sand/inspector/contract'
 import { pcs, wire, wireHello } from '@sand/devices-contract'
 import { needs } from '@sand/needs-you/contract'
@@ -10,6 +11,7 @@ import { definePlugin } from 'drydock'
 import { type Mode, type PermissionSettings, permissionDeadline, permissionModeSet, permissionRuleRemove, permissionSettings, settingsWire } from '../contract'
 import { createModeState, modeRow, type Place } from './mode'
 import { createModel } from './model'
+import { permissionLine } from './line'
 import { permissionNeeds } from './needs'
 import { permissionsPage } from './page'
 
@@ -22,6 +24,7 @@ export default definePlugin({
     const report = (error: unknown) => ctx.report(error)
     const model = owned(ctx, () => createModel(ctx, ctx))
     ctx.watch(needs, found => found?.source(permissionNeeds(ctx, kit, model)))
+    ctx.watch(waitLines, found => found?.add(permissionLine(kit, model)))
 
     ctx.watch(inspector, found =>
       found?.row({

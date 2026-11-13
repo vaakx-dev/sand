@@ -11,6 +11,8 @@ import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
 import { slotHost } from './slot'
+import { shownWait } from './wait'
+import { waitLines } from './contract'
 import { failed } from './states'
 import { foldTurns } from './turns/fold'
 import { shownRows, type TurnContext } from './turns/rows'
@@ -85,7 +87,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       branchSwitch: entry => branchSwitch(ctx, view, entry),
     })
-    const context: TurnContext = { kit, rows, states, repaint }
+    const context: TurnContext = { kit, rows, states, repaint, wait: shownWait(ctx.get(waitLines), thread) }
     const items = cache.items(thread, () => ctx.threads.path(thread.id))
     const folded = foldTurns(items, {
       older: ctx.threads.older(thread.id),
