@@ -1,0 +1,59 @@
+{
+  "name": "@sand/permissions",
+  "version": "0.0.0",
+  "description": "Permission modes for threads and bots: off, ask and auto, with saved rules, questions with a deadline, stricter defaults for threads a bot starts and a log of every decision",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "permissions",
+    "runtime": "./src/index.ts",
+    "cli": "./src/cli.ts",
+    "label": "Permissions",
+    "summary": "Asks you, or a reviewer model, before an agent runs commands, sends, spends or deletes",
+    "web": "./src/web/index.ts",
+    "features": {
+      "permissions": {
+        "label": "Permissions",
+        "summary": "Threads and bots ask you, or a reviewer model, before risky calls",
+        "needs": [
+          "engine"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chat": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/cli-commands": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-notify": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/needs-you": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/sub-model": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

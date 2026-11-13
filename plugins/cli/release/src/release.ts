@@ -30,7 +30,10 @@ const releaseAssets = async ([folder]: string[]) => {
   await Bun.write(join(out, stampAsset), JSON.stringify(stamp))
   console.log(`build ${stamp.id} (Bun ${stamp.bun}): ${join(out, bundleAsset)} (${bytes.length} bytes), ${join(out, stampAsset)}`)
   const packed = await Promise.all(addons.map(addon => packAddon(root, addon, app.files, version)))
-  for (const { listing, bytes: addonBytes } of packed) await Bun.write(join(out, listing.file), addonBytes)
+  for (const { listing, bytes: addonBytes, pictures } of packed) {
+    await Bun.write(join(out, listing.file), addonBytes)
+    for (const picture of pictures) await Bun.write(join(out, picture.file), picture.bytes)
+  }
   const catalog: AddonCatalog = { addons: packed.map(({ listing }) => listing) }
   await Bun.write(join(out, addonCatalogAsset), `${JSON.stringify(catalog, null, 2)}\n`)
   console.log(`${packed.length} add-ons (${packed.reduce((sum, { listing }) => sum + listing.size, 0)} bytes), ${join(out, addonCatalogAsset)}`)

@@ -1,114 +1,30 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
-import type { Addon, Feature, FeatureChoice } from '../contract'
+import { derive, div, dynamicChild, media, show } from '@vaakx-dev/vrui'
+import type { Addon, FeatureChoice } from '../contract'
+import { addonCard } from './addon/card'
+import { addonControls, addonLine } from './addon/controls'
+import { detail, row, tree, working } from './rows'
+import { searchAddons } from './search'
+import { sourcesSection } from './sources'
 import type { FeatureStore } from './store'
 
-interface Placed {
-  feature: Feature
-  depth: number
+interface AddonLinks {
+  open(id: string): void
+  has(id: string): boolean
+  core(): void
 }
 
-const tree = (features: Feature[], feature: Feature, depth = 0): Placed[] => [
-  { feature, depth },
-  ...features.filter(child => child.parent === feature.id).flatMap(child => tree(features, child, depth + 1)),
-]
-
-const listed = (labels: string[]) => (labels.length > 1 ? `${labels.slice(0, -1).join(', ')} and ${labels.at(-1)}` : (labels[0] ?? ''))
-
-const goesOffWith = (features: Feature[], id: string): Feature[] =>
-  features.filter(other => other.on && (other.parent === id || other.needs.includes(id))).flatMap(other => [other, ...goesOffWith(features, other.id)])
-
-const notice = (features: Feature[], feature: Feature) => {
-  const off = goesOffWith(features, feature.id)
-  const gone = new Set(off.map(other => other.id))
-  const also = [...new Set(off.map(other => other.label))]
-  const kept = feature.usedBy.some(id => !gone.has(id))
-  return [also.length ? `Also turns off ${listed(also)}.` : '', kept ? (feature.stops ?? '') : ''].filter(Boolean).join(' ')
+interface Shown {
+  kit: Kit
+  store: FeatureStore
+  links: AddonLinks
+  choice: FeatureChoice
 }
 
-const available = (features: Feature[], id: string): boolean => {
-  const found = features.find(feature => feature.id === id)
-  if (!found) return false
-  if (found.kind === 'feature') return found.on
-  return found.chosen && found.needs.every(need => available(features, need))
-}
-
-const labelOf = ({ features, addons }: FeatureChoice, id: string) => features.find(feature => feature.id === id)?.label ?? addons.find(addon => addon.id === id)?.label ?? id
-
-const missing = (features: Feature[], feature: Feature) => feature.needs.filter(need => !available(features, need))
-
-const orphaned = (features: Feature[], feature: Feature) => feature.parent !== undefined && !available(features, feature.parent)
-
-const blocked = (features: Feature[], feature: Feature) => orphaned(features, feature) || missing(features, feature).length > 0
-
-const labels = (features: Feature[], ids: string[]) => ids.map(id => features.find(feature => feature.id === id)?.label ?? id)
-
-const status = (choice: FeatureChoice, feature: Feature) => {
-  const { features } = choice
-  if (orphaned(features, feature)) return ''
-  const needs = missing(features, feature)
-  if (needs.length) return `Needs ${listed(needs.map(need => labelOf(choice, need)))}`
-  if (feature.kind === 'feature' || !feature.chosen) return ''
-  return feature.usedBy.length ? `Used by ${listed(labels(features, feature.usedBy))}` : 'Not used, so not loaded'
-}
-
-const detail = (summary: string, line: string) => (line ? [div(summary), div(line)] : summary)
-const busy = (store: FeatureStore) => Boolean(store.applying.get())
-
-const working = (kit: Kit, store: FeatureStore, id: string) => show(() => id in (store.applying.get() ?? {}), () => kit.spinner())
-
-const featureSwitch = (kit: Kit, store: FeatureStore, { features }: FeatureChoice, feature: Feature) => {
-  const { id, kind, label } = feature
-  const on = kind === 'feature' ? feature.on : feature.chosen
-  const warning = on ? notice(features, feature) : ''
-  const apply = (next: boolean) => store.apply({ [id]: next })
-  const turnOff = { id: 'off', label: 'Turn off', danger: true, confirm: warning, run: () => apply(false) }
-  const flip = (event: MouseEvent) => {
-    if (warning) return kit.confirm(event)(turnOff)
-    void apply(!on)
-  }
-  return kit.toggleSwitch({ on, disabled: () => busy(store) || blocked(features, feature), 'aria-label': label, onClick: flip })
-}
-
-const row = (kit: Kit, store: FeatureStore, choice: FeatureChoice, { feature, depth }: Placed) =>
-  kit.settingsRow(
-    { title: feature.label, detail: detail(feature.summary, status(choice, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
-    working(kit, store, feature.id),
-    featureSwitch(kit, store, choice, feature),
-  )
-
-const removeButton = (kit: Kit, store: FeatureStore, { id, label }: Addon) => {
-  const action = { id: 'remove', label: `Remove ${label}`, icon: 'trash', danger: true, confirm: `Deletes ${label} from this PC. You can install it again later.`, run: () => store.remove(id) }
-  return kit.iconButton({ title: 'Remove', 'aria-label': `Remove ${label}`, disabled: () => busy(store), onClick: (event: MouseEvent) => kit.confirm(event)(action) }, kit.icon('trash'))
-}
-
-const installButton = (kit: Kit, store: FeatureStore, { id, label, needsSand }: Addon) =>
-  kit.secondaryAction({ size: 'sm', 'aria-label': `Install ${label}`, disabled: () => busy(store) || Boolean(needsSand), onClick: () => void store.install(id) }, 'Install')
-
-const updateButton = (kit: Kit, store: FeatureStore, { id, label, update }: Addon) =>
-  update ? kit.secondaryAction({ size: 'sm', title: `Update to ${update}`, 'aria-label': `Update ${label}`, disabled: () => busy(store), onClick: () => void store.update(id) }, 'Update') : null
-
-const addonControls = (kit: Kit, store: FeatureStore, choice: FeatureChoice, addon: Addon, feature: Feature | undefined) => {
-  const toggle = feature ? featureSwitch(kit, store, choice, feature) : null
-  switch (addon.status) {
-    case 'available':
-      return [installButton(kit, store, addon)]
-    case 'installed':
-      return [updateButton(kit, store, addon), toggle, removeButton(kit, store, addon)]
-    case 'built-in':
-      return [toggle]
-  }
-}
-
-const addonLine = (choice: FeatureChoice, addon: Addon, feature: Feature | undefined) => {
-  if (addon.needsSand) return 'Needs a newer sand'
-  return feature ? status(choice, feature) : ''
-}
-
-const addonRows = (kit: Kit, store: FeatureStore, choice: FeatureChoice, addon: Addon) => {
+const installedRows = ({ kit, store, links, choice }: Shown, addon: Addon) => {
   const feature = choice.features.find(found => found.id === addon.id)
   const head = kit.settingsRow(
-    { title: addon.label, detail: detail(addon.summary, addonLine(choice, addon, feature)) },
+    { title: addon.label, detail: detail(addon.summary, addonLine(choice, addon, feature)), ...(links.has(addon.id) && { onOpen: () => links.open(addon.id) }) },
     working(kit, store, addon.id),
     ...addonControls(kit, store, choice, addon, feature),
   )
@@ -116,35 +32,60 @@ const addonRows = (kit: Kit, store: FeatureStore, choice: FeatureChoice, addon: 
   return [head, ...children]
 }
 
-const catalogNote = ({ catalogError, addons }: FeatureChoice) => {
-  if (!catalogError) return undefined
-  return addons.length ? "Can't reach the add-on catalog, so only installed add-ons show. They keep working." : "Can't reach the add-on catalog. Try again when you're online."
+const unreachable = ({ sources, addons }: FeatureChoice) => {
+  const failed = sources.filter(source => source.error).map(source => source.label)
+  if (!failed.length) return undefined
+  const kept = addons.some(addon => addon.status === 'installed') ? ' Installed add-ons keep working.' : ''
+  return `Can't reach ${failed.join(' and ')} right now.${kept}`
 }
 
-export const featuresPage = (kit: Kit, store: FeatureStore) => {
-  const { errorText, loadingState, settingsSection } = kit
-  const state = derive(() => JSON.stringify(store.choice.get() ?? null))
+const cards = ({ kit, store, links }: Shown, available: Addon[]) => {
+  const wide = media('(min-width: 640px)')
+  return div({ class: () => ['grid gap-3', wide.get() ? 'grid-cols-2' : 'grid-cols-1'] }, ...available.map(addon => addonCard(kit, store, addon, links.open)))
+}
+
+const addonSections = (shown: Shown, addons: Addon[], note: string | undefined) => {
+  const { settingsSection } = shown.kit
+  const installed = addons.filter(addon => addon.status !== 'available')
+  const available = addons.filter(addon => addon.status === 'available')
+  return [
+    installed.length ? settingsSection({ title: 'Installed' }, ...installed.flatMap(addon => installedRows(shown, addon))) : null,
+    available.length || note ? settingsSection({ title: 'Available', note }, available.length ? cards(shown, available) : null) : null,
+  ]
+}
+
+const searchResults = (shown: Shown, query: string) => {
+  const found = searchAddons(shown.choice.addons, query)
+  if (!found.length) return [shown.kit.emptyState({ text: `No add-ons match “${query.trim()}”.` })]
+  return addonSections(shown, found, undefined)
+}
+
+const everything = (shown: Shown) => {
+  const { kit, store, links, choice } = shown
+  return [
+    ...addonSections(shown, choice.addons, unreachable(choice)),
+    sourcesSection(kit, store, choice.sources),
+    kit.settingsSection({}, kit.settingsRow({ title: 'Core features', detail: 'Threads, bots, phones and the parts of sand they share', onOpen: links.core })),
+  ]
+}
+
+const featuresPage = (kit: Kit, store: FeatureStore, links: AddonLinks) => {
+  const state = derive(() => JSON.stringify([store.choice.get() ?? null, store.query.get().trim()]))
   return div(
     { class: 'flex flex-col gap-6' },
+    div({ class: 'flex' }, kit.searchField({ placeholder: 'Search add-ons', 'aria-label': 'Search add-ons', bindValue: store.query })),
     show(
       () => Boolean(store.error.get()),
-      () => errorText(() => store.error.get()),
+      () => kit.errorText(() => store.error.get()),
     ),
     dynamicChild(state, () => {
       const choice = store.choice.get()
-      if (!choice) return loadingState()
-      const { features, addons } = choice
-      const addonIds = new Set(addons.map(addon => addon.id))
-      const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent && !addonIds.has(feature.id))
-      return div(
-        { class: 'contents' },
-        settingsSection({ title: 'Add-ons', note: catalogNote(choice) }, addons.flatMap(addon => addonRows(kit, store, choice, addon))),
-        settingsSection({ title: 'Core' }, tops.flatMap(top => tree(features, top)).map(item => row(kit, store, choice, item))),
-        settingsSection(
-          { title: 'Shared parts' },
-          features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, choice, { feature, depth: 0 })),
-        ),
-      )
+      if (!choice) return kit.loadingState()
+      const shown = { kit, store, links, choice }
+      const query = store.query.get()
+      return div({ class: 'contents' }, ...(query.trim() ? searchResults(shown, query) : everything(shown)))
     }),
   )
 }
+
+export { featuresPage, type AddonLinks }

@@ -100,7 +100,9 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     const settings = { ...inherited, ...matchSettings(ctx, input, inherited.model) }
     const prompt = owners.sign(input.prompt, input.from)
     const session = await threadFor(input, adopt)
-    if (input.subagent && input.from && starters.put(session.id, input.from)) ctx.emit(subagentStarted, session.id, input.from)
+    const starter = input.from
+    const first = starter !== undefined && starters.put(session.id, starter, input.subagent ? 'subagent' : 'thread')
+    if (first && input.subagent) ctx.emit(subagentStarted, session.id, starter)
     const sent = await ctx.turns.send(session, { prompt, label: input.label, origin: input.origin, clientRequestId: input.clientRequestId, settings })
     return { ...sent, thread: session.id }
   }

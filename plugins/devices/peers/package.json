@@ -15,8 +15,7 @@
         "summary": "Use sand on your other PCs from one place, with your plugins shared between them",
         "needs": [
           "phone"
-        ],
-        "addon": true
+        ]
       },
       "ssh": {
         "label": "SSH machines",

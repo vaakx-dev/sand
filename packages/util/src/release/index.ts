@@ -1,6 +1,7 @@
 export {
   addonAsset,
   addonCatalogAsset,
+  addonPicture,
   addonFolders,
   addonStampFile,
   isAddonFolder,

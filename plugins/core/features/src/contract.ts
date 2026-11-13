@@ -13,15 +13,26 @@ export interface Addon {
   label: string
   summary: string
   status: AddonStatus
+  readme: string
+  pictures: string[]
+  cover?: string
   version?: string
   update?: string
   needsSand?: string
+  source?: { id: string; label: string }
+}
+
+export interface AddonSource {
+  id: string
+  label: string
+  removable: boolean
+  error?: string
 }
 
 export interface FeatureChoice {
   features: Feature[]
   addons: Addon[]
-  catalogError?: string
+  sources: AddonSource[]
 }
 
 export interface FeatureState {
@@ -37,6 +48,16 @@ export const featuresList = request('features.list', { input: () => z.object({})
 export const featuresSet = request('features.set', { input: () => z.object({ changes: z.record(z.string(), z.boolean()) }), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 
 export const addonsReady = request('addons.ready', { input: () => z.object({}), output: type<Addon[]>(), callers: 'runtime' })
+
+export const addonsPicture = request('addons.picture', {
+  input: () => z.object({ id: z.string().min(1), file: z.string().min(1) }),
+  output: type<string>(),
+  callers: 'any',
+})
+
+export const addonsSourceAdd = request('addons.source.add', { input: () => z.object({ source: z.string().min(1) }), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
+
+export const addonsSourceRemove = request('addons.source.remove', { input: () => z.object({ id: z.string().min(1) }), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 
 export const addonsInstall = request('addons.install', { input: addonIds, output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 
