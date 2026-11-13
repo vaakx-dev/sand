@@ -21,7 +21,7 @@ const resolve = (definitions: FeatureDefinition[], off: ReadonlySet<string>) => 
     const known = ready.get(id)
     if (known !== undefined) return known
     const definition = byId.get(id)
-    if (!definition) return true
+    if (!definition) return false
     if (path.has(id)) return false
     const within = new Set([...path, id])
     const value = !off.has(id) && requiredBy(definition).every(need => isReady(need, within))
