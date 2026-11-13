@@ -1,29 +1,29 @@
 import { botName, type BotPatch, type BotSummary } from '@sand/bots/contract'
 import type { FaceState } from '@sand/ui-kit/contract'
 import type { Route, Screen } from '@sand/ui-shell/contract'
-import { div, show, span, untrack } from '@vaakx-dev/vrui'
+import { div, dynamicChild, show, span, untrack } from '@vaakx-dev/vrui'
 import { chatView } from '../chat/view'
 import type { Parts } from '../parts'
 import { botStatus } from '../work'
 
 const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 
-const faceStateOf = (bot: BotSummary | undefined): FaceState | undefined => {
-  if (!bot) return undefined
-  const status = botStatus(bot)
-  return status === 'running' ? 'running' : undefined
-}
+const faceStateOf = (bot: BotSummary): FaceState | undefined => (botStatus(bot) === 'running' ? 'running' : undefined)
 
 const missing = ({ ctx: { kit } }: Parts) => kit.pageBody({}, kit.emptyState({ text: 'This bot is gone.' }))
 
 const headerOf = (parts: Parts, id: string) => {
   const { kit } = parts.ctx
   const bot = () => parts.store.find(id)
-  const faceState = () => faceStateOf(bot())
   const title = () => botName(bot() ?? { name: '' })
+  const face = (found: BotSummary | undefined) => {
+    if (!found) return null
+    const state = faceStateOf(found)
+    return span({ class: 'shrink-0' }, kit.botFace(id, found.color, 26, state ? { state, label: botName(found) } : { label: botName(found) }))
+  }
   return div(
     { class: 'flex min-w-0 flex-1 items-center gap-3' },
-    span({ class: 'shrink-0' }, kit.botFace(id, bot()?.color ?? 'grey', 26, faceState() ? { state: faceState(), label: title() } : { label: title() })),
+    dynamicChild(bot, face),
     kit.barTitle(title),
   )
 }
