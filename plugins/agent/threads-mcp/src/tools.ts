@@ -144,6 +144,7 @@ export const threadTools: McpTool[] = [
       },
     ],
     access: 'operate',
+    uses: 'agents',
     group: group.name,
     run: async ({ clientRequestId, from, prompt, files, ...input }, { call, here }) =>
       call(threadStart, {

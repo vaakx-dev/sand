@@ -15,7 +15,7 @@ export const fillTool = (deps: ToolDeps): Tool<typeof input> => ({
     "Fill a saved website login's username and password into the sign-in form open in the browser; you never see them. The page must be on the login's site. Submit the form yourself, then use login_code if it asks for a code.",
   input,
   needs: ['computer'],
-  effect: 'read',
+  act: ({ login }) => ({ effect: 'read', uses: 'login', summary: `Fill the saved login ${login} into the browser` }),
   async run({ login, computer }, { conversation }) {
     const site = websiteOf(deps.logins.find(login))
     const fill = fillerOf(deps, computer)

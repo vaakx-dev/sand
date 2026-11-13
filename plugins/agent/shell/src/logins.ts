@@ -1,5 +1,6 @@
 import type { Conversation } from '@sand/engine/contract'
 import type { Logins, LoginValues } from '@sand/logins/contract'
+import type { Act } from '@sand/tools/contract'
 import { z } from 'zod'
 
 type Wanted = Record<string, string>
@@ -18,6 +19,12 @@ export const loginsField = z
 
 const refOf = (ref: string) =>
   ref.endsWith(usernameSuffix) ? { id: ref.slice(0, -usernameSuffix.length), username: true } : { id: ref, username: false }
+
+export const loginsAct = (wanted: Wanted, command: string): Act => {
+  const ids = [...new Set(Object.values(wanted).map(ref => refOf(ref).id))]
+  if (!ids.length) return { effect: 'run', summary: command }
+  return { effect: 'run', summary: `With the saved logins ${ids.join(', ')}: ${command}`, uses: 'login' }
+}
 
 const valueOf = (values: LoginValues, id: string, username: boolean) => {
   if (values.kind === 'website') return username ? values.username : values.password

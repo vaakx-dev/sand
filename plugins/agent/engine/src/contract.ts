@@ -32,7 +32,7 @@ export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'routine',
 export type TurnOrigin = (typeof turnOrigins)[number]
 
 export interface WaitReason {
-  kind: 'secret' | 'question'
+  kind: 'secret' | 'question' | 'permission'
   call: string
   title: string
 }

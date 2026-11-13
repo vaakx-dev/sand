@@ -55,7 +55,7 @@ export const codeTool = (deps: ToolDeps): Tool<typeof input> => ({
   input,
   needs: ['computer'],
   timeoutMs: answerTimeout + settleGrace,
-  effect: 'read',
+  act: ({ login }) => ({ effect: 'read', uses: 'login', summary: `Get past the two-step check for the saved login ${login}` }),
   async run({ login, prompt, ref, computer }, context) {
     const entry = deps.logins.find(login)
     const site = websiteOf(entry)

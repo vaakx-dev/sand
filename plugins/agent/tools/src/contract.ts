@@ -27,6 +27,17 @@ export const effects = ['read', 'write', 'run', 'send', 'spend', 'delete'] as co
 
 export type Effect = (typeof effects)[number]
 
+export const uses = ['login', 'agents'] as const
+
+export type Use = (typeof uses)[number]
+
+export interface Act {
+  effect: Effect
+  paths?: string[]
+  summary?: string
+  uses?: Use
+}
+
 export interface Tool<S extends ZodType = ZodType> {
   name: string
   description: string
@@ -39,10 +50,13 @@ export interface Tool<S extends ZodType = ZodType> {
   input: S
   needs?: Need[]
   effect?: Effect
+  act?(input: output<S>, conversation: Conversation): Act
   active?(conversation: Conversation): boolean
   replaces?: string[]
   run(input: output<S>, context: ToolContext): ToolOutput | Promise<ToolOutput>
 }
+
+export type Gate = (act: Act, tool: Tool, context: ToolContext) => Promise<string | undefined>
 
 export type ToolLoad = 'always' | 'on-demand' | 'off'
 
@@ -81,6 +95,7 @@ export interface Tools {
   secrets(): Secrets
   group(group: ToolGroup): Dispose
   offer(owner: Owner, offer: Offer): Dispose
+  gate(gate: Gate): Dispose
   groups(): GroupState[]
   choose(group: string, load: ToolLoad): Promise<void>
   specs(messages: Message[], conversation: Conversation): ToolSpec[]
