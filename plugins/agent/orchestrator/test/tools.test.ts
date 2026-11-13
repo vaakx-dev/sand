@@ -87,7 +87,7 @@ const startSubagent = async (parent: Session) => {
   return subagent
 }
 
-test('a subagent tells the thread that started it its final reply when it finishes; a thread it starts stands on its own', async () => {
+test('a subagent tells the thread that started it its final reply when it finishes; a thread it starts stands on its own but remembers who started it', async () => {
   await start()
   const parent = agent(2)
   parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
@@ -105,7 +105,7 @@ test('a subagent tells the thread that started it its final reply when it finish
 
   const started = JSON.parse((await use(parent, 'thread_start', { prompt: 'own work', model: 'fake/m' })).text)
   expect(await sand.turns.wait(started.turn, 'end')).toMatchObject({ status: 'completed' })
-  expect(threads.starterOf(started.thread)).toBeUndefined()
+  expect(threads.starterOf(started.thread)).toEqual({ owner: 'thread', id: parent.id })
   await Bun.sleep(100)
   expect(await heard(parent, 0)).toEqual(notices)
 })

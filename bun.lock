@@ -495,6 +495,32 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/agent/permissions": {
+      "name": "@sand/permissions",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/cli-commands": "workspace:*",
+        "@sand/devices-notify": "workspace:*",
+        "@sand/engine": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
+        "@sand/ledger": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/sub-model": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
+      },
+    },
     "plugins/agent/plugins-mcp": {
       "name": "@sand/plugins-mcp",
       "version": "0.0.0",
@@ -3252,6 +3278,8 @@
     "@sand/pcs-mcp": ["@sand/pcs-mcp@workspace:plugins/agent/pcs-mcp"],
 
     "@sand/performance": ["@sand/performance@workspace:plugins/ui/shared/performance"],
+
+    "@sand/permissions": ["@sand/permissions@workspace:plugins/agent/permissions"],
 
     "@sand/picker": ["@sand/picker@workspace:plugins/ui/shared/picker"],
 
