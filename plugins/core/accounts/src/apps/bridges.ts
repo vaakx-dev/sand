@@ -1,15 +1,15 @@
 import type { AppPlan, LLMRequest } from '../contract'
-import { createBridge, type Bridge } from './bridge'
+import { createBridge, type Bridge, type Track } from './bridge'
 
 export type Bridges = ReturnType<typeof createBridges>
 
-export const createBridges = (home: string) => {
+export const createBridges = (home: string, track: Track) => {
   const bridges = new Map<AppPlan, Bridge>()
 
   const bridgeFor = (plan: AppPlan) => {
     const found = bridges.get(plan)
     if (found) return found
-    const made = createBridge(plan, home)
+    const made = createBridge(plan, home, track)
     bridges.set(plan, made)
     return made
   }

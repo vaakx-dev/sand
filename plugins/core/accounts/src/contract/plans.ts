@@ -106,6 +106,7 @@ export interface AppAside {
 
 export interface AppSession {
   id?: string
+  pid?: number
   send(content: ModelContent[], effort?: Effort): void
   steer?(content: ModelContent[]): void
   answer(id: string, result: ToolResultBlock): void

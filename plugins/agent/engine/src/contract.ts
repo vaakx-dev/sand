@@ -16,6 +16,15 @@ export interface Conversation {
 
 export type ConversationRef = Pick<Conversation, 'owner' | 'id'>
 
+export class Interruption extends Error {
+  constructor(
+    reason: string,
+    readonly note: string,
+  ) {
+    super(reason)
+  }
+}
+
 export type TurnStatus = 'running' | 'waiting' | 'completed' | 'interrupted' | 'failed' | 'lost'
 
 export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'routine', 'print', 'cli', 'mcp', 'bot', 'resume'] as const
@@ -155,6 +164,7 @@ export interface Engine {
   turn(owner: Owner, id: string): TurnInfo | undefined
   open(conversation: ConversationRef): Conversation | undefined
   send(conversation: ConversationRef, input: SendInput): Promise<SendResult> | undefined
+  stop(conversation: string, interruption: Interruption): boolean
 }
 
 export const engine = service<Engine>('engine')

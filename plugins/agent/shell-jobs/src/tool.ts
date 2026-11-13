@@ -28,7 +28,7 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
       command,
       cwd,
       origin: call.id,
-      work: commandWork(ctx, runner, command, cwd, output),
+      work: commandWork(ctx, runner, { command, cwd, conversation: conversation.id }, output),
       read: output.read,
       output: output.last,
     })
