@@ -73,8 +73,13 @@ describe.each(widths)('at %ipx wide', width => {
     const menu = page.getByRole('menu')
     expect(await menu.evaluate(node => node.scrollWidth - node.clientWidth)).toBe(0)
     expect(await menu.evaluate(node => node.getBoundingClientRect().right <= innerWidth)).toBe(true)
-    const rightOf = (text: string) => menu.getByText(text, { exact: true }).evaluate(node => Math.round(node.getBoundingClientRect().right))
-    expect(await rightOf('Running')).toBe(await rightOf('1m'))
+    const edgesOf = (text: string) => menu.getByText(text, { exact: true }).evaluate(node => {
+        const { left, right } = node.getBoundingClientRect()
+        return { left, right }
+      })
+    const project = await edgesOf('harbor-tide-tables')
+    const branch = await edgesOf('sand/ignore-landed-work-clashes-when-the-branch-was-merged')
+    expect(branch.left - project.right).toBeLessThan(16)
     await page.screenshot({ path: join(shots, `chip-${width}.png`) })
     expect(errors).toEqual([])
     await page.close()
