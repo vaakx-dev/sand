@@ -1,0 +1,9 @@
+{
+  "name": "@sand/machine",
+  "version": "0.0.0",
+  "description": "Reads this PC's free memory and its processes, with the memory each uses, on Windows, Mac and Linux",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
