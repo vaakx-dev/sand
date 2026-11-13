@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>sand — an assistant you can change into what you need</title>
-<meta name="description" content="sand is a chat assistant you can change into what you need. Ask it to work differently and it changes itself: every part is a plugin, and changes reload without closing your chat.">
+<meta name="description" content="sand is a chat assistant you can change into what you need. Ask it to work differently and it builds the change into itself, without closing your chat. Use it from your phone too.">
 <script>
   (function () {
     var saved = null;
@@ -93,6 +93,11 @@
 
   .shot { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 40px 80px -40px rgba(0,0,0,.7); background: #0b0b0c; }
   .hero .shot { margin-top: 56px; }
+  video.shot { aspect-ratio: 16 / 9; }
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin: 40px 0 0; padding: 0; list-style: none; }
+  .features b { display: block; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .features p { margin: 0; color: var(--text-2); font-size: 15px; }
+  .features + .shot { margin-top: 56px; }
 
   section.block { padding: 110px 0; border-bottom: 1px solid var(--line-soft); }
   .head { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; margin-bottom: 48px; }
@@ -144,6 +149,7 @@
     .phones img { width: calc(50% - 6px); border-radius: 22px; }
     .phones img + img { margin-top: 32px; }
     .points li { grid-template-columns: 1fr; gap: 4px; }
+    .features { grid-template-columns: 1fr; gap: 20px; }
     .final { padding-top: 96px; }
     .final .dunes { height: 180px; }
   }
@@ -171,12 +177,12 @@
 <div class="wrap">
   <header class="hero">
     <h1>An assistant you can turn into <em>what you need.</em></h1>
-    <p class="lede">Talk to sand like any chat assistant: get ready for an exam, work through a lab report, debug a test rig, turn meeting notes into actions. When you want it to work differently, ask it. Every part of sand is a plugin, so it can change its own sidebar, tools or look, and the change reloads without closing your chat. You can use it from your phone too.</p>
+    <p class="lede">Use sand like any chat assistant: get ready for an exam, work through a lab report, debug a test rig, turn meeting notes into actions. When you want it to work differently, ask it, and it builds the change into itself. You can use it from your phone too.</p>
     <div class="actions">
       <a class="btn ink" href="#install">Install sand</a>
       <a class="btn" href="#change">See it change itself</a>
     </div>
-    <img class="shot" src="images/desktop.png" width="2560" height="1600" alt="sand on a desktop, with study and work threads in the sidebar and a rover battery analysis in the chat">
+    <video class="shot" src="images/sand.mp4" poster="images/sand-poster.jpg" width="1920" height="1080" autoplay muted loop playsinline preload="metadata" aria-label="In 20 seconds: sand builds itself citation cards, a PDF reader and a git graph, then a bot that watches deadlines, the same chats on a phone, and the add-ons you can turn on"></video>
   </header>
 </div>
 
@@ -184,9 +190,14 @@
   <div class="wrap">
     <div class="head">
       <h2 class="title">Ask for a feature.<br><em>Watch it appear.</em></h2>
-      <p class="lede">Here sand is asked for a Deadlines page. It reads three syllabi, writes a new page into itself and reloads, and the page is in the sidebar while the chat stays open. The sidebar, the chat and the tools it uses are all plugins it can change the same way.</p>
+      <p class="lede">Every part of sand is a plugin, so it can add to its own sidebar, side panel, chat or tools, and the change loads without closing your chat. In the clip above, each of these took one request.</p>
     </div>
-    <img class="shot" src="images/reload.gif" width="1100" height="690" loading="lazy" alt="sand builds itself a Deadlines page from three course syllabi, and two deadlines get ticked off">
+    <ul class="features">
+      <li><b>Citation cards</b><p>For a thermodynamics reading list. Papers sand cites show up as cards with the abstract and a Copy BibTeX button.</p></li>
+      <li><b>A PDF reader</b><p>For a capstone project. A battery datasheet opens beside the chat, and page links jump to the right line.</p></li>
+      <li><b>A git graph</b><p>For a team repo. Every commit and branch, in the side panel next to the chat.</p></li>
+    </ul>
+    <img class="shot" src="images/desktop.png" width="2560" height="1600" loading="lazy" alt="sand on a desktop, with study and work threads in the sidebar and a rover battery analysis in the chat">
   </div>
 </section>
 
@@ -201,8 +212,9 @@
       <ul class="points">
         <li><b>Threads</b><p>Chats for anything: coursework, lab reports, work projects. Put related ones in a project, a folder with the files they work on.</p></li>
         <li><b>Bots</b><p>Take care of an ongoing job, like reminding you before deadlines or drafting your daily standup, on a schedule or when something changes.</p></li>
-        <li><b>Your devices</b><p>Chats keep going when you close the tab. Pair your phone to pick them up there, and pair other PCs to run threads on them.</p></li>
-        <li><b>Your models</b><p>Use a Claude plan through the Claude Code app, a ChatGPT plan through the Codex app, or API keys.</p></li>
+        <li><b>Your devices</b><p>Chats keep going when you close the tab. Pair your phone or another PC to pick up the same chats there.</p></li>
+        <li><b>Your models</b><p>Use a Claude plan through Claude Code, a ChatGPT plan through Codex, or API keys.</p></li>
+        <li><b>Add-ons</b><p>Settings → Add-ons lists the parts sand comes with. Turn them on or off there, or install more.</p></li>
       </ul>
     </div>
   </div>
@@ -217,7 +229,7 @@
       <span class="os">Windows, in PowerShell</span>
       <span class="install"><span><b>PS&gt;</b> irm https://vaakx-dev.github.io/sand/install.ps1 | iex</span><button data-copy="irm https://vaakx-dev.github.io/sand/install.ps1 | iex">Copy</button></span>
     </div>
-    <p class="note">sand opens in your browser when it's installed. Then open Settings → Accounts and choose how it reaches a model.</p>
+    <p class="note">sand opens in your browser when it's installed. Then open Settings → Accounts and choose your model: a Claude plan through Claude Code, a ChatGPT plan through Codex, or API keys.</p>
   </div>
   <svg class="dunes" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
     <defs>
