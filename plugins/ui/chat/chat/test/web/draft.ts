@@ -4,6 +4,15 @@ import { startSandbox } from './sandbox'
 
 const LAYOUT_DELAY_MS = 200
 
+const slowLayout = `(() => {
+  const Native = window.ResizeObserver
+  window.ResizeObserver = class extends Native {
+    constructor(callback) {
+      super((entries, observer) => (document.body.dataset.slow ? void setTimeout(() => callback(entries, observer), ${LAYOUT_DELAY_MS}) : callback(entries, observer)))
+    }
+  }
+})()`
+
 let sand: Awaited<ReturnType<typeof startSandbox>>
 let browser: Browser
 
@@ -19,14 +28,7 @@ afterAll(async () => {
 
 test('what is typed right after New thread stays in the new thread, however late the page lays out', async () => {
   const page = await browser.newPage()
-  await page.addInitScript(delay => {
-    const Native = window.ResizeObserver
-    window.ResizeObserver = class extends Native {
-      constructor(callback: ResizeObserverCallback) {
-        super((entries, observer) => (document.body.dataset.slow ? void setTimeout(() => callback(entries, observer), delay) : callback(entries, observer)))
-      }
-    }
-  }, LAYOUT_DELAY_MS)
+  await page.addInitScript(slowLayout)
   await page.goto(sand.url)
   await page.waitForURL(/view=draft/)
   await page.evaluate(() => (document.body.dataset.slow = 'yes'))
