@@ -8,7 +8,7 @@ import { models, modelsChange, outbox, outboxChange, threadChange, threadSelect 
 import type { ComposerContext } from './context'
 import type { ChatRef } from './contract'
 import type { Model } from './model'
-import { interrupt, modelMissing, sendDevice, submit } from './send/submit'
+import { interrupt, modelMissing, sendDevice, stoppable, submit } from './send/submit'
 import type { Delivery, Target } from './target'
 
 const deliveryOf = (ctx: ComposerContext): Delivery => {
@@ -44,6 +44,7 @@ export const threadTarget = (ctx: ComposerContext): Target => {
     if (id === ctx.threads.current()?.id) changes.bump()
   })
   const running = changes.read(() => Boolean(ctx.threads.current()?.turn))
+  const stopping = changes.read(() => stoppable(ctx.threads.current()))
   const delivery = changes.read(() => deliveryOf(ctx))
   const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
   const name = changes.read(() => ctx.threads.current()?.info.title || 'New chat')
@@ -55,6 +56,7 @@ export const threadTarget = (ctx: ComposerContext): Target => {
   return {
     place: { device: () => sendDevice(ctx), thread: () => ctx.threads.current()?.id },
     running: () => running.get(),
+    stoppable: () => stopping.get(),
     delivery: () => delivery.get(),
     pcName: () => pcName.get(),
     name: () => name.get(),

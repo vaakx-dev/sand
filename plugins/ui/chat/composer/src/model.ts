@@ -42,6 +42,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
   const outgoing = sig<Saved | undefined>(undefined)
   const shown = sig<Sending | undefined>(undefined)
   const running = derive(() => target.running())
+  const stoppable = derive(() => target.stoppable())
   const delivery = derive(() => target.delivery())
   const pcName = derive(() => target.pcName())
   const empty = derive(() => !text.get().trim() && !attachments.get().length)
@@ -168,6 +169,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     sending,
     shown,
     running,
+    stoppable,
     delivery,
     pcName,
     empty,

@@ -12,6 +12,7 @@ export type Outgoing = Pick<SendOptions, 'mode'> & { clientRequestId: string }
 export interface Target {
   place: ShelfPlace
   running(): boolean
+  stoppable(): boolean
   delivery(): Delivery
   pcName(): string
   name(): string
@@ -28,6 +29,7 @@ const nowhere: ShelfPlace = { device: () => undefined, thread: () => undefined }
 export const chatTarget = (chat: Chat): Target => ({
   place: nowhere,
   running: chat.running,
+  stoppable: chat.running,
   delivery: () => 'now',
   pcName: () => 'sand',
   name: chat.name,

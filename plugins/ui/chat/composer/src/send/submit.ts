@@ -2,7 +2,7 @@ import { promptOf } from '@sand/attachments/contract'
 import { labelOf } from '@sand/attachments/web/contract'
 import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import { models } from '@sand/web-client/contract'
+import { models, type Thread } from '@sand/web-client/contract'
 import type { ComposerContext } from '../context'
 import type { Outgoing } from '../target'
 
@@ -17,9 +17,11 @@ export const sendDevice = (ctx: ComposerContext) => {
   return current ? current.device : ctx.threads.device()
 }
 
+export const stoppable = (thread: Thread | undefined) => Boolean(thread?.turn) || (thread?.jobs.size ?? 0) > 0
+
 export const interrupt = async (ctx: ComposerContext) => {
   const current = ctx.threads.current()
-  if (current?.turn) await ctx.turns.stop(current.id)
+  if (current && stoppable(current)) await ctx.turns.stop(current.id)
 }
 
 export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Outgoing) => {

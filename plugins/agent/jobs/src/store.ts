@@ -6,6 +6,7 @@ import type { Delivery } from './deliver'
 import { notification } from './notice'
 
 const restarted = 'Stopped before it finished. Start it again if you still need it.'
+const stoppedWithChat = 'Stopped with this thread. Start it again if you still need it.'
 
 const keptFinished = 100
 
@@ -27,12 +28,18 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
 
   const running = () => [...entries.values()].filter(({ job }) => job.status === 'running')
 
+  const stopNoted = (stopped: Entry[], reason: string) => {
+    for (const { job } of stopped) stop(job)
+    for (const { job, spec } of stopped) delivery.record(spec.parent, notification({ ...job, status: 'cancelled' }, reason))
+    return stopped.length > 0
+  }
+
+  const stopAll = (parent: string) => stopNoted(running().filter(({ job }) => job.parent === parent), stoppedWithChat)
+
   let disposing = false
   ctx.effect(() => () => {
     disposing = true
-    const stopped = running()
-    for (const { job } of stopped) stop(job)
-    for (const { job, spec } of stopped) delivery.record(spec.parent, notification({ ...job, status: 'cancelled' }, restarted))
+    stopNoted(running(), restarted)
   })
 
   ctx.on(sessionRemove, id => {
@@ -107,7 +114,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     return entry
   }
 
-  return { start, list, own, stop }
+  return { start, list, own, stop, stopAll }
 }
 
 export type Store = ReturnType<typeof createStore>
