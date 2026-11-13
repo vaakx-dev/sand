@@ -518,6 +518,7 @@
       "dependencies": {
         "@sand/machine": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
       },
     },
     "plugins/agent/project-memory": {
@@ -2790,6 +2791,33 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/shared/performance": {
+      "name": "@sand/performance",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/features": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/processes": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/usage-page": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+        "@sand/jobs": "workspace:*",
+        "@sand/shell": "workspace:*",
+        "@sand/shell-jobs": "workspace:*",
+        "@sand/tools": "workspace:*",
+      },
+    },
     "plugins/ui/shared/picker": {
       "name": "@sand/picker",
       "version": "0.0.0",
@@ -3217,6 +3245,8 @@
     "@sand/paths": ["@sand/paths@workspace:plugins/core/paths"],
 
     "@sand/pcs-mcp": ["@sand/pcs-mcp@workspace:plugins/agent/pcs-mcp"],
+
+    "@sand/performance": ["@sand/performance@workspace:plugins/ui/shared/performance"],
 
     "@sand/picker": ["@sand/picker@workspace:plugins/ui/shared/picker"],
 

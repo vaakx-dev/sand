@@ -61,7 +61,7 @@ interface ShellToolOptions {
   shell: Shell
   limits: Limits
   logins: Logins | undefined
-  trackFor(conversation: string): Track
+  trackFor(conversation: string, command: string): Track
 }
 
 export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor }: ShellToolOptions): Tool<z.ZodType<ShellInput>> => {
@@ -84,7 +84,7 @@ export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor 
         cwd: context.cwd,
         verbatim: shell.verbatim,
         env,
-        track: trackFor(context.conversation.id),
+        track: trackFor(context.conversation.id, command),
         signal: context.signal,
         onText: tail.add,
       })

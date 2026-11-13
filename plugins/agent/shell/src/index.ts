@@ -1,13 +1,15 @@
 import { logins } from '@sand/logins/contract'
 import { processes } from '@sand/processes/contract'
 import { tools } from '@sand/tools/contract'
-import { joinDisposers } from '@sand/util'
+import { joinDisposers, oneLine } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { shellRunner } from './contract'
 import { detect, sidePowerShell } from './detect'
 import { shellRunnerOf } from './runner'
 import { shellTool } from './tool'
+
+const LABEL_CHARS = 80
 
 export default definePlugin({
   name: 'shell',
@@ -20,7 +22,8 @@ export default definePlugin({
   }),
   apply(ctx, config) {
     const shell = detect(config.shell)
-    const trackFor = (conversation: string) => (pid: number) => ctx.get(processes)?.track(conversation, pid)
+    const trackFor = (conversation: string, command: string) => (pid: number) =>
+      ctx.get(processes)?.track({ conversation, pid, label: oneLine(command, LABEL_CHARS), kind: 'command' })
     ctx.provide(shellRunner, shellRunnerOf(shell, trackFor))
     const powerShell = sidePowerShell(shell)
     const shells = [

@@ -13,6 +13,7 @@ import {
 } from '../contract'
 import { isModelContent, type Message, type ModelContent, textOf } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
+import type { Tracked } from '@sand/processes/contract'
 import type { Dispose } from 'drydock'
 import { stat } from 'node:fs/promises'
 import { blankFiles, secretValues } from './blank'
@@ -38,7 +39,7 @@ interface Live {
   untrack?: Dispose
 }
 
-export type Track = (conversation: string, pid: number) => Dispose | undefined
+export type Track = (tracked: Tracked) => Dispose | undefined
 
 interface Opened {
   entry: Live
@@ -84,7 +85,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const watch = (entry: Live, conversation: string | undefined) => {
     const { pid } = entry.session
     if (entry.untrack || !conversation || pid === undefined) return
-    entry.untrack = track(conversation, pid)
+    entry.untrack = track({ conversation, pid, label: plan.app, kind: 'app' })
   }
 
   const drop = (key: string, entry: Live) => {
