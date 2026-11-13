@@ -20,7 +20,9 @@ export const claims = () => {
 
   return (node: HTMLElement, claim: Claim) =>
     onMount(node, () => {
-      const observer = resizeObserver(node, () => (node.offsetWidth > 0 ? appear(claim) : leave(claim)))
+      const check = () => (node.offsetWidth > 0 ? appear(claim) : leave(claim))
+      check()
+      const observer = resizeObserver(node, check)
       return () => {
         observer.disconnect()
         leave(claim)
