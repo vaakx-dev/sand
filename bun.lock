@@ -500,6 +500,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/bots": "workspace:*",
+        "@sand/chat": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/cli-commands": "workspace:*",
         "@sand/devices-contract": "workspace:*",
