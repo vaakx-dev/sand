@@ -16,7 +16,7 @@ const captionOf = (running: number) => (running ? `Background commands · ${runn
 
 const keyOf = (job: WireJob) => `${job.id} ${job.status}`
 
-const rowOf = (job: WireJob): Row => ({ id: job.id, label: job.label, status: statuses[job.status], at: job.started })
+const rowOf = (job: WireJob): Row => ({ id: job.id, label: job.label, status: statuses[job.status], at: job.ended ?? job.started })
 
 const newestFirst = (a: WireJob, b: WireJob) => (b.ended ?? b.started) - (a.ended ?? a.started)
 
