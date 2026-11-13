@@ -62,6 +62,21 @@ test('turning the group on lets the tool run', async () => {
   expect(ran).toEqual(['risky_act'])
 })
 
+test('a gate sees what a call does and its refusal stops the call', async () => {
+  const { catalog, ran } = startCatalog()
+  await catalog.choose('risky', 'always')
+  const acts: unknown[] = []
+  const ungate = catalog.gate(async act => {
+    acts.push(act)
+    return 'Not run: denied'
+  })
+  expect(await catalog.run(call('risky_act'), context)).toMatchObject({ isError: true, content: [{ text: 'Not run: denied' }] })
+  expect(acts).toEqual([{ effect: 'run' }])
+  ungate()
+  expect(await catalog.run(call('risky_act'), context)).toMatchObject({ content: [{ text: 'acted' }] })
+  expect(ran).toEqual(['risky_act'])
+})
+
 const named = (name: string, replaces?: string[]) => ({ name, description: name, input: z.object({}), ...(replaces && { replaces }), run: () => name })
 
 test('a second tool under a taken name fails to register, naming where both came from', () => {
