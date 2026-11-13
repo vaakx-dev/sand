@@ -31,11 +31,21 @@ const windowsTree = (child: Subprocess, killOnClose: boolean) => {
   }
 }
 
-const groupTree = (child: Subprocess) => async () => {
-  try {
-    process.kill(-child.pid, 'SIGKILL')
-  } catch {
-    child.kill('SIGKILL')
+const orphanGuard = (group: number) => {
+  const guard = Bun.spawn(['sh', '-c', `read line; kill -KILL -${group}`], { stdio: ['pipe', 'ignore', 'ignore'], detached: true })
+  guard.unref()
+  return guard
+}
+
+const groupTree = (child: Subprocess, killOnClose: boolean) => {
+  const guard = killOnClose ? orphanGuard(child.pid) : undefined
+  return async () => {
+    try {
+      process.kill(-child.pid, 'SIGKILL')
+    } catch {
+      child.kill('SIGKILL')
+    }
+    guard?.kill('SIGKILL')
   }
 }
 
@@ -50,7 +60,7 @@ export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, {
     windowsHide: true,
     windowsVerbatimArguments: verbatim,
   })
-  return { child, killTree: windows ? windowsTree(child, killOnClose) : groupTree(child) }
+  return { child, killTree: windows ? windowsTree(child, killOnClose) : groupTree(child, killOnClose) }
 }
 
 export const unixNewlines = (text: string) => (windows ? text.replaceAll('\r\n', '\n') : text)
