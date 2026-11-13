@@ -11,7 +11,6 @@ import { mergePeriods } from './data/merge/groups'
 import { normalise } from './data/normalise'
 import type { Pc, PcSummary } from './data/types'
 import { allPcs, usagePrefs } from './prefs'
-import type { Breakdown } from './view/breakdown/rows'
 
 export interface UsageDeps {
   wire: Wire
@@ -31,7 +30,7 @@ const stale = 60_000
 const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export const usageModel = (deps: UsageDeps) => {
-  const { range, pc, metric } = usagePrefs()
+  const { range, pc, forecast } = usagePrefs()
   const signature = derive(() => JSON.stringify(deps.pcs()))
   const pcs = derive(() => {
     signature.get()
@@ -39,7 +38,6 @@ export const usageModel = (deps: UsageDeps) => {
   })
   const fleet = fleetLoader(deps.wire, () => pcs.get(), () => ({ key: range.get(), query: usageQuery(range.get()) }))
   const history = fleetLoader(deps.wire, () => pcs.get(), historyView)
-  const breakdown = sig<Breakdown>('projects')
   const checking = sig(false)
   const now = clock(30_000)
 
@@ -117,8 +115,7 @@ export const usageModel = (deps: UsageDeps) => {
   return {
     range,
     pc,
-    metric,
-    breakdown,
+    forecast,
     checking,
     now,
     usage,

@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { periodLabel, type UsageBucket } from '@sand/usage/contract'
 import { dynamicChild, rect, sig } from '@vaakx-dev/vrui'
-import { tickText, type Metric } from '../../format'
+import { tickText } from '../../format'
 import { chartFrame, gridLine } from './frame'
 import { cssPercent, scaleFor } from './scale'
 import type { Series } from './series'
@@ -11,7 +11,6 @@ export interface PlotProps {
   bucket: UsageBucket
   keys: string[]
   series: Series[]
-  metric: Metric
 }
 
 const WIDTH = 960
@@ -49,7 +48,7 @@ const periodTicks = ({ metaLine }: Kit, keys: string[], bucket: UsageBucket) => 
 const columnTotals = (series: Series[], count: number) =>
   Array.from({ length: count }, (_, index) => series.reduce((sum, line) => sum + (line.values[index] ?? 0), 0))
 
-export const plot = (kit: Kit, { bucket, keys, series, metric }: PlotProps) => {
+export const plot = (kit: Kit, { bucket, keys, series }: PlotProps) => {
   const { top: peak, ticks } = scaleFor(Math.max(0, ...columnTotals(series, keys.length)))
   const toHeight = (value: number) => (value / peak) * (HEIGHT - TOP)
   const slot = WIDTH / Math.max(1, keys.length)
@@ -61,13 +60,13 @@ export const plot = (kit: Kit, { bucket, keys, series, metric }: PlotProps) => {
     {
       width: WIDTH,
       height: HEIGHT,
-      label: `Daily ${metric} by model`,
-      axis: ticks.map(tick => ({ text: tickText(tick, metric), top: cssPercent((HEIGHT - toHeight(tick)) / HEIGHT) })),
+      label: 'Daily cost by model',
+      axis: ticks.map(tick => ({ text: tickText(tick), top: cssPercent((HEIGHT - toHeight(tick)) / HEIGHT) })),
       onPointerMove: event => hover.set(hoverAt(event, keys.length)),
       onPointerLeave: () => hover.set(undefined),
     },
     [ticks.map(tick => gridLine(WIDTH, HEIGHT - toHeight(tick))), keys.map((_, index) => columnBars(series, index, index * slot + (slot - barWidth) / 2, barWidth, toHeight))],
-    [dynamicChild(hover, current => (current ? tooltip(kit, current, keys[current.index] ?? '', bucket, series, metric) : null))],
+    [dynamicChild(hover, current => (current ? tooltip(kit, current, keys[current.index] ?? '', bucket, series) : null))],
     periodTicks(kit, keys, bucket),
   )
 }

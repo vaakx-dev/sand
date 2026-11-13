@@ -3,7 +3,7 @@ import { hourKey } from '../../range'
 import type { FleetView } from '../fleet'
 
 export const hour = 3_600_000
-const day = 24 * hour
+export const day = 24 * hour
 
 const weeks = 4
 const slots = 7 * 24

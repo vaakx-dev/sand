@@ -1,9 +1,7 @@
 import type { UsageBucket } from '@sand/usage/contract'
 import type { PageRange } from './prefs'
 
-const monthName = () => new Date().toLocaleDateString('en', { month: 'long' })
-
-export const rangeLabel = (range: PageRange) => (range === 'month' ? monthName() : ({ '7d': '7 days', '30d': '30 days', '90d': '90 days' } as const)[range])
+export const rangeLabel = (range: PageRange) => ({ '7d': '7 days', '30d': '30 days', '90d': '90 days' } as const)[range]
 
 const pad = (value: number) => String(value).padStart(2, '0')
 

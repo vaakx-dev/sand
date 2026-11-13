@@ -4,7 +4,6 @@ import { grouped } from '@sand/util'
 import { colorVar, span } from '@vaakx-dev/vrui'
 import { addTotals } from '../../data/totals'
 import type { Merged } from '../../data/types'
-import { metricValue, type Metric } from '../../format'
 import { periodKeys } from '../../range'
 
 export interface Series {
@@ -44,12 +43,12 @@ const shading = (kit: Kit, named: ModelTotals[]) => {
   }
 }
 
-export const seriesOf = (kit: Kit, usage: Merged, metric: Metric) => {
+export const seriesOf = (kit: Kit, usage: Merged) => {
   const keys = periodKeys(usage.since, usage.until, usage.bucket)
   const periods = new Map(usage.periods.map(period => [period.key, period]))
   const ranked = modelTotals(usage)
-    .filter(model => metricValue(model.totals, metric) > 0)
-    .toSorted((first, second) => metricValue(second.totals, metric) - metricValue(first.totals, metric))
+    .filter(model => model.totals.cost > 0)
+    .toSorted((first, second) => second.totals.cost - first.totals.cost)
   const named = ranked.slice(0, NAMED)
   const others = new Set(ranked.slice(NAMED).map(model => model.name))
   const shade = shading(kit, named)
@@ -57,9 +56,9 @@ export const seriesOf = (kit: Kit, usage: Merged, metric: Metric) => {
     keys.map(key =>
       Object.entries(periods.get(key)?.models ?? {})
         .filter(([name]) => names(name))
-        .reduce((sum, [, totals]) => sum + metricValue(totals, metric), 0),
+        .reduce((sum, [, totals]) => sum + totals.cost, 0),
     )
-  const series: Series[] = named.map(model => ({ key: model.name, label: model.label, ...shade(model), values: valuesOf(name => name === model.name), total: metricValue(model.totals, metric) }))
+  const series: Series[] = named.map(model => ({ key: model.name, label: model.label, ...shade(model), values: valuesOf(name => name === model.name), total: model.totals.cost }))
   if (others.size) {
     const values = valuesOf(name => others.has(name))
     series.push({ key: OTHER, label: `${others.size} more`, color: colorVar('neutral', 500), opacity: 0.6, values, total: values.reduce((sum, value) => sum + value, 0) })

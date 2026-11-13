@@ -15,7 +15,7 @@ const label = 'Usage'
 
 export default definePlugin({
   name: 'usage-page',
-  description: 'Usage page, opened from the sidebar foot: plan limits, billed cost and tokens per account, across your PCs, beside the other views added to it, like Performance',
+  description: 'Usage page, opened from the sidebar foot: a forecast of the plan limit that runs out first, every limit per account, and daily cost by model, beside the other views added to it, like Performance',
   inject: { wire, kit, pcs },
   apply(ctx) {
     const changes = pulse(ctx, [limitsChange], [limits])

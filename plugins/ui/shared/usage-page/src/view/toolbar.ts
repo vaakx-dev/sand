@@ -5,7 +5,7 @@ import type { Pc } from '../data/types'
 import type { UsageModel } from '../model'
 import { allPcs } from '../prefs'
 import { agoText } from '../format'
-import { offlineNotices } from './notices'
+import { offlineNotes } from './notices'
 
 const pcItem = ({ choiceItem }: Kit, model: UsageModel, value: string, close: () => void, ...label: Child[]) =>
   choiceItem(
@@ -64,7 +64,12 @@ const checkedText = ({ metaLine }: Kit, model: UsageModel) => {
 
 export const toolbar = (kit: Kit, model: UsageModel) =>
   div(
-    { class: 'flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3' },
-    dynamicChild(model.notices, notices => div({ class: 'flex min-w-0 flex-1 flex-col gap-1' }, offlineNotices(kit, notices, model.now))),
-    div({ class: 'flex items-center gap-2 self-end sm:self-center' }, checkedText(kit, model), pcFilter(kit, model), refreshButton(kit, model)),
+    { class: 'flex min-w-0 items-center gap-2' },
+    div(
+      { class: 'flex min-w-0 flex-1 flex-col items-end text-right' },
+      dynamicChild(model.notices, notices => div({ class: 'contents' }, offlineNotes(kit, notices, model.now))),
+      checkedText(kit, model),
+    ),
+    pcFilter(kit, model),
+    refreshButton(kit, model),
   )

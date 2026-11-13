@@ -1,7 +1,7 @@
 import { periodTitle, type UsageBucket } from '@sand/usage/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, portal, span, type Child } from '@vaakx-dev/vrui'
-import { metricText, type Metric } from '../../format'
+import { dollars } from '@sand/util'
 import { type Series, swatch } from './series'
 
 export interface Hover {
@@ -43,14 +43,14 @@ const tipBox = ({ layer, metaLine }: Kit, at: Pick<Hover, 'x' | 'y'>, title: str
     ),
   )
 
-export const tooltip = (kit: Kit, hover: Hover, key: string, bucket: UsageBucket, series: Series[], metric: Metric) => {
+export const tooltip = (kit: Kit, hover: Hover, key: string, bucket: UsageBucket, series: Series[]) => {
   const valueAt = (line: Series) => line.values[hover.index] ?? 0
   const total = series.reduce((sum, line) => sum + valueAt(line), 0)
   return tipBox(
     kit,
     hover,
     periodTitle(key, bucket),
-    series.filter(valueAt).map(line => tipRow(kit, seriesName(line), metricText(valueAt(line), metric))),
-    series.length > 1 ? div({ class: 'mt-2 font-medium' }, tipRow(kit, 'Total', metricText(total, metric))) : null,
+    series.filter(valueAt).map(line => tipRow(kit, seriesName(line), dollars(valueAt(line)))),
+    series.length > 1 ? div({ class: 'mt-2 font-medium' }, tipRow(kit, 'Total', dollars(total))) : null,
   )
 }

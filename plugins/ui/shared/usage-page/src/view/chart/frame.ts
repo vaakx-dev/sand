@@ -20,6 +20,9 @@ const axisLabel = ({ metaLine }: Kit, { text, top }: AxisLabel) =>
 
 export const gridLine = (width: number, y: number) => line({ x1: 0, x2: width, y1: y, y2: y, stroke: colorVar('neutral', 700), vectorEffect: 'non-scaling-stroke' })
 
+export const guideLine = (x: () => number, from: number, to: number, shown: () => boolean) =>
+  line({ x1: x, x2: x, y1: from, y2: to, stroke: colorVar('neutral', 500), vectorEffect: 'non-scaling-stroke', visibility: () => (shown() ? 'visible' : 'hidden') })
+
 export const chartFrame = (kit: Kit, { width, height, label, axis, onPointerMove, onPointerLeave }: FrameProps, drawing: Child[], overlays: Child[], ticks: Child[]) =>
   div(
     { class: 'flex flex-col gap-2' },

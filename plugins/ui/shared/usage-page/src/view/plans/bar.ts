@@ -55,5 +55,15 @@ const segmentView = ({ account, window, forecast }: Segment, named: boolean, now
   )
 }
 
+const phoneResets = (segments: Segment[], now: number) =>
+  div(
+    { class: 'flex w-full gap-1 sm:hidden' },
+    segments.map(({ window, forecast }) => span({ class: 'min-w-0 flex-1 truncate px-2 text-xs text-neutral-500 tabular-nums' }, resetText(window, toneOf(window, now, forecast)))),
+  )
+
 export const limitBar = (segments: Segment[], now: number) =>
-  div({ class: 'flex w-full gap-1' }, segments.map(segment => segmentView(segment, segments.length > 1, now)))
+  div(
+    { class: 'flex min-w-0 flex-1 flex-col gap-1' },
+    div({ class: 'flex w-full gap-1' }, segments.map(segment => segmentView(segment, segments.length > 1, now))),
+    phoneResets(segments, now),
+  )
