@@ -16,6 +16,7 @@
   "dependencies": {
     "@sand/engine": "workspace:*",
     "@sand/logins": "workspace:*",
+    "@sand/processes": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

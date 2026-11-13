@@ -14,6 +14,7 @@ interface Member {
 }
 
 export interface ThreadServer {
+  pid: number
   request(method: string, params?: Json): Promise<Json>
   close(): Promise<void>
 }
@@ -87,6 +88,7 @@ export const createPool = (folder: string, version: string) => {
     })
     members.set(member, rpc)
     return {
+      pid: rpc.pid,
       request(method, params = {}) {
         member.used = Date.now()
         if (method === 'turn/start') member.busy = true
