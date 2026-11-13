@@ -13,8 +13,6 @@ const id = process.env[runtimeEnv.id]
 const secret = process.env[runtimeEnv.secret]
 delete process.env[runtimeEnv.secret]
 
-const swapTimeoutMs = 180_000
-
 export default definePlugin({
   name: 'runtime-link',
   description: 'Links this runtime to the host that started it: readiness, activity, draining and which chats it owns',
@@ -85,7 +83,7 @@ export default definePlugin({
           activity.flush()
         })
       },
-      swap: () => host.channel.call(runtimesReload, {}, swapTimeoutMs),
+      swap: () => host.channel.call(runtimesReload, {}),
       handed: session => send({ type: 'handed', sessions: [session] }),
       owns: ownership.owns,
     }

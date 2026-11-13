@@ -114,8 +114,10 @@ export const hostEvent = event<(event: WireEvent<unknown>, payload: unknown) => 
 export const runtimeDrain = event<() => void>('runtime.drain')
 export const runtimeRelease = event<(sessions: string[]) => void>('runtime.release')
 
+export const swapWaitMs = 180_000
+
 export const runtimesSafe = request('runtimes.safe', { input: () => z.object({ on: z.boolean() }), output: type<boolean>() })
-export const runtimesReload = request('runtimes.reload', { input: () => z.object({}), output: type<SwapResult>(), callers: 'runtime' })
+export const runtimesReload = request('runtimes.reload', { input: () => z.object({}), output: type<SwapResult>(), callers: 'runtime', waitMs: swapWaitMs })
 export const runtimesSwapped = request('runtimes.swapped', { input: () => z.object({}), output: type<SwapResult | undefined>(), callers: 'any' })
 
 export const runtimeChanged = wireEvent<RuntimeChange>('runtime.changed')
