@@ -8,7 +8,7 @@ import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { resumeCancel } from '../src/contract'
+import { resumeAlternative, resumeCancel, resumeSwitch } from '../src/contract'
 
 let sand: Sand
 const homes: string[] = []
@@ -120,4 +120,25 @@ test('a bot out of usage continues at the reset', async () => {
 
   await until(async () => (await sand.ask(botList, {})).find(listed => listed.id === bot.id && listed.status === 'idle')?.last?.text === 'Picked up.')
   expect(sent()).toEqual(['Start', continued])
+})
+
+test('a thread out of usage can switch to the same model on another account and continue there at once', async () => {
+  sand = await startSand(
+    [
+      { id: 'fake', label: 'Fake Plan', models: ['m'], replies: [[said('Half'), limit(60_000)]] },
+      { id: 'other', label: 'Other Plan', models: ['m'], replies: [[said('Picked up elsewhere.')]] },
+    ],
+    { plugins: ['automation/schedules', 'agent/usage-resume'] },
+  )
+  const chat = sand.chat('fake/m')
+  await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
+  const [stopped] = await ended(chat, 1)
+
+  const offered = await sand.ask(resumeAlternative, { turn: stopped!.id })
+  expect(offered).toEqual({ model: 'other/m', label: 'm', account: 'Other Plan' })
+  await sand.ask(resumeSwitch, { turn: stopped!.id, model: 'other/m' })
+
+  await ended(chat, 2)
+  expect(sand.native('other').flatMap(call => (call.type === 'send' ? [call.text] : []))).toEqual([expect.stringContaining('Switched to Other Plan')])
+  expect(await sand.ask(resumeAlternative, { turn: stopped!.id })).toBeUndefined()
 })
