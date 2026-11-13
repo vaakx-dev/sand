@@ -1,7 +1,7 @@
 import type { Child } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
-export type NeedKind = 'secret' | 'conflict' | 'review'
+export type NeedKind = 'permission' | 'secret' | 'conflict' | 'review'
 
 export interface NeedAction {
   label: string
@@ -14,10 +14,10 @@ export interface Need {
   who: string
   mark(): Child
   title: string
+  head?(): Child
   text?(): Child
   at: number
-  main: NeedAction
-  second?: NeedAction
+  actions: [NeedAction, ...NeedAction[]]
 }
 
 export interface NeedSource {

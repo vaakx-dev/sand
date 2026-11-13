@@ -62,8 +62,8 @@ const conflictNeed = (parts: NeedsParts, thread: Thread, change: ThreadChanges, 
   const base = { id: `conflict:${thread.id}`, kind: 'conflict' as const, who: titleOf(thread), mark: projectMark(parts, thread), at: thread.info.updated }
   const clashes = change.clashes ?? []
   const fix = clashes.length ? askToFix(parts, thread, clashes) : undefined
-  if (!fix) return { ...base, title: trouble, main: opener(parts, thread) }
-  return { ...base, title: `Its changes clash with the project in ${fileCount(clashes.length)}`, text: () => clashText(parts, thread), main: fix, second: opener(parts, thread) }
+  if (!fix) return { ...base, title: trouble, actions: [opener(parts, thread)] }
+  return { ...base, title: `Its changes clash with the project in ${fileCount(clashes.length)}`, text: () => clashText(parts, thread), actions: [fix, opener(parts, thread)] }
 }
 
 export const conflictNeeds = (parts: NeedsParts) => ({
@@ -103,8 +103,10 @@ const reviewNeed = (parts: NeedsParts, thread: Thread): Need => ({
   title: 'Done and ready to merge',
   text: () => reviewText(parts, thread),
   at: thread.info.updated,
-  main: { label: 'Merge', run: () => parts.changes.merge(thread) },
-  second: { label: 'Review', run: () => review(parts, thread) },
+  actions: [
+    { label: 'Merge', run: () => parts.changes.merge(thread) },
+    { label: 'Review', run: () => review(parts, thread) },
+  ],
 })
 
 export const reviewNeeds = (parts: NeedsParts) => ({
@@ -120,7 +122,7 @@ const secretNeed = (parts: NeedsParts, thread: Thread, call: string, asked: stri
   title: `Waiting on you: ${asked}`,
   text: () => span({}, 'Waiting on you: ', parts.kit.emphasis(asked), '.'),
   at: thread.started ?? thread.info.updated,
-  main: { label: 'Sign in', run: () => openThread(parts.ctx, parts.shell, thread.id) },
+  actions: [{ label: 'Sign in', run: () => openThread(parts.ctx, parts.shell, thread.id) }],
 })
 
 export const secretNeeds = (parts: NeedsParts) => ({

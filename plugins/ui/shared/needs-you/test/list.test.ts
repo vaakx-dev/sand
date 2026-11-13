@@ -9,7 +9,7 @@ const need = (id: string, at: number, kind: Need['kind'] = 'secret'): Need => ({
   title: `Which ${id}?`,
   at,
   mark: () => null,
-  main: { label: 'Open', run: () => {} },
+  actions: [{ label: 'Open', run: () => {} }],
 })
 
 describe('needs list', () => {
