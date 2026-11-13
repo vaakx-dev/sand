@@ -3,8 +3,14 @@ import { scheduleChange, scheduleRemove } from './contract'
 import type { Store, Stored } from './store'
 
 export const createBook = (ctx: Context, store: Store) => {
-  const entries = new Map(store.load().map(stored => [stored.schedule.id, stored]))
+  const entries = new Map<string, Stored>()
+  const load = () => {
+    entries.clear()
+    for (const stored of store.load()) entries.set(stored.schedule.id, stored)
+  }
+  load()
   return {
+    load,
     all: () => [...entries.values()],
     get: (id: string) => entries.get(id),
     put(stored: Stored) {

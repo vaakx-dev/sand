@@ -1,3 +1,4 @@
+import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { ledger } from '@sand/ledger/contract'
 import { definePlugin } from 'drydock'
 import { createBook } from './book'
@@ -15,7 +16,8 @@ export default definePlugin({
     const registry: Registry = { handlers: new Map() }
     const runner = createRunner(book, registry)
     ctx.effect(() => runner.stop)
+    ctx.on(runtimeDrain, runner.stop)
     ctx.provide(schedules, createSchedules(book, registry, runner.plan))
-    runner.plan()
+    void ctx.settled().then(runner.start)
   },
 })

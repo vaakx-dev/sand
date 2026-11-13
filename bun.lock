@@ -826,6 +826,7 @@
       "name": "@sand/schedules",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/host-runtimes": "workspace:*",
         "@sand/ledger": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
