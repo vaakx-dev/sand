@@ -18,6 +18,9 @@ const listing = z.object({
   size: z.number().int().positive(),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),
   hash: z.string().min(1),
+  readme: z.string().default(''),
+  pictures: z.array(z.string().regex(/^[\w.-]+$/)).default([]),
+  cover: z.string().regex(/^[\w.-]+$/).optional(),
 })
 
 const catalogSchema = z.object({ addons: z.array(listing) })

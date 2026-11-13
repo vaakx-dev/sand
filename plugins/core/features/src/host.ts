@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { createAddons } from './addons/actions'
 import { catalogSource, channelUrl } from './addons/catalog'
-import { addonsInstall, addonsReady, addonsRemove, addonsUpdate, featuresList, featuresSet } from './contract'
+import { addonsInstall, addonsPicture, addonsReady, addonsRemove, addonsUpdate, featuresList, featuresSet } from './contract'
 
 export default definePlugin({
   name: 'features',
@@ -28,6 +28,7 @@ export default definePlugin({
     })
     ctx.effect(() => ctx.hub.handle(featuresList, () => addons.choice()))
     ctx.effect(() => ctx.hub.handle(addonsReady, () => addons.ready()))
+    ctx.effect(() => ctx.hub.handle(addonsPicture, ({ id, file }) => addons.picture(id, file)))
     ctx.effect(() => ctx.hub.handle(featuresSet, ({ changes }) => addons.set(changes)))
     ctx.effect(() => ctx.hub.handle(addonsInstall, ({ ids }) => addons.install(ids)))
     ctx.effect(() => ctx.hub.handle(addonsUpdate, ({ ids }) => addons.update(ids)))

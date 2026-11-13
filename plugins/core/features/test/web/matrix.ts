@@ -29,7 +29,7 @@ const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'compute
 
 const topLevel = [...core, ...addons]
 
-const kernelPages = ['Add-ons', 'Plugins']
+const kernelPages = ['Add-ons', 'Core features', 'Plugins']
 
 const fillingShell = ['threads', 'bots', 'calendar']
 
@@ -171,7 +171,7 @@ test.concurrent(
       page.on('pageerror', error => errors.push(error.message))
       await page.goto(sand.url)
       await settle(page)
-      await page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.open('features'))
+      await page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.open('features-core'))
       await page.getByRole('switch', { name: 'Threads', exact: true }).click()
       const reloaded = page.waitForEvent('load', { timeout: 60_000 })
       await page.getByRole('button', { name: 'Turn off' }).click()

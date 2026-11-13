@@ -24,7 +24,7 @@ const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(byte
 
 const publish = async (version: string, sand = '>=1.0.0'): Promise<Published> => {
   const bytes = await new Bun.Archive({ 'notes/package.json': JSON.stringify({ name: '@sand/notes', version }) }, { compress: 'gzip' }).bytes()
-  const listing = { id: 'notes', label: 'Notes', summary: 'Keeps notes', version, sand, needs: [], file: 'notes.tar.gz', size: bytes.length, sha256: sha256(bytes), hash: version }
+  const listing = { id: 'notes', label: 'Notes', summary: 'Keeps notes', version, sand, needs: [], file: 'notes.tar.gz', size: bytes.length, sha256: sha256(bytes), hash: version, readme: '# Notes', pictures: [] }
   return { listing, bytes }
 }
 
@@ -56,7 +56,7 @@ test('an add-on installs from the catalog, updates to a newer one, and is delete
   const { root, addons } = setup(shelf)
 
   const installed = await addons.install(['notes'])
-  expect(installed.addons).toEqual([{ id: 'notes', label: 'Notes', summary: 'Keeps notes', status: 'installed', version: '1.0.0' }])
+  expect(installed.addons).toEqual([{ id: 'notes', label: 'Notes', summary: 'Keeps notes', readme: '# Notes', pictures: [], status: 'installed', version: '1.0.0' }])
   expect(await installedVersion(root)).toBe('1.0.0')
 
   const second = await publish('1.1.0')
