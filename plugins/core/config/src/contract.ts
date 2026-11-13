@@ -72,6 +72,7 @@ export interface Features {
   list(): Feature[]
   on(id: string): boolean
   set(changes: Record<string, boolean>): Promise<void>
+  refresh(): Promise<void>
 }
 
 export { definitionsIn, featureOf } from './features/definitions'

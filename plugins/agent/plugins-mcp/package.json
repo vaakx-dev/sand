@@ -1,7 +1,7 @@
 {
   "name": "@sand/plugins-mcp",
   "version": "0.0.0",
-  "description": "sand's plugin tools, defined once for its own threads and bots and for outside agents over MCP: list plugins and web extensions with their status and errors, show one in detail, reload them, and turn add-ons on and off",
+  "description": "sand's plugin tools, defined once for its own threads and bots and for outside agents over MCP: list plugins and web extensions with their status and errors, show one in detail, reload them, and install, update, remove and turn add-ons on and off",
   "type": "module",
   "sand": {
     "feature": "threads-mcp",
@@ -9,7 +9,7 @@
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
     "label": "Plugin tools",
-    "summary": "Lets your threads, your bots and outside agents see sand's plugins and their errors, reload them, and turn add-ons on and off"
+    "summary": "Lets your threads, your bots and outside agents see sand's plugins and their errors, reload them, and install, update, remove and turn add-ons on and off"
   },
   "dependencies": {
     "@sand/features": "workspace:*",

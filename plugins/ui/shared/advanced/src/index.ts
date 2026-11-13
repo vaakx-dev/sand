@@ -26,6 +26,6 @@ export default definePlugin({
       )
     }
     ctx.provide(advanced, { on: () => on.get(), set })
-    ctx.watch(settings, found => found?.section({ page: 'features', id: 'advanced', order: 10, render: row }))
+    ctx.watch(settings, found => found?.section({ page: 'features-core', id: 'advanced', order: 10, render: row }))
   },
 })

@@ -1,6 +1,6 @@
 import { engine } from '@sand/engine/contract'
-import { memory, type Memory } from '@sand/machine'
-import { processes } from '@sand/processes/contract'
+import type { Memory } from '@sand/machine'
+import { machineRead, processes } from '@sand/processes/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { stopChat } from './stop'
@@ -18,10 +18,9 @@ const lowBytes = ({ totalBytes }: Memory, { low_percent, low_mb }: Limits) => Ma
 
 export default definePlugin({
   name: 'memory-guard',
-  description: "Reads this PC's free memory every couple of seconds; when it stays very low, stops the chat whose processes use the most and kills them, never sand itself",
+  description: "Watches this PC's free memory readings; when it stays very low, stops the chat whose processes use the most and kills them, never sand itself",
   inject: { engine, processes },
   config: z.object({
-    every_ms: z.number().int().positive().default(2_000),
     low_percent: z.number().positive().max(100).default(10),
     low_mb: z.number().int().positive().default(2_048),
   }),
@@ -33,27 +32,13 @@ export default definePlugin({
       if (hungriest && hungriest.bytes >= WORTH_STOPPING_BYTES) stopChat(ctx, ctx.engine, hungriest, reading)
     }
 
-    const check = async () => {
-      const reading = await memory()
+    const check = async (reading: Memory) => {
       streak = reading.freeBytes < lowBytes(reading, config) ? streak + 1 : 0
       if (streak < LOW_READINGS) return
       streak = 0
       await stopHungriest(reading)
     }
 
-    ctx.effect(() => {
-      let stopped = false
-      const tick = () =>
-        check()
-          .catch(error => ctx.report(error))
-          .finally(() => {
-            if (!stopped) timer = setTimeout(tick, config.every_ms)
-          })
-      let timer = setTimeout(tick, config.every_ms)
-      return () => {
-        stopped = true
-        clearTimeout(timer)
-      }
-    })
+    ctx.on(machineRead, reading => void check(reading).catch(error => ctx.report(error)))
   },
 })

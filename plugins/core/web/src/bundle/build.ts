@@ -28,6 +28,7 @@ const COMPILE_ON_LOAD = '//# allFunctionsCalledOnLoad'
 const shared = (extensions: Extension[], modules: Modules) => ({
   drydock: Bun.resolveSync('drydock/browser', import.meta.dir),
   '@vaakx-dev/vrui': Bun.resolveSync('@vaakx-dev/vrui', import.meta.dir),
+  zod: Bun.resolveSync('zod', import.meta.dir),
   ...modules,
   ...Object.fromEntries([...extensions].sort((a, b) => Number(b.builtin) - Number(a.builtin)).flatMap(extension => Object.entries(extension.modules))),
 })

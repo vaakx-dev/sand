@@ -1,4 +1,5 @@
 import { isRecord } from '@sand/util'
+import { addonFolders } from '@sand/util/release'
 import { readdir } from 'node:fs/promises'
 import { basename, isAbsolute, join, resolve } from 'node:path'
 
@@ -38,12 +39,19 @@ export const builtinPlugins = async (root: string) => {
   return dirs.map((dir, index) => [ids[index]!, dir] as const)
 }
 
+export const addonPlugins = async (root: string) => (await Promise.all((await addonFolders(root)).map(builtinPlugins))).flat()
+
+const ownPlugins = async (root: string) => {
+  const folders = await subfolders(root)
+  const plugins = await Promise.all(folders.map(dir => Bun.file(join(dir, 'package.json')).exists()))
+  return folders.filter((_, index) => plugins[index]).map(dir => [basename(dir), dir] as const)
+}
+
 export const userPlugins = async (root: string, table: unknown) => {
-  const folders = (await subfolders(root)).map(dir => [basename(dir), dir] as const)
   const paths = Object.keys(isRecord(table) ? table : {})
     .filter(id => isAbsolute(id))
     .map(path => [path, path] as const)
-  return [...folders, ...paths]
+  return [...(await ownPlugins(root)), ...(await addonPlugins(root)), ...paths]
 }
 
 const fileIn = (dir: string, table: unknown, key: string) => {

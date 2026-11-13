@@ -1,4 +1,5 @@
 import { isRecord } from '@sand/util'
+import { addonFolders } from '@sand/util/release'
 import { basename, join, resolve } from 'node:path'
 import { pluginFolders } from './folders'
 
@@ -28,7 +29,7 @@ const modulesOf = (dir: string, name: unknown, exports: unknown): Record<string,
       )
     : {}
 
-const idOf = (dir: string, builtin: boolean, name: string | undefined) => (builtin && name ? name.replace(/^@sand\//, '') : basename(dir))
+const idOf = (dir: string, named: boolean, name: string | undefined) => (named && name ? name.replace(/^@sand\//, '') : basename(dir))
 
 const webManifest = async (dir: string) => {
   try {
@@ -47,19 +48,31 @@ const webManifest = async (dir: string) => {
   }
 }
 
+interface Candidate extends Folder {
+  named: boolean
+}
+
+const addonCandidates = async (dir: string) => {
+  const folders = await Promise.all((await addonFolders(dir)).map(addon => pluginFolders(addon, true)))
+  return folders.flat().map(found => ({ dir: found, builtin: false, named: true }))
+}
+
+const candidatesIn = async ({ dir, builtin }: Folder): Promise<Candidate[]> => {
+  const own = (await pluginFolders(dir, builtin)).map(found => ({ dir: found, builtin, named: builtin }))
+  return builtin ? own : [...own, ...(await addonCandidates(dir))]
+}
+
 export const discover = async (parents: Folder[], extra: Folder[]) => {
-  const listed = await Promise.all(
-    parents.map(async parent => (await pluginFolders(parent.dir, parent.builtin)).map(dir => ({ dir, builtin: parent.builtin }))),
-  )
-  const all = [...listed.flat(), ...extra]
+  const listed = await Promise.all(parents.map(candidatesIn))
+  const all = [...listed.flat(), ...extra.map(folder => ({ ...folder, named: false }))]
   const candidates = [...all.filter(candidate => !candidate.builtin), ...all.filter(candidate => candidate.builtin)]
   const read = await Promise.all(candidates.map(candidate => webManifest(candidate.dir)))
   const found = new Map<string, Extension>()
-  candidates.forEach(({ dir, builtin }, index) => {
+  candidates.forEach(({ dir, builtin, named }, index) => {
     const manifest = read[index]
     if (!manifest) return
     const { name, ...rest } = manifest
-    const id = idOf(dir, builtin, name)
+    const id = idOf(dir, named, name)
     if (!found.has(id)) found.set(id, { id, dir, ...rest, builtin })
   })
   return [...found.values()]

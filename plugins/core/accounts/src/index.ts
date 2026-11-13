@@ -52,7 +52,7 @@ export default definePlugin({
     const { home } = ctx.cli
     const appsFolder = join(home, 'apps')
     await mkdir(appsFolder, { recursive: true })
-    const bridges = createBridges(appsFolder, (conversation, pid) => ctx.get(processes)?.track(conversation, pid))
+    const bridges = createBridges(appsFolder, tracked => ctx.get(processes)?.track(tracked))
     const statusFile = appStatusFile(appsFolder)
     const plans = createPlans({ saved: await statusFile.read(), save: statusFile.write, changed, dropped: bridges.forget })
     const accounts = createAccounts(await authPath(home), plans, changed)
