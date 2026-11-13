@@ -3,6 +3,12 @@ import { shellReady, type ShellRunner } from '@sand/shell/contract'
 import type { Context } from 'drydock'
 import type { OutputTail } from './output'
 
+interface Command {
+  command: string
+  cwd: string
+  conversation: string
+}
+
 const reported = 4_000
 const noteEvery = 1_000
 
@@ -13,7 +19,7 @@ const lastLine = (text: string) =>
     ?.trim() ?? ''
 
 export const commandWork =
-  (ctx: Context, runner: ShellRunner, command: string, cwd: string, output: OutputTail): JobWork =>
+  (ctx: Context, runner: ShellRunner, { command, cwd, conversation }: Command, output: OutputTail): JobWork =>
   async (signal, job) => {
     await ctx.waterfall(shellReady, cwd, signal, text => ctx.emit(jobNote, { id: job.id, label: job.label, text }))
     signal.throwIfAborted()
@@ -25,6 +31,7 @@ export const commandWork =
     }
     const running = runner.start(command, {
       cwd,
+      conversation,
       onText(text) {
         output.write(text)
         ctx.emit(jobOutput, job.id, text)

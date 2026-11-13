@@ -19,6 +19,12 @@ const endings: Record<string, { text: string; tone: NoticeTone }> = {
   limited: { text: 'Out of usage', tone: 'error' },
 }
 
+const endingNotice = ({ stopReason, error }: TurnEnding): { text: string; tone: NoticeTone } | undefined => {
+  if (stopReason === 'interrupted' && error) return { text: `Stopped · ${error}`, tone: 'error' }
+  const known = endings[stopReason]
+  return known && { text: error ? `${known.text}: ${error}` : known.text, tone: known.tone }
+}
+
 export const endingType = (stopReason: string) => `turn-ending:${stopReason}`
 
 const settingsText = (settings: SessionSettings) =>
@@ -75,11 +81,11 @@ export const settledItems = (owner: Owner, path: Entry[], custom: (type: string)
   }
 
   const ending = (entry: Entry) => {
-    const { stopReason, error } = entry.data as TurnEnding
-    const type = endingType(stopReason)
+    const turnEnding = entry.data as TurnEnding
+    const type = endingType(turnEnding.stopReason)
     if (custom(type)) return list.emit({ kind: 'custom', key: entry.id, entry: { ...entry, type } })
-    const known = endings[stopReason]
-    if (known) list.emit({ kind: 'notice', key: entry.id, text: error ? `${known.text}: ${error}` : known.text, tone: known.tone })
+    const notice = endingNotice(turnEnding)
+    if (notice) list.emit({ kind: 'notice', key: entry.id, ...notice })
   }
 
   for (const entry of path) {

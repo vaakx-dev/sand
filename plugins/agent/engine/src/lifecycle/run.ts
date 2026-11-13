@@ -2,7 +2,7 @@ import { UsageLimited } from '@sand/accounts/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { runtime } from '@sand/host-runtimes/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
-import { type Conversation, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
+import { type Conversation, Interruption, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
 import type { EngineContext } from '../context'
 import { createPartial } from '../loop/partial'
 import { runReact } from '../loop/react'
@@ -21,6 +21,7 @@ const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail ===
 interface Outcome {
   stopReason: TurnResult['stopReason']
   failure?: { error: unknown }
+  cause?: string
   handed?: true
 }
 
@@ -30,19 +31,22 @@ interface Opened<C extends Conversation> {
   release(): void
 }
 
-const resultOf = <C extends Conversation>(run: TurnRun<C>, { stopReason, failure }: Outcome): TurnResult => {
+const resultOf = <C extends Conversation>(run: TurnRun<C>, { stopReason, failure, cause }: Outcome): TurnResult => {
   const detail = failure && detailOf(failure.error)
   const resetsAt = failure?.error instanceof UsageLimited ? failure.error.resetsAt : undefined
+  const error = failure ? errorMessage(failure.error) : cause
   return {
     stopReason,
     usage: run.usage,
     text: run.reply,
     steps: run.steps,
-    ...(failure && { error: errorMessage(failure.error) }),
+    ...(error && { error }),
     ...(detail && { detail }),
     ...(resetsAt && { resetsAt }),
   }
 }
+
+const interrupted = ({ reason }: AbortSignal): Outcome => ({ stopReason: 'interrupted', ...(reason instanceof Interruption && { cause: reason.message }) })
 
 const failed = (error: unknown): Outcome => ({ stopReason: error instanceof UsageLimited ? 'limited' : 'error', failure: { error } })
 
@@ -60,7 +64,7 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
       run.signal.throwIfAborted()
       return await runReact({ signal: run.signal, hooks, leaving }, 'calls' in begun ? begun : undefined)
     } catch (error) {
-      return run.signal.aborted ? { stopReason: 'interrupted' } : failed(error)
+      return run.signal.aborted ? interrupted(run.signal) : failed(error)
     }
   }
 

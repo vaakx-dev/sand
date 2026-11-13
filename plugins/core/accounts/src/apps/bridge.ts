@@ -13,6 +13,8 @@ import {
 } from '../contract'
 import { isModelContent, type Message, type ModelContent, textOf } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
+import type { Tracked } from '@sand/processes/contract'
+import type { Dispose } from 'drydock'
 import { stat } from 'node:fs/promises'
 import { blankFiles, secretValues } from './blank'
 import { deliver } from './deliver'
@@ -34,7 +36,10 @@ interface Live {
   handoff?: { id: string; delivered: Delivery }
   calming?: Promise<void>
   timer?: ReturnType<typeof setTimeout>
+  untrack?: Dispose
 }
+
+export type Track = (tracked: Tracked) => Dispose | undefined
 
 interface Opened {
   entry: Live
@@ -65,7 +70,7 @@ const callsOf = (message: Message) => message.content.flatMap(block => (block.ty
 
 export type Bridge = ReturnType<typeof createBridge>
 
-export const createBridge = (plan: AppPlan, home: string) => {
+export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const live = new Map<string, Live>()
   const effortFixed = !plan.caps.reconfigure.includes('effort')
 
@@ -74,6 +79,13 @@ export const createBridge = (plan: AppPlan, home: string) => {
   const forget = (key: string, entry: Live) => {
     if (live.get(key) === entry) live.delete(key)
     clearTimeout(entry.timer)
+    entry.untrack?.()
+  }
+
+  const watch = (entry: Live, conversation: string | undefined) => {
+    const { pid } = entry.session
+    if (entry.untrack || !conversation || pid === undefined) return
+    entry.untrack = track({ conversation, pid, label: plan.app, kind: 'app' })
   }
 
   const drop = (key: string, entry: Live) => {
@@ -184,6 +196,7 @@ export const createBridge = (plan: AppPlan, home: string) => {
     const delta = request.delta ?? []
     const { found, messages } = held(key, thread, delta) ?? { messages: delta }
     const { entry, fresh } = await ready(key, found, await setupOf(request, thread), thread)
+    watch(entry, request.session)
     const { lead, delivered } = await handOver(entry, request)
     const waiting = entry.waiting
     entry.sent = entry.done ? messages : [...entry.sent, ...messages]

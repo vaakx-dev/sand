@@ -143,6 +143,7 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
 
   return {
     id: threadId,
+    pid: server.pid,
     send(content: ModelContent[], effort) {
       running = true
       request('turn/start', { input: content.map(toItem), model: setup.model, ...(effort && { effort }), summary: 'auto' })

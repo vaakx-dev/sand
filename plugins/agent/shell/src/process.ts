@@ -1,4 +1,5 @@
 import type { Subprocess } from 'bun'
+import type { Dispose } from 'drydock'
 import { jobObject } from './job-object'
 
 const windows = process.platform === 'win32'
@@ -14,7 +15,10 @@ export interface SpawnOptions {
   verbatim?: boolean
   env?: Record<string, string>
   killOnClose?: boolean
+  track?: Track
 }
+
+export type Track = (pid: number) => Dispose | undefined
 
 const taskkill = async (pid: number) => {
   const killer = Bun.spawn(['taskkill', '/pid', String(pid), '/T', '/F'], { stdio: ['ignore', 'ignore', 'ignore'], windowsHide: true })
@@ -49,7 +53,7 @@ const groupTree = (child: Subprocess, killOnClose: boolean) => {
   }
 }
 
-export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, { cwd, verbatim = false, env = {}, killOnClose = false }: SpawnOptions) => {
+export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, { cwd, verbatim = false, env = {}, killOnClose = false, track }: SpawnOptions) => {
   const child = Bun.spawn(argv, {
     cwd,
     env: { ...process.env, ...noPrompts, ...env },
@@ -60,6 +64,8 @@ export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, {
     windowsHide: true,
     windowsVerbatimArguments: verbatim,
   })
+  const untrack = track?.(child.pid)
+  if (untrack) void child.exited.then(untrack)
   return { child, killTree: windows ? windowsTree(child, killOnClose) : groupTree(child, killOnClose) }
 }
 

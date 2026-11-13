@@ -1,5 +1,6 @@
 import { cli } from '@sand/config/contract'
 import { media } from '@sand/media/contract'
+import { processes } from '@sand/processes/contract'
 import { server as serverService, type Server } from '@sand/server/contract'
 import { helloLimits, llm, llmLimits, llmModels, llmPlans, loginChange, type Limits, type LoginSharePc } from './contract'
 import { peers as pcLinks } from '@sand/devices-contract'
@@ -51,7 +52,7 @@ export default definePlugin({
     const { home } = ctx.cli
     const appsFolder = join(home, 'apps')
     await mkdir(appsFolder, { recursive: true })
-    const bridges = createBridges(appsFolder)
+    const bridges = createBridges(appsFolder, tracked => ctx.get(processes)?.track(tracked))
     const statusFile = appStatusFile(appsFolder)
     const plans = createPlans({ saved: await statusFile.read(), save: statusFile.write, changed, dropped: bridges.forget })
     const accounts = createAccounts(await authPath(home), plans, changed)

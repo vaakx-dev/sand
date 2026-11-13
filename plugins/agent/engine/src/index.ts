@@ -55,6 +55,11 @@ export default definePlugin({
       turn: (owner, id) => stores.turns.get(owner, id),
       open: ({ owner, id }) => attached.get(owner)?.open(id),
       send: ({ owner, id }, input) => attached.get(owner)?.send(id, input),
+      stop(id, interruption) {
+        const turn = [...attached.keys()].map(owner => stores.turns.current({ owner, id })).find(found => found !== undefined)
+        if (turn) leases.interrupt(turn.id, interruption)
+        return turn !== undefined
+      },
     }
 
     if (dispatches) {

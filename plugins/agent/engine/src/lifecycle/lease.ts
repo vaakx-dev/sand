@@ -1,3 +1,4 @@
+import type { Interruption } from '../contract'
 import type { EngineContext } from '../context'
 import type { TurnStore } from '../store/turns'
 
@@ -58,9 +59,9 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
         if (!held.size) stop()
       }
     },
-    interrupt(turn: string) {
+    interrupt(turn: string, interruption?: Interruption) {
       const controller = held.get(turn)
-      if (controller) controller.abort()
+      if (controller) controller.abort(interruption)
       else store.cancel(turn)
     },
   }

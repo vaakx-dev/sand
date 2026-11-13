@@ -1,0 +1,27 @@
+{
+  "name": "@sand/memory-guard",
+  "version": "0.0.0",
+  "description": "Watches this PC's free memory and stops the chat using the most when it runs very low, so the PC doesn't freeze",
+  "type": "module",
+  "sand": {
+    "feature": "memory-guard",
+    "runtime": "./src/index.ts",
+    "label": "Out-of-memory guard",
+    "summary": "Stops the chat using the most memory when this PC runs very low"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/devices-notify": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/machine": "workspace:*",
+    "@sand/processes": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/shell": "workspace:*"
+  }
+}
