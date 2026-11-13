@@ -123,6 +123,8 @@ export const agentLimits = service<AgentLimits>('agentLimits')
 
 export const subagentStarted = event<(subagent: string, starter: ConversationRef) => void>('subagent.started')
 
+export const threadStarted = event<(thread: string, starter: ConversationRef) => void>('thread.started')
+
 export interface ThreadRow {
   thread: string
   title: string

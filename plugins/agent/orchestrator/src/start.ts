@@ -4,7 +4,7 @@ import type { SessionSettings } from '@sand/model/contract'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
-import { failure, type Sent, type StartInput, subagentStarted } from './contract'
+import { failure, type Sent, type StartInput, subagentStarted, threadStarted } from './contract'
 import type { Owners } from './owners'
 import type { Receipts } from './receipts'
 import { matchSettings } from './settings'
@@ -82,6 +82,7 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
   const open = async (input: StartInput, adopt?: Adopt) => {
     const session = await (input.quick ? quickThread(input) : inFolder(input))
     if (input.title) ctx.sessions.rename(session.id, input.title)
+    if (input.from) ctx.emit(threadStarted, session.id, input.from)
     adopt?.(session)
     receipts.put(input.clientRequestId, session.id)
     return session
