@@ -14,14 +14,14 @@ sand installs [VRUI](https://github.com/vaakx-dev/vrui) and [drydock](https://gi
 
 ## Release a version
 
-Releases are Git tags. sand reads its version from `apps/sand/package.json`. To release the next alpha:
+Releases are Git tags. sand reads its version from `apps/sand/package.json`. To release the next beta:
 
-1. In `apps/sand`, run `bun pm version prerelease --preid alpha`. It raises the version, for example from `0.1.0-alpha.1` to `0.1.0-alpha.2`. Because `apps/sand` is not the repository root, it doesn't commit or tag.
-2. Commit the change with the message `chore: release 0.1.0-alpha.2`.
-3. Run `git tag -a v0.1.0-alpha.2 -m v0.1.0-alpha.2`.
+1. In `apps/sand`, run `bun pm version prerelease --preid beta`. It raises the version, for example from `0.1.0-beta.1` to `0.1.0-beta.2`. Because `apps/sand` is not the repository root, it doesn't commit or tag.
+2. Commit the change with the message `chore: release 0.1.0-beta.2`.
+3. Run `git tag -a v0.1.0-beta.2 -m v0.1.0-beta.2`.
 4. Run `git push --follow-tags`.
 
-The release workflow runs the checks on the tag and publishes a GitHub release with notes generated from the commits. If the checks fail, it publishes nothing. A version with a suffix such as `-alpha.2` is published as a pre-release.
+The release workflow runs the checks on the tag and publishes a GitHub release, marked Latest, with notes listing the pull requests merged since the previous version tag. Installs on the Release channel take the add-on catalog from the Latest release. If the checks fail, it publishes nothing.
 
 The nightly workflow runs once a day. If `main` has changed since the last nightly build and the checks pass, it moves the `nightly` tag and its pre-release to the newest commit on `main`. You can also start it by hand from the Actions tab.
 
