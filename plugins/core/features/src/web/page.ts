@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
-import type { Feature } from '../contract'
+import type { Addon, Feature, FeatureChoice } from '../contract'
 import type { FeatureStore } from './store'
 
 interface Placed {
@@ -28,13 +28,14 @@ const notice = (features: Feature[], feature: Feature) => {
 
 const available = (features: Feature[], id: string): boolean => {
   const found = features.find(feature => feature.id === id)
-  if (!found) return true
+  if (!found) return false
   if (found.kind === 'feature') return found.on
   return found.chosen && found.needs.every(need => available(features, need))
 }
 
-const missing = (features: Feature[], feature: Feature) =>
-  feature.needs.filter(need => !available(features, need)).map(need => features.find(other => other.id === need)?.label ?? need)
+const labelOf = ({ features, addons }: FeatureChoice, id: string) => features.find(feature => feature.id === id)?.label ?? addons.find(addon => addon.id === id)?.label ?? id
+
+const missing = (features: Feature[], feature: Feature) => feature.needs.filter(need => !available(features, need))
 
 const orphaned = (features: Feature[], feature: Feature) => feature.parent !== undefined && !available(features, feature.parent)
 
@@ -42,37 +43,87 @@ const blocked = (features: Feature[], feature: Feature) => orphaned(features, fe
 
 const labels = (features: Feature[], ids: string[]) => ids.map(id => features.find(feature => feature.id === id)?.label ?? id)
 
-const status = (features: Feature[], feature: Feature) => {
+const status = (choice: FeatureChoice, feature: Feature) => {
+  const { features } = choice
   if (orphaned(features, feature)) return ''
   const needs = missing(features, feature)
-  if (needs.length) return `Needs ${listed(needs)}`
+  if (needs.length) return `Needs ${listed(needs.map(need => labelOf(choice, need)))}`
   if (feature.kind === 'feature' || !feature.chosen) return ''
   return feature.usedBy.length ? `Used by ${listed(labels(features, feature.usedBy))}` : 'Not used, so not loaded'
 }
 
 const detail = (summary: string, line: string) => (line ? [div(summary), div(line)] : summary)
+const busy = (store: FeatureStore) => Boolean(store.applying.get())
 
-const row = (kit: Kit, store: FeatureStore, features: Feature[], { feature, depth }: Placed) => {
-  const { confirm, settingsRow, spinner, toggleSwitch } = kit
-  const { id, kind, label, summary } = feature
+const working = (kit: Kit, store: FeatureStore, id: string) => show(() => id in (store.applying.get() ?? {}), () => kit.spinner())
+
+const featureSwitch = (kit: Kit, store: FeatureStore, { features }: FeatureChoice, feature: Feature) => {
+  const { id, kind, label } = feature
   const on = kind === 'feature' ? feature.on : feature.chosen
   const warning = on ? notice(features, feature) : ''
   const apply = (next: boolean) => store.apply({ [id]: next })
   const turnOff = { id: 'off', label: 'Turn off', danger: true, confirm: warning, run: () => apply(false) }
   const flip = (event: MouseEvent) => {
-    if (warning) return confirm(event)(turnOff)
+    if (warning) return kit.confirm(event)(turnOff)
     void apply(!on)
   }
-  return settingsRow(
-    { title: label, detail: detail(summary, status(features, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
-    show(() => id in (store.applying.get() ?? {}), () => spinner()),
-    toggleSwitch({ on, disabled: () => Boolean(store.applying.get()) || blocked(features, feature), 'aria-label': label, onClick: flip }),
+  return kit.toggleSwitch({ on, disabled: () => busy(store) || blocked(features, feature), 'aria-label': label, onClick: flip })
+}
+
+const row = (kit: Kit, store: FeatureStore, choice: FeatureChoice, { feature, depth }: Placed) =>
+  kit.settingsRow(
+    { title: feature.label, detail: detail(feature.summary, status(choice, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
+    working(kit, store, feature.id),
+    featureSwitch(kit, store, choice, feature),
   )
+
+const removeButton = (kit: Kit, store: FeatureStore, { id, label }: Addon) => {
+  const action = { id: 'remove', label: `Remove ${label}`, icon: 'trash', danger: true, confirm: `Deletes ${label} from this PC. You can install it again later.`, run: () => store.remove(id) }
+  return kit.iconButton({ title: 'Remove', 'aria-label': `Remove ${label}`, disabled: () => busy(store), onClick: (event: MouseEvent) => kit.confirm(event)(action) }, kit.icon('trash'))
+}
+
+const installButton = (kit: Kit, store: FeatureStore, { id, label, needsSand }: Addon) =>
+  kit.secondaryAction({ size: 'sm', 'aria-label': `Install ${label}`, disabled: () => busy(store) || Boolean(needsSand), onClick: () => void store.install(id) }, 'Install')
+
+const updateButton = (kit: Kit, store: FeatureStore, { id, label, update }: Addon) =>
+  update ? kit.secondaryAction({ size: 'sm', title: `Update to ${update}`, 'aria-label': `Update ${label}`, disabled: () => busy(store), onClick: () => void store.update(id) }, 'Update') : null
+
+const addonControls = (kit: Kit, store: FeatureStore, choice: FeatureChoice, addon: Addon, feature: Feature | undefined) => {
+  const toggle = feature ? featureSwitch(kit, store, choice, feature) : null
+  switch (addon.status) {
+    case 'available':
+      return [installButton(kit, store, addon)]
+    case 'installed':
+      return [updateButton(kit, store, addon), toggle, removeButton(kit, store, addon)]
+    case 'built-in':
+      return [toggle]
+  }
+}
+
+const addonLine = (choice: FeatureChoice, addon: Addon, feature: Feature | undefined) => {
+  if (addon.needsSand) return 'Needs a newer sand'
+  return feature ? status(choice, feature) : ''
+}
+
+const addonRows = (kit: Kit, store: FeatureStore, choice: FeatureChoice, addon: Addon) => {
+  const feature = choice.features.find(found => found.id === addon.id)
+  const head = kit.settingsRow(
+    { title: addon.label, detail: detail(addon.summary, addonLine(choice, addon, feature)) },
+    working(kit, store, addon.id),
+    ...addonControls(kit, store, choice, addon, feature),
+  )
+  const children = feature ? tree(choice.features, feature).slice(1).map(item => row(kit, store, choice, item)) : []
+  return [head, ...children]
+}
+
+const catalogNote = ({ catalogError, addons }: FeatureChoice) => {
+  if (!catalogError) return undefined
+  return addons.length ? "Can't reach the add-on catalog, so only installed add-ons show. They keep working." : "Can't reach the add-on catalog. Try again when you're online."
 }
 
 export const featuresPage = (kit: Kit, store: FeatureStore) => {
   const { errorText, loadingState, settingsSection } = kit
-  const state = derive(() => JSON.stringify(store.choice.get()?.features ?? null))
+  const state = derive(() => JSON.stringify(store.choice.get() ?? null))
   return div(
     { class: 'flex flex-col gap-6' },
     show(
@@ -80,17 +131,18 @@ export const featuresPage = (kit: Kit, store: FeatureStore) => {
       () => errorText(() => store.error.get()),
     ),
     dynamicChild(state, () => {
-      const features = store.choice.get()?.features
-      if (!features) return loadingState()
-      const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent)
-      const section = (title: string, list: Feature[]) => settingsSection({ title }, list.flatMap(top => tree(features, top)).map(item => row(kit, store, features, item)))
+      const choice = store.choice.get()
+      if (!choice) return loadingState()
+      const { features, addons } = choice
+      const addonIds = new Set(addons.map(addon => addon.id))
+      const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent && !addonIds.has(feature.id))
       return div(
         { class: 'contents' },
-        section('Add-ons', tops.filter(top => top.addon).toSorted((a, b) => a.label.localeCompare(b.label))),
-        section('Core', tops.filter(top => !top.addon)),
+        settingsSection({ title: 'Add-ons', note: catalogNote(choice) }, addons.flatMap(addon => addonRows(kit, store, choice, addon))),
+        settingsSection({ title: 'Core' }, tops.flatMap(top => tree(features, top)).map(item => row(kit, store, choice, item))),
         settingsSection(
           { title: 'Shared parts' },
-          features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, features, { feature, depth: 0 })),
+          features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, choice, { feature, depth: 0 })),
         ),
       )
     }),
