@@ -11,6 +11,7 @@ interface Group {
 }
 
 const groups: Group[] = [
+  { kind: 'permission', label: 'Allow' },
   { kind: 'secret', label: 'Sign-ins' },
   { kind: 'conflict', label: 'Merge' },
   { kind: 'review', label: 'Review' },
@@ -30,17 +31,15 @@ const actions = (kit: Kit, need: Need) => {
       busy.set(false)
     }
   }
-  const second = need.second
-  const buttons = [
-    kit.quietButton({ size: 'sm', strong: true, disabled: busy, onClick: () => void run(need.main) }, need.main.label),
-    second ? kit.quietButton({ size: 'sm', disabled: busy, onClick: () => void run(second) }, second.label) : null,
-  ]
+  const buttons = need.actions.map((action, index) => kit.quietButton({ size: 'sm', strong: index === 0, disabled: busy, onClick: () => void run(action) }, action.label))
   return { buttons, failure: dynamicChild(failure, text => (text ? kit.errorText(text) : null)) }
 }
 
 const item = (kit: Kit, need: Need) => {
   const { buttons, failure } = actions(kit, need)
-  return kit.actionItem({ title: need.who, lead: need.mark(), at: need.at, actions: buttons }, need.text?.() ?? need.title, failure)
+  const head = { title: need.head?.() ?? need.who, lead: need.mark(), at: need.at }
+  if (need.body) return kit.actionItem(head, need.body(buttons), failure)
+  return kit.actionItem({ ...head, actions: buttons }, need.text?.() ?? need.title, failure)
 }
 
 const group = (kit: Kit, items: Derive<Need[]>, { kind, label }: Group) => {

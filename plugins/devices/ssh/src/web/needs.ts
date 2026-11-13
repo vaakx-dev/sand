@@ -23,7 +23,7 @@ export const sshNeeds = (kit: Kit, marks: () => PcMarks | undefined, state: Sig<
       mark: () => marks()?.icon(machine.pc) ?? kit.icon('monitor', 'sm'),
       title,
       at: firstSeen(machine.pc),
-      main: { label: 'Enter password', run: () => reconnect(machine.pc) },
+      actions: [{ label: 'Enter password', run: () => reconnect(machine.pc) }],
     }))
   }
   return { id: 'ssh', items }
