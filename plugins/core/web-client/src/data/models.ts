@@ -91,7 +91,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   const labelOn = (device: string, { model, effort, speed }: SessionSettings) =>
     [infoOn(device, model)?.label ?? model ?? 'Choose a model', catalogOf(device).levels.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
       .filter(Boolean)
-      .join(' � ')
+      .join(' · ')
 
   const summary = (settings: SessionSettings) => {
     const model = settings.model ?? catalogOf().defaults.model

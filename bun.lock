@@ -156,6 +156,8 @@
       "dependencies": {
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/media": "workspace:*",
@@ -674,6 +676,7 @@
       "dependencies": {
         "@sand/attachments": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/compaction": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/transcript": "workspace:*",
@@ -1248,9 +1251,11 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/cli-commands": "workspace:*",
+        "@sand/compaction": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/orchestrator": "workspace:*",
+        "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
       "devDependencies": {

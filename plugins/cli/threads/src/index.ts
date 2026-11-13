@@ -12,18 +12,19 @@ const usage = [
   'sand thread show <id>                   print what the thread said',
   'sand thread list                        list threads on all your reachable PCs, newest first',
   'sand thread stop <id>                   stop its turn and background commands',
+  'sand thread compact <id>                summarize the earlier conversation now; the thread must be idle',
   '                                        exit codes: 0 done, 1 failed, 2 usage, 3 waiting on you, 130 interrupted',
 ].join('\n')
 
 export default definePlugin({
   name: 'cli-threads',
-  description: 'The sand thread command: start, message, wait for, show, list and stop threads from a script or another agent',
+  description: 'The sand thread command: start, message, wait for, show, list, stop and compact threads from a script or another agent',
   inject: { cli, cliCommands, daemon },
   apply(ctx) {
     ctx.effect(() =>
       ctx.cliCommands.register({
         name: 'thread',
-        summary: 'start, message, wait for, show, list and stop threads',
+        summary: 'start, message, wait for, show, list, stop and compact threads',
         usage,
         options: {
           wait: { type: 'boolean', help: 'sand thread start and send: wait for the reply and print it' },
