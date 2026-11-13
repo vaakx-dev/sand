@@ -7,7 +7,7 @@ import { shellReady } from './contract'
 import type { Shell } from './detect'
 import { liveTail } from './live'
 import { loginEnv, loginsField } from './logins'
-import { agentEnv } from './process'
+import { agentEnv, type Track } from './process'
 import { run, type Stop, type Timeouts } from './run'
 
 export interface Limits {
@@ -56,13 +56,15 @@ const truncate = (text: string, max: number) =>
 
 const unchanged = (text: string) => text
 
-export const shellTool = (
-  ctx: Context,
-  spec: Pick<Tool, 'name' | 'description' | 'environment'>,
-  shell: Shell,
-  limits: Limits,
-  logins: Logins | undefined,
-): Tool<z.ZodType<ShellInput>> => {
+interface ShellToolOptions {
+  spec: Pick<Tool, 'name' | 'description' | 'environment'>
+  shell: Shell
+  limits: Limits
+  logins: Logins | undefined
+  trackFor(conversation: string): Track
+}
+
+export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor }: ShellToolOptions): Tool<z.ZodType<ShellInput>> => {
   const redact = logins ? (text: string) => logins.redact(text) : unchanged
   return {
     ...spec,
@@ -82,6 +84,7 @@ export const shellTool = (
         cwd: context.cwd,
         verbatim: shell.verbatim,
         env,
+        track: trackFor(context.conversation.id),
         signal: context.signal,
         onText: tail.add,
       })

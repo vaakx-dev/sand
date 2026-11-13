@@ -34,7 +34,7 @@ const windowsPrelude = [
 const ensureScripts: Record<Shell, string> = {
   posix: [
     `if [ ! -x ${posixShim} ]; then echo '${markers.missing}'; exit 0; fi`,
-    `BROWSER=true ${posixShim} </dev/null >/dev/null || exit $?`,
+    `${posixShim} serve </dev/null >/dev/null || exit $?`,
     `printf '%s' '${markers.server}'`,
     `tr -d '\\r\\n' < "$HOME/.sand/server.json"`,
     'echo',
@@ -44,36 +44,21 @@ const ensureScripts: Record<Shell, string> = {
     ...windowsPrelude,
     `if (-not (Test-Path -LiteralPath $shim)) { '${markers.missing}'; exit 0 }`,
     "$info = Join-Path $sand 'server.json'",
-    "$log = Join-Path $sand 'server.log'",
-    'function Get-Server {',
-    '  if (-not (Test-Path -LiteralPath $info)) { return $null }',
-    '  try { $server = Get-Content -LiteralPath $info -Raw | ConvertFrom-Json } catch { return $null }',
-    '  if (-not (Get-Process -Id $server.pid -ErrorAction SilentlyContinue)) { return $null }',
-    '  $url = [Uri]$server.url',
-    '  $client = New-Object Net.Sockets.TcpClient',
-    '  try { if ($client.ConnectAsync($url.Host, $url.Port).Wait(2000)) { return $server } } catch { } finally { $client.Dispose() }',
-    '  return $null',
-    '}',
-    '$server = Get-Server',
-    'if (-not $server) {',
-    `  $line = 'cmd.exe /d /c ""' + $shim + '" serve >> "' + $log + '" 2>&1"'`,
-    '  $started = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $line; CurrentDirectory = $env:USERPROFILE }',
-    '  if ($started.ReturnValue -ne 0) { throw "Windows would not start sand (Win32_Process.Create returned $($started.ReturnValue))" }',
-    '  $until = (Get-Date).AddSeconds(60)',
-    '  while (-not ($server = Get-Server)) {',
-    '    if ((Get-Date) -gt $until) { throw "sand did not start; see $log" }',
-    '    Start-Sleep -Milliseconds 500',
-    '  }',
-    '}',
+    "$log = Join-Path $sand 'serve.log'",
+    `$line = 'cmd.exe /d /c ""' + $shim + '" serve > nul 2> "' + $log + '""'`,
+    '$started = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $line; CurrentDirectory = $env:USERPROFILE }',
+    'if ($started.ReturnValue -ne 0) { throw "Windows would not start sand (Win32_Process.Create returned $($started.ReturnValue))" }',
+    '$serve = Get-Process -Id $started.ProcessId -ErrorAction SilentlyContinue',
+    'if ($serve -and -not $serve.WaitForExit(90000)) { throw "sand did not start in time; see $log" }',
+    '$server = if (Test-Path -LiteralPath $info) { Get-Content -LiteralPath $info -Raw | ConvertFrom-Json }',
+    'if (-not ($server -and (Get-Process -Id $server.pid -ErrorAction SilentlyContinue))) { throw "sand did not start; see $log" }',
     `'${markers.server}' + ($server | ConvertTo-Json -Compress)`,
   ].join('\n'),
 }
 
 const installScripts = (command: string): Record<Shell, string> => ({
-  posix: ['BROWSER=true', 'export BROWSER', command, 'code=$?', `printf '\\n%s%s\\n' '${markers.done}' "$code"`, 'exit $code', ''].join('\n'),
-  windows: ["$ProgressPreference = 'SilentlyContinue'", "$env:BROWSER = 'true'", command, '$code = [int](-not $?)', `'${markers.done}' + $code`, 'exit $code'].join(
-    '\n',
-  ),
+  posix: [command, 'code=$?', `printf '\\n%s%s\\n' '${markers.done}' "$code"`, 'exit $code', ''].join('\n'),
+  windows: ["$ProgressPreference = 'SilentlyContinue'", command, '$code = [int](-not $?)', `'${markers.done}' + $code`, 'exit $code'].join('\n'),
 })
 
 const joinScripts = (link: string): Record<Shell, string> => ({

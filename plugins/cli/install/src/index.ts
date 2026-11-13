@@ -19,7 +19,7 @@ export default definePlugin({
         summary: 'set up a downloaded sand',
         usage: [
           'sand install                    set up a downloaded sand (the installer runs this); with',
-          '                                SAND_JOIN=<link from Add a PC>, add this PC to your PCs',
+          '                                SAND_JOIN=<link from Add a PC>, add this PC to your PCs without opening the browser',
         ].join('\n'),
         run: async args => (await import('./install')).installCommand({ home: ctx.cli.home, daemon: ctx.daemon, open }, args),
       }),

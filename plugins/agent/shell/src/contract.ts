@@ -16,6 +16,7 @@ export interface ShellOutcome {
 
 export interface ShellStart {
   cwd: string
+  conversation: string
   onText(text: string): void
 }
 

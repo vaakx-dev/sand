@@ -83,6 +83,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
 
   return {
     ...(resumed && { id: resumed.id }),
+    pid: connection.pid,
     send,
     ...(resumed && { aside: (prompt: string, signal?: AbortSignal) => askAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), prompt, signal) }),
     steer: send,

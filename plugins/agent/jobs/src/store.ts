@@ -34,7 +34,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     return stopped.length > 0
   }
 
-  const stopAll = (parent: string) => stopNoted(running().filter(({ job }) => job.parent === parent), stoppedWithChat)
+  const stopAll = (parent: string, reason = stoppedWithChat) => stopNoted(running().filter(({ job }) => job.parent === parent), reason)
 
   let disposing = false
   ctx.effect(() => () => {
