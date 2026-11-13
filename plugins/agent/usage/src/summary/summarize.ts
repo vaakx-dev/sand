@@ -5,7 +5,7 @@ import { isBilled } from '../contract/billed'
 import { emptyTotals } from '../records'
 import { accountBook } from './accounts'
 import { identityResolver } from './identity'
-import { modelBook } from './models'
+import { modelBook, nameOf } from './models'
 import { periodBook } from './periods'
 import { projectBook } from './projects'
 import { addUsage } from './totals'
@@ -33,8 +33,8 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
       total,
       accounts.add(id),
       models.add(turn, id, Boolean(price)),
-      ...periods.add(turn.at, id.key),
-      projects.add(turn.session, id.key),
+      ...periods.add(turn.at, id.key, nameOf(turn.model)),
+      projects.add(turn.session),
     ]
     for (const totals of groups) addUsage(totals, turn.usage, price, isBilled(id.billing))
   }

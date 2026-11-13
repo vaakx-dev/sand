@@ -24,7 +24,6 @@ export const normalise = (summary: UsageSummary, pc: Pc, nameOf: (id: string) =>
     return next
   })
   const remap = (key: string) => keys.get(key) ?? key
-  const remapAll = (list: string[]) => [...new Set(list.map(remap))]
   const remapRecord = (record: Record<string, UsageTotals>) => {
     const next: Record<string, UsageTotals> = {}
     for (const [key, totals] of Object.entries(record)) addRecord(next, remap(key), totals)
@@ -35,6 +34,5 @@ export const normalise = (summary: UsageSummary, pc: Pc, nameOf: (id: string) =>
     accounts,
     models: summary.models.map(model => ({ ...model, account: remap(model.account) })),
     periods: summary.periods.map(period => ({ ...period, accounts: remapRecord(period.accounts) })),
-    projects: summary.projects.map(project => ({ ...project, accounts: remapAll(project.accounts) })),
   }
 }

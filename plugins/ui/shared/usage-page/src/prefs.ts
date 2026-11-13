@@ -1,14 +1,14 @@
-import { type UsageRange, usageRanges } from '@sand/usage/contract'
+import type { UsageRange } from '@sand/usage/contract'
 import { stored } from '@vaakx-dev/vrui'
 
 export const allPcs = ''
 
-export const tabs = ['usage', 'cost', 'tokens'] as const
+export const pageRanges = ['7d', '30d', '90d'] as const satisfies UsageRange[]
 
-export type Tab = (typeof tabs)[number]
+export type PageRange = (typeof pageRanges)[number]
 
 export const usagePrefs = () => ({
-  range: stored<UsageRange>('sand.usage.range', '30d', value => usageRanges.some(range => range === value)),
+  range: stored<PageRange>('sand.usage.range', '30d', value => pageRanges.some(range => range === value)),
   pc: stored<string>('sand.usage.pc', allPcs),
-  tab: stored<Tab>('sand.usage.tab', 'usage', value => tabs.some(tab => tab === value)),
+  forecast: stored<string>('sand.usage.forecast', ''),
 })

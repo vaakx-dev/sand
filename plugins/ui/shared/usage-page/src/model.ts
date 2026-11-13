@@ -11,7 +11,6 @@ import { mergePeriods } from './data/merge/groups'
 import { normalise } from './data/normalise'
 import type { Pc, PcSummary } from './data/types'
 import { allPcs, usagePrefs } from './prefs'
-import type { Breakdown } from './view/breakdown/rows'
 
 export interface UsageDeps {
   wire: Wire
@@ -31,7 +30,7 @@ const stale = 60_000
 const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export const usageModel = (deps: UsageDeps) => {
-  const { range, pc, tab } = usagePrefs()
+  const { range, pc, forecast } = usagePrefs()
   const signature = derive(() => JSON.stringify(deps.pcs()))
   const pcs = derive(() => {
     signature.get()
@@ -39,10 +38,8 @@ export const usageModel = (deps: UsageDeps) => {
   })
   const fleet = fleetLoader(deps.wire, () => pcs.get(), () => ({ key: range.get(), query: usageQuery(range.get()) }))
   const history = fleetLoader(deps.wire, () => pcs.get(), historyView)
-  const breakdown = sig<Breakdown>('projects')
   const checking = sig(false)
   const now = clock(30_000)
-  const windows = sig(new Map<string, string>())
 
   effect(() => {
     range.get()
@@ -118,8 +115,7 @@ export const usageModel = (deps: UsageDeps) => {
   return {
     range,
     pc,
-    tab,
-    breakdown,
+    forecast,
     checking,
     now,
     usage,
@@ -127,11 +123,8 @@ export const usageModel = (deps: UsageDeps) => {
     notices,
     busy: fleet.busy,
     pcs,
-    windows,
     nameOf: (id: string) => nameOf(id) ?? id,
-    refresh,
-    checkLimits: () => checkWith(refresh),
-    setWindow: (account: string, window: string) => windows.set(new Map(windows.get()).set(account, window)),
+    reload: () => checkWith(refresh),
   }
 }
 

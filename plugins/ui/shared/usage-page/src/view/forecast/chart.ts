@@ -2,11 +2,12 @@ import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, div, line, path, rect, show, span, type Sig } from '@vaakx-dev/vrui'
-import type { Forecast, Point } from '../../../data/forecast/project'
-import { chartFrame, gridLine, guideLine } from '../../chart/frame'
-import { dash } from '../../chart/legend'
-import { cssPercent } from '../../chart/scale'
+import type { Forecast, Point } from '../../data/forecast/project'
+import { chartFrame, gridLine, guideLine } from '../chart/frame'
+import { cssPercent } from '../chart/scale'
 import { ticksOf } from './ticks'
+
+export const DASH = '5 4'
 
 const width = 1000
 const height = 170
@@ -72,11 +73,11 @@ export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast,
     [
       levels.map(level => gridLine(width, toY(level))),
       outAt ? rect({ x: toX(outAt), y: 0, width: width - toX(outAt), height, fill: colorVar('warning', 500), fillOpacity: 0.12 }) : null,
-      line({ x1: 0, x2: width, y1: toY(1), y2: toY(0), stroke: colorVar('neutral', 500), strokeDasharray: dash, vectorEffect: 'non-scaling-stroke' }),
+      line({ x1: 0, x2: width, y1: toY(1), y2: toY(0), stroke: colorVar('neutral', 500), strokeDasharray: DASH, vectorEffect: 'non-scaling-stroke' }),
       path({ d: `${trace(forecast.past)} L${toX(now)},${height} L0,${height} Z`, fill: color, fillOpacity: 0.08 }),
       path({ d: band, fill: color, fillOpacity: 0.08 }),
       path({ d: trace(forecast.past), ...stroke }),
-      path({ d: trace(forecast.ahead), ...stroke, strokeDasharray: dash }),
+      path({ d: trace(forecast.ahead), ...stroke, strokeDasharray: DASH }),
       line({ x1: toX(now), x2: toX(now), y1: 0, y2: height, stroke: colorVar('neutral', 500), strokeDasharray: '2 3', vectorEffect: 'non-scaling-stroke' }),
       guideLine(() => toX(hovered.get() ?? start), top, height, () => hovered.get() !== undefined),
     ],

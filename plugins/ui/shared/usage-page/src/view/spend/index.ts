@@ -1,33 +1,36 @@
-import { usageRanges } from '@sand/usage/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div } from '@vaakx-dev/vrui'
+import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
-import type { Metric } from '../../format'
 import type { UsageModel } from '../../model'
+import { listText } from '../../names'
+import { pageRanges } from '../../prefs'
 import { rangeLabel } from '../../range'
-import { breakdownView } from '../breakdown'
-import { chartView } from '../chart'
-import { unpricedRow } from '../notices'
-import { figures } from './figures'
+import { plot } from '../chart/plot'
+import { seriesOf } from '../chart/series'
+import { headline, modelList } from './figures'
 
 const periodPicker = ({ segmented }: Kit, model: UsageModel) =>
   segmented(
-    usageRanges.map(value => ({ value, label: rangeLabel(value) })),
+    pageRanges.map(value => ({ value, label: rangeLabel(value) })),
     model.range,
     value => model.range.set(value),
     { label: 'Period' },
   )
 
-const overview = (kit: Kit, usage: Merged, metric: Metric) =>
-  kit.sectionRow({}, div({ class: 'flex min-w-0 flex-1 flex-col gap-4 py-2' }, figures(kit, usage, metric), chartView(kit, usage, metric)))
+const unpricedNote = ({ unpriced }: Merged) =>
+  unpriced.length ? span({ class: 'text-xs text-neutral-500' }, `Leaves out ${listText(unpriced.map(item => item.model))}, which ${unpriced.length > 1 ? 'have' : 'has'} no price`) : null
 
-export const spendView = (kit: Kit, usage: Merged, model: UsageModel, metric: Metric) => {
-  const { emptyState, settingsSection } = kit
-  const head = { title: `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric}`, action: periodPicker(kit, model) }
-  if (!usage.total.turns) return settingsSection(head, emptyState({ text: 'No usage in this range.' }))
+const overview = (kit: Kit, usage: Merged) => {
+  const { keys, series } = seriesOf(kit, usage)
   return div(
-    { class: 'flex flex-col gap-6' },
-    settingsSection(head, overview(kit, usage, metric), metric === 'cost' ? usage.unpriced.map(item => unpricedRow(kit, item)) : null),
-    breakdownView({ kit, usage }, model.breakdown, metric),
+    { class: 'flex flex-col gap-5 md:flex-row md:gap-8' },
+    div({ class: 'flex min-w-0 shrink-0 flex-col gap-4 md:w-48' }, headline(usage), unpricedNote(usage), modelList(series)),
+    div({ class: 'min-w-0 flex-1' }, plot(kit, { bucket: usage.bucket, keys, series })),
   )
 }
+
+export const spendSection = (kit: Kit, usage: Merged, model: UsageModel) =>
+  kit.pageSection(
+    { title: 'Spend', action: periodPicker(kit, model) },
+    usage.total.turns ? overview(kit, usage) : kit.emptyState({ text: 'No usage in this range.' }),
+  )

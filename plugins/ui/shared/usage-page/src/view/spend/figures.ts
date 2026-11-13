@@ -1,32 +1,29 @@
-import { tokensOf } from '@sand/usage/contract'
-import { dollars, tokens } from '@sand/util'
-import type { Kit } from '@sand/ui-kit/contract'
+import { dollars, percent } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
-import { onPlanOf, type Metric } from '../../format'
-import { isSubscription } from '../../names'
+import { type Series, swatch } from '../chart/series'
 
-type Figure = [label: string, value: string]
+const count = new Intl.NumberFormat('en')
 
-const costFigures = ({ accounts, total }: Merged): Figure[] => {
-  const planned = accounts.filter(isSubscription).reduce((sum, account) => sum + onPlanOf(account), 0)
-  return [
-    ['Billed to you', dollars(total.billed)],
-    ['Covered by plans', planned > 0.005 ? `â‰ˆ${dollars(planned)}` : dollars(0)],
-    ['At API prices', dollars(total.cost)],
-  ]
-}
-
-const tokenFigures = ({ total }: Merged): Figure[] => [
-  ['Tokens', tokens(tokensOf(total.usage))],
-  ['Output', tokens(total.usage.output)],
-  ['Cache reads', tokens(total.usage.cacheRead)],
-]
-
-export const figures = ({ metaLine }: Kit, usage: Merged, metric: Metric) =>
+export const headline = ({ total }: Merged) =>
   div(
-    { class: 'grid grid-cols-3 gap-4' },
-    (metric === 'cost' ? costFigures(usage) : tokenFigures(usage)).map(([label, value]) =>
-      div({ class: 'flex min-w-0 flex-col gap-1' }, metaLine(label), span({ class: 'truncate text-xl font-medium text-neutral-100 tabular-nums' }, value)),
+    { class: 'flex flex-col gap-1' },
+    span({ class: 'text-3xl font-semibold tracking-tight text-neutral-100 tabular-nums' }, dollars(total.cost)),
+    span({ class: 'text-xs text-neutral-500' }, `At API prices · ${count.format(total.turns)} turns`),
+  )
+
+export const modelList = (series: Series[]) => {
+  const sum = series.reduce((total, line) => total + line.total, 0)
+  return div(
+    { class: 'flex flex-col gap-2' },
+    series.map(line =>
+      div(
+        { class: 'flex items-center gap-2 text-sm' },
+        swatch(line),
+        span({ class: 'min-w-0 truncate text-neutral-200' }, line.label),
+        span({ class: 'text-xs text-neutral-500 tabular-nums' }, sum ? percent(line.total / sum) : ''),
+        span({ class: 'ml-auto text-neutral-100 tabular-nums' }, dollars(line.total)),
+      ),
     ),
   )
+}

@@ -20,9 +20,14 @@ const model = z.union([
   z.object({ name: z.string(), label: z.string().optional(), efforts: z.array(z.enum(efforts)).optional() }),
 ])
 
+const window = z.object({ id: z.string(), label: z.string(), used: z.number(), resetInMs: z.number().optional(), durationMs: z.number().optional() })
+
 export const sourceSchema = z.object({
   id: z.string(),
   label: z.string().optional(),
+  logo: z.string().default('replay'),
+  plan: z.string().optional(),
+  limits: z.array(window).optional(),
   api: z.literal('anthropic').optional(),
   models: z.array(model).min(1),
   price: z.object({ input: z.number(), output: z.number(), cacheRead: z.number(), cacheWrite: z.number() }).optional(),
@@ -34,6 +39,8 @@ export const sourceSchema = z.object({
 export type Part = z.infer<typeof part>
 
 export type Reply = Part[]
+
+export type LimitScript = z.infer<typeof window>
 
 export type Source = z.input<typeof sourceSchema>
 

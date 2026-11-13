@@ -5,7 +5,7 @@ import { byCost, emptyTotals, tokensOf } from '../records'
 import type { AccountId } from './identity'
 import type { Turn } from './turns'
 
-const nameOf = (model: string) => model.slice(model.indexOf('/') + 1)
+export const nameOf = (model: string) => model.slice(model.indexOf('/') + 1)
 
 export const modelBook = (llm?: LLM) => {
   const labels = new Map<string, string>()

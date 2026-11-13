@@ -12,11 +12,10 @@ import { usagePage } from './view/page'
 
 const kind = 'usage'
 const label = 'Usage'
-const intro = 'Plan limits, cost and tokens for each account, across your PCs.'
 
 export default definePlugin({
   name: 'usage-page',
-  description: 'Usage page, opened from the sidebar foot: plan limits, billed cost and tokens per account, across your PCs, beside the other views added to it, like Performance',
+  description: 'Usage page, opened from the sidebar foot: a forecast of the plan limit that runs out first, every limit per account, and daily cost by model, beside the other views added to it, like Performance',
   inject: { wire, kit, pcs },
   apply(ctx) {
     const changes = pulse(ctx, [limitsChange], [limits])
@@ -33,7 +32,7 @@ export default definePlugin({
         refreshLimits: () => ctx.get(limits)?.refresh().catch(() => {}) ?? Promise.resolve(),
       })
 
-    const usage: UsageView = { id: kind, label, order: 0, render: () => ctx.kit.pageBody({ intro }, render()) }
+    const usage: UsageView = { id: kind, label, order: 0, render: () => ctx.kit.pageBody({}, render()) }
     const views = sig<UsageView[]>([usage])
     ctx.provide(usageViews, {
       add(view) {

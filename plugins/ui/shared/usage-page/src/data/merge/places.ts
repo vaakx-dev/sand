@@ -8,9 +8,8 @@ export const mergeProjects = (parts: PcSummary[]) => {
   for (const { pc, summary } of parts)
     for (const project of summary.projects) {
       const name = project.cwd ? folderName(project.cwd) : 'No folder'
-      const into = grouped(byName, name, (): Project => ({ ...emptyTotals(), name, accounts: [], machines: [] }))
+      const into = grouped(byName, name, (): Project => ({ ...emptyTotals(), name, machines: [] }))
       addTotals(into, project)
-      including(into.accounts, project.accounts)
       including(into.machines, [pc.id])
     }
   return [...byName.values()].sort(byCost)
@@ -22,6 +21,5 @@ export const pcUsage = (parts: PcSummary[]): PcUsage[] =>
       ...addTotals(emptyTotals(), summary.total),
       id: pc.id,
       name: pc.name,
-      accounts: summary.accounts.filter(account => account.turns).map(account => account.key),
     }))
     .sort(byCost)
