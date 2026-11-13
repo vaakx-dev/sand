@@ -132,6 +132,10 @@
         "label": "Updates",
         "summary": "Install newer sand releases on every PC"
       },
+      "memory-guard": {
+        "label": "Out-of-memory guard",
+        "summary": "When a PC runs very low on memory, stops the chat using the most and kills its commands, so the PC doesn't freeze"
+      },
       "models": {
         "kind": "capability",
         "label": "Models",

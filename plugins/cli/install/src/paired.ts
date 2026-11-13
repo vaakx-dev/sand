@@ -6,7 +6,7 @@ import { UnhealthyError, waitForHealth } from './health'
 import { joinOtherPc, type JoinedPc } from './join'
 import { copyPlugins } from './plugins'
 import { type JoinGrant, reportDone, reportFail, reportStep } from './remote'
-import { checkInstalled, installedRoot, openSand, placeApp, printFailure, skipStart, startHost, type Installer } from './steps'
+import { checkInstalled, installedRoot, placeApp, printFailure, skipStart, startHost, type Installer } from './steps'
 
 const alreadyReported = 3
 
@@ -43,12 +43,11 @@ const joinYourPcs = async (grant: JoinGrant, { home, daemon }: Installer) => {
 
 export const installPaired = async (grant: JoinGrant, installer: Installer) => {
   try {
-    if (!(await joinYourPcs(grant, installer))) return
+    if (await joinYourPcs(grant, installer)) dim("Open it from your other PCs, or run 'sand' here")
   } catch (error) {
     const message = errorMessage(error)
     await reportFail(grant, message, error instanceof UnhealthyError ? error : undefined)
     printFailure(message)
     process.exit(alreadyReported)
   }
-  await openSand(installer)
 }

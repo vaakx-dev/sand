@@ -6,6 +6,7 @@ export interface JsonLinesOptions {
 }
 
 export interface JsonLines {
+  pid: number
   send(message: unknown): void
   close(): void
   exited: Promise<number>
@@ -51,6 +52,7 @@ export const spawnJsonLines = (command: string[], { cwd, env, onMessage, onExit 
     return code
   })
   return {
+    pid: child.pid,
     send(message) {
       if (child.exitCode !== null) return
       child.stdin.write(`${JSON.stringify(message)}\n`)
