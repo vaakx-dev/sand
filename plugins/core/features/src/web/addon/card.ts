@@ -8,7 +8,7 @@ const coverOf = (store: FeatureStore, { id, label, pictures, cover }: Addon) => 
   const url = file ? store.picture(id, file) : undefined
   return div(
     { class: 'aspect-video w-full overflow-hidden rounded-t-md bg-neutral-950' },
-    url ? show(() => Boolean(url.get()), () => img({ src: () => url.get() ?? '', alt: `${label} in use`, class: 'h-full w-full object-cover object-top' })) : null,
+    url ? show(() => Boolean(url.get()), () => img({ src: () => url.get() ?? '', alt: `${label} in use`, class: 'h-full w-full object-contain' })) : null,
   )
 }
 
