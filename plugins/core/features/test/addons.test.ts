@@ -31,10 +31,10 @@ const publish = async (version: string, sand = '>=1.0.0', id = 'notes'): Promise
 const serve = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }) => {
   const server = Bun.serve({
     port: 0,
-    fetch: request => (new URL(request.url).pathname === '/catalog.json' ? Response.json({ addons: shelf.catalog }) : new Response(shelf.file)),
+    fetch: request => (new URL(request.url).pathname === '/sand-addons.json' ? Response.json({ addons: shelf.catalog }) : new Response(shelf.file)),
   })
   servers.push(server)
-  return `http://127.0.0.1:${server.port}/catalog.json`
+  return `http://127.0.0.1:${server.port}`
 }
 
 const features: Features = { list: () => [], on: () => true, set: async () => {}, refresh: async () => {} }
@@ -45,7 +45,7 @@ const setup = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }
   homes.push(home)
   const url = serve(shelf)
   const root = join(home, 'plugins')
-  const main = { id: 'vaakx-dev/sand', label: 'vaakx-dev/sand', removable: false, url: async () => url }
+  const main = { id: 'vaakx-dev/sand', label: 'vaakx-dev/sand', removable: false, url: async () => `${url}/sand-addons.json` }
   return { root, addons: createAddons({ root, version, features, runtimes, main, saved: sourceStore(home) }) }
 }
 
@@ -107,11 +107,12 @@ test("an add-on from another source installs, says where it comes from, and stay
   expect(await Bun.file(join(root, 'spectra', 'spectra', 'package.json')).exists()).toBe(true)
 })
 
-test('a source without a catalog sand can read is not added', async () => {
+test('a source is a site whose catalog sand can read, never a catalog file', async () => {
   const own = await publish('1.0.0')
   const { addons } = setup({ catalog: [own.listing], file: own.bytes })
   const broken = Bun.serve({ port: 0, fetch: () => new Response('not a catalog') })
   servers.push(broken)
-  expect(addons.addSource(`http://127.0.0.1:${broken.port}/sand-addons.json`)).rejects.toThrow("isn't one sand can read")
+  expect(addons.addSource(`http://127.0.0.1:${broken.port}`)).rejects.toThrow("isn't one sand can read")
+  expect(addons.addSource(`http://127.0.0.1:${broken.port}/sand-addons.json`)).rejects.toThrow('without a path')
   expect((await addons.choice()).sources).toHaveLength(1)
 })

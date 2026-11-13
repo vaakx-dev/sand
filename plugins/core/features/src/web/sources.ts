@@ -29,8 +29,8 @@ const addForm = (kit: Kit, store: FeatureStore) => {
     div(
       { class: 'flex flex-col gap-3 pb-3' },
       kit.field(
-        { label: 'GitHub repository or catalog address' },
-        kit.textInput({ placeholder: 'owner/name or https://…', bindValue: address, onMount: node => node.focus(), onKeyDown: (event: KeyboardEvent) => event.key === 'Enter' && void submit() }),
+        { label: 'GitHub repository or add-on server' },
+        kit.textInput({ placeholder: 'owner/repo or addons.example.org', bindValue: address, onMount: node => node.focus(), onKeyDown: (event: KeyboardEvent) => event.key === 'Enter' && void submit() }),
       ),
       p({ class: 'text-xs text-neutral-500' }, TRUST),
       div(

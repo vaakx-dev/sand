@@ -73,7 +73,7 @@ const featuresPage = (kit: Kit, store: FeatureStore, links: AddonLinks) => {
   const state = derive(() => JSON.stringify([store.choice.get() ?? null, store.query.get().trim()]))
   return div(
     { class: 'flex flex-col gap-6' },
-    kit.searchField({ placeholder: 'Search add-ons', 'aria-label': 'Search add-ons', bindValue: store.query }),
+    div({ class: 'flex' }, kit.searchField({ placeholder: 'Search add-ons', 'aria-label': 'Search add-ons', bindValue: store.query })),
     show(
       () => Boolean(store.error.get()),
       () => kit.errorText(() => store.error.get()),

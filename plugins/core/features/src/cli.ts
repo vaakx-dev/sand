@@ -11,7 +11,7 @@ const USAGE = [
   'sand addons update <id>...          download newer versions of installed add-ons',
   'sand addons remove <id>...          turn add-ons off and delete them',
   'sand addons sources                 list where add-ons come from',
-  'sand addons source add <repo | url> add a GitHub repository (owner/name) or catalog address as a source',
+  'sand addons source add <repo | site> add a GitHub repository (owner/repo) or a community add-on server (addons.example.org) as a source',
   'sand addons source remove <id>      remove a source you added',
 ].join('\n')
 

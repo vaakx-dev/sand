@@ -87,12 +87,12 @@ const setTool: McpTool<typeof setInput> = {
   run: async (input, { call }) => reloaded(call, await call(featuresSet, input)),
 }
 
-const sourceAddInput = z.object({ source: z.string().min(1).describe('A GitHub repository like owner/name that publishes sand add-on releases, or the https:// address of a catalog in the same format') })
+const sourceAddInput = z.object({ source: z.string().min(1).describe('A GitHub repository like owner/repo, or its github.com address, whose releases publish sand add-ons; or the address of a community add-on server, just the site like addons.example.org') })
 
 const sourceAddTool: McpTool<typeof sourceAddInput> = {
   name: 'addon_source_add',
   description:
-    "Add a source of add-ons besides sand's own, when the user asks: a GitHub repository whose releases carry sand-addons.json and the add-on files, or a server hosting such a catalog. sand checks the catalog before adding it, and its add-ons show in addon_list. Add-ons from other people run with full access to this PC, like any plugin, so add only sources the user named and tell them that",
+    "Add a source of add-ons besides sand's own, when the user asks: a GitHub repository whose releases publish add-ons the way sand's do, or a community add-on server. sand finds and checks its catalog before adding it, and its add-ons show in addon_list. Add-ons from other people run with full access to this PC, like any plugin, so add only sources the user named and tell them that",
   input: sourceAddInput,
   access: 'operate',
   group: GROUP,
