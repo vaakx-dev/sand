@@ -2,6 +2,7 @@ import { botRoster } from '@sand/bots/contract'
 import type { Need, NeedAction, NeedSource } from '@sand/needs-you/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { projects, threads } from '@sand/web-client/contract'
+import { dynamicChild } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { Decision } from '../contract'
 import type { Model, Question } from './model'
@@ -15,10 +16,11 @@ const threadMark = (ctx: Context, kit: Kit, id: string) => {
   return found ? kit.projectIcon(found.name, found.icon, MARK_SIZE) : kit.icon('message', 'sm')
 }
 
-const botMark = (ctx: Context, kit: Kit, id: string) => {
-  const bot = ctx.get(botRoster)?.find(id)
-  return kit.botFace(id, bot?.color ?? 'grey', MARK_SIZE)
-}
+const botMark = (ctx: Context, kit: Kit, id: string) =>
+  dynamicChild(
+    () => ctx.get(botRoster)?.find(id),
+    bot => (bot ? kit.botFace(id, bot.color, MARK_SIZE) : kit.icon('bot', 'sm')),
+  )
 
 export const markOf = (ctx: Context, kit: Kit, { owner, conversation }: Decision) => (owner === 'bot' ? botMark(ctx, kit, conversation) : threadMark(ctx, kit, conversation))
 
