@@ -31,7 +31,7 @@ const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(byte
 const packAddon = async (root: string, addon: Addon, files: AppFile[], version: string): Promise<PackedAddon> => {
   const contents = [...ownFiles(files, addon), ...(await moduleBytes(root, addon))].toSorted((a, b) => compare(a.path, b.path))
   const bytes = await new Bun.Archive(Object.fromEntries(contents.map(file => [file.path, file.bytes])), { compress: 'gzip' }).bytes()
-  const { readme, pictures } = await addonReadme(addon)
+  const { readme, pictures, cover } = await addonReadme(addon)
   const { id, label, summary, needs } = addon
   const listing = {
     id,
@@ -46,8 +46,9 @@ const packAddon = async (root: string, addon: Addon, files: AppFile[], version: 
     hash: hashFiles(contents),
     readme,
     pictures: pictures.map(picture => picture.file),
+    ...(cover && { cover: cover.file }),
   }
-  return { listing, bytes, pictures }
+  return { listing, bytes, pictures: cover ? [...pictures, cover] : pictures }
 }
 
 export { inside, packAddon }

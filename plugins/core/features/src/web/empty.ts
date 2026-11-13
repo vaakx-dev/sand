@@ -9,11 +9,13 @@ const fillingShell = ['threads', 'bots', 'calendar']
 
 const emptyRoute = 'empty'
 
+export const CORE = 'features-core'
+
 const emptyView = ({ emptyState, pageBody }: Kit, open: () => void) =>
   pageBody({}, emptyState({ text: 'No features are on.', action: { label: 'Choose features', run: open } }))
 
 export const emptyHome = (ctx: Context, kit: Kit, store: FeatureStore) => {
-  const open = () => ctx.get(settings)?.open('features')
+  const open = () => ctx.get(settings)?.open(CORE)
   const whileBare = () => {
     const bare = derive(() => store.choice.get() !== undefined && fillingShell.every(id => !store.feature(id)?.on))
     return show(bare, () => emptyView(kit, open))

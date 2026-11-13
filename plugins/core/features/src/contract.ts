@@ -15,6 +15,7 @@ export interface Addon {
   status: AddonStatus
   readme: string
   pictures: string[]
+  cover?: string
   version?: string
   update?: string
   needsSand?: string

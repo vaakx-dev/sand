@@ -33,7 +33,7 @@ const createAddons = ({ root, version, features, runtimes, catalog }: AddonsOpti
     const feature = list.find(found => found.id === id)
     const listing = listings.get(id)
     const stamp = stamps.get(id)
-    const about = { id, label: feature?.label ?? listing?.label ?? id, summary: feature?.summary ?? listing?.summary ?? '', readme: listing?.readme ?? '', pictures: listing?.pictures ?? [] }
+    const about = { id, label: feature?.label ?? listing?.label ?? id, summary: feature?.summary ?? listing?.summary ?? '', readme: listing?.readme ?? '', pictures: listing?.pictures ?? [], ...(listing?.cover && { cover: listing.cover }) }
     if (stamp) {
       const newer = listing && listing.hash !== stamp.hash && compatible(listing)
       return { ...about, status: 'installed', version: stamp.version, ...(newer && { update: listing.version }) }
@@ -135,7 +135,7 @@ const createAddons = ({ root, version, features, runtimes, catalog }: AddonsOpti
   const picture = async (id: string, file: string) => {
     const { url, catalog: found } = await catalog.recent()
     const listing = found.addons.find(addon => addon.id === id)
-    if (!listing?.pictures.includes(file)) throw new Error(`${id} has no picture ${file}`)
+    if (!listing || ![...listing.pictures, listing.cover].includes(file)) throw new Error(`${id} has no picture ${file}`)
     return pictures(new URL(file, url).href, file)
   }
 

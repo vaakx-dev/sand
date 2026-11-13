@@ -171,7 +171,7 @@ test.concurrent(
       page.on('pageerror', error => errors.push(error.message))
       await page.goto(sand.url)
       await settle(page)
-      await page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.open('features'))
+      await page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.open('features-core'))
       await page.getByRole('switch', { name: 'Threads', exact: true }).click()
       const reloaded = page.waitForEvent('load', { timeout: 60_000 })
       await page.getByRole('button', { name: 'Turn off' }).click()

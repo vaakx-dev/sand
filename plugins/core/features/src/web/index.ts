@@ -5,7 +5,8 @@ import { kit } from '@sand/ui-kit/contract'
 import { definePlugin } from 'drydock'
 import { featureState } from '../contract'
 import { addonPages } from './addon/pages'
-import { emptyHome } from './empty'
+import { corePage } from './core'
+import { CORE, emptyHome } from './empty'
 import { featuresPage } from './page'
 import { featureStore } from './store'
 
@@ -18,7 +19,9 @@ export default definePlugin({
     ctx.provide(featureState, { on: id => store.feature(id)?.on })
     ctx.watch(settings, found => {
       if (!found) return
-      const links = addonPages(found, { kit: ctx.kit, store, markdown: () => ctx.get(markdown) })
+      const addons = addonPages(found, { kit: ctx.kit, store, markdown: () => ctx.get(markdown) })
+      const links = { ...addons, core: () => found.open(CORE) }
+      const core = found.page({ id: CORE, label: 'Core features', parent: 'features', group: 'app', render: () => corePage(ctx.kit, store) })
       const list = found.page({
         id: 'features',
         label: 'Add-ons',
@@ -29,7 +32,8 @@ export default definePlugin({
         render: () => featuresPage(ctx.kit, store, links),
       })
       return () => {
-        links.dispose()
+        addons.dispose()
+        void core()
         void list()
       }
     })

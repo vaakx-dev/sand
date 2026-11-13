@@ -9,6 +9,7 @@ import type { FeatureStore } from './store'
 interface AddonLinks {
   open(id: string): void
   has(id: string): boolean
+  core(): void
 }
 
 const installedRows = (kit: Kit, store: FeatureStore, choice: FeatureChoice, links: AddonLinks, addon: Addon) => {
@@ -44,21 +45,15 @@ const featuresPage = (kit: Kit, store: FeatureStore, links: AddonLinks) => {
     dynamicChild(state, () => {
       const choice = store.choice.get()
       if (!choice) return loadingState()
-      const { features, addons } = choice
+      const { addons } = choice
       const installed = addons.filter(addon => addon.status !== 'available')
       const available = addons.filter(addon => addon.status === 'available')
-      const addonIds = new Set(addons.map(addon => addon.id))
-      const tops = features.filter(feature => feature.kind === 'feature' && !feature.parent && !addonIds.has(feature.id))
       const note = catalogNote(choice)
       return div(
         { class: 'contents' },
         installed.length ? settingsSection({ title: 'Installed' }, ...installed.flatMap(addon => installedRows(kit, store, choice, links, addon))) : null,
         available.length || note ? settingsSection({ title: 'Available', note }, available.length ? cards(kit, store, links, available) : null) : null,
-        settingsSection({ title: 'Core' }, ...tops.flatMap(top => tree(features, top)).map(item => row(kit, store, choice, item))),
-        settingsSection(
-          { title: 'Shared parts' },
-          ...features.filter(feature => feature.kind === 'capability').map(feature => row(kit, store, choice, { feature, depth: 0 })),
-        ),
+        settingsSection({}, kit.settingsRow({ title: 'Core features', detail: 'Threads, bots, phones and the parts of sand they share', onOpen: links.core })),
       )
     }),
   )

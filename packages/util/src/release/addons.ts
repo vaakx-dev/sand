@@ -14,6 +14,7 @@ interface AddonListing {
   hash: string
   readme: string
   pictures: string[]
+  cover?: string
 }
 
 interface AddonCatalog {
