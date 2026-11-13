@@ -1,8 +1,8 @@
 import { copyPlugin, removeFolder, removePlugin } from '@sand/plugin-files'
 import { isRecord } from '@sand/util'
-import { exists } from '@sand/util/fs'
+import { exists, moveFresh } from '@sand/util/fs'
 import type { BuildInfo } from '@sand/util/release'
-import { lstat, rename } from 'node:fs/promises'
+import { lstat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { builtinPlugins } from './builtins'
 import { linkDependencies } from './links'
@@ -42,7 +42,7 @@ export const libraryActions = ({ paths, kept, build, report }: ActionOptions) =>
         await copyPlugin(builtin.folder, staging)
         await writeCustomised(staging, { version, build: info.id, hash, time: Date.now() })
         await linkDependencies(appRoot, builtin.folder, staging)
-        await rename(staging, copy)
+        await moveFresh(staging, copy)
       } catch (error) {
         await removeFolder(staging)
         throw error

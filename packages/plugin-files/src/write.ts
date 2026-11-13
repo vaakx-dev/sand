@@ -1,5 +1,5 @@
-import { exists, isLink, removeQuietly } from '@sand/util/fs'
-import { mkdir, readdir, rename, rm } from 'node:fs/promises'
+import { exists, isLink, moveFresh, removeQuietly } from '@sand/util/fs'
+import { mkdir, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { type PluginFile, writeFiles } from './file'
 import { carryOver, unsharedPaths } from './keep'
@@ -63,7 +63,7 @@ export const writePlugin = async (incoming: IncomingPlugin): Promise<string> => 
   }
   const restore = async (): Promise<boolean> => {
     if (trash && !(await exists(target))) {
-      const back = await rename(join(trash, plugin), target).then(() => true, () => false)
+      const back = await moveFresh(join(trash, plugin), target).then(() => true, () => false)
       if (!back) return false
     }
     if (!moved.length) return true
@@ -76,9 +76,9 @@ export const writePlugin = async (incoming: IncomingPlugin): Promise<string> => 
     await mkdir(root, { recursive: true })
     if (await exists(target)) {
       trash = await stagingFolder(home, 'trash')
-      await rename(target, join(trash, plugin))
+      await moveFresh(target, join(trash, plugin))
     }
-    await rename(staging, target)
+    await moveFresh(staging, target)
   } catch (error) {
     if (!(await restore())) throw error
     try {

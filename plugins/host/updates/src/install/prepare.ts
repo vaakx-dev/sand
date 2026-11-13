@@ -1,6 +1,6 @@
 import { appsFolder, buildFolder, inAppsFolder, readPointer } from '@sand/boot'
 import { extractBundle, fetchOfficialBun } from '@sand/boot/build'
-import { replaceFile } from '@sand/util/fs'
+import { moveFresh } from '@sand/util/fs'
 import { type BuildInfo, defaultTarget, readBuildBun, readStamp, readTarget, readyRelease } from '@sand/util/release'
 import { mkdir, rm } from 'node:fs/promises'
 import { basename, join } from 'node:path'
@@ -48,7 +48,7 @@ export const prepareBuild = async (home: string, bytes: Uint8Array, force: boole
       return { root, build, bun: chosen.bun, bunPath: await sandBun(home, chosen.bun) }
     }
     await rm(root, { recursive: true, force: true })
-    await replaceFile(temp, root)
+    await moveFresh(temp, root)
     placed = root
     const { bun } = await readyRelease(root)
     const bunPath = await sandBun(home, bun)

@@ -40,13 +40,13 @@ const serve = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }
 const features: Features = { list: () => [], on: () => true, set: async () => {}, refresh: async () => {} }
 const runtimes = { swap: async () => true }
 
-const setup = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }, version = '1.0.0') => {
+const setup = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }, chosen = features) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-addons-'))
   homes.push(home)
   const url = serve(shelf)
   const root = join(home, 'plugins')
   const main = { id: 'vaakx-dev/sand', label: 'vaakx-dev/sand', removable: false, url: async () => `${url}/sand-addons.json` }
-  return { root, addons: createAddons({ root, version, features, runtimes, main, saved: sourceStore(home) }) }
+  return { root, addons: createAddons({ root, version: '1.0.0', features: chosen, runtimes, main, saved: sourceStore(home) }) }
 }
 
 const installedVersion = async (root: string) => (await Bun.file(join(root, 'notes', 'notes', 'package.json')).json()).version
@@ -115,4 +115,16 @@ test('a source is a site whose catalog sand can read, never a catalog file', asy
   expect(addons.addSource(`http://127.0.0.1:${broken.port}`)).rejects.toThrow("isn't one sand can read")
   expect(addons.addSource(`http://127.0.0.1:${broken.port}/sand-addons.json`)).rejects.toThrow('without a path')
   expect((await addons.choice()).sources).toHaveLength(1)
+})
+
+test('a batch install that fails partway turns on what landed and names what did not', async () => {
+  const notes = await publish('1.0.0')
+  const spectra = { ...(await publish('1.0.0', '>=1.0.0', 'spectra')).listing, label: 'Spectra' }
+  const chosen: Record<string, boolean>[] = []
+  const recording: Features = { ...features, set: async changes => void chosen.push(changes) }
+  const { root, addons } = setup({ catalog: [notes.listing, spectra], file: notes.bytes }, recording)
+
+  await expect(addons.install(['notes', 'spectra'])).rejects.toThrow("Couldn't install Spectra: The Spectra download doesn't match the catalog, so sand left it out. Installed and turned on: Notes. Not installed: Spectra.")
+  expect(chosen).toEqual([{ notes: true }])
+  expect(await installedVersion(root)).toBe('1.0.0')
 })
