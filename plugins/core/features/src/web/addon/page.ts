@@ -34,7 +34,12 @@ const head = ({ kit, store }: PageParts, addon: Addon) => {
   const line = addonLine(choice, addon, feature)
   return div(
     { class: 'flex flex-wrap items-center gap-x-6 gap-y-3' },
-    div({ class: 'flex min-w-0 flex-1 flex-col gap-1 text-sm' }, p({ class: 'text-neutral-400' }, addon.summary), line ? p({ class: 'text-neutral-500' }, line) : null),
+    div(
+      { class: 'flex min-w-0 flex-1 flex-col gap-1 text-sm' },
+      p({ class: 'text-neutral-400' }, addon.summary),
+      addon.source ? p({ class: 'text-neutral-500' }, `From ${addon.source.label}`) : null,
+      line ? p({ class: 'text-neutral-500' }, line) : null,
+    ),
     div({ class: 'flex shrink-0 items-center gap-2' }, working(kit, store, addon.id), ...addonControls(kit, store, choice, addon, feature)),
   )
 }
