@@ -1,16 +1,24 @@
-import { type AppCall, type AppOutput, type AppPlan, type AppSession, type AppSetup, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, type AppPlan, type AppSession, type AppSetup, type LimitWindow, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
 import type { ToolResultContent } from '@sand/chats/contract'
 import { appendFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
-import type { NativeCall, Reply, Script } from './contract'
+import type { LimitScript, NativeCall, Reply, Script } from './contract'
 import { planModels } from './models'
 
 const said = (reply: Reply) => reply.flatMap(part => (part.type === 'text' ? [part.text] : [])).join('')
 
+const windowOf = ({ id, label, used, resetInMs, durationMs }: LimitScript): LimitWindow => ({
+  id,
+  label,
+  used,
+  ...(resetInMs !== undefined && { resetsAt: Date.now() + resetInMs }),
+  ...(durationMs !== undefined && { duration: durationMs }),
+})
+
 const textOf = (content: ToolResultContent[]) => content.map(block => (block.type === 'text' ? block.text : `[${block.type}]`)).join('\n')
 
 export const replayApp = (script: Script, folder: string) => {
-  const { id, label = id, replies, resume, inject } = script
+  const { id, label = id, logo, limits, replies, resume, inject } = script
   const queue = [...replies]
   const injects = [...inject]
   const calls: NativeCall[] = []
@@ -108,11 +116,12 @@ export const replayApp = (script: Script, folder: string) => {
     label,
     name: label,
     detail: 'Plays scripted replies',
-    logo: 'replay',
+    logo,
     app: label,
     install: '',
     caps,
-    status: async () => ({ installed: true, signedIn: true }),
+    status: async () => ({ installed: true, signedIn: true, ...(script.plan && { plan: script.plan }) }),
+    ...(limits && { usage: async () => ({ windows: limits.map(windowOf) }) }),
     signIn: () => Promise.reject(new Error(`${label} needs no sign-in`)),
     signOut: async () => {},
     models: async () => planModels(script),
