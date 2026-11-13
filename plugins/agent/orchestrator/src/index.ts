@@ -36,10 +36,7 @@ export default definePlugin({
       wait: (thread, until, signal, by) => (by ? waits.during(by, thread, () => wait(thread, until, signal)) : wait(thread, until, signal)),
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
-      starterOf: thread => {
-        const session = ctx.sessions.open(thread)
-        return session && starters.of(session)
-      },
+      starterOf: starters.starterOf,
       started: starters.owned,
       sign: owners.sign,
       owner: owners.register,

@@ -1,4 +1,4 @@
-import type { ConversationRef, Owner } from '@sand/engine/contract'
+import type { ConversationRef } from '@sand/engine/contract'
 import type { Ledger } from '@sand/ledger/contract'
 import type { Database } from 'bun:sqlite'
 import type { Mode, ModeEntry } from '../contract'
@@ -21,15 +21,6 @@ const createModes = (db: Database) => {
   }
 }
 
-const createStarters = (db: Database) => {
-  const one = db.query<ConversationRef, { thread: string }>('select owner, id from permission_starters where thread = $thread')
-  const written = db.query('insert or ignore into permission_starters (thread, owner, id) values ($thread, $owner, $id)')
-  return {
-    of: (thread: string) => one.get({ thread }) ?? undefined,
-    put: (thread: string, { owner, id }: { owner: Owner; id: string }) => void written.run({ thread, owner, id }),
-  }
-}
-
 const createSettings = (db: Database) => {
   const read = db.query<{ value: string }, { name: string }>('select value from permission_settings where name = $name')
   const write = db.query('insert into permission_settings (name, value) values ($name, $value) on conflict (name) do update set value = $value')
@@ -42,7 +33,7 @@ const createSettings = (db: Database) => {
 export const openStores = (ledger: Ledger) => {
   ledger.migrate('permissions', schema)
   const { db } = ledger
-  return { rules: createRules(db), decisions: createDecisions(db), modes: createModes(db), starters: createStarters(db), settings: createSettings(db) }
+  return { rules: createRules(db), decisions: createDecisions(db), modes: createModes(db), settings: createSettings(db) }
 }
 
 export type Stores = ReturnType<typeof openStores>

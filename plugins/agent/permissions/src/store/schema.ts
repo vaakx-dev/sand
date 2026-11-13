@@ -41,11 +41,6 @@ export const schema = [
       at integer not null,
       primary key (owner, conversation)
     )`,
-    `create table permission_starters (
-      thread text primary key,
-      owner text not null,
-      id text not null
-    )`,
     `create table permission_settings (
       name text primary key,
       value text not null

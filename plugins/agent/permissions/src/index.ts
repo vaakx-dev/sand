@@ -4,7 +4,7 @@ import { notify } from '@sand/devices-notify/contract'
 import { type ConversationRef, engine } from '@sand/engine/contract'
 import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { ledger } from '@sand/ledger/contract'
-import { orchestrator, threadStarted } from '@sand/orchestrator/contract'
+import { orchestrator } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { tools } from '@sand/tools/contract'
@@ -33,7 +33,6 @@ export default definePlugin({
     const questions = createQuestions()
     ctx.effect(() => questions.stop)
     ctx.on(runtimeDrain, questions.move)
-    ctx.on(threadStarted, (thread, from) => stores.starters.put(thread, from))
 
     const title = ({ owner, id }: ConversationRef) => (owner === 'thread' ? ctx.get(sessions)?.open(id)?.title : ctx.get(bots)?.get(id)?.name) || id
     const questionsChanged = () => ctx.get(server)?.broadcast(questionsWire, service.questions())

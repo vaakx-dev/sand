@@ -13,7 +13,7 @@ const MAX_DEPTH = 32
 const same = (a: ConversationRef, b: ConversationRef) => a.owner === b.owner && a.id === b.id
 
 export const createScopes = (stores: Stores, orchestrator: () => Orchestrator | undefined) => {
-  const starterOf = (at: ConversationRef) => (at.owner === 'thread' ? (stores.starters.of(at.id) ?? orchestrator()?.starterOf(at.id)) : undefined)
+  const starterOf = (at: ConversationRef) => (at.owner === 'thread' ? orchestrator()?.starterOf(at.id) : undefined)
 
   const chainOf = (at: ConversationRef, chain: ConversationRef[] = []): ConversationRef[] => {
     if (chain.length >= MAX_DEPTH || chain.some(seen => same(seen, at))) return chain
