@@ -20,7 +20,7 @@ export interface Shared {
 export interface Attached<C extends Conversation> {
   runner: Runner<C>
   sweep(): void
-  recover(): void
+  recover(released?: ReadonlySet<string>): void
 }
 
 export const attachConversations = <C extends Conversation>(

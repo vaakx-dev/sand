@@ -1,4 +1,4 @@
-import { runtimeDrain } from '@sand/host-runtimes/contract'
+import { runtimeDrain, runtimeRelease } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { attachConversations } from './attach'
 import { type Conversation, engine, type Engine, entryViews, type Owner, type SendInput, type SendResult } from './contract'
@@ -13,7 +13,7 @@ const pruneEvery = 60 * 60 * 1000
 
 interface Attached {
   sweep(): void
-  recover(): void
+  recover(released?: ReadonlySet<string>): void
   open(id: string): Conversation | undefined
   send(id: string, input: SendInput): Promise<SendResult> | undefined
 }
@@ -60,6 +60,11 @@ export default definePlugin({
     if (dispatches) {
       ctx.on(runtimeDrain, () => {
         draining = true
+        leases.leave()
+      })
+      ctx.on(runtimeRelease, ids => {
+        const released = new Set(ids)
+        setTimeout(() => attached.forEach(found => found.recover(released)))
       })
       every(dispatchEvery, () => attached.forEach(found => found.sweep()))
     }

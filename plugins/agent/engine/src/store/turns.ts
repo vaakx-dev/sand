@@ -24,6 +24,8 @@ interface Row {
   partial: string | null
   outputs: string | null
   recoveries: number
+  handed: number
+  lease: number
   waiting: string | null
   stop_reason: TurnEnding['stopReason'] | null
   error: string | null
@@ -60,9 +62,10 @@ export interface Stale {
   partial?: Message
   outputs: Record<string, string>
   recoveries: number
+  handed?: { at: number }
 }
 
-type StaleRow = Pick<Row, 'id' | 'owner' | 'conversation' | 'provider_thread' | 'partial' | 'outputs' | 'recoveries'>
+type StaleRow = Pick<Row, 'id' | 'owner' | 'conversation' | 'provider_thread' | 'partial' | 'outputs' | 'recoveries' | 'handed' | 'lease'>
 
 const waitsOf = (waiting: string | null): WaitReason[] => (waiting ? JSON.parse(waiting) : [])
 
@@ -97,6 +100,7 @@ const staleOf = (row: StaleRow): Stale => ({
   ...(row.partial && { partial: JSON.parse(row.partial) }),
   outputs: row.outputs ? JSON.parse(row.outputs) : {},
   recoveries: row.recoveries,
+  ...(row.handed && { handed: { at: row.lease } }),
 })
 
 const insertSql = `insert into turns (id, owner, conversation, ordinal, status, origin, source, model, effort, speed, prompt, holder, lease, usage, started, pending)
@@ -132,10 +136,11 @@ export const createTurnStore = (db: Database) => {
   )
   const cancelled = db.query('update turns set cancel = 1 where id = $id and ended is null')
   const expired = db.query<StaleRow, { owner: Owner; holder: string; now: number }>(
-    'select id, owner, conversation, provider_thread, partial, outputs, recoveries from turns where owner = $owner and ended is null and lease <= $now and holder != $holder',
+    'select id, owner, conversation, provider_thread, partial, outputs, recoveries, handed, lease from turns where owner = $owner and ended is null and lease <= $now and holder != $holder',
   )
+  const handedOver = db.query('update turns set handed = 1, lease = $now where id = $id and holder = $holder and ended is null and cancel = 0')
   const adopted = db.query<Row, { id: string; holder: string; lease: number; now: number }>(
-    `update turns set holder = $holder, lease = $lease, status = 'running', waiting = null, recoveries = recoveries + 1
+    `update turns set holder = $holder, lease = $lease, status = 'running', waiting = null, recoveries = recoveries + 1 - handed, handed = 0
       where id = $id and ended is null and lease <= $now and cancel = 0
         and not exists (select 1 from turns later where later.owner = turns.owner and later.conversation = turns.conversation and later.ordinal > turns.ordinal)
       returning *`,
@@ -201,6 +206,7 @@ export const createTurnStore = (db: Database) => {
     cancel: (id: string) => void cancelled.run({ id }),
     expired: (owner: Owner, holder: string) => expired.all({ owner, holder, now: Date.now() }).map(staleOf),
     lose: (id: string) => lost.run({ id, now: Date.now() }).changes > 0,
+    handOver: (id: string, holder: string) => handedOver.run({ id, holder, now: Date.now() }).changes > 0,
     adopt(id: string, holder: string, lease: number) {
       const row = adopted.get({ id, holder, lease, now: Date.now() })
       return row ? infoOf(row) : undefined

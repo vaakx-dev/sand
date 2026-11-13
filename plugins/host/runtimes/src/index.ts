@@ -3,9 +3,9 @@ import { cli } from '@sand/config/contract'
 import { hostApp, hostOptions } from '@sand/host-daemon/contract'
 import { hub } from '@sand/host-hub/contract'
 import { hostVersions } from '@sand/host-plugin-versions/contract'
-import { errorMessage } from '@sand/util'
+import { errorMessage, joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { hostEvent, hostRuntimes, runtimeChanged, runtimeFailed, runtimes, runtimesSafe } from './contract'
+import { hostEvent, hostRuntimes, runtimeChanged, runtimeFailed, runtimes, runtimesReload, runtimesSafe, runtimesSwapped } from './contract'
 import { answerRuntime } from './answer'
 import { createSupervisor } from './supervisor'
 
@@ -33,7 +33,20 @@ export default definePlugin({
       startSafe,
     )
     ctx.provide(runtimes, supervisor.runtimes)
-    ctx.watch(hub, impl => impl?.handle(runtimesSafe, ({ on }) => supervisor.safe(on)))
+    const reload = async () => {
+      const swapped = await supervisor.runtimes.swap('reload')
+      return supervisor.runtimes.swapped() ?? { swapped, failed: [] }
+    }
+    ctx.watch(
+      hub,
+      impl =>
+        impl &&
+        joinDisposers(
+          impl.handle(runtimesSafe, ({ on }) => supervisor.safe(on)),
+          impl.handle(runtimesReload, reload),
+          impl.handle(runtimesSwapped, () => supervisor.runtimes.swapped()),
+        ),
+    )
     ctx.effect(() => {
       supervisor.start()
       return supervisor.stop

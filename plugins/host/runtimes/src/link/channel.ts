@@ -15,6 +15,7 @@ interface CallOptions {
 }
 
 const defaultTimeout = 30_000
+const askTimeout = 180_000
 
 export const createHostChannel = (send: (message: RuntimeMessage) => void) => {
   const pending = new Map<number, Waiter>()
@@ -38,7 +39,7 @@ export const createHostChannel = (send: (message: RuntimeMessage) => void) => {
 
   const channel: HostChannel = {
     call: (request, input, timeout) => callHost(request, input, { timeout }),
-    ask: (request, input, caller) => callHost(request, input, { caller }),
+    ask: (request, input, caller) => callHost(request, input, { caller, timeout: askTimeout }),
     on<P>(event: WireEvent<P>, listener: (payload: P) => void) {
       const set = listeners.get(event.id) ?? new Set<Listener>()
       const added = listener as Listener

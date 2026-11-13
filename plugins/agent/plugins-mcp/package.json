@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@sand/features": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/plugins": "workspace:*",
     "@sand/reload": "workspace:*",

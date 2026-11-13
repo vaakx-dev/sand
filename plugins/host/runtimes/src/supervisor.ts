@@ -1,10 +1,10 @@
 import type { HostOptions } from '@sand/host-daemon/contract'
 import { errorMessage } from '@sand/util'
 import { createBackoff } from './backoff'
-import type { FailedPlugin, HostAnswer, HostCall, RuntimeChange, RuntimeMessage, RuntimeReason, Runtimes } from './contract'
+import { type FailedPlugin, type HostAnswer, type HostCall, listFailed, type RuntimeChange, type RuntimeMessage, type RuntimeReason, type Runtimes, type SwapResult } from './contract'
 import { stopAll, terminate } from './kill'
 import { createLauncher, type Launched } from './launch'
-import { listFailed, restoredText } from './notices'
+import { restoredText } from './notices'
 import { createSafeMode } from './safe'
 import { sendTo, type Child } from './spawn'
 import { createWaiters } from './waiters'
@@ -23,6 +23,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
   let current: Child | undefined
   let lastError: string | undefined
   let lastFailed: FailedPlugin[] = []
+  let lastSwap: SwapResult | undefined
   let announce = false
   let restoreTried = false
   let started = false
@@ -57,7 +58,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     }
     if (message.type === 'failed') return launcher.failed(child, message.failed)
     if (message.type === 'call') return void events.asked(child.id, message).then(answer => sendTo(child, { type: 'answer', id: message.id, ...answer }))
-    if (message.type === 'swap') return void swap('reload')
+    if (message.type === 'handed') return release(message.sessions)
     if (message.type === 'drained') {
       child.drained = true
       return
@@ -165,7 +166,11 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     backoff.cancel()
     const launched = await launcher.launch(safeMode.on()).catch((error: unknown): Launched => ({ error: errorMessage(error) }))
     if (stopping) return false
-    if ('error' in launched) return fail(launched.error, launched.failed)
+    if ('error' in launched) {
+      lastSwap = { swapped: false, failed: launched.failed ?? [], error: launched.error }
+      return fail(launched.error, launched.failed)
+    }
+    lastSwap = { swapped: true, failed: launched.child.failed }
     promote(launched.child, reason)
     return true
   }
@@ -194,6 +199,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     live: () => (current ? [current, ...draining] : [...draining]),
     wait: timeout => (current ? Promise.resolve(current) : waiters.wait(timeout)),
     swap,
+    swapped: () => lastSwap,
     status: () => ({
       pid: process.pid,
       runtime: current ? 'ready' : lastError ? 'failed' : started ? 'restarting' : 'starting',

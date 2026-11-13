@@ -1,7 +1,7 @@
 import { accessOf, callerOf, runtimeEnv } from '@sand/boot'
 import { cli } from '@sand/config/contract'
 import { definePlugin } from 'drydock'
-import { hostChannel, runtime as runtimeService, type HostMessage, type Runtime, type RuntimeMessage } from '../contract'
+import { hostChannel, runtime as runtimeService, runtimesReload, type HostMessage, type Runtime, type RuntimeMessage } from '../contract'
 import { createActivity } from './activity'
 import { createHostChannel } from './channel'
 import { createDrain } from './drain'
@@ -12,6 +12,8 @@ import { createOwnership } from './ownership'
 const id = process.env[runtimeEnv.id]
 const secret = process.env[runtimeEnv.secret]
 delete process.env[runtimeEnv.secret]
+
+const swapTimeoutMs = 180_000
 
 export default definePlugin({
   name: 'runtime-link',
@@ -83,7 +85,8 @@ export default definePlugin({
           activity.flush()
         })
       },
-      swap: () => send({ type: 'swap' }),
+      swap: () => host.channel.call(runtimesReload, {}, swapTimeoutMs),
+      handed: session => send({ type: 'handed', sessions: [session] }),
       owns: ownership.owns,
     }
     ctx.provide(runtimeService, runtime)

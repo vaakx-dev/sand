@@ -15,7 +15,7 @@ export interface SendDeps<C extends Conversation> {
   opener: Opener<C>
   drive: Drive<C>
   dispatch(conversation: C): Promise<void>
-  recover(): void
+  recover(released?: ReadonlySet<string>): void
   ready(): boolean
 }
 
@@ -45,7 +45,7 @@ export const createSend = <C extends Conversation>(ctx: EngineContext, { convers
   return async (conversation: C, input: SendInput): Promise<SendResult> => {
     const earlier = stores.receipts.get(conversation, input.clientRequestId)
     if (earlier) return earlier
-    recover()
+    recover(new Set([conversation.id]))
     const held = conversations.held?.(conversation) || (await ctx.bail(turnHold, conversation, input.origin ?? 'user', 'send'))
     const routing: SendInput = held ? { ...input, mode: 'queue' } : input
     const opening = held || !ready() || stores.turns.current(conversation) ? undefined : await opener.prepare(conversation, input.prompt, input.origin ?? 'user')

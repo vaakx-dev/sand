@@ -24,6 +24,12 @@ export interface HostStatus {
   draining: number
 }
 
+export interface SwapResult {
+  swapped: boolean
+  failed: FailedPlugin[]
+  error?: string
+}
+
 export interface RuntimeActivity {
   sessions: string[]
 }
@@ -50,7 +56,7 @@ export type RuntimeMessage =
   | { type: 'ready'; url: string; failed: FailedPlugin[] }
   | { type: 'failed'; failed: FailedPlugin[] }
   | { type: 'activity'; activity: RuntimeActivity }
-  | { type: 'swap' }
+  | { type: 'handed'; sessions: string[] }
   | { type: 'drained' }
   | HostCall
 
@@ -72,7 +78,8 @@ export interface Runtime {
   access(request: Request): RuntimeAccess
   caller(request: Request): RouteCaller | undefined
   listening(url: string): void
-  swap(): void
+  swap(): Promise<SwapResult>
+  handed(session: string): void
   owns(session: string): boolean
 }
 
@@ -91,9 +98,12 @@ export interface Runtimes {
   live(): RuntimeView[]
   wait(timeout: number): Promise<RuntimeView | undefined>
   swap(reason: RuntimeReason): Promise<boolean>
+  swapped(): SwapResult | undefined
   status(): HostStatus
   tell<P>(runtime: string, event: WireEvent<P>, payload: P): boolean
 }
+
+export const listFailed = (failed: readonly FailedPlugin[]) => failed.map(plugin => `${plugin.id}: ${plugin.error}`).join('; ')
 
 export const runtimes = service<Runtimes>('runtimes')
 export const runtime = service<Runtime>('runtime')
@@ -105,6 +115,8 @@ export const runtimeDrain = event<() => void>('runtime.drain')
 export const runtimeRelease = event<(sessions: string[]) => void>('runtime.release')
 
 export const runtimesSafe = request('runtimes.safe', { input: () => z.object({ on: z.boolean() }), output: type<boolean>() })
+export const runtimesReload = request('runtimes.reload', { input: () => z.object({}), output: type<SwapResult>(), callers: 'runtime' })
+export const runtimesSwapped = request('runtimes.swapped', { input: () => z.object({}), output: type<SwapResult | undefined>(), callers: 'any' })
 
 export const runtimeChanged = wireEvent<RuntimeChange>('runtime.changed')
 export const runtimeFailed = wireEvent<string>('runtime.failed')

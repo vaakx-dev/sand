@@ -8,6 +8,7 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   const holder = `${ctx.cli.place}-${process.pid}-${Bun.randomUUIDv7().slice(-8)}`
   const held = new Map<string, AbortController>()
   let timer: Timer | undefined
+  let leaving = false
 
   const until = () => Date.now() + leaseFor
 
@@ -26,6 +27,10 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   return {
     holder,
     until,
+    leave() {
+      leaving = true
+    },
+    leaving: () => leaving,
     hold(turn: string, controller: AbortController) {
       held.set(turn, controller)
       timer ??= setInterval(beat, beatEvery)
