@@ -16,7 +16,12 @@ const get = async (runtime: RuntimeView, path: string) => {
   return { status: response.status, body: await response.text() }
 }
 
-const scriptOf = (page: string) => page.match(/<script type="module" src="([^"]+)"/)?.[1]
+const scriptOf = (page: string) =>
+  page
+    .match(/<script\b[^>]*>/g)
+    ?.filter(tag => /\btype="module"/.test(tag))
+    .map(tag => tag.match(/\bsrc="([^"]+)"/)?.[1])
+    .find(Boolean)
 
 const checkPage = async (runtime: RuntimeView): Promise<string | undefined> => {
   const page = await get(runtime, '/')
