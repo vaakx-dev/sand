@@ -15,6 +15,7 @@ export interface Need {
   mark(): Child
   title: string
   head?(): Child
+  body?(actions: Child[]): Child
   text?(): Child
   at: number
   actions: [NeedAction, ...NeedAction[]]

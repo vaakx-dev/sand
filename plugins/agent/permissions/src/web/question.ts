@@ -19,19 +19,20 @@ const wants: Record<Decision['effect'], string> = {
 }
 
 const uses: Record<NonNullable<Decision['uses']>, string> = {
-  login: 'wants to use a saved login',
+  login: 'wants a saved login',
   agents: 'wants to start agents',
 }
 
 const note = (...children: Child[]) => span({ class: 'shrink-0 text-xs text-neutral-500' }, ...children)
 
-
-const asked = (decision: Decision) => {
-  if (decision.blocked.length) return 'was blocked by auto 3 times in a row'
+export const asked = (decision: Decision) => {
+  if (decision.blocked.length) return `auto blocked ${decision.blocked.length + 1}`
   return decision.uses ? uses[decision.uses] : wants[decision.effect]
 }
 
-const leftText = (deadline: number, now: number) => `${Math.max(1, Math.ceil((deadline - now) / MINUTE_MS))} min left`
+export const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+
+const leftText = (deadline: number, now: number) => `${Math.max(1, Math.ceil((deadline - now) / MINUTE_MS))}m left`
 
 const due = (decision: Decision) => {
   if (decision.outcome === 'expired') return note('timed out')
@@ -52,15 +53,20 @@ const earlier = (kit: Kit, decision: Decision) => {
   }
 }
 
-export const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+export const questionHead = (decision: Decision) =>
+  span({ class: 'flex min-w-0 gap-1' }, span({ class: 'min-w-0 truncate' }, decision.title), span({ class: 'shrink-0 font-normal text-neutral-400' }, `· ${asked(decision)}`))
 
-export const questionHead = (decision: Decision) => span({}, sentence(asked(decision)), span({ class: 'font-normal text-neutral-400' }, ` · ${decision.title}`))
-
-export const questionBody = (kit: Kit, decision: Decision) => {
+export const questionBody = (kit: Kit, decision: Decision, actions: Child[]) => {
   const blocked = decision.blocked.length ? earlier(kit, decision) : undefined
   return div(
     { class: 'flex min-w-0 flex-col' },
-    div({ class: 'flex min-w-0 items-baseline gap-2' }, kit.monoMeta(decision.summary), due(decision), blocked?.toggle ?? null),
+    div(
+      { class: 'flex min-w-0 items-center gap-2' },
+      kit.monoMeta(decision.summary),
+      due(decision),
+      blocked?.toggle ?? null,
+      span({ class: 'ml-auto flex shrink-0 items-center' }, ...actions),
+    ),
     blocked?.list ?? null,
   )
 }
@@ -72,7 +78,7 @@ export const choicesOf = (decision: Decision): [Choice, ...Choice[]] =>
         { label: 'Deny', answer: 'deny' },
       ]
     : [
-        { label: 'Allow once', answer: 'once' },
-        { label: 'Always allow', answer: 'always' },
+        { label: 'Allow', answer: 'once' },
+        { label: 'Always', answer: 'always' },
         { label: decision.outcome === 'expired' ? 'Dismiss' : 'Deny', answer: 'deny' },
       ]

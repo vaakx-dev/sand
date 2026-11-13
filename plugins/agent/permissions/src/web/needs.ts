@@ -37,7 +37,7 @@ const needOf = (ctx: Context, kit: Kit, model: Model, question: Question): Need 
     mark: () => markOf(ctx, kit, decision),
     title: `Allow ${decision.tool}? ${decision.summary}`,
     head: () => questionHead(decision),
-    text: () => questionBody(kit, decision),
+    body: actions => questionBody(kit, decision, actions),
     at: decision.at,
     actions: actionsOf(model, question),
   }

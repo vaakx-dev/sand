@@ -4,7 +4,7 @@ import { div, p, show, sig, span, type Child } from '@vaakx-dev/vrui'
 import { dangerAction, secondaryAction } from '../buttons/button'
 import { menuSeparator } from '../menus/menu'
 import { errorText } from '../notes/notes'
-import { menuIcon, menuItem, menuSizes } from '../menus/menu-item'
+import { choiceCheck, menuIcon, menuItem, menuSizes } from '../menus/menu-item'
 import { askView } from './ask'
 import { choiceChips, type ChipHandlers } from './chips'
 
@@ -51,6 +51,7 @@ const item = (action: MenuAction, control: MenuControl, size: ItemSize) =>
   menuItem(
     { role: 'menuitem', size, tone: action.danger ? 'danger' : undefined, icon: action.icon, onClick: choose(control, action) },
     label(action),
+    choiceCheck(action.active === true),
   )
 
 const choiceRow = (action: MenuAction, control: MenuControl, size: ItemSize) =>

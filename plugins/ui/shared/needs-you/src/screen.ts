@@ -37,7 +37,9 @@ const actions = (kit: Kit, need: Need) => {
 
 const item = (kit: Kit, need: Need) => {
   const { buttons, failure } = actions(kit, need)
-  return kit.actionItem({ title: need.head?.() ?? need.who, lead: need.mark(), at: need.at, actions: buttons }, need.text?.() ?? need.title, failure)
+  const head = { title: need.head?.() ?? need.who, lead: need.mark(), at: need.at }
+  if (need.body) return kit.actionItem(head, need.body(buttons), failure)
+  return kit.actionItem({ ...head, actions: buttons }, need.text?.() ?? need.title, failure)
 }
 
 const group = (kit: Kit, items: Derive<Need[]>, { kind, label }: Group) => {
