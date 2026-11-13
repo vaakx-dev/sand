@@ -28,7 +28,7 @@ export const createHostChannel = (send: (message: RuntimeMessage) => void) => {
     return waiter
   }
 
-  const callHost = <I, O>(request: Request<I, O>, input: I, { timeout = defaultTimeout, caller }: CallOptions) =>
+  const callHost = <I, O>(request: Request<I, O>, input: I, { timeout = request.waitMs ?? defaultTimeout, caller }: CallOptions) =>
     new Promise<O>((resolve, reject) => {
       const id = ++next
       const timer = setTimeout(() => take(id)?.reject(new Error(`the host didn't answer ${request.id} in time`)), timeout)

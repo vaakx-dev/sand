@@ -34,6 +34,7 @@ export interface Resumption {
 export interface Turn {
   signal: AbortSignal
   hooks: TurnHooks
+  leaving(): boolean
 }
 
-export type TurnOutcome = Pick<TurnResult, 'stopReason'>
+export type TurnOutcome = Pick<TurnResult, 'stopReason'> & { handed?: true }

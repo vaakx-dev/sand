@@ -83,7 +83,7 @@ ${config}
 const noHost = () => Promise.reject(new Error('No host in tests'))
 
 const hostStubs = (app: Context) => {
-  app.provide(runtime, { id: 'test', access: () => 'denied', caller: () => undefined, listening() {}, swap() {}, owns: () => true })
+  app.provide(runtime, { id: 'test', access: () => 'denied', caller: () => undefined, listening() {}, swap: noHost, handed() {}, owns: () => true })
   app.provide(hostChannel, { call: noHost, ask: noHost, on: () => () => {} })
 }
 

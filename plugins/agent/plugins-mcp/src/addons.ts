@@ -1,6 +1,8 @@
 import { type Feature, type FeatureChoice, featuresList, featuresSet } from '@sand/features/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
+import { runtimesSwapped } from '@sand/host-runtimes/contract'
 import { joinDisposers } from '@sand/util'
+import { reloadNote } from './reloaded'
 import { z } from 'zod'
 
 const group: McpGroup = {
@@ -30,11 +32,15 @@ const setInput = z.object({ changes: z.record(z.string(), z.boolean()).describe(
 const setTool: McpTool<typeof setInput> = {
   name: 'addon_set',
   description:
-    "Turn add-ons and other features on or off, as the user asked. sand then reloads its plugins into a fresh runtime: running threads and bots, you included, finish their turns in the old one first, and the new tools come with the next turn. Tell the user what you turned on",
+    "Turn add-ons and other features on or off, as the user asked. sand then reloads its plugins into a fresh runtime and returns once it is up, naming any plugin that failed to load. After this batch of tool calls your turn moves there and carries on with the new tools, so go on and use them in this turn. Tell the user what you turned on",
   input: setInput,
   access: 'operate',
   group: group.name,
-  run: async (input, { call }) => addons(await call(featuresSet, input)),
+  async run(input, { call }) {
+    const choice = await call(featuresSet, input)
+    const swap = await call(runtimesSwapped, {})
+    return { addons: addons(choice), ...(swap && { reload: reloadNote(swap) }) }
+  },
 }
 
 const offerAddonTools = (tools: McpTools) => joinDisposers(tools.group(group), tools.register(listTool), tools.register(setTool))

@@ -8,12 +8,26 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   const holder = `${ctx.cli.place}-${process.pid}-${Bun.randomUUIDv7().slice(-8)}`
   const held = new Map<string, AbortController>()
   let timer: Timer | undefined
+  let leaving = false
+  let watching = 0
+  let staying: (() => void) | undefined
 
   const until = () => Date.now() + leaseFor
 
   const beat = () => {
     const kept = new Set(store.renew(holder, until()).flatMap(turn => (turn.cancel ? [] : [turn.id])))
     for (const [id, controller] of held) if (!kept.has(id)) controller.abort()
+  }
+
+  const stay = () => {
+    if (leaving && watching) staying ??= ctx.busy()
+  }
+
+  const unwatch = () => {
+    watching--
+    if (watching) return
+    staying?.()
+    staying = undefined
   }
 
   const stop = () => {
@@ -26,6 +40,16 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   return {
     holder,
     until,
+    leave() {
+      leaving = true
+      stay()
+    },
+    watch() {
+      watching++
+      stay()
+      return unwatch
+    },
+    leaving: () => leaving,
     hold(turn: string, controller: AbortController) {
       held.set(turn, controller)
       timer ??= setInterval(beat, beatEvery)

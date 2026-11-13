@@ -6,6 +6,7 @@ import type { Stale } from '../store/turns'
 import type { Drive } from './run'
 
 const mostRecoveries = 3
+const handoverGraceMs = 5_000
 
 export interface RecoveryDeps<C extends Conversation> {
   drive: Drive<C>
@@ -62,20 +63,23 @@ export const createRecovery = <C extends Conversation>(
 
   const resume = (stale: Stale) => {
     const conversation = conversations.open(stale.conversation)
-    if (!conversation || stale.recoveries >= mostRecoveries) return lose(stale)
+    if (!conversation || (!stale.handed && stale.recoveries >= mostRecoveries)) return lose(stale)
     const resumed = ctx.ledger.tx(() => {
       const info = stores.turns.adopt(stale.id, leases.holder, leases.until())
       if (!info) return undefined
       const rerun = rerunnable(conversation)
       const { calls, replied } = settle(conversation, stale, rerun)
-      if (stale.thread && !calls.length && !replied) conversations.abandon?.(stale.thread)
+      if (stale.thread && !stale.handed && !calls.length && !replied) conversations.abandon?.(stale.thread)
       return { conversation, info, calls: calls.filter(rerun), replied }
     })
     if (!resumed) return lose(stale)
     drive.start(resumed)
   }
 
-  return () => {
-    if (running()) stores.turns.expired(conversations.owner, leases.holder).forEach(resume)
+  const due = (released: ReadonlySet<string>) => (stale: Stale) =>
+    !stale.handed || released.has(stale.conversation) || Date.now() - stale.handed.at >= handoverGraceMs
+
+  return (released: ReadonlySet<string> = new Set()) => {
+    if (running()) stores.turns.expired(conversations.owner, leases.holder).filter(due(released)).forEach(resume)
   }
 }

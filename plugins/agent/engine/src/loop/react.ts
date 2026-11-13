@@ -13,6 +13,10 @@ const answerCalls = async (turn: Turn, message: Message, stopReason: StopReason)
 
 const step = async (turn: Turn, outcome: TurnOutcome) => {
   turn.signal.throwIfAborted()
+  if (turn.leaving()) {
+    outcome.handed = true
+    return false
+  }
   const { message, stopReason } = await turn.hooks.step()
   outcome.stopReason = stopReason
   return answerCalls(turn, message, stopReason)
@@ -28,7 +32,7 @@ export const runReact = async (turn: Turn, resumed?: Resumption): Promise<TurnOu
   let more = resumed ? await resume(turn, resumed) : true
   do {
     while (more) more = await step(turn, outcome)
-    more = await turn.hooks.steer()
+    more = !outcome.handed && (await turn.hooks.steer())
   } while (more)
   return outcome
 }

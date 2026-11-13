@@ -1,6 +1,5 @@
-import type { FailedPlugin, RuntimeMessage } from './contract'
+import { type FailedPlugin, listFailed, type RuntimeMessage } from './contract'
 import { terminate } from './kill'
-import { listFailed } from './notices'
 import { spawnRuntime, type Child } from './spawn'
 
 const readyTimeout = 60_000

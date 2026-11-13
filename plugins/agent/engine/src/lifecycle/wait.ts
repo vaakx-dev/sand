@@ -5,8 +5,9 @@ const pollEvery = 1_000
 
 const reached = (info: TurnInfo, until: WaitUntil) => info.ended !== undefined || (until === 'attention' && info.status === 'waiting')
 
-const watched = <C extends Conversation>({ announce }: Owned<C>, done: () => boolean, signal?: AbortSignal) =>
+const watched = <C extends Conversation>({ announce, leases }: Owned<C>, done: () => boolean, signal?: AbortSignal) =>
   new Promise<void>(resolve => {
+    const release = leases.watch()
     const check = () => {
       if (!done() && !signal?.aborted) return
       stop()
@@ -15,6 +16,7 @@ const watched = <C extends Conversation>({ announce }: Owned<C>, done: () => boo
     const stopChanges = announce.watch(check)
     const timer = setInterval(check, pollEvery)
     const stop = () => {
+      release()
       stopChanges()
       clearInterval(timer)
       signal?.removeEventListener('abort', check)

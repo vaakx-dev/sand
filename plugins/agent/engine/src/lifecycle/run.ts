@@ -1,5 +1,6 @@
 import { UsageLimited } from '@sand/accounts/contract'
 import { type Message, textOf } from '@sand/chats/contract'
+import { runtime } from '@sand/host-runtimes/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
 import { type Conversation, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
 import type { EngineContext } from '../context'
@@ -20,6 +21,13 @@ const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail ===
 interface Outcome {
   stopReason: TurnResult['stopReason']
   failure?: { error: unknown }
+  handed?: true
+}
+
+interface Opened<C extends Conversation> {
+  run: TurnRun<C>
+  hooks: TurnHooks
+  release(): void
 }
 
 const resultOf = <C extends Conversation>(run: TurnRun<C>, { stopReason, failure }: Outcome): TurnResult => {
@@ -46,11 +54,11 @@ export interface Driven {
 export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: Owned<C>, ended: (conversation: C) => void) => {
   const { conversations, stores, leases, announce } = owned
 
-  const react = async (run: TurnRun<C>, hooks: TurnHooks, begun: Begun<C>): Promise<Outcome> => {
+  const react = async ({ run, hooks }: Opened<C>, begun: Begun<C>, leaving: () => boolean): Promise<Outcome> => {
     try {
       if ('entry' in begun) await conversations.ready?.(begun.entry, run.conversation, run.signal)
       run.signal.throwIfAborted()
-      return await runReact({ signal: run.signal, hooks }, 'calls' in begun ? begun : undefined)
+      return await runReact({ signal: run.signal, hooks, leaving }, 'calls' in begun ? begun : undefined)
     } catch (error) {
       return run.signal.aborted ? { stopReason: 'interrupted' } : failed(error)
     }
@@ -76,7 +84,7 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     return result
   }
 
-  const drive = async (begun: Begun<C>, external?: AbortSignal): Promise<Driven> => {
+  const open = (begun: Begun<C>, external?: AbortSignal): Opened<C> => {
     const { conversation, info } = begun
     const controller = new AbortController()
     const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal
@@ -87,7 +95,11 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     if ('user' in begun) conversations.started?.(conversation, begun.user, info)
     announce.turn(info.id)
     ctx.emit(turnOpen, conversation, info)
-    const outcome = await react(run, hooks, begun)
+    return { run, hooks, release }
+  }
+
+  const finish = ({ run, release }: Opened<C>, outcome: Outcome): Driven => {
+    const { conversation, info } = run
     let result: TurnResult
     try {
       result = end(run, outcome)
@@ -102,10 +114,30 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     return { result, ...(outcome.failure && { failure: outcome.failure }) }
   }
 
+  const handOff = (opened: Opened<C>) => {
+    const { conversation, info } = opened.run
+    if (!stores.turns.handOver(info.id, leases.holder)) return void finish(opened, { stopReason: 'interrupted' })
+    opened.release()
+    announce.turn(info.id)
+    ctx.get(runtime)?.handed(conversation.id)
+  }
+
+  const keep = () => false
+
+  const detached = async (begun: Begun<C>) => {
+    const opened = open(begun)
+    const outcome = await react(opened, begun, leases.leaving)
+    if (outcome.handed) handOff(opened)
+    else finish(opened, outcome)
+  }
+
   return {
-    run: drive,
+    async run(begun: Begun<C>, signal?: AbortSignal) {
+      const opened = open(begun, signal)
+      return finish(opened, await react(opened, begun, keep))
+    },
     start(begun: Begun<C>) {
-      drive(begun).catch(error => ctx.report(error))
+      detached(begun).catch(error => ctx.report(error))
     },
   }
 }
