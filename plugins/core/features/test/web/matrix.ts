@@ -23,9 +23,9 @@ interface Combo {
   exact?: boolean
 }
 
-const core = ['threads', 'bots', 'phone', 'notifications', 'updates']
+const core = ['threads', 'bots', 'phone', 'pcs', 'notifications', 'updates']
 
-const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'computers', 'bot-watches', 'logbook', 'guesses', 'stash', 'math', 'mcp', 'pcs', 'outside']
+const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'computers', 'bot-watches', 'logbook', 'guesses', 'stash', 'math', 'mcp', 'outside']
 
 const topLevel = [...core, ...addons]
 
