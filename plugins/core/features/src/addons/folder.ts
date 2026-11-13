@@ -7,7 +7,14 @@ import { z } from 'zod'
 
 const DOWNLOAD_TIMEOUT_MS = 5 * 60_000
 
-const stampSchema = z.object({ id: z.string(), version: z.string(), hash: z.string(), sha256: z.string() })
+const stampSchema = z.object({ id: z.string(), source: z.string(), version: z.string(), hash: z.string(), sha256: z.string() })
+
+interface Download {
+  root: string
+  listing: AddonListing
+  catalogUrl: string
+  source: string
+}
 
 const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 
@@ -31,7 +38,7 @@ const unpack = async (bytes: Uint8Array, folder: string) => {
   for (const [path, file] of files) await Bun.write(join(folder, ...path.split('/')), file)
 }
 
-const stampOf = ({ id, version, hash, sha256: fingerprint }: AddonListing): AddonStamp => ({ id, version, hash, sha256: fingerprint })
+const stampOf = ({ id, version, hash, sha256: fingerprint }: AddonListing, source: string): AddonStamp => ({ id, source, version, hash, sha256: fingerprint })
 
 const replace = async (staging: string, target: string) => {
   const old = `${staging}-old`
@@ -43,12 +50,12 @@ const replace = async (staging: string, target: string) => {
   if (had) await removeFolder(old)
 }
 
-const installFolder = async (root: string, listing: AddonListing, catalogUrl: string) => {
+const installFolder = async ({ root, listing, catalogUrl, source }: Download) => {
   const bytes = await download(listing, catalogUrl)
   const staging = join(root, `.${listing.id}-${uuid()}`)
   try {
     await unpack(bytes, staging)
-    await Bun.write(join(staging, addonStampFile), `${JSON.stringify(stampOf(listing), null, 2)}\n`)
+    await Bun.write(join(staging, addonStampFile), `${JSON.stringify(stampOf(listing, source), null, 2)}\n`)
     await replace(staging, join(root, listing.id))
   } finally {
     await removeFolder(staging)

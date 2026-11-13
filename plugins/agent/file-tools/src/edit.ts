@@ -99,7 +99,10 @@ export const edit: Tool<typeof input> = {
   ].join(' '),
   input,
   needs: ['pc'],
-  effect: 'write',
+  act: ({ edits }) => {
+    const paths = [...new Set(edits.map(edit => edit.path))]
+    return { effect: 'write', paths, summary: `Edit ${paths.join(', ')}` }
+  },
   run({ edits }, { cwd }) {
     const changes = edits.map(edit => ({ ...edit, full: resolve(cwd, edit.path) }))
     const paths = [...new Set(changes.map(edit => edit.full))]

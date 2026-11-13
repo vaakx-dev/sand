@@ -1,9 +1,9 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import { type Message, secretMark, type ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
-import type { GroupState, Offer, Secrets, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
+import type { Gate, GroupState, Offer, Secrets, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
 import { z } from 'zod'
-import { run } from '../run'
+import { actOf, run } from '../run'
 import type { Choices } from './choices'
 import { findName, findTool } from './find'
 import { foundIn } from './found'
@@ -29,6 +29,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const registered = new Map<Tool, string>()
   const groups = new Map<string, ToolGroup>()
   const offers = new Map<Owner, Offer>()
+  let gated: Gate | undefined
 
   const chosen = (group: ToolGroup) => choices.get(group.name) ?? group.load
 
@@ -111,7 +112,9 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const effect = (call: ToolCallBlock, conversation: Conversation) => {
     const tool = resolve(call.name, conversation)
-    return tool && call.malformed === undefined ? (tool.effect ?? 'run') : undefined
+    if (!tool || call.malformed !== undefined) return undefined
+    const parsed = tool.input.safeParse(call.input)
+    return parsed.success ? actOf(tool, parsed.data, conversation).effect : undefined
   }
 
   const service: Tools = {
@@ -123,6 +126,13 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
       changes(() => offers.set(owner, offer))
       return () => changes(() => offers.get(owner) === offer && offers.delete(owner))
     },
+    gate(gate) {
+      if (gated) throw new Error('Tool calls already have a gate')
+      gated = gate
+      return () => {
+        if (gated === gate) gated = undefined
+      }
+    },
     groups: states,
     async choose(name, load) {
       if (!groups.has(name)) throw new Error(`No tool group named "${name}"`)
@@ -133,7 +143,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     notes,
     parallel: (call, conversation) => resolve(call.name, conversation)?.parallel === true,
     effect,
-    run: (call, context) => run(resolve(call.name, context.conversation), call, context),
+    run: (call, context) => run(resolve(call.name, context.conversation), call, context, gated),
   }
   return service
 }

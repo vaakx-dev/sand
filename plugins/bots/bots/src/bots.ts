@@ -16,7 +16,6 @@ import {
   type BotPatch,
   botRemove,
   type Bots,
-  type BotStatus,
   type BotSummary,
   changeEntry,
   type ChangeEntry,
@@ -57,14 +56,14 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
 export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: LLM, quick: (main: ModelChoice) => ModelChoice): Bots => {
   const records = createRecords(db)
   const entries = createEntries(db)
-  const statuses = new Map<string, BotStatus>()
+  const statuses = new Map<string, Pick<BotSummary, 'status' | 'waiting'>>()
   const folderOf = (id: string) => join(root, id)
 
   const summary = (bot: Bot): BotSummary => {
     const last = lastLine(entries.newest(bot.id, 'message', scanned), entries.newest(bot.id, gistEntry, 1))
     const spent = billedCost(entries.usage(bot.id, monthStart()), llm)
     const hold = holdOf(bot, spent)
-    return { ...bot, folder: folderOf(bot.id), status: statuses.get(bot.id) ?? 'idle', spent, ...(hold && { hold }), ...(last ? { last } : {}) }
+    return { ...bot, folder: folderOf(bot.id), ...(statuses.get(bot.id) ?? { status: 'idle' }), spent, ...(hold && { hold }), ...(last ? { last } : {}) }
   }
 
   const known = (id: string) => {
@@ -141,9 +140,10 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
       ctx.emit(botRemove, id)
       return true
     },
-    status(id, status) {
-      if (!records.get(id) || (statuses.get(id) ?? 'idle') === status) return
-      statuses.set(id, status)
+    status(id, status, waiting) {
+      const current = statuses.get(id)
+      if (!records.get(id) || ((current?.status ?? 'idle') === status && current?.waiting === waiting)) return
+      statuses.set(id, { status, ...(waiting && { waiting }) })
       changed(id)
     },
     conversation: id => ({

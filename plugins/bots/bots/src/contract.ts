@@ -1,6 +1,7 @@
 import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
+import type { WaitReason } from '@sand/turns-contract/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
@@ -75,6 +76,7 @@ export const jobLimit = 20_000
 export interface BotSummary extends Bot {
   folder: string
   status: BotStatus
+  waiting?: WaitReason['kind']
   spent: number
   hold?: BotHold
   last?: LastLine
@@ -144,7 +146,7 @@ export interface Bots {
   create(spec: NewBot): BotSummary
   update(id: string, patch: BotPatch, by: Changer): BotSummary
   remove(id: string): boolean
-  status(id: string, status: BotStatus): void
+  status(id: string, status: BotStatus, waiting?: WaitReason['kind']): void
   conversation(id: string): Conversation
   folder(id: string): string
 }

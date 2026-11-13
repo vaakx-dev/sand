@@ -34,6 +34,7 @@ export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<Return
     return describeAgents([], ctx.get(llm))
   },
   parallel: true,
+  act: ({ label, task }) => ({ effect: 'run', uses: 'agents', summary: `Start a subagent, ${label}: ${task}` }),
   get input() {
     return inputSchema(ctx)
   },

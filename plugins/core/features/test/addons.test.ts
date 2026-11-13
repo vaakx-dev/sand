@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createAddons } from '../src/addons/actions'
-import { catalogSource } from '../src/addons/catalog'
+import { sourceStore } from '../src/addons/sources'
 
 interface Published {
   listing: AddonListing
@@ -22,19 +22,19 @@ afterEach(() => {
 
 const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 
-const publish = async (version: string, sand = '>=1.0.0'): Promise<Published> => {
-  const bytes = await new Bun.Archive({ 'notes/package.json': JSON.stringify({ name: '@sand/notes', version }) }, { compress: 'gzip' }).bytes()
-  const listing = { id: 'notes', label: 'Notes', summary: 'Keeps notes', version, sand, needs: [], file: 'notes.tar.gz', size: bytes.length, sha256: sha256(bytes), hash: version }
+const publish = async (version: string, sand = '>=1.0.0', id = 'notes'): Promise<Published> => {
+  const bytes = await new Bun.Archive({ [`${id}/package.json`]: JSON.stringify({ name: `@sand/${id}`, version }) }, { compress: 'gzip' }).bytes()
+  const listing = { id, label: 'Notes', summary: 'Keeps notes', version, sand, needs: [], file: `${id}.tar.gz`, size: bytes.length, sha256: sha256(bytes), hash: version, readme: '# Notes', pictures: [] }
   return { listing, bytes }
 }
 
 const serve = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }) => {
   const server = Bun.serve({
     port: 0,
-    fetch: request => (new URL(request.url).pathname === '/catalog.json' ? Response.json({ addons: shelf.catalog }) : new Response(shelf.file)),
+    fetch: request => (new URL(request.url).pathname === '/sand-addons.json' ? Response.json({ addons: shelf.catalog }) : new Response(shelf.file)),
   })
   servers.push(server)
-  return `http://127.0.0.1:${server.port}/catalog.json`
+  return `http://127.0.0.1:${server.port}`
 }
 
 const features: Features = { list: () => [], on: () => true, set: async () => {}, refresh: async () => {} }
@@ -45,7 +45,8 @@ const setup = (shelf: { catalog: AddonListing[]; file: Uint8Array<ArrayBuffer> }
   homes.push(home)
   const url = serve(shelf)
   const root = join(home, 'plugins')
-  return { root, addons: createAddons({ root, version, features, runtimes, catalog: catalogSource(async () => url) }) }
+  const main = { id: 'vaakx-dev/sand', label: 'vaakx-dev/sand', removable: false, url: async () => `${url}/sand-addons.json` }
+  return { root, addons: createAddons({ root, version, features, runtimes, main, saved: sourceStore(home) }) }
 }
 
 const installedVersion = async (root: string) => (await Bun.file(join(root, 'notes', 'notes', 'package.json')).json()).version
@@ -56,7 +57,7 @@ test('an add-on installs from the catalog, updates to a newer one, and is delete
   const { root, addons } = setup(shelf)
 
   const installed = await addons.install(['notes'])
-  expect(installed.addons).toEqual([{ id: 'notes', label: 'Notes', summary: 'Keeps notes', status: 'installed', version: '1.0.0' }])
+  expect(installed.addons).toEqual([{ id: 'notes', label: 'Notes', summary: 'Keeps notes', readme: '# Notes', pictures: [], source: { id: 'vaakx-dev/sand', label: 'vaakx-dev/sand' }, status: 'installed', version: '1.0.0' }])
   expect(await installedVersion(root)).toBe('1.0.0')
 
   const second = await publish('1.1.0')
@@ -86,4 +87,32 @@ test('an add-on that needs a newer sand is listed but not installed', async () =
   expect((await addons.choice()).addons[0]).toMatchObject({ status: 'available', needsSand: '>=2.0.0' })
   expect(addons.install(['notes'])).rejects.toThrow('needs a newer sand')
   expect(await Bun.file(join(root, 'notes')).exists()).toBe(false)
+})
+
+test("an add-on from another source installs, says where it comes from, and stays when that source is removed", async () => {
+  const own = await publish('1.0.0')
+  const { root, addons } = setup({ catalog: [own.listing], file: own.bytes })
+  const theirs = await publish('0.3.0', '>=1.0.0', 'spectra')
+  const other = serve({ catalog: [theirs.listing], file: theirs.bytes })
+
+  const added = await addons.addSource(other)
+  const source = added.sources.find(found => found.removable)!
+  expect(added.addons.find(addon => addon.id === 'spectra')?.source).toEqual({ id: source.id, label: source.label })
+
+  await addons.install(['spectra'])
+  await addons.removeSource(source.id)
+  const after = await addons.choice()
+  expect(after.sources.map(found => found.id)).toEqual(['vaakx-dev/sand'])
+  expect(after.addons.find(addon => addon.id === 'spectra')?.status).toBe('installed')
+  expect(await Bun.file(join(root, 'spectra', 'spectra', 'package.json')).exists()).toBe(true)
+})
+
+test('a source is a site whose catalog sand can read, never a catalog file', async () => {
+  const own = await publish('1.0.0')
+  const { addons } = setup({ catalog: [own.listing], file: own.bytes })
+  const broken = Bun.serve({ port: 0, fetch: () => new Response('not a catalog') })
+  servers.push(broken)
+  expect(addons.addSource(`http://127.0.0.1:${broken.port}`)).rejects.toThrow("isn't one sand can read")
+  expect(addons.addSource(`http://127.0.0.1:${broken.port}/sand-addons.json`)).rejects.toThrow('without a path')
+  expect((await addons.choice()).sources).toHaveLength(1)
 })

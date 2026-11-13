@@ -2,12 +2,14 @@ import type { Kit } from '@sand/ui-kit/contract'
 import type { OpenStates, Place, Row, Rows } from '@sand/transcript/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { Shown, ShownItem } from './fold'
-import { turnRow } from './header'
+import type { ShownWait } from '../wait'
+import { turnRow, waitingRow } from './header'
 
 export interface TurnContext {
   kit: Kit
   rows: Rows
   states: OpenStates
+  wait?: ShownWait
   repaint(): void
 }
 
@@ -27,6 +29,6 @@ const placed = (inner: Row, place: Place): Row<{ inner: unknown; place: Place }>
 const placeOf = ({ rail, last }: ShownItem): Place => ({ railed: rail, last })
 
 export const shownRows = (entry: Shown, context: TurnContext): Row[] => {
-  if (entry.kind === 'turn') return [turnRow(entry, context)]
+  if (entry.kind === 'turn') return [entry.phase === 'waiting' && context.wait ? waitingRow(entry, context, context.wait) : turnRow(entry, context)]
   return context.rows.item(entry.item).map(inner => placed(inner, placeOf(entry)))
 }

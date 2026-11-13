@@ -14,6 +14,7 @@ interface Addon {
   label: string
   summary: string
   needs: string[]
+  home: Workspace
   packages: Workspace[]
 }
 
@@ -50,9 +51,12 @@ const splitWorkspace = async (root: string): Promise<Split> => {
   const definitions = definitionsIn(manifests)
   const rootOf = rootFinder(definitions)
   const owners = manifests.map(sand => rootOf(featureOf(sand)))
-  const addons = definitions
-    .filter(definition => definition.addon)
-    .map(definition => ({ ...addonOf(definition, definitions, rootOf), packages: workspaces.filter((_, index) => owners[index] === definition.id) }))
+  const homeOf = (id: string) => workspaces[manifests.findIndex(sand => isRecord(sand.features) && id in sand.features)]!
+  const addons = definitions.filter(definition => definition.addon).map(definition => ({
+    ...addonOf(definition, definitions, rootOf),
+    home: homeOf(definition.id),
+    packages: workspaces.filter((_, index) => owners[index] === definition.id),
+  }))
   return { core: workspaces.filter((_, index) => !owners[index]), addons: addons.toSorted((a, b) => a.id.localeCompare(b.id)) }
 }
 

@@ -1,6 +1,7 @@
 import type { AgentAccess } from '@sand/devices-contract'
 import type { Actor } from '@sand/host-hub/contract'
 import type { Call } from '@sand/orchestrator/contract'
+import type { Act } from '@sand/tools/contract'
 import { type Dispose, service } from 'drydock'
 import { type output, z, type ZodObject } from 'zod'
 
@@ -24,6 +25,7 @@ export interface McpTool<S extends ZodObject = ZodObject> {
   parts?: McpToolPart<S>[]
   secret?: (keyof output<S> & string)[]
   access: AgentAccess
+  act?(input: output<S>): Act
   group?: string
   agents?: Actor['owner'][]
   always?: Actor['owner'][]

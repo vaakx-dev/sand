@@ -7,13 +7,14 @@ import { draftStarted, projects, projectsChange, threadSelect, threadsChange } f
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
-import { draftRoute, threadOwners, threadRoute, threadView } from './contract'
+import { draftRoute, threadOwners, threadRoute, threadView, waitLines } from './contract'
 import { threadLinks } from './links'
 import { mergedCheck } from './live/merged'
 import { threadRoutes } from './route'
 import { followStart } from './route/select'
 import { threadScreens } from './screens'
 import { threadViewService } from './service'
+import { createWaitLines } from './wait'
 
 export default definePlugin({
   name: 'chat',
@@ -33,6 +34,7 @@ export default definePlugin({
       dock.set(found)
       return found?.placeholder(placeholder)
     })
+    ctx.provide(waitLines, createWaitLines())
     const view = threadViewService(ctx, screens)
     ctx.provide(threadView, view)
     ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view)))

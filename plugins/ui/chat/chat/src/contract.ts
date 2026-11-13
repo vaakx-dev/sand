@@ -1,5 +1,6 @@
+import type { WaitReason } from '@sand/turns-contract/contract'
 import { draftRouteKind, threadRouteKind } from '@sand/web-client/contract'
-import { service } from 'drydock'
+import { type Dispose, service } from 'drydock'
 
 export const threadRoute = threadRouteKind
 
@@ -32,3 +33,21 @@ export interface DraftPlaces {
 }
 
 export const draftPlaces = service<DraftPlaces>('draftPlaces')
+
+export interface Waiting {
+  thread: string
+  device: string
+  reason: WaitReason
+}
+
+export interface WaitLine {
+  kind: WaitReason['kind']
+  render(waiting: Waiting): HTMLElement
+}
+
+export interface WaitLines {
+  add(line: WaitLine): Dispose
+  of(kind: WaitReason['kind']): WaitLine | undefined
+}
+
+export const waitLines = service<WaitLines>('waitLines')
