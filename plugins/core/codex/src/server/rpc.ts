@@ -80,6 +80,7 @@ export const startRpc = ({ binary, args, onNotify, onRequest, onExit }: RpcOptio
   })
 
   return {
+    pid: lines.pid,
     request: (method: string, params: Json = {}) =>
       new Promise<Json>((resolve, reject) => {
         const id = ++count

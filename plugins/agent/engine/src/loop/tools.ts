@@ -1,7 +1,7 @@
 import { errorResult, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { concealBlock, type ToolContext } from '@sand/tools/contract'
 import { errorMessage, untilAborted } from '@sand/util'
-import { type Conversation, type Conversations, toolContent } from '../contract'
+import { type Conversation, type Conversations, Interruption, toolContent } from '../contract'
 import type { EngineContext } from '../context'
 
 export interface Report {
@@ -15,6 +15,12 @@ interface Calling {
 }
 
 export type CallContext<C extends Conversation> = Omit<ToolContext, 'call' | 'progress' | 'conversation'> & { conversation: C }
+
+const stoppedText = ({ reason }: AbortSignal, byUser: string) => (reason instanceof Interruption ? reason.note : byUser)
+
+const interruptedText = (signal: AbortSignal) => stoppedText(signal, 'Interrupted: the user stopped the turn before this call finished.')
+
+const notRunText = (signal: AbortSignal) => stoppedText(signal, 'Not run: the user stopped the turn first.')
 
 const settle = async <C extends Conversation>(
   ctx: EngineContext,
@@ -30,7 +36,7 @@ const settle = async <C extends Conversation>(
   try {
     return await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
   } catch (error) {
-    if (context.signal.aborted) return errorResult(call, 'Interrupted: the user stopped the turn before this call finished.')
+    if (context.signal.aborted) return errorResult(call, interruptedText(context.signal))
     return errorResult(call, errorMessage(error))
   }
 }
@@ -53,7 +59,7 @@ const runTool = async <C extends Conversation>(
   context: CallContext<C>,
   report: Report,
 ) => {
-  if (context.signal.aborted) return report.answer(errorResult(call, 'Not run: the user stopped the turn first.'))
+  if (context.signal.aborted) return report.answer(errorResult(call, notRunText(context.signal)))
   const shown = concealBlock(call, ctx.tools.secrets())
   conversations.toolStarted?.(shown, context.conversation)
   const result = await runCall(ctx, conversations, { call, shown }, context, report)

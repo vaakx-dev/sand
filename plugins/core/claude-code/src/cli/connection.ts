@@ -80,6 +80,7 @@ export const connect = async ({ args, env, cwd, handle, onMessage, onExit }: Con
     })
 
   return {
+    pid: lines.pid,
     request,
     send: (message: Json) => lines.send(message),
     close() {
