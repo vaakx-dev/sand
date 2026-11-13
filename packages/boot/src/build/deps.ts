@@ -24,9 +24,19 @@ const findInstalled = async (from: string, name: string) => {
   }
 }
 
-export const runtimeDeps = async (root: string): Promise<RuntimeDep[]> => {
-  const workspaces = await workspacePackages(root)
-  const workspaceNames = new Set(workspaces.map(workspace => workspace.name))
+interface Needed {
+  name: string
+  dir: string
+  dependencies: string[]
+}
+
+interface DepsOptions {
+  packages: Needed[]
+  provided?: ReadonlySet<string>
+}
+
+export const runtimeDeps = async (root: string, { packages, provided = new Set() }: DepsOptions): Promise<RuntimeDep[]> => {
+  const workspaceNames = new Set((await workspacePackages(root)).map(workspace => workspace.name))
   const found = new Map<string, RuntimeDep>()
 
   const visit = async ({ name, from, by, optional }: Wanted): Promise<void> => {
@@ -48,9 +58,9 @@ export const runtimeDeps = async (root: string): Promise<RuntimeDep[]> => {
     for (const dep of dependencyNames(manifest?.optionalDependencies)) await visit({ name: dep, from: dir, by: name, optional: true })
   }
 
-  for (const workspace of workspaces) {
+  for (const workspace of packages) {
     const from = await realpath(workspace.dir)
-    for (const dep of workspace.dependencies) await visit({ name: dep, from, by: workspace.name, optional: false })
+    for (const dep of workspace.dependencies.filter(dep => !provided.has(dep))) await visit({ name: dep, from, by: workspace.name, optional: false })
   }
   return [...found.values()].sort((a, b) => compare(a.name, b.name))
 }
