@@ -42,7 +42,7 @@ On Windows, in PowerShell:
 irm https://vaakx-dev.github.io/sand/install.ps1 | iex
 ```
 
-The installer sets sand up, adds `sand` to your PATH and opens sand in your browser. Then open Settings → Accounts and choose your model: a Claude plan through Claude Code, a ChatGPT plan through Codex, or API keys. To pair a phone or another PC, open Settings → Devices.
+The installer sets sand up, adds `sand` to your PATH and opens sand in your browser. Then open Settings → Accounts and choose your model. To pair a phone or another PC, open Settings → Devices.
 
 sand updates itself from Settings → Updates. On that page you can also switch to the nightly or dev builds.
 
