@@ -78,7 +78,7 @@ const placeView = ({ mark, label }: RowPlaceProps) =>
 const secondLine = (large: boolean, { detail, place, trail }: Pick<WorkRowBody, 'detail' | 'place' | 'trail'>) => {
   if (!detail && !place && !trail) return null
   const left = detail ? span({ class: 'min-w-0 truncate' }, detail) : (place ? placeView(place) : null)
-  const trailing = trail ? span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, trail) : null
+  const trailing = trail ? span({ class: 'flex min-w-0 flex-1 items-center justify-end gap-2' }, trail) : null
   return div({ class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, trailing)
 }
 

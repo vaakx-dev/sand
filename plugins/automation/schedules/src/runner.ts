@@ -19,6 +19,7 @@ const longestWait = 1_000
 export const createRunner = (book: Book, { handlers }: Registry) => {
   const running = new Set<string>()
   const stopped = new AbortController()
+  let started = false
   let timer: Timer | undefined
 
   const ready = (schedule: Schedule) => !schedule.paused && schedule.next !== undefined && !running.has(schedule.id) && handlers.has(schedule.owner)
@@ -64,7 +65,7 @@ export const createRunner = (book: Book, { handlers }: Registry) => {
 
   const plan = () => {
     clearTimeout(timer)
-    if (stopped.signal.aborted) return
+    if (!started || stopped.signal.aborted) return
     const soonest = Math.min(...book.all().map(({ schedule }) => (ready(schedule) ? schedule.next! : Infinity)))
     if (soonest === Infinity) return
     timer = setTimeout(tick, Math.min(Math.max(soonest - Date.now(), 0), longestWait))
@@ -72,6 +73,12 @@ export const createRunner = (book: Book, { handlers }: Registry) => {
 
   return {
     plan,
+    start() {
+      if (stopped.signal.aborted) return
+      book.load()
+      started = true
+      plan()
+    },
     stop() {
       stopped.abort()
       clearTimeout(timer)

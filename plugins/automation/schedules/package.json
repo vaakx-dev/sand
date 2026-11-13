@@ -13,6 +13,7 @@
     "summary": "Runs things at the times you set, even after sand restarts"
   },
   "dependencies": {
+    "@sand/host-runtimes": "workspace:*",
     "@sand/ledger": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
