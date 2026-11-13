@@ -13,6 +13,8 @@ export interface Addon {
   label: string
   summary: string
   status: AddonStatus
+  readme: string
+  pictures: string[]
   version?: string
   update?: string
   needsSand?: string
@@ -37,6 +39,12 @@ export const featuresList = request('features.list', { input: () => z.object({})
 export const featuresSet = request('features.set', { input: () => z.object({ changes: z.record(z.string(), z.boolean()) }), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 
 export const addonsReady = request('addons.ready', { input: () => z.object({}), output: type<Addon[]>(), callers: 'runtime' })
+
+export const addonsPicture = request('addons.picture', {
+  input: () => z.object({ id: z.string().min(1), file: z.string().min(1) }),
+  output: type<string>(),
+  callers: 'any',
+})
 
 export const addonsInstall = request('addons.install', { input: addonIds, output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 

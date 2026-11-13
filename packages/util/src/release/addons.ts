@@ -12,6 +12,8 @@ interface AddonListing {
   size: number
   sha256: string
   hash: string
+  readme: string
+  pictures: string[]
 }
 
 interface AddonCatalog {
@@ -31,6 +33,8 @@ const addonStampFile = 'sand-addon.json'
 
 const addonAsset = (id: string) => `sand-addon-${id}.tar.gz`
 
+const addonPicture = (id: string, file: string) => `sand-addon-${id}-${file}`
+
 const isAddonFolder = (dir: string) => Bun.file(join(dir, addonStampFile)).exists()
 
 const addonFolders = async (root: string) => {
@@ -41,4 +45,4 @@ const addonFolders = async (root: string) => {
   return folders.filter((_, index) => addons[index])
 }
 
-export { addonAsset, addonCatalogAsset, addonFolders, addonStampFile, isAddonFolder, type AddonCatalog, type AddonListing, type AddonStamp }
+export { addonAsset, addonCatalogAsset, addonPicture, addonFolders, addonStampFile, isAddonFolder, type AddonCatalog, type AddonListing, type AddonStamp }

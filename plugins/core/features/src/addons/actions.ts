@@ -5,6 +5,7 @@ import type { AddonCatalog, AddonListing, AddonStamp } from '@sand/util/release'
 import type { Addon, FeatureChoice } from '../contract'
 import type { catalogSource } from './catalog'
 import { installedStamps, installFolder, removeAddonFolder } from './folder'
+import { pictureCache } from './picture'
 
 interface AddonsOptions {
   root: string
@@ -32,15 +33,14 @@ const createAddons = ({ root, version, features, runtimes, catalog }: AddonsOpti
     const feature = list.find(found => found.id === id)
     const listing = listings.get(id)
     const stamp = stamps.get(id)
-    const label = feature?.label ?? listing?.label ?? id
-    const summary = feature?.summary ?? listing?.summary ?? ''
+    const about = { id, label: feature?.label ?? listing?.label ?? id, summary: feature?.summary ?? listing?.summary ?? '', readme: listing?.readme ?? '', pictures: listing?.pictures ?? [] }
     if (stamp) {
       const newer = listing && listing.hash !== stamp.hash && compatible(listing)
-      return { id, label, summary, status: 'installed', version: stamp.version, ...(newer && { update: listing.version }) }
+      return { ...about, status: 'installed', version: stamp.version, ...(newer && { update: listing.version }) }
     }
-    if (feature) return { id, label, summary, status: 'built-in' }
+    if (feature) return { ...about, status: 'built-in' }
     const fits = !listing || compatible(listing)
-    return { id, label, summary, status: 'available', version: listing?.version, ...(!fits && { needsSand: listing.sand }) }
+    return { ...about, status: 'available', version: listing?.version, ...(!fits && { needsSand: listing.sand }) }
   }
 
   const known = async (found?: AddonCatalog): Promise<Known> => ({
@@ -130,9 +130,18 @@ const createAddons = ({ root, version, features, runtimes, catalog }: AddonsOpti
       return choice()
     })
 
+  const pictures = pictureCache()
+
+  const picture = async (id: string, file: string) => {
+    const { url, catalog: found } = await catalog.recent()
+    const listing = found.addons.find(addon => addon.id === id)
+    if (!listing?.pictures.includes(file)) throw new Error(`${id} has no picture ${file}`)
+    return pictures(new URL(file, url).href, file)
+  }
+
   const ready = async () => (await choice()).addons.filter(addon => addon.status === 'available' && !addon.needsSand)
 
-  return { choice, ready, install, update, remove, set }
+  return { choice, ready, picture, install, update, remove, set }
 }
 
 export { createAddons }

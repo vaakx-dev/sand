@@ -1,8 +1,8 @@
 import { type wire, wireHello } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import { sig } from '@vaakx-dev/vrui'
+import { type Sig, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { addonsInstall, addonsRemove, addonsUpdate, type FeatureChoice, featuresList, featuresSet } from '../contract'
+import { addonsInstall, addonsPicture, addonsRemove, addonsUpdate, type FeatureChoice, featuresList, featuresSet } from '../contract'
 
 const DOWNLOAD = { timeout: 10 * 60_000 }
 
@@ -37,7 +37,23 @@ export const featureStore = (ctx: Context<{ wire: typeof wire }>) => {
 
   const feature = (id: string) => choice.get()?.features.find(found => found.id === id)
 
-  return { choice, applying, error, feature, apply, install, update, remove }
+  const addon = (id: string) => choice.get()?.addons.find(found => found.id === id)
+
+  const pictures = new Map<string, Sig<string | undefined>>()
+  const picture = (id: string, file: string) => {
+    const key = `${id}/${file}`
+    const known = pictures.get(key)
+    if (known) return known
+    const shown = sig<string | undefined>(undefined)
+    pictures.set(key, shown)
+    ctx.wire.call(addonsPicture, { id, file }).then(
+      url => shown.set(url),
+      () => pictures.delete(key),
+    )
+    return shown
+  }
+
+  return { choice, applying, error, feature, addon, picture, apply, install, update, remove }
 }
 
 export type FeatureStore = ReturnType<typeof featureStore>
