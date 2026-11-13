@@ -144,7 +144,7 @@ export const threadTools: McpTool[] = [
       },
     ],
     access: 'operate',
-    uses: 'agents',
+    act: ({ title, prompt }) => ({ effect: 'run', uses: 'agents', summary: title ? `Start the thread “${title}”: ${prompt}` : `Start a thread: ${prompt}` }),
     group: group.name,
     run: async ({ clientRequestId, from, prompt, files, ...input }, { call, here }) =>
       call(threadStart, {

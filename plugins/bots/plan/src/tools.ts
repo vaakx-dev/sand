@@ -34,6 +34,7 @@ export const planTools: McpTool[] = [
     description: writeRules,
     input: writeInput,
     access: 'operate',
+    act: () => ({ effect: 'write', summary: 'Update its plan' }),
     agents: ['bot'],
     run: async (input, { call }) => {
       await call(planWrite, input)

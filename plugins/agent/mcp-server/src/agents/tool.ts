@@ -9,14 +9,14 @@ const waitGrace = 60_000
 
 const callerOf = ({ owner, id }: Conversation) => ({ device: 'sand', kind: 'agent', actor: { owner, id } }) as const
 
-export const agentTool = <S extends ZodObject>(server: Server, { name, description, group, always, input, secret, access, uses, agents, run }: McpTool<S>): Tool<S> => ({
+export const agentTool = <S extends ZodObject>(server: Server, { name, description, group, always, input, secret, access, act, agents, run }: McpTool<S>): Tool<S> => ({
   name,
   description,
   ...(secret && { secret }),
   ...(group && { group }),
   ...(always && { always }),
   input,
-  act: () => ({ effect: access === 'read' ? 'read' : 'run', ...(uses && { uses }) }),
+  act: act ?? (() => ({ effect: access === 'read' ? 'read' : 'run' })),
   parallel: access === 'read',
   timeoutMs: longestWait + waitGrace,
   ...(agents && { active: conversation => agents.includes(conversation.owner) }),
