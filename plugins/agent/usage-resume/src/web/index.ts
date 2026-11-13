@@ -4,7 +4,7 @@ import { transcript } from '@sand/transcript/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { helloResumes, type Resume, resumeCancel, resumesChange } from '../contract'
+import { helloResumes, type Resume, resumeAlternative, resumeCancel, resumesChange, resumeSwitch } from '../contract'
 import { limitLine } from './line'
 
 export default definePlugin({
@@ -22,7 +22,13 @@ export default definePlugin({
     ctx.effect(() => ctx.wire.on(resumesChange, found => resumes.set(found)))
     ctx.watch(transcript, found =>
       found?.ending('limited', ({ data, turn }) =>
-        limitLine(ctx.kit, { resetsAt: (data as TurnEnding).resetsAt, planned: () => planned(turn), cancel: () => turn && cancel(turn) }),
+        limitLine(ctx.kit, {
+          resetsAt: (data as TurnEnding).resetsAt,
+          planned: () => planned(turn),
+          cancel: () => turn && cancel(turn),
+          alternative: () => (turn ? ctx.wire.call(resumeAlternative, { turn }).catch(() => undefined) : Promise.resolve(undefined)),
+          switchTo: ({ model }) => (turn ? ctx.wire.call(resumeSwitch, { turn, model }).catch(error => ctx.report(error)) : Promise.resolve()),
+        }),
       ),
     )
   },
