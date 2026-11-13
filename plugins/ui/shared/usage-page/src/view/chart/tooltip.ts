@@ -2,7 +2,8 @@ import { periodTitle, type UsageBucket } from '@sand/usage/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, portal, span, type Child } from '@vaakx-dev/vrui'
 import { dollars } from '@sand/util'
-import { type Series, swatch } from './series'
+import { swatch } from '../../look'
+import type { Series } from './series'
 
 export interface Hover {
   index: number

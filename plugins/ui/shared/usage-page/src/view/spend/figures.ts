@@ -1,7 +1,8 @@
 import { dollars, percent } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
-import { type Series, swatch } from '../chart/series'
+import { swatch } from '../../look'
+import type { Series } from '../chart/series'
 
 const count = new Intl.NumberFormat('en')
 

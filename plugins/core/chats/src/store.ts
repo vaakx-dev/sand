@@ -55,6 +55,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
   const tasks = quickTasks(scratch)
   const children = childSummaries(db)
   const ofType = db.query<Row, { type: string }>(`select ${entryColumns} from entries e where e.type = $type order by e.at`)
+  const inSession = db.query<Row, { session: string; type: string }>(`select ${entryColumns} from entries e where e.session = $session and e.type = $type order by e.at`)
 
   const sessionHooks: SessionHooks = {
     entry(session, entry) {
@@ -157,6 +158,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
     list: summaries(db),
     synced: syncedSummaries(db),
     entriesOfType: type => ofType.all({ type }).map(parseRow),
+    entriesIn: (session, type) => inSession.all({ session, type }).map(parseRow),
   }
 
   return { sessions, forget }

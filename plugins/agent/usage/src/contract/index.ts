@@ -1,5 +1,5 @@
 import type { Billing, Limits, Usage } from '@sand/accounts/contract'
-import { request, type } from '@sand/host-hub/contract'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { z } from 'zod'
 
 export * from '../records'
@@ -69,6 +69,30 @@ export interface UsageSummary extends UsageQuery {
   unpriced: UnpricedModel[]
   limits?: Limits
 }
+
+export interface ThreadModel extends UsageTotals {
+  name: string
+  label: string
+  provider: string
+  subagents: number
+}
+
+export interface ThreadAccount {
+  label: string
+  pcName?: string
+  limits?: Limits
+}
+
+export interface ThreadUsage {
+  session: string
+  total: UsageTotals
+  models: ThreadModel[]
+  account?: ThreadAccount
+}
+
+export const usageThread = request('usage.thread', { input: () => z.object({ session: z.string() }), output: type<ThreadUsage>() })
+
+export const usageThreadChange = wireEvent<ThreadUsage>('usage.thread.change')
 
 export const usageSummary = request('usage.summary', {
   input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string() }),

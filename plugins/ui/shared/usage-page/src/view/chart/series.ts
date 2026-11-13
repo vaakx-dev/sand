@@ -1,7 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { emptyTotals, type UsageTotals } from '@sand/usage/contract'
 import { grouped } from '@sand/util'
-import { colorVar, span } from '@vaakx-dev/vrui'
+import { colorVar } from '@vaakx-dev/vrui'
+import { modelShades } from '../../look'
 import { addTotals } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { periodKeys } from '../../range'
@@ -24,23 +25,12 @@ interface ModelTotals {
 
 const NAMED = 5
 const OTHER = 'other'
-const SHADES = [1, 0.6, 0.35, 0.2]
 
 const modelTotals = ({ models }: Merged) => {
   const byName = new Map<string, ModelTotals>()
   for (const model of models)
     addTotals(grouped(byName, model.name, () => ({ name: model.name, label: model.label, provider: model.provider, totals: emptyTotals() })).totals, model)
   return [...byName.values()]
-}
-
-const shading = (kit: Kit, named: ModelTotals[]) => {
-  const providers = [...new Set(named.map(model => model.provider))]
-  const ranks = new Map<string, number>()
-  return (model: ModelTotals) => {
-    const rank = ranks.get(model.provider) ?? 0
-    ranks.set(model.provider, rank + 1)
-    return { color: kit.providerColor(model.provider, providers.indexOf(model.provider)), opacity: SHADES[Math.min(rank, SHADES.length - 1)] ?? 1 }
-  }
 }
 
 export const seriesOf = (kit: Kit, usage: Merged) => {
@@ -51,7 +41,7 @@ export const seriesOf = (kit: Kit, usage: Merged) => {
     .toSorted((first, second) => second.totals.cost - first.totals.cost)
   const named = ranked.slice(0, NAMED)
   const others = new Set(ranked.slice(NAMED).map(model => model.name))
-  const shade = shading(kit, named)
+  const shade = modelShades(kit, named)
   const valuesOf = (names: (name: string) => boolean) =>
     keys.map(key =>
       Object.entries(periods.get(key)?.models ?? {})
@@ -65,6 +55,3 @@ export const seriesOf = (kit: Kit, usage: Merged) => {
   }
   return { keys, series }
 }
-
-export const swatch = ({ color, opacity }: Pick<Series, 'color' | 'opacity'>) =>
-  span({ class: 'h-2 w-2 shrink-0 rounded-sm', style: { backgroundColor: color, opacity } })
