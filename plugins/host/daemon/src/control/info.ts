@@ -53,7 +53,7 @@ export const running = async (home: string) => {
   return info && isAlive(info.pid) && (await answers(home, info)) ? info : undefined
 }
 
-export const requireRunning = async (home: string, hint = 'start it with `sand` first') => {
+export const requireRunning = async (home: string, hint = 'start it with `sand serve` first') => {
   const info = await running(home)
   if (!info) throw new Error(`sand is not running; ${hint}`)
   return info

@@ -12,7 +12,7 @@ const kernelOptions = {
   print: { type: 'string', short: 'p' },
 } as const
 
-const processes: Record<string, CliPlace> = { serve: 'host', runtime: 'runtime' }
+const processes: Record<string, CliPlace> = { host: 'host', runtime: 'runtime' }
 
 const text = (value: unknown) => (typeof value === 'string' ? value : undefined)
 

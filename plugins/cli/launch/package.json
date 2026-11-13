@@ -1,12 +1,12 @@
 {
   "name": "@sand/cli-launch",
   "version": "0.0.0",
-  "description": "The sand command: starts sand in the background if needed and opens it in the browser",
+  "description": "The sand and sand serve commands: start sand in the background if needed, and open it in the browser or print its paired link",
   "type": "module",
   "sand": {
     "cli": "./src/index.ts",
     "label": "Launch command",
-    "summary": "Starts sand and opens it in the browser"
+    "summary": "Starts sand and opens it in the browser or prints its link"
   },
   "dependencies": {
     "@sand/cli-commands": "workspace:*",
