@@ -1,6 +1,6 @@
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import type { Effect } from '@sand/tools/contract'
+import type { Effect, Use } from '@sand/tools/contract'
 import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
@@ -57,6 +57,7 @@ export interface Decision {
   call: string
   tool: string
   effect: Effect
+  uses?: Use
   summary: string
   mode: Mode
   once: boolean

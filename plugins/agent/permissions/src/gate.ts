@@ -55,6 +55,7 @@ export const createGate = (deps: GateDeps): Gate => {
       call: call.id,
       tool: tool.name,
       effect: act.effect,
+      ...(act.uses && { uses: act.uses }),
       summary: oneLine(act.summary ?? JSON.stringify(shown.input), SUMMARY_CHARS),
       key: keyOf(tool.name, call.input),
       mode: scope.mode,

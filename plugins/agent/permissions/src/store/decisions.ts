@@ -1,7 +1,9 @@
 import type { Database } from 'bun:sqlite'
+import type { Use } from '@sand/tools/contract'
 import type { Blocked, Decider, Decision, DecisionQuery, Late, Outcome } from '../contract'
 
-type Row = Omit<Decision, 'once' | 'blocked' | 'by' | 'reason' | 'rule' | 'late' | 'deadline' | 'decided'> & {
+type Row = Omit<Decision, 'uses' | 'once' | 'blocked' | 'by' | 'reason' | 'rule' | 'late' | 'deadline' | 'decided'> & {
+  uses: Use | null
   key: string
   once: number
   blocked: string
@@ -23,9 +25,10 @@ export interface Settled {
 
 const keptOpenMs = 24 * 60 * 60 * 1000
 
-const decisionOf = ({ key: _key, once, blocked, by, reason, rule, late, deadline, decided, ...row }: Row): Decision => ({
+const decisionOf = ({ key: _key, uses, once, blocked, by, reason, rule, late, deadline, decided, ...row }: Row): Decision => ({
   ...row,
   once: once === 1,
+  ...(uses !== null && { uses }),
   blocked: JSON.parse(blocked) as Blocked[],
   ...(by !== null && { by }),
   ...(reason !== null && { reason }),
@@ -41,8 +44,8 @@ const listSql = `select * from permission_decisions
 
 export const createDecisions = (db: Database) => {
   const inserted = db.query(
-    `insert into permission_decisions (id, owner, conversation, title, turn, call, tool, effect, summary, key, mode, once, outcome, by, reason, rule, blocked, late, at, deadline, decided)
-      values ($id, $owner, $conversation, $title, $turn, $call, $tool, $effect, $summary, $key, $mode, $once, $outcome, $by, $reason, $rule, $blocked, null, $at, $deadline, $decided)`,
+    `insert into permission_decisions (id, owner, conversation, title, turn, call, tool, effect, uses, summary, key, mode, once, outcome, by, reason, rule, blocked, late, at, deadline, decided)
+      values ($id, $owner, $conversation, $title, $turn, $call, $tool, $effect, $uses, $summary, $key, $mode, $once, $outcome, $by, $reason, $rule, $blocked, null, $at, $deadline, $decided)`,
   )
   const byId = db.query<Row, { id: string }>('select * from permission_decisions where id = $id')
   const open = db.query<Row, { since: number }>(
@@ -66,10 +69,11 @@ export const createDecisions = (db: Database) => {
 
   return {
     add({ key, ...decision }: Logged): Decision {
-      const { by, reason, rule, deadline, decided } = decision
+      const { uses, by, reason, rule, deadline, decided } = decision
       inserted.run({
         ...decision,
         key,
+        uses: uses ?? null,
         once: decision.once ? 1 : 0,
         blocked: JSON.stringify(decision.blocked),
         by: by ?? null,

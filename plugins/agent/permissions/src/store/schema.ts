@@ -18,6 +18,7 @@ export const schema = [
       call text not null,
       tool text not null,
       effect text not null,
+      uses text,
       summary text not null,
       key text not null,
       mode text not null,
