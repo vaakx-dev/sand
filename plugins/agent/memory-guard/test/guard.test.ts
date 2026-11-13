@@ -11,7 +11,7 @@ afterEach(() => sand.stop())
 
 const eater = `bun -e "const kept = Buffer.alloc(${EATEN_MB} * 1024 * 1024, 1); setInterval(() => kept[0]++, 1000)"`
 
-const alwaysLow = { every_ms: 100, low_percent: 100, low_mb: 1_000_000_000 }
+const alwaysLow = { low_percent: 100, low_mb: 1_000_000_000 }
 
 const until = async <T>(found: () => T | undefined) => {
   for (const end = Date.now() + ENDED_WAIT_MS; Date.now() < end; await Bun.sleep(50)) {
@@ -24,7 +24,7 @@ const until = async <T>(found: () => T | undefined) => {
 test('when memory stays low, the chat using the most is stopped and its command killed, and the agent hears why', async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [[{ type: 'call', name: 'shell', id: 'eat', input: { command: eater } }]] }], {
     plugins: ['agent/shell', 'agent/processes', 'agent/memory-guard'],
-    options: { 'memory-guard': alwaysLow },
+    options: { processes: { every_ms: 100 }, 'memory-guard': alwaysLow },
   })
   const chat = sand.chat('fake/m')
   await sand.turns.send(chat, { prompt: 'Eat memory', clientRequestId: 'one' })

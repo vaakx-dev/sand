@@ -28,6 +28,6 @@ export const stopChat = (ctx: Context, engine: Engine, chat: ChatMemory, memory:
   const interruption = new Interruption(OUT_OF_MEMORY, noteOf(chat, memory))
   engine.stop(chat.conversation, interruption)
   ctx.get(backgroundJobs)?.stopAll(chat.conversation, interruption.note)
-  chat.pids.forEach(kill)
+  chat.pids.filter(pid => pid !== process.pid).forEach(kill)
   tell(ctx, chat, memory)
 }
