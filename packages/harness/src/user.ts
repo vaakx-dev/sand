@@ -8,7 +8,7 @@ type Plugin = readonly [id: string, entry: string]
 
 let shared: Promise<void> | undefined
 
-const shareModules = (builtins: string) => (shared ??= sharedModules(builtins).then(share))
+const shareModules = (builtins: string) => (shared ??= sharedModules(builtins, []).then(share))
 
 const runtimeEntry = async (dir: string) => {
   const manifest = await Bun.file(join(dir, 'package.json'))

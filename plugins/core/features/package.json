@@ -1,16 +1,17 @@
 {
   "name": "@sand/features",
   "version": "0.0.0",
-  "description": "Turns sand's features and add-ons on and off: the Add-ons settings page, and the home screen while nothing fills it",
+  "description": "Turns sand's features on and off and installs, updates and removes add-ons from the catalog of sand's releases: the Add-ons settings page, the sand addons command, and the home screen while nothing fills it",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
   },
   "sand": {
     "host": "./src/host.ts",
+    "cli": "./src/cli.ts",
     "web": "./src/web/index.ts",
     "label": "Features",
-    "summary": "Turn add-ons like Coding or Calendar on, and the rest of sand off",
+    "summary": "Install add-ons like Coding or Calendar, and turn the rest of sand off",
     "features": {
       "threads": {
         "label": "Threads",
@@ -320,10 +321,15 @@
     }
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
+    "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
+    "@sand/host-updates": "workspace:*",
+    "@sand/markdown": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",

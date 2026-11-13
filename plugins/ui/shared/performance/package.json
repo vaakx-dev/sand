@@ -1,0 +1,39 @@
+{
+  "name": "@sand/performance",
+  "version": "0.0.0",
+  "description": "Performance beside Usage: memory and CPU on each of your PCs, over time, and the chats using them, with the memory guard's switch",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "usage",
+    "runtime": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Performance",
+    "summary": "Memory and CPU on each PC and the chats using them, beside Usage"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/processes": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/usage-page": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/shell": "workspace:*",
+    "@sand/shell-jobs": "workspace:*",
+    "@sand/tools": "workspace:*"
+  }
+}

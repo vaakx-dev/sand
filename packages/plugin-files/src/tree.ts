@@ -2,6 +2,7 @@ import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { PluginTree } from '@sand/host-plugin-sync/contract'
 import { fileHash, isFolder } from '@sand/util/fs'
+import { isAddonFolder } from '@sand/util/release'
 import { treeHash } from './hash'
 import { validPluginName } from './names'
 import { pluginFiles } from './walk'
@@ -19,7 +20,7 @@ const pluginFolders = async (root: string) => {
   const names: string[] = []
   const linked = new Set<string>()
   for (const entry of entries) {
-    if (!validPluginName(entry.name)) continue
+    if (!validPluginName(entry.name) || (await isAddonFolder(join(root, entry.name)))) continue
     if (entry.isDirectory()) names.push(entry.name)
     else if (entry.isSymbolicLink() && (await isFolder(join(root, entry.name)))) {
       names.push(entry.name)

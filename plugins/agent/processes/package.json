@@ -1,7 +1,7 @@
 {
   "name": "@sand/processes",
   "version": "0.0.0",
-  "description": "Knows which chat started each process tree on this PC and measures the memory each chat's trees use",
+  "description": "Reads this PC's memory and CPU, knows which chat started each process tree, and measures what each chat uses",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,10 +9,11 @@
   "sand": {
     "runtime": "./src/index.ts",
     "label": "Chat processes",
-    "summary": "Measures the memory each chat's commands use"
+    "summary": "Measures the memory and CPU of this PC and of each chat's commands"
   },
   "dependencies": {
     "@sand/machine": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   }
 }
