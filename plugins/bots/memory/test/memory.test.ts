@@ -2,7 +2,7 @@ import { botMemorySpace } from '@sand/bot-memory/contract'
 import { botCreate, botDelete, botList } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { memory as memoryService, memoryLimit, memoryNoteWrite, memoryRead, memoryWrite } from '@sand/memory/contract'
+import { memoryChange, memory as memoryService, memoryLimit, memoryNoteWrite, memoryRead, memoryWrite } from '@sand/memory/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync } from 'node:fs'
@@ -91,10 +91,12 @@ test('near its context limit, a bot checks its memory in the same cached chat, t
   sand = await start([[said('Noted.')], [said('Noted.'), full], [fix], [said('Fixed.')], [rewritten], [said('Booked.')]])
   const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
   await memory().write(mine(bot.id), '- Lives in Porto.')
+  const rewrote = new Promise<void>(resolve => sand.app.on(memoryChange, (_, text) => void (text === `${remembered}\n` && resolve())))
 
   await talk(bot.id, `Remember: no meetings before 10.\n${notes}`)
   await talk(bot.id, `More notes.\n${notes}`)
-  for (let tries = 0; tries < 300 && (await sand.ask(memoryRead, mine(bot.id))).text !== `${remembered}\n`; tries++) await Bun.sleep(10)
+  await rewrote
+  await Bun.sleep(0)
   await talk(bot.id, 'Book lunch with Ana on Friday')
 
   const [, last, check, , compaction, next] = bodies()
