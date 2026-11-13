@@ -53,6 +53,12 @@ test('plugins of no feature, or of a feature nobody defines, stay on', () => {
   expect(catalog.on('worktrees')).toBe(false)
 })
 
+test("a feature that needs one nobody defines, like an add-on that isn't installed, stays off", () => {
+  const catalog = createCatalog([...definitions, feature('logbook-tab', { needs: ['logbook'] })], undefined)
+  expect(catalog.on('logbook-tab')).toBe(false)
+  expect(catalog.on('bots')).toBe(true)
+})
+
 test('an add-on is off until it is turned on, with or without a [features] table', () => {
   const addons = [...definitions, feature('logbook', { addon: true }), feature('math', { addon: true })]
   expect(createCatalog(addons, undefined).on('logbook')).toBe(false)

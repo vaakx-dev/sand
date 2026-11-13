@@ -1,4 +1,13 @@
-export { addonAsset, addonCatalogAsset, addonStampFile, type AddonCatalog, type AddonListing, type AddonStamp } from './addons'
+export {
+  addonAsset,
+  addonCatalogAsset,
+  addonFolders,
+  addonStampFile,
+  isAddonFolder,
+  type AddonCatalog,
+  type AddonListing,
+  type AddonStamp,
+} from './addons'
 export { buildBunFile, bunBinary, bunFolder, defaultTarget, readBuildBun, readTarget, validTarget, validVersion, writeBuildBun } from './bun'
 export { buildStamp, bundleAsset, isAppPath, moduleFiles, scanApp, stampAsset } from './files'
 export { hashModules, isLinkEntry, isModulePath, moduleHash, modulesFolder, releaseDamaged } from './manifest'

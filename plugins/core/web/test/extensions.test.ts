@@ -38,3 +38,25 @@ test('built-in extensions are known by package name, and a user plugin named the
     ['devices-ui', join(user, 'devices-ui')],
   ])
 })
+
+test("an installed add-on's extensions are known by package name, so they replace the built-in ones", async () => {
+  const builtins = root()
+  const user = root()
+  await plugin(join(builtins, 'git', 'git'), '@sand/git')
+  await Bun.write(join(user, 'git', 'sand-addon.json'), '{}')
+  await plugin(join(user, 'git', 'git', 'git'), '@sand/git')
+  await plugin(join(user, 'git', 'ui', 'branch'), '@sand/branch')
+
+  const found = await discover(
+    [
+      { dir: builtins, builtin: true },
+      { dir: user, builtin: false },
+    ],
+    [],
+  )
+
+  expect(found.map(({ id, dir }) => [id, dir]).sort()).toEqual([
+    ['branch', join(user, 'git', 'ui', 'branch')],
+    ['git', join(user, 'git', 'git', 'git')],
+  ])
+})

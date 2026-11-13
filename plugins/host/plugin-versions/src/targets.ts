@@ -1,4 +1,5 @@
 import { validPluginName } from '@sand/plugin-files'
+import { isAddonFolder } from '@sand/util/release'
 import { lstat, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -14,11 +15,13 @@ export const targetInfo = (home: string, key: string): TargetInfo | undefined =>
   return { key, name, path: join(home, 'plugins', name) }
 }
 
-export const present = (info: TargetInfo) =>
-  lstat(info.path).then(
+export const present = async (info: TargetInfo) => {
+  const folder = await lstat(info.path).then(
     stats => stats.isDirectory(),
     () => false,
   )
+  return folder && !(await isAddonFolder(info.path))
+}
 
 export const discoverTargets = async (home: string): Promise<TargetInfo[]> => {
   const entries = await readdir(join(home, 'plugins'), { withFileTypes: true }).catch(() => [])
