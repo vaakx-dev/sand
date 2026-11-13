@@ -9,7 +9,7 @@ import { offerPluginTools } from './tools'
 export default definePlugin({
   name: 'plugins-mcp',
   description:
-    'Offers the plugin_list, plugin_show, plugin_reload, addon_list, addon_install, addon_update, addon_remove and addon_set tools to its own threads and bots and to outside agents over MCP, naming the add-ons ready to install',
+    'Offers the plugin_list, plugin_show, plugin_reload, addon_list, addon_install, addon_update, addon_remove, addon_set, addon_source_add and addon_source_remove tools to its own threads and bots and to outside agents over MCP, naming the add-ons ready to install',
   apply(ctx) {
     ctx.watch(
       mcpTools,

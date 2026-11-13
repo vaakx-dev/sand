@@ -19,12 +19,20 @@ export interface Addon {
   version?: string
   update?: string
   needsSand?: string
+  source?: { id: string; label: string }
+}
+
+export interface AddonSource {
+  id: string
+  label: string
+  removable: boolean
+  error?: string
 }
 
 export interface FeatureChoice {
   features: Feature[]
   addons: Addon[]
-  catalogError?: string
+  sources: AddonSource[]
 }
 
 export interface FeatureState {
@@ -46,6 +54,10 @@ export const addonsPicture = request('addons.picture', {
   output: type<string>(),
   callers: 'any',
 })
+
+export const addonsSourceAdd = request('addons.source.add', { input: () => z.object({ source: z.string().min(1) }), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
+
+export const addonsSourceRemove = request('addons.source.remove', { input: () => z.object({ id: z.string().min(1) }), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 
 export const addonsInstall = request('addons.install', { input: addonIds, output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
 

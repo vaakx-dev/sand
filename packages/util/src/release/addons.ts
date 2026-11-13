@@ -23,6 +23,7 @@ interface AddonCatalog {
 
 interface AddonStamp {
   id: string
+  source: string
   version: string
   hash: string
   sha256: string
