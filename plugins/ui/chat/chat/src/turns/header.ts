@@ -11,7 +11,7 @@ const took = (head: TurnHead) => {
 
 const labels: Record<TurnPhase, (head: TurnHead) => string> = {
   thinking: () => 'Thinking',
-  working: () => 'Working',
+  working: head => (head.summary ? `Working · ${head.summary}` : 'Working'),
   waiting: () => 'Needs you',
   done: took,
 }
