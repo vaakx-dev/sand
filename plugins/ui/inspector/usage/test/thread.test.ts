@@ -17,7 +17,7 @@ const finished = async (chat: Session, count: number) => {
 test("a thread's usage adds up its own turns and its subagents' turns, per model", async () => {
   sand = await startSand(
     [{ id: 'fake', models: ['big', 'small'], price: { input: 1, output: 10, cacheRead: 0, cacheWrite: 0 }, replies: [[...reply(1_000, 100)], [...reply(2_000, 200)]] }],
-    { plugins: ['agent/usage'] },
+    { plugins: ['ui/inspector/usage'] },
   )
   const thread = sand.chat('fake/big')
   await sand.turns.send(thread, { prompt: 'One', clientRequestId: 'one' })
