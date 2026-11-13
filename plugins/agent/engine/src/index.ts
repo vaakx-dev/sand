@@ -27,8 +27,11 @@ export default definePlugin({
     const stores = openStores(ctx.ledger)
     const leases = createLeases(ctx, stores.turns)
     const attached = new Map<Owner, Attached>()
-    let stopped = ctx.cli.place !== 'runtime'
+    const dispatches = ctx.cli.place === 'runtime'
+    let draining = false
     let settled = false
+    const ready = () => settled && !draining
+    const running = () => dispatches && ready()
 
     const every = (ms: number, run: () => void) =>
       ctx.effect(() => {
@@ -40,7 +43,7 @@ export default definePlugin({
       attach(conversations) {
         const { owner } = conversations
         if (attached.has(owner)) throw new Error(`${owner} conversations are already attached`)
-        const found = attachConversations(ctx, { stores, leases, running: () => settled && !stopped }, conversations, () => attached.delete(owner))
+        const found = attachConversations(ctx, { stores, leases, ready, running }, conversations, () => attached.delete(owner))
         const send = (id: string, input: SendInput) => {
           const conversation = conversations.open(id)
           return conversation && found.runner.send(conversation, input)
@@ -54,16 +57,16 @@ export default definePlugin({
       send: ({ owner, id }, input) => attached.get(owner)?.send(id, input),
     }
 
-    if (!stopped) {
+    if (dispatches) {
       ctx.on(runtimeDrain, () => {
-        stopped = true
+        draining = true
       })
       every(dispatchEvery, () => attached.forEach(found => found.sweep()))
     }
     every(recoverEvery, () => attached.forEach(found => found.recover()))
     void ctx.settled().then(() => {
       settled = true
-      attached.forEach(found => found.recover())
+      attached.forEach(found => found.sweep())
     })
     stores.receipts.prune()
     every(pruneEvery, stores.receipts.prune)

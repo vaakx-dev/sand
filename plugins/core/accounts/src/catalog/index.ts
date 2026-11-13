@@ -98,18 +98,10 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
     void prefsStore.write(prefs)
   }
 
-  const prune = (ids: Set<string>) => {
-    const stale = Object.keys(cache).filter(id => !ids.has(id))
-    if (!stale.length) return
-    cache = Object.fromEntries(Object.entries(cache).filter(([id]) => ids.has(id)))
-    void cacheStore.write(cache)
-  }
-
   const sync = () => {
     const metas = localMetas(accounts)
     const ids = new Set(metas.map(meta => meta.id))
     for (const id of [...prints.keys()]) if (!ids.has(id)) forget(id)
-    prune(ids)
     for (const meta of metas) {
       const print = accounts.fingerprint(meta.id)
       if (prints.get(meta.id)?.print === print) continue
