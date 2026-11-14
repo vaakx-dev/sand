@@ -5,6 +5,7 @@ import type { Addon } from '../../contract'
 import { working } from '../rows'
 import type { FeatureStore } from '../store'
 import { addonControls, addonLine } from './controls'
+import { extrasSection } from './extras'
 
 interface PageParts {
   kit: Kit
@@ -45,13 +46,14 @@ const head = ({ kit, store }: PageParts, addon: Addon) => {
 }
 
 const addonPage = (parts: PageParts, id: string) => {
-  const state = derive(() => JSON.stringify([parts.store.addon(id), parts.store.choice.get()?.features]))
+  const state = derive(() => JSON.stringify(parts.store.choice.get() ?? null))
   return div(
     { class: 'flex flex-col gap-5' },
     dynamicChild(state, () => {
       const addon = parts.store.addon(id)
       if (!addon) return parts.kit.loadingState()
-      return div({ class: 'contents' }, head(parts, addon), readme(parts, addon))
+      const choice = parts.store.choice.get()
+      return div({ class: 'contents' }, head(parts, addon), choice ? extrasSection(parts.kit, parts.store, choice, addon) : null, readme(parts, addon))
     }),
   )
 }

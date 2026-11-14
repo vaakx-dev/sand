@@ -12,6 +12,7 @@ export interface Addon {
   id: string
   label: string
   summary: string
+  parent?: string
   status: AddonStatus
   readme: string
   pictures: string[]
@@ -40,6 +41,8 @@ export interface FeatureState {
 }
 
 export const featureState = service<FeatureState>('featureState')
+
+export const addonPageId = (id: string) => `addon:${id}`
 
 const addonIds = () => z.object({ ids: z.array(z.string().min(1)).min(1) })
 
