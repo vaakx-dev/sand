@@ -56,7 +56,7 @@ const markdownFormat = (parts: Parts): FileFormat => ({
     const found = parts.markdown()
     if (!found) return codeView(parts, file, text)
     const files = { link: (target: string, label: (Node | string)[]) => file.link(target, label), mention: () => undefined }
-    return div({ class: 'p-4 text-sm leading-relaxed text-neutral-100 wrap-anywhere' }, ...found.nodes(text, { files, size: 'reading' }))
+    return div({ class: 'p-4' }, parts.kit.prose(...found.nodes(text, { files, size: 'reading' })))
   },
 })
 
