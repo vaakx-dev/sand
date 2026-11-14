@@ -44,8 +44,6 @@ const inheritedSettings = (ctx: OrchestratorContext, parent: Session | undefined
 export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starters: Starters, owners: Owners) => {
   const opening = new Map<string, Promise<Session>>()
 
-  const placeOf = ({ cwd, project, from }: StartInput) => (cwd === undefined && project === undefined ? { project: owners.home(from) } : { cwd, project })
-
   const opener = (input: StartInput): Open => {
     const { subagent, from, title } = input
     if (!subagent) return (cwd, project) => ctx.sessions.thread(cwd, project === undefined ? undefined : { project })
@@ -53,17 +51,16 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     return (cwd, project) => ctx.sessions.agent({ parent: from.id, cwd, project, title: title ?? '', origin: subagent.call })
   }
 
-  const subagentPlace = (from: ConversationRef) => {
+  const homeOf = (from: ConversationRef) => {
     const project = owners.home(from)
     if (project) return folderOf(ctx, { project })
-    const parent = parentOf(ctx, { from })
-    return parent && { cwd: parent.cwd, project: parent.project }
+    const starter = parentOf(ctx, { from })
+    return starter && { cwd: starter.cwd, project: starter.project }
   }
 
-  const folderFor = (input: StartInput) => {
-    const { subagent, from, cwd, project } = input
-    const placed = subagent && from && cwd === undefined && project === undefined ? subagentPlace(from) : undefined
-    return placed ?? folderOf(ctx, placeOf(input))
+  const folderFor = ({ from, cwd, project }: StartInput) => {
+    const placed = from && cwd === undefined && project === undefined ? homeOf(from) : undefined
+    return placed ?? folderOf(ctx, { cwd, project })
   }
 
   const inFolder = (input: StartInput) => {

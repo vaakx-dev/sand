@@ -26,7 +26,7 @@ export const agentTool = <S extends ZodObject>(server: Server, { name, descripti
       call: (request, body) => server.ask(request, body, caller),
       actor: caller.actor,
       signal,
-      ...(conversation.owner === 'thread' && { here: cwd }),
+      here: cwd,
     })
     return resultText(answer)
   },

@@ -159,12 +159,14 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
   expect(await replied(bot.id, second.turn!)).toBe('Booked.')
 })
 
-test("a bot starts a thread in its only project, which says the bot sent it and stands on its own: no report back, not listed as the bot's", async () => {
-  await start([said('README fixed.'), said('Hi back.')], [])
+test("a bot starts a thread in its own folder, or in its only project, which says the bot sent it and stands on its own: no report back, not listed as the bot's", async () => {
+  await start([said('Tidied.'), said('README fixed.'), said('Hi back.')], [])
   await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
   const bot = await createBot('Builder')
 
-  expect(await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })).toEqual({ error: expect.stringContaining('Give either cwd, project or quick') })
+  const tidy = await use(asBot(bot.id), 'thread_start', { prompt: 'Tidy your folder' })
+  expect(sand.sessions.require(tidy.thread).cwd).toBe(bot.folder)
+  await sand.turns.wait(tidy.turn, 'end')
   expect(await use(asBot(bot.id), 'bot_update', { projects: ['p1'] })).toMatchObject({ bot: bot.id, projects: ['p1'] })
   const started = await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })
   const thread = sand.sessions.require(started.thread)
@@ -172,7 +174,7 @@ test("a bot starts a thread in its only project, which says the bot sent it and 
   expect(sand.turns.get(started.turn)?.origin).toBe('bot')
   expect(recordsOf(userMessages(thread.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', label: 'Builder', data: { id: bot.id, sent: true } })])
   await sand.turns.wait(started.turn, 'end')
-  expect(seenIn(sand.requests('fake')[0]!)).toContain('Your reply stays in this chat; if it asks to hear back, message it with bot_send.')
+  expect(seenIn(sand.requests('fake')[1]!)).toContain('Your reply stays in this chat; if it asks to hear back, message it with bot_send.')
   await Bun.sleep(100)
   expect(botTexts(bot.id)).toEqual([])
   expect(await sand.ask(botSubagents, {})).toEqual({})

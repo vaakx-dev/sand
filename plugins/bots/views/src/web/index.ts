@@ -24,7 +24,7 @@ import { joinDisposers } from '@sand/util'
 import { projects, projectsChange } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { changeNote } from './chat/change'
-import { chatEntries } from './chat/entries'
+import { botChats } from './chat/chats'
 import { inject } from './context'
 import { openNewBot } from './create/sheet'
 import { morningNote } from './jobs/morning'
@@ -81,24 +81,24 @@ export default definePlugin({
     ctx.effect(() => ctx.shell.section({ id: 'bots', order: 10, groups: () => [botsGroup(parts)] }))
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
     ctx.watch(needs, found => found?.source(botNeeds(parts)))
+    const chats = botChats(ctx)
     ctx.effect(() =>
       ctx.shell.subject(({ kind, id }) => {
         const bot = kind === botRoute && id ? parts.store.find(id) : undefined
         if (!bot) return undefined
-        const device = ctx.threads.get(bot.id)?.device ?? ctx.threads.device()
-        return { session: bot.id, owner: 'bot', device, ...(bot.folder && { cwd: bot.folder }) }
+        const chat = chats.thread(bot.id)
+        return { session: bot.id, owner: 'bot', device: chat?.device ?? ctx.threads.device(), cwd: chat?.info.cwd ?? bot.folder }
       }),
     )
     ctx.watch(threadView, found => found?.place(thread => (parts.store.find(thread) ? { kind: botRoute, id: thread, tab: 'chat' } : undefined)))
 
-    const entriesOf = chatEntries(ctx)
     ctx.watch(
       transcript,
       found =>
         found &&
         joinDisposers(
           found.entry(changeEntry, entry => changeNote(ctx.kit, entry.data as ChangeEntry)),
-          found.entry(runEntry, (entry, bot) => runNote(ctx.kit, entry, () => entriesOf(bot))),
+          found.entry(runEntry, (entry, bot) => runNote(ctx.kit, entry, () => chats.path(bot))),
           found.entry(morningEntry, (entry, bot) => morningNote(ctx.kit, (entry.data as MorningEntry).lines, job => parts.showJob(bot, job))),
         ),
     )

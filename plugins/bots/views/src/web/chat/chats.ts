@@ -2,7 +2,7 @@ import { threadChange } from '@sand/web-client/contract'
 import { sig, type Sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 
-export const chatEntries = (ctx: BotsContext) => {
+export const botChats = (ctx: BotsContext) => {
   const versions = new Map<string, Sig<number>>()
   ctx.on(threadChange, id => versions.get(id)?.update(version => version + 1))
 
@@ -14,8 +14,14 @@ export const chatEntries = (ctx: BotsContext) => {
     return fresh
   }
 
-  return (bot: string) => {
-    versionOf(bot).get()
-    return ctx.threads.path(bot)
+  return {
+    thread(bot: string) {
+      versionOf(bot).get()
+      return ctx.threads.get(bot)
+    },
+    path(bot: string) {
+      versionOf(bot).get()
+      return ctx.threads.path(bot)
+    },
   }
 }
