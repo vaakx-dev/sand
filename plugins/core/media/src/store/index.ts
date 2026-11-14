@@ -1,10 +1,12 @@
 import { imageDimensions } from '@sand/util'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { StoredMedia } from '../contract'
+import type { MediaRef, StoredMedia } from '../contract'
 import { extensionOf, isText, storedExtensions } from './types'
 
 export const isHash = (value: string) => /^[a-f0-9]{64}$/.test(value)
+
+const EXCLUDED = 'excluded'
 
 const hashOf = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 
@@ -43,9 +45,17 @@ export const createStore = (folder: string) => {
     return media
   }
 
+  const excludedMark = ({ hash }: MediaRef) => join(folder, `${hash}.${EXCLUDED}`)
+
+  const exclude = (media: MediaRef) => {
+    if (isHash(media.hash)) writeFileSync(excludedMark(media), '')
+  }
+
+  const include = (media: MediaRef) => rmSync(excludedMark(media), { force: true })
+
   const data = (media: StoredMedia) => {
     const target = path(media)
-    if (!isHash(media.hash) || !existsSync(target)) return undefined
+    if (!isHash(media.hash) || !existsSync(target) || existsSync(excludedMark(media))) return undefined
     const bytes = readFileSync(target)
     return isText(media.mediaType) ? bytes.toString('utf8') : bytes.toString('base64')
   }
@@ -59,7 +69,7 @@ export const createStore = (folder: string) => {
     return undefined
   }
 
-  return { folder, path, put, data, locate }
+  return { folder, path, put, data, exclude, include, locate }
 }
 
 export type Store = ReturnType<typeof createStore>

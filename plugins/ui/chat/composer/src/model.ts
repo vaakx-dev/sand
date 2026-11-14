@@ -1,21 +1,20 @@
-import { promptOf } from '@sand/attachments/contract'
-import type { Held, Shelves } from '@sand/attachments/web/contract'
-import type { UserContent } from '@sand/chats/contract'
+import { stored, type Held, type Shelves } from '@sand/attachments/web/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
 import type { SendOptions } from '@sand/web-client/contract'
 import { derive, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { commandChar } from './complete/detect'
 import { boundTriggers, type Triggers } from './complete/registry'
-import type { Command, ComposerContent, Sending } from './contract'
+import type { Command, ComposerContent } from './contract'
 import type { Saved } from './drafts/store'
 import { contextOf, createRecords } from './records'
 import { createHolds } from './send/holds'
-import type { Outgoing, Target } from './target'
+import { createOutgoing, type Send, type SendsSaved } from './send/outgoing'
+import type { Target } from './target'
 
-interface Retry {
-  draft: Saved
-  options: Outgoing
+interface Failure {
+  text: string
+  retry?: Send
 }
 
 const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettings => {
@@ -23,11 +22,9 @@ const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettin
   return { ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }
 }
 
-const uploaded = (item: Held): item is UserContent => !(item instanceof File)
+const joined = (before: string, after: string) => (before.trim() && after.trim() ? `${before.trim()}\n\n${after.trim()}` : before.trim() || after.trim())
 
-const sendError = (error: unknown) => `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}.`
-
-export const createModel = (target: Target, registries: Triggers[], shelves: Sig<Shelves | undefined>) => {
+export const createModel = (target: Target, registries: Triggers[], shelves: Sig<Shelves | undefined>, saved: SendsSaved) => {
   const text = sig('')
   const attached = sig<Held[]>([])
   const shelf = derive(() => {
@@ -37,10 +34,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
   const attachments = derive(() => (shelf.get() ? attached.get() : []))
   const records = createRecords()
   const picked = sig<SessionSettings>({})
-  const failure = sig<{ text: string; retry?: Retry } | undefined>(undefined)
-  const sending = sig(false)
-  const outgoing = sig<Saved | undefined>(undefined)
-  const shown = sig<Sending | undefined>(undefined)
+  const failure = sig<Failure | undefined>(undefined)
   const running = derive(() => target.running())
   const stoppable = derive(() => target.stoppable())
   const delivery = derive(() => target.delivery())
@@ -55,104 +49,100 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     picked.set({})
   }
 
-  const fill = (saved: Saved) => {
-    records.list.set(saved.records ?? [])
-    text.set(saved.text)
-    attached.set(saved.items)
-    picked.set(saved.settings ?? {})
+  const fill = (draft: Saved) => {
+    records.list.set(draft.records ?? [])
+    text.set(draft.text)
+    attached.set(draft.items)
+    picked.set(draft.settings ?? {})
+  }
+
+  const merge = (draft: Saved) => {
+    records.add(draft.records ?? [])
+    text.update(typed => joined(typed, draft.text))
+    attached.update(list => [...list, ...draft.items])
   }
 
   const reset = () => {
     clear()
     failure.set(undefined)
-    outgoing.set(undefined)
   }
 
   const fail = (message: string) => failure.set({ text: message })
 
-  const typed = (): Saved => ({ text: text.get(), items: attached.get(), records: records.linked(text.get()), settings: picked.get() })
-
-  const draft = (): Saved => (empty.get() ? (outgoing.get() ?? typed()) : typed())
+  const draft = (): Saved => ({ text: text.get(), items: attached.get(), records: records.linked(text.get()), settings: picked.get() })
 
   const unchanged = (before: Saved) => {
-    const now = typed()
+    const now = draft()
     return now.text === before.text && now.items.length === before.items.length && now.items.every((item, at) => item === before.items[at])
   }
 
-  const putBack = (saved: Saved, message: string, retry?: Retry) => {
+  const putBack = (saved: Saved, message: string, retry?: Send) => {
     const restored = empty.get()
     if (restored) fill(saved)
-    failure.set({ text: restored ? `${message} Your message is still here.` : message, retry })
+    failure.set({ text: restored ? `${message} Your message is still here.` : message, ...(retry && { retry }) })
   }
+
+  const showing = (send: Send) => target.conversation() === target.shownIn(send.to)
+
+  const outgoing = createOutgoing({
+    target,
+    shelves,
+    saved,
+    returned(send, message) {
+      if (!showing(send) || !empty.get()) return false
+      putBack(send.draft, message, send)
+      return true
+    },
+    edit: send => merge(send.draft),
+  })
 
   const requestId = () => {
     const failed = failure.get()?.retry
-    return failed && unchanged(failed.draft) ? failed.options.clientRequestId : crypto.randomUUID()
+    return failed && unchanged(failed.draft) ? failed.id : crypto.randomUUID()
   }
 
-  const upload = (items: Held[]) => shelf.get()?.upload(items) ?? Promise.resolve([])
+  const uploaded = (items: Held[]) => shelves.get()?.uploaded(items, target.place.device()) ?? items.filter(stored)
 
   const content = async (saved: Saved): Promise<ComposerContent> => {
-    const items = await upload(saved.items)
+    const items = (await shelves.get()?.content(saved.items, target.place.device())) ?? saved.items.filter(stored)
     return { text: saved.text.trim(), content: [...items, ...contextOf(saved.records)] }
   }
 
-  const attempt = async (busy: boolean, task: () => Promise<void>, failed: (error: unknown) => void) => {
-    failure.set(undefined)
-    sending.set(busy)
-    try {
-      await task()
-    } catch (error) {
-      failed(error)
-    } finally {
-      sending.set(false)
-    }
-  }
-
-  const runCommand = (command: Command) => {
+  const runCommand = async (command: Command) => {
     const before = text.get()
     text.set('')
-    return attempt(false, async () => command.run(target.chat()), error => {
+    failure.set(undefined)
+    try {
+      await command.run(target.chat())
+    } catch (error) {
       if (!text.get()) text.set(before)
       fail(errorMessage(error))
-    })
+    }
   }
 
   const triggers = boundTriggers(registries, command => void runCommand(command))
 
-  const show = ({ options }: Retry, { text: said, content: parts }: ComposerContent, uploading: boolean) =>
-    shown.set({ id: options.clientRequestId, conversation: target.conversation() ?? '', prompt: promptOf(said, parts), at: Date.now(), uploading })
-
-  const deliver = async (retry: Retry) => {
-    const { draft: saved, options } = retry
-    show(retry, { text: saved.text.trim(), content: [...saved.items.filter(uploaded), ...contextOf(saved.records)] }, !saved.items.every(uploaded))
-    const prompt = await content(saved)
-    show(retry, prompt, false)
-    await target.send(prompt.text, prompt.content, saved.settings ?? {}, options)
+  const sendPrompt = (send: Send) => {
+    failure.set(undefined)
+    if (unchanged(send.draft)) clear()
+    outgoing.add(send)
   }
 
-  const sendPrompt = (retry: Retry) => {
-    outgoing.set(retry.draft)
-    if (unchanged(retry.draft)) clear()
-    const ours = () => outgoing.get() === retry.draft
-    const settle = (error?: unknown) => {
-      shown.set(undefined)
-      if (!ours()) return
-      outgoing.set(undefined)
-      if (error) putBack(retry.draft, sendError(error), retry)
-    }
-    return attempt(true, () => deliver(retry).then(() => settle()), settle)
+  const resend = (send: Send) => {
+    const to = target.destination()
+    if (to) sendPrompt({ ...send, to, at: Date.now(), failed: undefined })
   }
 
   const send = async (mode?: SendOptions['mode']) => {
-    if (sending.get() || blocked.get() || holds.reason.get()) return
+    if (blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
     const withAttachments = attachments.get().length > 0
     const command = value.startsWith(commandChar) ? triggers.named(value.slice(1)) : undefined
     if (command && !withAttachments) return runCommand(command)
     if (!value && !withAttachments) return target.interrupt().catch(error => fail(errorMessage(error)))
-    if (!target.ready(picked.get())) return
-    return sendPrompt({ draft: typed(), options: { mode, clientRequestId: requestId() } })
+    const to = target.destination()
+    if (!to || !target.ready(picked.get())) return
+    sendPrompt({ id: requestId(), to, draft: draft(), at: Date.now(), ...(mode && { mode }) })
   }
 
   return {
@@ -161,13 +151,12 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     attached,
     shelf,
     content,
+    uploaded,
     records,
     triggers,
     picked,
     choose: (patch: SettingsPatch) => picked.update(current => applied(current, patch)),
     failure,
-    sending,
-    shown,
     running,
     stoppable,
     delivery,
@@ -176,14 +165,17 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     blocked,
     holds,
     send,
-    resend: sendPrompt,
+    resend,
+    sending: outgoing.sending,
+    waiting: () => outgoing.sending().some(send => send.conversation === target.conversation()),
+    resume: outgoing.resume,
     clear,
     fill,
+    merge,
     reset,
     putBack,
     fail,
     draft,
-    upload,
   }
 }
 

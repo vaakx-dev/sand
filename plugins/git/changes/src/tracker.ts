@@ -93,7 +93,7 @@ export const createTracker = (deps: ChangesDeps, send: (changes: ThreadChanges) 
   }
 
   const follow = (session: SessionInfo) => {
-    const wanted = session.kind === 'thread' && session.settled === null
+    const wanted = session.kind === 'thread' && session.archived === null
     const current = followed.get(session.id)
     if (wanted ? current?.cwd === session.cwd : !current) return
     unfollow(session.id)

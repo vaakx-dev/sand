@@ -12,7 +12,7 @@ export const infoOf = (session: SessionInfo): SessionInfo => ({
   title: session.title,
   seen: session.seen,
   pinned: session.pinned,
-  settled: session.settled,
+  archived: session.archived,
   snoozed: session.snoozed,
   position: session.position,
 })

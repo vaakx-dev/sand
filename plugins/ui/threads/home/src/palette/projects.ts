@@ -21,12 +21,18 @@ const placeDetail = (parts: StartParts, place: Place) => {
   return severalPcs(parts.ctx) ? pcNames(parts.ctx, place).join(', ') : undefined
 }
 
-const hideAction = ({ projects }: StartParts, group: ProjectGroup): PaletteItemAction => ({
-  label: 'Hide project',
-  icon: 'x',
-  danger: true,
+const pinAction = ({ projects }: StartParts, group: ProjectGroup): PaletteItemAction => ({
+  label: group.pinned ? 'Unpin' : 'Pin',
+  icon: 'pin',
   returnAfter: true,
-  run: () => projects.hide(group, true),
+  run: () => projects.pin(group, !group.pinned),
+})
+
+const archiveAction = ({ projects }: StartParts, group: ProjectGroup): PaletteItemAction => ({
+  label: group.archived ? 'Unarchive' : 'Archive',
+  icon: group.archived ? 'up' : 'archive',
+  returnAfter: true,
+  run: () => projects.archive(group, !group.archived),
 })
 
 const renameAction = ({ ctx, projects }: StartParts, group: ProjectGroup): PaletteItemAction => ({
@@ -50,7 +56,7 @@ const actionsOf = (parts: StartParts, start: Start, place: Place) => {
   const { group } = place
   const starts = otherLocations(ctx, group, threads.device()).map(location => startAction(parts, start, location))
   const rename = ctx.get(picker) ? [renameAction(parts, group)] : []
-  return [...starts, ...rename, hideAction(parts, group)]
+  return [...starts, ...rename, pinAction(parts, group), archiveAction(parts, group)]
 }
 
 const projectItem = (parts: StartParts, start: Start, place: Place): PaletteItem => {
@@ -62,13 +68,16 @@ const projectItem = (parts: StartParts, start: Start, place: Place): PaletteItem
     avatarIcon: place.shown.icon,
     label: place.shown.name,
     detail: placeDetail(parts, place),
+    ...(place.group.archived && { meta: 'Archived' }),
     search: `${place.shown.name} ${place.group.locations.map(location => location.path).join(' ')} ${pcNames(ctx, place).join(' ')}`,
     actions: actionsOf(parts, start, place),
     run: () => start(place.path, place.device),
   }
 }
 
-export const projectItems = (parts: StartParts, start: Start) => places(parts).map(place => projectItem(parts, start, place))
+export const projectItems = (parts: StartParts, start: Start) => places(parts, parts.projects.groups()).map(place => projectItem(parts, start, place))
+
+export const archivedItems = (parts: StartParts, start: Start) => places(parts, parts.projects.archived()).map(place => projectItem(parts, start, place))
 
 const quickItem = (parts: StartParts, start: Start): PaletteItem => ({
   id: 'no-project',

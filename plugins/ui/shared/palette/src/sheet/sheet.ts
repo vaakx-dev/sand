@@ -6,6 +6,7 @@ import { formHead, paletteHead } from './head'
 import { pageModel, type PageModel } from './model'
 import type { PageMemory, PageNav } from './nav'
 import { pageBody, pageKeys } from './page'
+import type { Used } from './rank'
 
 const pageNav = (stack: Sig<PalettePage[]>, fail: (error: unknown) => void): PageNav => {
   const held = new Set<PalettePage>()
@@ -38,7 +39,16 @@ const pageNav = (stack: Sig<PalettePage[]>, fail: (error: unknown) => void): Pag
   }
 }
 
-const shownModel = (kit: Kit, stack: Sig<PalettePage[]>, query: () => string, fail: (error: unknown) => void) => {
+interface SheetParts {
+  kit: Kit
+  shell: Shell
+  stack: Sig<PalettePage[]>
+  query(): string
+  used: Used
+  fail(error: unknown): void
+}
+
+const shownModel = ({ kit, stack, query, used, fail }: SheetParts) => {
   const nav = pageNav(stack, fail)
   const model = sig<PageModel | undefined>(undefined)
   let opening = true
@@ -50,7 +60,7 @@ const shownModel = (kit: Kit, stack: Sig<PalettePage[]>, query: () => string, fa
     }
     const initial = opening ? untrack(query) : ''
     opening = false
-    const { value, scope } = collectScope(() => untrack(() => pageModel(kit, page, nav, initial)))
+    const { value, scope } = collectScope(() => untrack(() => pageModel({ kit, page, nav, initial, used })))
     model.set(value)
     return () => disposeAll(scope)
   })
@@ -67,8 +77,17 @@ const scrolled = (look: SheetLook, model: PageModel, body: HTMLElement) =>
     ? body
     : div({ class: () => ['flex min-h-0 flex-col overflow-y-auto overscroll-contain px-2 pb-2', look === 'list' && model.searching.get() && 'h-screen sm:h-auto'] }, body)
 
-export const searchSheet = (kit: Kit, shell: Shell, stack: Sig<PalettePage[]>, query: () => string, fail: (error: unknown) => void) => {
-  const model = shownModel(kit, stack, query, fail)
+const waitingLine = ({ metaLine }: Kit, model: PageModel) =>
+  div({ class: 'flex h-8 shrink-0 items-center px-4', 'aria-live': 'polite' }, metaLine(() => model.late.waiting.get()))
+
+const content = (kit: Kit, look: SheetLook, model: PageModel) => {
+  const list = scrolled(look, model, pageBody(kit, model))
+  return model.late.shown ? div({ class: 'flex min-h-0 flex-col' }, list, waitingLine(kit, model)) : list
+}
+
+export const searchSheet = (parts: SheetParts) => {
+  const { kit, shell, stack } = parts
+  const model = shownModel(parts)
   const shown = (render: (found: PageModel) => HTMLElement) => dynamicChild(model, found => (found ? render(found) : null))
   const closedByShell = () => () => {
     if (stack.get().length) stack.set([])
@@ -84,7 +103,7 @@ export const searchSheet = (kit: Kit, shell: Shell, stack: Sig<PalettePage[]>, q
         label: page.title,
         look,
         head: () => shown(found => span({ class: look === 'form' ? 'flex min-w-0 flex-1' : 'flex shrink-0 flex-col', onKeyDown: pageKeys(found) }, head(found))),
-        body: () => div({ class: 'flex min-h-0 flex-col', onMount: closedByShell }, shown(found => scrolled(look, found, pageBody(kit, found)))),
+        body: () => div({ class: 'flex min-h-0 flex-col', onMount: closedByShell }, shown(found => content(kit, look, found))),
       }),
     )
     return () => handle.close()
