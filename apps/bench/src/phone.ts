@@ -26,6 +26,7 @@ export interface PageBench {
   count(text: string): number
   composer(): boolean
   scroller(text: string): Element
+  ask(type: string, input: unknown): Promise<unknown>
 }
 
 declare global {
@@ -69,6 +70,8 @@ const watch = () => {
     return [...nodes].map(node => node.parentElement)
   }
   let scrolled: { text: string; element: Element } | undefined
+  let socket: WebSocket | undefined
+  let asked = 1_000_000_000
   const bench: PageBench = {
     calls: [],
     events: [],
@@ -84,6 +87,22 @@ const watch = () => {
       scrolled = { text, element: element ?? document.scrollingElement! }
       return scrolled.element
     },
+    ask: (type, input) =>
+      new Promise((resolve, reject) => {
+        const open = socket
+        if (!open) return reject(new Error('the page has no socket open'))
+        const id = ++asked
+        const answer = (event: MessageEvent) => {
+          if (typeof event.data !== 'string') return
+          const message = JSON.parse(event.data)
+          if (message.type !== 'result' || message.id !== id) return
+          open.removeEventListener('message', answer)
+          if (message.error) reject(new Error(message.error))
+          else resolve(message.result)
+        }
+        open.addEventListener('message', answer)
+        open.send(JSON.stringify({ type, id, input }))
+      }),
   }
   window.bench = bench
   performance.setResourceTimingBufferSize(100_000)
@@ -95,6 +114,7 @@ const watch = () => {
   window.WebSocket = class extends Native {
     constructor(url: string | URL, protocols?: string | string[]) {
       super(url, protocols)
+      this.addEventListener('open', () => (socket = this))
       const sent = new Map<number, { type: string; at: number; bytes: number }>()
       const send = this.send.bind(this)
       this.send = data => {
