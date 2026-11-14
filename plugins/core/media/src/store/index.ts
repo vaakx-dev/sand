@@ -1,16 +1,14 @@
+import { imageDimensions } from '@sand/util'
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { StoredMedia } from '../contract'
-import { dimensions } from './sniff'
 import { extensionOf, isText, storedExtensions } from './types'
 
 export const isHash = (value: string) => /^[a-f0-9]{64}$/.test(value)
 
-const sniffed = 65_536
-
 const hashOf = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 
-const measure = (bytes: Uint8Array, mediaType: string) => (mediaType.startsWith('image/') ? dimensions(bytes.subarray(0, sniffed)) : undefined)
+const measure = (bytes: Uint8Array, mediaType: string) => (mediaType.startsWith('image/') ? imageDimensions(bytes) : undefined)
 
 const touch = (path: string) => {
   const now = new Date()
