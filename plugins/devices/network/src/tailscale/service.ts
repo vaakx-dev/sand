@@ -4,7 +4,7 @@ import { findTailscale } from './binary'
 import { type Detected, detect } from './detect'
 import { tailscaleErrors } from './errors'
 import { readPeers } from './peers'
-import { sandTarget, serveOff, serveOn } from './serve'
+import { sandTarget, serveOff, serveOn, shareOn } from './serve'
 import { loadSettings, saveSettings, type TailscaleSettings } from './settings'
 
 interface TailscaleOptions {
@@ -123,5 +123,7 @@ export const createTailscale = async ({ home, port, changed }: TailscaleOptions)
     return refresh()
   }
 
-  return { state: () => current, refresh, setHttps, peers: () => readPeers(binary), resume }
+  const share = async (shared: number) => (binary && detected.name && serving() ? shareOn(binary, detected.name, shared) : undefined)
+
+  return { state: () => current, refresh, setHttps, share, peers: () => readPeers(binary), resume }
 }
