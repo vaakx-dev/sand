@@ -7,11 +7,11 @@
     "feature": "file-fonts",
     "web": "./src/web/index.ts",
     "label": "Fonts",
-    "summary": "Shows TrueType, OpenType and WOFF fonts as a specimen with their name",
+    "summary": "TrueType, OpenType and WOFF fonts",
     "features": {
       "file-fonts": {
         "label": "Fonts",
-        "summary": "Shows TrueType, OpenType and WOFF fonts as a specimen with their name",
+        "summary": "TrueType, OpenType and WOFF fonts",
         "parent": "file-viewer",
         "addon": true
       }
