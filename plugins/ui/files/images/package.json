@@ -11,11 +11,11 @@
     "runtime": "./src/runtime/index.ts",
     "web": "./src/web/index.ts",
     "label": "More images",
-    "summary": "Shows TIFF and HEIC images, with their size and actual pixels",
+    "summary": "TIFF and HEIC images",
     "features": {
       "file-images": {
         "label": "More images",
-        "summary": "Shows TIFF and HEIC images, with their size and actual pixels",
+        "summary": "TIFF and HEIC images",
         "parent": "file-viewer",
         "addon": true
       }
