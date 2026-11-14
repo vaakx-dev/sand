@@ -1,6 +1,6 @@
+import type { SandConfig } from '@sand/config/contract'
 import { z } from 'zod'
 import type { ModelPrice } from '../contract'
-import { writePrice } from './price-file'
 
 const priceSchema = z
   .object({ input: z.number(), output: z.number(), cache_read: z.number(), cache_write: z.number(), cache_write_long: z.number().optional() })
@@ -14,13 +14,21 @@ const priceSchema = z
     }),
   )
 
+const fieldsOf = ({ input, output, cacheRead, cacheWrite, cacheWriteLong }: ModelPrice) => ({
+  input,
+  output,
+  cache_read: cacheRead,
+  cache_write: cacheWrite,
+  cache_write_long: cacheWriteLong,
+})
+
 class PriceList {
   readonly #prices: Map<string, ModelPrice>
-  readonly #path: string
+  readonly #config: SandConfig
 
-  constructor(settings: Record<string, ModelPrice>, path: string) {
+  constructor(settings: Record<string, ModelPrice>, config: SandConfig) {
     this.#prices = new Map(Object.entries(settings))
-    this.#path = path
+    this.#config = config
   }
 
   get(model: string) {
@@ -28,7 +36,7 @@ class PriceList {
   }
 
   async set(model: string, price: ModelPrice) {
-    await writePrice(this.#path, model, price)
+    await this.#config.set(['plugins', 'accounts', 'prices', model], fieldsOf(price))
     this.#prices.set(model, price)
   }
 }
