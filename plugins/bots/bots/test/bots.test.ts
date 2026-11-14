@@ -22,7 +22,7 @@ const start = async (home?: string) => {
 
 test('a bot is created with defaults, listed, updated and deleted along with its folder', async () => {
   const { ask, home } = await start()
-  const bot = await ask(botCreate, { name: 'calendar', job: 'Keep my calendar.' })
+  const bot = await ask(botCreate, { name: 'calendar' })
   expect(bot).toMatchObject({ name: 'calendar', initial: 'C', color: 'gold', computer: 'none', projects: [], models: { main: {}, quick: {} }, status: 'idle' })
   expect(await ask(botList, {})).toEqual([bot])
 

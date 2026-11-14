@@ -1,3 +1,4 @@
+import { checkJob } from '@sand/bots/contract'
 import type { Actor } from '@sand/host-hub/contract'
 import { failure } from '@sand/orchestrator/contract'
 import type { Server } from '@sand/server/contract'
@@ -37,8 +38,10 @@ export const serveWatches = (ctx: BotWatchesContext, server: Server) => {
 
   return joinDisposers(
     server.handle(botWatchList, ({ bot }, { actor }) => listed(bot ?? callerBot(actor))),
-    server.handle(botWatchCreate, async ({ bot, label, instructions, kind, input }, { actor }) => {
-      const watch = await ctx.watches.create({ owner, subject: botOf(bot, actor), kind, input, label, data: { instructions } })
+    server.handle(botWatchCreate, async ({ bot, label, instructions, job, kind, input }, { actor }) => {
+      const subject = botOf(bot, actor)
+      checkJob(ctx.bots, job, subject)
+      const watch = await ctx.watches.create({ owner, subject, kind, input, label, data: { instructions, ...(job && { job }) } })
       return botWatchOf(watch, ctx.watches.kinds())
     }),
     server.handle(botWatchRemove, ({ watch }) => remove(watch)),

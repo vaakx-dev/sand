@@ -13,6 +13,7 @@ const fields = z.object({
     .trim()
     .min(1)
     .describe('What to do when it changes, written to the bot\'s future self, like "Read the new release notes and tell the user if anything breaks their build"'),
+  job: z.string().optional().describe('The job it runs, from bot_list; leave out for a watch that is not part of a job'),
 })
 
 const createDescription =

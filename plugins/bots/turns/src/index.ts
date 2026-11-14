@@ -18,7 +18,7 @@ import { botConversations, inject } from './runner'
 
 export default definePlugin({
   name: 'bot-turns',
-  description: "Runs each bot's turns on the shared engine, with its job as instructions and its main model",
+  description: "Runs each bot's turns on the shared engine, with its jobs as instructions and its main model",
   inject: { ...inject, engine, context },
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))

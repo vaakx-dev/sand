@@ -43,7 +43,7 @@ const statusView = (kit: Kit, talk: Conversation, status: () => BotStatus | unde
 }
 
 const emptyChat = (kit: Kit, bot: () => BotSummary | undefined) =>
-  kit.emptyState({ text: () => (bot()?.job.trim() ? 'No messages yet.' : 'No messages yet. Say what it should take care of.') })
+  kit.emptyState({ text: () => (bot()?.jobs.length ? 'No messages yet.' : 'No messages yet. Say what it should take care of.') })
 
 const stateView = (kit: Kit, talk: Conversation, bot: () => BotSummary | undefined, state: 'loading' | 'failed' | 'empty') => {
   if (state === 'empty') return emptyChat(kit, bot)

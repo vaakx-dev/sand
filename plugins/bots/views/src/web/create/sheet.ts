@@ -5,13 +5,13 @@ import { createProject, projectChecklist } from '../profile/projects'
 
 export const openNewBot = (parts: Parts) => {
   const { kit } = parts.ctx
-  const job = sig('')
+  const work = sig('')
   const name = sig('')
   const chosen = sig<string[]>([])
   const fresh = { open: sig(false), name: sig('') }
   const creating = sig(false)
   const failure = sig('')
-  const ready = () => Boolean(job.get().trim()) && !(fresh.open.get() && !fresh.name.get().trim()) && !creating.get()
+  const ready = () => Boolean(work.get().trim()) && !(fresh.open.get() && !fresh.name.get().trim()) && !creating.get()
   const toggle = (project: string) => chosen.update(list => (list.includes(project) ? list.filter(other => other !== project) : [...list, project]))
 
   const create = async (close: () => void) => {
@@ -19,7 +19,8 @@ export const openNewBot = (parts: Parts) => {
     failure.set('')
     try {
       const made = fresh.open.get() ? [await createProject(parts, fresh.name.get())] : []
-      const bot = await parts.store.create({ job: job.get().trim(), projects: [...chosen.get(), ...made], ...(name.get().trim() && { name: name.get().trim() }) })
+      const bot = await parts.store.create({ projects: [...chosen.get(), ...made], ...(name.get().trim() && { name: name.get().trim() }) })
+      await parts.chats.get(bot.id).send(work.get().trim(), crypto.randomUUID())
       close()
       parts.open(bot.id)
     } catch (error) {
@@ -37,7 +38,7 @@ export const openNewBot = (parts: Parts) => {
         { class: 'flex flex-col gap-4 pt-2' },
         kit.field(
           { label: 'What should it take care of?' },
-          kit.textArea({ bindValue: job, rows: 3, maxLength: 20_000, placeholder: 'Keep the CLI’s tests green and answer new issues.', onMount: node => node.focus() }),
+          kit.textArea({ bindValue: work, rows: 3, maxLength: 20_000, placeholder: 'Keep the CLI’s tests green and answer new issues.', onMount: node => node.focus() }),
         ),
         kit.field({ label: 'Projects' }, div({ class: '-mx-2' }, projectChecklist(parts, { chosen: () => chosen.get(), toggle, fresh }))),
         kit.field({ label: 'Name' }, kit.textInput({ bindValue: name, maxLength: 60, placeholder: 'Optional; it picks one if you leave this empty' })),

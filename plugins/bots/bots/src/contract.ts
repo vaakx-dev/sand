@@ -30,7 +30,6 @@ export interface Bot {
   name: string
   initial: string
   color: BotColor
-  job: string
   models: ModelPolicy
   computer: Computer
   projects: string[]
@@ -71,7 +70,69 @@ export interface ChangeEntry {
   after: BotPatch
 }
 
-export const jobLimit = 20_000
+export const jobStatuses = ['needs', 'on', 'paused'] as const
+
+export type JobStatus = (typeof jobStatuses)[number]
+
+export const runOutcomes = ['done', 'nothing', 'needs'] as const
+
+export type RunOutcome = (typeof runOutcomes)[number]
+
+export interface JobRun {
+  entry: string
+  at: number
+  outcome: RunOutcome
+  summary: string
+}
+
+export interface JobAsk {
+  question: string
+  entry: string
+}
+
+export interface Job {
+  id: string
+  bot: string
+  title: string
+  goal: string
+  done: string
+  paused: boolean
+  status: JobStatus
+  ask?: JobAsk
+  runs: JobRun[]
+  created: number
+  updated: number
+}
+
+export const byStatus = (first: Pick<Job, 'status'>, second: Pick<Job, 'status'>) => jobStatuses.indexOf(first.status) - jobStatuses.indexOf(second.status)
+
+export const runEntry = 'job-run'
+
+export interface RunEntry {
+  job: string
+  title: string
+  outcome: RunOutcome
+  summary: string
+  question?: string
+}
+
+export const morningEntry = 'job-morning'
+
+export interface MorningLine {
+  job: string
+  title: string
+  status: JobStatus
+  text: string
+}
+
+export interface MorningEntry {
+  lines: MorningLine[]
+}
+
+export interface Morning extends MorningEntry {
+  entry: string
+  at: number
+}
 
 export interface BotSummary extends Bot {
   folder: string
@@ -80,6 +141,8 @@ export interface BotSummary extends Bot {
   spent: number
   hold?: BotHold
   last?: LastLine
+  jobs: Job[]
+  morning?: Morning
 }
 
 export interface BotEntry {
@@ -124,7 +187,6 @@ const botFields = lazy(() => z.object({
   name: z.string().trim().min(1).max(60),
   initial: z.string().trim().min(1).max(2),
   color: z.enum(botColors),
-  job: z.string().max(jobLimit),
   models: z.object({ main: modelChoice(), quick: modelChoice() }),
   computer: computer(),
   projects: projectIds(),
@@ -140,6 +202,56 @@ export type NewBot = z.infer<ReturnType<typeof newBot>>
 
 export type BotPatch = z.infer<ReturnType<typeof botPatch>>
 
+export const jobTextLimit = 2_000
+
+export const summaryLimit = 300
+
+const jobFields = lazy(() =>
+  z.object({
+    title: z.string().trim().min(1).max(60).describe('A short name the user sees, like "Morning CI triage"'),
+    goal: z.string().trim().min(1).max(jobTextLimit).describe('What the job is for, in a sentence, like "Check failing CI on main every weekday morning."'),
+    done: z
+      .string()
+      .trim()
+      .min(1)
+      .max(jobTextLimit)
+      .describe('What done right looks like, in a sentence, like "Every red build has an owner or a fix PR."'),
+  }),
+)
+
+export const newJob = lazy(() => jobFields().extend({ bot: z.string().optional().describe('The bot it belongs to (default: you, when you are a bot)') }))
+
+export const jobPatch = lazy(() => jobFields().partial().extend({ paused: z.boolean().optional().describe('Pause it, or resume it with false') }))
+
+const runFields = lazy(() =>
+  z.object({
+    job: z.string().describe('The job id'),
+    outcome: z.enum(runOutcomes).describe('done when you did work, nothing when there was nothing to do, needs when the user has to decide'),
+    summary: z.string().trim().max(summaryLimit).optional().describe('One line on what you did, like "Fixed 2 failures, opened PR #412"; needed unless outcome is nothing'),
+    question: z.string().trim().max(jobTextLimit).optional().describe('What the user has to decide, with what they need to know; only and always with outcome needs'),
+  }),
+)
+
+export const runReport = lazy(() =>
+  runFields()
+    .refine(({ outcome, summary }) => outcome === 'nothing' || Boolean(summary), { message: 'Say what you did in summary' })
+    .refine(({ outcome, question }) => (outcome === 'needs') === Boolean(question), { message: 'Ask a question with outcome needs, and only then' }),
+)
+
+export type NewJob = z.infer<ReturnType<typeof newJob>>
+
+export type JobPatch = z.infer<ReturnType<typeof jobPatch>>
+
+export type RunReport = Omit<z.infer<ReturnType<typeof runReport>>, 'job'>
+
+export interface Jobs {
+  get(id: string): Job | undefined
+  create(bot: string, spec: Omit<NewJob, 'bot'>): Job
+  update(id: string, patch: JobPatch): Job
+  remove(id: string): boolean
+  report(id: string, report: RunReport): Job
+}
+
 export interface Bots {
   list(): BotSummary[]
   get(id: string): BotSummary | undefined
@@ -149,9 +261,16 @@ export interface Bots {
   status(id: string, status: BotStatus, waiting?: WaitReason['kind']): void
   conversation(id: string): Conversation
   folder(id: string): string
+  jobs: Jobs
 }
 
 export const bots = service<Bots>('bots')
+
+export const runPrompt = (job: Pick<Job, 'id' | 'title'>) => `This run is for your job “${job.title}” (job ${job.id}). When you finish, report it with job_report.`
+
+export const checkJob = (found: Bots | undefined, job: string | undefined, bot: string) => {
+  if (job && found?.jobs.get(job)?.bot !== bot) throw new Error(`No job ${job} for this bot`)
+}
 
 export const botRoute = 'bot'
 
@@ -206,6 +325,7 @@ export const botAutomations = service<BotAutomations>('botAutomations')
 export const botChange = event<(bot: BotSummary) => void>('bot.change')
 export const botRemove = event<(id: string) => void>('bot.remove')
 export const botEntry = event<(entry: BotEntry) => void>('bot.entry')
+export const jobRemove = event<(job: Job) => void>('job.remove')
 
 export const botChangeWire = wireEvent<BotSummary>('bot.change')
 export const botRemoveWire = wireEvent<string>('bot.remove')
@@ -219,3 +339,10 @@ export const botList = request('bot.list', { input: () => z.object({}), output: 
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>(), callers: 'any' })
 export const botUpdate = request('bot.update', { input: () => z.object({ bot: z.string().optional(), patch: botPatch() }), output: type<BotSummary>(), callers: 'any' })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>(), callers: 'any' })
+
+const oneJob = lazy(() => z.object({ job: z.string().describe('The job id') }))
+
+export const jobCreate = request('job.create', { input: newJob, output: type<Job>(), callers: 'any' })
+export const jobUpdate = request('job.update', { input: () => oneJob().extend({ patch: jobPatch() }), output: type<Job>(), callers: 'any' })
+export const jobDelete = request('job.delete', { input: oneJob, output: type<boolean>(), callers: 'any' })
+export const jobReport = request('job.report', { input: runReport, output: type<Job>(), callers: 'any' })

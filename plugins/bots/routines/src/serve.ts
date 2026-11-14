@@ -1,4 +1,4 @@
-import { bots } from '@sand/bots/contract'
+import { bots, checkJob } from '@sand/bots/contract'
 import type { Caller } from '@sand/host-hub/contract'
 import type { Schedule } from '@sand/schedules/contract'
 import { scheduleChange, scheduleRemove } from '@sand/schedules/contract'
@@ -23,8 +23,11 @@ export const serveRoutines = (ctx: Context, server: Server, routines: Routines) 
     return id
   }
 
-  const create = ({ bot, name, instructions, if_missed, ...timing }: NewRoutine, caller: Caller) =>
-    routines.create(botOf(bot, caller), { name, instructions, when: whenOf(timing), ...(if_missed && { missed: if_missed }) })
+  const create = ({ bot, name, instructions, job, if_missed, ...timing }: NewRoutine, caller: Caller) => {
+    const subject = botOf(bot, caller)
+    checkJob(ctx.get(bots), job, subject)
+    return routines.create(subject, { name, instructions, ...(job && { job }), when: whenOf(timing), ...(if_missed && { missed: if_missed }) })
+  }
 
   return joinDisposers(
     server.handle(routineList, ({ bot }, caller) => routines.list(bot ?? callerBot(caller))),

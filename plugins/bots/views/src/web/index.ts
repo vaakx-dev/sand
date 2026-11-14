@@ -96,7 +96,7 @@ export default definePlugin({
     )
 
     ctx.watch(transcript, found =>
-      found?.entry(changeEntry, (entry, bot) => changeNote(ctx.kit, { store: parts.store, edit: parts.profile, report: error => parts.toasts.error('Couldn’t restore the job', error) }, bot, entry.data as ChangeEntry)),
+      found?.entry(changeEntry, entry => changeNote(ctx.kit, entry.data as ChangeEntry)),
     )
     ctx.watch(palette, found =>
       found?.source({
@@ -112,7 +112,7 @@ export default definePlugin({
                   icon: 'bot',
                   label: botName(bot),
                   detail: projectNames(parts, bot.projects),
-                  search: bot.job,
+                  search: bot.jobs.map(job => job.title).join(' '),
                   run: () => parts.open(bot.id),
                 })),
                 { id: 'bot:new', group: 'Bots', icon: 'plus', label: 'New bot…', run: () => parts.create() },

@@ -1,7 +1,7 @@
 {
   "name": "@sand/bots-mcp",
   "version": "0.0.0",
-  "description": "sand's bot tools, defined once for its own threads and bots and for outside agents over MCP: list, message, read and update bots",
+  "description": "sand's bot tools, defined once for its own threads and bots and for outside agents over MCP: list, message, read and update bots and their jobs",
   "type": "module",
   "sand": {
     "feature": "bots-mcp",
@@ -9,7 +9,7 @@
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
     "label": "Bot tools",
-    "summary": "Lets your threads, your bots and outside agents message, read and update your bots"
+    "summary": "Lets your threads, your bots and outside agents message, read and update your bots and their jobs"
   },
   "dependencies": {
     "@sand/attachments": "workspace:*",

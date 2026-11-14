@@ -8,6 +8,7 @@ export interface Routine {
   bot: string
   name: string
   instructions: string
+  job?: string
   when: When
   missed: Missed
   paused: boolean
@@ -28,6 +29,7 @@ export const newRoutine = lazy(() =>
     bot: bot(),
     name: z.string().trim().min(1).max(60).describe('A short name the user sees, like "Call Ana"'),
     instructions: z.string().trim().min(1).describe("What to do when it comes due, written to the bot's future self"),
+    job: z.string().optional().describe('The job it runs, from bot_list; leave out for a reminder or routine that is not part of a job'),
     at: z.string().optional().describe('For one time: the local date and time, like 2026-11-04 18:00'),
     in_minutes: z.number().int().min(1).optional().describe('For one time: how many minutes from now'),
     repeat: z.string().optional().describe('To repeat: a five-field cron schedule in local time, like "0 9 * * 1-5" for weekdays at 9:00'),

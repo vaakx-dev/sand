@@ -18,10 +18,11 @@ const pauseInput = z.object({ id, paused: z.boolean().describe('true to pause, f
 const retryInput = z.object({ id })
 const deleteInput = z.object({ id })
 
-const shown = ({ id, bot, name, instructions, when, paused, next, last }: Routine) => ({
+const shown = ({ id, bot, name, instructions, job, when, paused, next, last }: Routine) => ({
   id,
   bot,
   name,
+  ...(job && { job }),
   when: timing(when),
   ...(next !== undefined && { next: timeIn(next, zoneOf(when)) }),
   ...(paused && { paused }),

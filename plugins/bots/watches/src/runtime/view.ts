@@ -4,9 +4,9 @@ import type { BotWatch } from '../contract'
 
 export const owner = 'bots'
 
-const content = z.object({ instructions: z.string() })
+const content = z.object({ instructions: z.string(), job: z.string().optional() })
 
-export const instructionsOf = (watch: Watch) => content.parse(watch.data).instructions
+export const contentOf = (watch: Watch) => content.parse(watch.data)
 
 export const botWatchOf = (watch: Watch, kinds: Kind[]): BotWatch => {
   const { id, subject, label, kind, target, info, created, changed, error } = watch
@@ -17,7 +17,7 @@ export const botWatchOf = (watch: Watch, kinds: Kind[]): BotWatch => {
     kind,
     kindLabel: kinds.find(found => found.name === kind)?.label ?? kind,
     target,
-    instructions: instructionsOf(watch),
+    ...contentOf(watch),
     ...(info && { info }),
     created,
     ...(changed !== undefined && { changed }),

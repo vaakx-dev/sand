@@ -1,7 +1,8 @@
 import { notificationText } from '@sand/chats/contract'
 import { timestamp } from '@sand/util'
 import type { Change, Watch } from '@sand/watches/contract'
-import { instructionsOf } from './view'
+import { type Job, runPrompt } from '@sand/bots/contract'
+import { contentOf } from './view'
 
 const guide = [
   'Look into what changed, as far as you need to understand it.',
@@ -11,7 +12,7 @@ const guide = [
 
 const changeText = ({ at, from, summary, detail }: Change) => [`${timestamp(at)} ${from}: ${summary}`, ...(detail ? [detail] : [])].join('\n')
 
-export const wakePrompt = (watch: Watch, changes: Change[]) =>
+export const wakePrompt = (watch: Watch, changes: Change[], job: Job | undefined) =>
   notificationText({
     from: 'watch',
     id: watch.id,
@@ -19,5 +20,5 @@ export const wakePrompt = (watch: Watch, changes: Change[]) =>
     label: watch.label,
     status: 'changed',
     at: Math.max(...changes.map(change => change.at)),
-    result: [...changes.map(changeText), `<instructions>\n${instructionsOf(watch)}\n</instructions>`, guide].join('\n\n'),
+    result: [...changes.map(changeText), ...(job ? [runPrompt(job)] : []), `<instructions>\n${contentOf(watch).instructions}\n</instructions>`, guide].join('\n\n'),
   })

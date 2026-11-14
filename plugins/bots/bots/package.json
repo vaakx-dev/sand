@@ -1,7 +1,7 @@
 {
   "name": "@sand/bots",
   "version": "0.0.0",
-  "description": "Named, lasting bots: each has a job, models, a computer choice and one ongoing conversation, kept in tables of their own",
+  "description": "Named, lasting bots: each has jobs, models, a computer choice and one ongoing conversation, kept in tables of their own",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

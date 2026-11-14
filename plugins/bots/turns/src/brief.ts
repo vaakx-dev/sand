@@ -3,11 +3,11 @@ import type { ProjectFiles } from '@sand/project/contract'
 import type { ContextBuilder } from '@sand/prompt/contract'
 import type { Brief } from '@sand/provider-threads/contract'
 import { needs, type Tools } from '@sand/tools/contract'
-import { instructions } from './instructions'
+import { instructions, jobBlock } from './instructions'
 
 export const offered = needs.filter(need => need !== 'thread')
 
-const briefOf = ({ name, job, projects }: BotSummary) => `${name}\n${job}\n${projects.join()}`
+const briefOf = ({ name, jobs, projects }: BotSummary) => [name, ...jobs.map(jobBlock), projects.join()].join('\n')
 
 export const botBrief = (bots: Bots, tools: Tools, context: ContextBuilder, files: () => ProjectFiles | undefined) => {
   const briefed = new Map<string, string>()

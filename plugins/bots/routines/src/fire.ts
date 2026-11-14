@@ -1,5 +1,6 @@
 import type { BotTurns } from '@sand/bot-turns/contract'
 import { notificationText } from '@sand/chats/contract'
+import { type Job, runPrompt } from '@sand/bots/contract'
 import type { Moment, MomentKind } from '@sand/devices-notify/contract'
 import type { Fire, Handler } from '@sand/schedules/contract'
 import type { Routine } from './contract'
@@ -8,7 +9,9 @@ import { routineOf } from './routines'
 const guide = (fire: Fire) =>
   `Do what these instructions say.${fire.late ? ' It is late, so say so.' : ''} The user may be away, so write your reply for them to read later.`
 
-const promptOf = (routine: Routine, fire: Fire) =>
+const jobLine = (job: Job | undefined) => (job ? [runPrompt(job)] : [])
+
+const promptOf = (routine: Routine, fire: Fire, job: Job | undefined) =>
   notificationText({
     from: 'routine',
     id: routine.id,
@@ -16,22 +19,25 @@ const promptOf = (routine: Routine, fire: Fire) =>
     label: routine.name,
     status: fire.late ? 'late' : 'due',
     at: fire.due,
-    result: [guide(fire), `<instructions>\n${routine.instructions}\n</instructions>`].join('\n\n'),
+    result: [guide(fire), ...jobLine(job), `<instructions>\n${routine.instructions}\n</instructions>`].join('\n\n'),
   })
 
 const moments: Partial<Record<string, MomentKind>> = { completed: 'routine', failed: 'failed', lost: 'failed' }
 
 export interface Firing {
   turns: BotTurns
+  job(id: string): Job | undefined
   lastSaid(bot: string): string
   tell(moment: Moment): void
 }
 
 export const fireRoutine =
-  ({ turns, lastSaid, tell }: Firing): Handler =>
+  ({ turns, job, lastSaid, tell }: Firing): Handler =>
   async (schedule, fire, signal) => {
     const routine = routineOf(schedule)
-    const sent = await turns.send(routine.bot, { prompt: promptOf(routine, fire), mode: 'queue', origin: 'routine', label: routine.name, clientRequestId: fire.key })
+    const owned = routine.job ? job(routine.job) : undefined
+    if (owned?.paused) return
+    const sent = await turns.send(routine.bot, { prompt: promptOf(routine, fire, owned), mode: 'queue', origin: 'routine', label: routine.name, clientRequestId: fire.key })
     const turn = await turns.follow(routine.bot, sent, signal)
     const kind = turn && moments[turn.status]
     if (!turn || !kind) return

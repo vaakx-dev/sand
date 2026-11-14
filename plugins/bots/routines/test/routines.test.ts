@@ -1,6 +1,6 @@
 import { botOpen, botSend } from '@sand/bot-turns/contract'
 import { routineDelete, routineList, routinePause } from '@sand/bot-routines/contract'
-import { botCreate, botDelete, botList, type BotEntry } from '@sand/bots/contract'
+import { botCreate, botDelete, botList, type BotEntry, jobCreate, jobDelete, jobUpdate } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { engine } from '@sand/engine/contract'
@@ -138,4 +138,29 @@ test('a routine that fires while its bot is busy waits its turn, and when that t
   await until(() => answered(bot.id, 'Time to call Ana.'))
   await until(async () => !(await ask(routineList, { bot: bot.id })).length)
   expect(told).toEqual([{ kind: 'routine', title: 'Call Ana', text: 'Time to call Ana.' }])
+})
+
+test('a routine that runs a job names the job to the bot, skips its runs while the job is paused, and goes when the job is deleted', async () => {
+  setSystemTime(at('2026-11-04T07:59:00Z'))
+  const { ask, requests } = await start([[said('Main is green again.')]])
+  const models = { main: { model: 'fake/m' }, quick: {} }
+  const bot = await ask(botCreate, { name: 'Ferry', models })
+  const other = await ask(botCreate, { name: 'Juno', models })
+  const job = await ask(jobCreate, { bot: bot.id, title: 'CI triage', goal: 'Fix red builds on main.', done: 'Main is green.' })
+  const triage = { name: 'Triage', instructions: 'Check CI on main', repeat: '0 8 * * *', zone: 'UTC', job: job.id }
+
+  expect(await runTool('routine_create', triage, other.id)).toContain(`No job ${job.id} for this bot`)
+  await runTool('routine_create', triage, bot.id)
+  await ask(jobUpdate, { job: job.id, patch: { paused: true } })
+  setSystemTime(at('2026-11-04T08:00:00Z'))
+  await until(async () => (await ask(routineList, { bot: bot.id }))[0]?.last?.outcome === 'ran')
+  expect(requests('fake')).toEqual([])
+
+  await ask(jobUpdate, { job: job.id, patch: { paused: false } })
+  setSystemTime(at('2026-11-05T08:00:00Z'))
+  await until(() => answered(bot.id, 'Main is green again.'))
+  expect(JSON.parse(requests('fake')[0]!).messages.at(-1).content[0].text).toContain(`“CI triage” (job ${job.id})`)
+
+  await ask(jobDelete, { job: job.id })
+  expect(await ask(routineList, { bot: bot.id })).toEqual([])
 })

@@ -41,12 +41,19 @@ export const schema = [
     'update bots set projects = json_array(project) where project is not null',
     'alter table bots drop column project',
   ],
+  ['drop table bot_jobs'],
   [
-    `update bot_entries set type = 'bot-change', data = json_object(
-      'by', json_object('kind', 'agent'),
-      'before', json_object('job', json_extract(data, '$.previous')),
-      'after', json_object('job', json_extract(data, '$.job'))
-    ) where type = 'bot-job'`,
-    'drop table bot_jobs',
+    'alter table bots drop column job',
+    `create table bot_jobs (
+      id text primary key,
+      bot text not null,
+      title text not null,
+      goal text not null,
+      done text not null,
+      paused integer not null,
+      created integer not null,
+      updated integer not null
+    )`,
+    'create index bot_jobs_bot on bot_jobs (bot, created)',
   ],
 ]

@@ -10,6 +10,7 @@ export interface BotWatch {
   kindLabel: string
   target: string
   instructions: string
+  job?: string
   info?: Record<string, string>
   created: number
   changed?: number
@@ -34,6 +35,7 @@ export const botWatchCreate = request('bot.watch.create', {
     bot: bot(),
     label: z.string().trim().min(1).max(60),
     instructions: z.string().trim().min(1),
+    job: z.string().optional(),
     kind: z.string().min(1),
     input: z.record(z.string(), z.unknown()),
   }),

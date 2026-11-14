@@ -17,8 +17,6 @@ afterEach(() => sand.stop())
 
 const said = (text: string): Reply => [{ type: 'text', text }]
 
-const update = (input: Record<string, unknown>): Reply => [{ type: 'call', name: 'bot_update', input }]
-
 const start = async (replies: Reply[], plugins: string[] = []) => {
   sand = await startSand([{ id: 'fake', models: ['b'], replies, api: 'anthropic' }], {
     plugins: ['agent/mcp-server', 'bots/bots', 'bots/turns', 'bots/mcp', ...plugins],
@@ -28,7 +26,7 @@ const start = async (replies: Reply[], plugins: string[] = []) => {
 
 const models = { main: { model: 'fake/b' }, quick: {} }
 
-const createBot = (name: string) => sand.ask(botCreate, { name, job: `Be ${name}.`, models })
+const createBot = (name: string) => sand.ask(botCreate, { name, models })
 
 const asBot = (bot: string): Conversation => ({
   id: bot,
@@ -131,21 +129,28 @@ test('a bot looks up its own past with history_read: what was said and done, and
   expect(await read({ item: String(done.items[1].seq) })).toMatchObject({ bot: bot.id, seq: done.items[1].seq, text: expect.stringMatching(/^\[bot_list result\] .*Clerk/) })
 })
 
-test('a bot with no job writes its own job, works to it from its next step, and its chat keeps every job it had', async () => {
-  const job = "You keep the user's notes."
-  await start([update({ job, name: 'Notes' }), said('Done.'), update({ job: 'You file notes.' }), said('Done.')])
+test('a bot with no jobs sets one up and works to it from its next step; its runs mark the job as needing the user until the next report', async () => {
+  const notes = { title: 'Notes', goal: "Keep the user's notes tidy.", done: 'Every note has a tag.' }
+  await start([[{ type: 'call', name: 'job_create', input: notes }], said('Done.')])
   const bot = await sand.ask(botCreate, { models })
 
   await answered(bot.id, 'Keep my notes')
   const [, next] = sand.requests('fake').map(body => JSON.parse(body).system[0].text as string)
-  expect(next).toStartWith('You are Notes')
-  expect(next).toContain(job)
+  expect(next).toContain(notes.goal)
+  const [job] = (await sand.ask(botList, {})).find(listed => listed.id === bot.id)!.jobs
+  expect(job).toMatchObject({ ...notes, status: 'on', runs: [] })
 
-  await answered(bot.id, 'File them instead')
-  expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ name: 'Notes', job: 'You file notes.' })
-  await sand.ask(botUpdate, { bot: bot.id, patch: { job } })
-  const jobs = (await changes(bot.id)).map(change => (change as { after: { job: string } }).after.job)
-  expect(jobs).toEqual([job, 'You file notes.', job])
+  const me = asBot(bot.id)
+  expect(await use(me, 'job_report', { job: job!.id, outcome: 'needs', summary: 'Found untagged notes' })).toEqual({ error: expect.stringContaining('question') })
+  expect(await use(me, 'job_report', { job: job!.id, outcome: 'needs', summary: 'Found 3 untagged notes', question: 'Tag them as work?' })).toMatchObject({
+    status: 'needs',
+    question: 'Tag them as work?',
+    last: 'Found 3 untagged notes',
+  })
+  expect(await use(me, 'job_report', { job: job!.id, outcome: 'nothing' })).toEqual({ job: job!.id, ...notes, status: 'on', last: 'Nothing to do' })
+  expect(await use(me, 'job_update', { job: job!.id, paused: true, title: 'Tidy notes' })).toMatchObject({ title: 'Tidy notes', status: 'paused' })
+  expect(await use(me, 'job_delete', { job: job!.id })).toBe(true)
+  expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)!.jobs).toEqual([])
 })
 
 test('an outside agent lists, makes, stops and deletes bots, hands one a task, gets its reply and renames it over MCP', async () => {
@@ -166,11 +171,11 @@ test('an outside agent lists, makes, stops and deletes bots, hands one a task, g
     return first?.type === 'text' ? JSON.parse(first.text) : undefined
   }
 
-  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', projects: [], budget: null, spent: 0 }])
+  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', jobs: [], status: 'idle', projects: [], budget: null, spent: 0 }])
   expect(await value('bot_send', { bot: bot.id, prompt: 'Book Friday' })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
-  expect(await value('bot_update', { bot: bot.id, name: 'Trips' })).toMatchObject({ bot: bot.id, name: 'Trips', job: 'Be Travel.' })
-  const made = await value('bot_create', { name: 'Errands', job: 'You run errands.', budget: 10 })
-  expect(made).toMatchObject({ name: 'Errands', job: 'You run errands.', budget: 10, status: 'idle' })
+  expect(await value('bot_update', { bot: bot.id, name: 'Trips' })).toMatchObject({ bot: bot.id, name: 'Trips' })
+  const made = await value('bot_create', { name: 'Errands', budget: 10 })
+  expect(made).toMatchObject({ name: 'Errands', budget: 10, status: 'idle' })
   expect(await value('bot_interrupt', { bot: made.bot })).toBe(false)
   expect(await value('bot_delete', { bot: made.bot })).toBe(true)
   expect((await value('bot_list', {})).map((row: { name: string }) => row.name)).toEqual(['Trips'])

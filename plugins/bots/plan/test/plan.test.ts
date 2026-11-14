@@ -43,7 +43,7 @@ const talk = async (bot: string, prompt: string) => {
 
 test('a bot sees its plan in every request, writes it through its tool, and sees the user edit it on its next step', async () => {
   const changes = await start([use('bot_plan_write', { text: plan }), said('Planned.'), said('Booked.')])
-  const bot = await sand.ask(botCreate, { name: 'Travel', job: 'Be Travel.', models: { main: { model: 'fake/b' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Travel', models: { main: { model: 'fake/b' }, quick: {} } })
   await sand.ask(planWrite, { bot: bot.id, text: '- Ask about dates\n' })
 
   await talk(bot.id, 'Book my Lisbon flights')
