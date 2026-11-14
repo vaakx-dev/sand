@@ -1,4 +1,4 @@
-import { sameHash } from '@sand/util/fs'
+import { sameHash } from '../fs'
 
 const valid = 86_400_000
 const rounding = 3_600_000

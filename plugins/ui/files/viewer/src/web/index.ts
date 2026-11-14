@@ -5,7 +5,7 @@ import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { type FileViewer, fileUrl, fileViewer, filesChanged, filesFind, filesShow, type FoundFile, type OpenFile } from '../contract'
+import { type FileViewer, fileUrl, fileViewer, filesChanged, filesStream, filesFind, filesShow, type FoundFile, type OpenFile } from '../contract'
 import { builtinFormats, textFormat } from './builtin'
 import { formatRegistry } from './formats'
 import { linkFor } from './link'
@@ -44,6 +44,7 @@ export default definePlugin({
       return {
         ...file,
         blob,
+        source: () => ctx.wire.call(filesStream, { path: file.path }),
         bytes: async () => (await blob()).bytes(),
         content: async () => (await blob()).text(),
         link: (target, label) => (isFileTarget(target) ? linkFor(ctx.kit, label, target, () => open(thread, besideFile(file.path, target))) : undefined),

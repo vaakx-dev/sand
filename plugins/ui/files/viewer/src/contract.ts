@@ -15,6 +15,7 @@ export interface FoundFile {
 export type Found = { file: FoundFile } | { missing: string }
 
 export interface OpenFile extends FoundFile {
+  source(): Promise<string>
   blob(): Promise<Blob>
   bytes(): Promise<Uint8Array>
   content(): Promise<string>
@@ -42,6 +43,8 @@ export interface FileViewer {
 
 export const fileRoute = '/file'
 
+export const fileStreamRoute = '/file-stream/'
+
 export const fileUrl = ({ path, modified }: FoundFile) => `${fileRoute}?${new URLSearchParams({ path, v: String(modified) })}`
 
 export const formatAddons = {
@@ -61,6 +64,12 @@ export const extensionOf = (name: string) => /\.([^./\\]+)$/.exec(name)?.[1]?.to
 export const filesFind = request('files.find', {
   input: () => z.object({ thread: z.string().min(1), mention: z.string().min(1).max(4096) }),
   output: type<Found>(),
+  callers: 'any',
+})
+
+export const filesStream = request('files.stream', {
+  input: () => z.object({ path: z.string().min(1).max(4096) }),
+  output: type<string>(),
   callers: 'any',
 })
 
