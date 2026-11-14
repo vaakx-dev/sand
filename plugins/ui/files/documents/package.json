@@ -7,11 +7,11 @@
     "feature": "file-documents",
     "web": "./src/web/index.ts",
     "label": "Documents",
-    "summary": "Shows OpenDocument text, spreadsheets and slides, EPUB books and rich text files",
+    "summary": "OpenDocument, EPUB and RTF files",
     "features": {
       "file-documents": {
         "label": "Documents",
-        "summary": "Shows OpenDocument text, spreadsheets and slides, EPUB books and rich text files",
+        "summary": "OpenDocument, EPUB and RTF files",
         "parent": "file-viewer",
         "addon": true
       }
