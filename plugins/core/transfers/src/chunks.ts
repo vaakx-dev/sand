@@ -10,6 +10,8 @@ export const transferPath = '/transfer'
 
 export const chunkBytes = 1024 ** 2
 
+export const TRANSFER_LIFETIME_MS = 15 * 60_000
+
 const inFlight = 4
 
 export const chunkCount = (size: number) => Math.ceil(size / chunkBytes)
