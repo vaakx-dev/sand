@@ -7,7 +7,7 @@ import { afterEach, expect, setSystemTime, test } from 'bun:test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { type Found, messagesSearch } from '../src/contract'
+import { type ChatHits, type Excerpt, type Found, messagesSearch } from '../src/contract'
 
 let running: Sand[] = []
 let home: string | undefined
@@ -35,9 +35,13 @@ const thread = (sand: Sand, title: string, said: Message[]) => {
   return session
 }
 
-const titles = ({ hits }: Found) => hits.map(hit => hit.title)
+const HOUR_MS = 3_600_000
 
-const marked = ({ text, marks }: Found['hits'][number]['excerpt']) => marks.map(([start, end]) => text.slice(start, end))
+const titles = ({ chats }: Found) => chats.map(chat => chat.title)
+
+const lines = ({ hits }: ChatHits) => hits.map(hit => hit.excerpt.text)
+
+const marked = ({ text, marks }: Excerpt) => marks.map(([start, end]) => text.slice(start, end))
 
 test('search finds words said in threads and bots as they arrive, words side by side first, then all words, then word starts, newest first in each', async () => {
   const sand = await start()
@@ -52,10 +56,10 @@ test('search finds words said in threads and bots as they arrive, words side by 
 
   const found = await search('release check')
   expect(titles(found)).toEqual(['Errands', 'Newer plan', 'Older plan', 'Words apart', 'Word starts'])
-  expect(found.hits.map(hit => hit.fit)).toEqual(['phrase', 'phrase', 'phrase', 'words', 'prefixes'])
-  expect(found.hits[0]).toMatchObject({ owner: 'bot', chat: bot.id, role: 'assistant', block: 0, excerpt: { text: 'Your Release checklist is in the drawer.' } })
-  expect(marked(found.hits[0]!.excerpt)).toEqual(['Release', 'check'])
-  expect(found.hits[1]).toMatchObject({ owner: 'thread', chat: newer.id, excerpt: { text: 'Release checks passed on main.' } })
+  expect(found.chats.map(chat => chat.fit)).toEqual(['phrase', 'phrase', 'phrase', 'words', 'prefixes'])
+  expect(found.chats[0]).toMatchObject({ owner: 'bot', chat: bot.id, matches: 1, hits: [{ role: 'assistant', block: 0, excerpt: { text: 'Your Release checklist is in the drawer.' } }] })
+  expect(marked(found.chats[0]!.hits[0]!.excerpt)).toEqual(['Release', 'check'])
+  expect(found.chats[1]).toMatchObject({ owner: 'thread', chat: newer.id, hits: [{ excerpt: { text: 'Release checks passed on main.' } }] })
   expect(found.indexing).toBeUndefined()
 
   expect(titles(await search('rÉlease chécklist', { owner: 'thread' }))).toEqual(['Older plan', 'Words apart'])
@@ -64,7 +68,36 @@ test('search finds words said in threads and bots as they arrive, words side by 
   expect(titles(await search('release check'))).toEqual(['Older plan', 'Words apart', 'Word starts'])
 })
 
-test('a chat shows at most three hits unless it is the one searched, and the excerpt starts near where the words meet', async () => {
+test('chats rank by best fit, then different matching messages, whole words and newer matches, and show their best two different lines', async () => {
+  const sand = await start()
+  const nowMs = Date.now()
+  const hoursAgo = (hours: number) => setSystemTime(new Date(nowMs - hours * HOUR_MS))
+  hoursAgo(24 * 90)
+  thread(sand, 'Old atlas', ['The tile grid', 'Tile seams at the poles', 'A tile per country', 'Every tile is square'].map(text => message('user', text)))
+  hoursAgo(12)
+  const steps = Array.from({ length: 30 }, (_, step) => message('user', `Step ${step + 1}: check the tile shader for the next layer.`))
+  thread(sand, 'Shader layer review', steps)
+  hoursAgo(2)
+  const flicker = [
+    'The tile renderer flickers when I zoom past level 14.',
+    'Found it: the tile cache keys on zoom only, so each tile loads twice.',
+    'The cache now holds about 12% more tiles at mixed ratios.',
+  ]
+  thread(sand, 'Tile renderer flicker', flicker.map(text => message('assistant', text)))
+  hoursAgo(1)
+  thread(sand, 'Floor plans', [message('user', 'Pick tiles for the bathroom floor.')])
+  setSystemTime()
+
+  const found = await sand.ask(messagesSearch, { query: 'tile' })
+  expect(titles(found)).toEqual(['Tile renderer flicker', 'Shader layer review', 'Floor plans', 'Old atlas'])
+  const [renderer, shader] = found.chats
+  expect(lines(renderer!)).toEqual([flicker[1]!, flicker[0]!])
+  expect(renderer!.matches).toBe(3)
+  expect(lines(shader!)).toEqual(['Step 30: check the tile shader for the next layer.'])
+  expect(shader!.matches).toBe(30)
+})
+
+test('a chat searched by id lists every match newest first, pages back, and the excerpt starts near where the words meet', async () => {
   const sand = await start()
   const search = (query: string, more = {}) => sand.ask(messagesSearch, { query, ...more })
   const filler = 'We walked along the river and talked about the weather for a long while before anything else came up. '
@@ -77,13 +110,15 @@ test('a chat shows at most three hits unless it is the one searched, and the exc
   sand.sessions.rename(garden.id, 'Garden')
   thread(sand, 'Walk', [message('assistant', `${filler.repeat(3)}Then the gazebo paint came up: teal, like the old gazebo door. ${filler}`)])
 
-  expect(titles(await search('gazebo'))).toEqual(['Walk', 'Garden', 'Garden', 'Garden'])
-  const inGarden = await search('gazebo', { chat: garden.id })
-  expect(inGarden.hits.map(hit => hit.excerpt.text)).toEqual(['fifth', 'fourth', 'third', 'second', 'first'].map(nth => `The ${nth} gazebo note`))
-  const older = await search('gazebo', { chat: garden.id, before: inGarden.hits[1]!.at, limit: 2 })
-  expect(older.hits.map(hit => hit.excerpt.text)).toEqual(['The third gazebo note', 'The second gazebo note'])
+  const both = await search('gazebo')
+  expect(titles(both)).toEqual(['Walk', 'Garden'])
+  expect(both.chats[1]).toMatchObject({ matches: 5, hits: [{ excerpt: { text: 'The fifth gazebo note' } }, { excerpt: { text: 'The fourth gazebo note' } }] })
+  const [inGarden] = (await search('gazebo', { chat: garden.id })).chats
+  expect(lines(inGarden!)).toEqual(['fifth', 'fourth', 'third', 'second', 'first'].map(nth => `The ${nth} gazebo note`))
+  const [older] = (await search('gazebo', { chat: garden.id, before: inGarden!.hits[1]!.at, limit: 2 })).chats
+  expect(lines(older!)).toEqual(['The third gazebo note', 'The second gazebo note'])
 
-  const [walk] = (await search('gazebo paint')).hits
+  const [walk] = (await search('gazebo paint')).chats[0]!.hits
   expect(walk!.excerpt.text).toStartWith('…')
   expect(walk!.excerpt.text).toEndWith('…')
   expect(walk!.excerpt.text).toContain('Then the gazebo paint came up: teal')

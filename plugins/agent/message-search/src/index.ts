@@ -44,7 +44,7 @@ export default definePlugin({
       found =>
         found?.handle(messagesSearch, search => {
           keeper.refresh()
-          return { hits: searchMessages(store, chats, search), ...keeper.progress() }
+          return { chats: searchMessages(store, chats, search), ...keeper.progress() }
         }),
     )
   },

@@ -1,7 +1,7 @@
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { type Indexing, type MessageHit, messagesSearch, mostHits, queryLimit } from './contract'
+import { type ChatHits, type Indexing, type MessageHit, messagesSearch, mostHits, queryLimit } from './contract'
 
 const group: McpGroup = { name: 'message-search', label: 'Message search', summary: 'find words said in your threads and bots' }
 
@@ -10,18 +10,20 @@ const searchInput = z.object({
   owner: z.enum(['thread', 'bot']).optional().describe('Only threads or only bots (default: both)'),
   chat: z.string().min(1).optional().describe('Only this thread or bot, by id'),
   before: z.iso.datetime({ offset: true }).optional().describe('Only messages said before this time, to page back from the oldest hit you got'),
-  limit: z.number().int().min(1).max(mostHits).optional().describe('At most this many hits (default 20)'),
+  limit: z.number().int().min(1).max(mostHits).optional().describe('At most this many chats, or messages when you pick one chat (default 20)'),
 })
 
-const description = `Search the words said in every thread and bot chat on this PC, by you and the user, not tool output. Use it to find where something was discussed or decided, or a command, number or name from an earlier chat, when you don't know which thread it was in. Hits come with the words side by side first, then all the words, then words that start with them, newest first within each, at most 3 per chat unless you pick one chat. Each hit has the chat, its time and an excerpt; thread hits link to the thread as thread:<id>.`
+const description = `Search the words said in every thread and bot chat on this PC, by you and the user, not tool output. Use it to find where something was discussed or decided, or a command, number or name from an earlier chat, when you don't know which thread it was in. Chats come best first: the words side by side, then all the words, then words that start with them; then chats with more different matching messages, whole words and newer matches. Each chat has its number of matching messages and its best one or two, with their time and an excerpt; pick one chat to get all its matching messages, newest first. Thread chats link to the thread as thread:<id>.`
 
-const shown = ({ owner, chat, title, role, at, excerpt }: MessageHit) => ({
+const said = ({ role, at, excerpt }: MessageHit) => ({ role, at: new Date(at).toISOString(), excerpt: excerpt.text })
+
+const shown = ({ owner, chat, title, at, matches, hits }: ChatHits) => ({
   owner,
   chat,
   title,
-  role,
   at: new Date(at).toISOString(),
-  excerpt: excerpt.text,
+  matches,
+  said: hits.map(said),
   ...(owner === 'thread' && { link: `thread:${chat}` }),
 })
 
@@ -37,7 +39,7 @@ const searchTool = {
   always: ['bot'],
   run: async ({ before, ...input }, { call }) => {
     const found = await call(messagesSearch, { ...input, ...(before && { before: Date.parse(before) }) })
-    return { hits: found.hits.map(shown), ...(found.indexing && { indexing: indexingNote(found.indexing) }) }
+    return { chats: found.chats.map(shown), ...(found.indexing && { indexing: indexingNote(found.indexing) }) }
   },
 } satisfies McpTool<typeof searchInput>
 

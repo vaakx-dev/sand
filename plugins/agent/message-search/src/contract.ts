@@ -12,9 +12,6 @@ export interface Excerpt {
 }
 
 export interface MessageHit {
-  owner: ChatOwner
-  chat: string
-  title: string
   entry: string
   block: number
   role: 'user' | 'assistant'
@@ -23,13 +20,24 @@ export interface MessageHit {
   excerpt: Excerpt
 }
 
+export interface ChatHits {
+  owner: ChatOwner
+  chat: string
+  title: string
+  at: number
+  fit: Fit
+  weight: number
+  matches: number
+  hits: MessageHit[]
+}
+
 export interface Indexing {
   done: number
   total: number
 }
 
 export interface Found {
-  hits: MessageHit[]
+  chats: ChatHits[]
   indexing?: Indexing
 }
 

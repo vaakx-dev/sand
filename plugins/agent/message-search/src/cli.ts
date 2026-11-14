@@ -4,7 +4,7 @@ import { daemon } from '@sand/host-daemon/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { exactTime } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { type Found, type MessageHit, messagesSearch, mostHits } from './contract'
+import { type ChatHits, type Found, messagesSearch, mostHits } from './contract'
 import { indexingNote, offerSearchTool } from './tools'
 
 interface Asked {
@@ -13,9 +13,9 @@ interface Asked {
 }
 
 const usage = [
-  'sand search <words…>               find messages said in your threads and bots, best matches first',
-  `sand search <words…> --limit <n>   at most n hits, up to ${mostHits} (default 20)`,
-  'sand search <words…> --json        print the hits as JSON',
+  'sand search <words…>               find the chats where words were said, best matches first',
+  `sand search <words…> --limit <n>   at most n chats, up to ${mostHits} (default 20)`,
+  'sand search <words…> --json        print the chats as JSON',
 ].join('\n')
 
 const limitOf = (value: string | boolean | undefined) => {
@@ -31,12 +31,15 @@ const askedOf = (args: string[], values: CliValues): Asked | undefined => {
   return { query, ...(limit && { limit }) }
 }
 
-const chatOf = ({ owner, chat }: MessageHit) => `${owner} ${chat}`
+const matchesText = (matches: number) => (matches === 1 ? '1 match' : `${matches} matches`)
 
-const hitLines = (hit: MessageHit) => [`${hit.title || 'Untitled'} · ${exactTime(hit.at)} · ${chatOf(hit)}`, `  ${hit.excerpt.text}`]
+const chatLines = ({ owner, chat, title, at, matches, hits }: ChatHits) => [
+  `${title || 'Untitled'} · ${exactTime(at)} · ${matchesText(matches)} · ${owner} ${chat}`,
+  ...hits.map(hit => `  ${hit.excerpt.text}`),
+]
 
-const print = ({ hits, indexing }: Found) => {
-  console.log(hits.length ? hits.flatMap(hitLines).join('\n') : 'No messages found')
+const print = ({ chats, indexing }: Found) => {
+  console.log(chats.length ? chats.flatMap(chatLines).join('\n') : 'No messages found')
   if (indexing) console.error(indexingNote(indexing))
 }
 
@@ -52,8 +55,8 @@ export default definePlugin({
         summary: 'find messages said in your threads and bots',
         usage,
         options: {
-          json: { type: 'boolean', help: 'sand search: print the hits as JSON' },
-          limit: { type: 'string', help: 'sand search: at most this many hits' },
+          json: { type: 'boolean', help: 'sand search: print the chats as JSON' },
+          limit: { type: 'string', help: 'sand search: at most this many chats' },
         },
         async run(args, values) {
           const asked = askedOf(args, values)

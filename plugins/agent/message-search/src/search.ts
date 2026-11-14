@@ -1,8 +1,9 @@
-import { searchWords } from '@sand/util'
-import { type ChatOwner, type Fit, fits, type MessageHit } from './contract'
-import { excerptOf } from './excerpt'
+import { searchWords, textWords } from '@sand/util'
+import { type ChatHits, type ChatOwner, type Fit, fits, type MessageHit } from './contract'
+import { echoes, excerptOf } from './excerpt'
 import { chatText, fitMatch, type Scope, scopedMatch } from './match'
 import { type Block, firstSlot, type Store, timeOf } from './store'
+import { weightOf } from './weight'
 
 export interface Search {
   query: string
@@ -17,15 +18,24 @@ export interface Chats {
   title(owner: ChatOwner, id: string): string | undefined
 }
 
-interface Found {
+interface Fitted {
   block: Block
   fit: Fit
+}
+
+interface Read {
+  hit: MessageHit
+  whole: boolean
+}
+
+interface Titled {
+  blocks: Fitted[]
   title: string
 }
 
 const DEFAULT_LIMIT = 20
-const PER_CHAT = 3
-const FIRST_PAGE_PER_HIT = 2
+const SHOWN_PER_CHAT = 2
+const READ_PER_CHAT = 24
 const NEWEST_MATCHES = 2000
 
 const tiers = (words: string[]) =>
@@ -33,59 +43,81 @@ const tiers = (words: string[]) =>
     .map(fit => ({ fit, words: fitMatch(fit, words) }))
     .filter((tier, index, all) => all.findIndex(other => other.words === tier.words) === index)
 
-const searchMessages = (store: Store, chats: Chats, { query, owner, chat, before, limit = DEFAULT_LIMIT }: Search): MessageHit[] => {
-  const words = searchWords(query)
-  if (!words.length || (owner && !chats.tracks(owner))) return []
-  const perChat = chat ? Infinity : PER_CHAT
-  const scope: Scope = { owner, chat, skipped: [] }
-  const titles = new Map<string, string | undefined>()
-  const counts = new Map<string, number>()
-  const seen = new Set<number>()
-  const found: Found[] = []
+const fitOrder = ({ fit }: { fit: Fit }) => fits.indexOf(fit)
 
-  const titleOf = ({ owner, chat }: Block) => {
-    const key = chatText(owner, chat)
-    if (!titles.has(key)) titles.set(key, chats.title(owner, chat))
-    const title = titles.get(key)
-    if (title === undefined) store.drop(owner, chat)
-    return title
-  }
+const newestFirst = (a: Fitted, b: Fitted) => b.block.rowid - a.block.rowid
 
-  const take = (block: Block, fit: Fit) => {
-    if (found.length >= limit || seen.has(block.rowid) || !chats.tracks(block.owner)) return
-    seen.add(block.rowid)
-    const key = chatText(block.owner, block.chat)
-    const count = counts.get(key) ?? 0
-    if (count >= perChat) return
-    const title = titleOf(block)
-    if (title === undefined) return
-    counts.set(key, count + 1)
-    if (count + 1 >= perChat) scope.skipped.push(key)
-    found.push({ block, fit, title })
-  }
+const bestFirst = (a: Fitted, b: Fitted) => fitOrder(a) - fitOrder(b) || newestFirst(a, b)
 
-  const newest = before === undefined ? Number.MAX_SAFE_INTEGER : firstSlot(before)
-  const from = store.oldestOfNewest({ match: scopedMatch(fitMatch('prefixes', words), scope), below: newest, most: NEWEST_MATCHES })
+const bestRead = (a: Read, b: Read) => fitOrder(a.hit) - fitOrder(b.hit) || Number(b.whole) - Number(a.whole) || b.hit.at - a.hit.at
 
-  const scan = (fit: Fit, tierWords: string) => {
-    let below = newest
-    for (let most = limit * FIRST_PAGE_PER_HIT; found.length < limit; most *= 2) {
-      const page = store.matching({ match: scopedMatch(tierWords, scope), from, below, most })
-      for (const block of page) take(block, fit)
-      if (page.length < most) return
-      below = page.at(-1)!.rowid
-    }
-  }
+const bestChat = (a: ChatHits, b: ChatHits) => fitOrder(a) - fitOrder(b) || b.weight - a.weight
 
-  const hitOf = ({ block, fit, title }: Found): MessageHit[] => {
+const holdsWhole = (text: string, words: string[]) => {
+  const said = new Set(textWords(text))
+  return words.every(word => said.has(word))
+}
+
+const distinctReads = (reads: Read[]) =>
+  reads
+    .toSorted(bestRead)
+    .reduce<Read[]>((kept, read) => (kept.some(other => other.hit.entry === read.hit.entry || echoes(other.hit.excerpt, read.hit.excerpt)) ? kept : [...kept, read]), [])
+
+const fittedBlocks = (store: Store, words: string[], scope: Scope, below: number) => {
+  const from = store.oldestOfNewest({ match: scopedMatch(fitMatch('prefixes', words), scope), below, most: NEWEST_MATCHES })
+  const tiered = tiers(words).flatMap(tier =>
+    store.matching({ match: scopedMatch(tier.words, scope), from, below, most: NEWEST_MATCHES }).map((block): Fitted => ({ block, fit: tier.fit })),
+  )
+  return [...new Map(tiered.toReversed().map(fitted => [fitted.block.rowid, fitted])).values()]
+}
+
+const titled = (store: Store, chats: Chats, blocks: Fitted[]): Titled[] => {
+  const { owner, chat } = blocks[0]!.block
+  const title = chats.title(owner, chat)
+  if (title !== undefined) return [{ blocks, title }]
+  store.drop(owner, chat)
+  return []
+}
+
+const reader =
+  (store: Store, words: string[]) =>
+  ({ block, fit }: Fitted): Read[] => {
     const text = store.text(block)
     if (text === undefined) return []
-    const { owner, chat, entry, role, rowid } = block
-    return [{ owner, chat, title, entry, block: block.block, role, at: timeOf(rowid), fit, excerpt: excerptOf(text, words) }]
+    const { entry, role, rowid } = block
+    return [{ hit: { entry, block: block.block, role, at: timeOf(rowid), fit, excerpt: excerptOf(text, words) }, whole: holdsWhole(text, words) }]
   }
 
-  for (const tier of tiers(words)) scan(tier.fit, tier.words)
-  return found.flatMap(hitOf)
+const chatHits = ({ blocks, title }: Titled, distinct: Read[], hits: MessageHit[]): ChatHits[] => {
+  const best = distinct[0]
+  if (!best) return []
+  const { owner, chat } = blocks[0]!.block
+  const at = timeOf(Math.max(...blocks.map(({ block }) => block.rowid)))
+  const matches = new Set(blocks.map(({ block }) => block.entry)).size
+  const weight = weightOf({ whole: best.whole, distinct: distinct.length, at })
+  return [{ owner, chat, title, at, fit: best.hit.fit, weight, matches, hits }]
+}
+
+const searchMessages = (store: Store, chats: Chats, { query, owner, chat, before, limit = DEFAULT_LIMIT }: Search): ChatHits[] => {
+  const words = searchWords(query)
+  if (!words.length || (owner && !chats.tracks(owner))) return []
+  const below = before === undefined ? Number.MAX_SAFE_INTEGER : firstSlot(before)
+  const found = fittedBlocks(store, words, { owner, chat }, below).filter(({ block }) => chats.tracks(block.owner))
+  const byChat = [...Map.groupBy(found, ({ block }) => chatText(block.owner, block.chat)).values()].flatMap(blocks => titled(store, chats, blocks))
+  const read = (blocks: Fitted[]) => blocks.flatMap(reader(store, words))
+
+  const inChat = (found: Titled) => {
+    const reads = read(found.blocks.toSorted(newestFirst).slice(0, limit))
+    return chatHits(found, distinctReads(reads), reads.map(({ hit }) => hit))
+  }
+
+  const ranked = (found: Titled) => {
+    const distinct = distinctReads(read(found.blocks.toSorted(bestFirst).slice(0, READ_PER_CHAT)))
+    return chatHits(found, distinct, distinct.slice(0, SHOWN_PER_CHAT).map(({ hit }) => hit))
+  }
+
+  if (chat) return byChat.flatMap(inChat)
+  return byChat.flatMap(ranked).toSorted(bestChat).slice(0, limit)
 }
 
 export { searchMessages }

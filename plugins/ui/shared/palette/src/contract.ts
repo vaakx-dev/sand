@@ -19,6 +19,7 @@ export interface PaletteItem {
   label: string
   detail?: string
   excerpt?: PaletteExcerpt
+  nested?: boolean
   visits?: string
   meta?: string
   icon?: string

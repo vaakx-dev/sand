@@ -26,6 +26,12 @@ const excerptView = (excerpt: PaletteExcerpt, large: boolean) => span({ class: l
 
 const workView = (kit: Kit, row: () => Row, props: Props<HTMLButtonElement>, large: boolean) => kit.workRow({ ...props, surface: 'raised', large }, kit.rowBody(row, { large }))
 
+const lines = (kit: Kit, item: PaletteItem, large: boolean) => {
+  const excerpt = item.excerpt && excerptView(item.excerpt, large)
+  if (item.nested) return { lead: span({ class: 'w-4' }), title: null, meta: excerpt ?? item.label }
+  return { lead: lead(kit, item), title: item.label, meta: excerpt ?? item.detail }
+}
+
 const listView = (kit: Kit, item: PaletteItem, props: Props<HTMLButtonElement>, large: boolean) =>
   kit.listRow({
     ...props,
@@ -33,9 +39,7 @@ const listView = (kit: Kit, item: PaletteItem, props: Props<HTMLButtonElement>, 
     touch: true,
     large,
     ...(item.danger && { tone: 'danger' as const }),
-    lead: lead(kit, item),
-    title: item.label,
-    meta: item.excerpt ? excerptView(item.excerpt, large) : item.detail,
+    ...lines(kit, item, large),
     trail: item.meta ? span({ class: 'tabular-nums' }, item.meta) : undefined,
     opens: Boolean(item.page),
   })

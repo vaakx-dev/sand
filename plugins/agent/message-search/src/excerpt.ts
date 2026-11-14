@@ -1,4 +1,4 @@
-import { type Range, wordMatches } from '@sand/util'
+import { type Range, textWords, wordMatches } from '@sand/util'
 import type { Excerpt } from './contract'
 
 interface Window {
@@ -8,6 +8,7 @@ interface Window {
 
 const LENGTH = 120
 const LEAD = 24
+const ECHO_SHARE = 0.8
 
 const spanFrom = (found: Range[][], start: number) =>
   found.reduce<number | undefined>((span, ranges) => {
@@ -46,4 +47,14 @@ const excerptOf = (block: string, words: string[]): Excerpt => {
   return { text, marks: wordMatches(text, words) }
 }
 
-export { excerptOf }
+const lineWords = ({ text }: Excerpt) => new Set(textWords(text).filter(word => !/^\d+$/.test(word)))
+
+const echoes = (one: Excerpt, other: Excerpt) => {
+  const words = lineWords(one)
+  const others = lineWords(other)
+  const shared = [...words].filter(word => others.has(word)).length
+  const all = words.size + others.size - shared
+  return all === 0 || shared / all >= ECHO_SHARE
+}
+
+export { echoes, excerptOf }

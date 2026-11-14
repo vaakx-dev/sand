@@ -3,7 +3,6 @@ import type { ChatOwner, Fit } from './contract'
 export interface Scope {
   owner?: ChatOwner
   chat?: string
-  skipped: string[]
 }
 
 const SHORTEST_PREFIX = 2
@@ -22,9 +21,7 @@ const chatText = (owner: ChatOwner, chat: string) => `${owner} ${chat}`
 
 const fitMatch = (fit: Fit, words: string[]) => FITS[fit](words)
 
-const scopedMatch = (words: string, { owner, chat, skipped }: Scope) => {
-  const wanted = [`text : (${words})`, ...(owner ? [`chat : ${quoted(owner)}`] : []), ...(chat ? [`chat : ${quoted(chat)}`] : [])].join(' AND ')
-  return skipped.length ? `(${wanted}) NOT chat : (${skipped.map(quoted).join(' OR ')})` : wanted
-}
+const scopedMatch = (words: string, { owner, chat }: Scope) =>
+  [`text : (${words})`, ...(owner ? [`chat : ${quoted(owner)}`] : []), ...(chat ? [`chat : ${quoted(chat)}`] : [])].join(' AND ')
 
 export { chatText, fitMatch, scopedMatch }

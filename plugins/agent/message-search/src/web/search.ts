@@ -1,13 +1,13 @@
 import type { Pcs, Wire } from '@sand/devices-contract'
 import { searchWords } from '@sand/util'
-import { type Found, type Indexing, type MessageHit, messagesSearch } from '../contract'
+import { type ChatHits, type Found, type Indexing, messagesSearch, mostHits } from '../contract'
 
-export interface PcHit extends MessageHit {
+export interface PcChat extends ChatHits {
   pc: string
 }
 
 export interface Searched {
-  hits: PcHit[]
+  chats: PcChat[]
   indexing?: Indexing
 }
 
@@ -23,9 +23,9 @@ interface Searcher {
 
 const CACHE_MS = 30_000
 const MOST_CACHED = 50
-const HITS_PER_PC = 30
+const CHATS_PER_PC = 10
 
-const keptHits = (pc: string, home: string, { hits }: Found): PcHit[] => hits.filter(hit => hit.owner === 'thread' || pc === home).map(hit => ({ ...hit, pc }))
+const keptChats = (pc: string, home: string, { chats }: Found): PcChat[] => chats.filter(chat => chat.owner === 'thread' || pc === home).map(chat => ({ ...chat, pc }))
 
 const totalIndexing = (found: Found[]) => {
   const busy = found.flatMap(({ indexing }) => (indexing ? [indexing] : []))
@@ -44,7 +44,7 @@ class MessageSearch {
 
   async #onPc(pc: string, query: string) {
     try {
-      return { pc, found: await this.#wire.call(messagesSearch, { query, limit: HITS_PER_PC }, pc) }
+      return { pc, found: await this.#wire.call(messagesSearch, { query, limit: CHATS_PER_PC }, pc) }
     } catch {
       return undefined
     }
@@ -54,9 +54,9 @@ class MessageSearch {
     const home = this.#pcs.here().id
     const online = this.#pcs.list().filter(pc => pc.online && this.#wire.ready(pc.id))
     const answers = (await Promise.all(online.map(pc => this.#onPc(pc.id, query)))).filter(answer => answer !== undefined)
-    const hits = answers.flatMap(({ pc, found }) => keptHits(pc, home, found))
+    const chats = answers.flatMap(({ pc, found }) => keptChats(pc, home, found))
     const indexing = totalIndexing(answers.map(({ found }) => found))
-    return { hits, ...(indexing && { indexing }) }
+    return { chats, ...(indexing && { indexing }) }
   }
 
   #cached(key: string) {
@@ -81,6 +81,11 @@ class MessageSearch {
     const searched = await this.#searchPcs(query)
     this.#remember(key, searched)
     return searched
+  }
+
+  async inChat({ pc, owner, chat }: PcChat, query: string) {
+    const { chats } = await this.#wire.call(messagesSearch, { query, owner, chat, limit: mostHits }, pc)
+    return chats[0]?.hits ?? []
   }
 }
 

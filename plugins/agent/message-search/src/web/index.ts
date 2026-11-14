@@ -1,14 +1,16 @@
 import { botRoster, botRoute } from '@sand/bots/contract'
 import { threadView } from '@sand/chat/contract'
 import { pcs, wire } from '@sand/devices-contract'
-import { palette, type Palette } from '@sand/palette/contract'
+import { palette, type Palette, type PalettePage } from '@sand/palette/contract'
 import { shownChats } from '@sand/transcript/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { searchWords } from '@sand/util'
 import { definePlugin } from 'drydock'
-import type { Indexing } from '../contract'
-import { messageRows } from './rows'
-import { MessageSearch, type PcHit } from './search'
+import type { Indexing, MessageHit } from '../contract'
+import { chatMatchRows, messageRows, type RowParts } from './rows'
+import { MessageSearch, type PcChat } from './search'
+
+const TYPING_DELAY_MS = 150
 
 const indexingNote = ({ done, total }: Indexing) => `Indexing messages… ${Math.floor((done / total) * 100)}%`
 
@@ -19,21 +21,37 @@ export default definePlugin({
   apply(ctx) {
     const search = new MessageSearch(ctx)
 
-    const openChat = ({ owner, chat }: PcHit) => {
+    const openChat = ({ owner, chat }: PcChat) => {
       if (owner === 'thread') return ctx.threadView.open(chat)
       ctx.shell.open({ kind: botRoute, id: chat, tab: 'chat' })
     }
 
-    const open = (hit: PcHit, words: string[]) => {
-      openChat(hit)
-      void ctx.shownChats.show({ conversation: hit.chat, entry: hit.entry, block: hit.block, words })
+    const open = (chat: PcChat, { entry, block }: MessageHit, query: string) => {
+      openChat(chat)
+      void ctx.shownChats.show({ conversation: chat.chat, entry, block, words: searchWords(query) })
     }
 
+    const partsFor = (found: Palette, query: string): RowParts => ({
+      used: found.used,
+      tint: bot => ctx.get(botRoster)?.find(bot)?.color,
+      open: (chat, hit) => open(chat, hit, query),
+      more: chat => matchesPage(found, chat, query),
+    })
+
+    const matchRowsFor = async (found: Palette, chat: PcChat, query: string) => chatMatchRows(partsFor(found, query), chat, await search.inChat(chat, query))
+
+    const matchesPage = (found: Palette, chat: PcChat, query: string): PalettePage => ({
+      id: `messages:${chat.pc}:${chat.owner}:${chat.chat}`,
+      title: chat.title,
+      placeholder: `Search in ${chat.title}`,
+      filter: false,
+      delay: TYPING_DELAY_MS,
+      items: typed => matchRowsFor(found, chat, typed.trim() || query),
+    })
+
     const rowsFor = async (found: Palette, query: string) => {
-      const words = searchWords(query)
-      const { hits, indexing } = await search.search(query)
-      const parts = { used: found.used, tint: (bot: string) => ctx.get(botRoster)?.find(bot)?.color, open: (hit: PcHit) => open(hit, words) }
-      return { items: messageRows(parts, hits), ...(indexing && { note: indexingNote(indexing) }) }
+      const { chats, indexing } = await search.search(query)
+      return { items: messageRows(partsFor(found, query), chats), ...(indexing && { note: indexingNote(indexing) }) }
     }
 
     ctx.watch(palette, found =>

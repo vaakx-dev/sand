@@ -1,27 +1,45 @@
 import { expect, test } from 'bun:test'
-import type { Fit } from '../src/contract'
-import { messageRows } from '../src/web/rows'
-import type { PcHit } from '../src/web/search'
+import type { Fit, MessageHit } from '../src/contract'
+import { messageRows, type RowParts } from '../src/web/rows'
+import type { PcChat } from '../src/web/search'
 
-const DAY_MS = 86_400_000
+const hit = (text: string): MessageHit => ({ entry: text, block: 0, role: 'user', at: Date.now(), fit: 'phrase', excerpt: { text, marks: [] } })
 
-const hit = (chat: string, fit: Fit, ageDays: number): PcHit => ({
+const chat = (title: string, fit: Fit, weight: number, said: string[], matches = said.length): PcChat => ({
   pc: 'home',
   owner: 'thread',
-  chat,
-  title: chat,
-  entry: `${chat}-entry`,
-  block: 0,
-  role: 'user',
-  at: Date.now() - ageDays * DAY_MS,
+  chat: title,
+  title,
+  at: Date.now(),
   fit,
-  excerpt: { text: chat, marks: [] },
+  weight,
+  matches,
+  hits: said.map(hit),
 })
 
-test('message rows put a better fit first, and recent or often used chats first within a fit', () => {
-  const used = (visits: string) => (visits === 'thread:favourite' ? 0.9 : 0)
-  const parts = { used, tint: () => undefined, open: () => {} }
-  const hits = [hit('fresh-prefix', 'prefixes', 0), hit('old-words', 'words', 300), hit('favourite', 'words', 30), hit('recent', 'words', 1), hit('old-phrase', 'phrase', 400)]
+test('message rows show each chat once with its best line, a second line under it and the rest a tap away; use only breaks near-ties', () => {
+  const parts: RowParts = {
+    used: visits => (visits === 'thread:favourite' ? 0.9 : 0),
+    tint: () => undefined,
+    open: () => {},
+    more: found => ({ id: found.chat, title: found.title }),
+  }
+  const chats = [
+    chat('prefix', 'prefixes', 9, ['prefix line']),
+    chat('plain', 'phrase', 3, ['plain line']),
+    chat('favourite', 'phrase', 2.9, ['favourite line']),
+    chat('clear', 'phrase', 3.5, ['clear line']),
+    chat('strong', 'phrase', 4, ['best line', 'second line'], 5),
+  ]
 
-  expect(messageRows(parts, hits).map(row => row.label)).toEqual(['old-phrase', 'favourite', 'recent', 'old-words', 'fresh-prefix'])
+  const rows = messageRows(parts, chats).map(row => [row.nested ? `  ${row.label}` : row.label, row.excerpt?.text ?? '', Boolean(row.page)])
+  expect(rows).toEqual([
+    ['strong', 'best line', false],
+    ['  second line', 'second line', false],
+    ['  3 more', '', true],
+    ['clear', 'clear line', false],
+    ['favourite', 'favourite line', false],
+    ['plain', 'plain line', false],
+    ['prefix', 'prefix line', false],
+  ])
 })
