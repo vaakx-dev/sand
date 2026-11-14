@@ -7,11 +7,11 @@
     "feature": "file-archives",
     "web": "./src/web/index.ts",
     "label": "Archives",
-    "summary": "Browse zip, jar, tar and gzip archives and open the files inside",
+    "summary": "Zip, tar and gzip archives",
     "features": {
       "file-archives": {
         "label": "Archives",
-        "summary": "Browse zip, jar, tar and gzip archives and open the files inside",
+        "summary": "Zip, tar and gzip archives",
         "parent": "file-viewer",
         "addon": true
       }
