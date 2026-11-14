@@ -8,11 +8,11 @@
     "runtime": "./src/runtime/index.ts",
     "web": "./src/web/index.ts",
     "label": "SQLite",
-    "summary": "Browse the tables and rows of SQLite databases",
+    "summary": "SQLite databases",
     "features": {
       "file-sqlite": {
         "label": "SQLite",
-        "summary": "Browse the tables and rows of SQLite databases",
+        "summary": "SQLite databases",
         "parent": "file-viewer",
         "addon": true
       }
