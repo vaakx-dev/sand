@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, effect, nav, onIdle, sig, untrack, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, nav, onIdle, sig, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
 import { drawerLook, drawerOffset } from './drawer'
 import type { Model } from './model'
 import { brand, footRow, groupList, navList, quietNavList } from './rows'
@@ -51,24 +51,18 @@ const phoneList = (model: Model) => {
 
 export const phoneSidebar = (model: Model) => {
   const closed = () => !model.drawerOpen.get() && model.drawerDrag.get() === undefined
-  const resting = sig(true)
   const built = sig(false)
   onIdle(() => built.set(true))
   effect(() => {
-    if (closed()) return
-    resting.set(false)
-    built.set(true)
+    if (!closed()) built.set(true)
   })
   return nav(
     {
       'aria-label': 'Sidebar',
       'data-part': 'sidebar',
       class: () => ['flex h-full w-full flex-col', drawerLook(model)],
-      style: () => ({ ...drawerOffset(model), ...(resting.get() && { contentVisibility: 'hidden' }) }),
+      style: () => drawerOffset(model),
       inert: closed,
-      onTransitionEnd: () => {
-        if (untrack(closed)) resting.set(true)
-      },
     },
     dynamicChild(built, ready => (ready ? phoneList(model) : null)),
   )
