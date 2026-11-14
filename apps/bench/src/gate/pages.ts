@@ -13,7 +13,7 @@ interface Screen {
 const SCREENS: Screen[] = [
   { name: 'Settings', route: { kind: 'settings' }, shows: 'Accounts and devices' },
   { name: 'Add-ons', route: { kind: 'settings', id: 'features' }, shows: 'Installed' },
-  { name: 'Usage', route: { kind: 'usage' }, shows: 'Forecast' },
+  { name: 'Usage', route: { kind: 'usage' }, shows: 'Spend' },
   { name: 'Performance', route: { kind: 'usage', id: 'performance' }, shows: 'Memory used' },
   { name: 'Search', shows: 'Actions' },
 ]

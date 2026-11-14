@@ -32,6 +32,7 @@ interface Driven extends Live {
 }
 
 const TURNS = 100
+const REPLIES_AVERAGED = 10
 const IDLE_MS = 60_000
 const SETTLE_MS = 15_000
 const QUERY = 'student'
@@ -41,7 +42,7 @@ const PAIR_TIMEOUT_MS = 60_000
 
 const REPLIES_PER_TURN = 3
 
-const CHATS: Plan = { script: { replies: (TURNS + 2) * REPLIES_PER_TURN, gapMs: 0 }, plugin: 'index.ts' }
+const CHATS: Plan = { script: { replies: (TURNS + REPLIES_AVERAGED + 1) * REPLIES_PER_TURN, gapMs: 0 }, plugin: 'index.ts' }
 const BULK: Plan = { script: { replies: 0, gapMs: 0 }, plugin: 'bulk.ts', addons: ['message-search'] }
 
 const rows: Row[] = [
@@ -113,8 +114,8 @@ const idle = async (live: Live[]) => {
 
 const reply = async (instance: Driven) => {
   const before = usage(instance.served.pid)
-  await chatTurns(instance, 1)
-  instance.run.marks.set('reply CPU', usage(instance.served.pid).cpuMs - before.cpuMs)
+  await chatTurns(instance, REPLIES_AVERAGED)
+  instance.run.marks.set('reply CPU', (usage(instance.served.pid).cpuMs - before.cpuMs) / REPLIES_AVERAGED)
 }
 
 const leaks = async (driven: Driven[]) => {
