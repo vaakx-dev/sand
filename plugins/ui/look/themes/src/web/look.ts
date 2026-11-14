@@ -15,6 +15,7 @@ ${part('main')} { background: ${mix('neutral', 900, main)}; }
 ${part('sidebar')}, ${part('aside')}, ${part('app')} .bg-neutral-950 { background-color: ${mix('neutral', 950, side)} !important; ${blur(24)} }
 ${part('app')} .bg-neutral-800, ${part('sheet')} { background-color: ${mix('neutral', 800, panel)} !important; ${blur(18)} }
 ${part('composer')} { box-shadow: 0 0 0 1px ${mix('neutral', 50, 7)} inset, 0 8px 30px -12px rgb(0 0 0 / .35); }
+${part('settings')} { background: ${mix('neutral', 900, 62)}; }
 ${part('main')} > ${part('header')} { background: ${mix('neutral', 900, head)}; ${blur(16)} }
 ${part('main')} [data-fade] { background: linear-gradient(to top, ${mix('neutral', 900, main)} 55%, transparent) !important; }
 ${part('main')} [data-fade="top"] { background: linear-gradient(to bottom, ${mix('neutral', 900, main)}, transparent) !important; }

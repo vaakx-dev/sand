@@ -115,3 +115,5 @@ export const modeOf = (theme: Theme | null, systemLight: boolean): Mode => {
   if (theme?.mode === 'light' || theme?.mode === 'dark') return theme.mode
   return systemLight ? 'light' : 'dark'
 }
+
+export const designedMode = (theme: Theme): Mode => (theme.mode === 'light' || theme.mode === 'dark' ? theme.mode : toLch(theme.base).l >= 0.5 ? 'light' : 'dark')
