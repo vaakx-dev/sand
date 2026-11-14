@@ -1,4 +1,5 @@
-import { derive, div, dynamicChild, effect, nav, onIdle, sig, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, nav, sig, type Child, type Derive, type Props } from '@vaakx-dev/vrui'
+import { whenSettled } from '@sand/reactive'
 import { drawerLook, drawerOffset } from './drawer'
 import type { Model } from './model'
 import { brand, footRow, groupList, navList, quietNavList } from './rows'
@@ -52,7 +53,7 @@ const phoneList = (model: Model) => {
 export const phoneSidebar = (model: Model) => {
   const closed = () => !model.drawerOpen.get() && model.drawerDrag.get() === undefined
   const built = sig(false)
-  onIdle(() => built.set(true))
+  whenSettled(() => built.set(true))
   effect(() => {
     if (!closed()) built.set(true)
   })

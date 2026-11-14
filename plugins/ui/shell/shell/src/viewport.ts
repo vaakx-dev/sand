@@ -1,3 +1,4 @@
+import { whenSettled } from '@sand/reactive'
 import { listen, sig } from '@vaakx-dev/vrui'
 
 export interface VisibleArea {
@@ -12,8 +13,9 @@ const besideKeyboard = (): VisibleArea | undefined => {
 }
 
 export const keyboardArea = () => {
-  const area = sig(besideKeyboard())
+  const area = sig<VisibleArea | undefined>(undefined)
   const update = () => area.set(besideKeyboard())
+  whenSettled(update)
   if (window.visualViewport) {
     listen(window.visualViewport, 'resize', update)
     listen(window.visualViewport, 'scroll', update)

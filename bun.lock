@@ -2469,6 +2469,7 @@
       "name": "@sand/math",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
