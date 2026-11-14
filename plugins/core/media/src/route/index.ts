@@ -1,6 +1,6 @@
 import type { RouteHandler } from '@sand/server/contract'
 import { mediaPath } from '../contract'
-import type { Tokens } from '../sign/tokens'
+import type { Tokens } from '@sand/util/host'
 import type { Store } from '../store'
 import { servedType } from '../store/types'
 import { askedHeight, type Sized } from './sized'
