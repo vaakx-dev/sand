@@ -1,9 +1,7 @@
 import { botName, type BotSummary } from '@sand/bots/contract'
 import { derive, div, dynamicChild, list, show, sig, span } from '@vaakx-dev/vrui'
-import { noAutomations } from '../automations/empty'
-import { automationRow } from '../automations/row'
 import { deleteAction } from '../delete'
-import { automationsOf, projectName, projectNames, type Parts } from '../parts'
+import { projectName, projectNames, type Parts } from '../parts'
 import { advancedBlock } from './advanced'
 import { createProject, projectChecklist } from './projects'
 
@@ -97,25 +95,6 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
   )
 }
 
-const automationsBlock = (parts: Parts, id: string) => {
-  const { kit } = parts.ctx
-  const menu = kit.contextMenu()
-  const items = derive(() => automationsOf(parts, id))
-  return show(
-    () => parts.automationSources.items.get().length > 0,
-    () =>
-      kit.pageSection(
-        { title: 'Automations' },
-        list(items, item => item.id, item => automationRow(kit, menu, item, 'raised'), div({ class: '-mx-2 flex flex-col' })),
-        show(
-          () => !items.get().length,
-          () => noAutomations(kit),
-        ),
-        menu.view(),
-      ),
-  )
-}
-
 const foot = (parts: Parts, id: string, bot: Bot, close: () => void) => {
   const { kit } = parts.ctx
   const paused = () => bot()?.paused ?? false
@@ -153,7 +132,6 @@ export const openProfile = (parts: Parts, id: string) => {
       div(
         { class: 'flex flex-col gap-6 pt-2' },
         projectsBlock(parts, id, bot),
-        automationsBlock(parts, id),
         advancedBlock(parts, id, bot),
         list(parts.sections.items, section => section.id, section => section.get().render(id), div({ class: 'flex flex-col gap-6' })),
       ),

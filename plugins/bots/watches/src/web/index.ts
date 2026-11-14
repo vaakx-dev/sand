@@ -17,6 +17,7 @@ export default definePlugin({
       title: watch.label,
       when: 'On changes',
       detail: `${watch.kindLabel}: ${watch.target}`,
+      ...(watch.job && { job: watch.job }),
       error: watch.error,
       actions: () => [
         {

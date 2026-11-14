@@ -1,4 +1,19 @@
-import { botChangeWire, botCreate, botDelete, botRemoveWire, botUpdate, helloBots, type BotPatch, type BotSummary, type NewBot } from '@sand/bots/contract'
+import {
+  botChangeWire,
+  botCreate,
+  botDelete,
+  botRemoveWire,
+  botUpdate,
+  helloBots,
+  jobCreate,
+  jobDelete,
+  jobUpdate,
+  type BotPatch,
+  type BotSummary,
+  type JobPatch,
+  type NewBot,
+  type NewJob,
+} from '@sand/bots/contract'
 import { wireHello } from '@sand/devices-contract'
 import { owned } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
@@ -52,6 +67,11 @@ export const botStore = (ctx: BotsContext) => {
     create: (spec: NewBot) => ctx.wire.call(botCreate, spec).then(keep),
     update: (bot: string, patch: BotPatch) => ctx.wire.call(botUpdate, { bot, patch }).then(keep),
     remove: (bot: string) => ctx.wire.call(botDelete, { bot }).then(() => drop(bot)),
+    jobs: {
+      create: (bot: string, spec: Omit<NewJob, 'bot'>) => ctx.wire.call(jobCreate, { bot, ...spec }),
+      update: (job: string, patch: JobPatch) => ctx.wire.call(jobUpdate, { job, patch }),
+      remove: (job: string) => ctx.wire.call(jobDelete, { job }),
+    },
   }
 }
 

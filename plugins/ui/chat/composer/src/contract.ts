@@ -114,6 +114,8 @@ export interface ChatDock {
   view: HTMLElement
   sending(): Sending | undefined
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
+  quote(text: string): void
+  focus(): void
 }
 
 export interface Composer {

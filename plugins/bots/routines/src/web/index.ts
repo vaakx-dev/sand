@@ -21,6 +21,7 @@ export default definePlugin({
       title: routine.name,
       when: describe(routine.when),
       detail: oneLine(routine.instructions),
+      ...(routine.job && { job: routine.job }),
       paused: routine.paused,
       error: failure(routine),
       actions: () => [

@@ -114,9 +114,26 @@ export const chatView = (parts: ChatParts) => {
 
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
-  return div(
+  const rowOf = (entry: string) => rowList.querySelector(`[data-entry="${CSS.escape(entry)}"]`)
+
+  const reveal = async (entry: string) => {
+    while (!rowOf(entry) && talk.more.get()) {
+      const shown = talk.entries.get()?.length
+      await talk.older()
+      if (talk.entries.get()?.length === shown) break
+    }
+    rowOf(entry)?.scrollIntoView({ block: 'center' })
+  }
+
+  const answer = (question: string) => {
+    dock.quote(question)
+    dock.focus()
+  }
+
+  const view = div(
     { class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: () => talk.release },
     div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view()),
     dock.view,
   )
+  return { view, reveal, answer }
 }
