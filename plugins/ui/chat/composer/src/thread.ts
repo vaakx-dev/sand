@@ -4,12 +4,13 @@ import { modelButton } from '@sand/model-panel/contract'
 import { threadUpdate } from '@sand/orchestrator/contract'
 import { pulse } from '@sand/reactive'
 import { errorMessage } from '@sand/util'
-import { models, modelsChange, outbox, outboxChange, threadChange, threadSelect } from '@sand/web-client/contract'
+import { draftStarted, models, modelsChange, outbox, outboxChange, threadChange, threadSelect } from '@sand/web-client/contract'
+import { sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from './context'
 import type { ChatRef } from './contract'
 import type { Model } from './model'
-import { interrupt, modelMissing, sendDevice, stoppable, submit } from './send/submit'
-import type { Delivery, Target } from './target'
+import { destination, interrupt, modelMissing, sendDevice, stoppable, submit } from './send/submit'
+import type { Delivery, Destination, Target } from './target'
 
 const deliveryOf = (ctx: ComposerContext): Delivery => {
   const pc = sendDevice(ctx)
@@ -43,6 +44,9 @@ export const threadTarget = (ctx: ComposerContext): Target => {
   ctx.on(threadChange, id => {
     if (id === ctx.threads.current()?.id) changes.bump()
   })
+  const started = sig(new Map<string, string>())
+  ctx.on(draftStarted, (draft, thread) => started.update(known => new Map(known).set(draft, thread)))
+  const threadOf = (to: Destination) => (to.draft ? started.get().get(to.draft.id) : to.conversation)
   const running = changes.read(() => Boolean(ctx.threads.current()?.turn))
   const stopping = changes.read(() => stoppable(ctx.threads.current()))
   const delivery = changes.read(() => deliveryOf(ctx))
@@ -71,7 +75,9 @@ export const threadTarget = (ctx: ComposerContext): Target => {
       if (!button || !modelMissing(ctx, threadSettings(ctx, picked))) return true
       return !button.open()
     },
-    send: (text, content, picked, options) => submit(ctx, text, content, threadSettings(ctx, picked), options),
+    destination: () => destination(ctx),
+    shownIn: to => threadOf(to) ?? to.conversation,
+    deliver: (to, message) => submit(ctx, threadOf(to), to, { ...message, settings: threadSettings(ctx, message.settings) }),
     interrupt: () => interrupt(ctx),
   }
 }

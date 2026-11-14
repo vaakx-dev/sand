@@ -13,15 +13,15 @@ const moveToWorktree = (ctx: OrchestratorContext, id: string, branch: string | u
   return found.move(id, branch)
 }
 
-export const updateThread = async (ctx: OrchestratorContext, { session, title, pinned, snoozed, settled, worktree, branch, ...asked }: InputOf<typeof threadUpdate>) => {
+export const updateThread = async (ctx: OrchestratorContext, { session, title, pinned, snoozed, archived, worktree, branch, ...asked }: InputOf<typeof threadUpdate>) => {
   const thread = findThread(ctx, session)
   const { id } = thread
   ctx.modelSettings.change(thread, matchSettings(ctx, asked))
   if (title !== undefined) ctx.sessions.rename(id, title)
   if (pinned !== undefined) ctx.sessions.pin(id, pinned)
   if (snoozed !== undefined) ctx.sessions.snooze(id, snoozed)
-  if (settled) await stopThread(ctx, thread)
-  if (settled !== undefined) await ctx.sessions.settle(id, settled)
+  if (archived) await stopThread(ctx, thread)
+  if (archived !== undefined) await ctx.sessions.archive(id, archived)
   if (worktree || branch) await moveToWorktree(ctx, id, branch)
   return rowOf(ctx, ctx.sessions.list().find(summary => summary.id === id)!)
 }

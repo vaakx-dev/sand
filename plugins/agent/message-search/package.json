@@ -1,0 +1,52 @@
+{
+  "name": "@sand/message-search",
+  "version": "0.0.0",
+  "description": "Message search: an index of the words said in threads and bots, kept in sand.db, that Search, agents and the sand search command use to find messages",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "message-search",
+    "runtime": "./src/index.ts",
+    "host": "./src/host.ts",
+    "cli": "./src/cli.ts",
+    "web": "./src/web/index.ts",
+    "label": "Message search",
+    "summary": "Finds words said in your threads and bots",
+    "features": {
+      "message-search": {
+        "label": "Message search",
+        "summary": "Search finds words said in your threads and bots, and jumps to the message",
+        "needs": [
+          "threads"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chat": "workspace:*",
+    "@sand/chat-find": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/cli-commands": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

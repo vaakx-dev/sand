@@ -4,7 +4,7 @@ import { isAbsolute, resolve } from 'node:path'
 import { z } from 'zod'
 import { projectCreate, projectRemove, projectRoot, projectRows, projectUpdate } from '@sand/project/contract'
 
-const group: McpGroup = { name: 'projects', label: 'Projects', summary: 'list, add, create, rename, hide and remove projects, and set where new ones go' }
+const group: McpGroup = { name: 'projects', label: 'Projects', summary: 'list, add, create, rename, pin, archive and remove projects, and set where new ones go' }
 
 const project = z.string().describe('The project id, from project_list')
 const pc = z.string().min(1).optional()
@@ -26,7 +26,8 @@ const createInput = z.object({
 const updateInput = z.object({
   project,
   name: z.string().min(1).optional().describe('Rename it'),
-  hidden: z.boolean().optional().describe("Hide it from sand's lists of projects, or show it again"),
+  pinned: z.boolean().optional().describe('Pin it first in every list and picker of projects, or unpin it; pinning also unarchives it'),
+  archived: z.boolean().optional().describe("Archive it out of sand's lists and pickers of projects, or unarchive it; archiving also unpins it. Its folders and threads stay"),
   icon: z
     .object({
       shape: z.number().int().positive().optional().describe('A shape number from 1 up (default: the first shape)'),
@@ -55,7 +56,7 @@ export const projectTools: McpTool[] = [
   {
     name: 'project_list',
     description:
-      "List sand's projects by name: each one's folder on this PC, its git remote and whether it is hidden. Start threads in one with thread_start's project.",
+      "List sand's projects by name: each one's folder on this PC, its git remote and whether it is pinned or archived. Start threads in one with thread_start's project.",
     input: listInput,
     parts: [{ feature: 'pcs', description: 'otherPcs lists its folders on your other PCs.' }],
     access: 'read',
@@ -81,7 +82,7 @@ export const projectTools: McpTool[] = [
   } satisfies McpTool<typeof createInput>,
   {
     name: 'project_update',
-    description: 'Rename a project, hide or show it, or change its icon; returns the project as project_list shows it',
+    description: 'Rename, pin or archive a project, or change its icon; returns the project as project_list shows it',
     input: updateInput,
     access: 'operate',
     group: group.name,

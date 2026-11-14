@@ -31,7 +31,7 @@ const start = async () => {
   return { repo, thread: thread.id, worktree }
 }
 
-test("a thread's committed and uncommitted work is ready, and merging squashes it onto the project's branch and settles the thread", async () => {
+test("a thread's committed and uncommitted work is ready, and merging squashes it onto the project's branch and archives the thread", async () => {
   const { repo, thread, worktree } = await start()
   const before = git(repo, 'rev-parse', 'HEAD')
   await Bun.write(join(worktree, 'notes.txt'), 'one\n2\nthree\n')
@@ -57,7 +57,7 @@ test("a thread's committed and uncommitted work is ready, and merging squashes i
   expect(await Bun.file(join(repo, 'notes.txt')).text()).toBe('one\n2\nthree\n')
   expect(await Bun.file(join(repo, 'todo.txt')).text()).toBe('later\n')
   expect(git(repo, 'status', '--porcelain')).toBe('')
-  expect(sand.sessions.require(thread).settled).not.toBeNull()
+  expect(sand.sessions.require(thread).archived).not.toBeNull()
   expect(git(worktree, 'rev-parse', 'HEAD')).toBe(git(repo, 'rev-parse', 'HEAD'))
   expect(await sand.ask(changesList, { sessions: [thread] })).toEqual([expect.objectContaining({ state: 'merged', commit: git(repo, 'rev-parse', 'HEAD') })])
 })
@@ -79,9 +79,9 @@ test('a dirty project folder is refused and a conflict ends in conflict, and nei
   expect(git(repo, 'rev-parse', 'HEAD')).toBe(head)
   expect(git(repo, 'status', '--porcelain')).toBe('')
   expect(git(worktree, 'show', 'HEAD:notes.txt')).toBe('one\nthread\nthree')
-  expect(sand.sessions.require(thread).settled).toBeNull()
+  expect(sand.sessions.require(thread).archived).toBeNull()
 
-  await sand.sessions.settle(thread, true)
+  await sand.sessions.archive(thread, true)
   expect(await sand.ask(changesList, { sessions: [thread] })).toEqual([expect.objectContaining({ session: thread, state: 'none' })])
 })
 
