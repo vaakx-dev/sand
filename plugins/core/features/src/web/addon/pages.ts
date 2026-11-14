@@ -2,6 +2,7 @@ import type { Settings } from '@sand/settings/contract'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { Addon } from '../../contract'
+import { extrasOf, isExtra } from './extras'
 import { addonPage, type PageParts } from './page'
 
 const LIST = 'features'
@@ -30,7 +31,8 @@ const addonPages = (host: Settings, parts: PageParts) => {
     for (const id of [...shown.keys()]) if (!kept.has(id)) drop(id)
   }
   const stop = effect(() => {
-    const addons = (parts.store.choice.get()?.addons ?? []).filter(described)
+    const choice = parts.store.choice.get()
+    const addons = choice ? choice.addons.filter(addon => !isExtra(choice, addon) && (described(addon) || extrasOf(choice, addon.id).length > 0)) : []
     untrack(() => sync(addons))
   })
   return {

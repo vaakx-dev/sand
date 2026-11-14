@@ -14,6 +14,7 @@ interface Addon {
   label: string
   summary: string
   needs: string[]
+  parent?: string
   home: Workspace
   packages: Workspace[]
 }
@@ -38,11 +39,12 @@ const rootFinder = (definitions: FeatureDefinition[]) => {
   return rootOf
 }
 
-const addonOf = (root: FeatureDefinition, definitions: FeatureDefinition[], rootOf: (id: string) => string | undefined) => {
+const addonOf = (root: FeatureDefinition, definitions: FeatureDefinition[], rootOf: (id: string | undefined) => string | undefined) => {
   const own = definitions.filter(definition => rootOf(definition.id) === root.id)
-  const needed = new Set(own.flatMap(definition => definition.needs.flatMap(need => rootOf(need) ?? [])))
+  const parent = rootOf(root.parent)
+  const needed = new Set([...own.flatMap(definition => definition.needs.flatMap(need => rootOf(need) ?? [])), ...(parent ? [parent] : [])])
   needed.delete(root.id)
-  return { id: root.id, label: root.label, summary: root.summary, needs: [...needed].sort() }
+  return { id: root.id, label: root.label, summary: root.summary, needs: [...needed].sort(), ...(parent && { parent }) }
 }
 
 const splitWorkspace = async (root: string): Promise<Split> => {

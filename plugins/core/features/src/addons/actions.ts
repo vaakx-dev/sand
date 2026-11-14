@@ -78,10 +78,12 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
     const stamp = state.stamps.get(id)
     const offer = stamp ? offerFrom(state, id, stamp.source) : state.offers.get(id)
     const listing = offer?.listing
+    const parent = feature?.parent ?? listing?.parent
     const about = {
       id,
       label: feature?.label ?? listing?.label ?? id,
       summary: feature?.summary ?? listing?.summary ?? '',
+      ...(parent && { parent }),
       readme: listing?.readme ?? '',
       pictures: listing?.pictures ?? [],
       ...(listing?.cover && { cover: listing.cover }),

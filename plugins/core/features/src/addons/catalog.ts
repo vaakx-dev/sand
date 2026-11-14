@@ -22,6 +22,7 @@ const listing = z.object({
   version: z.string(),
   sand: z.string(),
   needs: z.array(z.string()),
+  parent: z.string().optional(),
   file: z.string().min(1),
   size: z.number().int().positive(),
   sha256: z.string().regex(/^[0-9a-f]{64}$/),

@@ -12,6 +12,7 @@ export interface Addon {
   id: string
   label: string
   summary: string
+  parent?: string
   status: AddonStatus
   readme: string
   pictures: string[]

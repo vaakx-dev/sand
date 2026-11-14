@@ -32,7 +32,7 @@ const packAddon = async (root: string, addon: Addon, files: AppFile[], version: 
   const contents = [...ownFiles(files, addon), ...(await moduleBytes(root, addon))].toSorted((a, b) => compare(a.path, b.path))
   const bytes = await new Bun.Archive(Object.fromEntries(contents.map(file => [file.path, file.bytes])), { compress: 'gzip' }).bytes()
   const { readme, pictures, cover } = await addonReadme(addon)
-  const { id, label, summary, needs } = addon
+  const { id, label, summary, needs, parent } = addon
   const listing = {
     id,
     label,
@@ -40,6 +40,7 @@ const packAddon = async (root: string, addon: Addon, files: AppFile[], version: 
     version,
     sand: `>=${version}`,
     needs,
+    ...(parent && { parent }),
     file: addonAsset(id),
     size: bytes.length,
     sha256: sha256(bytes),
