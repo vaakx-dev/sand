@@ -71,9 +71,9 @@ const reading = (kit: Kit, { document, shape }: Opened) => {
   )
   const keeping = (change: () => void) => () => keepPlace(strip, pages[current.get() - 1]!.node, change)
   const bar = div(
-    { class: 'sticky bottom-3 mb-3 flex items-center gap-1 self-center rounded-full border border-neutral-800 bg-neutral-900 py-1 pr-1 pl-3 shadow-lg' },
+    { class: ['sticky bottom-3 mb-3 flex items-center gap-1 self-center rounded-lg bg-neutral-800 p-1 pl-3', kit.floatingEdge] },
     span({ class: 'text-sm tabular-nums text-neutral-400', 'aria-label': () => `Page ${current.get()} of ${document.numPages}` }, () => `${current.get()} / ${document.numPages}`),
-    kit.zoomControls({ label: zoom.label, canZoomOut: zoom.canZoomOut, zoomIn: keeping(zoom.zoomIn), zoomOut: keeping(zoom.zoomOut), fit: keeping(zoom.fit) }),
+    kit.zoomControls({ label: zoom.label, canZoomOut: zoom.canZoomOut, zoomIn: keeping(zoom.zoomIn), zoomOut: keeping(zoom.zoomOut), fit: keeping(zoom.fit), surface: 'raised' }),
   )
   return div({ class: 'flex flex-col' }, strip, bar)
 }
