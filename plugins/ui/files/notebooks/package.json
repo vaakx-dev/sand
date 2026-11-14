@@ -1,0 +1,29 @@
+{
+  "name": "@sand/file-notebooks",
+  "version": "0.0.0",
+  "description": "Shows Jupyter notebooks in the file viewer as cells with their saved outputs",
+  "type": "module",
+  "sand": {
+    "feature": "file-notebooks",
+    "web": "./src/web/index.ts",
+    "label": "Notebooks",
+    "summary": "Shows Jupyter notebooks as cells, with their saved outputs, tables and charts",
+    "features": {
+      "file-notebooks": {
+        "label": "Notebooks",
+        "summary": "Shows Jupyter notebooks as cells, with their saved outputs, tables and charts",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}
