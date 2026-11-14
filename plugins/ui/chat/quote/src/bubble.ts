@@ -19,6 +19,10 @@ export const replyBubble = (kit: Kit, quote: (text: string) => void) => {
     if (!pressing) picked.set(dragging ? undefined : readSelection())
   }
 
+  const move = () => {
+    if (picked.get()) update()
+  }
+
   const reply = () => {
     pressing = false
     const current = picked.get()
@@ -68,8 +72,8 @@ export const replyBubble = (kit: Kit, quote: (text: string) => void) => {
       onDocument<KeyboardEvent>(owner, 'keydown', event => {
         if (event.key === 'Escape') picked.set(undefined)
       })
-      onWindow(owner, 'scroll', update, true)
-      onWindow(owner, 'resize', update)
+      onWindow(owner, 'scroll', move, true)
+      onWindow(owner, 'resize', move)
     },
   }, show(() => Boolean(picked.get()), bubble))
 }
