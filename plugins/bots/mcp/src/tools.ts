@@ -83,7 +83,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof oneInput>,
   {
     name: 'bot_interrupt',
-    description: "Stop a bot's running turn and its background commands",
+    description: "Stop a bot's running turn. Its background commands keep running",
     input: oneInput,
     access: 'operate',
     group: group.name,
