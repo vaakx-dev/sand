@@ -16,7 +16,7 @@ export type Found = { file: FoundFile } | { missing: string }
 
 export interface OpenFile extends FoundFile {
   blob(): Promise<Blob>
-  bytes(): Promise<Uint8Array>
+  bytes(): Promise<Uint8Array<ArrayBuffer>>
   content(): Promise<string>
   link(target: string, label: (Node | string)[]): Node | undefined
 }
