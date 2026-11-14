@@ -41,6 +41,12 @@ export interface Size {
   height: number
 }
 
+export interface FitZoomOptions {
+  readableLevel?: number
+}
+
+type Chosen = 'start' | 'fit' | number
+
 const LEAST_ZOOM = 0.25
 const MOST_ZOOM = 4
 const ZOOM_STEP = 1.4
@@ -48,23 +54,34 @@ const STAGE_MARGIN = 24
 
 const clampZoom = (level: number) => Math.min(MOST_ZOOM, Math.max(LEAST_ZOOM, level))
 
-export const fitZoom = (size: Size) => {
+export const fitZoom = (size: Size, { readableLevel = LEAST_ZOOM }: FitZoomOptions = {}) => {
   const room = sig<Size>({ width: 0, height: 0 })
   const fitted = derive(() => {
     const { width, height } = room.get()
     return width ? clampZoom(Math.min((width - 2 * STAGE_MARGIN) / size.width, (height - 2 * STAGE_MARGIN) / size.height)) : 1
   })
-  const chosen = sig<number | undefined>(undefined)
-  const level = derive(() => chosen.get() ?? fitted.get())
+  const start = derive(() => Math.max(fitted.get(), clampZoom(readableLevel)))
+  const chosen = sig<Chosen>('start')
+  const levelFor = (choice: Chosen) => {
+    switch (choice) {
+      case 'start':
+        return start.get()
+      case 'fit':
+        return fitted.get()
+      default:
+        return choice
+    }
+  }
+  const level = derive(() => levelFor(chosen.get()))
   const zoomIn = () => chosen.set(clampZoom(level.get() * ZOOM_STEP))
   const zoomOut = () => chosen.set(clampZoom(level.get() / ZOOM_STEP))
-  const fit = () => chosen.set(undefined)
+  const fit = () => chosen.set('fit')
   return {
     size,
     room,
     level,
     canZoomOut: derive(() => level.get() > LEAST_ZOOM),
-    label: derive(() => (chosen.get() === undefined ? 'Fit' : `${Math.round(level.get() * 100)}%`)),
+    label: derive(() => (level.get() === fitted.get() ? 'Fit' : `${Math.round(level.get() * 100)}%`)),
     zoomIn,
     zoomOut,
     fit,

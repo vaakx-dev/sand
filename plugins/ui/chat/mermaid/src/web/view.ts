@@ -9,6 +9,8 @@ type Showing = 'diagram' | 'source'
 
 type Face = Drawn | { kind: 'waiting' } | { kind: 'source' }
 
+type Picture = Extract<Drawn, { kind: 'drawn' }>
+
 interface Parts {
   kit: Kit
   diagrams: Diagrams
@@ -25,6 +27,8 @@ const WAITING: Face = { kind: 'waiting' }
 const SOURCE: Face = { kind: 'source' }
 
 const NEAR_SCREEN = '400px'
+
+const READABLE_TEXT_PX = 12
 
 let shown = 0
 
@@ -46,11 +50,17 @@ const whenNear = (element: Element, reached: () => void) =>
 
 const sourceBlock = (kit: Kit, source: string) => kit.codeBlock({ class: 'whitespace-pre' }, source)
 
-const fittedDiagram = (svg: string, expand: () => void) => div({ class: 'cursor-zoom-in', onClick: expand }, placeDiagram(svg).node)
+const readableScale = ({ textPx }: Picture) => READABLE_TEXT_PX / textPx
 
-const fullScreenDiagram = (kit: Kit, title: string, svg: string): SheetSpec => {
-  const diagram = placeDiagram(svg)
-  const zoom = kit.fitZoom(diagram.size)
+const fittedDiagram = (picture: Picture, expand: () => void) => {
+  const diagram = placeDiagram(picture.svg)
+  const narrowestPx = diagram.size.width * Math.min(1, readableScale(picture))
+  return div({ class: 'overflow-x-auto', onClick: expand }, div({ class: 'cursor-zoom-in', style: { minWidth: `${narrowestPx}px` } }, diagram.node))
+}
+
+const fullScreenDiagram = (kit: Kit, title: string, picture: Picture): SheetSpec => {
+  const diagram = placeDiagram(picture.svg)
+  const zoom = kit.fitZoom(diagram.size, { readableLevel: readableScale(picture) })
   return {
     label: `Full screen ${title}`,
     look: 'viewer',
@@ -68,7 +78,7 @@ const faceView = (kit: Kit, source: string, face: Face, { retry, expand }: FaceA
     case 'waiting':
       return div({ class: 'flex h-24 items-center justify-center rounded-lg bg-neutral-950' }, kit.spinner())
     case 'drawn':
-      return fittedDiagram(face.svg, expand)
+      return fittedDiagram(face, expand)
     case 'failed':
       return div({ class: 'flex flex-col gap-1' }, sourceBlock(kit, source), kit.errorText(face.error))
     case 'unloaded':
@@ -96,7 +106,7 @@ const diagramView = ({ kit, diagrams, fullScreen }: Parts, source: string, title
     }
     const expand = () => {
       const face = drawing.get()
-      if (face.kind === 'drawn') fullScreen(fullScreenDiagram(kit, title, face.svg))
+      if (face.kind === 'drawn') fullScreen(fullScreenDiagram(kit, title, face))
     }
     effect(() => {
       if (near.get()) draw(diagrams.theme.get())

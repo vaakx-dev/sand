@@ -1,9 +1,9 @@
 import type { Theme } from '@sand/ui-theme/contract'
 import { errorMessage } from '@sand/util'
 import type { Mermaid } from 'mermaid'
-import { diagramConfig } from '../config'
+import { diagramConfig, FONT_SIZE } from '../config'
 
-type Drawn = { kind: 'drawn'; svg: string } | { kind: 'failed'; error: string } | { kind: 'unloaded'; error: string }
+type Drawn = { kind: 'drawn'; svg: string; textPx: number } | { kind: 'failed'; error: string } | { kind: 'unloaded'; error: string }
 
 const DRAFT_ID = 'sand-mermaid-draft'
 
@@ -20,11 +20,21 @@ const loadLibrary = () =>
     },
   ))
 
+const smallestTextPx = (svg: string) => {
+  const probe = document.createElement('div')
+  probe.className = 'invisible fixed left-0 top-0'
+  probe.innerHTML = svg
+  document.body.append(probe)
+  const sizes = [...probe.querySelectorAll('text, tspan')].filter(text => text.textContent?.trim()).map(text => parseFloat(getComputedStyle(text).fontSize))
+  probe.remove()
+  return sizes.length ? Math.min(...sizes) : FONT_SIZE
+}
+
 const drawWith = async (mermaid: Mermaid, theme: Theme, source: string): Promise<Drawn> => {
   mermaid.initialize(diagramConfig(theme, getComputedStyle(document.body).fontFamily))
   try {
     const { svg } = await mermaid.render(DRAFT_ID, source)
-    return { kind: 'drawn', svg }
+    return { kind: 'drawn', svg, textPx: smallestTextPx(svg) }
   } catch (error) {
     return { kind: 'failed', error: `Couldn't draw this diagram. ${errorMessage(error)}` }
   }

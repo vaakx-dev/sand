@@ -85,4 +85,4 @@ const diagramConfig = (theme: Theme, fontFamily: string): MermaidConfig => ({
   themeVariables: variables(theme, fontFamily),
 })
 
-export { diagramConfig }
+export { diagramConfig, FONT_SIZE }
