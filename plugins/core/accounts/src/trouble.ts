@@ -1,4 +1,4 @@
-import { ProviderTrouble, UsageLimited } from './contract'
+import { ProviderTrouble, RequestRejected, UsageLimited } from './contract'
 import { ApiError } from './http/error'
 
 const droppedCodes = new Set([
@@ -16,6 +16,7 @@ const droppedCodes = new Set([
 ])
 const busyStreamErrors = new Set(['overloaded_error', 'api_error'])
 const busyStatuses = new Set([408, 409])
+const BAD_REQUEST = 400
 
 const codeOf = (error: unknown): string | undefined => {
   if (!(error instanceof Error)) return undefined
@@ -29,6 +30,7 @@ const apiTrouble = (provider: string, error: ApiError) => {
   if (error.usageLimit) return new UsageLimited(`${provider} is out of usage (${error.message})`, error.resetsAt)
   if (error.status === 429) return new ProviderTrouble(`${provider} is rate limiting sand (${error.message})`, error.waitMs, { cause: error })
   if (busy(error)) return new ProviderTrouble(`${provider} is busy or having trouble (${error.message})`, error.waitMs, { cause: error })
+  if (error.status === BAD_REQUEST) return new RequestRejected(`${provider} refused the request (${error.message})`, { cause: error })
   return error
 }
 

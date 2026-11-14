@@ -30,6 +30,8 @@ export default definePlugin({
       put: store.put,
       path: store.path,
       data: store.data,
+      exclude: store.exclude,
+      include: store.include,
       inUse(hashes) {
         providers.add(hashes)
         return () => void providers.delete(hashes)

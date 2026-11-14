@@ -107,12 +107,14 @@ export interface Sending {
   conversation: string
   prompt: Prompt
   at: number
-  uploading: boolean
+  failed: boolean
+  caption(): string
+  actions: MenuAction[]
 }
 
 export interface ChatDock {
   view: HTMLElement
-  sending(): Sending | undefined
+  sending(): Sending[]
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
   quote(text: string): void
   focus(): void
@@ -143,7 +145,7 @@ export interface Composer {
   settings(): SessionSettings
   choose(patch: SettingsPatch): void
   dock(chat: Chat, options?: DockOptions): ChatDock
-  sending(): Sending | undefined
+  sending(): Sending[]
 }
 
 export interface Typing {
@@ -160,8 +162,6 @@ export interface Drafts {
   list(): ThreadDraft[]
   remove(id: string): void
 }
-
-export const sendingCaption = ({ uploading }: Sending) => (uploading ? 'Uploading files…' : 'Sending…')
 
 export const composer = service<Composer>('composer')
 export const drafts = service<Drafts>('drafts')

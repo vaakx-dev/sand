@@ -20,6 +20,7 @@
     "@sand/chats": "workspace:*",
     "@sand/context": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/keyval": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/model-panel": "workspace:*",
     "@sand/orchestrator": "workspace:*",

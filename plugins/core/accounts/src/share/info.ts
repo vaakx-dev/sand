@@ -22,7 +22,7 @@ export interface ShareInfo {
   limits?: Limits
 }
 
-export type ShareFailure = 'lost' | 'trouble' | 'limited'
+export type ShareFailure = 'lost' | 'trouble' | 'limited' | 'rejected'
 
 export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: string; detail?: string; kind?: ShareFailure; waitMs?: number; resetsAt?: number }
 

@@ -7,7 +7,7 @@ import type { Effort, LLMRequest, ModelInfo } from '../src/contract'
 import { discoverAnthropic, discoverOpenRouter } from '../src/discover'
 import { openaiBody } from '../src/openai/body'
 
-const media: Media = { put: () => ({ hash: '', size: 0, mediaType: '' }), path: () => '', data: () => undefined, inUse: () => () => {} }
+const media: Media = { put: () => ({ hash: '', size: 0, mediaType: '' }), path: () => '', data: () => undefined, exclude: () => {}, include: () => {}, inUse: () => () => {} }
 
 const request = (effort?: Effort): LLMRequest => ({ system: 'Be brief.', messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }], tools: [], ...(effort && { effort }) })
 

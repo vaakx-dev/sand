@@ -12,8 +12,9 @@ const looksLikeImage = (name: string) => {
   return (mediaType?.startsWith('image/') && mediaType !== 'image/svg+xml') || imageExtensions.has(extensionOf(name))
 }
 
-const looksLikePdf = (data: Uint8Array, name: string) =>
-  extensionOf(name) === 'pdf' || (data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46)
+const PDF_HEADER_BYTES = 1024
+
+const looksLikePdf = (data: Uint8Array) => Buffer.from(data.subarray(0, PDF_HEADER_BYTES)).includes('%PDF-')
 
 export const isMedia = (path: string) => imageExtensions.has(extensionOf(path)) || extensionOf(path) === 'pdf'
 
@@ -22,7 +23,7 @@ export const worthFitting = (name: string, size: number) => size <= maxPdfBytes 
 export const fit = async (data: Uint8Array, name: string, limits: ImageLimits): Promise<Fitted | undefined> => {
   const picture = looksLikeImage(name) ? await image(data, name, limits) : undefined
   if (picture) return picture
-  if (looksLikePdf(data, name)) return pdf(data, name)
+  if (looksLikePdf(data)) return pdf(data, name)
   return text(data, name)
 }
 

@@ -1,0 +1,9 @@
+{
+  "name": "@sand/keyval",
+  "version": "0.0.0",
+  "description": "One IndexedDB object store in the browser, as a small key-value store",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

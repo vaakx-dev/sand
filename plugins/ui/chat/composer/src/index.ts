@@ -2,6 +2,7 @@ import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, draftStore, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions, type DraftStore } from './contract'
 import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
+import { keyval } from '@sand/keyval'
 import { owned, pulse } from '@sand/reactive'
 import { quotedText } from '@sand/util'
 import { listen, onIdle, onMount, sig } from '@vaakx-dev/vrui'
@@ -15,6 +16,8 @@ import { field, type Field } from './dock/field'
 import { createSlots } from './dock/slots'
 import { dockDrafts } from './drafts/dock'
 import { draftSession } from './drafts/session'
+import { reconnected } from './drafts/reconnected'
+import type { Kept } from './drafts/store'
 import { spacedLink } from './editor/chips/place'
 import { loadEditor } from './editor/view'
 import { createTurnErrors, turnErrorBanner } from './errors/turn'
@@ -24,6 +27,7 @@ import { createPlaceholders } from './placeholder'
 import { createPlus } from './plus/entries'
 import { createAsides } from './send/aside'
 import { createSendMenu } from './send/menu'
+import { sendsIn, unsaved, type Send } from './send/outgoing'
 import { createSuggesters } from './suggest/sources'
 import { chatTarget } from './target'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
@@ -46,6 +50,8 @@ export default definePlugin({
     const threadOnly = createTriggers()
     const skills = sig<SkillIndex | undefined>(undefined)
     const shelf = sig<Shelves | undefined>(undefined)
+    const files = keyval<Kept>('sand-draft-files', 'drafts')
+    const sends = keyval<Send[]>('sand-sending', 'sends')
     ctx.watch(shelves, found => {
       shelf.set(found)
     })
@@ -61,8 +67,8 @@ export default definePlugin({
       })
 
     const { model, session, errors, placeholders } = owned(ctx, () => {
-      const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf)
-      const session = draftSession(ctx, model, () => store.get(), () => mounted.forEach(built => built.completion.close()))
+      const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf, sendsIn(sends, 'threads'))
+      const session = draftSession(ctx, model, () => store.get(), files, () => mounted.forEach(built => built.completion.close()))
       const inThread = pulse(ctx, [threadSelect]).read(() => Boolean(ctx.threads.current()))
       listen(window, 'pagehide', () => session.keep())
       return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
@@ -72,8 +78,8 @@ export default definePlugin({
       const own = createSlots(shared)
       const chatOnly = createTriggers()
       chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
-      const model = createModel(chatTarget(chat), [triggers, chatOnly], shelf)
-      dockDrafts(`${chat.ref.owner}:${chat.ref.id}`, model, () => store.get())
+      const model = createModel(chatTarget(chat), [triggers, chatOnly], shelf, unsaved)
+      dockDrafts(`${chat.ref.owner}:${chat.ref.id}`, model, () => store.get(), files, () => reconnected(ctx))
       const parts = {
         ctx,
         model,
@@ -89,7 +95,7 @@ export default definePlugin({
       return {
         view: dock(parts, built),
         slot: own.add,
-        sending: () => model.shown.get(),
+        sending: model.sending,
         quote: text => built.editor.quote(text),
         focus: () => built.editor.focus(),
       }
@@ -153,13 +159,14 @@ export default definePlugin({
       settings,
       choose,
       dock: chatDock,
-      sending: () => model.shown.get(),
+      sending: model.sending,
     }
 
-    session.start()
+    void session.start()
+    void model.resume()
     ctx.watch(draftStore, found => {
       store.set(found)
-      if (found) session.start()
+      if (found) void session.start()
     })
     ctx.on(threadSelect, session.open)
     ctx.watch(fileIndex, found => found && threadOnly.add(fileTrigger(found, ctx.threads)))

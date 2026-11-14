@@ -1,7 +1,7 @@
 import type { Composer } from '@sand/composer/contract'
 import { type Route, shell } from '@sand/ui-shell/contract'
 import { threadChange, type Thread } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, list, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, resizeObserver, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import { claims } from './claims'
 import type { ChatContext } from './context'
 import { threadRoute } from './contract'
@@ -35,14 +35,14 @@ export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefin
     const { kit, transcriptParts: parts } = ctx
     const rows = parts.rows({ conversation: draft, menu: kit.contextMenu(), states: parts.openStates(), jump: () => {} })
     const shown = derive(() => sendingRows(ctx, draft, rows, composer.get()?.sending()))
-    return div(
-      { class: [kit.pageColumn, 'min-h-0 flex-1 overflow-auto px-3 pt-4 md:px-4'], hidden: () => !shown.get().length },
-      list(
-        shown,
-        row => row.key,
-        row => untrack(() => row.get()).view(row.map(value => value.data)),
-      ),
+    const rowList = list(
+      shown,
+      row => row.key,
+      row => untrack(() => row.get()).view(row.map(value => value.data)),
     )
+    const scroller = div({ class: [kit.pageColumn, 'min-h-0 flex-1 overflow-auto px-3 pt-4 md:px-4'], hidden: () => !shown.get().length }, rowList)
+    resizeObserver(rowList, () => scroller.scrollTo({ top: scroller.scrollHeight }))
+    return scroller
   }
 
   const thread = (id: string) => {

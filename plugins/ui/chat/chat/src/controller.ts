@@ -235,10 +235,12 @@ export const chatController = (ctx: ChatContext, id: string) => {
       ctx.on(threadsChange, render),
       ctx.on(modelsChange, refresh),
       ctx.watch(composer, found => {
-        const sending = derive(() => {
-          const message = found?.sending()
-          return message?.conversation === id ? message : undefined
-        })
+        const sending = derive(() =>
+          (found?.sending() ?? [])
+            .filter(message => message.conversation === id)
+            .map(message => `${message.id}:${message.failed}`)
+            .join(),
+        )
         return effect(() => {
           sending.get()
           untrack(render)

@@ -1,10 +1,12 @@
-import type { DraftTarget } from '@sand/web-client/contract'
+import type { KeyVal } from '@sand/keyval'
+import { draftStarted, type DraftTarget } from '@sand/web-client/contract'
 import { effect, onTimeout, untrack } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import type { DraftStore, Drafts } from '../contract'
 import type { Model } from '../model'
 import { createListed } from './listed'
-import { createStore, isBlank, type Saved } from './store'
+import { reconnected } from './reconnected'
+import { createStore, isBlank, type Kept, type Saved } from './store'
 
 interface Key {
   id: string
@@ -17,12 +19,14 @@ const keyOf = (ctx: ComposerContext, id: string | undefined): Key | undefined =>
   return target && { id: target.id, target }
 }
 
-export const draftSession = (ctx: ComposerContext, model: Model, remote: () => DraftStore | undefined, switched: () => void) => {
-  const store = createStore(remote, model.upload)
+export const draftSession = (ctx: ComposerContext, model: Model, remote: () => DraftStore | undefined, local: KeyVal<Kept>, switched: () => void) => {
+  const store = createStore(remote, local, model.uploaded)
   const listed = createListed(ctx)
+  const started = new Map<string, string>()
   let key = keyOf(ctx, ctx.threads.current()?.id)
   let ready = false
-  let sent: { id: string; text: string } | undefined
+
+  ctx.on(draftStarted, (draft, thread) => void started.set(draft, thread))
 
   const drop = (id: string) => {
     store.remove(id)
@@ -42,9 +46,18 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
     store.save(key.id, { ...saved, target: key.target, updated: listed.updated(key.id) ?? Date.now() })
   }
 
+  const loaded = async (next: Key): Promise<Saved | undefined> => {
+    try {
+      return await store.load(next.id)
+    } catch {
+      await reconnected(ctx)
+      return next === key ? loaded(next) : undefined
+    }
+  }
+
   const restore = async (next: Key) => {
-    const saved = await store.load(next.id)
-    if (next !== key) return
+    const saved = await loaded(next)
+    if (!saved || next !== key) return
     if (!isBlank(saved) && model.empty.get()) model.fill(saved)
     ready = true
   }
@@ -55,8 +68,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
     keep()
   }
 
-  const promotes = (next: Key | undefined) =>
-    Boolean(model.sending.get() && key?.target && next && !next.target && !ctx.threads.get(next.id)?.info.head)
+  const promotes = (next: Key | undefined) => Boolean(key?.target && next && !next.target && started.get(key.id) === next.id)
 
   const settle = (first: Key) => {
     key = first
@@ -70,9 +82,8 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
     if (!key && next && !isBlank(model.draft())) return settle(next)
     if (key && next && promotes(next)) {
       drop(key.id)
-      if (sent?.id === key.id) sent = { ...sent, id: next.id }
       key = next
-      return
+      return keep()
     }
     keep(true)
     key = next
@@ -88,20 +99,10 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
 
   effect(() => {
     const saved = model.draft()
+    model.uploaded(saved.items)
     if (!ready) return
     untrack(() => publish(saved, false))
     return onTimeout(() => keep(), 300)
-  })
-
-  effect(() => {
-    if (model.sending.get()) {
-      sent = key ? { id: key.id, text: untrack(() => model.draft().text) } : undefined
-      return
-    }
-    const done = sent
-    sent = undefined
-    if (!done || done.id === key?.id || untrack(() => model.failure.get())) return
-    if (store.peek(done.id)?.text === done.text) drop(done.id)
   })
 
   const drafts: Drafts = {
@@ -116,9 +117,9 @@ export const draftSession = (ctx: ComposerContext, model: Model, remote: () => D
     drafts,
     open,
     keep: () => keep(),
-    start() {
-      if (key) void restore(key)
+    async start() {
       void load()
+      if (key) await restore(key)
     },
   }
 }
