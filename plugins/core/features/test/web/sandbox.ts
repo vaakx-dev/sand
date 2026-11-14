@@ -17,9 +17,14 @@ const printed = (out: string, pattern: RegExp) => {
   return found
 }
 
+const emptyCatalog = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => Response.json({ addons: [] }) })
+emptyCatalog.unref()
+
+const offline = `[plugins.features]\ncatalog = "${new URL('/sand-addons.json', emptyCatalog.url).href}"\n\n`
+
 export const startSandbox = async (settings: string) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-features-'))
-  await Bun.write(join(home, 'sandbox.toml'), settings)
+  await Bun.write(join(home, 'sandbox.toml'), offline + settings)
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
   const box = printed(out, /throwaway sand \(pid \d+\) in (.+)$/m)
