@@ -33,6 +33,7 @@ const openedEntry = ({ archive, entry, content, link }: Inside): OpenFile => {
   const name = nameOf(entry.path)
   const type = TYPES[extensionOf(name)] ?? ''
   const blob = new Blob([content], { type })
+  let url: string | undefined
   return {
     path: `${archive.path}/${entry.path}`,
     name,
@@ -40,6 +41,7 @@ const openedEntry = ({ archive, entry, content, link }: Inside): OpenFile => {
     modified: entry.modified,
     type,
     text: looksLikeText(content),
+    source: async () => (url ??= URL.createObjectURL(blob)),
     blob: async () => blob,
     bytes: async () => content,
     content: async () => new TextDecoder().decode(content),
