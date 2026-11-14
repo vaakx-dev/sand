@@ -51,7 +51,8 @@ export const parseProject = (value: unknown): Project | undefined => {
     ...(iconFile ? { iconFile } : {}),
     copies: parseCopies(value.copies),
     updated: value.updated,
-    ...(value.hidden === true ? { hidden: true } : {}),
+    ...(value.pinned === true ? { pinned: true } : {}),
+    ...(value.archived === true ? { archived: true } : {}),
     ...(value.deleted === true ? { deleted: true } : {}),
   }
 }

@@ -2316,6 +2316,7 @@
       "name": "@sand/project",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/cli-commands": "workspace:*",
         "@sand/composer": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",

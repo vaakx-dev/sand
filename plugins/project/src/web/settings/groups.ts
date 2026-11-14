@@ -2,7 +2,7 @@ import type { ContextMenu } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import type { Pulse } from '@sand/reactive'
-import { derive, dynamicChild, sig, type Sig } from '@vaakx-dev/vrui'
+import { dynamicChild, sig, type Sig } from '@vaakx-dev/vrui'
 import { projectAdd } from '../../contract'
 import type { ProjectsContext } from '../context'
 import { iconSheet, type Picking } from './icon'
@@ -19,29 +19,22 @@ const addButton = (ctx: ProjectsContext) => {
   return adder ? quietButton({ size: 'sm', 'aria-label': 'Add a project', onClick: () => adder.open({ added: () => {} }) }, icon('plus', 'sm'), 'Add') : null
 }
 
-const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) => {
-  const { quietButton } = ctx.kit
-  return showHidden.get() || ctx.projects.groups({ hidden: true }).some(group => group.hidden)
-    ? quietButton({ size: 'sm', onClick: showHidden.toggle() }, showHidden.get() ? 'Hide hidden' : 'Show hidden')
-    : null
-}
-
 const emptyRows = (ctx: ProjectsContext) => (ctx.projects.known() ? [ctx.kit.emptyState({ text: 'No projects yet. Add a project to start threads in its folder.' })] : [])
 
-export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: Pulse) => {
-  const { settingsSection } = ctx.kit
-  const showHidden = sig(false)
+const activeSection = (ctx: ProjectsContext, menu: ContextMenu, picking: Sig<Picking>, groups: ProjectGroup[]) =>
+  ctx.kit.settingsSection(
+    { title: heading(groups), action: addButton(ctx) },
+    ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : emptyRows(ctx)),
+  )
+
+const archivedSection = (ctx: ProjectsContext, menu: ContextMenu, picking: Sig<Picking>, groups: ProjectGroup[]) =>
+  groups.length ? ctx.kit.settingsSection({ title: 'Archived' }, ...groups.map(group => groupRow(ctx, menu, group, picking))) : null
+
+export const groupsSections = (ctx: ProjectsContext, menu: ContextMenu, changes: Pulse) => {
   const picking = sig<Picking>(undefined)
   iconSheet(ctx, changes, picking)
-  const source = derive(() => {
-    changes.version.get()
-    return { hidden: showHidden.get() }
-  })
-  return dynamicChild(source, ({ hidden }) => {
-    const groups = ctx.projects.groups({ hidden })
-    return settingsSection(
-      { title: heading(groups), action: [hiddenToggle(ctx, showHidden), addButton(ctx)] },
-      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : emptyRows(ctx)),
-    )
-  })
+  return [
+    dynamicChild(changes.read(() => ctx.projects.groups()), groups => activeSection(ctx, menu, picking, groups)),
+    dynamicChild(changes.read(() => ctx.projects.archived()), groups => archivedSection(ctx, menu, picking, groups)),
+  ]
 }
