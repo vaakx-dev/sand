@@ -1,6 +1,5 @@
-import { botOpen } from '@sand/bot-turns/contract'
 import { botWatchCreate, botWatchList, botWatchRemove } from '@sand/bot-watches/contract'
-import { botCreate, botDelete, type BotEntry, botList } from '@sand/bots/contract'
+import { botCreate, botDelete, botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -15,8 +14,6 @@ let sand: Sand
 afterEach(() => sand.stop())
 
 const said = (text: string): Reply => [{ type: 'text', text }]
-
-const models = { main: { model: 'fake/b' }, quick: {} }
 
 const emitters = new Map<string, (change: Change) => void>()
 
@@ -65,13 +62,13 @@ const use = async (bot: string, name: string, input: Record<string, unknown>) =>
 }
 
 const userTexts = async (bot: string) =>
-  (await sand.ask(botOpen, { bot })).entries.flatMap((entry: BotEntry) =>
+  sand.sessions.require(bot).path().flatMap(entry =>
     entry.type === 'message' && (entry.data as Message).role === 'user' ? [textOf((entry.data as Message).content)] : [],
   )
 
 test('a change to what a bot watches wakes it with the change and its instructions', async () => {
   await start([said('Nothing breaks; noted the new release.')])
-  const bot = await sand.ask(botCreate, { name: 'Releases', models })
+  const bot = await sand.ask(botCreate, { name: 'Releases' })
 
   const watch = await sand.ask(botWatchCreate, { bot: bot.id, label: 'Release feed', instructions: 'Tell the user if a release breaks their build', kind: 'fake', input: { feed: 'releases' } })
   expect(watch).toMatchObject({ bot: bot.id, label: 'Release feed', kind: 'fake', kindLabel: 'Fake feed', target: 'releases' })
@@ -93,7 +90,7 @@ test('a change to what a bot watches wakes it with the change and its instructio
 
 test('a bot listens through its tools, and its watches go when it does', async () => {
   await start([])
-  const bot = await sand.ask(botCreate, { name: 'Docs', models })
+  const bot = await sand.ask(botCreate, { name: 'Docs' })
 
   const made = await use(bot.id, 'watch_create', { label: 'Docs feed', instructions: 'Note what changed in the docs', watch: { kind: 'fake', feed: 'docs' } })
   expect(made).toMatchObject({ bot: bot.id, label: 'Docs feed', kindLabel: 'Fake feed', target: 'docs' })

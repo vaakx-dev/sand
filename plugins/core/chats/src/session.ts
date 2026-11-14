@@ -1,6 +1,6 @@
 import { forksOf } from './branches'
 import type { EntryCache } from './cache'
-import type { AppendMeta, Entry, Message, Session, SessionInfo } from './contract'
+import { type AppendMeta, type Entry, type Message, ownerOf, type Session, type SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
 import type { Paging } from './paging'
 import { entryColumns, parseRow, type Row } from './paging/rows'
@@ -52,7 +52,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
 
   const session: Session = {
     ...info,
-    owner: 'thread',
+    owner: ownerOf(info.kind),
     get head() {
       return current()
     },
@@ -62,6 +62,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
       hooks.entry(session, entry)
       return entry
     },
+    entry: id => all().get(id),
     path() {
       const path: Entry[] = []
       const map = all()

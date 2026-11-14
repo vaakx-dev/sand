@@ -53,7 +53,7 @@ const seed = (ctx: SeedContext) => {
       const title = `Tutor ${index + 1}`
       const bot = ctx.bots.create({ name: title })
       ctx.bots.jobs.create(bot.id, { title: `${title} lessons`, goal: paragraph(2), done: paragraph(1) })
-      write(ctx.bots.conversation(bot.id), turnsFor(long ? 80 : 12, image, false), now - (14 - index) * day, `b${index}`)
+      write(ctx.sessions.require(bot.id), turnsFor(long ? 80 : 12, image, false), now - (14 - index) * day, `b${index}`)
       seeded.bots.push({ id: bot.id, marker: `b${index}`, long, title })
     }
   })

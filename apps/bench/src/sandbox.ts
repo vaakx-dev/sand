@@ -79,9 +79,11 @@ const seededIn = async (box: string): Promise<Seeded> => {
 
 class Sand {
   readonly #main: string
+  readonly #seed: string
 
   constructor(root = REPO) {
     this.#main = join(root, 'apps/sand/src/main.ts')
+    this.#seed = join(root, 'apps/bench/src/seed')
   }
 
   async run(home: string, ...args: string[]) {
@@ -95,7 +97,7 @@ class Sand {
     const home = mkdtempSync(join(tmpdir(), 'sand-bench-'))
     const folder = join(home, 'plugins', 'bench-seed')
     mkdirSync(folder, { recursive: true })
-    cpSync(join(import.meta.dir, 'seed'), folder, { recursive: true })
+    cpSync(this.#seed, folder, { recursive: true })
     cpSync(join(REPO, 'docs/images/phone-chat.png'), join(folder, 'plot.png'))
     await Bun.write(join(folder, 'package.json'), JSON.stringify({ name: 'bench-seed', type: 'module', sand: { runtime: `./${plugin}` } }))
     await Bun.write(join(home, 'sandbox.toml'), settings(script, addons))

@@ -79,9 +79,14 @@ const phaseOf = (body: Item[], running: boolean, options: FoldOptions): TurnPhas
   return begun(body) ? 'working' : 'thinking'
 }
 
+const timedOf = (turn: Turn) => {
+  const worked = turn.body.slice(0, tail(turn.body))
+  return turn.head ? [turn.head, ...worked] : worked
+}
+
 const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions): TurnHead => {
   const items = turn.head ? [turn.head, ...turn.body] : turn.body
-  const times = items.flatMap(item => timeOf(item) ?? [])
+  const times = timedOf(turn).flatMap(item => timeOf(item) ?? [])
   const first = turn.head ? timeOf(turn.head) : times[0]
   return {
     kind: 'turn',

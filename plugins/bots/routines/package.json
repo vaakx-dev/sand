@@ -16,7 +16,6 @@
     "summary": "Lets your bots remind you and do things on a schedule"
   },
   "dependencies": {
-    "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
@@ -26,6 +25,7 @@
     "@sand/schedules": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/transcript": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

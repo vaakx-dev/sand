@@ -1,4 +1,4 @@
-import { botEntry, botName, botRemove, bots } from '@sand/bots/contract'
+import { botName, bots } from '@sand/bots/contract'
 import { sessionEntry, sessionRemove, sessions } from '@sand/chats/contract'
 import { ledger } from '@sand/ledger/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
@@ -29,15 +29,10 @@ export default definePlugin({
     }
 
     ctx.effect(() => () => keeper.stop())
-    ctx.watch(bots, () => keeper.refresh())
     ctx.on(sessionEntry, (session, entry) => {
       if (entry.type === 'message' && session.kind !== 'agent') keeper.refresh()
     })
-    ctx.on(botEntry, entry => {
-      if (entry.type === 'message') keeper.refresh()
-    })
-    ctx.on(sessionRemove, id => store.drop('thread', id))
-    ctx.on(botRemove, id => store.drop('bot', id))
+    ctx.on(sessionRemove, id => store.drop(id))
     ctx.watch(mcpTools, found => found && offerSearchTool(found))
     ctx.watch(
       server,

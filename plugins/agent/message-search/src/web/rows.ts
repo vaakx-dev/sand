@@ -1,5 +1,3 @@
-import { botRoute } from '@sand/bots/contract'
-import { threadRoute } from '@sand/chat/contract'
 import { visitsOf, type PaletteItem, type PalettePage } from '@sand/palette/contract'
 import type { Route } from '@sand/ui-shell/contract'
 import { ago } from '@sand/util'
@@ -9,6 +7,7 @@ import type { PcChat } from './search'
 export interface RowParts {
   used(visits: string): number
   tint(bot: string): string | undefined
+  route(chat: string): Route
   open(chat: PcChat, hit: MessageHit): void
   more(chat: PcChat): PalettePage
 }
@@ -16,12 +15,10 @@ export interface RowParts {
 const USE_WEIGHT = 0.2
 const MOST_CHATS = 10
 
-const routeOf = ({ owner, chat }: PcChat): Route => ({ kind: owner === 'bot' ? botRoute : threadRoute, id: chat })
-
 const fitOrder = ({ fit }: PcChat) => fits.indexOf(fit)
 
 const lead = (parts: RowParts, chat: PcChat): Pick<PaletteItem, 'face' | 'icon'> => {
-  const tint = chat.owner === 'bot' ? parts.tint(chat.chat) : undefined
+  const tint = parts.tint(chat.chat)
   return tint ? { face: { id: chat.chat, tint } } : { icon: 'message' }
 }
 
@@ -32,7 +29,7 @@ const chatRow = (parts: RowParts, chat: PcChat, hit: MessageHit): PaletteItem =>
   label: chat.title,
   excerpt: hit.excerpt,
   meta: ago(hit.at),
-  visits: visitsOf(routeOf(chat)),
+  visits: visitsOf(parts.route(chat.chat)),
   ...lead(parts, chat),
   run: () => parts.open(chat, hit),
 })
@@ -42,7 +39,7 @@ const matchRow = (parts: RowParts, chat: PcChat, hit: MessageHit): PaletteItem =
   label: hit.excerpt.text,
   excerpt: hit.excerpt,
   nested: true,
-  visits: visitsOf(routeOf(chat)),
+  visits: visitsOf(parts.route(chat.chat)),
   run: () => parts.open(chat, hit),
 })
 
@@ -60,7 +57,7 @@ const chatRows = (parts: RowParts, chat: PcChat) => {
   return [chatRow(parts, chat, best), ...rest.map(hit => matchRow(parts, chat, hit)), ...(more > 0 ? [moreRow(parts, chat, more)] : [])]
 }
 
-const rankOf = (parts: RowParts, chat: PcChat) => chat.weight + parts.used(visitsOf(routeOf(chat))) * USE_WEIGHT
+const rankOf = (parts: RowParts, chat: PcChat) => chat.weight + parts.used(visitsOf(parts.route(chat.chat))) * USE_WEIGHT
 
 const messageRows = (parts: RowParts, chats: PcChat[]) =>
   chats

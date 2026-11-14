@@ -1,7 +1,7 @@
 import { filesInput, promptWithFiles } from '@sand/attachments/contract'
-import { awaitBot, botInterrupt, botSend } from '@sand/bot-turns/contract'
 import { botCreate, botDelete, botList, botUpdate } from '@sand/bots/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
+import { type Sent, threadSend, type ThreadState, threadStop, waitThread } from '@sand/orchestrator/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
 import { rowOf } from './row'
@@ -37,6 +37,8 @@ const updateInput = profile.extend({ bot: self, paused: z.boolean().optional().d
 
 const oneInput = z.object({ bot })
 
+const asBot = <T extends Sent | ThreadState>({ thread, ...rest }: T) => ({ bot: thread, ...rest })
+
 const updateRules = `Rename a bot, set the projects it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
 
 A paused bot starts no turns: its running turn stops, and its messages and everything it set to run wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count. Its work is set with job_create.`
@@ -56,8 +58,12 @@ export const botTools: McpTool[] = [
     input: sendInput,
     access: 'operate',
     group: group.name,
-    run: async ({ bot, prompt, files, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call, signal, here }) =>
-      awaitBot(call, await call(botSend, { bot, prompt: await promptWithFiles(call, prompt, files, here), origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
+    async run({ bot, prompt, files, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call, signal, here, actor }) {
+      if (actor?.id === bot) throw new Error("A bot can't message itself")
+      const sent = await call(threadSend, { session: bot, prompt: await promptWithFiles(call, prompt, files, here), origin: 'mcp', clientRequestId })
+      if (actor) return asBot(sent)
+      return asBot(await waitThread(call, bot, 'end', Date.now() + timeoutSeconds * 1000, signal))
+    },
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'bot_create',
@@ -77,11 +83,11 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof oneInput>,
   {
     name: 'bot_interrupt',
-    description: "Stop a bot's running turn",
+    description: "Stop a bot's running turn and its background commands",
     input: oneInput,
     access: 'operate',
     group: group.name,
-    run: (input, { call }) => call(botInterrupt, input),
+    run: ({ bot }, { call }) => call(threadStop, { session: bot }),
   } satisfies McpTool<typeof oneInput>,
   {
     name: 'bot_update',

@@ -17,7 +17,7 @@ export const runningSubagents = (ctx: OrchestratorContext, session: Session) =>
 export const reportFinished = (ctx: OrchestratorContext, starters: Starters, waits: Waits, owners: Owners) => {
   const busy = (session: Session) => ctx.turns.pending(session).some(item => !item.held) || runningSubagents(ctx, session)
 
-  const archived = ({ owner, id }: ConversationRef) => owner === 'thread' && Boolean(ctx.sessions.open(id)?.archived)
+  const archived = ({ id }: ConversationRef) => Boolean(ctx.sessions.open(id)?.archived)
 
   ctx.on(turnEnd, (session, result, info) => {
     const starter = starters.of(session)

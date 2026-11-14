@@ -1,5 +1,5 @@
 import { windowText } from '@sand/accounts/contract'
-import { type AccountUsage, periodLabel, tokensOf, type UsageSummary, type UsageTotals, usageCost } from '@sand/usage/contract'
+import { type AccountUsage, addTotals, emptyTotals, type PeriodUsage, periodLabel, tokensOf, type UsageSummary, type UsageTotals, usageCost } from '@sand/usage/contract'
 import { tokens } from '@sand/util'
 
 const table = (head: string[], rows: string[][]) => {
@@ -7,6 +7,8 @@ const table = (head: string[], rows: string[][]) => {
   const widths = head.map((_, column) => Math.max(...all.map(row => row[column]!.length)))
   return all.map(row => row.map((cell, column) => (column ? cell.padStart(widths[column]!) : cell.padEnd(widths[column]!))).join('  ').trimEnd())
 }
+
+const periodTotals = (period: PeriodUsage) => Object.values(period.accounts).reduce(addTotals, emptyTotals())
 
 const numbers = (totals: UsageTotals) => [usageCost(totals), tokens(tokensOf(totals.usage)), String(totals.turns)]
 
@@ -44,6 +46,6 @@ export const summaryText = (summary: UsageSummary, title: string) => {
     ...limitLines(summary.accounts),
     ...breakdown('Account', summary.accounts.filter(account => account.turns).map(account => [accountName(account), account])),
     ...breakdown('Model', summary.models.map(model => [`${model.label} · ${labels.get(model.account) ?? model.account}`, model])),
-    ...breakdown(summary.bucket === 'hour' ? 'Hour' : 'Day', summary.periods.map(row => [periodLabel(row.key, summary.bucket), row])),
+    ...breakdown(summary.bucket === 'hour' ? 'Hour' : 'Day', summary.periods.map(row => [periodLabel(row.key, summary.bucket), periodTotals(row)])),
   ].join('\n')
 }

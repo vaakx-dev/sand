@@ -1,7 +1,7 @@
 import { filesInput, promptWithFiles } from '@sand/attachments/contract'
 import { historyItem, historyReading } from '@sand/chats/contract'
 import { compactTimeoutMs, contextCompact } from '@sand/compaction/contract'
-import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
+import type { McpGroup, McpTool, McpToolContext } from '@sand/mcp-server/contract'
 import { historyRead, itemRead, pendingActions, readLimit, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import { sendModes } from '@sand/turns-contract/contract'
 import { resolve } from 'node:path'
@@ -109,10 +109,10 @@ const chatOf = ({ thread, bot }: z.output<typeof compactInput>) => {
 
 const requestId = (given: string | undefined) => given ?? Bun.randomUUIDv7()
 
-const folderOf = ({ cwd, project, quick, pc }: Pick<z.output<typeof startInput>, 'cwd' | 'project' | 'quick' | 'pc'>, here: string | undefined) => {
+const folderOf = ({ cwd, project, quick, pc }: Pick<z.output<typeof startInput>, 'cwd' | 'project' | 'quick' | 'pc'>, { here, actor }: McpToolContext) => {
   if (quick || pc || !here) return cwd
   if (cwd !== undefined) return resolve(here, cwd)
-  return project ? undefined : here
+  return project || actor ? undefined : here
 }
 
 const replies = "Its reply doesn't come back to you on its own: read it with thread_wait or history_read, or, as a sand thread or bot, ask in the message for it to message you back"
@@ -146,12 +146,12 @@ export const threadTools: McpTool[] = [
     access: 'operate',
     act: ({ title, prompt }) => ({ effect: 'run', uses: 'agents', summary: title ? `Start the thread “${title}”: ${prompt}` : `Start a thread: ${prompt}` }),
     group: group.name,
-    run: async ({ clientRequestId, from, prompt, files, ...input }, { call, here }) =>
-      call(threadStart, {
+    run: async ({ clientRequestId, from, prompt, files, ...input }, context) =>
+      context.call(threadStart, {
         ...input,
-        prompt: await promptWithFiles(call, prompt, files, here),
+        prompt: await promptWithFiles(context.call, prompt, files, context.here),
         ...(from && { base: from }),
-        cwd: folderOf(input, here),
+        cwd: folderOf(input, context),
         origin: 'mcp',
         clientRequestId: requestId(clientRequestId),
       }),
@@ -172,7 +172,6 @@ export const threadTools: McpTool[] = [
     input: waitInput,
     access: 'read',
     group: group.name,
-    agents: ['thread'],
     run: ({ thread, until = 'attention', timeoutSeconds = waitSeconds }, { call, signal }) =>
       waitThread(call, thread, until, Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof waitInput>,

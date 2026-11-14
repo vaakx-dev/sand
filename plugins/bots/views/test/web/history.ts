@@ -9,6 +9,7 @@ const turns = 12
 const steps = 30
 
 const seedPlugin = `import { bots } from '@sand/bots/contract'
+import { sessions } from '@sand/chats/contract'
 import { paths } from '@sand/paths/contract'
 import { definePlugin } from 'drydock'
 import { existsSync, writeFileSync } from 'node:fs'
@@ -16,12 +17,12 @@ import { join } from 'node:path'
 
 export default definePlugin({
   name: 'history-seed',
-  inject: { bots, paths },
+  inject: { bots, sessions, paths },
   apply(ctx) {
     const marker = join(ctx.paths.home, 'history-seed.json')
     if (existsSync(marker)) return
     const bot = ctx.bots.create({ name: 'Worker' })
-    const chat = ctx.bots.conversation(bot.id)
+    const chat = ctx.sessions.require(bot.id)
     let at = Date.now() - 86_400_000
     for (let turn = 0; turn < ${turns}; turn++) {
       chat.append('message', { role: 'user', content: [{ type: 'text', text: 'Do task ' + turn }] }, { at })
