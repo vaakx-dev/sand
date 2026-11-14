@@ -1,0 +1,53 @@
+{
+  "name": "@sand/pull-watch",
+  "version": "0.0.0",
+  "description": "Threads keep up with their pull requests: a thread follows the PRs it opens, and wakes when CI finishes, a review or comment lands, or the PR merges, closes or conflicts",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "pull-watch",
+    "runtime": "./src/runtime/index.ts",
+    "cli": "./src/cli.ts",
+    "web": "./src/web/index.ts",
+    "label": "Pull request follow",
+    "summary": "Wakes a thread when its pull request's CI, reviews, comments or state change",
+    "features": {
+      "pull-watch": {
+        "label": "Follow pull requests",
+        "summary": "A thread follows the pull requests it opens, and wakes to deal with CI results, reviews, comments, merges and conflicts",
+        "needs": [
+          "git",
+          "watches"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/cli-commands": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/watches": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

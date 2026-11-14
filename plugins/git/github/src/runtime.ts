@@ -5,6 +5,7 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { createClient } from './api/client'
 import { githubHost } from './api/endpoint'
+import { createEvents } from './api/events'
 import { createAuth } from './auth/auth'
 import { registerChecks } from './checks'
 import { listenUser } from './checks/user'
@@ -19,7 +20,7 @@ export default definePlugin({
     const auth = createAuth(githubHost)
     const client = createClient({ token: auth.token, rejected: auth.invalidate })
     const listen = listenUser(ctx)
-    ctx.provide(github, { rest: client.rest })
+    ctx.provide(github, { rest: client.rest, changes: createEvents(client) })
     ctx.watch(
       gitRunner,
       git =>

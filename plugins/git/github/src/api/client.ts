@@ -12,8 +12,12 @@ export interface ClientDeps {
   rejected(): void
 }
 
-export interface Client {
+export interface Rest {
   rest<T>(method: string, path: string, body?: unknown): Promise<T>
+}
+
+export interface Client extends Rest {
+  stream(url: string, signal: AbortSignal): Promise<Response>
 }
 
 const readJson = async (response: Response): Promise<unknown> => {
@@ -73,6 +77,10 @@ export const createClient = (deps: ClientDeps): Client => {
         if (etag) etags.set(path, etag, data)
         return data as T
       })
+    },
+    async stream(url, signal) {
+      const token = await tokenFor()
+      return fetch(url, { headers: { ...apiHeaders(token), accept: 'text/event-stream' }, signal })
     },
   }
 }

@@ -1,6 +1,6 @@
 import type { ToolContext } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
-import type { Client } from '../src/api/client'
+import type { Rest } from '../src/api/client'
 import { restError } from '../src/api/errors'
 import { checksTool, type ChecksGit } from '../src/checks/tool'
 
@@ -27,7 +27,7 @@ const github = (first: Poll, ...later: Poll[]) => {
   const paths: string[] = []
   let poll = first
   let at = 0
-  const client: Client = {
+  const client: Rest = {
     rest: async <T>(_method: string, path: string) => {
       paths.push(path)
       if (path.endsWith('/pulls/7')) return { head: { sha } } as T
@@ -44,7 +44,7 @@ const github = (first: Poll, ...later: Poll[]) => {
   return { client, paths, polls: () => at }
 }
 
-const waitFor = async (client: Client, input: { pr?: number }) => {
+const waitFor = async (client: Rest, input: { pr?: number }) => {
   const progress: string[] = []
   const tool = checksTool({
     git,

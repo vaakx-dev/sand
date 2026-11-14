@@ -1,4 +1,4 @@
-import type { Client } from '../api/client'
+import type { Rest } from '../api/client'
 
 export type CheckState = 'running' | 'passed' | 'failed'
 
@@ -31,7 +31,7 @@ const runState = (run: Run): CheckState => {
   return passing.has(run.conclusion ?? '') ? 'passed' : 'failed'
 }
 
-export const readChecks = async (client: Client, repo: string, sha: string): Promise<Check[]> => {
+export const readChecks = async (client: Rest, repo: string, sha: string): Promise<Check[]> => {
   const [runs, combined] = await Promise.all([
     client.rest<{ check_runs: Run[] }>('GET', `${repo}/commits/${sha}/check-runs?per_page=100`),
     client.rest<{ statuses: Status[] }>('GET', `${repo}/commits/${sha}/status?per_page=100`),

@@ -2,7 +2,7 @@ import type { GitRunner } from '@sand/git-runner/contract'
 import type { Tool } from '@sand/tools/contract'
 import { shortSha } from '@sand/util'
 import { z } from 'zod'
-import type { Client } from '../api/client'
+import type { Rest } from '../api/client'
 import { repoOf } from '../repo'
 import { readChecks } from './read'
 import type { Listen } from './user'
@@ -21,7 +21,7 @@ export type ChecksGit = Pick<GitRunner, 'remoteUrl' | 'maybe'>
 
 export interface ChecksDeps {
   git: ChecksGit
-  client: Client
+  client: Rest
   listen: Listen
   timing: Timing
 }
