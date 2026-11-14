@@ -7,7 +7,12 @@ const main = join(import.meta.dir, '../../sand/src/main.ts')
 
 const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'computers', 'bot-watches', 'logbook', 'guesses', 'stash', 'math', 'mcp', 'outside']
 
-export const replyText = (index: number) => `Bench reply ${index} arrived.`
+const streamGapMs = 600
+
+const streamed = (index: number) =>
+  [`Bench reply ${index} starts. `, 'It keeps going for a while, ', 'the way a model writes its first paragraph.\n\n', `A second paragraph ends reply ${index}.`]
+    .map(text => `{ type = "text", text = ${JSON.stringify(text)} }`)
+    .join(`, { type = "wait", ms = ${streamGapMs} }, `)
 
 const settings = (replies: number) =>
   [
@@ -17,7 +22,7 @@ const settings = (replies: number) =>
     '[[plugins.replay.sources]]',
     'id = "replay"',
     'models = ["script"]',
-    `replies = [${Array.from({ length: replies }, (_, index) => `[{ type = "text", text = "${replyText(index + 1)}" }]`).join(', ')}]`,
+    `replies = [${Array.from({ length: replies }, (_, index) => `[${streamed(index + 1)}]`).join(', ')}]`,
     '',
   ].join('\n')
 

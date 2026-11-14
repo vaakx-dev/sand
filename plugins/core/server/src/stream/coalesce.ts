@@ -30,12 +30,18 @@ const linesEnd = (event: Delta) => (event.type === 'tool_input' ? event.json.len
 export const createCoalescer = <S extends { id: string }>(send: (event: LLMEvent, session: S) => void, overdueMs: number) => {
   const pending = new Map<string, Held<S>>()
 
+  const sendHeld = (held: Held<S>) => {
+    clearTimeout(held.timer)
+    held.timer = undefined
+    if (contentOf(held.event)) send(held.event, held.session)
+    held.event = withContent(held.event, '')
+  }
+
   const release = (id: string) => {
     const held = pending.get(id)
     if (!held) return
-    clearTimeout(held.timer)
+    sendHeld(held)
     pending.delete(id)
-    send(held.event, held.session)
   }
 
   const wait = (held: Held<S>) => {
@@ -46,7 +52,7 @@ export const createCoalescer = <S extends { id: string }>(send: (event: LLMEvent
   const releaseUpTo = (held: Held<S>, end: number) => {
     if (end === 0) return
     const content = contentOf(held.event)
-    if (end >= content.length) return release(held.session.id)
+    if (end >= content.length) return sendHeld(held)
     send(withContent(held.event, content.slice(0, end)), held.session)
     held.event = withContent(held.event, content.slice(end))
     wait(held)
@@ -65,13 +71,12 @@ export const createCoalescer = <S extends { id: string }>(send: (event: LLMEvent
     const joined = held && join(held.event, event)
     if (held && joined) {
       held.event = joined
+      if (!held.timer) wait(held)
       return releaseUpTo(held, paragraphsEnd(joined))
     }
     release(session.id)
-    const fresh: Held<S> = { event, session }
-    pending.set(session.id, fresh)
-    wait(fresh)
-    releaseUpTo(fresh, paragraphsEnd(event))
+    send(event, session)
+    pending.set(session.id, { event: withContent(event, ''), session })
   }
 
   const stop = () => {

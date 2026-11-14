@@ -2,8 +2,10 @@ import type { Reply } from './contract'
 
 type Event = Record<string, unknown> & { type: string }
 
+type Step = Event | { type: 'wait'; ms: number }
+
 interface Played {
-  out: Event[]
+  out: Step[]
   end: 'close' | 'hold' | 'drop'
 }
 
@@ -16,7 +18,7 @@ const block = (index: number, start: Record<string, unknown>, deltas: Record<str
 ]
 
 const events = (reply: Reply, model: string, ids: () => string): Played => {
-  const out: Event[] = [{ type: 'message_start', message: { model, usage: { input_tokens: 0, output_tokens: 0 } } }]
+  const out: Step[] = [{ type: 'message_start', message: { model, usage: { input_tokens: 0, output_tokens: 0 } } }]
   let calls = false
   for (const [index, part] of reply.entries()) {
     switch (part.type) {
@@ -43,6 +45,9 @@ const events = (reply: Reply, model: string, ids: () => string): Played => {
       case 'error':
         out.push({ type: 'error', error: { type: 'invalid_request_error', message: part.message } })
         return { out, end: 'close' }
+      case 'wait':
+        out.push({ type: 'wait', ms: part.ms })
+        break
       case 'hold':
         return { out, end: 'hold' }
       case 'drop':
@@ -57,8 +62,11 @@ export const anthropicStream = (reply: Reply, model: string, ids: () => string) 
   const { out, end } = events(reply, model, ids)
   const encoder = new TextEncoder()
   return new ReadableStream<Uint8Array>({
-    start(controller) {
-      out.forEach(event => controller.enqueue(encoder.encode(frame(event))))
+    async start(controller) {
+      for (const step of out) {
+        if (step.type === 'wait') await Bun.sleep(step.ms as number)
+        else controller.enqueue(encoder.encode(frame(step)))
+      }
       if (end === 'close') controller.close()
       if (end === 'drop') setTimeout(() => controller.error(new Error('replay dropped the connection')))
     },
