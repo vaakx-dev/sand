@@ -35,7 +35,7 @@ export const fireRoutine =
     const turn = await turns.follow(routine.bot, sent, signal)
     const kind = turn && moments[turn.status]
     if (!turn || !kind) return
-    const failed = kind === 'failed'
-    tell({ kind, title: routine.name, text: failed ? (turn.error ?? '') : lastSaid(routine.bot) })
-    if (failed) throw new Error(turn.error ?? 'The turn failed')
+    if (kind !== 'failed') return tell({ kind, title: routine.name, text: lastSaid(routine.bot) })
+    if (fire.final) tell({ kind, title: routine.name, text: turn.error ?? '' })
+    throw new Error(turn.error ?? 'The turn failed')
   }
