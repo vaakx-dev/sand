@@ -1,4 +1,5 @@
-import { collectScope, disposeAll, div, list, mount, onIdle, onMount, scoped, sig, untrack, type Disposer } from '@vaakx-dev/vrui'
+import { whenSettled } from '@sand/reactive'
+import { collectScope, disposeAll, div, list, mount, onMount, scoped, sig, untrack, type Disposer } from '@vaakx-dev/vrui'
 import type { ChatView } from './controller'
 
 interface Kept {
@@ -80,7 +81,7 @@ export const keptViews = (build: (id: string) => ChatView) => {
   const prepare = (id: string) => {
     if (kept.has(id) || preparing.has(id)) return
     const stop = collectScope(() =>
-      onIdle(() => {
+      whenSettled(() => {
         preparing.delete(id)
         prepareNow(id)
       }),

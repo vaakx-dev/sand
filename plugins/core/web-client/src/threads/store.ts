@@ -57,6 +57,7 @@ export class Store {
   private listed = false
   known = false
   private keys = new WeakMap<Thread, string>()
+  private children = new Map<string, Set<string>>()
   private frame: (() => void) | undefined
 
   constructor(
@@ -105,6 +106,7 @@ export class Store {
     }
     const thread = blank({ updated: info.created, messages: 0, ...info }, device)
     this.threads.set(info.id, thread)
+    if (info.parent) this.children.set(info.parent, (this.children.get(info.parent) ?? new Set()).add(info.id))
     this.changed(info.id, true)
     return thread
   }
@@ -144,7 +146,9 @@ export class Store {
   }
 
   remove(id: string) {
-    if (!this.threads.delete(id)) return
+    const thread = this.threads.get(id)
+    if (!thread || !this.threads.delete(id)) return
+    if (thread.info.parent) this.children.get(thread.info.parent)?.delete(id)
     this.dirty.delete(id)
     for (const watcher of this.watchers) watcher.removed(id)
     this.changed(undefined, true)
@@ -169,7 +173,7 @@ export class Store {
   }
 
   private runningChild(id: string) {
-    for (const thread of this.threads.values()) if (thread.info.parent === id && thread.running) return true
+    for (const child of this.children.get(id) ?? []) if (this.threads.get(child)?.running) return true
     return false
   }
 

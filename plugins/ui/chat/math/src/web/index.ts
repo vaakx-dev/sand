@@ -1,5 +1,5 @@
 import { kit } from '@sand/ui-kit/contract'
-import { onIdle } from '@vaakx-dev/vrui'
+import { whenSettled } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 import { math, type MathRenderer } from '../contract'
 import { mathCss } from './style'
@@ -17,6 +17,6 @@ export default definePlugin({
   apply(ctx) {
     ctx.kit.style(ctx, mathCss)
     ctx.provide(math, renderer)
-    ctx.effect(() => onIdle(() => void loadRenderer()))
+    ctx.effect(() => whenSettled(() => void loadRenderer()))
   },
 })
