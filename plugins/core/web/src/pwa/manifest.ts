@@ -1,3 +1,4 @@
+import { SHARE_PATH } from '../contract'
 import { dark, light, type PageColors } from '../page/first-paint'
 
 export const schemeHint = 'Sec-CH-Prefers-Color-Scheme'
@@ -15,6 +16,12 @@ const manifestFor = ({ background }: PageColors) =>
     background_color: background,
     theme_color: background,
     icons: [icon(192), icon(512)],
+    share_target: {
+      action: SHARE_PATH,
+      method: 'POST',
+      enctype: 'multipart/form-data',
+      params: { title: 'title', text: 'text', url: 'url', files: [{ name: 'files', accept: ['*/*'] }] },
+    },
   })
 
 const manifests = { dark: manifestFor(dark), light: manifestFor(light) }

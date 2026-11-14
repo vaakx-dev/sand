@@ -1,4 +1,4 @@
-import { hasFiles } from '@sand/attachments/web/contract'
+import { hasFiles, type PickSource } from '@sand/attachments/web/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
@@ -127,7 +127,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
 
   const here = { restore: createHandoff(model, () => editor.focusEnd()).restore, insertWords: editor.insertWords }
 
-  const choose = () => model.shelf.get()?.pick()
+  const choose = (source?: PickSource) => model.shelf.get()?.pick(source)
 
   const keepFocus = (event: MouseEvent) => {
     if (within.get() && onButton(event)) event.preventDefault()
@@ -162,7 +162,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
     div({ class: 'min-w-0 flex-1 cursor-text pr-2', onMouseDown: focusText }, editor.node),
     div(
       { class: '-ml-2 mt-4 flex min-w-0 items-center gap-1' },
-      plusView(ctx.kit, plus, choose, () => Boolean(model.shelf.get()?.attachable())),
+      plusView(ctx.kit, plus, { choose, attachable: () => Boolean(model.shelf.get()?.attachable()), touch: () => coarse.get() }),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1', here),
       span(
         { class: 'min-w-2 flex-1 truncate px-1 text-xs text-neutral-600', 'aria-hidden': 'true' },

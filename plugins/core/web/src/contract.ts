@@ -44,3 +44,15 @@ export const webExtensionsReport = request('web.extensions.report', { input: () 
 export const webBuild = wireEvent<string>('web.build')
 
 export const pluginsOffMeta = 'sand-plugins-off'
+
+export interface Shared {
+  text: string
+  files: File[]
+}
+
+export const SHARE_PATH = '/share'
+export const SHARED_PARAM = 'shared'
+export const SHARE_LANDING = `/?view=draft&${SHARED_PARAM}`
+export const SHARED_DATABASE = 'sand-shared'
+export const SHARED_STORE = 'shares'
+export const SHARED_KEY = 'latest'
