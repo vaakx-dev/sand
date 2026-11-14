@@ -1,0 +1,30 @@
+{
+  "name": "@sand/file-pdf",
+  "version": "0.0.0",
+  "description": "Shows PDFs in the file viewer with pdf.js, page by page",
+  "type": "module",
+  "sand": {
+    "feature": "file-pdf",
+    "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "PDF",
+    "summary": "Reads PDFs in the file viewer, page by page, with zoom",
+    "features": {
+      "file-pdf": {
+        "label": "PDF",
+        "summary": "Reads PDFs in the file viewer, page by page, with zoom",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "pdfjs-dist": "6.5.438"
+  }
+}
