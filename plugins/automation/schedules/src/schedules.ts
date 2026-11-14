@@ -59,6 +59,11 @@ export const createSchedules = (book: Book, { handlers }: Registry, plan: () => 
       const { schedule, state } = known(id)
       return changed(book.put({ schedule: paused ? { ...schedule, paused } : resumed(schedule, Date.now()), state }))
     },
+    retry(id) {
+      const { schedule, state } = known(id)
+      if (schedule.next !== undefined) throw new Error('It has not failed')
+      return changed(book.put({ schedule: { ...schedule, paused: false, next: Date.now() }, state }))
+    },
     remove: id => changed(book.drop(id)),
     get: id => book.get(id)?.schedule,
     list,

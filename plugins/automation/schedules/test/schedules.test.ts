@@ -70,7 +70,7 @@ test('a one-off runs at its time and is then gone', async () => {
   await until(() => service.get(once.id) === undefined)
 })
 
-test('a failed run is tried again after growing gaps, across a restart, and a one-off that keeps failing stays with its error', async () => {
+test('a failed run is tried again after growing gaps, across a restart, and a one-off that keeps failing stays with its error until tried again', async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-schedules-'))
   setSystemTime(at('2026-11-06T08:59:59Z'))
   const before = await start()
@@ -107,6 +107,13 @@ test('a failed run is tried again after growing gaps, across a restart, and a on
   expect(failed).toMatchObject({ paused: false, last: { outcome: 'failed', error: 'model unavailable' } })
   expect(failed?.next).toBeUndefined()
   expect(after.pause(once.id, false).next).toBeUndefined()
+
+  setSystemTime(at('2026-11-06T10:00:00Z'))
+  expect(after.retry(once.id).next).toBe(at('2026-11-06T10:00:00Z'))
+  await until(() => after.get(once.id)?.last?.at === at('2026-11-06T10:00:00Z'))
+  expect(fires.at(-1)).toEqual({ key: `${once.id}@${due}#4`, due, late: true, final: true })
+  expect(after.get(once.id)?.next).toBeUndefined()
+  expect(() => after.retry(often.id)).toThrow('It has not failed')
 })
 
 test('schedules in the past, or that never come due are refused, and any number may run every minute', async () => {

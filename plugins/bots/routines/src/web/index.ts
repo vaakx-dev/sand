@@ -3,7 +3,7 @@ import { wire } from '@sand/devices-contract'
 import { transcript } from '@sand/transcript/contract'
 import { oneLine } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { routineDelete, routinePause, type Routine } from '../contract'
+import { routineDelete, routinePause, routineRetry, type Routine } from '../contract'
 import { createRoutines } from './store'
 import { describe } from './when'
 
@@ -24,15 +24,13 @@ export default definePlugin({
       paused: routine.paused,
       error: failure(routine),
       actions: () => [
-        ...(failure(routine)
-          ? []
-          : [
-              {
-                id: 'pause',
-                label: routine.paused ? 'Resume' : 'Pause',
-                run: () => ctx.wire.call(routinePause, { routine: routine.id, paused: !routine.paused }),
-              },
-            ]),
+        failure(routine)
+          ? { id: 'retry', label: 'Try again', run: () => ctx.wire.call(routineRetry, { routine: routine.id }) }
+          : {
+              id: 'pause',
+              label: routine.paused ? 'Resume' : 'Pause',
+              run: () => ctx.wire.call(routinePause, { routine: routine.id, paused: !routine.paused }),
+            },
         {
           id: 'delete',
           label: 'Delete',

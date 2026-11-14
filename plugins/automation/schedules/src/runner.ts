@@ -11,7 +11,8 @@ interface Result {
   outcome: Outcome
   state: unknown
   error?: string
-  retry?: Retry & { at: number }
+  retry?: Retry
+  retryAt?: number
 }
 
 const GRACE = 2 * 60_000
@@ -28,13 +29,12 @@ const keyOf = (schedule: Schedule) => {
   return attempt ? `${key}#${attempt}` : key
 }
 
-const retryOf = (schedule: Schedule, now: number): Result['retry'] => {
+const retryAtOf = (schedule: Schedule, now: number) => {
   const gap = RETRY_GAPS[attemptOf(schedule)]
   if (gap === undefined) return undefined
   const at = now + gap
   const regular = schedule.when.kind === 'cron' ? nextRun(schedule.when, now) : undefined
-  if (regular !== undefined && regular <= at) return undefined
-  return { due: dueOf(schedule), attempt: attemptOf(schedule) + 1, at }
+  return regular !== undefined && regular <= at ? undefined : at
 }
 
 export const createRunner = (book: Book, { handlers }: Registry) => {
@@ -48,28 +48,25 @@ export const createRunner = (book: Book, { handlers }: Registry) => {
   const attempt = async (schedule: Schedule, handler: Handler, state: unknown, now: number): Promise<Result> => {
     if (schedule.missed === 'skip' && now - schedule.next! > GRACE) return { outcome: 'missed', state }
     const due = dueOf(schedule)
-    const retry = retryOf(schedule, now)
+    const retryAt = retryAtOf(schedule, now)
     try {
-      await handler(schedule, { key: keyOf(schedule), due, late: now - due > GRACE, final: !retry }, stopped.signal)
+      await handler(schedule, { key: keyOf(schedule), due, late: now - due > GRACE, final: retryAt === undefined }, stopped.signal)
       return { outcome: 'ran', state }
     } catch (error) {
-      return { outcome: 'failed', state, error: errorMessage(error), retry }
+      return { outcome: 'failed', state, error: errorMessage(error), retry: { due, attempt: attemptOf(schedule) + 1 }, retryAt }
     }
   }
 
-  const settle = (id: string, { outcome, state, error, retry }: Result) => {
+  const settle = (id: string, { outcome, state, error, retry, retryAt }: Result) => {
     const found = book.get(id)
     if (!found) return
     const { schedule } = found
     const now = Date.now()
     const last = { at: now, outcome, ...(error && { error }) }
-    if (retry) {
-      const { at, ...next } = retry
-      return void book.put({ schedule: { ...schedule, next: at, retry: next, last }, state })
-    }
-    if (schedule.when.kind === 'once' && outcome !== 'failed') return void book.drop(id)
-    const next = schedule.when.kind === 'cron' ? nextRun(schedule.when, now) : undefined
-    book.put({ schedule: { ...schedule, next, retry: undefined, last }, state })
+    const { when } = schedule
+    if (retry && (retryAt !== undefined || when.kind === 'once')) return void book.put({ schedule: { ...schedule, next: retryAt, retry, last }, state })
+    if (when.kind === 'once') return void book.drop(id)
+    book.put({ schedule: { ...schedule, next: nextRun(when, now), retry: undefined, last }, state })
   }
 
   const fire = async (id: string, now: number) => {

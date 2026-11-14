@@ -2,10 +2,10 @@ import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { systemZone } from '@sand/schedules/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { newRoutine, type Routine, routineCreate, routineDelete, routineList, routinePause } from './contract'
+import { newRoutine, type Routine, routineCreate, routineDelete, routineList, routinePause, routineRetry } from './contract'
 import { timeIn, timing, zoneOf } from './time'
 
-const group: McpGroup = { name: 'routines', label: 'Routines', summary: "set a bot's reminders and routines, and list, pause or delete them" }
+const group: McpGroup = { name: 'routines', label: 'Routines', summary: "set a bot's reminders and routines, and list, pause, try again or delete them" }
 
 const always: McpTool['always'] = ['bot']
 
@@ -15,6 +15,7 @@ const id = z.string().describe('The routine id from routine_list')
 const createInput = newRoutine()
 const listInput = z.object({ bot: self })
 const pauseInput = z.object({ id, paused: z.boolean().describe('true to pause, false to resume') })
+const retryInput = z.object({ id })
 const deleteInput = z.object({ id })
 
 const shown = ({ id, bot, name, instructions, when, paused, next, last }: Routine) => ({
@@ -57,6 +58,15 @@ export const routineTools: McpTool[] = [
     always,
     run: async ({ id, paused }, { call }) => shown(await call(routinePause, { routine: id, paused })),
   } satisfies McpTool<typeof pauseInput>,
+  {
+    name: 'routine_retry',
+    description: 'Run a reminder that failed after its retries once more, now. If that fails it is tried again later, like any failed run.',
+    input: retryInput,
+    access: 'operate',
+    group: group.name,
+    always,
+    run: async ({ id }, { call }) => shown(await call(routineRetry, { routine: id })),
+  } satisfies McpTool<typeof retryInput>,
   {
     name: 'routine_delete',
     description: 'Delete a reminder or routine for good.',
