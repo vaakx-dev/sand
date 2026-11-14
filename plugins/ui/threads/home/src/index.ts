@@ -26,7 +26,7 @@ import { wakeTimer } from './snooze/wake'
 
 export default definePlugin({
   name: 'threads-home',
-  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Settled, newest first; New thread opens a new chat in the last project, and its header picks another; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search; thread links in chats drawn as their sidebar row",
+  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Archived, newest first; New thread opens a new chat in the last project, and its header picks another; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search; thread links in chats drawn as their sidebar row",
   inject: { kit, threads, projects, shell, wire },
   apply(ctx) {
     const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs])

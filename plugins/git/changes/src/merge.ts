@@ -54,7 +54,7 @@ const mergeIn = async (deps: ChangesDeps, session: Session, work: Work, self: bo
   const commit = await attempt(deps, session, work, target, split.pending.tree)
   if (commit) {
     await deps.merged.put(id, { main: work.main, commit, files, ...totals, at: Date.now() }).catch(deps.report)
-    await deps.settle(id).catch(deps.report)
+    await deps.archive(id).catch(deps.report)
   }
   return deps.changed(id)
 }

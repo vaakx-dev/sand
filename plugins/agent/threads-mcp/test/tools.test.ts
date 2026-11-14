@@ -37,10 +37,10 @@ test('an outside agent starts a thread where it is once per request id, waits fo
   await expect(run('history_read', { thread, bot: 'b' })).rejects.toThrow('Give either a thread or a bot')
 
   const later = '2030-01-02T03:04:05Z'
-  expect(await run('thread_update', { thread, title: 'Ping', pinned: true })).toMatchObject({ thread, title: 'Ping', pinned: true, settled: false })
+  expect(await run('thread_update', { thread, title: 'Ping', pinned: true })).toMatchObject({ thread, title: 'Ping', pinned: true, archived: false })
   expect(await run('thread_update', { thread, snoozeUntil: later })).toMatchObject({ snoozed: Date.parse(later) })
-  expect(await run('thread_update', { thread, settled: true })).toMatchObject({ settled: true })
-  expect(await run('thread_update', { thread, settled: false, snoozeUntil: null })).toMatchObject({ settled: false })
+  expect(await run('thread_update', { thread, archived: true })).toMatchObject({ archived: true })
+  expect(await run('thread_update', { thread, archived: false, snoozeUntil: null })).toMatchObject({ archived: false })
   await expect(run('thread_update', { thread, model: 'nope' })).rejects.toThrow('No model matches "nope"')
   await run('thread_update', { thread, model: 'm', fast: true })
   expect(sand.sessions.require(thread).latest('settings')?.data).toEqual({ model: 'fake/m', speed: 'fast' })

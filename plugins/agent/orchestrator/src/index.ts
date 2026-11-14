@@ -10,7 +10,7 @@ import { createOwners } from './owners'
 import { createPcs } from './pcs'
 import { openReceipts } from './receipts'
 import { schema } from './schema'
-import { settleSubagents } from './settle'
+import { archiveSubagents } from './archive'
 import { serveThreads } from './serve'
 import { createStart } from './start'
 import { openStarters } from './starters'
@@ -20,7 +20,7 @@ import { createWaits } from './waits'
 export default definePlugin({
   name: 'orchestrator',
   description:
-    "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A subagent tells whoever started it when it finishes and settles with its parent; a thread stands on its own",
+    "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A subagent tells whoever started it when it finishes and is archived with its parent; a thread stands on its own",
   inject,
   apply(ctx) {
     ctx.ledger.migrate('orchestrator', schema)
@@ -44,7 +44,7 @@ export default definePlugin({
     ctx.provide(orchestrator, threads)
     ctx.on(sessionRemove, starters.remove)
     reportFinished(ctx, starters, waits, owners)
-    settleSubagents(ctx)
+    archiveSubagents(ctx)
     serveThreads(ctx, threads, start, createPcs(ctx))
   },
 })

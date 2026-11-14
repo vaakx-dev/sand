@@ -17,11 +17,11 @@ export const runningSubagents = (ctx: OrchestratorContext, session: Session) =>
 export const reportFinished = (ctx: OrchestratorContext, starters: Starters, waits: Waits, owners: Owners) => {
   const busy = (session: Session) => ctx.turns.pending(session).some(item => !item.held) || runningSubagents(ctx, session)
 
-  const settled = ({ owner, id }: ConversationRef) => owner === 'thread' && Boolean(ctx.sessions.open(id)?.settled)
+  const archived = ({ owner, id }: ConversationRef) => owner === 'thread' && Boolean(ctx.sessions.open(id)?.archived)
 
   ctx.on(turnEnd, (session, result, info) => {
     const starter = starters.of(session)
-    if (!starter || settled(starter) || waits.has(starter, session.id) || busy(session)) return
+    if (!starter || archived(starter) || waits.has(starter, session.id) || busy(session)) return
     owners.deliver(starter, { text: noticeOf(session, result, info), clientRequestId: `${session.id}@${info.id}` }).catch(error => ctx.report(error))
   })
 }
