@@ -57,3 +57,27 @@ export const missingFrom = async (page: Page, box: string, session: string) => {
   })
   return problems
 }
+
+const serverList = (box: string) => {
+  const db = new Database(join(box, 'sand.db'), { readonly: true })
+  try {
+    return db.query<{ id: string; title: string }, []>('select id, title from chats').all()
+  } finally {
+    db.close()
+  }
+}
+
+export const listMissing = async (page: Page, box: string) => {
+  const shown = await page.evaluate(() => {
+    const app = (window as unknown as { sand: { get(token: { id: string }): { list(): { id: string; info: { title: string } }[] } | undefined } }).sand
+    return (app.get({ id: 'threads' })?.list() ?? []).map(thread => ({ id: thread.id, title: thread.info.title }))
+  })
+  const titles = new Map(shown.map(thread => [thread.id, thread.title]))
+  const kept = serverList(box)
+  const problems = kept.flatMap(chat => {
+    if (!titles.has(chat.id)) return [`the chat list misses ${chat.id}`]
+    return titles.get(chat.id) === chat.title ? [] : [`the chat list shows ${chat.id} as "${titles.get(chat.id)}", the PC calls it "${chat.title}"`]
+  })
+  if (shown.length !== kept.length) problems.push(`the chat list holds ${shown.length} chats, the PC has ${kept.length}`)
+  return problems
+}
