@@ -43,7 +43,7 @@ const failureNote = ({ codeBlock, rowDetail }: Kit, plugin: PluginEntry, actions
   const failure = () => actions.failure(plugin.name) ?? ''
   return show(
     () => actions.failure(plugin.name) !== undefined,
-    () => rowDetail(codeBlock({ danger: true, copy: failure }, failure)),
+    () => rowDetail(codeBlock({ danger: true, copy: failure }, () => tildeHome(failure()))),
   )
 }
 

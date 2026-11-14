@@ -1,5 +1,6 @@
 import { pairLink } from '@sand/devices-contract'
 import type { Daemon } from '@sand/host-daemon/contract'
+import { tildeHome } from '@sand/util'
 import { cpSync, existsSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -28,11 +29,12 @@ export const sandbox = async (daemon: Daemon, home: string) => {
   const sandboxed = daemon.at(box)
   const { info } = await sandboxed.ensure()
   const { token } = await sandboxed.request(pairLink, { kind: 'device' })
+  const shownBox = tildeHome(box)
   console.log(
     [
-      `started a throwaway sand (pid ${info.pid}) in ${box}`,
+      `started a throwaway sand (pid ${info.pid}) in ${shownBox}`,
       `open it paired: ${pageUrl(info.url, token)}`,
-      `stop it: sand --home "${box}" stop, then delete the folder`,
+      `stop it: sand --home "${shownBox}" stop, then delete the folder`,
     ].join('\n'),
   )
 }

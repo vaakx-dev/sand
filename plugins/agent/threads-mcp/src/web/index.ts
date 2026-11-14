@@ -1,4 +1,5 @@
 import { toolViews as toolViewsService, transcript as transcriptService, type ToolRenderer, type ToolViews } from '@sand/transcript/contract'
+import { tildeHome } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { dd, div, dl, dt } from '@vaakx-dev/vrui'
 
@@ -14,7 +15,7 @@ const startRenderer = ({ errorBody, field }: ToolViews): ToolRenderer => ({
   body(tool) {
     if (tool.result?.isError) return errorBody(tool)
     const rows = Object.entries(details).flatMap(([key, name]) => {
-      const value = field(tool.call.input, key)
+      const value = tildeHome(field(tool.call.input, key))
       return value ? [dt( { class: 'text-neutral-500' }, name), dd( { class: 'wrap-anywhere text-neutral-100' }, value)] : []
     })
     return div(

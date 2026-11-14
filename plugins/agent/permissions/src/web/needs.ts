@@ -1,6 +1,7 @@
 import { botRoster } from '@sand/bots/contract'
 import type { Need, NeedAction, NeedSource } from '@sand/needs-you/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { tildeHome } from '@sand/util'
 import { projects, threads } from '@sand/web-client/contract'
 import { dynamicChild } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
@@ -37,7 +38,7 @@ const needOf = (ctx: Context, kit: Kit, model: Model, question: Question): Need 
     kind: 'permission',
     who: decision.title,
     mark: () => markOf(ctx, kit, decision),
-    title: `Allow ${decision.tool}? ${decision.summary}`,
+    title: `Allow ${decision.tool}? ${tildeHome(decision.summary)}`,
     head: () => questionHead(decision),
     body: actions => questionBody(kit, decision, actions),
     at: decision.at,

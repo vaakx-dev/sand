@@ -1,8 +1,6 @@
 import { safeFromEnv } from '@sand/boot'
 import type { CliPlace } from '@sand/config/contract'
-import { expandHome } from '@sand/util/fs'
-import { homedir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { defaultHome, expandHome } from '@sand/util/fs'
 import { parseArgs } from 'node:util'
 
 const kernelOptions = {
@@ -37,10 +35,10 @@ const blankHome = (source: string) => new Error(`${source} is empty. Give it a f
 const homeOf = (flag: unknown) => {
   if (flag !== undefined) {
     if (typeof flag !== 'string' || !flag.trim()) throw blankHome('--home')
-    process.env.SAND_HOME = resolve(flag)
+    process.env.SAND_HOME = expandHome(flag)
   }
   const fromEnv = process.env.SAND_HOME
-  if (fromEnv === undefined) return join(homedir(), '.sand')
+  if (fromEnv === undefined) return defaultHome()
   if (!fromEnv.trim()) throw blankHome('SAND_HOME')
   return expandHome(fromEnv)
 }

@@ -2,12 +2,13 @@ import type { PcView } from '@sand/devices-contract'
 import type { Pulse } from '@sand/reactive'
 import { dynamicChild, keys, sig, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
-import { expand, shorten } from './places'
+import { tildeHome } from '@sand/util'
+import { absolute } from '../add/paths'
 
 const rootField = (ctx: ProjectsContext, pc: PcView, failed: Sig<string | undefined>) => {
   const { textInput } = ctx.kit
   const device = pc.id
-  let saved = shorten(ctx, ctx.projects.place(device).root, device)
+  let saved = tildeHome(ctx.projects.place(device).root)
   const text = sig(saved)
   const commit = () => {
     const value = text.get().trim()
@@ -15,10 +16,10 @@ const rootField = (ctx: ProjectsContext, pc: PcView, failed: Sig<string | undefi
     const previous = saved
     saved = value
     failed.set(undefined)
-    ctx.projects.setRoot(expand(ctx, value, device), device).catch(() => {
+    ctx.projects.setRoot(absolute(value, ctx.projects.place(device)), device).catch(() => {
       saved = previous
       text.set(previous)
-      failed.set(`Couldn't use ${value}. Check that the folder exists and try again.`)
+      failed.set(`Couldn't use ${tildeHome(value)}. Check that the folder exists and try again.`)
     })
   }
   return textInput({

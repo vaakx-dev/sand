@@ -1,5 +1,6 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { tildeHome } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 
 const shownLines = 400
@@ -12,7 +13,7 @@ const parse = (text: string) => {
 
 export const shellRenderer = ({ codeBlock, fold, metaLine, statusLabel }: Kit, { errorBody, field, resultText, truncatedNote }: ToolViews): ToolRenderer => {
   const command = (tool: ToolView) => field(tool.call.input, 'command')
-  const multiline = (tool: ToolView) => command(tool).includes('\n') && div({ class: 'mb-2' }, codeBlock({}, span({ class: 'text-neutral-500' }, '$ '), command(tool)))
+  const multiline = (tool: ToolView) => command(tool).includes('\n') && div({ class: 'mb-2' }, codeBlock({}, span({ class: 'text-neutral-500' }, '$ '), tildeHome(command(tool))))
   return {
     icon: 'term',
     verb: 'Ran',
@@ -41,7 +42,7 @@ export const shellRenderer = ({ codeBlock, fold, metaLine, statusLabel }: Kit, {
       return div(
         multiline(tool),
         hidden > 0 && truncatedNote(hidden, 'before'),
-        shown ? fold({ lines: lines.length - hidden, chars: shown.length }, codeBlock({}, shown)) : div({ class: 'flex' }, metaLine('No output')),
+        shown ? fold({ lines: lines.length - hidden, chars: shown.length }, codeBlock({}, tildeHome(shown))) : div({ class: 'flex' }, metaLine('No output')),
         stopped && div({ class: 'mt-1 flex' }, metaLine(`Stopped: ${stopped}`)),
       )
     },

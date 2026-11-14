@@ -1,4 +1,5 @@
 import { pcs } from '@sand/devices-contract'
+import { tildeHome } from '@sand/util'
 import { projects, type ProjectGroup } from '@sand/web-client/contract'
 import { derive, div, list, show, type Sig } from '@vaakx-dev/vrui'
 import type { Parts } from '../parts'
@@ -15,7 +16,10 @@ export interface ChecklistProps {
   only?(group: ProjectGroup): boolean
 }
 
-const folderOf = (group: ProjectGroup) => group.locations[0]?.path ?? 'No folder on this PC'
+const folderOf = (group: ProjectGroup) => {
+  const path = group.locations[0]?.path
+  return path ? tildeHome(path) : 'No folder on this PC'
+}
 
 export const createProject = async (parts: Parts, name: string) => {
   const service = parts.ctx.get(projects)
