@@ -29,7 +29,7 @@ const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'compute
 
 const topLevel = [...core, ...addons]
 
-const kernelPages = ['Add-ons', 'Core features', 'Plugins']
+const kernelPages = ['Add-ons', 'Core features', 'File viewer', 'Plugins']
 
 const fillingShell = ['threads', 'bots', 'calendar']
 
