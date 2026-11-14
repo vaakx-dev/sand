@@ -22,6 +22,8 @@ export interface ShownItem {
 
 export type Shown = ShownItem | TurnHead
 
+export type Unfold = { kind: 'shown' } | { kind: 'turn'; key: string } | { kind: 'hidden' }
+
 export interface FoldOptions {
   older: boolean
   running: boolean
@@ -117,4 +119,13 @@ export const foldTurns = (items: Item[], options: FoldOptions): Shown[] => {
   const shown = turns.flatMap((turn, index) => shownTurn(turn, isRunning(turn, index === turns.length - 1, options), options))
   const last = shown.findLastIndex(isReply)
   return shown.map((entry, index) => (index === last && entry.kind === 'item' ? { ...entry, last: true } : entry))
+}
+
+export const unfolding = (items: Item[], key: string, options: FoldOptions): Unfold => {
+  const isItem = (entry: Shown) => entry.kind === 'item' && entry.key === key
+  if (foldTurns(items, options).some(isItem)) return { kind: 'shown' }
+  const opened = foldTurns(items, { ...options, open: () => true })
+  const at = opened.findIndex(isItem)
+  const head = opened.slice(0, Math.max(0, at)).findLast(entry => entry.kind === 'turn')
+  return head ? { kind: 'turn', key: head.key } : { kind: 'hidden' }
 }

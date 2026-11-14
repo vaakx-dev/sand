@@ -1,15 +1,6 @@
-const boundary = /\r?\n\r?\n/
+import { sseFrames } from '@sand/util'
 
-const dataOf = (frame: string) =>
-  frame
-    .split(/\r?\n/)
-    .filter(line => line.startsWith('data:'))
-    .map(line => line.slice(5).trimStart())
-    .join('\n')
-    .trim()
-
-const parse = <T>(frame: string, name: string): T | undefined => {
-  const data = dataOf(frame)
+const parse = <T>(data: string, name: string): T | undefined => {
   if (!data || data === '[DONE]') return undefined
   try {
     return JSON.parse(data)
@@ -19,16 +10,8 @@ const parse = <T>(frame: string, name: string): T | undefined => {
 }
 
 export async function* sseEvents<T>(body: ReadableStream<Uint8Array>, name: string): AsyncIterable<T> {
-  const decoder = new TextDecoder()
-  let buffer = ''
-  for await (const chunk of body) {
-    buffer += decoder.decode(chunk, { stream: true })
-    for (let match = boundary.exec(buffer); match; match = boundary.exec(buffer)) {
-      const event = parse<T>(buffer.slice(0, match.index), name)
-      buffer = buffer.slice(match.index + match[0].length)
-      if (event) yield event
-    }
+  for await (const { data } of sseFrames(body)) {
+    const event = parse<T>(data, name)
+    if (event) yield event
   }
-  const rest = parse<T>(buffer + decoder.decode(), name)
-  if (rest) yield rest
 }

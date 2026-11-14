@@ -39,14 +39,14 @@ test('a started thread runs to its reply, reads back in order, and a retried sta
     items: [{ role: 'user', text: 'again' }],
     more: true,
   })
-  expect(await sand.ask(threadList, {})).toEqual([expect.objectContaining({ thread: sent.thread, status: 'completed', settled: false })])
+  expect(await sand.ask(threadList, {})).toEqual([expect.objectContaining({ thread: sent.thread, status: 'completed', archived: false })])
 })
 
-test('settling a running thread stops its turn first', async () => {
+test('archiving a running thread stops its turn first', async () => {
   const base = await start([[{ type: 'hold' }]])
   const sent = await sand.ask(threadStart, { ...base, prompt: 'go' })
 
-  expect(await sand.ask(threadUpdate, { session: sent.thread, settled: true })).toMatchObject({ thread: sent.thread, settled: true })
+  expect(await sand.ask(threadUpdate, { session: sent.thread, archived: true })).toMatchObject({ thread: sent.thread, archived: true })
   expect(sand.turns.get(sent.turn!)).toMatchObject({ status: 'interrupted' })
 })
 

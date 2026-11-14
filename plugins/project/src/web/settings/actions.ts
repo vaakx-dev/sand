@@ -58,9 +58,3 @@ export const copyEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] 
     icon: 'x',
     run: () => ctx.projects.removeCopy(entry),
   }))
-
-export const visibilityEntry = (ctx: ProjectsContext, group: ProjectGroup): Entry => ({
-  label: group.hidden ? 'Show in sand' : 'Hide from sand',
-  icon: 'eye',
-  run: () => ctx.projects.hide(group, !group.hidden),
-})

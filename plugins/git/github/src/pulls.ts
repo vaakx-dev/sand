@@ -1,5 +1,5 @@
 import type { GitRunner } from '@sand/git-runner/contract'
-import type { Client } from './api/client'
+import type { Rest } from './api/client'
 import type { Pull, PullState } from './contract'
 import { repoOf } from './repo'
 
@@ -32,7 +32,7 @@ const branchOnGitHub = async (git: PullGit, cwd: string) => {
   return { ...repo, branch }
 }
 
-export const pullsOf = async (git: PullGit, client: Client, cwd: string): Promise<Pull[] | null> => {
+export const pullsOf = async (git: PullGit, client: Rest, cwd: string): Promise<Pull[] | null> => {
   const found = await branchOnGitHub(git, cwd)
   if (!found) return null
   const head = encodeURIComponent(`${found.owner}:${found.branch}`)
@@ -45,7 +45,7 @@ const pushIfNeeded = async (git: PullGit, cwd: string, branch: string) => {
   await git.ok(cwd, ['push', '--quiet', '--set-upstream', 'origin', branch], { timeoutMs: pushMs, what: "Couldn't push the branch" })
 }
 
-export const openPull = async (git: PullGit, client: Client, cwd: string, title: string): Promise<Pull> => {
+export const openPull = async (git: PullGit, client: Rest, cwd: string, title: string): Promise<Pull> => {
   const found = await branchOnGitHub(git, cwd)
   if (!found) throw new Error("This folder isn't on a branch of a GitHub repo.")
   await pushIfNeeded(git, cwd, found.branch)

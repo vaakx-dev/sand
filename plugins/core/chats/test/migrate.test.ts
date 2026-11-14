@@ -19,7 +19,7 @@ const said = (role: Message['role'], text: string): Message => ({ role, content:
 const writeUnversioned = (messages: Message[]) => {
   const db = new Database(path, { create: true, strict: true })
   for (const sql of v1) db.run(sql)
-  db.query("insert into chats (id, created, cwd, kind) values ('chat', 1, $cwd, 'thread')").run({ cwd: dir })
+  db.query("insert into chats (id, created, cwd, kind, settled) values ('chat', 1, $cwd, 'thread', 5)").run({ cwd: dir })
   const insert = db.query("insert into entries (id, session, parent, at, type, data, size) values ($id, 'chat', $parent, $at, 'message', $data, $size)")
   messages.forEach((message, index) => {
     const data = JSON.stringify(message)
@@ -40,7 +40,7 @@ const open = (file: string) => {
 
 const storeOf = (db: Database) =>
   createStore(db, {
-    hooks: { entry() {}, update() {}, settle() {}, remove() {} },
+    hooks: { entry() {}, update() {}, archive() {}, remove() {} },
     busy: async () => false,
     closing: async () => undefined,
     projectOf: () => null,
@@ -48,7 +48,7 @@ const storeOf = (db: Database) =>
     scratch: id => join(dir, id),
   }).sessions
 
-test('a database from before migrations keeps its chats, catch-up cursors and sync tokens', () => {
+test('a database from before migrations keeps its chats, archive times, catch-up cursors and sync tokens', () => {
   const history = [said('user', 'hi'), said('assistant', 'hello'), said('user', 'how are you'), said('assistant', 'fine')]
   const token = writeUnversioned(history)
 
@@ -56,6 +56,7 @@ test('a database from before migrations keeps its chats, catch-up cursors and sy
   const sessions = storeOf(db)
   const chat = sessions.require('chat')
   expect(chat.messages()).toEqual(history)
+  expect(chat.archived).toBe(5)
   expect(chat.since('e1')?.map(entry => entry.id)).toEqual(['e2', 'e3'])
 
   const added = chat.append('message', said('user', 'and now?'))

@@ -85,6 +85,7 @@ export default definePlugin({
       },
       aside: spec => model.asides.add(spec),
       showAside: (id, open) => model.showAside(id, open),
+      showChat: () => model.showChat(),
       asideOpen(id) {
         const spec = model.asides.items.get().find(found => found.id === id)
         return spec ? model.asideShown(spec) : false

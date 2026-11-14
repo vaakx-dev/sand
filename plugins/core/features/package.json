@@ -37,6 +37,7 @@
           "usage",
           "usage-resume",
           "palette",
+          "chat-find",
           "picker",
           "extend",
           "html"
@@ -72,6 +73,7 @@
           "usage",
           "usage-resume",
           "palette",
+          "chat-find",
           "html"
         ]
       },
@@ -299,6 +301,15 @@
         "label": "Command palette",
         "summary": "Find things and run actions from the keyboard",
         "stops": "The command palette and its actions go away."
+      },
+      "chat-find": {
+        "kind": "capability",
+        "label": "Find in chat",
+        "summary": "Find words in the chat on screen with Ctrl F or the chat menu, and step through them",
+        "stops": "You can't find words in the chat on screen; Ctrl F finds in the page instead.",
+        "needs": [
+          "transcript"
+        ]
       },
       "picker": {
         "kind": "capability",
