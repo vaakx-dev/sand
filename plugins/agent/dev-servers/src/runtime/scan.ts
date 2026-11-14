@@ -56,7 +56,7 @@ export const createScanner = (processes: () => Processes | undefined) => {
 
   const serverOf = (listener: Reachable): DevServer => {
     const { tree, name } = listener.owner
-    return { port: listener.port, url: `http://localhost:${listener.port}`, pid: listener.pid, name, command: tree.label, session: tree.conversation }
+    return { port: listener.port, url: `http://localhost:${listener.port}`, address: listener.address, pid: listener.pid, name, command: tree.label, session: tree.conversation }
   }
 
   const scan = async () => {

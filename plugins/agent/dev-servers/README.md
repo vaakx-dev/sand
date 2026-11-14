@@ -4,9 +4,9 @@ Dev servers lists the web servers each thread started in its Details, with Open 
 
 ## Good for
 
-- Opening the app an agent just started without hunting for its port
+- Opening the app an agent just started without hunting for its port, on the PC or from your phone, with hot reload
 - Stopping servers a thread left running
-- Letting agents and scripts list and stop them too, with the `dev_server_list` and `dev_server_stop` tools and `sand servers`
+- Letting agents and scripts list, open and stop them too, with the `dev_server_list`, `dev_server_open` and `dev_server_stop` tools and `sand servers`
 
 ## Try it
 
