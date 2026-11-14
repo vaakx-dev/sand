@@ -32,21 +32,33 @@ export const createSkillIndex = (ctx: Context, wire: Wire, pcs: Pcs, threads: Th
     asking.catch(() => places.delete(key))
     return asking
   }
+  const lists = new Map<string, SkillSummary[]>()
   const refresh = coalesced(ctx, () => {
     const ticket = ++asked
-    wire.call(skillsList, listInput(threads)).then(
-      next => ticket === asked && set(next),
+    const input = listInput(threads)
+    const key = JSON.stringify(input)
+    const known = lists.get(key)
+    if (known) return set(known)
+    wire.call(skillsList, input).then(
+      next => {
+        lists.set(key, next)
+        if (ticket === asked) set(next)
+      },
       () => {},
     )
   })
+  const fresh = () => {
+    lists.clear()
+    refresh()
+  }
   const offered = () => wire.hello(helloSkills) !== undefined
   onHomeHello(ctx, wire, () => {
     set(wire.hello(helloSkills) ?? [])
-    if (offered()) refresh()
+    if (offered()) fresh()
   })
   ctx.on(threadSelect, () => {
     if (offered()) refresh()
   })
-  ctx.effect(() => wire.on(skillsUpdate, refresh))
+  ctx.effect(() => wire.on(skillsUpdate, fresh))
   return { list: () => skills, of }
 }

@@ -74,7 +74,7 @@ export interface Session extends SessionInfo {
   since(after: number | string): Entry[] | undefined
   carried(before: string, types: string[]): Entry[]
   latest(type: string): Entry | undefined
-  branches(entry: string): Branch[]
+  forks(): Branch[][]
   entries(): Entry[]
   messages(): Message[]
   checkout(entry: string | null): void

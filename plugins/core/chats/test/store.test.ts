@@ -60,8 +60,7 @@ test('a message branches into the other messages sent from the same point, each 
     { entry: first.id, leaf: followUp.id },
     { entry: second.id, leaf: retried.id },
   ]
-  expect(chat.branches(first.id)).toEqual(expected)
-  expect(chat.branches(second.id)).toEqual(expected)
+  expect(chat.forks()).toEqual([expected])
 })
 
 test('versions at the start of a chat are ordered by when they were sent and land on their newest entry, whatever their ids', () => {
@@ -72,11 +71,12 @@ test('versions at the start of a chat are ordered by when they were sent and lan
   chat.checkout(null)
   const second = chat.append('message', said('user', 'second'), { id: 'a-second', at: 1 })
 
-  expect(chat.branches(second.id)).toEqual([
-    { entry: first.id, leaf: retried.id },
-    { entry: second.id, leaf: second.id },
+  expect(chat.forks()).toEqual([
+    [
+      { entry: first.id, leaf: retried.id },
+      { entry: second.id, leaf: second.id },
+    ],
   ])
-  expect(chat.branches('missing')).toEqual([])
 })
 
 test('a message sent once is its only version, and tool results sent from the same point are not versions', () => {
@@ -84,9 +84,9 @@ test('a message sent once is its only version, and tool results sent from the sa
   const call = chat.append('message', { role: 'assistant', content: [{ type: 'tool_call', id: 'call', name: 'read', input: {} }] })
   chat.append('message', { role: 'user', content: [{ type: 'tool_result', callId: 'call', content: [{ type: 'text', text: 'file' }] }] })
   chat.checkout(call.id)
-  const prompt = chat.append('message', said('user', 'do this instead'))
+  chat.append('message', said('user', 'do this instead'))
 
-  expect(chat.branches(prompt.id)).toEqual([{ entry: prompt.id, leaf: prompt.id }])
+  expect(chat.forks()).toEqual([])
 })
 
 test('paging back from the head walks the whole path, one turn at a time', () => {

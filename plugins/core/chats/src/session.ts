@@ -1,4 +1,4 @@
-import { branchesOf } from './branches'
+import { forksOf } from './branches'
 import type { EntryCache } from './cache'
 import type { AppendMeta, Entry, Message, Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
@@ -79,7 +79,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
       const head = current()
       return head ? paging.latest(info.id, head, type) : undefined
     },
-    branches: entry => branchesOf(session.entries(), entry),
+    forks: () => forksOf(session.entries()),
     entries: () => [...all().values()].sort((a, b) => a.seq - b.seq),
     messages: () => session.path().flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : [])),
     checkout(entry) {

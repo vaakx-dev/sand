@@ -1,7 +1,7 @@
 import {
   type OpenedSession,
-  sessionBranches,
   sessionCheckout,
+  sessionForks,
   sessionRemove,
   uiFocus,
 } from '@sand/server/contract'
@@ -129,6 +129,6 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
       if (entry && !thread.entries.has(entry)) await load(id)
       store.changed(id, true)
     },
-    branches: (id, entry) => wire.call(sessionBranches, { session: id, entry }),
+    forks: id => wire.call(sessionForks, { session: id }),
   }
 }
