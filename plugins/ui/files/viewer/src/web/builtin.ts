@@ -71,7 +71,7 @@ const imageFormat = (): FileFormat => ({
     const actual = sig(false)
     const source = await objectUrl(file)
     return div(
-      { class: () => ['flex min-h-full p-3', actual.get() ? 'overflow-auto' : 'items-center justify-center'] },
+      { class: () => ['flex flex-1 p-3', actual.get() ? 'overflow-auto' : 'items-center justify-center'] },
       img({
         ...source,
         alt: file.name,
