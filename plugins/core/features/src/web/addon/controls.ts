@@ -31,4 +31,4 @@ const addonLine = (choice: FeatureChoice, addon: Addon, feature: Feature | undef
   return feature ? status(choice, feature) : ''
 }
 
-export { addonControls, addonLine, updateButton }
+export { addonControls, addonLine }

@@ -4,7 +4,7 @@ import { mediaPath, type SignItem, type Signed } from '../contract'
 import { localImage } from '../resolve'
 import type { Store } from '../store'
 import { extensionOf } from '../store/types'
-import type { Tokens } from './tokens'
+import type { Tokens } from '@sand/util/host'
 
 type CwdOf = (session?: string) => string | undefined
 

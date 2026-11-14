@@ -42,8 +42,6 @@ export interface FeatureState {
 
 export const featureState = service<FeatureState>('featureState')
 
-export const addonPageId = (id: string) => `addon:${id}`
-
 const addonIds = () => z.object({ ids: z.array(z.string().min(1)).min(1) })
 
 export const featuresList = request('features.list', { input: () => z.object({}), output: type<FeatureChoice>(), callers: 'any', waitMs: swapWaitMs })
