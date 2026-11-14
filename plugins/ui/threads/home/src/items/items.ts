@@ -17,7 +17,7 @@ export interface Entry {
   row: ShellRow
   moved: number
   snoozed?: number
-  settled?: boolean
+  archived?: boolean
   pinned?: boolean
 }
 
@@ -66,7 +66,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes
     },
     moved: isBack(thread) ? Math.max(thread.info.updated, thread.info.snoozed ?? 0) : thread.info.updated,
     snoozed,
-    settled: Boolean(thread.info.settled),
+    archived: Boolean(thread.info.archived),
     pinned: Boolean(thread.info.pinned),
   }
 }

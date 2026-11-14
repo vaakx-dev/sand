@@ -6,6 +6,7 @@ export interface Change {
   from: string
   summary: string
   detail?: string
+  key?: string
 }
 
 export interface KindContext {

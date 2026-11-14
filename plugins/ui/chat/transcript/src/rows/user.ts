@@ -20,7 +20,7 @@ const fileChip = (kit: Kit, block: FileBlock) => chip(kit, block.name, isArchive
 const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
     return context.media(part.block, context.conversation, { class: 'block max-h-32 max-w-48 rounded-md bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
-  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file')
+  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file', part.block.size)
   if (part.kind === 'file') return fileChip(context.kit, part.block)
   if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles')
   return null
@@ -159,7 +159,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     const reveal = tapReveal()
     const relayed = sender && { sender, text: shown, records, attachments, ...context.states.get(`user:${item.key}`) }
     return div(
-      { class: ['chat-row group mt-2 mb-2 flex flex-col gap-2', relayed ? 'items-start pr-16 md:pr-32' : 'items-end pl-16 md:pl-32'] },
+      { class: ['chat-row group mt-2 mb-2 flex flex-col gap-2', relayed ? 'items-start pr-16 md:pr-32' : 'items-end pl-16 md:pl-32'], 'data-item': item.key },
       !relayed && attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       relayed
         ? relayedQuote(relayed, spec, context)

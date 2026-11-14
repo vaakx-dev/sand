@@ -1,8 +1,10 @@
 import { notificationTag } from '@sand/chats/contract'
 import { definePlugin } from 'drydock'
-import { toolViews, transcript, transcriptParts } from './contract'
+import { shownChats, toolViews, transcript, transcriptParts } from './contract'
 import { inject } from './context'
 import { chatImages } from './image'
+import { flasher } from './integrations/flash'
+import { createShownChats } from './integrations/shown'
 import { createParts, createToolViews } from './parts'
 import { rendererRegistry } from './registry'
 import { notificationRenderer } from './rows/notification'
@@ -19,6 +21,8 @@ export default definePlugin({
     ctx.effect(() => registry.entry(notificationTag, notificationRenderer(ctx.kit, registry)))
     ctx.provide(transcript, { tool: registry.tool, entry: registry.entry, ending: registry.ending, notice: registry.notice })
     ctx.provide(toolViews, createToolViews(ctx.kit, images.image))
-    ctx.provide(transcriptParts, createParts(ctx, registry, images))
+    const flash = flasher()
+    ctx.provide(transcriptParts, createParts(ctx, registry, images, flash))
+    ctx.provide(shownChats, createShownChats(flash))
   },
 })

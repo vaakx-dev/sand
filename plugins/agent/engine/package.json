@@ -19,6 +19,7 @@
     "@sand/config": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/ledger": "workspace:*",
+    "@sand/media": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/usage": "workspace:*",

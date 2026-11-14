@@ -26,7 +26,7 @@ export default definePlugin({
     const report = (error: unknown) => ctx.report(error)
     const merged = createMerged(join(ctx.paths.home, 'merged.json'), () => ctx.busy())
     merged.ready().catch(report)
-    const settleAfterTurn = new Set<string>()
+    const archiveAfterTurn = new Set<string>()
     const byRepo = keyedSerial()
 
     const busy = (id: string): boolean => {
@@ -42,9 +42,9 @@ export default definePlugin({
       merged,
       attempts: new Map<string, Attempt>(),
       busy,
-      async settle(id) {
-        if (busy(id)) settleAfterTurn.add(id)
-        else await ctx.sessions.settle(id, true)
+      async archive(id) {
+        if (busy(id)) archiveAfterTurn.add(id)
+        else await ctx.sessions.archive(id, true)
       },
       queue: (main, task) => byRepo(pathKey(main), task),
       changed: id => tracker.publish(id),
@@ -82,7 +82,7 @@ export default definePlugin({
       else tracker.poke(session.id)
     })
     ctx.on(turnEnd, session => {
-      if (settleAfterTurn.delete(session.id)) ctx.sessions.settle(session.id, true).catch(report)
+      if (archiveAfterTurn.delete(session.id)) ctx.sessions.archive(session.id, true).catch(report)
       tracker.poke(session.id)
     })
 

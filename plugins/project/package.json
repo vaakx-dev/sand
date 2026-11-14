@@ -1,7 +1,7 @@
 {
   "name": "@sand/project",
   "version": "0.0.0",
-  "description": "Projects: the registry and its sync across PCs, project files and folders, icons, the Projects page with its Add a project sheet, and palette items",
+  "description": "Projects: the registry and its sync across PCs, pinning and archiving, project files and folders, icons, the Projects page with its Add a project sheet, palette items and the sand project command",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -11,11 +11,13 @@
     "host": "./src/host.ts",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "cli": "./src/cli/index.ts",
     "web": "./src/web/index.ts",
     "label": "Projects",
     "summary": "Add, find and manage projects on every PC"
   },
   "dependencies": {
+    "@sand/cli-commands": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
