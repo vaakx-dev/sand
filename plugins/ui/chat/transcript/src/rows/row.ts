@@ -1,6 +1,6 @@
 import type { ContextLink, ContextRecord } from '@sand/chats/contract'
-import type { Markdown, MarkdownImage } from '@sand/markdown/contract'
-import type { Item, MediaImage, RendererRegistry, Row, Surface } from '../contract'
+import type { Markdown, NodeOptions } from '@sand/markdown/contract'
+import type { FileOpener, Item, MediaImage, RendererRegistry, Row, Surface } from '../contract'
 import { selectingIn, type Kit } from '@sand/ui-kit/contract'
 import { div, media, sig, type Child } from '@vaakx-dev/vrui'
 
@@ -9,7 +9,8 @@ export interface RowContext extends Surface {
   registry: RendererRegistry
   markdown: Markdown
   media: MediaImage
-  image: MarkdownImage
+  prose: NodeOptions
+  fileOpener: FileOpener
   chip(link: ContextLink, record?: ContextRecord): Child
   open(record: ContextRecord): void
 }

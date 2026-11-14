@@ -2,7 +2,7 @@ import type { ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contra
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { stepBody, stepLine, stepMark, type StepState } from '../rows/line'
-import { tildeHome } from '@sand/util'
+import { isRecord, tildeHome } from '@sand/util'
 import { relativeTo } from './relative'
 
 const states: Record<ToolStatus, StepState> = { pending: 'running', running: 'running', done: 'done', failed: 'failed' }
@@ -38,12 +38,17 @@ const metaView = (text: string) => span({ class: 'truncate', title: text }, coun
 
 const badgeTones: Record<ToolBadge['tone'], string> = { danger: 'text-danger-400', neutral: 'text-neutral-500' }
 
+const FILE_FIELDS = ['path', 'file_path', 'filePath', 'notebook_path']
+
+const filePathOf = (input: unknown) =>
+  isRecord(input) ? FILE_FIELDS.map(field => input[field]).find((value): value is string => typeof value === 'string' && value !== '') : undefined
+
 const badgeView = (found: ToolBadge | undefined) => found && span({ class: ['shrink-0', badgeTones[found.tone]] }, found.text)
 
 export const toolStep = (
   kit: Kit,
   tool: Sig<ToolView>,
-  { renderer, version, open, toggle, menu }: ToolStepOptions,
+  { renderer, version, open, toggle, menu, fileOpener }: ToolStepOptions,
   cwd: string | undefined,
 ) => {
   const { contextMenu, copyButton, shine } = kit
@@ -76,6 +81,15 @@ export const toolStep = (
     lines => (lines?.length ? stepBody(progressTail(lines)) : undefined),
   )
   const own = menu ?? contextMenu()
+  const filePath = derive(() => filePathOf(tool.get().call.input))
+  const openFile = () => {
+    const path = filePath.get()
+    if (path) fileOpener?.()?.(path)
+  }
+  const fileButton = show(
+    () => Boolean(filePath.get() && fileOpener?.()),
+    () => kit.iconButton({ size: 'sm', title: 'Open file', 'aria-label': 'Open file', onClick: openFile }, kit.icon('file-text', 'sm')),
+  )
   const spec = (): MenuSpec => ({
     title: shown.get().verb,
     subtitle: shown.get().label,
@@ -106,6 +120,7 @@ export const toolStep = (
       ),
       expanded: open,
       actions: [
+        fileButton,
         copyButton({ text: copy }),
         show(
           () => current().actions(tool.get()).length > 0,

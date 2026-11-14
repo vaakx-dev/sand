@@ -1,7 +1,6 @@
-import { expandHome } from '@sand/util/fs'
+import { expandHome, fromMsys } from '@sand/util/fs'
 import { stat } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { extname, isAbsolute, join } from 'node:path'
+import { extname, isAbsolute } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const imageTypes: Record<string, string> = {
@@ -23,14 +22,6 @@ const decoded = (src: string) => {
   } catch {
     return src
   }
-}
-
-const fromMsys = (path: string) => {
-  if (process.platform !== 'win32') return path
-  const drive = /^\/([a-zA-Z])(?:\/(.*))?$/.exec(path)
-  if (drive) return `${drive[1]!.toUpperCase()}:/${drive[2] ?? ''}`
-  if (path === '/tmp' || path.startsWith('/tmp/')) return join(tmpdir(), path.slice(4))
-  return path
 }
 
 const located = (src: string, cwd: string | undefined) => {

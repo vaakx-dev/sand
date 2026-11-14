@@ -10,14 +10,20 @@ export type MarkdownImage = (src: string, alt: string) => Node | undefined
 
 export type MarkdownSize = 'reading' | 'compact'
 
+export interface MarkdownFiles {
+  link(target: string, label: (Node | string)[]): Node | undefined
+  mention(text: string, label: Node): Node | undefined
+}
+
 export interface NodeOptions {
   image?: MarkdownImage
+  files?: MarkdownFiles
   size?: MarkdownSize
 }
 
 export interface Markdown {
   nodes(source: string, options?: NodeOptions): Node[]
-  settle(source: string, image?: MarkdownImage): SettledMarkdown | undefined
+  settle(source: string, options?: NodeOptions): SettledMarkdown | undefined
   inline(source: string): (Node | string)[]
   highlight(code: string, language: string): (Node | string)[]
 }

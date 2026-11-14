@@ -38,7 +38,8 @@ const link = ({ href, children, place, title }: Link, scope: Scope): Node => {
   if (url) return anchor(url, title, children)
   const [, name = '', target = ''] = schemed.exec(href.trim()) ?? []
   const found = name && scope.scheme(name.toLowerCase())
-  return found ? found.render(target, children, place) : linkLabel(href, children)
+  if (found) return found.render(target, children, place)
+  return scope.files?.link(href.trim(), children) ?? linkLabel(href, children)
 }
 
 const imageLink = (src: string, alt: string, place: LinkPlace, scope: Scope, title?: string) =>

@@ -4,7 +4,7 @@ const policy = [
   "style-src 'unsafe-inline'",
   "font-src 'self'",
   "img-src 'self' data: blob: http: https:",
-  "media-src blob:",
+  "media-src 'self' blob:",
   "connect-src 'self' http: https: ws: wss:",
   "frame-src 'self'",
   "manifest-src 'self'",

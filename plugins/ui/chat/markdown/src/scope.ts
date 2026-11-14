@@ -1,7 +1,7 @@
 import type { MathRenderer } from '@sand/math/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Refs } from './blocks/refs'
-import type { MarkdownImage, MarkdownSize } from './contract'
+import type { MarkdownFiles, MarkdownImage, MarkdownSize } from './contract'
 import type { FindScheme } from './schemes'
 
 export interface Renderers {
@@ -13,6 +13,7 @@ export interface Renderers {
 export interface Scope extends Renderers {
   refs: Refs
   image?: MarkdownImage
+  files?: MarkdownFiles
   size?: MarkdownSize
   streaming?: boolean
   paragraph?: string

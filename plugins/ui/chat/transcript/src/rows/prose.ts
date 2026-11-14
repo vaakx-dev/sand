@@ -11,7 +11,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const streaming = data.map(value => value.streaming)
     const railed = () => place?.get().railed ?? false
     const node = div({ class: ['leading-relaxed wrap-anywhere', () => (railed() ? 'text-neutral-400' : 'text-neutral-100')], 'data-quote': '' })
-    const render = streamedMarkdown(node, context.markdown, context.image)
+    const render = streamedMarkdown(node, context.markdown, context.prose)
     effect(() => render(text.get(), streaming.get()))
     const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply?.(text.get()) ?? [] })
     const reveal = tapReveal()

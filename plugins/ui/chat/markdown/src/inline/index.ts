@@ -23,10 +23,15 @@ const escaped: Parser = (source, index) => {
   return source[index] === '\\' && escapable.test(next) ? { item: next, end: index + 2 } : undefined
 }
 
-const codeSpan: Parser = (source, index) => {
+const mentioned = (content: string, scope: Scope) => {
+  const code = inlineCode(tildeHome(content))
+  return scope.files?.mention(content, code) ?? code
+}
+
+const codeSpan: Parser = (source, index, scope) => {
   if (source[index] !== '`') return undefined
   const span = codeSpanAt(source, index)
-  return { item: span.content === undefined ? source.slice(index, span.end) : inlineCode(tildeHome(span.content)), end: span.end }
+  return { item: span.content === undefined ? source.slice(index, span.end) : mentioned(span.content, scope), end: span.end }
 }
 
 const emphasisRun: Parser = (source, index) => {
