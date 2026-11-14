@@ -10,7 +10,7 @@ import { mediaRoute } from './route'
 import { createSized } from './route/sized'
 import { createSigner } from './sign'
 import { loadKey } from './sign/key'
-import { createTokens } from './sign/tokens'
+import { createTokens } from '@sand/util/host'
 import { createStore } from './store'
 
 export default definePlugin({

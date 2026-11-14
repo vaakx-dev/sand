@@ -60,18 +60,13 @@ const markdownFormat = (parts: Parts): FileFormat => ({
   },
 })
 
-const objectUrl = async (file: OpenFile) => {
-  const src = URL.createObjectURL(await file.blob())
-  return { src, onMount: () => () => URL.revokeObjectURL(src) }
-}
-
 const imageFormat = (): FileFormat => ({
   id: 'image',
   extensions: IMAGE_EXTENSIONS,
   async render(file) {
     const actual = sig(false)
-    const source = await objectUrl(file)
-    return pictureStage({ actual: () => actual.get(), toggle: () => actual.update(value => !value), element: look => img({ ...source, alt: file.name, ...look }) })
+    const src = await file.source()
+    return pictureStage({ actual: () => actual.get(), toggle: () => actual.update(value => !value), element: look => img({ src, alt: file.name, ...look }) })
   },
 })
 
@@ -80,13 +75,13 @@ const stage = (player: HTMLElement) => div({ class: 'flex justify-center p-4' },
 const audioFormat = (): FileFormat => ({
   id: 'audio',
   extensions: AUDIO_EXTENSIONS,
-  render: async file => stage(el('audio', { ...(await objectUrl(file)), controls: true, preload: 'metadata', class: 'w-full' })),
+  render: async file => stage(el('audio', { src: await file.source(), controls: true, preload: 'metadata', class: 'w-full' })),
 })
 
 const videoFormat = (): FileFormat => ({
   id: 'video',
   extensions: VIDEO_EXTENSIONS,
-  render: async file => stage(el('video', { ...(await objectUrl(file)), controls: true, preload: 'metadata', playsInline: true, class: 'w-full rounded-md' })),
+  render: async file => stage(el('video', { src: await file.source(), controls: true, preload: 'metadata', playsInline: true, class: 'w-full rounded-md' })),
 })
 
 const builtinFormats = (parts: Parts) => [markdownFormat(parts), imageFormat(), audioFormat(), videoFormat()]
