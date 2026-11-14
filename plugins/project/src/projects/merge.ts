@@ -15,7 +15,8 @@ const normalFields = (project: Project): Omit<Project, 'copies'> => ({
   ...(project.icon ? { icon: project.icon } : {}),
   ...(project.iconFile ? { iconFile: project.iconFile } : {}),
   updated: project.updated,
-  ...(project.hidden ? { hidden: true } : {}),
+  ...(project.pinned ? { pinned: true } : {}),
+  ...(project.archived ? { archived: true } : {}),
   ...(project.deleted ? { deleted: true } : {}),
 })
 

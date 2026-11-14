@@ -87,7 +87,7 @@ export const iconSheet = (ctx: ProjectsContext, changes: Pulse, picking: Sig<Pic
     if (!id || !frame) return
     const group = derive(() => {
       changes.version.get()
-      return ctx.projects.groups({ hidden: true }).find(found => found.id === id)
+      return ctx.projects.get(id)
     })
     const title = () => `Icon for ${group.get()?.name ?? ''}`
     const handle = untrack(() =>
