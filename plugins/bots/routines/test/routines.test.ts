@@ -114,9 +114,9 @@ test('routines can be paused, resumed and deleted, by any bot, and go when their
   expect(await ask(routineList, { bot: bot.id })).toEqual([])
 })
 
-test('a routine that fires while its bot is busy waits its turn, and that turn failing is kept as its last run', async () => {
+test('a routine that fires while its bot is busy waits its turn, and when that turn fails it is tried again a minute later', async () => {
   setSystemTime(at('2026-11-04T17:59:58Z'))
-  const { ask } = await start([[said('Working.'), { type: 'call', name: 'gate', input: {} }], [said('Done.')], [{ type: 'error', message: 'overloaded' }]])
+  const { ask } = await start([[said('Working.'), { type: 'call', name: 'gate', input: {} }], [said('Done.')], [{ type: 'error', message: 'overloaded' }], [said('Time to call Ana.')]])
   const gate = Promise.withResolvers<string>()
   sand.tool('gate', () => gate.promise)
   const bot = await ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
@@ -127,9 +127,15 @@ test('a routine that fires while its bot is busy waits its turn, and that turn f
   await Bun.sleep(1_500)
   expect(await ask(routineList, { bot: bot.id })).toMatchObject([{ name: 'Call Ana' }])
 
+  const told: Moment[] = []
+  sand.app.provide(notify, { send: async moment => void told.push(moment) })
   gate.resolve('open')
   await until(async () => (await ask(routineList, { bot: bot.id }))[0]?.last?.outcome === 'failed')
-  const [failed] = await ask(routineList, { bot: bot.id })
-  expect(failed).toMatchObject({ name: 'Call Ana', paused: false, last: { outcome: 'failed' } })
-  expect(failed?.next).toBeUndefined()
+  expect(await ask(routineList, { bot: bot.id })).toMatchObject([{ name: 'Call Ana', next: at('2026-11-04T18:01:00Z'), last: { outcome: 'failed', error: expect.stringContaining('overloaded') } }])
+  expect(told).toEqual([])
+
+  setSystemTime(at('2026-11-04T18:01:00Z'))
+  await until(() => answered(bot.id, 'Time to call Ana.'))
+  await until(async () => !(await ask(routineList, { bot: bot.id })).length)
+  expect(told).toEqual([{ kind: 'routine', title: 'Call Ana', text: 'Time to call Ana.' }])
 })

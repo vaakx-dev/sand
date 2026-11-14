@@ -24,11 +24,15 @@ export default definePlugin({
       paused: routine.paused,
       error: failure(routine),
       actions: () => [
-        {
-          id: 'pause',
-          label: routine.paused ? 'Resume' : 'Pause',
-          run: () => ctx.wire.call(routinePause, { routine: routine.id, paused: !routine.paused }),
-        },
+        ...(failure(routine)
+          ? []
+          : [
+              {
+                id: 'pause',
+                label: routine.paused ? 'Resume' : 'Pause',
+                run: () => ctx.wire.call(routinePause, { routine: routine.id, paused: !routine.paused }),
+              },
+            ]),
         {
           id: 'delete',
           label: 'Delete',

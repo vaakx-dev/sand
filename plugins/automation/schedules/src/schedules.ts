@@ -16,9 +16,9 @@ const checkWhen = (when: When, now: number) => {
   return next
 }
 
-const resumedNext = (schedule: Schedule, now: number) => {
-  if (schedule.when.kind === 'once') return Math.max(schedule.next ?? schedule.when.at, now)
-  return nextRun(schedule.when, now)
+const resumed = (schedule: Schedule, now: number): Schedule => {
+  if (schedule.when.kind === 'cron') return { ...schedule, paused: false, next: nextRun(schedule.when, now), retry: undefined }
+  return { ...schedule, paused: false, next: schedule.next === undefined ? undefined : Math.max(schedule.next, now) }
 }
 
 export const createSchedules = (book: Book, { handlers }: Registry, plan: () => void): Schedules => {
@@ -57,8 +57,7 @@ export const createSchedules = (book: Book, { handlers }: Registry, plan: () => 
     },
     pause(id, paused) {
       const { schedule, state } = known(id)
-      const next = paused ? schedule.next : resumedNext(schedule, Date.now())
-      return changed(book.put({ schedule: { ...schedule, paused, next }, state }))
+      return changed(book.put({ schedule: paused ? { ...schedule, paused } : resumed(schedule, Date.now()), state }))
     },
     remove: id => changed(book.drop(id)),
     get: id => book.get(id)?.schedule,
