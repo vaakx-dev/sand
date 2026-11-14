@@ -19,7 +19,7 @@ export interface LinkOptions {
   onPc: boolean
   signer: Signer
   relay(through: string): ViaRelay
-  since(): string | undefined
+  since(): string | undefined | Promise<string | undefined>
   greeted(retagged: boolean): void
   event(name: string, payload: unknown): void
   identified(identity: PcIdentity): void
@@ -31,11 +31,11 @@ const resumes = browserResumeStore()
 const wake = browserWake()
 
 export const openPcLink = (options: LinkOptions): PcLink => {
-  const hellos = helloMemory()
-  const greeting = () => hellos.greeting(options.since())
+  const hellos = helloMemory(options.pc)
+  const greeting = async () => hellos.greeting(await options.since())
 
   const regreet = () =>
-    void connection.call(hello, greeting()).then(
+    void greeting().then(input => connection.call(hello, input)).then(
       reply => options.greeted(hellos.take(reply)),
       () => {},
     )

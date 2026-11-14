@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import type { Page } from 'playwright'
-import { missingFrom } from './complete'
+import { listMissing, missingFrom } from './complete'
 import { slowLink, type LinkShape } from './link'
 import { type Cost, costOf, countAt, fresh, openRoute, seen, shownAt, tapped } from './measure'
 import { startPhone } from './phone'
@@ -140,14 +140,16 @@ const scrollUp = (page: Page, chat: SeededChat) =>
 const send = async (page: Page, run: number) => {
   const text = `Bench message ${run}`
   await page.locator('[contenteditable=true],textarea').first().fill(text)
-  const before = await page.evaluate(() => window.bench.count('Bench reply'))
+  const [before, ended] = await page.evaluate(() => [window.bench.count('Bench reply'), window.bench.count('ends reply')])
   const since = await seen(page, link.traffic)
   const start = await tap(page, 'Send')
   const shown = await shownAt(page, text)
-  const replied = await countAt(page, 'Bench reply', before)
-  const cost = await costOf(page, link.traffic, since, start, replied)
+  const replied = await countAt(page, 'Bench reply', before!)
+  const done = await countAt(page, 'ends reply', ended!)
+  const cost = await costOf(page, link.traffic, since, start, done)
   record('send: message shows', { ...cost, ms: shown - start })
-  record('send: first reply text shows', cost)
+  record('send: first reply text shows', { ...cost, ms: replied - start })
+  record('send: whole reply shows', cost)
 }
 
 const idle = async (page: Page) => {
@@ -199,6 +201,7 @@ const run = async (index: number) => {
   )
   await page.keyboard.press('Escape')
   await checkComplete(page, home, unseen, other, before, longChat)
+  problems.push(...(await listMissing(page, sandbox.box)))
   await idle(page)
   await page.close()
 }

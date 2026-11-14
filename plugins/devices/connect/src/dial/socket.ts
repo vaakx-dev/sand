@@ -57,7 +57,7 @@ export const openSocket = async (route: Route, path: string, context: DialContex
   run.signal.addEventListener('abort', abandon, { once: true })
   run.greeting?.(route)
   try {
-    return { link, hello: await link.call(hello, context.greeting(), callTimeout), ms }
+    return { link, hello: await link.call(hello, await context.greeting(), callTimeout), ms }
   } catch (error) {
     link.close()
     const refusal = watch.refused()

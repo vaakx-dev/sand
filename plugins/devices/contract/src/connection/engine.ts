@@ -81,7 +81,7 @@ export interface ConnectOptions {
   secure: boolean
   onPc: boolean
   visible(): boolean
-  greeting(): InputOf<typeof hello>
+  greeting(): InputOf<typeof hello> | Promise<InputOf<typeof hello>>
   greeted(reply: Hello, retagged: boolean): void
   event(name: string, payload: unknown): void
   changed(): void

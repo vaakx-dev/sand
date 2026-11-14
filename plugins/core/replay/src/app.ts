@@ -36,9 +36,12 @@ export const replayApp = (script: Script, folder: string) => {
       if (native) appendFileSync(fileOf(native), `${JSON.stringify(call)}\n`)
     }
 
-    const play = (reply: Reply) => {
+    const play = async (reply: Reply) => {
       for (const part of reply) {
         switch (part.type) {
+          case 'wait':
+            await Bun.sleep(part.ms)
+            break
           case 'text':
             out.text(part.text)
             break
@@ -71,7 +74,7 @@ export const replayApp = (script: Script, folder: string) => {
 
     const next = () => {
       const reply = queue.shift()
-      if (reply) play(reply)
+      if (reply) void play(reply)
       else out.fail(new Error(`${label} has no scripted reply left`))
     }
 

@@ -10,7 +10,7 @@ import { fallbackName, viewOf } from './view'
 export interface FleetOptions {
   home: string
   signer: Signer
-  since(pc: string): string | undefined
+  since(pc: string): string | undefined | Promise<string | undefined>
   greeted(pc: string, retagged: boolean): void
   changed(): void
 }

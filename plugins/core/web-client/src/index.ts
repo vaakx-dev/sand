@@ -38,8 +38,8 @@ export default definePlugin({
   apply(ctx) {
     const store = new Store(ctx, ctx.pcs.here().id)
     ctx.effect(() => () => store.dispose())
-    ctx.provide(threadPcs, threadPcsOf(store))
     const cache = createCache(ctx, store, ctx.wire, ctx.pcs)
+    ctx.provide(threadPcs, threadPcsOf(store, cache.ready))
     ctx.provide(deviceCache, cache.device)
     const keptProjects = cache.device.records<unknown>('projects')
     const projects = createProjects(ctx, ctx.wire, ctx.pcs, store)
