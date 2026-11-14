@@ -15,9 +15,7 @@ export const resumable = (routes: Route[], context: DialContext): Resumable | un
   const pc = context.expected().id
   const saved = context.resume.load(pc)
   const route = saved && saved.expires > Date.now() ? routes.find(found => found.key === saved.route && found.via === undefined) : undefined
-  if (!saved || !route) return undefined
-  context.resume.forget(pc)
-  return { route, saved }
+  return saved && route ? { route, saved } : undefined
 }
 
 const greeted = async ({ route, saved }: Resumable, context: DialContext, run: DialRun): Promise<Opened | undefined> => {
@@ -31,4 +29,13 @@ const greeted = async ({ route, saved }: Resumable, context: DialContext, run: D
   return undefined
 }
 
-export const resumeRoute = (resume: Resumable, context: DialContext, run: DialRun) => greeted(resume, context, run).catch(() => undefined)
+const forget = ({ saved }: Resumable, context: DialContext) => {
+  const pc = context.expected().id
+  if (context.resume.load(pc)?.nonce === saved.nonce) context.resume.forget(pc)
+}
+
+export const resumeRoute = async (resume: Resumable, context: DialContext, run: DialRun) => {
+  const opened = await greeted(resume, context, run).catch(() => undefined)
+  if (!opened) forget(resume, context)
+  return opened
+}

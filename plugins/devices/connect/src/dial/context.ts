@@ -14,6 +14,6 @@ export interface DialContext {
 }
 
 export interface DialRun {
-  stopped: boolean
+  signal: AbortSignal
   greeting?(route: Route): void
 }

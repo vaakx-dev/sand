@@ -9,14 +9,13 @@ import {
   routesChange,
 } from '@sand/devices-contract'
 import type { DialContext, DialRun } from '../dial/context'
-import { dial } from '../dial/dial'
+import { type DialOutcome, dial } from '../dial/dial'
 import type { Opened } from '../dial/open'
-import { probeRoute } from '../dial/probe'
 import type { LinkListener } from '../link/link'
 import type { RouteBook } from '../routes/book'
 import { isPublishedRoutes } from '../routes/valid'
 import { timer } from '../time/timer'
-import { drainMax, restartRetry, restartWindow, steadyAfter } from '../timing'
+import { drainMax, restartRetry, restartWindow, steadyAfter, wakeGrace } from '../timing'
 import { transportOf } from '../transport/pick'
 import { type Active, connectedStatus } from './active'
 import type { attemptLog } from './attempts'
@@ -36,7 +35,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   let lastTag: string | undefined
   let failures = 0
   let lostAt: number | undefined
-  let dialing: DialRun | undefined
+  let dialing: { stop: AbortController; started: number } | undefined
   let closed = false
 
   const name = () => identity?.name ?? target.name ?? target.id
@@ -87,11 +86,14 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   const health = healthWatch({
     current: () => active?.opened.link,
     visible: options.visible,
-    answers: route => probeRoute(route, context.transportOf, expected()).then(probe => probe.ok),
     measured(link, latency) {
       if (active?.opened.link !== link) return
+      abandonDial()
       active.latency = latency
       setStatus(connectedStatus(active))
+    },
+    silent(link) {
+      if (active?.opened.link === link) void dialNow()
     },
     failed(link) {
       if (active?.opened.link === link) replace()
@@ -140,25 +142,44 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
 
   const stuck = () => setStatus(wake.online() ? { phase: 'blocked', reason: 'no-route' } : { phase: 'offline' })
 
+  const connecting = () => setStatus({ phase: 'connecting', attempt: failures + 1 })
+
+  const abandonDial = () => {
+    dialing?.stop.abort()
+    dialing = undefined
+  }
+
+  const settle = (outcome: DialOutcome) => {
+    if (outcome.ok) return adopt(outcome.opened)
+    if (active && !outcome.blocked && !health.checking(active.opened.link)) return
+    if (active) drop()
+    if (outcome.blocked) return setStatus({ phase: 'blocked', ...outcome.blocked })
+    scheduleRetry(outcome.cause)
+  }
+
   const dialNow = async () => {
-    if (closed || active || dialing) return
+    if (closed || dialing) return
     retryTimer.clear()
     noteBlockedRoutes()
     const routes = candidates()
-    if (!routes.length) return stuck()
+    if (!routes.length) return active ? undefined : stuck()
     const attempt = failures + 1
-    const run: DialRun = { stopped: false, greeting: route => setStatus({ phase: 'greeting', route, attempt }) }
-    dialing = run
-    setStatus({ phase: 'connecting', attempt })
+    const stop = new AbortController()
+    const run: DialRun = {
+      signal: stop.signal,
+      greeting: route => {
+        if (!active) setStatus({ phase: 'greeting', route, attempt })
+      },
+    }
+    dialing = { stop, started: Date.now() }
+    if (!active) connecting()
     const outcome = await dialRoutes(routes, run)
-    if (dialing !== run) {
+    if (dialing?.stop !== stop) {
       if (outcome.ok) outcome.opened.link.close()
       return
     }
     dialing = undefined
-    if (outcome.ok) return adopt(outcome.opened)
-    if (outcome.blocked) return setStatus({ phase: 'blocked', ...outcome.blocked })
-    scheduleRetry(outcome.cause)
+    settle(outcome)
   }
 
   const adopt = (opened: Opened) => {
@@ -167,6 +188,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
     lastTag = opened.hello.tag
     active = { opened, since: previous?.since ?? Date.now(), latency: opened.ms }
     lostAt = undefined
+    retryTimer.clear()
     previous?.opened.link.retire(drainMax)
     if (!previous)
       steadyTimer.set(steadyAfter, () => {
@@ -193,11 +215,13 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
 
   const lose = (cause: string) => {
     drop()
+    if (dialing) return connecting()
     scheduleRetry(cause)
   }
 
   const replace = () => {
     drop()
+    if (dialing) return connecting()
     void dialNow()
   }
 
@@ -207,11 +231,17 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
     return health.checking(link) ? { state: 'checking', heard: link.heard() } : { state: 'live' }
   }
 
+  const staleDial = () => dialing !== undefined && Date.now() - dialing.started > wakeGrace
+
   const woke = () => {
     if (closed) return
-    if (!active) return void dialNow()
-    health.wake()
-    void upgrade.run()
+    if (active) {
+      health.wake()
+      return void upgrade.run()
+    }
+    failures = 0
+    if (staleDial()) abandonDial()
+    void dialNow()
   }
 
   const stopWake = wake.onWake(woke)
@@ -234,8 +264,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
       steadyTimer.clear()
       upgrade.stop()
       health.stop()
-      if (dialing) dialing.stopped = true
-      dialing = undefined
+      abandonDial()
       active?.opened.link.close()
       active = undefined
     },
