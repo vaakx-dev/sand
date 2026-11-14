@@ -1,4 +1,4 @@
-import { div, read, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import { derive, div, keys, read, resizeObserver, sig, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton, quietButton } from '../buttons/button'
 import { icon } from '../icons/lucide'
 import { layer } from '../layer'
@@ -35,6 +35,55 @@ export interface ZoomView {
   zoomOut(): void
   fit(): void
 }
+
+export interface Size {
+  width: number
+  height: number
+}
+
+const LEAST_ZOOM = 0.25
+const MOST_ZOOM = 4
+const ZOOM_STEP = 1.4
+const STAGE_MARGIN = 24
+
+const clampZoom = (level: number) => Math.min(MOST_ZOOM, Math.max(LEAST_ZOOM, level))
+
+export const fitZoom = (size: Size) => {
+  const room = sig<Size>({ width: 0, height: 0 })
+  const fitted = derive(() => {
+    const { width, height } = room.get()
+    return width ? clampZoom(Math.min((width - 2 * STAGE_MARGIN) / size.width, (height - 2 * STAGE_MARGIN) / size.height)) : 1
+  })
+  const chosen = sig<number | undefined>(undefined)
+  const level = derive(() => chosen.get() ?? fitted.get())
+  const zoomIn = () => chosen.set(clampZoom(level.get() * ZOOM_STEP))
+  const zoomOut = () => chosen.set(clampZoom(level.get() / ZOOM_STEP))
+  const fit = () => chosen.set(undefined)
+  return {
+    size,
+    room,
+    level,
+    canZoomOut: derive(() => level.get() > LEAST_ZOOM),
+    label: derive(() => (chosen.get() === undefined ? 'Fit' : `${Math.round(level.get() * 100)}%`)),
+    zoomIn,
+    zoomOut,
+    fit,
+    keys: keys({ '+': zoomIn, '=': zoomIn, '-': zoomOut, '0': fit }),
+  }
+}
+
+export type FitZoom = ReturnType<typeof fitZoom>
+
+export const zoomStage = (zoom: FitZoom, props: Props<HTMLDivElement>, ...children: Child[]) =>
+  div(
+    {
+      class: 'flex min-h-0 flex-1 overflow-auto',
+      onMount: node => {
+        resizeObserver(node, () => zoom.room.set({ width: node.clientWidth, height: node.clientHeight }))
+      },
+    },
+    div({ ...props, class: 'm-auto shrink-0', style: { width: `${zoom.size.width}px`, height: `${zoom.size.height}px`, zoom: () => String(zoom.level.get()) } }, ...children),
+  )
 
 export const zoomControls = (zoom: ZoomView) =>
   div(

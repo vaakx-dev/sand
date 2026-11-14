@@ -63,7 +63,7 @@ import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { overlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetStep } from './sheets/overlay'
-import { viewerShell, zoomControls } from './sheets/viewer'
+import { fitZoom, viewerShell, zoomControls, zoomStage } from './sheets/viewer'
 import { emptyPage, emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
@@ -144,6 +144,7 @@ export const kit = {
   floatButton,
   fileKindMark,
   firstRowBelow,
+  fitZoom,
   followEnd,
   fold,
   gesture,
@@ -273,4 +274,5 @@ export const kit = {
   rowBody,
   workRow,
   zoomControls,
+  zoomStage,
 }

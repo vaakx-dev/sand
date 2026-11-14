@@ -1,0 +1,33 @@
+{
+  "name": "@sand/mermaid",
+  "version": "0.0.0",
+  "description": "Draws Mermaid diagrams in the chat and in the file viewer",
+  "type": "module",
+  "sand": {
+    "feature": "mermaid",
+    "web": "./src/web/index.ts",
+    "label": "Mermaid diagrams",
+    "summary": "Draws the flowcharts, sequence diagrams and charts agents write in Mermaid",
+    "features": {
+      "mermaid": {
+        "label": "Mermaid diagrams",
+        "summary": "Draws the flowcharts, sequence diagrams and charts agents write in Mermaid",
+        "needs": [
+          "markdown"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/ui-theme": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "mermaid": "^12.3.0"
+  }
+}
