@@ -8,7 +8,7 @@ const studio = { id: 'studio', name: 'Studio' }
 
 const entry = (device: string, path: string): ProjectEntry => ({ project: 'harbor', name: 'harbor', path, device, added: 1, updated: 1 })
 
-const harbor = (devices: string[]): ProjectGroup => ({ id: 'harbor', name: 'harbor', hidden: false, updated: 1, locations: devices.map(device => entry(device, `/home/u/${device}/harbor`)) })
+const harbor = (devices: string[]): ProjectGroup => ({ id: 'harbor', name: 'harbor', pinned: false, archived: false, updated: 1, locations: devices.map(device => entry(device, `/home/u/${device}/harbor`)) })
 
 const fakeProjects = (group: ProjectGroup) => {
   const calls: string[] = []

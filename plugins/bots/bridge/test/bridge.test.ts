@@ -173,7 +173,7 @@ test("a bot starts a thread in its only project, which says the bot sent it and 
   const sent = await use(asBot(bot.id), 'thread_send', { thread: other.id, prompt: 'Hi' })
   await sand.turns.wait(sent.turn, 'end')
   expect(lastReply(other)).toBe('Hi back.')
-  expect(await use(asBot(bot.id), 'thread_update', { thread: thread.id, settled: true })).toMatchObject({ thread: thread.id, settled: true })
+  expect(await use(asBot(bot.id), 'thread_update', { thread: thread.id, archived: true })).toMatchObject({ thread: thread.id, archived: true })
   expect(await use(asBot(bot.id), 'thread_wait', { thread: thread.id })).toEqual({ error: expect.any(String) })
 })
 

@@ -22,7 +22,7 @@ const renewEarly = 300_000
 const itemOf = (source: ImageSource): SignItem =>
   'src' in source ? { src: source.src } : { hash: source.block.hash, mediaType: source.block.mediaType, name: source.block.name }
 
-export const createSigner = (wire: Wire, threads: Threads) => {
+export const createSigner = (wire: Wire, threads: Threads, connected: (device?: string) => Promise<void>) => {
   const links = new Map<string, Link>()
   const local = new Map<string, Link>()
   const flying = new Map<string, Promise<Link>>()
@@ -39,7 +39,8 @@ export const createSigner = (wire: Wire, threads: Threads) => {
     const batch = batches.get(key)
     if (!batch) return
     batches.delete(key)
-    void wire.call(mediaSign, { session: batch.session, items: batch.items }, batch.device).then(
+    const signed = connected(batch.device).then(() => wire.call(mediaSign, { session: batch.session, items: batch.items }, batch.device))
+    void signed.then(
       results => batch.settles.forEach((settle, index) => settle(results[index] ?? { error: 'No link came back' })),
       error => batch.settles.forEach(settle => settle({ error: errorMessage(error) })),
     )
