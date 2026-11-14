@@ -19,8 +19,14 @@ export interface TailscalePeer {
   online: boolean
 }
 
+export interface TailscaleShare {
+  url: string
+  stop(): void
+}
+
 export interface Tailscale {
   state(): TailscaleState
+  share(port: number): Promise<TailscaleShare | undefined>
   refresh(): Promise<TailscaleState>
   setHttps(on: boolean): Promise<TailscaleState>
   peers(): Promise<TailscalePeer[]>

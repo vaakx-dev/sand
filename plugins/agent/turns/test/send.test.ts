@@ -107,17 +107,17 @@ test('a first send picks the chat its model, and the same request id twice start
   ])
 })
 
-test('a send to a settled chat reopens it, whoever sends it', async () => {
+test('a send to an archived chat reopens it, whoever sends it', async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [[said('Done.')], [said('Back on it.')]] }])
   const chat = sand.chat('fake/m')
   await sand.turns.send(chat, { prompt: 'go', clientRequestId: 'go' })
   await idle(chat)
-  await sand.sessions.settle(chat.id, true)
-  expect(chat.settled).not.toBeNull()
+  await sand.sessions.archive(chat.id, true)
+  expect(chat.archived).not.toBeNull()
 
   await sand.turns.send(chat, { prompt: 'one more thing', origin: 'bot', clientRequestId: 'more' })
 
-  expect(chat.settled).toBeNull()
+  expect(chat.archived).toBeNull()
   await idle(chat)
   expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Back on it.')] })
 })

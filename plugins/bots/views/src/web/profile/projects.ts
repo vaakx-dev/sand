@@ -32,7 +32,7 @@ export const createProject = async (parts: Parts, name: string) => {
 
 export const projectChecklist = (parts: Parts, { chosen, toggle, fresh, only = () => true }: ChecklistProps) => {
   const { checkRow, textInput } = parts.ctx.kit
-  const shown = derive(() => parts.projects.get().filter(group => only(group) && (!group.hidden || chosen().includes(group.id))))
+  const shown = derive(() => parts.projects.get().filter(group => only(group) && (!group.archived || chosen().includes(group.id))))
   return div(
     { class: 'flex flex-col' },
     list(
