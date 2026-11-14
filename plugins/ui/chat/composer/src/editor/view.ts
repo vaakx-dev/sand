@@ -77,7 +77,7 @@ export const createEditor = (parts: EditorParts) => {
 
   const standIn = div(
     {
-      class: 'text-neutral-500 outline-none',
+      class: 'outline-none',
       contentEditable: 'true',
       role: 'textbox',
       'aria-label': 'Message',
@@ -88,9 +88,9 @@ export const createEditor = (parts: EditorParts) => {
     },
     show(
       () => !early.get(),
-      () => parts.hint(),
+      () => span({ class: 'contents text-neutral-500' }, parts.hint()),
     ),
-    span({ class: 'whitespace-pre-wrap text-neutral-100' }, () => early.get()),
+    span({ class: 'whitespace-pre-wrap' }, () => early.get()),
   )
   const node = div(
     { class: 'text-neutral-100 leading-relaxed' },
