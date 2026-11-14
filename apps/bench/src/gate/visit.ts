@@ -27,7 +27,7 @@ const QUIET_MS = 2000
 
 const QUIET_POLL_MS = 100
 
-const QUIET_LIMIT_MS = 30_000
+const QUIET_LIMIT_MS = 5000
 
 const end = (chat: SeededChat) => `End-${chat.marker}`
 

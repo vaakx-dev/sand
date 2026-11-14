@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import type { BrowserContext, Page } from 'playwright'
 import { startPhone } from '../phone'
 import type { Plan, Served } from '../sandbox'
-import { interleave, ordered, type Row, type Run, type Runs, type Suite, type Tree } from './row'
+import { interleave, repeated, type Row, type Run, type Runs, type Suite, type Tree } from './row'
 import { usage } from './process'
 import { allOrNone } from './together'
 
@@ -124,22 +124,18 @@ const leaks = async (driven: Driven[]) => {
   for (const instance of driven) instance.run.marks.set('memory after turns', usage(instance.served.pid).rssBytes)
 }
 
-const inTurn = async <T>(rounds: T[][], act: (item: T) => Promise<void>) => {
-  for (const [round, items] of rounds.entries()) for (const item of ordered(items, round)) await act(item)
-}
-
 const eachOf = <T, U>(rounds: T[][], act: (item: T) => Promise<U>) => Promise.all(rounds.map(items => Promise.all(items.map(act))))
 
 const serving = async (prepared: Prepared[], runs: Runs, rounds: number) => {
   const copies = Array.from({ length: rounds }, () => prepared.map(each => copy(each, runs.add(each.tree))))
   const browser = await startPhone({ cpuSlowdown: 1 })
   try {
-    await inTurn(copies, startUp)
+    await interleave(copies, startUp)
     const live = await eachOf(copies, async (instance): Promise<Live> => ({ ...instance, served: await instance.tree.sand.serve(instance.home) }))
     await idle(live.flat())
     const driven = await eachOf(live, async (instance): Promise<Driven> => ({ ...instance, page: await pair(browser.context, instance.served) }))
     await Promise.all(driven.flat().map(instance => chatTurns(instance, 1)))
-    await inTurn(driven, reply)
+    await interleave(driven, reply)
     await leaks(driven.flat())
   } finally {
     await browser.close()
@@ -182,7 +178,7 @@ const search = async (prepared: Prepared[], runs: Runs, rounds: number) => {
       await indexed(page)
       await searchMs(page)
     }))
-    await interleave(pages, rounds, async ({ tree, page }) => void runs.add(tree).marks.set('search', await searchMs(page)))
+    await interleave(repeated(pages, rounds), async ({ tree, page }) => void runs.add(tree).marks.set('search', await searchMs(page)))
   } finally {
     await browser.close()
     await Promise.all(prepared.map(({ tree, bulk }) => tree.sand.stop(bulk)))

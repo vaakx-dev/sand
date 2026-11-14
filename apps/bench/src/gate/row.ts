@@ -66,8 +66,10 @@ function wire(cost: Cost | undefined) {
 
 const ordered = <T>(items: T[], round: number) => (round % 2 ? items.toReversed() : items)
 
-const interleave = async <T>(items: T[], rounds: number, act: (item: T, round: number) => Promise<void>) => {
-  for (let round = 0; round < rounds; round++) for (const item of ordered(items, round)) await act(item, round)
+const repeated = <T>(items: T[], rounds: number) => Array.from({ length: rounds }, () => items)
+
+const interleave = async <T>(rounds: T[][], act: (item: T) => Promise<void>) => {
+  for (const [round, items] of rounds.entries()) for (const item of ordered(items, round)) await act(item)
 }
 
-export { interleave, ordered, Run, Runs, wire }
+export { interleave, ordered, repeated, Run, Runs, wire }

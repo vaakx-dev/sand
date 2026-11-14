@@ -1,6 +1,6 @@
 import type { Page } from 'playwright'
 import { type Cost, openRoute, shownAt } from '../measure'
-import { interleave, type Row, type Run, type Runs, type Suite, type Tree, wire } from './row'
+import { interleave, repeated, type Row, type Run, type Runs, type Suite, type Tree, wire } from './row'
 import { allOrNone } from './together'
 import { Visit } from './visit'
 
@@ -14,11 +14,11 @@ const SCREENS: Screen[] = [
   { name: 'Settings', route: { kind: 'settings' }, shows: 'Accounts and devices' },
   { name: 'Add-ons', route: { kind: 'settings', id: 'features' }, shows: 'Installed' },
   { name: 'Usage', route: { kind: 'usage' }, shows: 'Spend' },
-  { name: 'Performance', route: { kind: 'usage', id: 'performance' }, shows: 'Memory used' },
   { name: 'Search', shows: 'Actions' },
+  { name: 'Performance', route: { kind: 'usage', id: 'performance' }, shows: 'Memory used' },
 ]
 
-const LEFT_OPEN_MS = 30_000
+const LEFT_OPEN_MS = 20_000
 
 const MINUTE_MS = 60_000
 
@@ -75,7 +75,7 @@ const leaveOpen = async (visit: Visit, run: Run) => {
 const measure = async (trees: Tree[], runs: Runs, rounds: number) => {
   const visits = await allOrNone(trees.map(tree => Visit.open(tree, 0)), visit => visit.close())
   try {
-    await interleave(visits, rounds, visit => round(visit, runs.add(visit.tree)))
+    await interleave(repeated(visits, rounds), visit => round(visit, runs.add(visit.tree)))
     for (let index = 0; index < rounds; index++) await Promise.all(visits.map(visit => leaveOpen(visit, runs.add(visit.tree))))
   } finally {
     await Promise.all(visits.map(visit => visit.close()))

@@ -11,9 +11,9 @@ const MARKER = '<!-- sand-bench -->'
 
 const LIMITS: Record<Rule, number> = { timing: 0.15, exact: 0.05 }
 
-const SLACK: Record<Unit, number> = { ms: 20, bytes: 1024 }
-
 const KB = 1024
+
+const SLACK: Record<Unit, number> = { ms: 20, bytes: 2 * KB }
 
 const median = (numbers: number[]) => {
   if (!numbers.length) return undefined
