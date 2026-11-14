@@ -77,7 +77,7 @@ export const previousBuild = async () => {
   const tree = join(cacheFolder, `tree-${commit.slice(0, 12)}-${Date.now()}`)
   await git('worktree', 'add', '--detach', tree, commit)
   try {
-    await run([process.execPath, 'install', '--frozen-lockfile'], tree)
+    await run([process.execPath, 'install'], tree)
     await backdateApp(tree, Number(await git('log', '-1', '--format=%ct', commit)))
     return await releaseAssets(tree, out)
   } finally {
