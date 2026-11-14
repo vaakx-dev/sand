@@ -1,5 +1,6 @@
 import { fileViewer, formatAddons } from '@sand/file-viewer/contract'
 import { markdownCode } from '@sand/markdown/contract'
+import { shell, type SheetSpec } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { theme } from '@sand/ui-theme/contract'
 import { div } from '@vaakx-dev/vrui'
@@ -13,14 +14,14 @@ export default definePlugin({
   inject: { kit, code: markdownCode },
   apply(ctx) {
     const diagrams = new Diagrams()
-    const view = (source: string) => diagramView({ kit: ctx.kit, diagrams }, source)
+    const parts = { kit: ctx.kit, diagrams, fullScreen: (sheet: SheetSpec) => void ctx.get(shell)?.sheet(sheet) }
     ctx.watch(theme, found => diagrams.paint(found))
-    ctx.effect(() => ctx.code.language({ language: 'mermaid', render: view }))
+    ctx.effect(() => ctx.code.language({ language: 'mermaid', render: source => diagramView(parts, source, 'Diagram') }))
     ctx.watch(fileViewer, viewer =>
       viewer?.format({
         id: 'mermaid',
         extensions: formatAddons.mermaid.extensions,
-        render: async file => div({ class: 'p-4' }, view(await file.content())),
+        render: async file => div({ class: 'p-4' }, diagramView(parts, await file.content(), file.name)),
       }),
     )
   },

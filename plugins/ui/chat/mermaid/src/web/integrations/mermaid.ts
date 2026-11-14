@@ -7,8 +7,6 @@ type Drawn = { kind: 'drawn'; svg: string } | { kind: 'failed'; error: string } 
 
 const DRAFT_ID = 'sand-mermaid-draft'
 
-const SMALLEST_SCALE = 0.7
-
 let library: Promise<Mermaid> | undefined
 
 let placed = 0
@@ -41,16 +39,11 @@ const drawDiagram = async (theme: Theme, source: string): Promise<Drawn> => {
   return drawWith(loaded.mermaid, theme, source)
 }
 
-const keepLegible = (svg: SVGSVGElement | null) => {
-  const natural = Number.parseFloat(svg?.style.maxWidth ?? '')
-  if (svg && natural) svg.style.minWidth = `${natural * SMALLEST_SCALE}px`
-}
-
 const placeDiagram = (svg: string) => {
   const template = document.createElement('template')
   template.innerHTML = svg.replaceAll(DRAFT_ID, `sand-mermaid-${++placed}`)
-  keepLegible(template.content.querySelector('svg'))
-  return template.content
+  const box = template.content.querySelector('svg')?.viewBox.baseVal
+  return { node: template.content, size: { width: box?.width ?? 0, height: box?.height ?? 0 } }
 }
 
 export { drawDiagram, placeDiagram, type Drawn }
