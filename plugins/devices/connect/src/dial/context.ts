@@ -7,7 +7,7 @@ export interface DialContext {
   signer: Signer
   expected(): ExpectedPc
   transportOf(route: Route): Transport
-  greeting(): InputOf<typeof hello>
+  greeting(): InputOf<typeof hello> | Promise<InputOf<typeof hello>>
   identified(identity: PcIdentity): void
   listener: LinkListener
   resume: ResumeStore

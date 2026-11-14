@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import type { Page } from 'playwright'
-import { missingFrom } from './complete'
+import { listMissing, missingFrom } from './complete'
 import { slowLink, type LinkShape } from './link'
 import { type Cost, costOf, countAt, fresh, openRoute, seen, shownAt, tapped } from './measure'
 import { startPhone } from './phone'
@@ -199,6 +199,7 @@ const run = async (index: number) => {
   )
   await page.keyboard.press('Escape')
   await checkComplete(page, home, unseen, other, before, longChat)
+  problems.push(...(await listMissing(page, sandbox.box)))
   await idle(page)
   await page.close()
 }
