@@ -10,6 +10,12 @@ import type { ProjectStore } from './store'
 
 const nextStamp = (previous: number) => Math.max(Date.now(), previous + 1)
 
+const standing = ({ pinned, archived }: ProjectPatch): Pick<Project, 'pinned' | 'archived'> => {
+  if (pinned) return { pinned, archived: false }
+  if (archived) return { archived, pinned: false }
+  return { ...(pinned !== undefined && { pinned }), ...(archived !== undefined && { archived }) }
+}
+
 export interface RegistryDeps {
   changed(): void
   pull(): Promise<void>
@@ -99,7 +105,7 @@ export const createRegistry = (store: ProjectStore, device: string, { changed, p
       if (!name) throw new Error('Give a name')
       next.name = name
     }
-    if (patch.hidden !== undefined) next.hidden = patch.hidden
+    Object.assign(next, standing(patch))
     if (patch.icon) next.icon = patch.icon
     if (patch.icon === null) delete next.icon
     return commit(next)

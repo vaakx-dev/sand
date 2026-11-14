@@ -13,6 +13,7 @@ export type * from './message'
 export * from './notification'
 export type * from './parts'
 export * from './prompt'
+export * from './searchable'
 export type * from './session'
 
 export interface WireSession {
@@ -39,7 +40,7 @@ export const sessions = service<Sessions>('sessions')
 
 export const sessionEntry = event<(session: Session, entry: Entry) => void>('session.entry')
 export const sessionUpdate = event<(session: Session) => void>('session.update')
-export const sessionSettle = event<(session: Session) => void>('session.settle')
+export const sessionArchive = event<(session: Session) => void>('session.archive')
 export const sessionRemove = event<(id: string) => void>('session.remove')
 export const sessionClosing = event<(session: Session) => string | undefined | Promise<string | undefined>>('session.closing')
 export const sessionBusy = event<(session: Session) => boolean>('session.busy')

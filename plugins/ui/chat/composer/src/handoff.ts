@@ -3,7 +3,7 @@ import type { Model } from './model'
 
 export const createHandoff = (model: Model, focusEnd: () => void) => ({
   async snapshot(): Promise<ComposerContent | undefined> {
-    if (model.sending.get() || model.empty.get()) return undefined
+    if (model.empty.get()) return undefined
     return model.content(model.draft())
   },
   restore({ text, content }: ComposerContent) {

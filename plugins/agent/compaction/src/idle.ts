@@ -1,4 +1,4 @@
-import { type ChatKind, sessionSettle } from '@sand/chats/contract'
+import { type ChatKind, sessionArchive } from '@sand/chats/contract'
 import { type ConversationRef, engine } from '@sand/engine/contract'
 import { providerThreads, stepSettle } from '@sand/provider-threads/contract'
 import type { CompactionContext, Compactor } from './compact'
@@ -43,7 +43,7 @@ export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracke
     lifetimes.set(id, { model: request.model, ttl })
     timers.set(id, setTimeout(() => void compact({ owner, id }, turn.id), ttl * beforeExpiry))
   })
-  ctx.on(sessionSettle, session => {
+  ctx.on(sessionArchive, session => {
     cancel(session.id)
     lifetimes.delete(session.id)
   })

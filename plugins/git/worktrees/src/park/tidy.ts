@@ -9,10 +9,10 @@ export const dayMs = 24 * 60 * 60_000
 export const tidyWorktree = async (deps: WorktreeDeps, record: WorktreeRecord, now: number) => {
   if (record.removed) return
   const inside = threadsIn(deps.sessions, record.path)
-  const settled = inside.flatMap(thread => (thread.settled === null ? [] : [thread.settled]))
-  if (settled.length < inside.length) return
-  const since = inside.length ? Math.max(...settled) : record.created
-  const force = now - since >= deps.keepDays.settled * dayMs
+  const archived = inside.flatMap(thread => (thread.archived === null ? [] : [thread.archived]))
+  if (archived.length < inside.length) return
+  const since = inside.length ? Math.max(...archived) : record.created
+  const force = now - since >= deps.keepDays.archived * dayMs
   if (!force && !inside.length) return
   const result = await removeWorktree(deps, { path: record.path, force }, parkedNote)
   if (!result.removed) return

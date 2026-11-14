@@ -1,4 +1,4 @@
-import { type LLMEvent, ProviderTrouble, ThreadLost, UsageLimited } from '../contract'
+import { type LLMEvent, ProviderTrouble, RequestRejected, ThreadLost, UsageLimited } from '../contract'
 import { errorMessage } from '@sand/util'
 import { detailOf } from '../errors'
 import type { ShareFailure, ShareLine } from './info'
@@ -9,6 +9,7 @@ const kindOf = (error: unknown): ShareFailure | undefined => {
   if (error instanceof ThreadLost) return 'lost'
   if (error instanceof ProviderTrouble) return 'trouble'
   if (error instanceof UsageLimited) return 'limited'
+  if (error instanceof RequestRejected) return 'rejected'
   return undefined
 }
 
