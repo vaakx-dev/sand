@@ -1,0 +1,81 @@
+name: Performance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    name: measure ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [phone, pages, pc]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/bun
+      - name: Check out main beside the PR
+        run: |
+          git fetch --depth=1 origin main
+          git worktree add "$RUNNER_TEMP/main" FETCH_HEAD
+          cd "$RUNNER_TEMP/main" && bun install --frozen-lockfile
+      - name: Install Playwright's Chromium
+        working-directory: apps/bench
+        run: bunx playwright install --only-shell chromium
+      - name: Measure main and this PR
+        run: bun run bench:gate --suite ${{ matrix.suite }} --main "$RUNNER_TEMP/main" --out "$RUNNER_TEMP/results/${{ matrix.suite }}.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-${{ matrix.suite }}
+          path: ${{ runner.temp }}/results/${{ matrix.suite }}.json
+          if-no-files-found: ignore
+
+  performance:
+    needs: measure
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: performance-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/results
+      - name: Build the table
+        id: table
+        env:
+          RESULTS: ${{ runner.temp }}/results
+        run: |
+          bun apps/bench/src/gate/report.ts --pr "${{ github.event.pull_request.head.sha }}" \
+            --run "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --out "$RUNNER_TEMP/comment.md" "$RESULTS/phone.json" "$RESULTS/pages.json" "$RESULTS/pc.json" \
+            || echo "failed=true" >> "$GITHUB_OUTPUT"
+      - name: Post the table on the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          comments="repos/${{ github.repository }}/issues/$PR/comments"
+          id="$(gh api "$comments" --paginate --jq '.[] | select(.body | startswith("<!-- sand-bench -->")) | .id' | head -n 1)"
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh api "$comments" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          fi
+      - name: Fail when a row got worse
+        if: steps.table.outputs.failed == 'true'
+        run: exit 1
