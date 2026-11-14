@@ -1,0 +1,30 @@
+{
+  "name": "@sand/file-office",
+  "version": "0.0.0",
+  "description": "Shows Word documents, Excel workbooks and PowerPoint decks in the file viewer",
+  "type": "module",
+  "sand": {
+    "feature": "file-office",
+    "web": "./src/web/index.ts",
+    "label": "Office",
+    "summary": "Reads Word documents, Excel sheets and PowerPoint slides in the file viewer",
+    "features": {
+      "file-office": {
+        "label": "Office",
+        "summary": "Reads Word documents, Excel sheets and PowerPoint slides in the file viewer",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/zip": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "mammoth": "^1.13.0",
+    "numfmt": "^4.1.3"
+  }
+}
