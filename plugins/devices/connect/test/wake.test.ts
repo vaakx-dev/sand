@@ -26,9 +26,9 @@ test('waking replaces a socket that went quiet within a moment, without backing 
   const woke = Date.now()
   wake()
 
-  expect(await waitFor(() => pc.sockets.length === 2 && connected(connection), 2000)).toBe(true)
+  expect(await waitFor(() => pc.sockets.length === 2 && connection.freshness().state === 'live', 2000)).toBe(true)
   expect(Date.now() - woke).toBeLessThan(900)
-  expect(connection.freshness().state).toBe('live')
+  expect(connected(connection)).toBe(true)
 })
 
 test('waking while a dial hangs dials again at once instead of waiting it out', async () => {
