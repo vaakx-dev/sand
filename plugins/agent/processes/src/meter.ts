@@ -2,7 +2,7 @@ import { cpus } from 'node:os'
 import { processes, type ProcessInfo } from '@sand/machine'
 
 const WARM_FOR_MS = 15_000
-const WARM_UP_MS = 1_000
+const WARM_UP_MS = 250
 
 interface Snapshot {
   at: number
