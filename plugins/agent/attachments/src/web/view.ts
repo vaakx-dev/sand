@@ -52,19 +52,12 @@ const lookOf = (tray: Tray, item: Held): Look => {
   return { kind: 'busy', sent: upload.sent }
 }
 
-const busyText = (tray: Tray, item: Held, sent: number) => {
-  const phase = item instanceof File ? tray.upload(item)?.phase : undefined
-  const done = `${percent(sent, sizeOf(item))}%`
-  if (phase === 'offline') return `Waiting for connection · ${done}`
-  if (phase === 'retrying') return `Retrying · ${done}`
-  if (phase === 'queued' && !sent) return 'Waiting to upload'
-  return `Uploading ${done}`
-}
+const stalls = { offline: 'Waiting for connection', retrying: 'Retrying' } as const
 
 const statusOf = (tray: Tray, item: Held, look: Look) => {
   if (look.kind === 'failed') return look.error
-  if (look.kind === 'busy') return busyText(tray, item, look.sent)
-  return bytes(sizeOf(item))
+  const phase = item instanceof File ? tray.upload(item)?.phase : undefined
+  return phase === 'offline' || phase === 'retrying' ? stalls[phase] : bytes(sizeOf(item))
 }
 
 const retryOf = (tray: Tray, item: Held) => () => {
@@ -90,8 +83,8 @@ const progressBar = (item: Held, look: () => Look) => {
     return now.kind === 'busy' ? now.sent : undefined
   }
   return span(
-    { class: 'absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-neutral-700', hidden: () => sent() === undefined },
-    span({ class: 'block h-full bg-accent-500 transition-all', style: { width: () => `${percent(sent() ?? 0, sizeOf(item))}%` } }),
+    { class: 'absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-neutral-800', hidden: () => sent() === undefined },
+    span({ class: 'block h-full bg-neutral-600 transition-all', style: { width: () => `${percent(sent() ?? 0, sizeOf(item))}%` } }),
   )
 }
 
@@ -119,16 +112,7 @@ const failedCover = ({ kit, tray }: ViewParts, item: Held, { error, retry }: Ext
     ? kit.plainButton({ class: [coverClass, 'text-danger-400'], title: `${error}. Retry`, onClick: retryOf(tray, item) }, kit.icon('retry', 'md'))
     : span({ class: [coverClass, 'text-danger-400'] }, kit.icon('alert', 'md'))
 
-const thumbCover = (parts: ViewParts, item: Held, look: Look) => {
-  switch (look.kind) {
-    case 'busy':
-      return span({ class: [coverClass, 'text-xs font-medium tabular-nums text-neutral-100'] }, `${percent(look.sent, sizeOf(item))}%`)
-    case 'failed':
-      return failedCover(parts, item, look)
-    case 'idle':
-      return null
-  }
-}
+const thumbCover = (parts: ViewParts, item: Held, look: Look) => (look.kind === 'failed' ? failedCover(parts, item, look) : null)
 
 const thumb = (parts: ViewParts, menu: ContextMenu, item: Held) => {
   const { kit, tray } = parts
@@ -146,11 +130,10 @@ const thumb = (parts: ViewParts, menu: ContextMenu, item: Held) => {
   )
 }
 
-type Kind = 'failed' | 'loading' | 'pdf' | 'archive' | 'file'
+type Kind = 'failed' | 'pdf' | 'archive' | 'file'
 
 const kindOf = (item: Held, look: Look): Kind => {
   if (look.kind === 'failed') return 'failed'
-  if (look.kind === 'busy') return 'loading'
   if (isPdf(item)) return 'pdf'
   return isArchiveName(nameOf(item)) ? 'archive' : 'file'
 }
@@ -175,7 +158,7 @@ const fileRow = (parts: ViewParts, menu: ContextMenu, item: Held) => {
     { class: 'relative flex min-h-8 items-center gap-2 text-sm text-neutral-100', ...menu.target(() => attachmentMenu(kit, tray, item, look.get())) },
     span(
       { class: ['inline-flex shrink-0', () => (failed() ? 'text-danger-400' : 'text-neutral-400')] },
-      dynamicChild(kind, value => (value === 'loading' ? kit.spinner('md') : kit.icon(icons[value], 'md'))),
+      dynamicChild(kind, value => kit.icon(icons[value], 'md')),
     ),
     span({ class: 'min-w-0 flex-1 truncate' }, nameOf(item)),
     span({ class: ['max-w-1/2 shrink-0 truncate text-xs tabular-nums', () => (failed() ? 'text-danger-400' : 'text-neutral-500')] }, () =>

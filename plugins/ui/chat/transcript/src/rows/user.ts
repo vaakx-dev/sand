@@ -20,7 +20,7 @@ const fileChip = (kit: Kit, block: FileBlock) => chip(kit, block.name, isArchive
 const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
     return context.media(part.block, context.conversation, { class: 'block max-h-32 max-w-48 rounded-md bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
-  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file')
+  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file', part.block.size)
   if (part.kind === 'file') return fileChip(context.kit, part.block)
   if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles')
   return null

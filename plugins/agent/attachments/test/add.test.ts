@@ -73,3 +73,15 @@ test('a file named .pdf that holds no PDF is kept as a file, so the model never 
   expect(await asBot()(attachmentsAdd, { path: fake })).toEqual(expect.objectContaining({ type: 'file', name: 'scan.pdf' }))
   expect(await asBot()(attachmentsAdd, { path: real })).toEqual(expect.objectContaining({ type: 'document', mediaType: 'application/pdf' }))
 })
+
+test('a .txt file of control characters is kept as a file to open, instead of reaching the model as blank text', async () => {
+  const filler = join(sand.home, 'measurements.txt')
+  writeFileSync(filler, new Uint8Array(4096).fill(7))
+  const notes = join(sand.home, 'readings.txt')
+  writeFileSync(notes, 'kitchen\t3.2 m\nhall\t1.1 m\n')
+
+  const kept = await asBot()(attachmentsAdd, { path: filler })
+  expect(kept).toEqual(expect.objectContaining({ type: 'file', name: 'measurements.txt', size: 4096 }))
+  expect(readFileSync('path' in kept ? kept.path : '')).toEqual(Buffer.from(new Uint8Array(4096).fill(7)))
+  expect(await asBot()(attachmentsAdd, { path: notes })).toEqual(expect.objectContaining({ type: 'document', mediaType: 'text/plain' }))
+})

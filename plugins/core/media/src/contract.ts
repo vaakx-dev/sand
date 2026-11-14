@@ -18,6 +18,8 @@ export interface Media {
   put(bytes: Uint8Array, mediaType: string): StoredMedia
   path(media: StoredMedia): string
   data(media: StoredMedia): string | undefined
+  exclude(media: MediaRef): void
+  include(media: MediaRef): void
   inUse(hashes: () => Iterable<string>): Dispose
 }
 
