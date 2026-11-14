@@ -1,5 +1,6 @@
 import type { wire } from '@sand/devices-contract'
-import { type Addon, addonsInstall, featuresList, featuresSet } from '@sand/features/contract'
+import { type Addon, addonPageId, addonsInstall, featuresList, featuresSet } from '@sand/features/contract'
+import { settings } from '@sand/settings/contract'
 import type { Kit, kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
 import { a, div, dynamicChild, sig } from '@vaakx-dev/vrui'
@@ -10,11 +11,15 @@ type Ctx = Context<{ wire: typeof wire; kit: typeof kit }>
 
 type Step = { kind: 'idle' } | { kind: 'working' } | { kind: 'failed'; error: string }
 
+const VIEWER = 'file-viewer'
 const DOWNLOAD = { timeout: 10 * 60_000 }
 
 const addonFor = (file: OpenFile) => Object.entries(formatAddons).find(([, addon]) => addon.extensions.includes(extensionOf(file.name)))
 
 const verb = (addon: Addon | undefined) => (addon?.status === 'available' ? 'Get' : 'Turn on')
+
+const extrasLink = (ctx: Ctx) =>
+  ctx.kit.linkButton({ class: 'text-xs underline', onClick: () => ctx.get(settings)?.open(addonPageId(VIEWER)) }, 'File viewer extras')
 
 const download = (kit: Kit, file: OpenFile) => kit.secondaryAction({ size: 'sm', onClick: () => void saveAs(file) }, 'Download')
 
@@ -60,13 +65,14 @@ const offerCard = (ctx: Ctx, file: OpenFile, [id, format]: [string, FormatAddon]
       download(kit, file),
     ),
     dynamicChild(step, value => stepNote(kit, value)),
+    extrasLink(ctx),
   )
 }
 
 const unshown = (ctx: Ctx, file: OpenFile) => {
   const addon = addonFor(file)
   if (addon) return offerCard(ctx, file, addon)
-  return frame(ctx.kit, "sand can't show this file", `${file.name} isn't a kind of file the viewer reads.`, download(ctx.kit, file))
+  return frame(ctx.kit, "sand can't show this file", `${file.name} isn't a kind of file the viewer reads.`, download(ctx.kit, file), extrasLink(ctx))
 }
 
 export { saveAs, unshown, type Ctx }

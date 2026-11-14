@@ -2614,6 +2614,7 @@
         "@sand/markdown": "workspace:*",
         "@sand/panel": "workspace:*",
         "@sand/server": "workspace:*",
+        "@sand/settings": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",

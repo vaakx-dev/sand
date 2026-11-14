@@ -8,6 +8,7 @@ interface AddonListing {
   version: string
   sand: string
   needs: string[]
+  parent?: string
   file: string
   size: number
   sha256: string
