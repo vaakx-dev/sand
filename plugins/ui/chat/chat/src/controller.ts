@@ -31,7 +31,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
   const states = parts.openStates()
   const slot = slotHost()
   const menu = contextMenu()
-  const view = threadView(id, branchLists(entry => ctx.threads.branches(id, entry)))
+  const view = threadView(id, branchLists(() => ctx.threads.forks(id)))
   const edge = topEdge(
     () => reveal(),
     () => trim(),

@@ -1,7 +1,7 @@
 import type { Sessions } from '@sand/chats/contract'
 import type { WireHost } from '@sand/host-hub/contract'
 import { joinDisposers } from '@sand/util'
-import { sessionBranches, sessionCheckout, sessionRemove } from '../contract/requests'
+import { sessionCheckout, sessionForks, sessionRemove } from '../contract/requests'
 
 export const sessionRequests = (sessions: Sessions, wire: Pick<WireHost, 'handle'>) => {
   const session = (id: string) => sessions.require(id)
@@ -12,6 +12,6 @@ export const sessionRequests = (sessions: Sessions, wire: Pick<WireHost, 'handle
       session(id).checkout(entry)
       return true
     }),
-    wire.handle(sessionBranches, ({ session: id, entry }) => session(id).branches(entry)),
+    wire.handle(sessionForks, ({ session: id }) => session(id).forks()),
   )
 }

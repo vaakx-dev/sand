@@ -80,5 +80,5 @@ export interface Threads {
   findLast(id: string, test: (entry: Entry) => boolean): Promise<Entry | undefined>
   full(id: string): Promise<void>
   checkout(id: string, entry: string | null): Promise<void>
-  branches(id: string, entry: string): Promise<Branch[]>
+  forks(id: string): Promise<Branch[][]>
 }

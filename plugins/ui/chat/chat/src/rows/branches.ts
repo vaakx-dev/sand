@@ -6,7 +6,7 @@ import type { ThreadView } from '../view'
 export const branchSwitch = (ctx: ChatContext, view: ThreadView, entry: string) => {
   const { icon, iconButton } = ctx.kit
   const { branches } = view
-  effect(() => branches.want(entry))
+  effect(() => branches.want())
   const all = () => branches.of(entry)
   const index = () => all().findIndex(branch => branch.entry === entry)
   const at = (step: number) => all()[index() + step]
