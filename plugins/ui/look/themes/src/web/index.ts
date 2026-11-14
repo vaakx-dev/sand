@@ -1,6 +1,7 @@
 import { wire } from '@sand/devices-contract'
 import { definePlugin } from 'drydock'
 import { applyTheme } from './apply'
+import { themeChat } from './chat'
 import { themeModel } from './model'
 import { themeSettings } from './settings'
 
@@ -12,5 +13,6 @@ export default definePlugin({
     const model = themeModel(ctx, ctx.wire)
     applyTheme(ctx, model.shown)
     ctx.plugin(themeSettings(model))
+    ctx.plugin(themeChat(model))
   },
 })

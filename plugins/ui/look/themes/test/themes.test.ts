@@ -3,7 +3,8 @@ import { expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { starters, type Theme, themeAct, themeDecide, type ThemeState } from '../src/contract'
+import { tools } from '@sand/tools/contract'
+import { starters, type Theme, themeAct, themeDecide, type ThemeState, themeTrialEntry, type ThemeTrialEntry } from '../src/contract'
 import { createThemes } from '../src/runtime/themes'
 
 const start = (home?: string) => startSand([{ id: 'fake', models: ['m'], replies: [], api: 'anthropic' }], { plugins: ['ui/look/themes'], ...(home && { home }) })
@@ -84,4 +85,25 @@ test('the kept theme follows you to your other PCs, and the newest one wins', as
   expect((await home.ask(themeAct, { action: 'read' })).theme).toBeNull()
   await home.stop()
   await box.stop()
+})
+
+test('an agent tries a theme with the theme tool, and the card with Keep and Undo comes after its reply', async () => {
+  const sand = await startSand(
+    [{ id: 'fake', api: 'anthropic', models: ['m'], replies: [[{ type: 'call', name: 'theme', input: { action: 'set', theme: synthwave } }], [{ type: 'text', text: 'Here it is.' }]] }],
+    { plugins: ['ui/look/themes'] },
+  )
+  await sand.ask(themeAct, { action: 'set', theme: blueprint })
+  await sand.app.get(tools)!.choose('theme', 'always')
+  const chat = sand.chat('fake/m')
+  await sand.turns.run(chat, 'make it a synthwave sunset with pink accents')
+  const state = await sand.ask(themeAct, { action: 'read' })
+  expect(state.theme?.name).toBe('Synthwave sunset')
+  expect(state.trial?.previous?.name).toBe('Blueprint')
+  const types = chat.path().map(entry => entry.type)
+  expect(types.indexOf(themeTrialEntry)).toBeGreaterThan(types.lastIndexOf('assistant'))
+  const card = chat.path().find(entry => entry.type === themeTrialEntry)?.data as ThemeTrialEntry
+  expect(card).toMatchObject({ trial: state.trial!.id, theme: { name: 'Synthwave sunset' }, previous: { name: 'Blueprint' } })
+  const result = sand.requests('fake')[1]!
+  expect(result).toContain('goes back to Blueprint')
+  await sand.stop()
 })
