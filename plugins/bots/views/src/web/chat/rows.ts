@@ -60,9 +60,10 @@ export const chatRows = (chat: ChatRowsParts) => {
     parts.version.get()
     return parts.settled({ id: bot }, talk.path.get())
   })
-  return derive(() => {
+  const items = derive(() => {
     const said = parts.items(settled.get(), { id: bot, live: talk.live.get(), running: working() })
     const asked = talk.pending.get().flatMap(pending => promptItems(parts, bot, pending))
-    return [...withDays(kit, rows, [...said, ...asked].filter(item => shown.has(item.kind))), ...sendingRows(chat, sending())]
+    return [...said, ...asked].filter(item => shown.has(item.kind))
   })
+  return { items, rows: derive(() => [...withDays(kit, rows, items.get()), ...sendingRows(chat, sending())]) }
 }

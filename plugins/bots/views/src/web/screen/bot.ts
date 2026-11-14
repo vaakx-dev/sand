@@ -54,6 +54,7 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
       id,
       talk: parts.chats.get(id),
       bot: () => parts.store.find(id),
+      shown: () => view() === 'chat',
       profile: () => parts.profile(id),
       resume: () => save({ paused: false }),
       save,
@@ -68,7 +69,10 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
       parts,
       bot: id,
       answer: ({ question }: { question: string }) => inChat(() => chat.answer(question)),
-      reveal: (entry: string) => inChat(() => void chat.reveal(entry)),
+      reveal: (entry: string) => {
+        parts.open(id, 'chat')
+        void parts.ctx.shownChats.show({ conversation: id, entry, words: [] })
+      },
     }
     return div(
       { class: fill },

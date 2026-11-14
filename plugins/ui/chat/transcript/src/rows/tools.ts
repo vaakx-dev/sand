@@ -7,13 +7,13 @@ import { toolStep } from '../tools/step'
 
 type ThinkingStep = Extract<Step, { kind: 'thinking' }>
 
-const thinkingView = (kit: Kit, step: Sig<ThinkingStep>, state: OpenState) =>
+const thinkingView = (kit: Kit, step: Sig<ThinkingStep>, state: OpenState & { item: string }) =>
   thinkingStep(kit, { streaming: step.map(value => value.streaming), text: step.map(value => value.text), ...state })
 
 const stepView = (step: Sig<Step>, context: RowContext) => {
   const first = untrack(() => step.get())
   const state = context.states.get(first.key)
-  if (first.kind === 'thinking') return thinkingView(context.kit, step.map(value => (value.kind === 'thinking' ? value : first)), state)
+  if (first.kind === 'thinking') return thinkingView(context.kit, step.map(value => (value.kind === 'thinking' ? value : first)), { ...state, item: first.key })
   const { kit, registry, menu, cwd } = context
   return toolStep(
     kit,

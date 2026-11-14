@@ -13,6 +13,7 @@ export type * from './message'
 export * from './notification'
 export type * from './parts'
 export * from './prompt'
+export * from './searchable'
 export type * from './session'
 
 export interface WireSession {

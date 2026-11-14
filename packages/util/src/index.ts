@@ -26,6 +26,7 @@ export { quoteBlocks, quotedText, quoteRuns, type QuoteBlock, type QuoteRun } fr
 export { shortSha } from './text/sha'
 export { trimSlash } from './text/url'
 export { wellFormed } from './text/well-formed'
+export { foldText, searchWords, textMatches, textWords, wordMatches, type Range } from './text/words'
 export { ago, exactTime } from './time/ago'
 export { DAY_MS, dayLabel, monthLabel } from './time/day'
 export { coarseDuration, duration } from './time/duration'

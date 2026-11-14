@@ -1,7 +1,7 @@
 import { botName, type BotPatch, type BotStatus, type BotSummary, type ModelChoice } from '@sand/bots/contract'
-import type { Row } from '@sand/transcript/contract'
+import { itemNode, itemSpot, type Row, type ShownChat } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 import { applyChoice, effective } from '../models'
 import type { Conversation } from './conversation'
@@ -13,6 +13,7 @@ export interface ChatParts {
   id: string
   talk: Conversation
   bot: () => BotSummary | undefined
+  shown(): boolean
   profile(): void
   resume(): void
   save(patch: BotPatch): void
@@ -57,8 +58,8 @@ export const chatView = (parts: ChatParts) => {
   const busy = () => working(status())
   const menu = kit.contextMenu()
   const rowList = div({ class: 'pb-6' })
-  const quote = ctx.transcriptParts.quoteJump(rowList)
-  const surface = { conversation: id, menu, states: ctx.transcriptParts.openStates(), jump: (from: Element, text: string) => quote(rowList, from, text) }
+  const states = ctx.transcriptParts.openStates()
+  const surface = { conversation: id, menu, states, jump: (from: Element, text: string) => ctx.transcriptParts.quoteJump(rowList, from, text) }
   const dock = ctx.composer.dock(
     {
       ref: { owner: 'bot', id },
@@ -77,14 +78,15 @@ export const chatView = (parts: ChatParts) => {
     { placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
   )
   dock.slot('above', () => ctx.shell.chipBar({ owner: id }))
-  const rows = chatRows({ kit, parts: ctx.transcriptParts, rows: ctx.transcriptParts.rows(surface), talk, working: busy, sending: dock.sending })
+  const { items, rows } = chatRows({ kit, parts: ctx.transcriptParts, rows: ctx.transcriptParts.rows(surface), talk, working: busy, sending: dock.sending })
   const state = derive(() => {
     if (talk.entries.get() === undefined) return talk.failure.get() ? 'failed' : 'loading'
     return rows.get().length || busy() ? 'rows' : 'empty'
   })
+  const loadOlder = () => kit.loadAbove(scroller, rowList, talk.older)
   const onScroll = () => {
     follow.scrolled()
-    if (scroller.scrollTop < olderEdge) void kit.loadAbove(scroller, rowList, talk.older)
+    if (scroller.scrollTop < olderEdge) void loadOlder()
   }
   const watched = (node: HTMLElement) => {
     onMount(node, () => follow.watch(node))
@@ -114,16 +116,35 @@ export const chatView = (parts: ChatParts) => {
 
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
-  const rowOf = (entry: string) => rowList.querySelector(`[data-entry="${CSS.escape(entry)}"]`)
-
-  const reveal = async (entry: string) => {
-    while (!rowOf(entry) && talk.more.get()) {
-      const shown = talk.entries.get()?.length
-      await talk.older()
-      if (talk.entries.get()?.length === shown) break
+  const loadedSpot = async (entry: string, block?: number) => {
+    for (let size = -1; ; ) {
+      const found = talk.path.get().find(loaded => loaded.id === entry)
+      if (found) return itemSpot(items.get(), found, block)
+      const loaded = talk.entries.get()?.length ?? 0
+      if (loaded === size || !talk.more.get()) return undefined
+      size = loaded
+      await loadOlder()
     }
-    rowOf(entry)?.scrollIntoView({ block: 'center' })
   }
+
+  const reveal = async (entry: string, block?: number) => {
+    const spot = await loadedSpot(entry, block)
+    if (!spot) return undefined
+    for (const key of spot.folds) states.get(key).open.set(true)
+    return itemNode(rowList, spot.key)
+  }
+
+  const shownChat: ShownChat = {
+    conversation: id,
+    scroller,
+    loaded: () => talk.path.get(),
+    older: async () => {
+      await loadOlder()
+      return talk.more.get()
+    },
+    reveal,
+  }
+  effect(() => (parts.shown() && state.get() === 'rows' ? ctx.shownChats.add(shownChat) : undefined))
 
   const answer = (question: string) => {
     dock.quote(question)
@@ -135,5 +156,5 @@ export const chatView = (parts: ChatParts) => {
     div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view()),
     dock.view,
   )
-  return { view, reveal, answer }
+  return { view, answer }
 }

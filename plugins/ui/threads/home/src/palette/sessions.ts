@@ -1,4 +1,5 @@
-import type { PaletteItem } from '@sand/palette/contract'
+import { threadRoute } from '@sand/chat/contract'
+import { visitsOf, type PaletteItem } from '@sand/palette/contract'
 import type { ShellRow } from '@sand/ui-shell/contract'
 import type { Projects, Thread } from '@sand/web-client/contract'
 import { visibleThreads } from '../items/items'
@@ -16,6 +17,7 @@ const sessionItem = ({ ctx, shell, projects, rowOf }: SessionParts, thread: Thre
   id: `session:${thread.id}`,
   group,
   label: thread.info.title || 'Untitled thread',
+  visits: visitsOf({ kind: threadRoute, id: thread.id }),
   row: () => rowOf(thread),
   search: `${projectName(projects, thread)} ${thread.info.cwd} ${thread.id}`,
   run: () => openThread(ctx, shell, thread.id),
