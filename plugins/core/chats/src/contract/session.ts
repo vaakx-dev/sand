@@ -15,12 +15,12 @@ export interface SessionInfo {
   title: string
   seen: boolean
   pinned: boolean
-  settled: number | null
+  archived: number | null
   snoozed: number | null
   position: number | null
 }
 
-export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'seen' | 'pinned' | 'settled' | 'snoozed' | 'position'>>
+export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'seen' | 'pinned' | 'archived' | 'snoozed' | 'position'>>
 
 export interface NewAgent {
   parent?: string
@@ -89,7 +89,7 @@ export interface Sessions {
   relocate(id: string, relocation: Relocation): Promise<Session>
   rename(id: string, title: string): void
   pin(id: string, pinned: boolean): Session
-  settle(id: string, settled: boolean): Promise<Session>
+  archive(id: string, archived: boolean): Promise<Session>
   snooze(id: string, until: number | null): Session
   remove(id: string): Promise<void>
   open(id: string): Session | undefined

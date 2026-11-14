@@ -17,7 +17,7 @@ const listKey = ({ info, device, running, started }: Thread) =>
     info.parent,
     info.seen,
     info.pinned,
-    info.settled,
+    info.archived,
     info.snoozed,
     info.position,
     device,

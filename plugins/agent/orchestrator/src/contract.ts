@@ -131,7 +131,7 @@ export interface ThreadRow {
   updated: number
   status: ThreadStatus
   pinned: boolean
-  settled: boolean
+  archived: boolean
   snoozed?: number
   pc?: string
 }
@@ -238,7 +238,7 @@ export const threadUpdate = request('thread.update', {
     title: z.string().min(1).optional(),
     pinned: z.boolean().optional(),
     snoozed: z.number().int().positive().nullable().optional(),
-    settled: z.boolean().optional(),
+    archived: z.boolean().optional(),
     worktree: z.literal(true).optional(),
     branch: z.string().min(1).optional(),
     model: z.string().min(1).nullish(),

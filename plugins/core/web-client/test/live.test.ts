@@ -49,7 +49,7 @@ const info = (id: string): SessionInfo => ({
   title: '',
   seen: true,
   pinned: false,
-  settled: null,
+  archived: null,
   snoozed: null,
   position: null,
 })

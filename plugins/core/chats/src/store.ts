@@ -13,7 +13,7 @@ import { childSummaries, summaries, syncedSummaries } from './summaries'
 const loadedLimit = 20
 
 export interface StoreOptions {
-  hooks: SessionHooks & { settle(session: Session): void; remove(id: string): void }
+  hooks: SessionHooks & { archive(session: Session): void; remove(id: string): void }
   busy(session: Session): Promise<boolean>
   closing(session: Session): Promise<string | undefined>
   projectOf(cwd: string): string | null
@@ -32,15 +32,15 @@ const blank = (chat: NewChat): SessionInfo => ({
   title: '',
   seen: true,
   pinned: false,
-  settled: null,
+  archived: null,
   snoozed: null,
   position: null,
   ...chat,
 })
 
-const pinPatch = (pinned: boolean): ChatPatch => (pinned ? { pinned, settled: null, snoozed: null } : { pinned })
+const pinPatch = (pinned: boolean): ChatPatch => (pinned ? { pinned, archived: null, snoozed: null } : { pinned })
 
-const snoozePatch = (until: number | null): ChatPatch => (until === null ? { snoozed: null } : { snoozed: until, settled: null })
+const snoozePatch = (until: number | null): ChatPatch => (until === null ? { snoozed: null } : { snoozed: until, archived: null })
 
 export const createStore = (db: Database, { hooks, busy, closing, projectOf, knownProject, scratch }: StoreOptions) => {
   const opened = new Map<string, Session>()
@@ -118,11 +118,11 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
     children,
     update(id, patch) {
       const session = sessions.require(id)
-      const settled = session.settled
+      const archived = session.archived
       records.patch(id, patch)
       Object.assign(session, patch)
       hooks.update(session)
-      if (session.settled !== settled) hooks.settle(session)
+      if (session.archived !== archived) hooks.archive(session)
       return session
     },
     relocate: (id, relocation) => relocate(sessions.require(id), relocation),
@@ -130,11 +130,11 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
       sessions.update(id, { title })
     },
     pin: (id, pinned) => sessions.update(topLevel(id).id, pinPatch(pinned)),
-    async settle(id, settled) {
+    async archive(id, archived) {
       const session = sessions.require(id)
-      if (!settled) return sessions.update(id, { settled: null })
+      if (!archived) return sessions.update(id, { archived: null })
       await close(session)
-      return sessions.update(id, { settled: Date.now(), pinned: false, snoozed: null })
+      return sessions.update(id, { archived: Date.now(), pinned: false, snoozed: null })
     },
     snooze: (id, until) => sessions.update(topLevel(id).id, snoozePatch(until)),
     async remove(id) {

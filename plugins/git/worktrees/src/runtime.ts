@@ -1,4 +1,4 @@
-import { sessions, sessionSettle, textOf } from '@sand/chats/contract'
+import { sessions, sessionArchive, textOf } from '@sand/chats/contract'
 import { gitRepo, pathKey } from '@sand/git/contract'
 import { gitRunner } from '@sand/git-runner/contract'
 import { paths } from '@sand/paths/contract'
@@ -66,7 +66,7 @@ export default definePlugin({
       proposals,
       folder: config.folder ? expandHome(config.folder) : join(ctx.paths.home, 'worktrees'),
       prefix: config.prefix,
-      keepDays: { settled: config.settledDays, removed: config.removedDays },
+      keepDays: { archived: config.archivedDays, removed: config.removedDays },
       queue: (main, task) => serialByRepo(pathKey(main), task),
       busy,
       projectOf: folder => ctx.get(projectFiles)?.ofFolder(folder) ?? null,
@@ -86,7 +86,7 @@ export default definePlugin({
     ctx.watch(tools, found => (found ? registerTools(found, deps, survey) : undefined))
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
     const parking = createParking(deps)
-    ctx.on(sessionSettle, parking.settled)
+    ctx.on(sessionArchive, parking.archived)
     ctx.on(turnPrompt, (_content, session) => parking.resume(session).catch(report), { priority: 100 })
     ctx.on(turnStart, (session, prompt) => {
       if (session.kind === 'quick') return
