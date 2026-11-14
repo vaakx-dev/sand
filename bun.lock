@@ -84,6 +84,10 @@
       "name": "@sand/ical",
       "version": "0.0.0",
     },
+    "packages/keyval": {
+      "name": "@sand/keyval",
+      "version": "0.0.0",
+    },
     "packages/machine": {
       "name": "@sand/machine",
       "version": "0.0.0",
@@ -1797,6 +1801,7 @@
         "@sand/host-hub": "workspace:*",
         "@sand/html": "workspace:*",
         "@sand/jobs": "workspace:*",
+        "@sand/keyval": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/project": "workspace:*",
@@ -2442,6 +2447,7 @@
         "@sand/chats": "workspace:*",
         "@sand/context": "workspace:*",
         "@sand/devices-contract": "workspace:*",
+        "@sand/keyval": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/model-panel": "workspace:*",
         "@sand/orchestrator": "workspace:*",
@@ -3426,6 +3432,8 @@
     "@sand/keep-awake": ["@sand/keep-awake@workspace:plugins/agent/keep-awake"],
 
     "@sand/keys": ["@sand/keys@workspace:plugins/ui/shared/keys"],
+
+    "@sand/keyval": ["@sand/keyval@workspace:packages/keyval"],
 
     "@sand/ledger": ["@sand/ledger@workspace:plugins/core/ledger"],
 

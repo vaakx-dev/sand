@@ -2,11 +2,11 @@ import { request, type } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
-import type { ChunkedFile } from './chunks'
+import type { ChunkedFile, PcFetch } from './chunks'
 
 export * from './client'
 
-export type { ChunkedFile }
+export type { ChunkedFile, PcFetch }
 
 export interface Transfers {
   reserve(): Promise<string>

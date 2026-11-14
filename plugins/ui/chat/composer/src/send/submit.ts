@@ -2,9 +2,10 @@ import { promptOf } from '@sand/attachments/contract'
 import { labelOf } from '@sand/attachments/web/contract'
 import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import { models, type Thread } from '@sand/web-client/contract'
+import { models, threadsChange, type Thread } from '@sand/web-client/contract'
+import { onTimeout } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
-import type { Outgoing } from '../target'
+import type { Destination, Outbound } from '../target'
 
 export const modelMissing = (ctx: ComposerContext, settings: SessionSettings) => {
   if (!ctx.threads.current()) return !settings.model
@@ -24,14 +25,40 @@ export const interrupt = async (ctx: ComposerContext) => {
   if (current && stoppable(current)) await ctx.turns.stop(current.id)
 }
 
-export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Outgoing) => {
+const THREAD_WAIT_MS = 30_000
+
+const known = (ctx: ComposerContext, id: string) =>
+  new Promise<string>((resolve, reject) => {
+    if (ctx.threads.get(id)) return resolve(id)
+    const stop = () => {
+      stopTimer()
+      unwatch()
+    }
+    const stopTimer = onTimeout(() => {
+      stop()
+      reject(new Error('That thread is gone'))
+    }, THREAD_WAIT_MS)
+    const unwatch = ctx.on(threadsChange, () => {
+      if (!ctx.threads.get(id)) return
+      stop()
+      resolve(id)
+    })
+  })
+
+export const destination = (ctx: ComposerContext): Destination | undefined => {
+  const device = sendDevice(ctx)
   const current = ctx.threads.current()
-  const prompt = promptOf(text, attachments)
-  const label = labelOf(text, attachments)
-  if (current) return ctx.turns.send(current.id, prompt, { label, ...options })
+  if (current) return { conversation: current.id, device }
   const draft = ctx.threads.drafting()
-  if (!draft) throw new Error('Pick a project for a new thread first')
-  await ctx.threads.start(draft, { prompt, label, settings })
+  return draft && { conversation: draft.id, device, draft }
+}
+
+export const submit = async (ctx: ComposerContext, thread: string | undefined, to: Destination, { id, text, content, settings, mode }: Outbound) => {
+  const prompt = promptOf(text, content)
+  const label = labelOf(text, content)
+  if (thread) return ctx.turns.send(await known(ctx, thread), prompt, { label, mode, clientRequestId: id })
+  if (!to.draft) throw new Error('Pick a project for a new thread first')
+  await ctx.threads.start(to.draft, { prompt, label, settings })
 }
 
 const typedContent = (content: UserContent[]) =>
