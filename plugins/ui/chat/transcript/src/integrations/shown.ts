@@ -1,6 +1,6 @@
 import { wordMatches } from '@sand/util'
-import { onTimeout } from '@vaakx-dev/vrui'
-import type { ChatSpot, ShownChat, ShownChats } from '../contract'
+import { onTimeout, sig, untrack } from '@vaakx-dev/vrui'
+import type { ChatAction, ChatSpot, ShownChat, ShownChats } from '../contract'
 import { textNodes, type Flash } from './flash'
 
 const ARRIVAL_WAIT_MS = 4000
@@ -24,10 +24,11 @@ const into = (scroller: HTMLElement, target: Range | Element) => {
 }
 
 export const createShownChats = (flash: Flash): ShownChats => {
-  const chats = new Set<ShownChat>()
+  const chats = sig<ShownChat[]>([])
+  const actions = sig<ChatAction[]>([])
   const waiting = new Set<(chat: ShownChat) => void>()
 
-  const get = (conversation: string) => [...chats].findLast(chat => chat.conversation === conversation)
+  const get = (conversation: string) => untrack(() => chats.get()).findLast(chat => chat.conversation === conversation)
 
   const arrival = (conversation: string) =>
     new Promise<ShownChat | undefined>(resolve => {
@@ -43,8 +44,10 @@ export const createShownChats = (flash: Flash): ShownChats => {
       waiting.add(wake)
     })
 
+  const arrived = async (conversation: string) => get(conversation) ?? (await arrival(conversation))
+
   const show = async ({ conversation, entry, block, words }: ChatSpot) => {
-    const chat = get(conversation) ?? (await arrival(conversation))
+    const chat = await arrived(conversation)
     const row = await chat?.reveal(entry, block)
     if (!chat || !row) return false
     const ranges = wordRanges(row, words)
@@ -55,11 +58,17 @@ export const createShownChats = (flash: Flash): ShownChats => {
 
   return {
     add(chat) {
-      chats.add(chat)
+      chats.update(list => [...list, chat])
       for (const wake of [...waiting]) wake(chat)
-      return () => void chats.delete(chat)
+      return () => chats.update(list => list.filter(shown => shown !== chat))
     },
-    get,
+    current: () => chats.get().at(-1),
+    arrived,
     show,
+    action(action) {
+      actions.update(list => [...list, action])
+      return () => actions.update(list => list.filter(added => added !== action))
+    },
+    actions: () => actions.get(),
   }
 }

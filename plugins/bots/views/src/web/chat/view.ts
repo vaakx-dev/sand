@@ -134,8 +134,12 @@ export const chatView = (parts: ChatParts) => {
     return itemNode(rowList, spot.key)
   }
 
+  const frame = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view())
+
   const shownChat: ShownChat = {
+    owner: 'bot',
     conversation: id,
+    frame,
     scroller,
     loaded: () => talk.path.get(),
     older: async () => {
@@ -151,10 +155,6 @@ export const chatView = (parts: ChatParts) => {
     dock.focus()
   }
 
-  const view = div(
-    { class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: () => talk.release },
-    div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view()),
-    dock.view,
-  )
+  const view = div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: () => talk.release }, frame, dock.view)
   return { view, answer }
 }

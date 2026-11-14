@@ -69,6 +69,8 @@ export const chatController = (ctx: ChatContext, id: string) => {
     slot.show(key, build)
   }
 
+  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
+
   const jump = (from: Element, text: string) => parts.quoteJump(view.rowList, from, text)
 
   const shownThread = () => {
@@ -176,7 +178,9 @@ export const chatController = (ctx: ChatContext, id: string) => {
   }
 
   const shownChat: ShownChat = {
+    owner: 'thread',
     conversation: id,
+    frame: root,
     scroller,
     loaded: () => ctx.threads.path(id),
     older: async () => {
@@ -212,8 +216,6 @@ export const chatController = (ctx: ChatContext, id: string) => {
     follow.measure()
     edge.pump()
   }
-
-  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
 
   const refresh = () => {
     cache.reset()
