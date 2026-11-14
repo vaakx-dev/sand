@@ -4,12 +4,13 @@ import { tools } from '@sand/tools/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { homedir } from 'node:os'
-import { type Found, fileRoute, filesChanged, filesFind, filesShow } from '../contract'
+import { createTokens } from '@sand/util/host'
+import { type Found, fileRoute, fileStreamRoute, filesChanged, filesFind, filesShow, filesStream } from '../contract'
 import { follower } from './follow'
 import { describe } from './found'
 import { trailOf } from './history'
 import { locate } from './locate'
-import { fileResponse } from './route'
+import { fileResponse, isFile, streamLink, streamResponse } from './route'
 import { showTool } from './tool'
 
 const finder = (sessions: () => Sessions | undefined) => async (thread: string, mention: string, cwd?: string) => {
@@ -25,6 +26,7 @@ export default definePlugin({
   inject: { tools },
   apply(ctx) {
     const find = finder(() => ctx.get(sessionsService))
+    const tokens = createTokens(crypto.getRandomValues(new Uint8Array(32)))
     const followed = follower(path => void describe(path).then(file => ctx.get(serverService)?.broadcast(filesChanged, file), () => undefined))
     ctx.effect(() => followed.close)
 
@@ -33,6 +35,11 @@ export default definePlugin({
       if (!file) return { missing: mention }
       followed.follow(file.path)
       return { file }
+    }
+
+    const stream = async ({ path }: { path: string }) => {
+      if (!(await isFile(path))) throw new Error(`There is no file at ${path}`)
+      return streamLink(tokens, path)
     }
 
     const show = async (thread: string, cwd: string, mention: string) => {
@@ -46,6 +53,8 @@ export default definePlugin({
 
     ctx.effect(() => ctx.tools.group({ name: 'files', label: 'File viewer', summary: "open a file in the user's file viewer", load: 'on-demand' }))
     ctx.effect(() => ctx.tools.register(showTool(show)))
-    ctx.watch(serverService, server => (server ? joinDisposers(server.handle(filesFind, found), server.route(fileRoute, fileResponse)) : undefined))
+    ctx.watch(serverService, server => (server
+        ? joinDisposers(server.handle(filesFind, found), server.handle(filesStream, stream), server.route(fileRoute, fileResponse), server.route(fileStreamRoute, streamResponse(tokens), { public: true }))
+        : undefined))
   },
 })
