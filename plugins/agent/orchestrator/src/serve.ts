@@ -25,7 +25,7 @@ import { type ListFilter, listThreads } from './list'
 import type { Pcs } from './pcs'
 import type { Start } from './start'
 import { changePending } from './pending'
-import { stopThread } from './stop'
+import { stopTurn } from './stop'
 import { updateThread } from './update'
 
 const forwarded = (caller: Caller) => caller.kind === 'pc'
@@ -96,7 +96,7 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
       onOwner(found, historyRead, ({ session, bot, ...reading }, { actor }) => threads.read(conversationOf(session, bot, actor), reading)),
       onOwner(found, itemRead, ({ session, bot, item, offset }, { actor }) => threads.item(conversationOf(session, bot, actor), item, offset)),
       onOwner(found, threadPending, ({ session: id, pending, action }) => changePending(ctx, thread(id), pending, action)),
-      onOwner(found, threadStop, ({ session: id }) => stopThread(ctx, thread(id))),
+      onOwner(found, threadStop, ({ session: id }) => stopTurn(ctx, thread(id))),
       onOwner(found, threadUpdate, input => updateThread(ctx, input)),
     )
   })
