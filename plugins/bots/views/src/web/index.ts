@@ -102,7 +102,7 @@ export default definePlugin({
         found &&
         joinDisposers(
           found.entry(changeEntry, entry => changeNote(ctx.kit, entry.data as ChangeEntry)),
-          found.entry(runEntry, entry => runNote(ctx.kit, entry)),
+          found.entry(runEntry, (entry, bot) => runNote(ctx.kit, entry, () => parts.chats.get(bot).entries.get())),
           found.entry(morningEntry, (entry, bot) => morningNote(ctx.kit, (entry.data as MorningEntry).lines, job => parts.showJob(bot, job))),
         ),
     )

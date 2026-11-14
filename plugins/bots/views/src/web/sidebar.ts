@@ -32,7 +32,7 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
       const state = faceStateOf(bot)
       return parts.ctx.kit.botFace(bot.id, bot.color, 32, state ? { state } : {})
     },
-    ...((botStatus(bot) === 'waiting' || asking) && { status: 'waiting' as const }),
+    ...(botStatus(bot) === 'waiting' && !asking && { status: 'waiting' as const }),
     ...(detail && { detail: () => detail }),
     ...(at !== undefined && { at }),
   }
