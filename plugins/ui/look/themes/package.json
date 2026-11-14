@@ -1,0 +1,40 @@
+{
+  "name": "@sand/themes",
+  "version": "0.0.0",
+  "description": "One theme for all of sand on every device: colours from a base and an accent, custom CSS and an animated background behind frosted panels",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "themes",
+    "runtime": "./src/runtime/index.ts",
+    "cli": "./src/cli.ts",
+    "web": "./src/web/index.ts",
+    "label": "Themes",
+    "summary": "Restyle sand with your own colours, custom CSS and an animated background, on every device",
+    "features": {
+      "themes": {
+        "label": "Themes",
+        "summary": "Your own colours, custom CSS and an animated background behind the chat, the same on every device",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/cli-commands": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/ui-theme": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}
