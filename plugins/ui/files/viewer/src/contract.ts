@@ -1,5 +1,6 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import type { MarkdownFiles } from '@sand/markdown/contract'
+import type { ClassValue, StyleValue } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 import { z } from 'zod'
 
@@ -16,7 +17,7 @@ export type Found = { file: FoundFile } | { missing: string }
 
 export interface OpenFile extends FoundFile {
   blob(): Promise<Blob>
-  bytes(): Promise<Uint8Array>
+  bytes(): Promise<Uint8Array<ArrayBuffer>>
   content(): Promise<string>
   link(target: string, label: (Node | string)[]): Node | undefined
 }
@@ -33,10 +34,23 @@ export interface FormatAddon {
   extensions: readonly string[]
 }
 
+export interface PictureLook {
+  class: ClassValue
+  style: StyleValue
+  onClick(): void
+}
+
+export interface Picture {
+  actual(): boolean
+  toggle(): void
+  element(look: PictureLook): HTMLElement
+}
+
 export interface FileViewer {
   open(thread: string, mention: string): void
   files(thread: string): MarkdownFiles
   render(file: OpenFile): HTMLElement
+  picture(picture: Picture): HTMLElement
   format(format: FileFormat): Dispose
 }
 

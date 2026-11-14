@@ -10,6 +10,7 @@ import { builtinFormats, textFormat } from './builtin'
 import { formatRegistry } from './formats'
 import { linkFor } from './link'
 import { fileLike, isFileTarget } from './mention'
+import { pictureStage } from './picture'
 import { openFiles } from './state'
 import { fileView, rendered } from './view'
 
@@ -58,6 +59,7 @@ export default definePlugin({
       }),
       format: formats.add,
       render: file => rendered({ ctx, formats }, file),
+      picture: pictureStage,
     }
 
     ctx.effect(() => joinDisposers(...builtinFormats(parts).map(formats.add)))

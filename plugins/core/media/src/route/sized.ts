@@ -1,12 +1,11 @@
+import { IMAGE_HEADER_BYTES, imageDimensions } from '@sand/util'
 import { writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { Located } from '../store'
-import { dimensions } from '../store/sniff'
 
 const step = 160
 const tallest = 2560
 const widest = 2560
-const sniffed = 65_536
 const resizable = new Set(['png', 'jpg', 'webp'])
 
 export type Sized = (hash: string, original: Located, height: number) => Promise<Bun.BunFile | undefined>
@@ -18,7 +17,7 @@ export const askedHeight = (asked: string | null) => {
 }
 
 const needsResize = async (file: Bun.BunFile, height: number) => {
-  const size = dimensions(new Uint8Array(await file.slice(0, sniffed).arrayBuffer()))
+  const size = imageDimensions(new Uint8Array(await file.slice(0, IMAGE_HEADER_BYTES).arrayBuffer()))
   return Boolean(size && size.height > height)
 }
 

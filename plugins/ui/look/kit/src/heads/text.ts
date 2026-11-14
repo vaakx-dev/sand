@@ -1,4 +1,4 @@
-import { h1, h2, p, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { div, h1, h2, p, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 import { isMac } from '../page/platform'
 
 export const pageTitleLook = 'min-w-0 text-xl font-semibold tracking-tight text-neutral-100'
@@ -18,6 +18,8 @@ export const secondaryLook = 'text-sm text-neutral-400'
 export const secondaryText = (...children: Child[]) => p({ class: secondaryLook }, ...children)
 
 export const emphasis = (...children: Child[]) => span({ class: 'font-medium text-neutral-100' }, ...children)
+
+export const prose = (...children: Child[]) => div({ class: 'min-w-0 text-sm leading-relaxed text-neutral-100 wrap-anywhere' }, ...children)
 
 const rowTitleSize = 'text-sm font-medium'
 

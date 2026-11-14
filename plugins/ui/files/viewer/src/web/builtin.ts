@@ -2,6 +2,7 @@ import type { Markdown } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, el, img, sig, span } from '@vaakx-dev/vrui'
 import { extensionOf, type FileFormat, type OpenFile } from '../contract'
+import { pictureStage } from './picture'
 
 interface Parts {
   kit: Kit
@@ -55,7 +56,7 @@ const markdownFormat = (parts: Parts): FileFormat => ({
     const found = parts.markdown()
     if (!found) return codeView(parts, file, text)
     const files = { link: (target: string, label: (Node | string)[]) => file.link(target, label), mention: () => undefined }
-    return div({ class: 'p-4 text-sm leading-relaxed text-neutral-100 wrap-anywhere' }, ...found.nodes(text, { files, size: 'reading' }))
+    return div({ class: 'p-4' }, parts.kit.prose(...found.nodes(text, { files, size: 'reading' })))
   },
 })
 
@@ -70,16 +71,7 @@ const imageFormat = (): FileFormat => ({
   async render(file) {
     const actual = sig(false)
     const source = await objectUrl(file)
-    return div(
-      { class: () => ['flex min-h-full p-3', actual.get() ? 'overflow-auto' : 'items-center justify-center'] },
-      img({
-        ...source,
-        alt: file.name,
-        class: () => ['rounded-md', actual.get() ? 'cursor-zoom-out' : 'max-w-full cursor-zoom-in'],
-        style: () => (actual.get() ? { maxWidth: 'none' } : {}),
-        onClick: () => actual.update(value => !value),
-      }),
-    )
+    return pictureStage({ actual: () => actual.get(), toggle: () => actual.update(value => !value), element: look => img({ ...source, alt: file.name, ...look }) })
   },
 })
 

@@ -18,7 +18,7 @@ import { bodyColumn, pageBody } from './heads/page-body'
 import { pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
 import { titleButton } from './heads/title-button'
-import { barTitle, colorLabel, countMark, emphasis, metaLine, monoMeta, pageTitle, pathLabel, rowName, rowTitle, secondaryText, sectionTitle, sheetTitle, shortcutHint } from './heads/text'
+import { barTitle, colorLabel, countMark, emphasis, metaLine, monoMeta, pageTitle, pathLabel, prose, rowName, rowTitle, secondaryText, sectionTitle, sheetTitle, shortcutHint } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
@@ -200,6 +200,7 @@ export const kit = {
   progressSteps,
   projectAvatar,
   projectIcon,
+  prose,
   providerColor,
   providerIcon,
   quietButton,
