@@ -30,11 +30,7 @@ const saveAs = async (file: OpenFile) => {
 }
 
 const frame = (kit: Kit, title: string, text: string, ...actions: (Node | null)[]) =>
-  div(
-    { class: 'flex flex-col items-center gap-4 px-6 pb-16' },
-    kit.emptyPage({ title, text }),
-    ...actions,
-  )
+  kit.emptyPage({ title, text: [text, div({ class: 'mt-4 flex flex-col items-center gap-3' }, ...actions)] })
 
 const stepNote = (kit: Kit, step: Step) => {
   if (step.kind === 'failed') return kit.errorText(step.error)
