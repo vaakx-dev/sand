@@ -49,6 +49,7 @@
         "@sand/host-runtimes": "workspace:*",
         "@sand/host-updates": "workspace:*",
         "@sand/util": "workspace:*",
+        "@sand/zip": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -117,6 +118,13 @@
     "packages/vault": {
       "name": "@sand/vault",
       "version": "0.0.0",
+    },
+    "packages/zip": {
+      "name": "@sand/zip",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/util": "workspace:*",
+      },
     },
     "plugins/agent/accounts-mcp": {
       "name": "@sand/accounts-mcp",
@@ -3564,6 +3572,8 @@
     "@sand/web-tools": ["@sand/web-tools@workspace:plugins/agent/web"],
 
     "@sand/worktrees": ["@sand/worktrees@workspace:plugins/git/worktrees"],
+
+    "@sand/zip": ["@sand/zip@workspace:packages/zip"],
 
     "@types/bun": ["@types/bun@1.4.2", "", { "dependencies": { "bun-types": "1.4.2" } }, "sha512-GimotNn7+ZV0uVArItBbriZsR1oNf0+WTzPkdcFrzShI7k2norL0uzEaJT8T33dWr7O/c9ZDuAFQrctKCi72oQ=="],
 
