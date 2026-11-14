@@ -13,6 +13,7 @@ export interface StepLineProps {
   expanded: MaybeReactive<boolean>
   onToggle(): void
   headProps?: Props<HTMLDivElement>
+  item?: string
 }
 
 const marks: Record<StepState, (kit: Kit, name?: string) => HTMLElement> = {
@@ -25,9 +26,9 @@ export const stepMark = (kit: Kit, state: StepState, name?: string) => marks[sta
 
 export const stepBody = (...content: Child[]) => div({ class: 'mt-1 mb-3 min-w-0 text-xs sm:pl-5' }, ...content)
 
-export const stepLine = ({ rowButton }: Kit, { mark, label, title = '', meta, actions, expanded, onToggle, headProps }: StepLineProps, ...body: Child[]) =>
+export const stepLine = ({ rowButton }: Kit, { mark, label, title = '', meta, actions, expanded, onToggle, headProps, item }: StepLineProps, ...body: Child[]) =>
   div(
-    { class: 'group' },
+    { class: 'group', 'data-item': item },
     div(
       { ...headProps, class: 'flex min-h-6 items-center gap-1' },
       rowButton(

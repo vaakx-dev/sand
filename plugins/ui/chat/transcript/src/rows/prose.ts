@@ -16,7 +16,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply?.(text.get()) ?? [] })
     const reveal = tapReveal()
     return div(
-      { class: ['group relative text-sm', () => (railed() ? 'my-1' : 'mt-2 mb-1')], ...context.menu.target(spec, reveal.onClick, 'text') },
+      { class: ['group relative text-sm', () => (railed() ? 'my-1' : 'mt-2 mb-1')], 'data-item': item.key, ...context.menu.target(spec, reveal.onClick, 'text') },
       div({ 'data-part': 'agent-message', class: 'chat-row' }, node),
       show(
         () => !railed() && !streaming.get(),
@@ -33,5 +33,5 @@ export const textRow: RowMaker<'text'> = (item, context) =>
 
 export const thinkingRow: RowMaker<'thinking'> = (item, context) =>
   row(`thinking:${item.key}`, item, data =>
-    workFrame(thinkingStep(context.kit, { streaming: data.map(value => value.streaming), text: data.map(value => value.text), ...context.states.get(item.key) })),
+    workFrame(thinkingStep(context.kit, { item: item.key, streaming: data.map(value => value.streaming), text: data.map(value => value.text), ...context.states.get(item.key) })),
   )

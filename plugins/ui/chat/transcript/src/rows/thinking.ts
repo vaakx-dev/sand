@@ -4,6 +4,7 @@ import { div, dynamicChild, show, span, type Derive, type Sig } from '@vaakx-dev
 import { stepLine, stepMark } from './line'
 
 export interface ThinkingProps {
+  item: string
   streaming: Sig<boolean> | Derive<boolean>
   text: Sig<string> | Derive<string>
   open: Sig<boolean>
@@ -20,7 +21,7 @@ const thought = (text: string) => {
   return { title: oneLine(unmarked(text)), body: unmarked(text).trim() }
 }
 
-export const thinkingStep = (kit: Kit, { streaming, text, open, toggle }: ThinkingProps) => {
+export const thinkingStep = (kit: Kit, { item, streaming, text, open, toggle }: ThinkingProps) => {
   const parts = text.map(thought)
   const label = () => {
     const { title } = parts.get()
@@ -36,6 +37,7 @@ export const thinkingStep = (kit: Kit, { streaming, text, open, toggle }: Thinki
       title: label,
       expanded,
       onToggle: toggle,
+      item,
     },
     show(expanded, () => div({ class: 'mt-1 mb-2 pl-5 whitespace-pre-wrap wrap-anywhere text-neutral-500' }, () => parts.get().body)),
   )
