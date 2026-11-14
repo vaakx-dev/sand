@@ -285,6 +285,14 @@
         "@sand/replay": "workspace:*",
       },
     },
+    "plugins/agent/keep-awake": {
+      "name": "@sand/keep-awake",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/engine": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/agent/logbook": {
       "name": "@sand/logbook",
       "version": "0.0.0",
@@ -3293,6 +3301,8 @@
     "@sand/inspector-usage": ["@sand/inspector-usage@workspace:plugins/ui/inspector/usage"],
 
     "@sand/jobs": ["@sand/jobs@workspace:plugins/agent/jobs"],
+
+    "@sand/keep-awake": ["@sand/keep-awake@workspace:plugins/agent/keep-awake"],
 
     "@sand/keys": ["@sand/keys@workspace:plugins/ui/shared/keys"],
 
