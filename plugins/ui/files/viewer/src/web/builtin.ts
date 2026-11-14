@@ -2,6 +2,7 @@ import type { Markdown } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, el, img, sig, span } from '@vaakx-dev/vrui'
 import { extensionOf, type FileFormat, type OpenFile } from '../contract'
+import { pictureStage } from './picture'
 
 interface Parts {
   kit: Kit
@@ -70,16 +71,7 @@ const imageFormat = (): FileFormat => ({
   async render(file) {
     const actual = sig(false)
     const source = await objectUrl(file)
-    return div(
-      { class: () => ['flex flex-1 p-3', actual.get() ? 'overflow-auto' : 'items-center justify-center'] },
-      img({
-        ...source,
-        alt: file.name,
-        class: () => ['rounded-md', actual.get() ? 'cursor-zoom-out' : 'max-w-full cursor-zoom-in'],
-        style: () => (actual.get() ? { maxWidth: 'none' } : {}),
-        onClick: () => actual.update(value => !value),
-      }),
-    )
+    return pictureStage({ actual: () => actual.get(), toggle: () => actual.update(value => !value), element: look => img({ ...source, alt: file.name, ...look }) })
   },
 })
 
