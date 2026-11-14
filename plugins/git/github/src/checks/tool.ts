@@ -2,9 +2,9 @@ import type { GitRunner } from '@sand/git-runner/contract'
 import type { Tool } from '@sand/tools/contract'
 import { shortSha } from '@sand/util'
 import { z } from 'zod'
-import type { Client } from '../api/client'
+import type { Rest } from '../api/client'
 import { repoOf } from '../repo'
-import { readChecks } from './read'
+import { type CheckOutcome, readChecks } from './read'
 import type { Listen } from './user'
 import { type Timing, waitChecks } from './wait'
 
@@ -21,9 +21,10 @@ export type ChecksGit = Pick<GitRunner, 'remoteUrl' | 'maybe'>
 
 export interface ChecksDeps {
   git: ChecksGit
-  client: Client
+  client: Rest
   listen: Listen
   timing: Timing
+  settled(conversation: string, sha: string, outcome: CheckOutcome): void
 }
 
 const commitOf = async ({ git, client }: ChecksDeps, cwd: string, repo: string, pr: number | undefined) => {
@@ -52,7 +53,7 @@ export const checksTool = (deps: ChecksDeps): Tool<typeof input> => ({
     const spoke = deps.listen(conversation.id)
     try {
       const read = () => readChecks(deps.client, repo.path, sha)
-      return `Checks on ${shortSha(sha)}: ${await waitChecks({ read, progress, signal, spoke: spoke.signal, timeoutMs: timeout_ms, timing: deps.timing })}`
+      return `Checks on ${shortSha(sha)}: ${await waitChecks({ read, settled: outcome => deps.settled(conversation.id, sha, outcome), progress, signal, spoke: spoke.signal, timeoutMs: timeout_ms, timing: deps.timing })}`
     } finally {
       spoke.stop()
     }

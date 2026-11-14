@@ -2,6 +2,13 @@ import { errorMessage, isRecord } from '@sand/util'
 
 export class GitHubError extends Error {
   override name = 'GitHubError'
+
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
+    super(message)
+  }
 }
 
 const sentence = (text: string) => {
@@ -25,9 +32,9 @@ const reasonOf = (data: unknown) => {
 
 export const restError = (status: number, data: unknown) => {
   const said = reasonOf(data)
-  if (status === 404) return new GitHubError("GitHub couldn't find that, or this PC's GitHub sign-in can't see it.")
-  if (status >= 500) return new GitHubError(`GitHub is having trouble (HTTP ${status}); try again later.`)
-  return new GitHubError(sentence(said ? `GitHub said: ${said}` : `GitHub answered HTTP ${status}`))
+  if (status === 404) return new GitHubError("GitHub couldn't find that, or this PC's GitHub sign-in can't see it.", status)
+  if (status >= 500) return new GitHubError(`GitHub is having trouble (HTTP ${status}); try again later.`, status)
+  return new GitHubError(sentence(said ? `GitHub said: ${said}` : `GitHub answered HTTP ${status}`), status)
 }
 
 export const rejectedError = () => new GitHubError("GitHub didn't accept this PC's sign-in; run gh auth login on it again.")

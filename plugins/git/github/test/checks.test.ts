@@ -1,6 +1,6 @@
 import type { ToolContext } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
-import type { Client } from '../src/api/client'
+import type { Rest } from '../src/api/client'
 import { restError } from '../src/api/errors'
 import { checksTool, type ChecksGit } from '../src/checks/tool'
 
@@ -27,7 +27,7 @@ const github = (first: Poll, ...later: Poll[]) => {
   const paths: string[] = []
   let poll = first
   let at = 0
-  const client: Client = {
+  const client: Rest = {
     rest: async <T>(_method: string, path: string) => {
       paths.push(path)
       if (path.endsWith('/pulls/7')) return { head: { sha } } as T
@@ -44,13 +44,15 @@ const github = (first: Poll, ...later: Poll[]) => {
   return { client, paths, polls: () => at }
 }
 
-const waitFor = async (client: Client, input: { pr?: number }) => {
+const waitFor = async (client: Rest, input: { pr?: number }) => {
   const progress: string[] = []
+  const settled: string[] = []
   const tool = checksTool({
     git,
     client,
     listen: () => ({ signal: new AbortController().signal, stop() {} }),
     timing: { intervalMs: 1, graceMs: 200 },
+    settled: (conversation, commit, outcome) => settled.push(`${conversation} ${commit} ${outcome}`),
   })
   const context: ToolContext = {
     cwd: '/work/tiles',
@@ -64,7 +66,7 @@ const waitFor = async (client: Client, input: { pr?: number }) => {
     wait: () => () => {},
   }
   const result = await tool.run(input, context)
-  return { result, progress }
+  return { result, progress, settled }
 }
 
 test('returns the failed check with its link as soon as one fails, while others still run', async () => {
@@ -73,12 +75,13 @@ test('returns the failed check with its link as soon as one fails, while others 
     { runs: [run('check', 'completed', 'failure'), run('browser', 'in_progress')], statuses: [status('deploy', 'success')] },
   )
 
-  const { result, progress } = await waitFor(client, { pr: 7 })
+  const { result, progress, settled } = await waitFor(client, { pr: 7 })
 
   expect(paths[0]).toBe('/repos/acme/tiles/pulls/7')
   expect(paths).toContain(`/repos/acme/tiles/commits/${sha}/check-runs?per_page=100`)
   expect(progress).toEqual(['0 of 3 done, running: check, browser, deploy'])
   expect(result).toBe(`Checks on abc1234: 1 failed (2 of 3 done, running: browser):\n- check: https://github.com/acme/tiles/runs/check`)
+  expect(settled).toEqual([`t1 ${sha} failed`])
 })
 
 test('keeps waiting while no checks are reported right after a push, then reports them passed', async () => {
@@ -90,18 +93,20 @@ test('keeps waiting while no checks are reported right after a push, then report
     { runs: [run('check', 'completed', 'success'), run('lint', 'completed', 'skipped')], statuses: [status('deploy', 'success')] },
   )
 
-  const { result } = await waitFor(client, {})
+  const { result, settled } = await waitFor(client, {})
 
   expect(polls()).toBe(4)
   expect(result).toBe('Checks on abc1234: all 3 passed: check, lint, deploy.')
+  expect(settled).toEqual([`t1 ${sha} passed`])
 })
 
 test('stops waiting when no checks ever show up', async () => {
   const { client } = github({ runs: [], statuses: [] })
 
-  const { result } = await waitFor(client, {})
+  const { result, settled } = await waitFor(client, {})
 
   expect(result).toStartWith('Checks on abc1234: no checks reported within')
+  expect(settled).toEqual([])
 })
 
 test('rides out GitHub failing a few polls in a row, then reports the checks', async () => {
