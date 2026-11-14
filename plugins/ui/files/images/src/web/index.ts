@@ -6,7 +6,7 @@ import { pictureView } from './view'
 
 export default definePlugin({
   name: 'file-images-web',
-  description: 'Shows TIFF and HEIC images in the file viewer, decoded off the main thread',
+  description: 'Shows TIFF images in the file viewer, decoded off the main thread',
   inject: { fileViewer, kit },
   apply(ctx) {
     ctx.effect(() =>

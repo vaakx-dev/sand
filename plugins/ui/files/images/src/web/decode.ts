@@ -1,13 +1,9 @@
-import { extensionOf, type OpenFile } from '@sand/file-viewer/contract'
+import type { OpenFile } from '@sand/file-viewer/contract'
 import { bytes } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
-import { type Decoder, decoderUrl } from '../contract'
+import { decoderUrl } from '../contract'
 import type { Decoded, Reply } from './decoder/answer'
 import { MAX_FILE_BYTES } from './decoder/picture'
-
-const HEIF_EXTENSIONS = new Set(['heic', 'heif'])
-
-const decoderOf = (name: string): Decoder => (HEIF_EXTENSIONS.has(extensionOf(name)) ? 'heic' : 'tiff')
 
 const replyOf = (worker: Worker, buffer: ArrayBuffer) =>
   new Promise<Reply>((resolve, reject) => {
@@ -18,7 +14,7 @@ const replyOf = (worker: Worker, buffer: ArrayBuffer) =>
 
 const decoded = async (file: OpenFile): Promise<Decoded> => {
   if (file.size > MAX_FILE_BYTES) throw new Error(`it is ${bytes(file.size)}, and the viewer opens images up to ${bytes(MAX_FILE_BYTES)}`)
-  const worker = new Worker(decoderUrl(decoderOf(file.name)), { type: 'module' })
+  const worker = new Worker(decoderUrl, { type: 'module' })
   const reply = await file
     .blob()
     .then(blob => blob.arrayBuffer())

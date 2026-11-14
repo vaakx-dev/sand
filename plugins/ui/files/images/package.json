@@ -1,7 +1,7 @@
 {
   "name": "@sand/file-images",
   "version": "0.0.0",
-  "description": "Shows TIFF and HEIC images in the file viewer, decoded in the page",
+  "description": "Shows TIFF images in the file viewer, decoded in the page",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -11,11 +11,11 @@
     "runtime": "./src/runtime/index.ts",
     "web": "./src/web/index.ts",
     "label": "More images",
-    "summary": "TIFF and HEIC images",
+    "summary": "TIFF images",
     "features": {
       "file-images": {
         "label": "More images",
-        "summary": "TIFF and HEIC images",
+        "summary": "TIFF images",
         "parent": "file-viewer",
         "addon": true
       }
@@ -28,7 +28,6 @@
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "libheif-js": "^1.23.5",
     "utif2": "^4.1.0"
   }
 }

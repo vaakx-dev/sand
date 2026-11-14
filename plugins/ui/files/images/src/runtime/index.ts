@@ -5,7 +5,7 @@ import { decoderResponse } from './build'
 
 export default definePlugin({
   name: 'file-images',
-  description: 'Builds and serves the workers that decode TIFF and HEIC images for the file viewer',
+  description: 'Builds and serves the worker that decode TIFF images for the file viewer',
   apply(ctx) {
     const respond = decoderResponse()
     ctx.watch(serverService, server => server?.route(decoderRoute, respond, { public: true }))
