@@ -3,7 +3,7 @@ import type { MenuSpec } from '@sand/ui-kit/contract'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../context'
 import { bringEntry, copyEntries, projectEntries, openAt, startable, visibilityEntry, type Entry } from './actions'
-import { shorten } from './places'
+import { tildeHome } from '@sand/util'
 
 const quietly = (work: () => void | Promise<unknown>) => () => (async () => work())().catch(() => {})
 
@@ -35,7 +35,7 @@ const openChatHere = (ctx: ProjectsContext, entry: ProjectEntry): MenuAction[] =
 
 export const copySpec = (ctx: ProjectsContext, entry: ProjectEntry): MenuSpec => ({
   title: ctx.pcs.name(entry.device),
-  subtitle: shorten(ctx, entry.path, entry.device),
+  subtitle: tildeHome(entry.path),
   actions: [
     ...openChatHere(ctx, entry),
     { id: 'forget', group: 'manage', label: 'Forget this copy', icon: 'x', run: quietly(() => ctx.projects.removeCopy(entry)) },

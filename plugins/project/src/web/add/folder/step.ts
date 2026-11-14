@@ -3,6 +3,7 @@ import type { ProjectGroup } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../../context'
 import type { Pulse } from '@sand/reactive'
+import { tildeHome } from '@sand/util'
 import type { Step } from '../run'
 import { folderForm } from './form'
 import { matchChoice } from './matches'
@@ -38,7 +39,8 @@ export const folderStep = (ctx: ProjectsContext, changes: Pulse, pc: PcView, bri
   const step = changes.read(() => plan(ctx.projects, form))
   const note = dynamicChild(step, ({ note: text, error }) => {
     if (!text) return null
-    return error ? errorText(text) : sheetText(text)
+    const shown = tildeHome(text)
+    return error ? errorText(shown) : sheetText(shown)
   })
   const field = textInput({
     bindValue: form.path,

@@ -2,6 +2,7 @@ import type { ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contra
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { stepBody, stepLine, stepMark, type StepState } from '../rows/line'
+import { tildeHome } from '@sand/util'
 import { relativeTo } from './relative'
 
 const states: Record<ToolStatus, StepState> = { pending: 'running', running: 'running', done: 'done', failed: 'failed' }
@@ -56,7 +57,7 @@ export const toolStep = (
     signature.get()
     const value = untrack(() => tool.get())
     const found = renderer(value.call.name)
-    return { verb: found.verb, activeVerb: found.activeVerb, label: relativeTo(cwd, found.label(value)), meta: found.meta(value), badge: found.badge(value) }
+    return { verb: found.verb, activeVerb: found.activeVerb, label: tildeHome(relativeTo(cwd, found.label(value))), meta: found.meta(value), badge: found.badge(value) }
   })
   const state = derive(() => states[tool.get().status])
   const running = derive(() => state.get() === 'running')

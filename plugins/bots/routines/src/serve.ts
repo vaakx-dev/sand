@@ -5,7 +5,7 @@ import { scheduleChange, scheduleRemove } from '@sand/schedules/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
-import { type NewRoutine, routineCreate, routineDelete, routineList, routinePause, routinesChangeWire } from './contract'
+import { type NewRoutine, routineCreate, routineDelete, routineList, routinePause, routineRetry, routinesChangeWire } from './contract'
 import { owner, type Routines } from './routines'
 import { whenOf } from './time'
 
@@ -30,6 +30,7 @@ export const serveRoutines = (ctx: Context, server: Server, routines: Routines) 
     server.handle(routineList, ({ bot }, caller) => routines.list(bot ?? callerBot(caller))),
     server.handle(routineCreate, create),
     server.handle(routinePause, ({ routine, paused }) => routines.pause(routine, paused)),
+    server.handle(routineRetry, ({ routine }) => routines.retry(routine)),
     server.handle(routineDelete, ({ routine }) => routines.remove(routine)),
     ctx.on(scheduleChange, announce),
     ctx.on(scheduleRemove, announce),

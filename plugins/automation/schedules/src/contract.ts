@@ -22,6 +22,11 @@ export interface LastRun {
   error?: string
 }
 
+export interface Retry {
+  due: number
+  attempt: number
+}
+
 export interface Schedule {
   id: string
   owner: string
@@ -32,6 +37,7 @@ export interface Schedule {
   paused: boolean
   next?: number
   last?: LastRun
+  retry?: Retry
   created: number
 }
 
@@ -39,6 +45,7 @@ export interface Fire {
   key: string
   due: number
   late: boolean
+  final: boolean
 }
 
 export type Handler = (schedule: Schedule, fire: Fire, signal: AbortSignal) => Promise<void>
@@ -47,6 +54,7 @@ export interface Schedules {
   handle(owner: string, handler: Handler): Dispose
   create(spec: NewSchedule): Schedule
   pause(id: string, paused: boolean): Schedule
+  retry(id: string): Schedule
   remove(id: string): boolean
   get(id: string): Schedule | undefined
   list(owner: string, subject?: string): Schedule[]

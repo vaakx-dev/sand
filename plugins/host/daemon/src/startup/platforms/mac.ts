@@ -1,3 +1,4 @@
+import { tildeHome } from '@sand/util'
 import { mkdir, rm } from 'node:fs/promises'
 import { homedir, userInfo } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -48,7 +49,7 @@ export const launchAgent = (entry: Entry, path: string) =>
 export const mac: Platform = {
   startsWhen: 'when you log in to this Mac',
   unattended: 'to have it start after a reboot with nobody at the Mac, turn on automatic login in System Settings',
-  where: entry => `launch agent ${plistFile(entry)}`,
+  where: entry => `launch agent ${tildeHome(plistFile(entry))}`,
   installed: entry => Bun.file(plistFile(entry)).exists(),
   async install(entry) {
     const file = plistFile(entry)

@@ -29,6 +29,7 @@ export const createRoutines = (schedules: Schedules) => {
     list: (bot?: string) => schedules.list(owner, bot).map(routineOf),
     create: (bot: string, { name, instructions, ...timing }: RoutineSpec) => routineOf(schedules.create({ owner, subject: bot, ...timing, data: { name, instructions } })),
     pause: (id: string, paused: boolean) => routineOf(schedules.pause(known(id).id, paused)),
+    retry: (id: string) => routineOf(schedules.retry(known(id).id)),
     remove: (id: string) => schedules.remove(known(id).id),
     forget(bot: string) {
       for (const schedule of schedules.list(owner, bot)) schedules.remove(schedule.id)

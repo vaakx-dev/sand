@@ -1,5 +1,6 @@
 import type { BotSummary } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { tildeHome } from '@sand/util'
 import { type Child, derive, div, dynamicChild, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Decision, Mode, PermissionSettings, Rule } from '../contract'
 import { modeDetails, modeLabels } from './mode'
@@ -68,13 +69,13 @@ const ruleRow = ({ kit, removeRule }: PageParts, rule: Sig<Rule>) =>
   )
 
 const decisionFull = ({ summary, reason }: Decision) =>
-  div({ class: 'flex min-w-0 flex-col gap-1 pb-3 text-sm wrap-anywhere text-neutral-400' }, span({ class: 'font-mono text-neutral-100' }, summary), reason ? span({}, reason) : null)
+  div({ class: 'flex min-w-0 flex-col gap-1 pb-3 text-sm wrap-anywhere text-neutral-400' }, span({ class: 'font-mono text-neutral-100' }, tildeHome(summary)), reason ? span({}, reason) : null)
 
 const decisionRow = ({ kit }: PageParts, decision: Sig<Decision>) => {
   const open = sig(false)
   return div(
     { class: 'flex min-w-0 flex-col' },
-    kit.settingsRow({ title: oneLine(() => `${decision.get().tool}: ${decision.get().summary}`), detail: oneLine(() => decisionDetail(decision.get())), onOpen: () => open.set(!open.get()) }),
+    kit.settingsRow({ title: oneLine(() => `${decision.get().tool}: ${tildeHome(decision.get().summary)}`), detail: oneLine(() => decisionDetail(decision.get())), onOpen: () => open.set(!open.get()) }),
     show(open, () => decisionFull(decision.get())),
   )
 }

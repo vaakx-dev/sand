@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/util'
+import { errorMessage, tildeHome } from '@sand/util'
 import { parseArgs } from 'node:util'
 import type { CliCommand, CliCommands } from './contract'
 import { helpText } from './help'
@@ -28,7 +28,7 @@ export const runCommand = async (commands: CliCommands, args: string[]) => {
     const { values, positionals } = parse(command, args.slice(rest))
     return (await command.run(positionals, values)) ?? 0
   } catch (error) {
-    console.error(errorMessage(error))
+    console.error(tildeHome(errorMessage(error)))
     return 1
   }
 }

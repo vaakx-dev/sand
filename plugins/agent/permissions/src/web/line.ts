@@ -1,6 +1,6 @@
 import type { WaitLine, Waiting } from '@sand/chat/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { errorMessage } from '@sand/util'
+import { errorMessage, tildeHome } from '@sand/util'
 import { derive, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 import type { Model, Question } from './model'
 import { asked, choicesOf, sentence } from './question'
@@ -30,7 +30,7 @@ const line = (kit: Kit, model: Model, question: Question) =>
     div(
       { class: 'flex min-w-48 flex-1 items-center gap-2' },
       span({ class: 'shrink-0' }, sentence(asked(question.decision))),
-      kit.monoMeta(question.decision.summary),
+      kit.monoMeta(tildeHome(question.decision.summary)),
     ),
     div({ class: 'flex shrink-0 items-center gap-1' }, ...answers(kit, model, question)),
   )

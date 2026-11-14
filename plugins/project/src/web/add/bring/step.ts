@@ -1,11 +1,11 @@
 import type { PcView } from '@sand/devices-contract'
 import type { Pulse } from '@sand/reactive'
-import { bytes } from '@sand/util'
+import { bytes, tildeHome } from '@sand/util'
 import type { LocalFile, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, sig, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../../context'
 import { cache } from '../cache'
-import { join, short, split } from '../paths'
+import { join, split } from '../paths'
 import type { Action, Step } from '../run'
 
 type How = 'clone' | 'copy'
@@ -55,7 +55,7 @@ const bringForm = (ctx: ProjectsContext, changes: Pulse, pc: PcView, group: Proj
       picked.set(next)
     },
     how: sig<How>(group.remote ? 'clone' : 'copy'),
-    path: sig(join(short(place.root, place), group.name.replace(/[\\/]/g, '-'), place.sep)),
+    path: sig(join(tildeHome(place.root), group.name.replace(/[\\/]/g, '-'), place.sep)),
     listings,
   }
 }
@@ -121,7 +121,7 @@ const filesView = (ctx: ProjectsContext, form: BringForm) =>
   })
 
 const sourceLine = (ctx: ProjectsContext, source: Derive<ProjectEntry | undefined>) =>
-  dynamicChild(source, from => (from ? ctx.kit.sheetText(`From ${ctx.pcs.name(from.device)}, ${short(from.path, ctx.projects.place(from.device))}`) : null))
+  dynamicChild(source, from => (from ? ctx.kit.sheetText(`From ${ctx.pcs.name(from.device)}, ${tildeHome(from.path)}`) : null))
 
 const howChoice = (ctx: ProjectsContext, how: Sig<How>, remote: string | undefined) => (remote ? ctx.kit.segmented(hows, how, value => how.set(value), { label: 'How to bring it', fill: true }) : null)
 
@@ -137,7 +137,7 @@ export const bringStep = (ctx: ProjectsContext, changes: Pulse, pc: PcView, grou
       div(
         { class: 'flex flex-col gap-2' },
         textInput({ bindValue: form.path, class: 'font-mono', 'aria-label': `New folder on ${pc.name}`, placeholder: 'Folder path', spellcheck: false, autocomplete: 'off' }),
-        dynamicChild(problem, text => (text ? errorText(text) : null)),
+        dynamicChild(problem, text => (text ? errorText(tildeHome(text)) : null)),
       ),
       filesView(ctx, form),
     ),

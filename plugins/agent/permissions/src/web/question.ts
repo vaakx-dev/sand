@@ -1,4 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
+import { tildeHome } from '@sand/util'
 import { clock, div, show, sig, span, type Child } from '@vaakx-dev/vrui'
 import type { Answer, Blocked, Decision } from '../contract'
 
@@ -42,7 +43,7 @@ const due = (decision: Decision) => {
 }
 
 const blockedLine = (kit: Kit, { summary, reason }: Blocked) =>
-  div({ class: 'flex min-w-0 flex-col' }, kit.monoMeta(summary), span({ class: 'text-xs text-neutral-500' }, reason))
+  div({ class: 'flex min-w-0 flex-col' }, kit.monoMeta(tildeHome(summary)), span({ class: 'text-xs text-neutral-500' }, reason))
 
 const earlier = (kit: Kit, decision: Decision) => {
   const open = sig(false)
@@ -62,7 +63,7 @@ export const questionBody = (kit: Kit, decision: Decision, actions: Child[]) => 
     { class: 'flex min-w-0 flex-col' },
     div(
       { class: 'flex min-w-0 items-center gap-2' },
-      kit.monoMeta(decision.summary),
+      kit.monoMeta(tildeHome(decision.summary)),
       due(decision),
       blocked?.toggle ?? null,
       span({ class: 'ml-auto flex shrink-0 items-center' }, ...actions),

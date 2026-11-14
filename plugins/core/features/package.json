@@ -136,6 +136,10 @@
         "label": "Out-of-memory guard",
         "summary": "When a PC runs very low on memory, stops the chat using the most and kills its commands, so the PC doesn't freeze"
       },
+      "keep-awake": {
+        "label": "Keep awake",
+        "summary": "A PC doesn't go to sleep while a thread, bot or subagent is working, and sleeps as usual a minute after; the screen still turns off and locks"
+      },
       "models": {
         "kind": "capability",
         "label": "Models",

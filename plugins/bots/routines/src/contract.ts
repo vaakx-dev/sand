@@ -41,4 +41,5 @@ export type NewRoutine = z.output<ReturnType<typeof newRoutine>>
 export const routineList = request('routine.list', { input: () => z.object({ bot: bot() }), output: type<Routine[]>(), callers })
 export const routineCreate = request('routine.create', { input: newRoutine, output: type<Routine>(), callers })
 export const routinePause = request('routine.pause', { input: () => z.object({ routine: routine(), paused: z.boolean() }), output: type<Routine>(), callers })
+export const routineRetry = request('routine.retry', { input: () => z.object({ routine: routine() }), output: type<Routine>(), callers })
 export const routineDelete = request('routine.delete', { input: () => z.object({ routine: routine() }), output: type<boolean>(), callers })

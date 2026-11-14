@@ -1,4 +1,4 @@
-import { cli } from '@sand/config/contract'
+import { cli, sandConfig } from '@sand/config/contract'
 import { media } from '@sand/media/contract'
 import { processes } from '@sand/processes/contract'
 import { server as serverService, type Server } from '@sand/server/contract'
@@ -16,7 +16,7 @@ import { createLogin } from './auth/login'
 import { authPath } from './auth/path'
 import { createPlans } from './auth/plans'
 import { createCatalog } from './catalog'
-import { priceList, priceSchema } from './catalog/prices'
+import { PriceList, priceSchema } from './catalog/prices'
 import { createClaude } from './claude/client'
 import { createCompat } from './compat/client'
 import { createLimits } from './limits'
@@ -37,7 +37,7 @@ const streamIdleMs = 20 * 60_000
 
 export default definePlugin({
   name: 'accounts',
-  inject: { cli, media },
+  inject: { cli, media, sandConfig },
   config: z
     .object({ prices: z.record(z.string(), priceSchema).default({}), stream_idle_ms: z.number().int().positive().default(streamIdleMs) })
     .default({ prices: {}, stream_idle_ms: streamIdleMs }),
@@ -58,7 +58,8 @@ export default definePlugin({
     const accounts = createAccounts(await authPath(home), plans, changed)
     const login = createLogin(accounts, plans)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
-    const catalog = createCatalog({ home, accounts, plans, prices: priceList(options.prices), changed, report: error => ctx.report(error) })
+    const prices = new PriceList(options.prices, ctx.sandConfig)
+    const catalog = createCatalog({ home, accounts, plans, prices, changed, report: error => ctx.report(error) })
 
     const limits = createLimits({
       saved: (ctx.hot.data.sourceLimits ?? {}) as Record<string, Limits>,
@@ -130,7 +131,7 @@ export default definePlugin({
         forget,
         found.hello(helloLimits, () => merged.llm.limits?.(), { fresh: true }),
         serveLogin(found, accounts, login, { plans, state, load: () => Promise.all([peers.refresh(), plans.refresh()]).then(() => {}), conflict }),
-        serveModels(found, { view: merged.view, catalog, refreshPeers: () => peers.refresh() }),
+        serveModels(found, { view: merged.view, catalog, prices, refreshPeers: () => peers.refresh() }),
         serveShare(found, { local, accounts, users, media: ctx.media }),
       )
     })

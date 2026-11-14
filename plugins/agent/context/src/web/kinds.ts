@@ -1,5 +1,6 @@
 import type { ContextRecord } from '@sand/chats/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { tildeHome } from '@sand/util'
 import type { Threads } from '@sand/web-client/contract'
 import type { ChipKind } from '../contract'
 import { valueText } from './value'
@@ -17,7 +18,7 @@ export const fileChip = ({ field }: Kit): ChipKind => ({
   icon: 'file',
   details: record => {
     const path = text(record, 'path')
-    return path ? field({ label: 'Path' }, valueText(path)) : null
+    return path ? field({ label: 'Path' }, valueText(tildeHome(path))) : null
   },
 })
 
@@ -29,7 +30,7 @@ export const threadChip = ({ field, sheetText }: Kit, threads: Threads, open: (t
     const id = text(record, 'id')
     const info = id ? threads.get(id)?.info : undefined
     if (!info) return sheetText('This thread isn’t in your list on this page.')
-    return [info.title !== record.label && field({ label: 'Now titled' }, valueText(info.title)), field({ label: 'Folder' }, valueText(info.cwd))]
+    return [info.title !== record.label && field({ label: 'Now titled' }, valueText(info.title)), field({ label: 'Folder' }, valueText(tildeHome(info.cwd)))]
   },
   action: {
     label: 'Open thread',

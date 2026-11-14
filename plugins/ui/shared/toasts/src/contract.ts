@@ -1,5 +1,5 @@
 import type { BannerTone } from '@sand/ui-kit/contract'
-import { errorMessage } from '@sand/util'
+import { errorMessage, tildeHome } from '@sand/util'
 import { service, type Context } from 'drydock'
 
 export interface ToastAction {
@@ -47,7 +47,7 @@ const failureToast = (title: string, error: unknown, { id = title, actions }: Fa
   tone: 'danger',
   sticky: true,
   title,
-  detail: errorMessage(error),
+  detail: tildeHome(errorMessage(error)),
   ...(actions && { actions }),
 })
 

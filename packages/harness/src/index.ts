@@ -1,6 +1,6 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
-import { cli, pluginProblems, sandConfig } from '@sand/config/contract'
+import { cli, pluginProblems, sandConfig, setTomlValues } from '@sand/config/contract'
 import { type Caller, createHandlers, type Request, type WireEvent } from '@sand/host-hub/contract'
 import { hostChannel, runtime } from '@sand/host-runtimes/contract'
 import { media } from '@sand/media/contract'
@@ -113,7 +113,8 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, args: [], exit() {} })
   if (config === undefined) {
     app.provide(projectFiles, copiesStub(projects))
-    app.provide(sandConfig, { path: join(home, 'sand.toml'), section: name => sections[name] })
+    const path = join(home, 'sand.toml')
+    app.provide(sandConfig, { path, section: name => sections[name], set: (table, values) => setTomlValues(path, table, values) })
   }
   const wire = createHandlers()
   const routes = new Map<string, RouteHandler>()

@@ -1,5 +1,6 @@
 import { errorMessage } from '@sand/util'
 import { type ContextCore, type ScopeView, service, type Status } from 'drydock'
+import type { TomlValues } from './toml'
 
 export type CliPlace = 'host' | 'runtime' | 'print' | 'cli'
 
@@ -25,6 +26,7 @@ export interface Cli {
 export interface SandConfig {
   path: string
   section(name: string): unknown
+  set(table: string[], values: TomlValues): Promise<void>
 }
 
 export interface PluginOff {
@@ -76,6 +78,7 @@ export interface Features {
 }
 
 export { definitionsIn, featureOf } from './features/definitions'
+export { setTomlValues, type TomlValue, type TomlValues } from './toml'
 
 export const cli = service<Cli>('cli')
 export const features = service<Features>('features')
