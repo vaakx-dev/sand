@@ -5,7 +5,6 @@ import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/we
 import { collectScope, derive, div, effect, onRaf, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
-import { topEdge } from './integrations/top-edge'
 import { itemCache } from './cache'
 import { branchSwitch } from './rows/branches'
 import { pendingRows } from './rows/pending'
@@ -32,7 +31,7 @@ const blank = (thread: Thread) => !thread.entries.size && !(thread.loaded && thr
 
 export const chatController = (ctx: ChatContext, id: string) => {
   const { kit, transcriptParts: parts } = ctx
-  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, toEnd } = kit
+  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, toEnd, topEdge } = kit
   const cache = itemCache(parts)
   const states = parts.openStates()
   const slot = slotHost()
