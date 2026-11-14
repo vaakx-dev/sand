@@ -106,6 +106,7 @@ export const createEditor = (parts: EditorParts) => {
     focusEnd: () => run(editor => editor.focusEnd()),
     replace: (value: string) => run(editor => editor.replace(value)),
     insert: (value: string) => run(editor => editor.insert(value)),
+    insertWords: (value: string) => run(editor => editor.insertWords(value)),
     quote: (value: string) => run(editor => editor.quote(value)),
     reference: (link: string) => run(editor => editor.reference(link)),
   }

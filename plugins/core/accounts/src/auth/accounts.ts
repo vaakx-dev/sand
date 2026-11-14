@@ -139,6 +139,10 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     ],
     ids: () => [...ownIds().filter(id => !!credential(id) || viaApp(id)), ...servers().map(found => found.id)],
     signedIn: (id: string) => !!credential(id) || !!server(id) || viaApp(id),
+    apiKey(id: KeyKind) {
+      const found = credential(id)
+      return found?.type === 'api_key' ? { key: found.key, ...(found.base_url && { baseUrl: found.base_url }) } : undefined
+    },
     known: (id: string) => owned(id) || !!server(id),
     kind(id: string): AccountKind | undefined {
       if (owned(id)) return id

@@ -2551,6 +2551,30 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/chat/voice": {
+      "name": "@sand/voice",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/config": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/settings": "workspace:*",
+        "@sand/toasts": "workspace:*",
+        "@sand/transfers": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/ui/git/diff-view": {
       "name": "@sand/git-diff-view",
       "version": "0.0.0",
@@ -3466,6 +3490,8 @@
     "@sand/util": ["@sand/util@workspace:packages/util"],
 
     "@sand/vault": ["@sand/vault@workspace:packages/vault"],
+
+    "@sand/voice": ["@sand/voice@workspace:plugins/ui/chat/voice"],
 
     "@sand/vstack": ["@sand/vstack@workspace:plugins/agent/vstack"],
 

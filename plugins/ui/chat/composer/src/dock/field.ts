@@ -125,7 +125,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
     chip: drawChip(ctx),
   })
 
-  const here = { restore: createHandoff(model, () => editor.focusEnd()).restore }
+  const here = { restore: createHandoff(model, () => editor.focusEnd()).restore, insertWords: editor.insertWords }
 
   const choose = () => model.shelf.get()?.pick()
 

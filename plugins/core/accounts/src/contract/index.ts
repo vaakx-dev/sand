@@ -4,7 +4,7 @@ import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 import type { LLM, LLMEvent, Limits } from './llm'
-import type { DetectedServer, LoginState } from './login'
+import type { DetectedServer, KeyKind, LoginState } from './login'
 import type { ModelInfo } from './models'
 import type { Plans } from './plans'
 
@@ -24,7 +24,17 @@ export type * from './usage'
 export { cacheLifetimes, writtenTtl } from './usage'
 export { windowText } from './window'
 
+export interface SavedKey {
+  key: string
+  baseUrl?: string
+}
+
+export interface ApiKeys {
+  key(account: KeyKind): SavedKey | undefined
+}
+
 export const llm = service<LLM>('llm')
+export const apiKeys = service<ApiKeys>('apiKeys')
 export const llmPlans = service<Plans>('llmPlans')
 
 export const llmEvent = event<(event: LLMEvent, session: Session) => void>('llm.event')

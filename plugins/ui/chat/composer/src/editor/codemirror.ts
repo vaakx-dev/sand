@@ -73,6 +73,14 @@ export const mountEditor = (parts: EditorParts, doc: string) => {
       scrollIntoView: true,
     })
 
+  const insertWords = (value: string) => {
+    const { from, to } = view.state.selection.main
+    const touching = (char: string) => Boolean(char) && !/\s/.test(char)
+    const before = touching(view.state.sliceDoc(Math.max(0, from - 1), from)) ? ' ' : ''
+    const after = touching(view.state.sliceDoc(to, to + 1)) ? ' ' : ''
+    view.dispatch(view.state.replaceSelection(`${before}${value}${after}`), { scrollIntoView: true, userEvent: 'input' })
+  }
+
   const reference = (link: string) => {
     const { from, to } = view.state.selection.main
     placeLink(view, link, from, to)
@@ -85,6 +93,7 @@ export const mountEditor = (parts: EditorParts, doc: string) => {
     focusEnd,
     replace,
     insert: (value: string) => view.dispatch(view.state.replaceSelection(value), { scrollIntoView: true, userEvent: 'input' }),
+    insertWords,
     quote: (value: string) => quote(view, value),
     reference,
     destroy: () => view.destroy(),

@@ -1,6 +1,7 @@
 import { actionTones, controlButton, iconButton, linkButton, navButton, plainButton, primaryAction, quietButton, rowButton, secondaryAction } from './buttons/button'
 import { backButton } from './buttons/back'
 import { closeButton } from './buttons/close'
+import { roundButton } from './buttons/round'
 import { copyButton } from './buttons/copy'
 import { floatButton } from './buttons/float'
 import { quoteButton } from './buttons/quote'
@@ -109,6 +110,7 @@ export const kit = {
   choiceList,
   backButton,
   closeButton,
+  roundButton,
   codeBlock,
   colorLabel,
   confirm,
