@@ -28,7 +28,8 @@ export default definePlugin({
   description: "The side panel's Memory tab: a bot's own memory and notes in its chat, or the project's shared memory in a thread's chat, live and editable",
   inject: { panel, kit, wire, threads },
   apply(ctx) {
-    const threadInfo = pulse(ctx, [threadChange, threadsChange])
+    const threadInfo = pulse(ctx, [threadsChange])
+    ctx.on(threadChange, threadInfo.schedule)
     const features = sig<FeatureState | undefined>(undefined)
     ctx.watch(featureState, found => features.set(found))
     const remembering = () => features.get()?.on('memory') !== false

@@ -179,10 +179,12 @@ export const footRow = (model: Model, phone: boolean) =>
     ),
   )
 
+const offscreenRow = { contentVisibility: 'auto', containIntrinsicBlockSize: 'auto 44px' }
+
 const rowView = (model: Model, menu: ContextMenu, row: () => ShellRow, look: RowLook) => {
   const { workRow, rowBody } = model.kit
   const current = () => model.isCurrent(row().to)
-  return workRow({ current, large: look.phone, ...rowMenu(menu, row, () => model.open(row().to)) }, rowBody(row, { large: look.phone }))
+  return workRow({ current, large: look.phone, style: offscreenRow, ...rowMenu(menu, row, () => model.open(row().to)) }, rowBody(row, { large: look.phone }))
 }
 
 export const singleRow = (model: Model, row: () => ShellRow) => {

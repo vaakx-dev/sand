@@ -18,7 +18,8 @@ export default definePlugin({
   apply(ctx) {
     const logbook = pulse(ctx, [wireHello])
     const known = pulse(ctx, [projectsChange], [projects])
-    const threadInfo = pulse(ctx, [threadChange, threadsChange])
+    const threadInfo = pulse(ctx, [threadsChange])
+    ctx.on(threadChange, threadInfo.schedule)
     const roster = sig<BotRoster | undefined>(undefined)
     ctx.watch(botRoster, found => roster.set(found))
     ctx.effect(() => ctx.wire.on(logbookChanged, logbook.bump))

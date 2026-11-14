@@ -32,7 +32,8 @@ export default definePlugin({
   description: "The inspector's context row: how full a thread's or bot's context window is and what fills it",
   inject: { inspector, kit, threads, wire },
   apply(ctx) {
-    const changes = pulse(ctx, [threadChange, threadsChange])
+    const changes = pulse(ctx, [threadsChange])
+    ctx.on(threadChange, changes.schedule)
     const served = wireValues(ctx, ctx.wire, {
       key: ({ session }: Subject) => session,
       read: ({ session, owner }: Subject) => ctx.wire.call(contextGet, { session, owner }),
