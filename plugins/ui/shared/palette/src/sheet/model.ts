@@ -3,13 +3,23 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
 import { batch, derive, effect, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { actionsPage } from './actions'
+import { lateRows } from './later'
 import { entries, loadItems } from './load'
 import type { PageMemory, PageNav } from './nav'
+import type { Used } from './rank'
 import { wide } from './wide'
 
 export type PageModel = ReturnType<typeof pageModel>
 
 type Run = () => void | Promise<void>
+
+interface ModelParts {
+  kit: Kit
+  page: PalettePage
+  nav: PageNav
+  initial: string
+  used: Used
+}
 
 const draftOf = (page: PalettePage, memory: PageMemory, initial: string) => {
   memory.text ??= sig(page.field?.value ?? initial)
@@ -22,12 +32,12 @@ const emptyText = (page: PalettePage, query: string) => {
   return page.field || page.review ? '' : 'No matches'
 }
 
-export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, initial = '') => {
+export const pageModel = ({ kit, page, nav, initial, used }: ModelParts) => {
   const field = page.field
   const memory = nav.memory(page)
   const text = draftOf(page, memory, initial)
   let restored = memory.selected
-  const results = sig<PaletteItem[]>([])
+  const local = sig<PaletteItem[]>([])
   const loads = sig(0)
   const reloads = sig(0)
   const fills = sig(0)
@@ -72,13 +82,26 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     void closeAndRun(() => item.run?.())
   }
 
-  const box = listbox({ count: () => results.get().length, choose: index => choose(results.get()[index]), start: field ? -1 : 0, wrap: true })
-
   const unselected = () => Boolean(field) || (Boolean(page.browse) && !searching.get() && !wide.get())
+
+  const keepSelection = (change: () => void) =>
+    untrack(() =>
+      batch(() => {
+        const chosen = results.get()[box.selected.get()]?.id
+        change()
+        const at = results.get().findIndex(item => item.id === chosen)
+        if (at >= 0) box.select(at)
+        else if (!unselected()) box.select(0)
+      }),
+    )
+
+  const late = lateRows(page.later?.() ?? [], keepSelection)
+  const results = derive(() => [...local.get(), ...late.items.get()])
+  const box = kit.listbox({ count: () => results.get().length, choose: index => choose(results.get()[index]), start: field ? -1 : 0, wrap: true })
 
   const present = (items: PaletteItem[]) =>
     batch(() => {
-      results.set(items)
+      local.set(items)
       const index = restored ?? (unselected() ? -1 : 0)
       restored = undefined
       if (index < 0) box.clear()
@@ -90,9 +113,10 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     const query = text.get()
     reloads.get()
     let current = true
+    late.search(query)
     const load = () =>
       untrack(() =>
-        loadItems(page, query).then(items => {
+        loadItems(page, query, used).then(items => {
           if (current) present(items)
         }, nav.fail),
       )
@@ -157,7 +181,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     else if (page.review) void confirm()
   }
 
-  const empty = derive(() => (!loads.get() || results.get().length ? '' : emptyText(page, text.get())))
+  const empty = derive(() => (!loads.get() || results.get().length || late.pending.get() ? '' : emptyText(page, text.get())))
 
   const action = derive(() => {
     loads.get()
@@ -179,6 +203,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     progress,
     box,
     empty,
+    late,
     rows: derive(() => entries(results.get())),
     action,
     card,

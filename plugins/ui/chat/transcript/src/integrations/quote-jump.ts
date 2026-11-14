@@ -1,7 +1,5 @@
-import { onTimeout } from '@vaakx-dev/vrui'
+import { textNodes, type Flash } from './flash'
 
-const highlight = 'chat-quote'
-const shownFor = 2000
 const space = /\s/
 
 interface Flat {
@@ -9,13 +7,9 @@ interface Flat {
   at: [Text, number][]
 }
 
-const skipQuotes = (node: Node) => (node instanceof HTMLButtonElement ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT)
-
 const flatten = (root: Node): Flat => {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, skipQuotes)
   const flat: Flat = { text: '', at: [] }
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    if (!(node instanceof Text)) continue
+  for (const node of textNodes(root)) {
     for (let index = 0; index < node.data.length; index++) {
       const char = node.data[index] ?? ''
       if (space.test(char)) continue
@@ -51,20 +45,9 @@ const findQuote = (root: Element, from: Element, text: string) => {
   return undefined
 }
 
-const quoteFlash = (owner: Node) => {
-  let stop: (() => void) | undefined
-  return (range: Range) => {
-    stop?.()
-    range.startContainer.parentElement?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    CSS.highlights.set(highlight, new Highlight(range))
-    stop = onTimeout(() => CSS.highlights.delete(highlight), shownFor, owner)
-  }
-}
-
-export const quoteJump = (owner: Node) => {
-  const flash = quoteFlash(owner)
-  return (root: Element, from: Element, quote: string) => {
-    const range = findQuote(root, from, quote)
-    if (range) flash(range)
-  }
+export const quoteJump = (flash: Flash) => (root: Element, from: Element, quote: string) => {
+  const range = findQuote(root, from, quote)
+  if (!range) return
+  range.startContainer.parentElement?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  flash([range])
 }

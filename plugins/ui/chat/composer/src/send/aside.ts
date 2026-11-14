@@ -12,7 +12,7 @@ export const createAsides = () => {
   const ready = () => latest.get().length > 0
   const run = async (model: Model) => {
     const found = latest.get().at(-1)
-    if (!found || model.sending.get() || model.empty.get()) return
+    if (!found || model.empty.get()) return
     const draft = model.draft()
     model.clear()
     try {

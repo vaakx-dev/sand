@@ -15,7 +15,7 @@ export interface WorktreeDeps {
   proposals: Proposals
   folder: string
   prefix: string
-  keepDays: { settled: number; removed: number }
+  keepDays: { archived: number; removed: number }
   queue<T>(main: string, task: () => Promise<T>): Promise<T>
   busy(session: string): boolean
   projectOf(folder: string): string | null

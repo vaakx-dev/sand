@@ -51,7 +51,7 @@ const startInput = z.object({
     .boolean()
     .optional()
     .describe(
-      "Give the thread its own checkout: a git worktree and branch that sand makes, sets up as its working folder, and removes once the thread settles. Use this instead of git worktree add or telling the thread to make one",
+      "Give the thread its own checkout: a git worktree and branch that sand makes, sets up as its working folder, and removes once the thread is archived. Use this instead of git worktree add or telling the thread to make one",
     ),
   branch: z.string().min(1).optional().describe('An existing local branch for its worktree, instead of a new one. Implies worktree'),
   from: z.string().min(1).optional().describe("The branch or commit its worktree's new branch starts from (default: the default branch). Implies worktree"),
@@ -79,7 +79,7 @@ const updateInput = z.object({
   title: z.string().min(1).optional().describe('Rename it'),
   pinned: z.boolean().optional().describe('Pin it to the top of the sidebar, or unpin it'),
   snoozeUntil: z.iso.datetime({ offset: true }).nullable().optional().describe('Hide it until this time (ISO 8601), or null to bring it back now'),
-  settled: z.boolean().optional().describe('Settle it once its work is done, which stops it and moves it out of the open list; false reopens it'),
+  archived: z.boolean().optional().describe('Archive it once its work is done, which stops it and moves it out of the open list; false reopens it'),
   worktree: z
     .literal(true)
     .optional()
@@ -194,7 +194,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof pendingInput>,
   {
     name: 'thread_update',
-    description: 'Rename, pin, snooze or settle a thread, or change its model, effort or fast mode; returns the thread as thread_list shows it.',
+    description: 'Rename, pin, snooze or archive a thread, or change its model, effort or fast mode; returns the thread as thread_list shows it.',
     input: updateInput,
     parts: [{ feature: 'worktrees', fields: ['worktree', 'branch'], description: 'With worktree, it moves the thread into its own git worktree and branch.' }],
     access: 'operate',

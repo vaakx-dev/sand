@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import type { Client } from '../src/api/client'
+import type { Rest } from '../src/api/client'
 import { type PullGit, pullsOf } from '../src/pulls'
 
 const gitAt = (remote: string | undefined, branch: string | undefined): PullGit => ({
@@ -16,7 +16,7 @@ const listed = [
 
 const recording = () => {
   const paths: string[] = []
-  const client: Client = { rest: async <T>(_method: string, path: string) => (paths.push(path), listed as T) }
+  const client: Rest = { rest: async <T>(_method: string, path: string) => (paths.push(path), listed as T) }
   return { client, paths }
 }
 
