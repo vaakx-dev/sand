@@ -1,4 +1,5 @@
 import { composer } from '@sand/composer/contract'
+import { itemNode, itemSpot, type ItemSpot, type ShownChat } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/web-client/contract'
 import { collectScope, derive, div, effect, onRaf, untrack } from '@vaakx-dev/vrui'
@@ -14,10 +15,15 @@ import { slotHost } from './slot'
 import { shownWait } from './wait'
 import { waitLines } from './contract'
 import { failed } from './states'
-import { foldTurns } from './turns/fold'
+import { foldTurns, unfolding, type FoldOptions, type Unfold } from './turns/fold'
 import { shownRows, type TurnContext } from './turns/rows'
 import { threadColumn, threadView, type ThreadView } from './view'
 import { fetchWithin, growStep, resetToEnd, trimAt, windowed } from './window'
+
+interface Located {
+  spot: ItemSpot
+  unfold: Unfold
+}
 
 const screensKeptAbove = 3
 const fewestTrimmed = 20
@@ -33,7 +39,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
   const menu = contextMenu()
   const view = threadView(id, branchLists(() => ctx.threads.forks(id)))
   const edge = topEdge(
-    () => reveal(),
+    () => grow(),
     () => trim(),
   )
   const showing = () => untrack(() => view.visible.get())
@@ -63,8 +69,9 @@ export const chatController = (ctx: ChatContext, id: string) => {
     slot.show(key, build)
   }
 
-  const quote = parts.quoteJump(scroller)
-  const jump = (from: Element, text: string) => quote(view.rowList, from, text)
+  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
+
+  const jump = (from: Element, text: string) => parts.quoteJump(view.rowList, from, text)
 
   const shownThread = () => {
     const thread = ctx.threads.get(id)
@@ -75,6 +82,17 @@ export const chatController = (ctx: ChatContext, id: string) => {
     const thread = shownThread()
     if (thread) paint(thread, view)
   }
+
+  const itemsOf = (thread: Thread) => cache.items(thread, () => ctx.threads.path(thread.id))
+
+  const foldOptions = (thread: Thread): FoldOptions => ({
+    older: ctx.threads.older(thread.id),
+    running: thread.turn,
+    waiting: thread.waiting !== undefined,
+    streaming: thread.live.length > 0,
+    started: thread.started,
+    open: key => untrack(() => states.get(key).open.get()),
+  })
 
   const paint = (thread: Thread, view: ThreadView, grow = 0) => {
     const rows = parts.rows({
@@ -88,15 +106,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
       branchSwitch: entry => branchSwitch(ctx, view, entry),
     })
     const context: TurnContext = { kit, rows, states, repaint, wait: shownWait(ctx.get(waitLines), thread) }
-    const items = cache.items(thread, () => ctx.threads.path(thread.id))
-    const folded = foldTurns(items, {
-      older: ctx.threads.older(thread.id),
-      running: thread.turn,
-      waiting: thread.waiting !== undefined,
-      streaming: thread.live.length > 0,
-      started: thread.started,
-      open: key => untrack(() => states.get(key).open.get()),
-    })
+    const folded = foldTurns(itemsOf(thread), foldOptions(thread))
     const drawn = windowed(view, folded, grow).flatMap(entry => shownRows(entry, context).map(row => ({ row, entry: entry.key })))
     view.rowEntries = drawn.map(({ entry }) => entry)
     view.more.set(view.above > 0 || ctx.threads.older(thread.id))
@@ -104,7 +114,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, rows, untrack(() => ctx.get(composer)?.sending()))])
   }
 
-  const reveal = () => {
+  const grow = () => {
     const thread = shownThread()
     if (!thread || !scroller.clientHeight) return false
     if (view.above < fetchWithin && ctx.threads.older(id)) void ctx.threads.page(id)
@@ -121,6 +131,63 @@ export const chatController = (ctx: ChatContext, id: string) => {
     if (index < fewestTrimmed || !first) return
     view.first = first
     keepAnchor(scroller, view.rowList, () => paint(thread, view))
+  }
+
+  const located = (entry: string, block?: number): Located | undefined => {
+    const thread = ctx.threads.get(id)
+    const found = ctx.threads.path(id).find(loaded => loaded.id === entry)
+    if (!thread || !found) return undefined
+    const items = itemsOf(thread)
+    const spot = itemSpot(items, found, block)
+    return spot && { spot, unfold: unfolding(items, spot.item.key, foldOptions(thread)) }
+  }
+
+  const loadedSpot = async (entry: string, block?: number) => {
+    for (let size = -1; ; ) {
+      const found = located(entry, block)
+      if (found && found.unfold.kind !== 'hidden') return found
+      const loaded = ctx.threads.path(id).length
+      if (loaded === size || !ctx.threads.older(id)) return undefined
+      size = loaded
+      await ctx.threads.page(id)
+    }
+  }
+
+  const unfold = ({ spot, unfold }: Located) => {
+    const keys = unfold.kind === 'turn' ? [unfold.key, ...spot.folds] : spot.folds
+    for (const key of keys) states.get(key).open.set(true)
+  }
+
+  const drawItem = (thread: Thread, key: string) =>
+    keepAnchor(scroller, view.rowList, () => {
+      paint(thread, view)
+      if (view.rowEntries.includes(key)) return
+      view.first = key
+      paint(thread, view, growStep)
+    })
+
+  const revealEntry = async (entry: string, block?: number) => {
+    const found = await loadedSpot(entry, block)
+    const thread = shownThread()
+    if (!found || !thread) return undefined
+    unfold(found)
+    const drawn = itemNode(view.rowList, found.spot.key)
+    if (found.unfold.kind === 'shown' && drawn) return drawn
+    drawItem(thread, found.spot.item.key)
+    return itemNode(view.rowList, found.spot.key)
+  }
+
+  const shownChat: ShownChat = {
+    owner: 'thread',
+    conversation: id,
+    frame: root,
+    scroller,
+    loaded: () => ctx.threads.path(id),
+    older: async () => {
+      await ctx.threads.page(id)
+      return ctx.threads.older(id)
+    },
+    reveal: revealEntry,
   }
 
   let queued: (() => void) | undefined
@@ -149,8 +216,6 @@ export const chatController = (ctx: ChatContext, id: string) => {
     follow.measure()
     edge.pump()
   }
-
-  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
 
   const refresh = () => {
     cache.reset()
@@ -185,6 +250,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
         parts.version.get()
         untrack(refresh)
       }),
+      effect(() => (view.visible.get() ? ctx.shownChats.add(shownChat) : undefined)),
     )
     render()
   }

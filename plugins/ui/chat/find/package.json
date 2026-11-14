@@ -1,0 +1,34 @@
+{
+  "name": "@sand/chat-find",
+  "version": "0.0.0",
+  "description": "Find in this chat: a find bar over the chat on screen that counts and steps through the words, also in history the page hasn't loaded and in folded turns",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "chat-find",
+    "runtime": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Find in chat",
+    "summary": "Find words in the chat on screen and step through them"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/keys": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

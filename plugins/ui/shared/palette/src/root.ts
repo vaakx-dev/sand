@@ -1,5 +1,5 @@
 import { byOrder } from '@sand/util'
-import type { PaletteItem, PalettePage, PaletteSource } from './contract'
+import type { PaletteItem, PaletteLater, PalettePage, PaletteSource } from './contract'
 
 const gather = (source: PaletteSource, query: string) => {
   try {
@@ -24,10 +24,11 @@ export const merged = (sources: PaletteSource[], query: string) => {
   return [...groups.values()].flat()
 }
 
-export const rootPage = (sources: () => PaletteSource[]): PalettePage => ({
+export const rootPage = (sources: () => PaletteSource[], later: () => PaletteLater[]): PalettePage => ({
   id: 'root',
   title: 'Search',
   placeholder: 'Search',
   empty: query => (query.trim() ? 'Nothing matches.' : 'Type to search'),
   items: query => merged(sources().filter(source => !source.page), query),
+  later,
 })
