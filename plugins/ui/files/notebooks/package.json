@@ -7,11 +7,11 @@
     "feature": "file-notebooks",
     "web": "./src/web/index.ts",
     "label": "Notebooks",
-    "summary": "Shows Jupyter notebooks as cells, with their saved outputs, tables and charts",
+    "summary": "Jupyter notebooks",
     "features": {
       "file-notebooks": {
         "label": "Notebooks",
-        "summary": "Shows Jupyter notebooks as cells, with their saved outputs, tables and charts",
+        "summary": "Jupyter notebooks",
         "parent": "file-viewer",
         "addon": true
       }
