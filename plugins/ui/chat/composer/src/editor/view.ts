@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, effect, scoped, sig, untrack, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, scoped, show, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Completion } from '../complete/model'
 import type { Records } from '../records'
 import type { DrawChip } from './chips/widget'
@@ -40,16 +40,17 @@ export const createEditor = (parts: EditorParts) => {
   const editorHint = parts.hint()
   const mounted = sig<Mounted | undefined>(undefined)
   const made = () => untrack(() => mounted.get())
-  let early = ''
+  const early = sig('')
   let focused = false
 
   const mount = (module: Module) => {
     const existing = made()
     if (existing) return existing
-    const doc = untrack(() => parts.text.get()) + early
-    early = ''
-    const editor = untrack(() => module.mountEditor({ ...parts, hint: () => editorHint }, doc))
+    const editor = untrack(() => module.mountEditor({ ...parts, hint: () => editorHint }, parts.text.get()))
+    const typed = untrack(() => early.get())
+    early.set('')
     mounted.set(editor)
+    if (typed) editor.insert(typed)
     if (focused) editor.focusEnd()
     return editor
   }
@@ -70,7 +71,8 @@ export const createEditor = (parts: EditorParts) => {
   const hold = (event: InputEvent) => {
     if (made()) return
     event.preventDefault()
-    early += insertedText(event)
+    if (event.inputType.startsWith('delete')) early.update(text => text.slice(0, -1))
+    else early.update(text => text + insertedText(event))
   }
 
   const standIn = div(
@@ -84,7 +86,11 @@ export const createEditor = (parts: EditorParts) => {
       onBlur: () => (focused = false),
       onBeforeInput: hold,
     },
-    parts.hint(),
+    show(
+      () => !early.get(),
+      () => parts.hint(),
+    ),
+    span({ class: 'whitespace-pre-wrap text-neutral-100' }, () => early.get()),
   )
   const node = div(
     { class: 'text-neutral-100 leading-relaxed' },
