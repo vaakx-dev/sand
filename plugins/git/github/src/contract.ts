@@ -1,11 +1,18 @@
 import { request, type } from '@sand/host-hub/contract'
-import { service } from 'drydock'
+import { event, service } from 'drydock'
 import { z } from 'zod'
+import type { CheckOutcome } from './checks/read'
 
 export type PullState = 'open' | 'draft' | 'merged' | 'closed'
 
+export interface PullRef {
+  repo: string
+  number: number
+}
+
 export interface GitHub {
   rest<T>(method: string, path: string, body?: unknown): Promise<T>
+  changes(pull: PullRef, signal: AbortSignal): AsyncIterable<void>
 }
 
 export const github = service<GitHub>('github')
@@ -16,6 +23,17 @@ export interface Pull {
   state: PullState
   url: string
 }
+
+const pullUrl = /^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)\/pull\/(\d+)/
+
+export const pullRefOf = (url: string): PullRef | undefined => {
+  const match = pullUrl.exec(url)
+  return match?.[1] && match[2] ? { repo: match[1], number: Number(match[2]) } : undefined
+}
+
+export const checksSettled = event<(conversation: string, sha: string, outcome: CheckOutcome) => void>('github.checks.settled')
+
+export const pullOpened = event<(session: string, pull: Pull) => void>('github.pull.opened')
 
 export const githubPulls = request('github.pulls', {
   input: () => z.object({ cwd: z.string() }),
@@ -28,3 +46,5 @@ export const githubOpenPull = request('github.openPull', {
   output: type<Pull>(),
   place: 'thread',
 })
+
+export { type Check, type CheckOutcome, type CheckState, readChecks } from './checks/read'

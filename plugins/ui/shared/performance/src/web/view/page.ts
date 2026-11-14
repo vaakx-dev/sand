@@ -10,10 +10,10 @@ const guardSwitch = (kit: Kit, model: Model) =>
   div(
     { class: 'flex min-w-0 flex-1 items-center gap-3' },
     kit.toggleSwitch({
-      on: () => model.guard.get() === true,
-      disabled: () => model.guard.get() === undefined,
+      on: () => model.guard() === true,
+      disabled: () => model.guard() === undefined,
       'aria-label': 'Memory guard',
-      onClick: () => void model.setGuard(!model.guard.get()),
+      onClick: () => void model.setGuard(!model.guard()),
     }),
     div({ class: 'flex min-w-0 flex-col text-sm' }, kit.emphasis('Memory guard'), kit.secondaryText('When a PC runs very low on memory, sand stops the chat using the most')),
   )
@@ -44,7 +44,7 @@ const pcs = (kit: Kit, model: Model, open: ReturnType<typeof sig<ReadonlySet<str
 
 export const performancePage = (kit: Kit, model: Model) => {
   const open = sig<ReadonlySet<string>>(new Set())
-  model.refresh()
+  model.open()
   onInterval(model.refresh, REFRESH_MS)
   return div(
     { class: 'min-h-0 flex-1 overflow-auto overscroll-contain' },

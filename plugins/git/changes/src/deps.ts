@@ -15,7 +15,7 @@ export interface ChangesDeps {
   merged: Merged
   attempts: Map<string, Attempt>
   busy(session: string): boolean
-  settle(session: string): Promise<void>
+  archive(session: string): Promise<void>
   queue<T>(main: string, task: () => Promise<T>): Promise<T>
   changed(session: string): Promise<ThreadChanges>
   show(changes: ThreadChanges): Promise<ThreadChanges>
