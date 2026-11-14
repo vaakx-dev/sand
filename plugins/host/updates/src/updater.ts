@@ -3,9 +3,10 @@ import { stampBuild } from '@sand/boot/build'
 import type { UpdateStore } from '@sand/boot/updates'
 import { errorMessage } from '@sand/util'
 import type { BuildInfo } from '@sand/util/release'
-import type { UpdateChannel, UpdatePhase, UpdateState } from './contract'
+import type { HomeNotice, UpdateChannel, UpdatePhase, UpdateState } from './contract'
 import type { GithubRelease } from './github/release'
 import { cancelled, createInstaller, runningWork } from './install/run'
+import { UPDATE } from './notices'
 import { isNewer, releaseInfo } from './offer'
 import { scheduleChecks } from './schedule'
 import type { Updater, UpdaterDeps } from './types'
@@ -27,8 +28,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
   let claiming = false
   let sent = ''
   let stopSchedule: (() => void) | undefined
-  let stopNotice: (() => void) | undefined
-  let notice: string | undefined
+  let notices: HomeNotice[] = []
 
   const available = () => !!latest && !!current && isNewer(latest.build, current)
 
@@ -44,7 +44,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     checkError,
     phase,
     error,
-    ...(notice && { notice }),
+    notices,
     running: runningWork(deps),
   })
 
@@ -60,9 +60,15 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
 
   const busy = () => busyPhases.includes(phase)
 
-  const readNotice = async () => {
-    notice = (await deps.notice.read())?.text
-    commit()
+  const readNotices = async () => {
+    notices = await deps.notices.read(store.dismissed)
+    return commit()
+  }
+
+  const dismiss = async (id: string) => {
+    if (id === UPDATE) await deps.notices.clearUpdate()
+    else await store.dismiss(id)
+    return readNotices()
   }
 
   const settle = (next: UpdatePhase, message?: string) => {
@@ -80,7 +86,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     fail: message => settle('failed', message),
     done(build) {
       current = build
-      void deps.notice.clear()
+      void deps.notices.clearUpdate().then(readNotices)
       settle('idle')
     },
   })
@@ -113,7 +119,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
       })
       commit()
     }
-    return checking.then(commit)
+    return checking.then(readNotices)
   }
 
   const setChannel = async (channel: UpdateChannel) => {
@@ -185,13 +191,16 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
 
   const later = async () => {
     if (latest) await store.hide(latest.build.id)
-    await deps.notice.clear()
+    await deps.notices.clearUpdate()
+    await readNotices()
     if (phase === 'failed') settle('idle')
     return commit()
   }
 
   return {
     state: snapshot,
+    refresh: readNotices,
+    dismiss,
     check,
     later,
     setChannel,
@@ -201,8 +210,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     repair,
     start() {
       if (stopSchedule) return
-      void readNotice()
-      stopNotice = deps.notice.watch(() => void readNotice())
+      void readNotices()
       void deps
         .current()
         .then(build => {
@@ -217,8 +225,6 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
       epoch++
       stopSchedule?.()
       stopSchedule = undefined
-      stopNotice?.()
-      stopNotice = undefined
     },
   }
 }

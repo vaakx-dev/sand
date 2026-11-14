@@ -4,6 +4,7 @@ import {
   updatesChange,
   updatesChannel,
   updatesCheck,
+  updatesDismiss,
   updatesLater,
   updatesRestart,
   updatesState,
@@ -160,6 +161,12 @@ export const createFleet = (ctx: Context<{ wire: typeof wire; pcs: typeof pcs }>
       () => {},
     )
 
+  const dismiss = (key: string, id: string) =>
+    call(key, updatesDismiss, { id }).then(
+      state => store(key, state),
+      () => {},
+    )
+
   const finish = () => {
     run.set(undefined)
     failures.set(new Map())
@@ -177,6 +184,7 @@ export const createFleet = (ctx: Context<{ wire: typeof wire; pcs: typeof pcs }>
     update,
     retry,
     restartNow,
+    dismiss,
     finish,
     check: () => guarded(() => everyOnline(updatesCheck, {})),
     later: () => guarded(() => everyOnline(updatesLater, {})),

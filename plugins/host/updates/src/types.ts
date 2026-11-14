@@ -1,16 +1,14 @@
 import type { HealthOutcome } from '@sand/boot'
-import type { UpdateNotice } from '@sand/boot/notice'
 import type { HostApp } from '@sand/host-daemon/contract'
 import type { Runtimes } from '@sand/host-runtimes/contract'
 import type { Upgrade } from '@sand/ledger/contract'
 import type { BuildInfo } from '@sand/util/release'
-import type { BuildAddons, UpdateChannel, UpdateState } from './contract'
+import type { BuildAddons, HomeNotice, UpdateChannel, UpdateState } from './contract'
 import type { GithubRelease } from './github/release'
 
-export interface NoticeFile {
-  read(): Promise<UpdateNotice | undefined>
-  clear(): Promise<void>
-  watch(changed: () => void): () => void
+export interface Notices {
+  read(dismissed: (id: string) => boolean): Promise<HomeNotice[]>
+  clearUpdate(): Promise<void>
 }
 
 export interface PreparedBuild {
@@ -32,7 +30,7 @@ export interface UpdaterDeps {
   prepare(bytes: Uint8Array, force: boolean): Promise<PreparedBuild>
   checkLoads(root: string, bun: string): Promise<void>
   addons(): BuildAddons | undefined
-  notice: NoticeFile
+  notices: Notices
   upgrade(): Upgrade | undefined
   hostChanged(running: string, next: string): Promise<boolean>
   switchTo(id: string): Promise<void>
@@ -46,6 +44,8 @@ export interface UpdaterDeps {
 
 export interface Updater {
   state(): UpdateState
+  refresh(): Promise<UpdateState>
+  dismiss(id: string): Promise<UpdateState>
   check(): Promise<UpdateState>
   later(): Promise<UpdateState>
   setChannel(channel: UpdateChannel): Promise<UpdateState>

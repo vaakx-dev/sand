@@ -33,7 +33,6 @@ export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
     return (target?.changes ?? []).slice(0, listedWhenCurrent)
   })
   const checkError = () => localState(fleet)?.checkError ?? ''
-  const notice = () => localState(fleet)?.notice ?? ''
   const published = () => {
     now.get()
     const target = fleet.target.get()
@@ -58,7 +57,6 @@ export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
       changes.map(list => list.map(change => change.commit).join()),
       () => (changes.get().length ? changesRow(kit, changes.get(), 'page') : null),
     ),
-    show(() => !!notice(), () => errorState({ text: notice })),
     show(() => !!checkError(), () => errorState({ text: checkError })),
   )
 }

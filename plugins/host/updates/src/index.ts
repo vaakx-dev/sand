@@ -1,10 +1,8 @@
 import { appRoot, switchTo, waitHealthy } from '@sand/boot'
 import { buildInfo } from '@sand/boot/build'
 import { writeShim } from '@sand/boot/setup'
-import { clearUpdateNotice, readUpdateNotice, updateNoticeFile } from '@sand/boot/notice'
+import { clearUpdateNotice } from '@sand/boot/notice'
 import { loadUpdateStore } from '@sand/boot/updates'
-import { debouncedWatch } from '@sand/util/fs'
-import { basename } from 'node:path'
 import { peers, thisPc } from '@sand/devices-contract'
 import { hostApp, hostOptions, hostRestart } from '@sand/host-daemon/contract'
 import { hostHealth } from '@sand/host-health/contract'
@@ -17,6 +15,7 @@ import { buildAddons, updatesChange } from './contract'
 import { downloadRelease } from './github/download'
 import { findRelease } from './github/release'
 import { hostCodeChanged } from './host-code'
+import { homeNotices } from './notices'
 import { checkLoads } from './install/check'
 import { cleanupBuilds } from './install/cleanup'
 import { prepareBuild } from './install/prepare'
@@ -50,10 +49,9 @@ export default definePlugin({
         checkLoads,
         addons: () => ctx.get(buildAddons),
         upgrade: () => readUpgrade(databaseFile(home)),
-        notice: {
-          read: () => readUpdateNotice(home),
-          clear: () => clearUpdateNotice(home),
-          watch: changed => debouncedWatch(home, { only: name => name === basename(updateNoticeFile(home)) }, changed),
+        notices: {
+          read: dismissed => homeNotices(home, dismissed),
+          clearUpdate: () => clearUpdateNotice(home),
         },
         hostChanged: hostCodeChanged,
         switchTo: id => switchTo(home, id),

@@ -30,8 +30,14 @@ export interface UpdateState {
   checkError?: string
   phase: UpdatePhase
   error?: string
-  notice?: string
+  notices: HomeNotice[]
   running?: number
+}
+
+export interface HomeNotice {
+  id: string
+  title: string
+  detail: string
 }
 
 export interface AddonTarget {
@@ -67,6 +73,7 @@ export const updatesRestart = request('updates.restart', { input: onPc, output: 
 export const updatesHeard = request('updates.heard', { input: () => z.object({ channel: channel(), build: build() }), output: type<UpdateState>(), callers: 'pc' })
 export const updatesChannel = request('updates.channel', { input: () => onPc().extend({ channel: channel() }), output: type<UpdateState>(), callers: 'any' })
 export const updatesRepair = request('updates.repair', { input: () => z.object({}), output: type<UpdateState & { target: BuildInfo }>(), callers: 'pc' })
+export const updatesDismiss = request('updates.dismiss', { input: () => onPc().extend({ id: z.string().min(1) }), output: type<UpdateState>(), callers: 'any' })
 export const pcRepair = request('pc.repair', { input: () => z.object({ device: z.string().min(1), resume: z.boolean().optional() }), output: type<PcRepairResult>() })
 
 export const updatesChange = wireEvent<UpdateState>('updates.change')
