@@ -35,7 +35,8 @@ const groupOf = (lists: Lists, project: Project, times: Map<string, number>): Pr
     ...(project.remote ? { remote: project.remote } : {}),
     ...(project.icon ? { icon: project.icon } : {}),
     ...(project.iconFile ? { iconFile: project.iconFile } : {}),
-    hidden: Boolean(project.hidden),
+    pinned: Boolean(project.pinned),
+    archived: Boolean(project.archived),
     updated: locations[0]?.updated ?? 0,
     locations,
   }
@@ -45,7 +46,7 @@ export const buildGroups = (lists: Lists, threads: Iterable<Thread>): ProjectGro
   const times = chatTimes(threads)
   return liveProjects([...lists.values()])
     .map(project => groupOf(lists, project, times))
-    .sort((a, b) => b.updated - a.updated)
+    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updated - a.updated)
 }
 
 const fsRoot = /^([a-z]:)?[\\/]$/i

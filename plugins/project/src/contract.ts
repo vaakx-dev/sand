@@ -37,13 +37,15 @@ export interface Project {
   iconFile?: ProjectIconFile
   copies: Record<string, ProjectCopy>
   updated: number
-  hidden?: boolean
+  pinned?: boolean
+  archived?: boolean
   deleted?: boolean
 }
 
 export interface ProjectPatch {
   name?: string
-  hidden?: boolean
+  pinned?: boolean
+  archived?: boolean
   icon?: ProjectIcon | null
 }
 
@@ -122,7 +124,8 @@ export interface ProjectRow {
   name: string
   folder?: string
   remote?: string
-  hidden?: boolean
+  pinned?: boolean
+  archived?: boolean
   icon?: ProjectIcon
   otherPcs?: { pc: string; folder: string }[]
 }
@@ -190,7 +193,8 @@ export const createInput = lazy(() => z.object({
 export const updateInput = lazy(() => z.object({
   project: z.string(),
   name: z.string().trim().min(1).optional(),
-  hidden: z.boolean().optional(),
+  pinned: z.boolean().optional(),
+  archived: z.boolean().optional(),
   icon: iconInput().nullable().optional(),
 }))
 export const removeInput = lazy(() => z.object({ project: z.string(), pc: z.string().min(1).optional() }))

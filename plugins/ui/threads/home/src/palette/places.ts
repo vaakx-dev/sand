@@ -43,13 +43,18 @@ const currentProject = ({ threads, projects }: StartParts) => {
   return current.info.project ?? projects.group(current.info.cwd, current.device)?.id
 }
 
-export const places = (parts: StartParts): Place[] => {
+export const places = (parts: StartParts, groups: ProjectGroup[]): Place[] => {
   const device = parts.threads.device()
   const here = currentProject(parts)
-  return parts.projects
-    .groups()
+  return groups
     .flatMap(group => groupPlace(parts, group, device) ?? [])
-    .sort((a, b) => Number(b.id === here) - Number(a.id === here) || Number(a.away ?? false) - Number(b.away ?? false) || b.updated - a.updated)
+    .sort(
+      (a, b) =>
+        Number(b.group.pinned) - Number(a.group.pinned) ||
+        Number(b.id === here) - Number(a.id === here) ||
+        Number(a.away ?? false) - Number(b.away ?? false) ||
+        b.updated - a.updated,
+    )
 }
 
 export const awayPcName = (ctx: Context, device: string) => {

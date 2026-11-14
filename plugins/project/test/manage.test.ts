@@ -44,8 +44,14 @@ test('agents add, create, update and remove projects, and choose where new ones 
   expect(added).toMatchObject({ name: 'Beta app', folder })
   expect(await ask(runtimeProjectCreate, { folder })).toMatchObject({ project: added.project })
 
-  const updated = await ask(runtimeProjectUpdate, { project: added.project, name: 'Beta', hidden: true, icon: { shape: 3, hue: 120 } })
-  expect(updated).toMatchObject({ name: 'Beta', hidden: true, icon: { shape: 3, hue: 120 } })
+  const updated = await ask(runtimeProjectUpdate, { project: added.project, name: 'Beta', pinned: true, icon: { shape: 3, hue: 120 } })
+  expect(updated).toMatchObject({ name: 'Beta', pinned: true, icon: { shape: 3, hue: 120 } })
+  const archived = await ask(runtimeProjectUpdate, { project: added.project, archived: true })
+  expect(archived).toMatchObject({ archived: true })
+  expect(archived).not.toHaveProperty('pinned')
+  const repinned = await ask(runtimeProjectUpdate, { project: added.project, pinned: true })
+  expect(repinned).toMatchObject({ pinned: true })
+  expect(repinned).not.toHaveProperty('archived')
 
   const synced = await registry.find(added.project)
   await registry.merge([{ ...synced, copies: { ...synced.copies, laptop: { path: '/home/me/beta', added: 1, updated: 1 } } }])
