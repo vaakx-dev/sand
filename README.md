@@ -24,7 +24,7 @@ Settings → Add-ons lists the parts sand comes with. Turn them on or off there,
 </p>
 
 - **Threads** are chats for anything: coursework, lab reports, work projects. Put related ones in a project, a folder with the files they work on.
-- **Bots** take care of an ongoing job, like reminding you before deadlines or drafting your daily standup, on a schedule or when something changes.
+- **Bots** take care of ongoing jobs, like reminding you before deadlines or drafting your daily standup, on a schedule or when something changes.
 - **Your phone and other PCs.** Chats keep going when you close the tab. Pair your phone or another PC to pick up the same chats there.
 - **Your models.** Use a Claude plan through Claude Code, a ChatGPT plan through Codex, or API keys.
 

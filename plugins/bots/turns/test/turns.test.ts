@@ -1,5 +1,5 @@
 import { botMemorySpace } from '@sand/bot-memory/contract'
-import { botCreate, botDelete, botList, type BotEntry, type BotStatus } from '@sand/bots/contract'
+import { botCreate, botDelete, jobCreate, botList, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botOpen, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
 import { contextChange, contextGet } from '@sand/compaction/contract'
@@ -33,9 +33,10 @@ const settled = async (bot: string, want: BotStatus = 'idle') => {
 
 const messages = (entries: BotEntry[]) => entries.flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : []))
 
-test('a message to a bot runs a turn on its own conversation with its job, memory and model', async () => {
+test('a message to a bot runs a turn on its own conversation with its jobs, memory and model', async () => {
   const { ask, requests } = await start([[said('Noted.')]], [{ project: '0b6c2e1a', name: 'tiles', path: resolve('work', 'tiles') }])
-  const bot = await ask(botCreate, { name: 'Calendar', job: 'Keep my calendar.', projects: ['family', '0b6c2e1a'], models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
+  const bot = await ask(botCreate, { name: 'Calendar', projects: ['family', '0b6c2e1a'], models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
+  await ask(jobCreate, { bot: bot.id, title: 'Diary', goal: 'Keep my calendar.', done: 'No two events clash.' })
   await ask(memoryWrite, { space: botMemorySpace, id: bot.id, text: 'Gym on Mondays.' })
 
   expect(await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana is every Friday', clientRequestId: 'one' })).toMatchObject({ bot: bot.id, status: 'running' })
@@ -47,6 +48,7 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(system).toContain('## Questions are read-only')
   expect(system).toContain('## Avoid dumb moves')
   expect(system).toContain('Keep my calendar.')
+  expect(system).toContain('No two events clash.')
   expect(system).toContain('<memory>\nGym on Mondays.\n</memory>')
   expect(system).toContain('## Your projects')
   expect(system).toContain('- family: no folder on this PC')

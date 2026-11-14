@@ -184,7 +184,7 @@ test('auto mode asks the sub model, tells the agent what it blocked, and asks th
 test('a thread a bot started asks before using a saved login, even past an allow rule', async () => {
   const sand = await start([[call('sign_in', { to: 'bank' })], [said('Signed in.')]], [], ['bots/bots', 'bots/turns'])
   const ran = register(sand)
-  const bot = await sand.ask(botCreate, { name: 'Ada', job: 'Be Ada.', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Ada', models: { main: { model: 'fake/m' }, quick: {} } })
   service(sand).setMode({ owner: 'bot', id: bot.id }, 'ask')
 
   const asked = nextAsk(sand)

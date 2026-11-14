@@ -38,7 +38,7 @@ const start = async (thread: Reply[], bot: Reply[]) => {
   return sand
 }
 
-const createBot = (name: string) => sand.ask(botCreate, { name, job: `Be ${name}.`, models: { main: { model: 'botsrc/b' }, quick: {} } })
+const createBot = (name: string) => sand.ask(botCreate, { name, models: { main: { model: 'botsrc/b' }, quick: {} } })
 
 const asBot = (bot: string): Conversation => ({
   id: bot,
@@ -117,7 +117,7 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
-  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', projects: [], budget: null, spent: 0 }])
+  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', jobs: [], status: 'idle', projects: [], budget: null, spent: 0 }])
   const sent = await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow? Message me the answer." })
   expect(sent).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', detached: true })
   const [asked] = userMessages((await sand.ask(botOpen, { bot: bot.id })).entries)

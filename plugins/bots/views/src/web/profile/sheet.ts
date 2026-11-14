@@ -1,5 +1,5 @@
 import { botName, type BotSummary } from '@sand/bots/contract'
-import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, show, sig, span } from '@vaakx-dev/vrui'
 import { noAutomations } from '../automations/empty'
 import { automationRow } from '../automations/row'
 import { deleteAction } from '../delete'
@@ -41,18 +41,6 @@ const nameField = (parts: Parts, id: string, bot: Bot) => {
       : kit.plainButton({ title: 'Rename', class: 'min-w-0 rounded-sm', onClick: start }, kit.sheetTitle(() => nameOf(bot))),
   )
 }
-
-const jobBlock = (parts: Parts, id: string, bot: Bot) =>
-  parts.ctx.kit.editable({
-    title: 'Job',
-    text: () => bot()?.job,
-    view: job => p({ class: 'whitespace-pre-wrap wrap-anywhere' }, job),
-    empty: 'No job yet.',
-    save: job => parts.store.update(id, { job }),
-    rows: 8,
-    maxLength: 20_000,
-    placeholder: 'What it takes care of, and how',
-  })
 
 const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
   const { kit } = parts.ctx
@@ -164,7 +152,6 @@ export const openProfile = (parts: Parts, id: string) => {
     body: () =>
       div(
         { class: 'flex flex-col gap-6 pt-2' },
-        jobBlock(parts, id, bot),
         projectsBlock(parts, id, bot),
         automationsBlock(parts, id),
         advancedBlock(parts, id, bot),

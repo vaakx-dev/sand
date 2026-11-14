@@ -71,7 +71,7 @@ const userTexts = async (bot: string) =>
 
 test('a change to what a bot watches wakes it with the change and its instructions', async () => {
   await start([said('Nothing breaks; noted the new release.')])
-  const bot = await sand.ask(botCreate, { name: 'Releases', job: 'Follow releases.', models })
+  const bot = await sand.ask(botCreate, { name: 'Releases', models })
 
   const watch = await sand.ask(botWatchCreate, { bot: bot.id, label: 'Release feed', instructions: 'Tell the user if a release breaks their build', kind: 'fake', input: { feed: 'releases' } })
   expect(watch).toMatchObject({ bot: bot.id, label: 'Release feed', kind: 'fake', kindLabel: 'Fake feed', target: 'releases' })
@@ -93,7 +93,7 @@ test('a change to what a bot watches wakes it with the change and its instructio
 
 test('a bot listens through its tools, and its watches go when it does', async () => {
   await start([])
-  const bot = await sand.ask(botCreate, { name: 'Docs', job: 'Follow the docs.', models })
+  const bot = await sand.ask(botCreate, { name: 'Docs', models })
 
   const made = await use(bot.id, 'watch_create', { label: 'Docs feed', instructions: 'Note what changed in the docs', watch: { kind: 'fake', feed: 'docs' } })
   expect(made).toMatchObject({ bot: bot.id, label: 'Docs feed', kindLabel: 'Fake feed', target: 'docs' })

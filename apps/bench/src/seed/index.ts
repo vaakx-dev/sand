@@ -212,7 +212,8 @@ const seed = (ctx: SeedContext) => {
     for (let index = 0; index < 14; index++) {
       const long = index % 4 === 0
       const title = `Tutor ${index + 1}`
-      const bot = ctx.bots.create({ name: title, job: paragraph(3) })
+      const bot = ctx.bots.create({ name: title })
+      ctx.bots.jobs.create(bot.id, { title: `${title} lessons`, goal: paragraph(2), done: paragraph(1) })
       write(ctx.bots.conversation(bot.id), turnsFor(long ? 80 : 12, image, false), now - (14 - index) * day, `b${index}`)
       seeded.bots.push({ id: bot.id, marker: `b${index}`, long, title })
     }

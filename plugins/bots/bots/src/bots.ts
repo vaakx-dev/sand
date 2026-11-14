@@ -21,14 +21,22 @@ import {
   type ChangeEntry,
   freshColor,
   gistEntry,
+  jobRemove,
   type ModelChoice,
+  type Morning,
+  morningEntry,
+  type MorningEntry,
   type NewBot,
+  runEntry,
 } from './contract'
 import { createEntries } from './entries'
+import { createJobs } from './jobs'
 import { lastLine } from './last'
 import { createRecords } from './records'
 
 const scanned = 20
+
+const SUMMARY_TYPES = new Set(['message', 'usage', gistEntry, runEntry, morningEntry])
 
 const initialOf = (name = '') => [...name.trim()][0]?.toUpperCase() ?? ''
 
@@ -56,14 +64,35 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
 export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: LLM, quick: (main: ModelChoice) => ModelChoice): Bots => {
   const records = createRecords(db)
   const entries = createEntries(db)
+  const jobs = createJobs(db, entries, {
+    known: bot => known(bot).id,
+    append: (bot, type, data) => append(bot, type, data),
+    changed: bot => void changed(bot),
+    removed: job => ctx.emit(jobRemove, job),
+  })
   const statuses = new Map<string, Pick<BotSummary, 'status' | 'waiting'>>()
   const folderOf = (id: string) => join(root, id)
+
+  const morningOf = (bot: string): Morning | undefined => {
+    const [entry] = entries.newest(bot, morningEntry, 1)
+    return entry && { entry: entry.id, at: entry.at, ...(entry.data as MorningEntry) }
+  }
 
   const summary = (bot: Bot): BotSummary => {
     const last = lastLine(entries.newest(bot.id, 'message', scanned), entries.newest(bot.id, gistEntry, 1))
     const spent = billedCost(entries.usage(bot.id, monthStart()), llm)
     const hold = holdOf(bot, spent)
-    return { ...bot, folder: folderOf(bot.id), ...(statuses.get(bot.id) ?? { status: 'idle' }), spent, ...(hold && { hold }), ...(last ? { last } : {}) }
+    const morning = morningOf(bot.id)
+    return {
+      ...bot,
+      folder: folderOf(bot.id),
+      ...(statuses.get(bot.id) ?? { status: 'idle' }),
+      spent,
+      ...(hold && { hold }),
+      ...(last && { last }),
+      jobs: jobs.list(bot.id),
+      ...(morning && { morning }),
+    }
   }
 
   const known = (id: string) => {
@@ -88,7 +117,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
     const before = type === 'usage' ? summary(known(bot)).hold : undefined
     const entry = entries.append(known(bot).id, type, data, meta)
     ctx.emit(botEntry, entry)
-    if (type !== 'message' && type !== 'usage' && type !== gistEntry) return entry
+    if (!SUMMARY_TYPES.has(type)) return entry
     const after = changed(bot)
     if (type === 'usage' && after.hold === 'limit' && before !== 'limit') reached(after)
     return entry
@@ -109,7 +138,6 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
         name: '',
         initial: initialOf(spec.name),
         color: freshColor(records.list()),
-        job: '',
         computer: 'none',
         projects: [],
         paused: false,
@@ -132,6 +160,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
     remove(id) {
       const removed = tx(() => {
         entries.remove(id)
+        jobs.forget(id)
         return records.remove(id)
       })
       if (!removed) return false
@@ -153,5 +182,6 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
       entry: entry => entries.entry(known(id).id, entry),
     }),
     folder: folderOf,
+    jobs: jobs.service,
   }
 }

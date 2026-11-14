@@ -40,7 +40,7 @@ test('a bot adds an event to the calendar and reads its agenda back', async () =
     ],
     [{ type: 'text', text: 'Booked lunch with Ana.' }],
   ])
-  const bot = await ask(botCreate, { name: 'Planner', job: 'Keep my calendar.', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await ask(botCreate, { name: 'Planner', models: { main: { model: 'fake/m' }, quick: {} } })
   await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana next Friday at 1', clientRequestId: 'one' })
   for (let tries = 0; tries < 300 && (await ask(botList, {})).find(listed => listed.id === bot.id)?.last?.text !== 'Booked lunch with Ana.'; tries++) await Bun.sleep(10)
 

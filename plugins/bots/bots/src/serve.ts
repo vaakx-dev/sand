@@ -17,6 +17,10 @@ import {
   botUpdate,
   type Changer,
   helloBots,
+  jobCreate,
+  jobDelete,
+  jobReport,
+  jobUpdate,
 } from './contract'
 
 export const serveBots = (ctx: Context, service: Bots) => {
@@ -40,6 +44,10 @@ export const serveBots = (ctx: Context, service: Bots) => {
       found.handle(botCreate, spec => service.create(spec)),
       found.handle(botUpdate, ({ bot, patch }, caller) => service.update(botOf(bot, caller), patch, changerOf(caller))),
       found.handle(botDelete, ({ bot }) => service.remove(bot)),
+      found.handle(jobCreate, ({ bot, ...spec }, caller) => service.jobs.create(botOf(bot, caller), spec)),
+      found.handle(jobUpdate, ({ job, patch }) => service.jobs.update(job, patch)),
+      found.handle(jobDelete, ({ job }) => service.jobs.remove(job)),
+      found.handle(jobReport, ({ job, ...report }) => service.jobs.report(job, report)),
       ctx.on(botChange, bot => found.broadcast(botChangeWire, bot)),
       ctx.on(botRemove, id => found.broadcast(botRemoveWire, id)),
       ctx.on(botEntry, entry => found.broadcast(botEntryWire, entry)),

@@ -1,5 +1,5 @@
 import { botTurns } from '@sand/bot-turns/contract'
-import { botRemove, bots } from '@sand/bots/contract'
+import { botRemove, bots, jobRemove } from '@sand/bots/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { schedules } from '@sand/schedules/contract'
 import { server } from '@sand/server/contract'
@@ -18,8 +18,10 @@ export default definePlugin({
     const routines = createRoutines(ctx.schedules)
     const lastSaid = (bot: string) => ctx.get(bots)?.get(bot)?.last?.text ?? ''
     const tell = (moment: Moment) => void ctx.get(notify)?.send(moment).catch(error => ctx.report(error))
-    ctx.effect(() => ctx.schedules.handle(owner, fireRoutine({ turns: ctx.botTurns, lastSaid, tell })))
+    const job = (id: string) => ctx.get(bots)?.jobs.get(id)
+    ctx.effect(() => ctx.schedules.handle(owner, fireRoutine({ turns: ctx.botTurns, job, lastSaid, tell })))
     ctx.on(botRemove, bot => routines.forget(bot))
+    ctx.on(jobRemove, found => routines.forgetJob(found))
     ctx.watch(mcpTools, found => found && offerRoutineTools(found))
     ctx.watch(server, found => {
       if (found) return serveRoutines(ctx, found, routines)
