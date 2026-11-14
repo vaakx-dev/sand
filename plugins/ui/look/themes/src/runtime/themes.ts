@@ -77,6 +77,12 @@ export const createThemes = async (file: string, { changed, kept, trialMs: trial
     return trial ? tryOut(cleaned(theme)) : keep(cleaned(theme))
   }
 
+  const extend = (id: string) => {
+    const trial = state.trial
+    if (trial?.id !== id) return Promise.resolve(state)
+    return commit({ ...state, trial: { ...trial, until: Date.now() + trialFor } }, false)
+  }
+
   const take = async (incoming: Kept) => {
     if (incoming.updated <= state.updated) return keptOf(state)
     await commit({ theme: incoming.theme && cleaned(incoming.theme), updated: incoming.updated }, false)
@@ -90,6 +96,7 @@ export const createThemes = async (file: string, { changed, kept, trialMs: trial
     state: () => state,
     act,
     decide,
+    extend,
     take,
     stop: () => clearTimeout(timer),
   }

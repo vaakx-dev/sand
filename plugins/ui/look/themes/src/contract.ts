@@ -1,3 +1,4 @@
+import type { ImageBlock } from '@sand/chats/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { z } from 'zod'
 
@@ -101,5 +102,15 @@ export const starters: Starter[] = [
   { key: 'night-shift', theme: { name: 'Night shift', base: '#141838', accent: '#ffb547', mode: 'dark', scene: 'skyline' } },
   { key: 'synthwave-sunset', theme: { name: 'Synthwave sunset', base: '#1a1033', accent: '#ff4fa3', mode: 'dark', scene: 'sunset' } },
 ]
+
+export const themeTrialEntry = 'theme-trial'
+
+export interface ThemeTrialEntry {
+  trial: string
+  theme: Theme
+  previous: Theme | null
+  desktop?: ImageBlock
+  phone?: ImageBlock
+}
 
 export const themeName = (theme: Theme | null) => theme?.name ?? 'Sand'
