@@ -55,6 +55,7 @@ export interface Sandbox {
   box: string
   pairUrl: string
   seeded: Seeded
+  pairAgain(): Promise<string>
   stop(): Promise<void>
 }
 
@@ -81,6 +82,7 @@ export const startSandbox = async (replies: number, kept?: string, keep = false)
     box,
     pairUrl: printed(served, /open it paired: (\S+)/),
     seeded,
+    pairAgain: async () => printed(await sand(box, 'serve'), /open it paired: (\S+)/),
     async stop() {
       await sand(box, 'stop')
       if (!kept && !keep) rmSync(box, { recursive: true, force: true })

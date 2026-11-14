@@ -41,9 +41,32 @@ const watch = () => {
     return box.bottom > 0 && box.top < innerHeight && box.width > 0
   }
   const read = (element: Element | null) => shown(element) && !element?.closest('[contenteditable=true]')
+  const tracked = new Map<string, Set<Text>>()
+  const note = (node: Node) => {
+    if (!tracked.size) return
+    const check = (found: Text) => {
+      for (const [text, nodes] of tracked) if (found.data.includes(text)) nodes.add(found)
+    }
+    if (node instanceof Text) return check(node)
+    if (!(node instanceof Element)) return
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT)
+    for (let found = walker.nextNode(); found; found = walker.nextNode()) check(found as Text)
+  }
+  new MutationObserver(records => {
+    for (const record of records) {
+      if (record.type === 'characterData') note(record.target)
+      else record.addedNodes.forEach(note)
+    }
+  }).observe(document, { childList: true, subtree: true, characterData: true })
   const texts = (text: string) => {
-    const found = document.evaluate(`//text()[contains(., ${JSON.stringify(text)})]`, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null)
-    return Array.from({ length: found.snapshotLength }, (_, index) => found.snapshotItem(index)!.parentElement)
+    let nodes = tracked.get(text)
+    if (!nodes) {
+      const found = document.evaluate(`//text()[contains(., ${JSON.stringify(text)})]`, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null)
+      nodes = new Set(Array.from({ length: found.snapshotLength }, (_, index) => found.snapshotItem(index) as Text))
+      tracked.set(text, nodes)
+    }
+    for (const node of nodes) if (!node.isConnected || !node.data.includes(text)) nodes.delete(node)
+    return [...nodes].map(node => node.parentElement)
   }
   let scrolled: { text: string; element: Element } | undefined
   const bench: PageBench = {

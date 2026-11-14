@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util'
 import type { Page } from 'playwright'
 import { listMissing, missingFrom } from './complete'
 import { slowLink, type LinkShape } from './link'
-import { type Cost, costOf, countAt, fresh, openRoute, seen, shownAt, tapped } from './measure'
+import { type Cost, costOf, countAt, fresh as untouched, openRoute, seen, shownAt, tapped } from './measure'
 import { startPhone } from './phone'
 import { startSandbox } from './sandbox'
 import type { SeededChat } from './seed'
@@ -102,7 +102,7 @@ const profiled = async <T>(page: Page, name: string, act: () => Promise<T>) => {
 
 const coldLoad = async (page: Page, name: string, chat: SeededChat) => {
   await page.goto(at('/favicon.ico'))
-  const since = fresh(link.traffic)
+  const since = untouched(link.traffic)
   let shown = 0
   const end = await profiled(page, name, async () => {
     await page.goto(threadUrl(chat), { waitUntil: 'commit' })
@@ -166,8 +166,8 @@ const pair = async () => {
   for (const chat of [home, warm]) {
     await page.goto(threadUrl(chat))
     await shownAt(page, `End-${chat.marker}`, true)
+    await page.waitForTimeout(3000)
   }
-  await page.waitForTimeout(5000)
   await page.close()
 }
 
@@ -206,6 +206,23 @@ const run = async (index: number) => {
   await page.close()
 }
 
+const firstVisit = async (chat: SeededChat) => {
+  const fresh = await startPhone({ cpuSlowdown: Number(values.cpu) })
+  try {
+    const page = await fresh.page()
+    const paired = new URL(await sandbox.pairAgain())
+    const since = untouched(link.traffic)
+    await page.goto(`${link.origin}/?view=thread&id=${chat.id}${paired.hash}`, { waitUntil: 'commit' })
+    const shown = await shownAt(page, `End-${chat.marker}`)
+    const end = await shownAt(page, `End-${chat.marker}`, true)
+    const cost = await costOf(page, link.traffic, since, 0, end)
+    record('first visit, empty browser cache: chat shows', { ...cost, ms: shown })
+    record('first visit, empty browser cache: chat is usable', cost)
+  } finally {
+    await fresh.close()
+  }
+}
+
 const serverSide = async () => {
   Object.assign(shape, local)
   const page = await phone.page(1)
@@ -235,6 +252,7 @@ try {
     await run(index)
     console.error(`run ${index + 1} of ${runs} done`)
   }
+  for (let index = 0; index < Math.min(runs, 3); index++) await firstVisit(short[20 + index]!)
   const server = await serverSide()
   const summary = [...results].map(([name, costs]) => ({
     name,
