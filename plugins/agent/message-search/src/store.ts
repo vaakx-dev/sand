@@ -53,7 +53,7 @@ const OWNERS: ChatOwner[] = ['thread', 'bot']
 
 const MIGRATIONS = [
   [
-    `create virtual table message_search using fts5(text, chat, content='', contentless_delete=1, tokenize='unicode61 remove_diacritics 2', prefix='2 3')`,
+    `create virtual table message_search using fts5(text, chat, content='', contentless_delete=1, tokenize='unicode61 remove_diacritics 2')`,
     `create table message_search_blocks (
       rowid integer primary key,
       owner text not null,
