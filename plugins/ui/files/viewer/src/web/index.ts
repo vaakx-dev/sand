@@ -1,11 +1,11 @@
-import { wire } from '@sand/devices-contract'
+import { wire, wireHello } from '@sand/devices-contract'
 import { markdown } from '@sand/markdown/contract'
 import { panel } from '@sand/panel/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { type FileViewer, fileUrl, fileViewer, filesChanged, filesFind, filesShow, type FoundFile, type OpenFile } from '../contract'
+import { type FileViewer, fileUrl, fileViewer, filesChanged, filesStream, filesFind, filesShow, type FoundFile, type OpenFile } from '../contract'
 import { builtinFormats, textFormat } from './builtin'
 import { formatRegistry } from './formats'
 import { linkFor } from './link'
@@ -45,6 +45,7 @@ export default definePlugin({
       return {
         ...file,
         blob,
+        source: () => ctx.wire.call(filesStream, { path: file.path }),
         bytes: async () => (await blob()).bytes(),
         content: async () => (await blob()).text(),
         link: (target, label) => (isFileTarget(target) ? linkFor(ctx.kit, label, target, () => open(thread, besideFile(file.path, target))) : undefined),
@@ -63,6 +64,8 @@ export default definePlugin({
     }
 
     ctx.effect(() => joinDisposers(...builtinFormats(parts).map(formats.add)))
+    ctx.on(wireHello, files.reopen)
+    if (ctx.wire.ready()) files.reopen()
     ctx.provide(fileViewer, viewer)
     ctx.effect(() =>
       ctx.panel.tab({

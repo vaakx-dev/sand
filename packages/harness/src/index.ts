@@ -165,7 +165,7 @@ const start = async (models: Models, options: SandOptions) => {
   })
   const fetch = async (path: string, init?: RequestInit) => {
     const url = new URL(path, 'http://sand')
-    const handler = routes.get(url.pathname)
+    const handler = routes.get(url.pathname) ?? routes.get(url.pathname.slice(0, url.pathname.indexOf('/', 1) + 1))
     return handler ? handler(new Request(url, init)) : new Response('Not found', { status: 404 })
   }
   const askAs =
