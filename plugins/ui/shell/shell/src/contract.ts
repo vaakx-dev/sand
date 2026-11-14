@@ -217,6 +217,7 @@ export interface Shell {
   aside(spec: Aside): Dispose
   showAside(id: string, open: boolean): void
   asideOpen(id: string): boolean
+  showChat(): void
   subject(source: SubjectSource): Dispose
   subjectOf(route: Route): Subject | undefined
   chip(source: ChipSource): Dispose
