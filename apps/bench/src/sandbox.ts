@@ -58,6 +58,7 @@ const seedBox = async (replies: number) => {
   const plugin = join(home, 'plugins', 'bench-seed')
   mkdirSync(plugin, { recursive: true })
   cpSync(join(import.meta.dir, 'seed'), plugin, { recursive: true })
+  cpSync(join(import.meta.dir, '../../../docs/images/phone-chat.png'), join(plugin, 'plot.png'))
   await Bun.write(join(plugin, 'package.json'), JSON.stringify({ name: 'bench-seed', type: 'module', sand: { runtime: './index.ts' } }))
   await Bun.write(join(home, 'sandbox.toml'), settings(replies))
   await Bun.write(join(home, 'model.json'), JSON.stringify({ model: 'replay/script' }))
