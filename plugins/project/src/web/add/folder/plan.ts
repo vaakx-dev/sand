@@ -1,6 +1,6 @@
 import type { AddedProject } from '../../../contract'
 import type { ProjectGroup, Projects } from '@sand/web-client/contract'
-import { absolute, join, short, split } from '../paths'
+import { absolute, join, split } from '../paths'
 import { keepNew, type FolderForm } from './form'
 
 type PlanProjects = Pick<Projects, 'get' | 'add' | 'mkdir'>
@@ -67,7 +67,7 @@ export const plan = (projects: PlanProjects, form: FolderForm): Plan => {
   const { pc, place } = form
   const { sep } = place
   const { dir, leaf } = split(form.path.get().trim(), sep)
-  if (dir === undefined) return { label: labels.add, note: `Type a full path, such as ${join(short(place.root, place), '', sep)}` }
+  if (dir === undefined) return { label: labels.add, note: `Type a full path, such as ${join(place.root, '', sep)}` }
   const listing = form.listing(dir)
   if (listing.state === 'loading') return { label: labels.add }
   if (listing.state === 'failed') return { label: labels.add, error: true, note: `Couldn’t read ${dir} (${listing.error}). Check the path and that ${pc.name} is online.` }

@@ -1,6 +1,6 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { grouped, plural } from '@sand/util'
+import { grouped, plural, tildeHome } from '@sand/util'
 import { div, el, span, type Child } from '@vaakx-dev/vrui'
 
 const shownRows = 200
@@ -31,7 +31,8 @@ const output = (tool: ToolView, { resultText }: ToolViews) => {
   return { rows: all.filter(row => !row.startsWith('…')), stop: all.find(row => row.startsWith('…')) }
 }
 
-const pathView = (path: string) => {
+const pathView = (file: string) => {
+  const path = tildeHome(file)
   const cut = path.lastIndexOf('/') + 1
   return div({ class: 'font-sans wrap-anywhere text-neutral-100' }, span({ class: 'text-neutral-500' }, path.slice(0, cut)), path.slice(cut))
 }

@@ -1,6 +1,5 @@
 import { errorMessage, isRecord } from '@sand/util'
-import { expandHome } from '@sand/util/fs'
-import { homedir } from 'node:os'
+import { defaultHome, expandHome } from '@sand/util/fs'
 import { dirname, isAbsolute, join } from 'node:path'
 
 type Table = Record<string, unknown>
@@ -23,7 +22,7 @@ const parse = async (path: string) => {
 
 export const configPath = async (home: string) => {
   const own = join(home, 'sand.toml')
-  return (await Bun.file(own).exists()) ? own : join(homedir(), '.sand', 'sand.toml')
+  return (await Bun.file(own).exists()) ? own : join(defaultHome(), 'sand.toml')
 }
 
 export const readConfig = async (path: string): Promise<Table> => {

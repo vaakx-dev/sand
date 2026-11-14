@@ -2,11 +2,10 @@ import type { PcIdentity, Registry, ThisPc } from '@sand/devices-contract'
 import { signerOf } from '@sand/devices-identity'
 import type { PcKeys } from '@sand/devices-identity/pc'
 import type { BuildInfo } from '@sand/util/release'
-import { hostname } from 'node:os'
 
 interface ThisPcOptions {
   keys: PcKeys
-  name?: string
+  name: string
   registry: Registry
   build(): Promise<BuildInfo | undefined>
 }
@@ -18,11 +17,10 @@ export interface HostThisPc extends ThisPc {
 export const createThisPc = async ({ keys, name, registry, build }: ThisPcOptions): Promise<HostThisPc> => {
   const { id, publicKey } = keys
   const platform = process.platform
-  const seedName = name?.trim() || hostname()
-  if (!registry.get(id)) await registry.add({ kind: 'pc', name: seedName, platform, publicKey }, id)
+  if (!registry.get(id)) await registry.add({ kind: 'pc', name, platform, publicKey }, id)
   let known: BuildInfo | undefined
 
-  const currentName = () => registry.get(id)?.name ?? seedName
+  const currentName = () => registry.get(id)?.name ?? name
   const current = (): PcIdentity => ({ id, name: currentName(), platform, publicKey, ...(known && { build: known }) })
 
   const identity = async () => {

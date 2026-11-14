@@ -12,6 +12,4 @@ export const split = (value: string, sep: string) => {
 
 export const join = (dir: string, name: string, sep: string) => (dir.endsWith(sep) ? `${dir}${name}` : `${dir}${sep}${name}`)
 
-export const short = (path: string, place: ProjectPlace) => (path.startsWith(place.home) ? `~${path.slice(place.home.length)}` : path)
-
 export const absolute = (path: string, place: ProjectPlace) => (path === '~' || path.startsWith(`~${place.sep}`) ? `${place.home}${path.slice(1)}` : path)

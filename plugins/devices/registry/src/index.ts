@@ -6,6 +6,7 @@ import { hub, hubOpen } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'
 import { createAuth } from './auth'
 import { detectIconOnce } from './detected-icon'
+import { seedName } from './name'
 import { createRegistry } from './registry'
 import { deviceRequests } from './requests'
 import { loadSeen } from './seen/seen'
@@ -20,9 +21,10 @@ export default definePlugin({
   async apply(ctx) {
     const { home, name } = ctx.hostOptions
     const registry = createRegistry(await loadDeviceFile(home))
+    const keys = await loadPcIdentity(home)
     const thisPc = await createThisPc({
-      keys: await loadPcIdentity(home),
-      name,
+      keys,
+      name: name?.trim() || seedName(home, keys.id),
       registry,
       build: async () => ctx.get(hostBuild)?.info(),
     })

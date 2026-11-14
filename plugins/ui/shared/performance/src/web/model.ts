@@ -2,6 +2,7 @@ import { type PcView, pcHello, pcs, pcsChange, wire } from '@sand/devices-contra
 import { featuresList, featuresSet } from '@sand/features/contract'
 import { projects } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
+import { tildeHome } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { type ChatPlace, type PcReport, performanceRead, type Range } from '../contract'
@@ -55,7 +56,7 @@ export const createModel = (ctx: ModelContext) => {
     seen: () => ({ pcs: list(), heard: heard.get() }),
     where(place: ChatPlace, device: string) {
       if (place.kind === 'bot') return 'bot'
-      return ctx.get(projects)?.shown({ path: place.cwd, device, project: place.project, quick: place.quick }).name ?? place.cwd
+      return ctx.get(projects)?.shown({ path: place.cwd, device, project: place.project, quick: place.quick }).name ?? tildeHome(place.cwd)
     },
     silent: (found: Heard | undefined) => found !== undefined && (found.failed !== undefined || Date.now() - found.at > SILENT_AFTER_MS),
     refresh() {

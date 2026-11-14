@@ -2,6 +2,7 @@ import { inspector } from '@sand/inspector/contract'
 import { pcs, pcsChange } from '@sand/devices-contract'
 import { pulse } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
+import { tildeHome } from '@sand/util'
 import { definePlugin } from 'drydock'
 
 export default definePlugin({
@@ -20,7 +21,10 @@ export default definePlugin({
         group: 'place',
         order: 10,
         shows: () => true,
-        render: subject => ctx.kit.cardItem({ lead: ctx.kit.icon('monitor', 'sm'), end: () => subject().cwd ?? '', title: () => subject().cwd ?? '' }, () => name(subject().device)),
+        render: subject => {
+          const folder = () => tildeHome(subject().cwd ?? '')
+          return ctx.kit.cardItem({ lead: ctx.kit.icon('monitor', 'sm'), end: folder, title: folder }, () => name(subject().device))
+        },
       }),
     )
   },

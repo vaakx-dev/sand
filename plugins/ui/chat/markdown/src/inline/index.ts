@@ -1,3 +1,4 @@
+import { tildeHome } from '@sand/util'
 import { inlineMath } from '../math/inline'
 import { inlineCode, lineBreak, type Inline } from '../nodes'
 import type { Scope } from '../scope'
@@ -25,7 +26,7 @@ const escaped: Parser = (source, index) => {
 const codeSpan: Parser = (source, index) => {
   if (source[index] !== '`') return undefined
   const span = codeSpanAt(source, index)
-  return { item: span.content === undefined ? source.slice(index, span.end) : inlineCode(span.content), end: span.end }
+  return { item: span.content === undefined ? source.slice(index, span.end) : inlineCode(tildeHome(span.content)), end: span.end }
 }
 
 const emphasisRun: Parser = (source, index) => {
@@ -73,10 +74,10 @@ export const inline = (source: string, scope: Scope): Inline[] => {
       pending += item
       continue
     }
-    if (pending) items.push(pending)
+    if (pending) items.push(tildeHome(pending))
     pending = ''
     items.push(item)
   }
-  if (pending) items.push(pending)
+  if (pending) items.push(tildeHome(pending))
   return resolveEmphasis(items)
 }

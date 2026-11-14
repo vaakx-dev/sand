@@ -1,7 +1,9 @@
-export const tildeHome = (text: string) =>
-  text
-    .replace(/(^|[\s'"=(])\/(?:home|Users)\/[^/\s'"]+(?=[/\s'"]|$)/g, '$1~')
-    .replace(/(^|[\s'"=(])[A-Za-z]:[\\/]Users[\\/][^\\/\s'"]+(?=[\\/\s'"]|$)/gi, '$1~')
+const PATH_START = String.raw`(?<![\w.~\\/-])(?<!(?:^|\W)[a-z]:)`
+const PATH_END = String.raw`(?=\.?(?:[\\/\s'"\x60:;,()]|$))`
+const ACCOUNT = String.raw`(?!(?:Public|Shared|Default)\b)[^\\/\s'"\x60:;,()]+?${PATH_END}`
+const HOME_FOLDERS = new RegExp(String.raw`${PATH_START}(?:/root${PATH_END}|/(?:home|Users)/${ACCOUNT}|(?:/mnt)?/[a-z]/Users/${ACCOUNT}|[a-z]:[\\/]+Users[\\/]+${ACCOUNT})`, 'gi')
+
+export const tildeHome = (text: string) => text.replace(HOME_FOLDERS, '~')
 
 export const comparePaths = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 

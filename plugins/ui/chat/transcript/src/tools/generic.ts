@@ -1,4 +1,4 @@
-import { head } from '@sand/util'
+import { head, tildeHome } from '@sand/util'
 import type { ToolRenderer, ToolView } from '../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
@@ -35,7 +35,7 @@ const section = ({ codeBlock, fold }: Kit, body: string, danger = false) => {
 
 const resultSection = (kit: Kit, tool: ToolView) => {
   if (!tool.result) return undefined
-  return section(kit, resultText(tool.result) || 'No output', Boolean(tool.result.isError))
+  return section(kit, tildeHome(resultText(tool.result)) || 'No output', Boolean(tool.result.isError))
 }
 
 export const genericRenderer = (kit: Kit, name: string): Required<ToolRenderer> => ({
@@ -46,6 +46,6 @@ export const genericRenderer = (kit: Kit, name: string): Required<ToolRenderer> 
   meta: preview,
   badge: () => undefined,
   copy: toolLabel,
-  body: tool => div({ class: 'flex flex-col gap-2' }, section(kit, tool.call.malformed ?? inputText(tool.call.input)), resultSection(kit, tool)),
+  body: tool => div({ class: 'flex flex-col gap-2' }, section(kit, tildeHome(tool.call.malformed ?? inputText(tool.call.input))), resultSection(kit, tool)),
   actions: () => [],
 })

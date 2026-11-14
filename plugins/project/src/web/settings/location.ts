@@ -2,7 +2,7 @@ import type { ContextMenu } from '@sand/ui-kit/contract'
 import type { ProjectEntry } from '@sand/web-client/contract'
 import { div, span, stopThen } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
-import { shorten } from './places'
+import { tildeHome } from '@sand/util'
 import { copySpec } from './specs'
 
 const copyMenu = (ctx: ProjectsContext, menu: ContextMenu, entry: ProjectEntry) => {
@@ -18,7 +18,7 @@ export const locationLine = (ctx: ProjectsContext, menu: ContextMenu, entry: Pro
   return div(
     { class: ['flex min-w-0 items-center gap-2', !online || entry.missing ? 'text-neutral-500' : ''], ...copyMenu(ctx, menu, entry) },
     ...pcLabel(ctx, entry, online),
-    span({ class: 'min-w-0 truncate', title: entry.path }, shorten(ctx, entry.path, entry.device)),
+    span({ class: 'min-w-0 truncate', title: tildeHome(entry.path) }, tildeHome(entry.path)),
     entry.missing ? span({ class: 'shrink-0 text-warning-400' }, 'Folder missing') : null,
   )
 }

@@ -1,6 +1,6 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { isRecord } from '@sand/util'
+import { isRecord, tildeHome } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import { readAtLine } from '../at-line'
 
@@ -57,7 +57,7 @@ const rowView = ({ kind, number, text }: Row) => [
   span({ class: ['pr-3 whitespace-pre-wrap wrap-anywhere', tones[kind]] }, text || ' '),
 ]
 
-const pathView = (path: string, first: boolean) => span({ class: ['px-3 pb-1 text-neutral-200', !first && 'pt-3'], style: { gridColumn: '1 / -1' } }, path)
+const pathView = (path: string, first: boolean) => span({ class: ['px-3 pb-1 text-neutral-200', !first && 'pt-3'], style: { gridColumn: '1 / -1' } }, tildeHome(path))
 
 const changeInputs = (input: unknown): unknown[] => {
   if (!isRecord(input)) return []

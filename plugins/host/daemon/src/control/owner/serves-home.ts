@@ -1,7 +1,7 @@
 import { appsFolder } from '@sand/boot'
 import { trimSlash } from '@sand/util'
-import { homedir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { defaultHome } from '@sand/util/fs'
+import { resolve } from 'node:path'
 import { commandLine } from './command-line'
 
 const sandMain = 'apps/sand/src/main.ts'
@@ -24,7 +24,7 @@ const namedHome = (line: string) => {
 const servesThis = (line: string, home: string) => {
   const named = namedHome(line)
   if (named !== undefined) return named === folder(home)
-  return line.includes(`${folder(appsFolder(home))}/`) || folder(home) === folder(join(homedir(), '.sand'))
+  return line.includes(`${folder(appsFolder(home))}/`) || folder(home) === folder(defaultHome())
 }
 
 export const servesHome = async (pid: number, home: string) => {
