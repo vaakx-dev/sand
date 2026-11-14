@@ -1,0 +1,28 @@
+{
+  "name": "@sand/file-archives",
+  "version": "0.0.0",
+  "description": "Opens zip, jar, tar and gzip archives in the file viewer: browse their folders and open the files inside",
+  "type": "module",
+  "sand": {
+    "feature": "file-archives",
+    "web": "./src/web/index.ts",
+    "label": "Archives",
+    "summary": "Browse zip, jar, tar and gzip archives and open the files inside",
+    "features": {
+      "file-archives": {
+        "label": "Archives",
+        "summary": "Browse zip, jar, tar and gzip archives and open the files inside",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/zip": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
