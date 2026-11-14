@@ -121,8 +121,8 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
     idle: () => Promise.all([prefsStore.idle(), cacheStore.idle()]),
     price(id: string): ModelPrice | undefined {
       const parts = split(id)
-      if (!parts) return prices(id)
-      return prices(id) ?? prices(parts.name) ?? cache[parts.source]?.models?.find(model => model.name === parts.name)?.price
+      if (!parts) return prices.get(id)
+      return prices.get(id) ?? prices.get(parts.name) ?? cache[parts.source]?.models?.find(model => model.name === parts.name)?.price
     },
   }
 }

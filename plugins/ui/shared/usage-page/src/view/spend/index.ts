@@ -17,8 +17,13 @@ const periodPicker = ({ segmented }: Kit, model: UsageModel) =>
     { label: 'Period' },
   )
 
+const unpricedText = (models: string[]) =>
+  models.length > 1
+    ? `Leaves out ${listText(models)}, which have no price. Ask sand to add their prices.`
+    : `Leaves out ${models[0]}, which has no price. Ask sand to add its price.`
+
 const unpricedNote = ({ unpriced }: Merged) =>
-  unpriced.length ? span({ class: 'text-xs text-neutral-500' }, `Leaves out ${listText(unpriced.map(item => item.model))}, which ${unpriced.length > 1 ? 'have' : 'has'} no price`) : null
+  unpriced.length ? span({ class: 'text-xs text-neutral-500' }, unpricedText(unpriced.map(item => item.model))) : null
 
 const overview = (kit: Kit, usage: Merged) => {
   const { keys, series } = seriesOf(kit, usage)

@@ -445,6 +445,7 @@
       "name": "@sand/models-mcp",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/accounts": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/util": "workspace:*",
