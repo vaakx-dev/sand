@@ -1,11 +1,12 @@
 import type { Caller } from '@sand/host-hub/contract'
+import { hostChannel } from '@sand/host-runtimes/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { processes } from '@sand/processes/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin, event } from 'drydock'
 import { z } from 'zod'
-import { devServerList, devServersChange, devServerStop, type DevServer, helloDevServers } from '../contract'
+import { devServerList, devServerOpen, devServerProxiesKeep, devServerProxy, devServersChange, devServerStop, type DevServer, helloDevServers } from '../contract'
 import { offerDevServerTools } from '../tools'
 import { createScanner } from './scan'
 import { stopServer } from './stop'
@@ -18,7 +19,7 @@ const sameServers = (first: DevServer[], second: DevServer[]) => JSON.stringify(
 
 export default definePlugin({
   name: 'dev-servers',
-  description: "Finds the web servers each thread's commands started on this PC, even ones left running in the background, and lists and stops them",
+  description: "Finds the web servers each thread's commands started on this PC, even ones left running in the background, and lists, opens and stops them",
   config: z.object({ every_ms: z.number().int().positive().default(3_000) }),
   apply(ctx, config) {
     const scanner = createScanner(() => ctx.get(processes))
@@ -30,6 +31,10 @@ export default definePlugin({
       if (sameServers(current, next)) return
       current = next
       ctx.emit(found, next)
+      void ctx
+        .get(hostChannel)
+        ?.call(devServerProxiesKeep, { ports: next.map(entry => entry.port) })
+        .catch(() => undefined)
     }
 
     const rescan = () => (scanning = scanning.then(refresh).catch(error => ctx.report(error)))
@@ -41,6 +46,14 @@ export default definePlugin({
       await stopServer(tree, shown.pid)
       await rescan()
       return true
+    }
+
+    const open = (port: number, device: string) => {
+      const shown = current.find(entry => entry.port === port)
+      if (!shown) throw new Error(`No server a thread started listens on port ${port}`)
+      const channel = ctx.get(hostChannel)
+      if (!channel) throw new Error("Opening a dev server needs sand's host, which isn't running")
+      return channel.call(devServerProxy, { port, address: shown.address, device })
     }
 
     ctx.effect(() => {
@@ -68,6 +81,7 @@ export default definePlugin({
             return owner ? current.filter(entry => entry.session === owner) : current
           }),
           host.handle(devServerStop, ({ port }) => stop(port)),
+          host.handle(devServerOpen, ({ port }, caller) => open(port, caller.device)),
           ctx.on(found, servers => host.broadcast(devServersChange, servers)),
         ),
     )

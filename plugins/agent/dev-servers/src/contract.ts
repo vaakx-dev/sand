@@ -4,6 +4,7 @@ import { z } from 'zod'
 export interface DevServer {
   port: number
   url: string
+  address: string
   pid: number
   name: string
   command: string
@@ -26,4 +27,23 @@ export const devServerStop = request('devServers.stop', {
   output: type<boolean>(),
   callers: 'any',
   place: 'thread',
+})
+
+export const devServerOpen = request('devServers.open', {
+  input: () => z.object({ port: z.number().int().positive(), session: z.string().optional() }),
+  output: type<string[]>(),
+  callers: 'any',
+  place: 'thread',
+})
+
+export const devServerProxy = request('devServers.proxy', {
+  input: () => z.object({ port: z.number().int().positive(), address: z.string().min(1), device: z.string().min(1) }),
+  output: type<string[]>(),
+  callers: 'runtime',
+})
+
+export const devServerProxiesKeep = request('devServers.proxies.keep', {
+  input: () => z.object({ ports: z.array(z.number().int().positive()) }),
+  output: type<void>(),
+  callers: 'runtime',
 })
