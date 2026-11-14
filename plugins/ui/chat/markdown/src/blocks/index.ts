@@ -1,4 +1,4 @@
-import { codeBlock, streamingCodeBlock } from '../code/block'
+import { codeBlock, renderedCode, streamingCodeBlock } from '../code/block'
 import { inline } from '../inline'
 import { displayMath, mathBlock } from '../math/block'
 import { blockquote, heading, paragraph, thematicBreak } from '../nodes'
@@ -30,9 +30,11 @@ const fenced: Parser = (lines, start, scope) => {
   }
   const code = body.join('\n')
   const language = open[3] ?? ''
-  if (language === 'math') return { node: displayMath(scope, code), next: index + 1 }
-  const streaming = scope.streaming && index >= lines.length
-  return { node: streaming ? streamingCodeBlock(scope.kit, code) : codeBlock(scope.kit, code, language), next: index + 1 }
+  const next = index + 1
+  if (language === 'math') return { node: displayMath(scope, code), next }
+  if (scope.streaming && index >= lines.length) return { node: streamingCodeBlock(scope.kit, code), next }
+  const renderer = scope.code(language)
+  return { node: renderer ? renderedCode(renderer, code) : codeBlock(scope.kit, code, language), next }
 }
 
 const atxHeading: Parser = (lines, start, scope) => {
