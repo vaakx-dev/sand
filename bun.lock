@@ -2715,6 +2715,26 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/look/themes": {
+      "name": "@sand/themes",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/cli-commands": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-theme": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/ui/panel/changes": {
       "name": "@sand/panel-changes",
       "version": "0.0.0",
@@ -3374,6 +3394,8 @@
     "@sand/subagents": ["@sand/subagents@workspace:plugins/agent/subagents"],
 
     "@sand/terminal": ["@sand/terminal@workspace:plugins/ui/terminal/terminal"],
+
+    "@sand/themes": ["@sand/themes@workspace:plugins/ui/look/themes"],
 
     "@sand/thread-refs": ["@sand/thread-refs@workspace:plugins/ui/threads/thread-refs"],
 
