@@ -25,8 +25,6 @@ const serverLine = (kit: Kit, { open, stop }: Card, server: Shown) =>
       kit.rowBody(() => ({
         id: keyOf(server),
         label: `localhost:${server.port}`,
-        at: server.started,
-        status: 'running',
         detail: () => kit.monoMeta(server.command),
         lead: () => kit.icon('globe', 'sm'),
       })),

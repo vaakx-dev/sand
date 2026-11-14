@@ -40,7 +40,6 @@ const keyOf = ({ pid, port }: Listener) => `${pid}:${port}`
 
 export const createScanner = (processes: () => Processes | undefined) => {
   const probes = new Map<string, Probe>()
-  const firstSeen = new Map<string, number>()
 
   const probed = async (listener: Reachable) => {
     const key = keyOf(listener)
@@ -53,15 +52,11 @@ export const createScanner = (processes: () => Processes | undefined) => {
 
   const forget = (current: Set<string>) => {
     for (const key of probes.keys()) if (!current.has(key)) probes.delete(key)
-    for (const key of firstSeen.keys()) if (!current.has(key)) firstSeen.delete(key)
   }
 
   const serverOf = (listener: Reachable): DevServer => {
     const { tree, name } = listener.owner
-    const key = keyOf(listener)
-    const started = firstSeen.get(key) ?? Date.now()
-    firstSeen.set(key, started)
-    return { port: listener.port, url: `http://localhost:${listener.port}`, pid: listener.pid, name, command: tree.label, session: tree.conversation, started }
+    return { port: listener.port, url: `http://localhost:${listener.port}`, pid: listener.pid, name, command: tree.label, session: tree.conversation }
   }
 
   const scan = async () => {

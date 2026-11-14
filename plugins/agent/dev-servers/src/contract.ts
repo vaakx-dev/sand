@@ -8,7 +8,6 @@ export interface DevServer {
   name: string
   command: string
   session: string
-  started: number
 }
 
 export const helloDevServers = helloField<DevServer[]>('devServers')
