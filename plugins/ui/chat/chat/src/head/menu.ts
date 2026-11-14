@@ -27,5 +27,6 @@ export const threadActions = (ctx: ChatContext, shell: Shell, id: string): MenuA
   const remove: MenuAction[] = thread.running
     ? []
     : [{ id: 'delete', group: 'danger', label: 'Delete', icon: 'trash', danger: true, confirm: `Delete “${threadTitle(thread)}”? This can’t be undone.`, run: () => removeThread(ctx, shell, id) }]
-  return [...rename, { id: 'copy-link', label: 'Copy link', icon: 'link', run: () => ctx.kit.copyText(shell.link({ kind: threadRoute, id })) }, ...remove]
+  const shared = ctx.shownChats.actions().map(({ id: action, label, icon, run }): MenuAction => ({ id: action, label, icon, run: () => run(id) }))
+  return [...shared, ...rename, { id: 'copy-link', label: 'Copy link', icon: 'link', run: () => ctx.kit.copyText(shell.link({ kind: threadRoute, id })) }, ...remove]
 }

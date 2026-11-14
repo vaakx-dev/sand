@@ -156,7 +156,7 @@ export interface TranscriptParts {
   prompt(entry: Entry, parts: UserPart[]): Item[]
   rows(surface: Surface): Rows
   openStates(): OpenStates
-  quoteJump(owner: Node): (root: Element, from: Element, quote: string) => void
+  quoteJump(root: Element, from: Element, quote: string): void
 }
 
 export type ImageOptions = Omit<ShownImageOptions, 'open'>
@@ -174,6 +174,42 @@ export interface ToolViews {
   image: MediaImage
 }
 
+export interface ShownChat {
+  owner: 'thread' | 'bot'
+  conversation: string
+  frame: HTMLElement
+  scroller: HTMLElement
+  loaded(): Entry[]
+  older(): Promise<boolean>
+  reveal(entry: string, block?: number): Promise<HTMLElement | undefined>
+}
+
+export interface ChatSpot {
+  conversation: string
+  entry: string
+  block?: number
+  words: string[]
+}
+
+export interface ChatAction {
+  id: string
+  label: string
+  icon: IconName
+  run(conversation: string): void
+}
+
+export interface ShownChats {
+  add(chat: ShownChat): Dispose
+  current(): ShownChat | undefined
+  arrived(conversation: string): Promise<ShownChat | undefined>
+  show(spot: ChatSpot): Promise<boolean>
+  action(action: ChatAction): Dispose
+  actions(): ChatAction[]
+}
+
+export { blockKey, itemNode, itemSpot, type ItemSpot } from './items/spot'
+
 export const transcript = service<Transcript>('transcript')
+export const shownChats = service<ShownChats>('shownChats')
 export const toolViews = service<ToolViews>('toolViews')
 export const transcriptParts = service<TranscriptParts>('transcriptParts')

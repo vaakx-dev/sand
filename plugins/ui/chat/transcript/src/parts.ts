@@ -4,6 +4,7 @@ import { models } from '@sand/web-client/contract'
 import type { MediaImage, RendererRegistry, ToolViews, TranscriptParts } from './contract'
 import type { TranscriptContext } from './context'
 import type { Images } from './image'
+import type { Flash } from './integrations/flash'
 import { quoteJump } from './integrations/quote-jump'
 import { liveItems } from './items/items'
 import { field, resultText } from './items/results'
@@ -14,7 +15,7 @@ import type { RowContext } from './rows/row'
 import { userMessage } from './rows/user'
 import { errorBody, outputText, truncatedNote } from './tools/notes'
 
-export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, images: Images): TranscriptParts => {
+export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, images: Images, flash: Flash): TranscriptParts => {
   const custom = (type: string) => Boolean(registry.entryRenderer(type))
   const describe: DescribeSettings = settings => ctx.get(models)?.summary(settings)
   const chip = drawChip(ctx)
@@ -33,7 +34,7 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
       }
     },
     openStates,
-    quoteJump,
+    quoteJump: quoteJump(flash),
   }
 }
 

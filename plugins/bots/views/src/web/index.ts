@@ -16,7 +16,7 @@ import {
 } from '@sand/bots/contract'
 import { modelTargets } from '@sand/model-panel/contract'
 import { needs } from '@sand/needs-you/contract'
-import { palette, type PaletteItem } from '@sand/palette/contract'
+import { palette, visitsOf, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { toastsOf } from '@sand/toasts/contract'
 import { transcript } from '@sand/transcript/contract'
@@ -117,7 +117,8 @@ export default definePlugin({
                 ...(parts.store.bots.get() ?? []).map<PaletteItem>(bot => ({
                   id: `bot:${bot.id}`,
                   group: 'Bots',
-                  icon: 'bot',
+                  face: { id: bot.id, tint: bot.color },
+                  visits: visitsOf({ kind: botRoute, id: bot.id }),
                   label: botName(bot),
                   detail: projectNames(parts, bot.projects),
                   search: bot.jobs.map(job => job.title).join(' '),
