@@ -25,7 +25,7 @@ export { comparePaths, folderName, isInside, samePath, tildeHome } from './text/
 export { plural, plurals } from './text/plural'
 export { quoteBlocks, quotedText, quoteRuns, type QuoteBlock, type QuoteRun } from './text/quotes'
 export { shortSha } from './text/sha'
-export { trimSlash } from './text/url'
+export { libraryRoot, trimSlash } from './text/url'
 export { wellFormed } from './text/well-formed'
 export { ago, exactTime } from './time/ago'
 export { DAY_MS, dayLabel, monthLabel } from './time/day'
