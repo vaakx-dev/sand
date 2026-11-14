@@ -42,7 +42,7 @@ export default definePlugin({
       opened.forget(thread)
       known.forget(thread)
     })
-    ctx.watch(server, found => found && serveFollows(ctx, found, follows))
+    ctx.watch(server, found => found && serveFollows(ctx, found, follows, ctx.github))
     ctx.watch(tools, found => found && registerTools(found, follows))
   },
 })

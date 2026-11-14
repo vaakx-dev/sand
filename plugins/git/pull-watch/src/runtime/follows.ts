@@ -1,10 +1,11 @@
 import type { Session, Sessions } from '@sand/chats/contract'
-import { type GitHub, type PullRef, pullRefOf } from '@sand/github/contract'
+import type { GitHub, PullRef } from '@sand/github/contract'
 import type { Watch, Watches } from '@sand/watches/contract'
 import { keyedSerial } from '@sand/util'
 import { z } from 'zod'
 import type { FollowedPull } from '../contract'
 import { pullInput } from './kind'
+import { refOf } from './ref'
 
 export interface FollowsDeps {
   watches: Watches
@@ -16,16 +17,7 @@ export const OWNER = 'threads'
 
 const KIND = 'github-pull'
 
-const shortForm = /^([\w.-]+\/[\w.-]+)#(\d+)$/
-
 const content = z.object({ title: z.string(), url: z.string() })
-
-const refOf = (text: string): PullRef => {
-  const short = shortForm.exec(text.trim())
-  const found = short?.[1] && short[2] ? { repo: short[1], number: Number(short[2]) } : pullRefOf(text.trim())
-  if (!found) throw new Error(`${text} isn't a pull request; give its URL or owner/name#number.`)
-  return found
-}
 
 const sameRef = (watch: Watch, { repo, number }: PullRef) => {
   const input = pullInput.safeParse(watch.input).data

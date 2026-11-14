@@ -15,6 +15,37 @@ export interface FollowedPull {
 
 export const PULL_NOTICE = 'pull'
 
+export interface Remark {
+  id: string
+  author: string
+  body: string
+  url: string
+  at: number
+}
+
+export type Verdict = 'approved' | 'requested changes' | 'reviewed' | 'dismissed a review'
+
+export interface Said extends Remark {
+  verdict?: Verdict
+}
+
+export interface ReviewThread {
+  id: string
+  path: string
+  line?: number
+  outdated: boolean
+  remarks: Remark[]
+}
+
+export interface PullTalk {
+  repo: string
+  number: number
+  title: string
+  url: string
+  threads: ReviewThread[]
+  conversation: Said[]
+}
+
 const callers = 'any'
 
 const one = lazy(() => z.object({ thread: z.string().min(1) }))
@@ -25,4 +56,5 @@ export const pullFollowsChangeWire = wireEvent<[thread: string, pulls: FollowedP
 
 export const pullFollows = request('pull.follows', { input: one, output: type<FollowedPull[]>(), callers })
 export const pullFollow = request('pull.follow', { input: () => one().extend({ pull: pull() }), output: type<FollowedPull>(), callers })
+export const pullTalk = request('pull.talk', { input: () => z.object({ pull: pull() }), output: type<PullTalk>(), callers: 'user' })
 export const pullUnfollow = request('pull.unfollow', { input: () => one().extend({ pull: pull() }), output: type<boolean>(), callers })

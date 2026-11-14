@@ -192,6 +192,10 @@ export const shellModel = (kit: Kit) => {
 
   const showCover = (id: string, show: boolean) => (show ? raiseCover(id) : lowerCover(id))
 
+  const showChat = () => {
+    if (coverIds.get().length) leave()
+  }
+
   const showAside = (id: string, show: boolean) => {
     const spec = asides.items.get().find(found => found.id === id)
     if (!spec) return
@@ -255,6 +259,7 @@ export const shellModel = (kit: Kit) => {
     openDrawer,
     asideShown,
     showAside,
+    showChat,
     roomy,
     subjectOf,
     addSubject(source: SubjectSource) {
