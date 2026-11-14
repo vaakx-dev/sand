@@ -1,0 +1,49 @@
+{
+  "name": "@sand/dev-servers",
+  "version": "0.0.0",
+  "description": "The web servers each thread started, found by the processes it owns, listed in its Details to open and stop, and for agents and the sand servers command",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "dev-servers",
+    "runtime": "./src/runtime/index.ts",
+    "cli": "./src/cli.ts",
+    "web": "./src/web/index.ts",
+    "label": "Dev servers",
+    "summary": "Finds the web servers your threads start, and opens and stops them",
+    "features": {
+      "dev-servers": {
+        "label": "Dev servers",
+        "summary": "See, open and stop the web servers each thread started, from its Details",
+        "needs": [
+          "threads"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/cli-commands": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/machine": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/processes": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/tools": "workspace:*"
+  }
+}

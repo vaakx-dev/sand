@@ -1,12 +1,19 @@
+import type { ProcessInfo } from '@sand/machine'
 import { type Dispose, event, service } from 'drydock'
 
 export type TreeKind = 'command' | 'app' | 'sand' | 'browser'
+
+export interface TrackedJob {
+  pids(): number[]
+  close(): void
+}
 
 export interface Tracked {
   conversation: string
   pid: number
   label: string
   kind: TreeKind
+  job?: TrackedJob
 }
 
 export interface Use {
@@ -58,9 +65,18 @@ export interface PcPerformance {
   other: Use
 }
 
+export interface OwnedTree {
+  conversation: string
+  root: number
+  label: string
+  kind: TreeKind
+  processes: ProcessInfo[]
+}
+
 export interface Processes {
   track(tracked: Tracked): Dispose
   chats(): Promise<ChatMemory[]>
+  trees(): Promise<OwnedTree[]>
   performance(range: Range): Promise<PcPerformance>
 }
 

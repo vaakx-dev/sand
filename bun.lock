@@ -222,6 +222,32 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/agent/dev-servers": {
+      "name": "@sand/dev-servers",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/cli-commands": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/inspector": "workspace:*",
+        "@sand/machine": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/processes": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/harness": "workspace:*",
+        "@sand/tools": "workspace:*",
+      },
+    },
     "plugins/agent/engine": {
       "name": "@sand/engine",
       "version": "0.0.0",
@@ -3257,6 +3283,8 @@
     "@sand/connections-mcp": ["@sand/connections-mcp@workspace:plugins/agent/connections-mcp"],
 
     "@sand/context": ["@sand/context@workspace:plugins/agent/context"],
+
+    "@sand/dev-servers": ["@sand/dev-servers@workspace:plugins/agent/dev-servers"],
 
     "@sand/devices-cli": ["@sand/devices-cli@workspace:plugins/devices/cli"],
 

@@ -1,12 +1,10 @@
 import { forestOf, type ProcessInfo } from '@sand/machine'
-import type { ChatMemory, ChatUse, PcPerformance, Range, Tracked, TreeUse, Use } from './contract'
+import type { ChatMemory, ChatUse, OwnedTree, PcPerformance, Range, TreeUse, Use } from './contract'
 import type { Measured, Meter } from './meter'
 import type { Registry } from './registry'
 import type { Sampler } from './sampler'
 
 const BROWSERS = /chrom|msedge|headless_shell/i
-
-type Tree = (roots: number[]) => ProcessInfo[]
 
 const useOf = (entries: ProcessInfo[], { cpuOf }: Measured): Use => ({
   bytes: entries.reduce((sum, entry) => sum + entry.bytes, 0),
@@ -15,9 +13,13 @@ const useOf = (entries: ProcessInfo[], { cpuOf }: Measured): Use => ({
 
 const byBytes = (first: Pick<Use, 'bytes'>, second: Pick<Use, 'bytes'>) => second.bytes - first.bytes
 
-const chatUse = (conversation: string, tracked: Tracked[], treeOf: Tree, measured: Measured): ChatUse => {
-  const trees = tracked.map(({ pid, label, kind }): TreeUse => ({ label, kind, ...useOf(treeOf([pid]), measured) }))
-  return { conversation, ...useOf(treeOf(tracked.map(entry => entry.pid)), measured), trees: trees.toSorted(byBytes) }
+const unionOf = (trees: OwnedTree[]) => [...new Map(trees.flatMap(tree => tree.processes.map(entry => [entry.pid, entry] as const))).values()]
+
+const byChat = (trees: OwnedTree[]) => Map.groupBy(trees, tree => tree.conversation)
+
+const chatUse = (conversation: string, trees: OwnedTree[], measured: Measured): ChatUse => {
+  const uses = trees.map(({ label, kind, processes }): TreeUse => ({ label, kind, ...useOf(processes, measured) }))
+  return { conversation, ...useOf(unionOf(trees), measured), trees: uses.toSorted(byBytes) }
 }
 
 const sandUse = (sandProcesses: ProcessInfo[], measured: Measured) => {
@@ -33,24 +35,21 @@ const remainder = (whole: Use, parts: Use[]): Use => ({
   cpu: Math.max(0, whole.cpu - parts.reduce((sum, part) => sum + part.cpu, 0)),
 })
 
-export const chatMemory = (registry: Registry, all: ProcessInfo[]): ChatMemory[] => {
-  const treeOf = forestOf(all)
-  return [...registry.byChat()]
-    .map(([conversation, tracked]) => {
-      const tree = treeOf(tracked.map(entry => entry.pid))
+export const chatMemory = (registry: Registry, all: ProcessInfo[]): ChatMemory[] =>
+  [...byChat(registry.trees(all))]
+    .map(([conversation, trees]) => {
+      const tree = unionOf(trees)
       return { conversation, bytes: tree.reduce((sum, entry) => sum + entry.bytes, 0), pids: tree.map(entry => entry.pid) }
     })
     .toSorted(byBytes)
-}
 
 export const performanceOf = async ({ registry, meter, sampler }: { registry: Registry; meter: Meter; sampler: Sampler }, range: Range): Promise<PcPerformance> => {
   const [reading, measured] = await Promise.all([sampler.latest(), meter.measureWarm()])
-  const treeOf = forestOf(measured.all)
-  const byChat = registry.byChat()
-  const chats = [...byChat].map(([conversation, tracked]) => chatUse(conversation, tracked, treeOf, measured)).toSorted(byBytes)
-  const inChats = new Set(treeOf([...byChat.values()].flat().map(entry => entry.pid)).map(entry => entry.pid))
+  const trees = registry.trees(measured.all)
+  const chats = [...byChat(trees)].map(([conversation, owned]) => chatUse(conversation, owned, measured)).toSorted(byBytes)
+  const inChats = new Set(unionOf(trees).map(entry => entry.pid))
   const sand = sandUse(
-    treeOf([process.ppid, process.pid]).filter(entry => !inChats.has(entry.pid)),
+    forestOf(measured.all)([process.ppid, process.pid]).filter(entry => !inChats.has(entry.pid)),
     measured,
   )
   const used = { bytes: reading.totalBytes - reading.freeBytes, cpu: reading.cpu }
