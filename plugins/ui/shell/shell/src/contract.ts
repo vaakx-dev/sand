@@ -226,6 +226,22 @@ export interface Shell {
   swipe(way: Way): Swipe | undefined
 }
 
+export const pageParts = {
+  app: 'The whole page under any background, holding the sidebar and the main column',
+  sidebar: 'The sidebar with search, bots and threads; a drawer on phones',
+  main: 'The main column beside the sidebar: its header and the open chat or page',
+  header: 'The bar at the top of the main column and of settings',
+  aside: 'A side panel, drawer or card opened beside the chat, like details',
+  transcript: "The scrolling list of a chat's messages",
+  'user-message': 'The bubble of a message you sent',
+  'agent-message': "The text of an agent's reply",
+  composer: 'The box you type messages in',
+  settings: 'The body of a settings page',
+  sheet: 'A sheet or dialog over the page',
+} as const
+
+export type PagePart = keyof typeof pageParts
+
 export const shell = service<Shell>('shell')
 export const shellChange = event<(state: ShellState, route: Route) => void>('shell.change')
 

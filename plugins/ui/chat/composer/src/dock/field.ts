@@ -143,6 +143,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
 
   const node = div(
     {
+      'data-part': 'composer',
       class: [
         'flex flex-col rounded-2xl bg-neutral-800 pt-3 pr-2 pb-2 pl-4',
         () => (coarse.get() ? 'text-base' : 'text-sm'),

@@ -53,6 +53,7 @@ export const phoneSidebar = (model: Model) =>
   nav(
     {
       'aria-label': 'Sidebar',
+      'data-part': 'sidebar',
       class: () => ['flex h-full w-full flex-col', drawerLook(model)],
       style: () => drawerOffset(model),
       inert: () => !model.drawerOpen.get() && model.drawerDrag.get() === undefined,
@@ -63,7 +64,7 @@ export const phoneSidebar = (model: Model) =>
 export const sidebar = (model: Model, screen: Derive<Built | undefined>, { class: extra, ...props }: Props<HTMLElement>) => {
   const screenNav = derive(() => screen.get()?.nav)
   return nav(
-    { ...props, 'aria-label': 'Sidebar', class: ['flex h-full shrink-0 flex-col bg-neutral-950 px-2 py-2', extra], style: { width: '18rem' } },
+    { ...props, 'aria-label': 'Sidebar', 'data-part': 'sidebar', class: ['flex h-full shrink-0 flex-col bg-neutral-950 px-2 py-2', extra], style: { width: '18rem' } },
     appList(model, screenNav),
     dynamicChild(screenNav, shown => (shown ? screenList(model, shown) : null)),
   )

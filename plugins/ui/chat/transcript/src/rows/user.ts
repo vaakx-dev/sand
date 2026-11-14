@@ -82,6 +82,7 @@ const bubble = (text: string, records: ContextRecord[], props: Props<HTMLDivElem
   div(
     {
       ...props,
+      'data-part': 'user-message',
       class: 'min-w-0 rounded-xl bg-neutral-800 px-3 py-2 text-sm text-neutral-100 whitespace-pre-wrap wrap-anywhere',
       'data-quote': '',
       onCopy: copySelection(records),
