@@ -1,5 +1,6 @@
-import { type LLMEvent, ProviderTrouble, StreamStalled } from '@sand/accounts/contract'
+import { type LLMEvent, ProviderTrouble, RequestRejected, StreamStalled } from '@sand/accounts/contract'
 import { type Message, noteBlock, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
+import { media } from '@sand/media/contract'
 import { conceal } from '@sand/tools/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
 import { untilAborted } from '@sand/util'
@@ -7,6 +8,7 @@ import type { Conversation, Step, TurnOrigin } from '../contract'
 import type { EngineContext } from '../context'
 import { expand } from '../lifecycle/start'
 import type { Owned } from '../owned'
+import { recoverRejected } from './rejected'
 import { streamStep } from './stream'
 import { runTools } from './tools'
 import type { TurnHooks, TurnRun } from './turn'
@@ -52,7 +54,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     return tries + 1
   }
 
-  const send = async (again = true, tries = 0): Promise<Sent> => {
+  const send = async (again = true, tries = 0, recover = true): Promise<Sent> => {
     const step = await conversations.step(conversation, info, signal)
     if (step.thread) stores.turns.thread(info.id, step.thread)
     try {
@@ -60,9 +62,10 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     } catch (error) {
       if (signal.aborted) throw error
       const lost = step.lost(error)
-      if (error instanceof ProviderTrouble) return send(again, await pause(error, tries))
-      if (!again || !(await retries(lost, error))) throw error
-      return send(false, tries)
+      if (error instanceof ProviderTrouble) return send(again, await pause(error, tries), recover)
+      if (again && (await retries(lost, error))) return send(false, tries, recover)
+      if (recover && error instanceof RequestRejected) return recoverRejected(ctx.get(media), step.request, error, () => send(false, tries, false))
+      throw error
     }
   }
 
