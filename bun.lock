@@ -2566,6 +2566,7 @@
         "@sand/chats": "workspace:*",
         "@sand/compaction": "workspace:*",
         "@sand/context": "workspace:*",
+        "@sand/file-viewer": "workspace:*",
         "@sand/images": "workspace:*",
         "@sand/markdown": "workspace:*",
         "@sand/media": "workspace:*",
@@ -2594,6 +2595,29 @@
         "@sand/toasts": "workspace:*",
         "@sand/transfers": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
+    "plugins/ui/files/viewer": {
+      "name": "@sand/file-viewer",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/features": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/markdown": "workspace:*",
+        "@sand/panel": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -3294,6 +3318,8 @@
     "@sand/features": ["@sand/features@workspace:plugins/core/features"],
 
     "@sand/file-tools": ["@sand/file-tools@workspace:plugins/agent/file-tools"],
+
+    "@sand/file-viewer": ["@sand/file-viewer@workspace:plugins/ui/files/viewer"],
 
     "@sand/finders": ["@sand/finders@workspace:plugins/computer/finders"],
 

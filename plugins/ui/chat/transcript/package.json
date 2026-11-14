@@ -17,6 +17,7 @@
     "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/context": "workspace:*",
+    "@sand/file-viewer": "workspace:*",
     "@sand/images": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/media": "workspace:*",

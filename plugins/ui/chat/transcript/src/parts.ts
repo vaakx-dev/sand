@@ -3,6 +3,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
 import type { MediaImage, RendererRegistry, ToolViews, TranscriptParts } from './contract'
 import type { TranscriptContext } from './context'
+import { fileOpener, replyFiles } from './files'
 import type { Images } from './image'
 import { quoteJump } from './integrations/quote-jump'
 import { liveItems } from './items/items'
@@ -26,7 +27,7 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
     prompt: (entry, parts) => userItems(entry, parts, true, custom),
     rows(surface) {
       const { kit, markdown } = ctx
-      const context: RowContext = { ...surface, kit, registry, markdown, chip, open, media: images.image, image: images.replyImage(surface.conversation) }
+      const context: RowContext = { ...surface, kit, registry, markdown, chip, open, media: images.image, prose: { image: images.replyImage(surface.conversation), files: replyFiles(ctx, surface.conversation) }, fileOpener: fileOpener(ctx, surface.conversation) }
       return {
         item: item => itemRows(item, context),
         user: (item, actions, note) => userMessage(item, context, actions, note),

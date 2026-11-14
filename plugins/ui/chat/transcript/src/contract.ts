@@ -111,8 +111,11 @@ export interface RendererRegistry {
   noticeKind(from: string): NoticeKind | undefined
 }
 
+export type FileOpener = () => ((path: string) => void) | undefined
+
 export interface ToolStepOptions {
   renderer: (name: string) => Required<ToolRenderer>
+  fileOpener?: FileOpener
   version: Sig<number>
   open: Sig<boolean>
   toggle(): void

@@ -14,11 +14,11 @@ const stepView = (step: Sig<Step>, context: RowContext) => {
   const first = untrack(() => step.get())
   const state = context.states.get(first.key)
   if (first.kind === 'thinking') return thinkingView(context.kit, step.map(value => (value.kind === 'thinking' ? value : first)), state)
-  const { kit, registry, menu, cwd } = context
+  const { kit, registry, menu, cwd, fileOpener } = context
   return toolStep(
     kit,
     step.map(value => (value.kind === 'tool' ? value.tool : first.tool)),
-    { renderer: registry.toolRenderer, version: registry.version, ...state, menu },
+    { renderer: registry.toolRenderer, version: registry.version, ...state, menu, fileOpener },
     cwd,
   )
 }
