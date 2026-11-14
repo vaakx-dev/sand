@@ -1,4 +1,4 @@
-import { wire } from '@sand/devices-contract'
+import { wire, wireHello } from '@sand/devices-contract'
 import { markdown } from '@sand/markdown/contract'
 import { panel } from '@sand/panel/contract'
 import { kit } from '@sand/ui-kit/contract'
@@ -62,6 +62,8 @@ export default definePlugin({
     }
 
     ctx.effect(() => joinDisposers(...builtinFormats(parts).map(formats.add)))
+    ctx.on(wireHello, files.reopen)
+    if (ctx.wire.ready()) files.reopen()
     ctx.provide(fileViewer, viewer)
     ctx.effect(() =>
       ctx.panel.tab({
