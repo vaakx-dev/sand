@@ -1,6 +1,6 @@
 import type { UpdateChannel } from '@sand/host-updates/contract'
 import { isRecord, serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 
 interface LaterEntry {
@@ -36,10 +36,7 @@ const parse = (data: unknown): Saved => {
   return { channel: isChannel(saved.channel) ? saved.channel : 'release', later: parseLater(saved.later) }
 }
 
-const read = (file: string) =>
-  Bun.file(file)
-    .json()
-    .then(parse, () => parse(undefined))
+const read = async (file: string) => (await readState(file, parse)) ?? parse(undefined)
 
 export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')

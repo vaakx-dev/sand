@@ -1,9 +1,11 @@
 import { healthText, restorePrevious } from '@sand/boot'
+import { rollbackBlocked } from '@sand/boot/notice'
 import { errorMessage } from '@sand/util'
 import { checkHealth } from '../control/health'
 import { start } from '../control/start'
 import { stop } from '../control/stop'
 import { handOff } from '../handoff/hand-off'
+import { startSafe } from '../handoff/verify'
 
 const startWait = 90_000
 
@@ -39,6 +41,8 @@ const startPrevious = async (home: string) => {
 
 const rollBack = async (home: string) => {
   await stopLeftover(home)
+  const blocked = await rollbackBlocked(home)
+  if (blocked) return void (await startSafe(home, blocked))
   const info = await startPrevious(home)
   if (!info) return
   const outcome = await checkHealth(home, info)

@@ -2,6 +2,7 @@ import { cli, pluginSwitches } from '@sand/config/contract'
 import { loadPcIdentity } from '@sand/devices-identity/pc'
 import { server } from '@sand/server/contract'
 import { expandHome, packageExports, pluginContracts } from '@sand/util/fs'
+import { coreBuild } from '@sand/util/release'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -30,10 +31,12 @@ export default definePlugin({
     const folders = safe ? builtins : [...builtins, { dir: join(home, 'plugins'), builtin: false }]
     const extra = safe ? [] : config.paths.map(path => ({ dir: expandHome(path, home), builtin: false }))
     const switches = ctx.pluginSwitches
+    const build = await coreBuild(ctx.cli.builtins)
     const site = await createSite({
-      find: async () => (await discover(folders, extra)).filter(extension => !switches.turnedOff(extension.dir)),
+      find: async () => (await discover(folders, extra, build)).filter(extension => !switches.turnedOff(extension.dir)),
       modules: { ...(await pluginContracts(ctx.cli.builtins)), ...(await packageExports(join(ctx.cli.builtins, '..', 'packages'))) },
       report: problem => ctx.report(new Error(problem)),
+      fault: (addon, error) => void switches.fault(addon, error),
     })
     const states = createStates(site, switches)
     ctx.provide(webExtensions, { list: states.list })

@@ -5,6 +5,8 @@ import { basename, isAbsolute, join, resolve } from 'node:path'
 
 type Table = Record<string, unknown>
 
+export type Found = readonly [id: string, dir: string, addon?: string]
+
 const skipped = (name: string) => name.startsWith('.') || name === 'node_modules'
 
 const readManifest = async (dir: string): Promise<Table> => {
@@ -33,25 +35,27 @@ const builtinId = async (dir: string) => {
   return typeof name === 'string' ? name.replace(/^@sand\//, '') : basename(dir)
 }
 
-export const builtinPlugins = async (root: string) => {
+export const builtinPlugins = async (root: string): Promise<Found[]> => {
   const dirs = await nestedPlugins(root)
   const ids = await Promise.all(dirs.map(builtinId))
-  return dirs.map((dir, index) => [ids[index]!, dir] as const)
+  return dirs.map((dir, index) => [ids[index]!, dir])
 }
 
-export const addonPlugins = async (root: string) => (await Promise.all((await addonFolders(root)).map(builtinPlugins))).flat()
+const pluginsOfAddon = async (folder: string): Promise<Found[]> => (await builtinPlugins(folder)).map(([id, dir]) => [id, dir, basename(folder)])
 
-const ownPlugins = async (root: string) => {
+export const addonPlugins = async (root: string, build: string) => (await Promise.all((await addonFolders(root, build)).map(pluginsOfAddon))).flat()
+
+const ownPlugins = async (root: string): Promise<Found[]> => {
   const folders = await subfolders(root)
   const plugins = await Promise.all(folders.map(dir => Bun.file(join(dir, 'package.json')).exists()))
-  return folders.filter((_, index) => plugins[index]).map(dir => [basename(dir), dir] as const)
+  return folders.filter((_, index) => plugins[index]).map(dir => [basename(dir), dir])
 }
 
-export const userPlugins = async (root: string, table: unknown) => {
+export const userPlugins = async (root: string, table: unknown, build: string): Promise<Found[]> => {
   const paths = Object.keys(isRecord(table) ? table : {})
     .filter(id => isAbsolute(id))
-    .map(path => [path, path] as const)
-  return [...(await ownPlugins(root)), ...(await addonPlugins(root)), ...paths]
+    .map((path): Found => [path, path])
+  return [...(await ownPlugins(root)), ...(await addonPlugins(root, build)), ...paths]
 }
 
 const fileIn = (dir: string, table: unknown, key: string) => {

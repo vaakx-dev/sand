@@ -4,7 +4,11 @@ set -eu
 repo='vaakx-dev/sand'
 home="${SAND_HOME:-$HOME/.sand}"
 tmp="${TMPDIR:-/tmp}"
-channel="${SAND_CHANNEL:-release}"
+channel="${SAND_CHANNEL:-}"
+allow_older=''
+if [ "${SAND_ALLOW_OLDER:-}" = 1 ]; then
+  allow_older=1
+fi
 join="${SAND_JOIN:-}"
 assets=''
 label=''
@@ -86,7 +90,7 @@ cleanup() {
 }
 
 usage() {
-  printf '%s\n' 'usage: install.sh [--channel release|nightly|dev] [--join <link from Add a PC>]' >&2
+  printf '%s\n' 'usage: install.sh [--channel release|nightly|dev] [--join <link from Add a PC>] [--allow-older]' >&2
   exit 2
 }
 
@@ -103,13 +107,25 @@ read_args() {
         join=$2
         shift
         ;;
+      --allow-older) allow_older=1 ;;
       *) usage ;;
     esac
     shift
   done
+  if [ -z "$channel" ]; then
+    channel=$(saved_channel)
+  fi
   case "$channel" in
     release|nightly|dev) ;;
     *) fail "Unknown channel '$channel'; use release, nightly or dev." ;;
+  esac
+}
+
+saved_channel() {
+  saved=$(sed -n 's/.*"channel": *"\([a-z]*\)".*/\1/p' "$home/updates.json" </dev/null 2>/dev/null | head -n 1 || true)
+  case "$saved" in
+    nightly|dev) printf '%s' "$saved" ;;
+    *) printf '%s' release ;;
   esac
 }
 
@@ -287,6 +303,32 @@ get_bun() {
   fail "Bun $bun_version has no build for this PC (tried $targets)"
 }
 
+check_older() {
+  [ -z "$allow_older" ] || return 0
+  cat >"$work/older.js" <<'EOF' || fail 'Could not check the installed sand'
+import { Database } from "bun:sqlite"
+import { existsSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+const [home, stampFile, label] = process.argv.slice(2)
+const read = file => { try { return JSON.parse(readFileSync(file, "utf8")) } catch { return undefined } }
+const builds = []
+const add = (id, time, what) => { if (typeof id === "string" && Number.isFinite(time)) builds.push({ id, time, what }) }
+let current = ""
+try { current = readFileSync(join(home, "app", "current"), "utf8").trim() } catch {}
+if (/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(current)) { const stamp = read(join(home, "app", current, "sand-build.json")); add(stamp?.id, stamp?.time, "is installed") }
+const file = join(home, "sand.db")
+if (existsSync(file)) { try { const db = new Database(file, { readonly: true }); try { const row = db.query("select build, time from upgraded_by").get(); add(row?.build, row?.time, "already upgraded your chats and bots") } finally { db.close() } } catch {} }
+const next = read(stampFile) ?? {}
+const newest = builds.sort((a, b) => b.time - a.time)[0]
+const describe = (id, time) => `build ${id.slice(0, 7)} (${new Date(time).toISOString().slice(0, 10)})`
+if (newest && typeof next.id === "string" && Number.isFinite(next.time) && next.time < newest.time) console.log(`${describe(newest.id, newest.time)} ${newest.what}, and ${label} is the older ${describe(next.id, next.time)}.`)
+EOF
+  older=$("$bun" "$work/older.js" "$home" "$work/sand-build.json" "$label" </dev/null 2>&1) || fail "Could not check the installed sand: $older"
+  if [ -n "$older" ]; then
+    fail "Sand was left as it is: $older To install the older build anyway, run the command again with --allow-older."
+  fi
+}
+
 download() {
   step sand
   say "Downloading $label…"
@@ -315,7 +357,7 @@ hand_over() {
   work=''
   handed=1
   code=0
-  SAND_CHANNEL="$channel" SAND_JOIN="$join" "$bun" "$dir/apps/sand/src/main.ts" install </dev/null || code=$?
+  SAND_CHANNEL="$channel" SAND_JOIN="$join" SAND_ALLOW_OLDER="$allow_older" "$bun" "$dir/apps/sand/src/main.ts" install </dev/null || code=$?
   if [ "$code" -ne 0 ] && [ "$code" -ne 3 ]; then
     report "Setup on the new PC stopped (exit status $code); see the terminal there"
   fi
@@ -342,6 +384,7 @@ main() {
   read_stamp
   say "Installing $label (build $build)"
   get_bun
+  check_older
   download
   unpack
   hand_over

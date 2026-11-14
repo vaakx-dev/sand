@@ -8,9 +8,15 @@ interface Plugin {
 
 interface Loaded extends Plugin {
   scope: ScopeView
+  addon?: string
 }
 
-export const createSwitches = (turnedOff: () => Plugin[]) => {
+interface SwitchOptions {
+  turnedOff(): Plugin[]
+  fault(addon: string, error: string): Promise<void>
+}
+
+export const createSwitches = ({ turnedOff, fault }: SwitchOptions) => {
   const loaded = new Map<string, Loaded>()
   let owners = new Map<string, string>()
 
@@ -39,11 +45,15 @@ export const createSwitches = (turnedOff: () => Plugin[]) => {
     return found ? [{ id, dir, needs: found }] : []
   }
 
+  const loadedAs = (scope: ScopeView) => [...loaded.values()].find(plugin => plugin.scope.id === scope.id)
+
   const switches: PluginSwitches = {
     turnedOff: dir => turnedOff().some(plugin => plugin.dir === dir),
     needs,
     off: () => [...turnedOff().map(plugin => ({ ...plugin, needs: [] })), ...[...loaded.values()].flatMap(waitingOff)],
-    folder: scope => [...loaded.values()].find(plugin => plugin.scope.id === scope.id)?.dir,
+    folder: scope => loadedAs(scope)?.dir,
+    addon: scope => loadedAs(scope)?.addon,
+    fault,
   }
 
   return {

@@ -1,15 +1,16 @@
 import { isRecord } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
 
 type Kept = Record<string, string>
 
-const readKept = async (file: string): Promise<Kept> => {
-  const data: unknown = await Bun.file(file).json().catch(() => undefined)
+const keptOf = (data: unknown): Kept => {
   const kept = isRecord(data) ? data.kept : undefined
   if (!isRecord(kept)) return {}
   return Object.fromEntries(Object.entries(kept).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
 }
+
+const readKept = async (file: string): Promise<Kept> => (await readState(file, keptOf)) ?? {}
 
 export const keptStore = async (home: string) => {
   const file = join(home, 'plugin-library.json')

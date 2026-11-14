@@ -27,6 +27,8 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
   let claiming = false
   let sent = ''
   let stopSchedule: (() => void) | undefined
+  let stopNotice: (() => void) | undefined
+  let notice: string | undefined
 
   const available = () => !!latest && !!current && isNewer(latest.build, current)
 
@@ -42,6 +44,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     checkError,
     phase,
     error,
+    ...(notice && { notice }),
     running: runningWork(deps),
   })
 
@@ -56,6 +59,11 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
   }
 
   const busy = () => busyPhases.includes(phase)
+
+  const readNotice = async () => {
+    notice = (await deps.notice.read())?.text
+    commit()
+  }
 
   const settle = (next: UpdatePhase, message?: string) => {
     phase = next
@@ -72,6 +80,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     fail: message => settle('failed', message),
     done(build) {
       current = build
+      void deps.notice.clear()
       settle('idle')
     },
   })
@@ -176,6 +185,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
 
   const later = async () => {
     if (latest) await store.hide(latest.build.id)
+    await deps.notice.clear()
     if (phase === 'failed') settle('idle')
     return commit()
   }
@@ -191,6 +201,8 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     repair,
     start() {
       if (stopSchedule) return
+      void readNotice()
+      stopNotice = deps.notice.watch(() => void readNotice())
       void deps
         .current()
         .then(build => {
@@ -205,6 +217,8 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
       epoch++
       stopSchedule?.()
       stopSchedule = undefined
+      stopNotice?.()
+      stopNotice = undefined
     },
   }
 }

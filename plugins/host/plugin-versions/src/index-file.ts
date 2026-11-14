@@ -1,5 +1,5 @@
 import { isRecord } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { Version, VersionSource } from './contract'
 
@@ -33,10 +33,9 @@ const parseGood = (value: unknown): Record<string, string> => {
 
 const indexPath = (root: string) => join(root, 'index.json')
 
-export const readIndex = async (root: string): Promise<VersionIndex> => {
-  const data: unknown = await Bun.file(indexPath(root)).json().catch(() => undefined)
-  if (!isRecord(data)) return { targets: {}, good: {} }
-  return { targets: parseTargets(data.targets), good: parseGood(data.good) }
-}
+const parseIndex = (data: unknown): VersionIndex =>
+  isRecord(data) ? { targets: parseTargets(data.targets), good: parseGood(data.good) } : { targets: {}, good: {} }
+
+export const readIndex = async (root: string): Promise<VersionIndex> => (await readState(indexPath(root), parseIndex)) ?? parseIndex(undefined)
 
 export const writeIndex = (root: string, index: VersionIndex) => writePrivateJson(indexPath(root), index)

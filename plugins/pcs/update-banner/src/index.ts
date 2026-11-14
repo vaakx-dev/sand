@@ -16,7 +16,7 @@ export default definePlugin({
     const fleet = owned(ctx, () => createFleet(ctx))
     const sheet = sheetSlot(ctx)
     const open = () => sheet.open(() => updateSheet(ctx.kit, fleet, sheet.close))
-    const dot = () => fleet.pending.get().some(pc => !pc.state?.later)
+    const dot = () => fleet.pcs.get().some(pc => pc.state?.notice) || fleet.pending.get().some(pc => !pc.state?.later)
     ctx.watch(settings, found =>
       found?.page({ id: 'updates', label: 'Updates', intro: 'Keep sand current on every PC.', icon: 'reload', group: 'app', order: 70, dot, render: () => updatesPage(ctx.kit, fleet, open) }),
     )

@@ -31,6 +31,7 @@ test('built-in extensions are known by package name, and a user plugin named the
       { dir: user, builtin: false },
     ],
     [],
+    'test',
   )
 
   expect(found.map(({ id, dir }) => [id, dir]).sort()).toEqual([
@@ -53,10 +54,22 @@ test("an installed add-on's extensions are known by package name, so they replac
       { dir: user, builtin: false },
     ],
     [],
+    'test',
   )
 
   expect(found.map(({ id, dir }) => [id, dir]).sort()).toEqual([
     ['branch', join(user, 'git', 'ui', 'branch')],
     ['git', join(user, 'git', 'git', 'git')],
   ])
+})
+
+test('an add-on that did not load with this build is left out, and tried again with another build', async () => {
+  const user = root()
+  await Bun.write(join(user, 'git', 'sand-addon.json'), '{}')
+  await plugin(join(user, 'git', 'ui', 'branch'), '@sand/branch')
+  await Bun.write(join(user, 'git', 'sand-addon-fault.json'), JSON.stringify({ build: 'broken', error: 'it failed', at: 1 }))
+  const folders = [{ dir: user, builtin: false }]
+
+  expect(await discover(folders, [], 'broken')).toEqual([])
+  expect((await discover(folders, [], 'newer')).map(({ id, addon }) => [id, addon])).toEqual([['branch', 'git']])
 })

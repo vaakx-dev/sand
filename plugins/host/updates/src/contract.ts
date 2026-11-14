@@ -1,6 +1,7 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import type { BuildChange, BuildInfo } from '@sand/util/release'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export type UpdateChannel = 'release' | 'nightly' | 'dev'
@@ -29,7 +30,22 @@ export interface UpdateState {
   checkError?: string
   phase: UpdatePhase
   error?: string
+  notice?: string
   running?: number
+}
+
+export interface AddonTarget {
+  addons?: Record<string, string>
+  catalog?: string
+}
+
+export interface StagedAddons {
+  place(): Promise<string[]>
+  drop(): Promise<void>
+}
+
+export interface BuildAddons {
+  stage(target: AddonTarget): Promise<StagedAddons>
 }
 
 export interface PcRepairResult {
@@ -54,3 +70,5 @@ export const updatesRepair = request('updates.repair', { input: () => z.object({
 export const pcRepair = request('pc.repair', { input: () => z.object({ device: z.string().min(1), resume: z.boolean().optional() }), output: type<PcRepairResult>() })
 
 export const updatesChange = wireEvent<UpdateState>('updates.change')
+
+export const buildAddons = service<BuildAddons>('buildAddons')
