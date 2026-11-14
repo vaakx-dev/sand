@@ -10,6 +10,20 @@
         "typescript": "^7.0.2",
       },
     },
+    "apps/bench": {
+      "name": "@sand/bench",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/ledger": "workspace:*",
+        "@sand/media": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/usage": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "playwright": "^1.64.1",
+      },
+    },
     "apps/sand": {
       "name": "sand",
       "version": "0.1.0-beta.1",
@@ -3146,6 +3160,8 @@
     "@sand/ask": ["@sand/ask@workspace:plugins/agent/ask"],
 
     "@sand/attachments": ["@sand/attachments@workspace:plugins/agent/attachments"],
+
+    "@sand/bench": ["@sand/bench@workspace:apps/bench"],
 
     "@sand/boot": ["@sand/boot@workspace:packages/boot"],
 
