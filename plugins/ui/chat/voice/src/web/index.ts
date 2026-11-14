@@ -27,7 +27,7 @@ export default definePlugin({
         icon: 'mic',
         group: 'app',
         order: 15,
-        render: () => voicePage(ctx.kit, model),
+        render: () => voicePage(ctx.kit, model, () => ctx.get(settings)?.open('accounts')),
       }),
     )
     ctx.watch(composer, found => found?.shared('end', here => micButton({ kit: ctx.kit, model, here, toasts: toastsOf(ctx), openSettings }), MIC_ORDER))

@@ -10,7 +10,7 @@ Voice lets you speak instead of typing. Tap the microphone in the message box, s
 
 ## Try it
 
-Open Settings › Voice and choose This PC. sand downloads Parakeet, a free English speech model, once (about 700 MB) and checks it. From then on your speech becomes text on your own PC, on its graphics card when it has one, and your audio never leaves it. If you have a key for OpenAI, Groq or another OpenAI-style speech service, you can choose A cloud service instead.
+Open Settings › Voice and choose This PC. sand downloads Parakeet, a free English speech model, once (about 700 MB) and checks it. From then on your speech becomes text on your own PC, on its graphics card when it has one, and your audio never leaves it. If you saved an OpenAI API key in Settings › Accounts, you can choose A cloud service instead. Voice uses that key and its address, so a key for Groq or another OpenAI-style service works too.
 
 ## On a phone
 

@@ -15,7 +15,7 @@
     "features": {
       "voice": {
         "label": "Voice",
-        "summary": "Speak instead of typing. Free and private on your own PC, or with a cloud service you have a key for",
+        "summary": "Speak instead of typing. Free and private on your own PC, or in the cloud with your OpenAI key",
         "needs": [
           "composer"
         ],
@@ -24,7 +24,9 @@
     }
   },
   "dependencies": {
+    "@sand/accounts": "workspace:*",
     "@sand/composer": "workspace:*",
+    "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/paths": "workspace:*",
@@ -34,7 +36,6 @@
     "@sand/transfers": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
-    "@sand/vault": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

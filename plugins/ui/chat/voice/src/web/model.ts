@@ -2,7 +2,7 @@ import { type Wire, wireHello } from '@sand/devices-contract'
 import { uploadBlob } from '@sand/transfers/contract'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { type Choice, helloVoice, voiceChanged, voiceTranscribe, voiceUse, voiceWarm, type VoiceState } from '../contract'
+import { type Choice, helloVoice, voiceChanged, voiceState, voiceTranscribe, voiceUse, voiceWarm, type VoiceState } from '../contract'
 
 const voiceModel = (ctx: Context, wire: Wire) => {
   const state = sig<VoiceState | undefined>(undefined)
@@ -16,7 +16,7 @@ const voiceModel = (ctx: Context, wire: Wire) => {
 
   const ready = derive(() => {
     const current = state.get()
-    if (current?.destination === 'cloud') return true
+    if (current?.destination === 'cloud') return Boolean(current.openai)
     return current?.destination === 'local' && current.local.status === 'ready'
   })
 
@@ -28,6 +28,7 @@ const voiceModel = (ctx: Context, wire: Wire) => {
   return {
     state,
     ready,
+    refresh: () => void wire.call(voiceState, {}).then(take, error => ctx.report(error)),
     use: async (choice: Choice) => take(await wire.call(voiceUse, choice)),
     warm: () => wire.call(voiceWarm, {}),
     transcribe,

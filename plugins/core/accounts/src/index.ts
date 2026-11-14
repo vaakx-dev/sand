@@ -2,7 +2,7 @@ import { cli, sandConfig } from '@sand/config/contract'
 import { media } from '@sand/media/contract'
 import { processes } from '@sand/processes/contract'
 import { server as serverService, type Server } from '@sand/server/contract'
-import { helloLimits, llm, llmLimits, llmModels, llmPlans, loginChange, type Limits, type LoginSharePc } from './contract'
+import { apiKeys, helloLimits, llm, llmLimits, llmModels, llmPlans, loginChange, type Limits, type LoginSharePc } from './contract'
 import { peers as pcLinks } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -102,6 +102,7 @@ export default definePlugin({
     }
 
     ctx.provide(llm, merged.llm)
+    ctx.provide(apiKeys, { key: accounts.apiKey })
     ctx.provide(llmPlans, { register: plans.register, limits: limits.save })
     ctx.watch(pcLinks, found => {
       void peers.refresh()

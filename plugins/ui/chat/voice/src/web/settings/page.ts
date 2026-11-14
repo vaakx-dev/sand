@@ -9,10 +9,11 @@ import { localStatus } from './local'
 const NOTES: Record<Destination, string> = {
   off: 'Nothing is recorded. The microphone in the message box brings you here.',
   local: `${localModel.name} turns your speech into ${localModel.language} text on this PC, on its graphics card when it has one. Free, and your audio never leaves the PC.`,
-  cloud: 'Your recordings go to the service you pick and are billed to your account there.',
+  cloud: 'Your recordings go to OpenAI, or the OpenAI-style service saved with your key in Accounts, and are billed there.',
 }
 
-const voicePage = (kit: Kit, model: VoiceModel) => {
+const voicePage = (kit: Kit, model: VoiceModel, openAccounts: () => void) => {
+  model.refresh()
   const pending = sig<Destination | undefined>(undefined)
   const saved = derive(() => model.state.get()?.destination ?? 'off')
   const active = derive(() => pending.get() ?? saved.get())
@@ -32,7 +33,7 @@ const voicePage = (kit: Kit, model: VoiceModel) => {
       case 'local':
         return localStatus(kit, model, () => void choose('local'))
       case 'cloud':
-        return cloudForm(kit, model, () => pending.set(undefined))
+        return cloudForm(kit, model, { saved: () => pending.set(undefined), accounts: openAccounts })
     }
   }
 
@@ -44,7 +45,7 @@ const voicePage = (kit: Kit, model: VoiceModel) => {
         [
           { value: 'off' as const, label: 'Off' },
           { value: 'local' as const, label: 'This PC', mark: span({ class: 'text-xs text-neutral-500' }, 'Free · private') },
-          { value: 'cloud' as const, label: 'A cloud service', mark: span({ class: 'text-xs text-neutral-500' }, 'Your key') },
+          { value: 'cloud' as const, label: 'A cloud service', mark: span({ class: 'text-xs text-neutral-500' }, 'OpenAI key') },
         ],
         active,
         destination => void choose(destination),

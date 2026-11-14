@@ -1,37 +1,26 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
-import { div, keys, sig } from '@vaakx-dev/vrui'
-import { type CloudService, cloudServices, services } from '../../contract'
+import { derive, div, dynamicChild, keys, sig } from '@vaakx-dev/vrui'
 import type { VoiceModel } from '../model'
 
-const cloudForm = (kit: Kit, model: VoiceModel, saved: () => void) => {
-  const current = model.state.get()
-  const start = current?.cloud ?? { service: 'openai' as const, ...services.openai }
-  const service = sig<CloudService>(start.service)
-  const url = sig(start.url)
-  const name = sig(start.model)
-  const key = sig('')
+interface CloudLinks {
+  saved(): void
+  accounts(): void
+}
+
+const cloudForm = (kit: Kit, model: VoiceModel, { saved, accounts }: CloudLinks) => {
+  const name = sig(model.state.get()?.model ?? '')
   const busy = sig(false)
   const error = sig('')
-
-  const keySaved = () => Boolean(model.state.get()?.keys.includes(service.get()))
-  const who = () => (service.get() === 'other' ? 'the service at that address' : services[service.get()].label)
-  const ready = () => !busy.get() && Boolean(url.get().trim() && name.get().trim() && (key.get().trim() || keySaved()))
-
-  const pick = (next: CloudService) => {
-    service.set(next)
-    url.set(services[next].url)
-    name.set(services[next].model)
-    key.set('')
-  }
+  const url = derive(() => model.state.get()?.openai?.url)
+  const ready = () => !busy.get() && Boolean(name.get().trim())
 
   const save = async () => {
     if (!ready()) return
     busy.set(true)
     error.set('')
     try {
-      await model.use({ destination: 'cloud', service: service.get(), url: url.get().trim(), model: name.get().trim(), ...(key.get().trim() && { key: key.get().trim() }) })
-      key.set('')
+      await model.use({ destination: 'cloud', model: name.get().trim() })
       saved()
     } catch (failure) {
       error.set(errorMessage(failure))
@@ -40,27 +29,24 @@ const cloudForm = (kit: Kit, model: VoiceModel, saved: () => void) => {
     }
   }
 
-  const submit = keys({ Enter: () => void save() })
+  const noKey = () =>
+    kit.banner({
+      tone: 'warning',
+      title: 'Add an OpenAI API key in Settings › Accounts first',
+      detail: 'Voice uses the key and address you saved there. Give it the address of another OpenAI-style service, like Groq, to use that service instead.',
+      actions: [kit.secondaryAction({ onClick: accounts }, 'Open Accounts')],
+    })
 
-  return kit.pageSection(
-    { title: 'Cloud service', note: () => `Each recording goes to ${who()} when you stop speaking, and is billed to your account there.` },
+  const form = (address: string) =>
     div(
       { class: 'flex flex-col gap-4' },
-      kit.segmented(
-        cloudServices.map(value => ({ value, label: services[value].label })),
-        service,
-        pick,
-        { label: 'Service' },
-      ),
-      kit.field({ label: 'Address', hint: 'Any service that offers an OpenAI-style /audio/transcriptions endpoint' }, kit.textInput({ type: 'url', bindValue: url, placeholder: 'https://…/v1', onKeyDown: submit })),
-      kit.field({ label: 'Model' }, kit.textInput({ bindValue: name, placeholder: 'whisper-1', onKeyDown: submit })),
-      kit.field(
-        { label: 'API key', error: () => error.get() || undefined },
-        kit.textInput({ type: 'password', bindValue: key, placeholder: () => (keySaved() ? 'Saved. Enter a new one to replace it' : 'Paste your key'), onKeyDown: submit }),
-      ),
+      kit.field({ label: 'Model' }, kit.textInput({ bindValue: name, placeholder: 'gpt-4o-mini-transcribe', onKeyDown: keys({ Enter: () => void save() }) })),
+      kit.errorText(() => error.get()),
       div({ class: 'flex' }, kit.primaryAction({ disabled: () => !ready(), onClick: () => void save() }, 'Save and use')),
-    ),
-  )
+      kit.secondaryText(`Each recording goes to ${address} when you stop speaking, with the OpenAI key from Accounts, and is billed to that account.`),
+    )
+
+  return kit.pageSection({ title: 'Cloud service' }, dynamicChild(url, address => (address ? form(address) : noKey())))
 }
 
 export { cloudForm }

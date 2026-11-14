@@ -2555,7 +2555,9 @@
       "name": "@sand/voice",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/accounts": "workspace:*",
         "@sand/composer": "workspace:*",
+        "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/paths": "workspace:*",
@@ -2565,7 +2567,6 @@
         "@sand/transfers": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
-        "@sand/vault": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",

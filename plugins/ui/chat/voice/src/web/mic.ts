@@ -45,6 +45,7 @@ const tones: Record<Look, string> = {
 
 const waitingTitle = (state: VoiceState | undefined) => {
   if (!state || state.destination === 'off') return 'Set up voice input'
+  if (state.destination === 'cloud') return 'Add an OpenAI API key in Settings › Accounts'
   const local = state.local
   switch (local.status) {
     case 'downloading':

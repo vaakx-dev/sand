@@ -1,31 +1,9 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { z } from 'zod'
 
-export const cloudServices = ['openai', 'groq', 'other'] as const
-
-export type CloudService = (typeof cloudServices)[number]
-
-export interface ServiceInfo {
-  label: string
-  url: string
-  model: string
-}
-
-export const services: Record<CloudService, ServiceInfo> = {
-  openai: { label: 'OpenAI', url: 'https://api.openai.com/v1', model: 'gpt-4o-mini-transcribe' },
-  groq: { label: 'Groq', url: 'https://api.groq.com/openai/v1', model: 'whisper-large-v3-turbo' },
-  other: { label: 'Other', url: '', model: '' },
-}
-
 export const destinations = ['off', 'local', 'cloud'] as const
 
 export type Destination = (typeof destinations)[number]
-
-export interface Cloud {
-  service: CloudService
-  url: string
-  model: string
-}
 
 export type Local =
   | { status: 'missing'; bytes: number }
@@ -39,8 +17,8 @@ export type Local =
 export interface VoiceState {
   destination: Destination
   local: Local
-  cloud?: Cloud
-  keys: CloudService[]
+  model: string
+  openai?: { url: string }
 }
 
 export interface Transcript {
@@ -51,14 +29,9 @@ export const localModel = { name: 'Parakeet TDT 0.6B v2', language: 'English' }
 
 export const maxRecordingMs = 5 * 60_000
 
-const cloudChoice = () =>
-  z.object({
-    destination: z.literal('cloud'),
-    service: z.enum(cloudServices),
-    url: z.string().trim().url(),
-    model: z.string().trim().min(1),
-    key: z.string().trim().min(1).optional(),
-  })
+export const defaultCloudModel = 'gpt-4o-mini-transcribe'
+
+const cloudChoice = () => z.object({ destination: z.literal('cloud'), model: z.string().trim().min(1) })
 
 const choice = () => z.discriminatedUnion('destination', [z.object({ destination: z.literal('off') }), z.object({ destination: z.literal('local') }), cloudChoice()])
 
