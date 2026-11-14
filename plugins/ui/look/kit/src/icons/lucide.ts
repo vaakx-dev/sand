@@ -72,6 +72,8 @@ import {
   Lock,
   Menu,
   MessageSquare,
+  Mic,
+  MicOff,
   Monitor,
   MousePointerClick,
   PanelLeft,
@@ -217,6 +219,8 @@ const nodes = {
   inbox: Inbox,
   shield: ShieldCheck,
   calendar: Calendar,
+  mic: Mic,
+  'mic-off': MicOff,
   'tab-key': ArrowRightToLine,
   return: CornerDownLeft,
 } satisfies Record<string, IconNode>

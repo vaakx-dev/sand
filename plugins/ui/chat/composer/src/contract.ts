@@ -26,6 +26,7 @@ export interface ComposerContent {
 
 export interface ComposerView {
   restore(saved: ComposerContent): void
+  insertWords(text: string): void
 }
 
 export type SlotView = (here: ComposerView) => HTMLElement

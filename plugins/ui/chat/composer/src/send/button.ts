@@ -1,7 +1,7 @@
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
-import { derive, dynamicChild, SPACE, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'steer' | 'stop' | 'busy'
@@ -15,8 +15,6 @@ const titles: Record<Look, string> = {
   stop: 'Stop',
   busy: 'Sending',
 }
-
-const circle = `calc(${SPACE['6']} + ${SPACE['1']})`
 
 const fill = 'bg-neutral-100 text-neutral-900'
 
@@ -61,20 +59,19 @@ const menuOf = (model: Model, actions: () => MenuAction[]): MenuSpec | undefined
 }
 
 export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[], aside: () => (() => void) | undefined) => {
-  const { contextMenu, delayed, icon, plainButton, spinner } = kit
+  const { contextMenu, delayed, icon, roundButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
   const glyph = derive(() => glyphOf(look.get()))
   const context = contextMenu()
   return span(
     { class: 'ml-1 inline-flex h-8 shrink-0 items-center' },
-    plainButton(
+    roundButton(
       {
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
         'aria-disabled': () => String(look.get() === 'off' || look.get() === 'busy'),
-        class: ['inline-flex shrink-0 items-center justify-center rounded-full transition-colors', () => tones[look.get()]],
-        style: { width: circle, height: circle },
+        class: () => tones[look.get()],
         ...context.target(
           ({ touch }) => {
             const found = touch && !model.empty.get() ? aside() : undefined

@@ -1,0 +1,45 @@
+{
+  "name": "@sand/voice",
+  "version": "0.0.0",
+  "description": "Dictate into the composer: speech becomes text in your draft, on this PC with Parakeet or with a cloud service you choose",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "voice",
+    "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Voice",
+    "summary": "Speak instead of typing: a microphone in the message box puts your words in the draft",
+    "features": {
+      "voice": {
+        "label": "Voice",
+        "summary": "Speak instead of typing. Free and private on your own PC, or with a cloud service you have a key for",
+        "needs": [
+          "composer"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/transfers": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/vault": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}
