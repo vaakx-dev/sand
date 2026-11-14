@@ -1,0 +1,45 @@
+{
+  "name": "@sand/file-viewer",
+  "version": "0.0.0",
+  "description": "Opens the files agents write and mention beside the chat: text, code, Markdown, images, audio and video, with add-ons for more formats",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "file-viewer",
+    "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "File viewer",
+    "summary": "Opens the files your agents write and mention, without leaving the chat",
+    "features": {
+      "file-viewer": {
+        "label": "File viewer",
+        "summary": "Opens the files your agents write and mention, without leaving the chat",
+        "needs": [
+          "side-panel"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}
