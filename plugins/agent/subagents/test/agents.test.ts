@@ -96,7 +96,7 @@ test("a subagent keeps working when its parent's turn is interrupted, and the us
   expect(answered).toContain('Answered you.')
 })
 
-test('a subagent can work in a project of its own, and settles with its parent', async () => {
+test('a subagent can work in a project of its own, and is archived with its parent', async () => {
   const folder = join(process.env.TEMP ?? '/tmp', `sand-project-${Bun.randomUUIDv7()}`)
   mkdirSync(folder, { recursive: true })
   await start([delegate({ project: 'site' }), said('Started.')], [[{ type: 'hold' }]], [{ project: 'site', path: folder }])
@@ -107,12 +107,12 @@ test('a subagent can work in a project of its own, and settles with its parent',
   expect(child).toMatchObject({ cwd: folder, project: 'site' })
   await until(() => running(child.id))
 
-  await sand.ask(threadUpdate, { session: parent.id, settled: true })
-  await until(() => sand.sessions.require(child.id).settled !== null)
+  await sand.ask(threadUpdate, { session: parent.id, archived: true })
+  await until(() => sand.sessions.require(child.id).archived !== null)
   expect(running(child.id)).toBeFalsy()
 })
 
-test('a subagent given a worktree works in its own checkout, which goes once its parent settles', async () => {
+test('a subagent given a worktree works in its own checkout, which goes once its parent is archived', async () => {
   await start([delegate({ worktree: true }), said('Started.'), said('Noted.')], [said('Done.')], [], ['git/runner', 'git/git', 'git/worktrees'])
   const repo = join(sand.home, 'repo')
   await Bun.write(join(repo, 'tracked.txt'), 'first\n')
@@ -129,7 +129,7 @@ test('a subagent given a worktree works in its own checkout, which goes once its
   await until(() => notices(parent).length === 1)
   await until(() => !running(parent.id))
 
-  await sand.ask(threadUpdate, { session: parent.id, settled: true })
+  await sand.ask(threadUpdate, { session: parent.id, archived: true })
   await until(() => !existsSync(child.cwd) && git(repo, 'branch', '--list', 'sand/*') === '', 2000)
 })
 

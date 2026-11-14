@@ -5,11 +5,12 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { createClient } from './api/client'
 import { githubHost } from './api/endpoint'
+import { createEvents } from './api/events'
 import { createAuth } from './auth/auth'
 import { registerChecks } from './checks'
 import { listenUser } from './checks/user'
 import { timing } from './checks/wait'
-import { github, githubOpenPull, githubPulls } from './contract'
+import { checksSettled, github, githubOpenPull, githubPulls } from './contract'
 import { openPull, pullsOf } from './pulls'
 
 export default definePlugin({
@@ -19,7 +20,7 @@ export default definePlugin({
     const auth = createAuth(githubHost)
     const client = createClient({ token: auth.token, rejected: auth.invalidate })
     const listen = listenUser(ctx)
-    ctx.provide(github, { rest: client.rest })
+    ctx.provide(github, { rest: client.rest, changes: createEvents(client) })
     ctx.watch(
       gitRunner,
       git =>
@@ -34,7 +35,7 @@ export default definePlugin({
                 found.handle(githubOpenPull, ({ cwd, title }) => openPull(git, client, cwd, title)),
               ),
           ),
-          ctx.watch(tools, found => found && registerChecks(found, { git, client, listen, timing })),
+          ctx.watch(tools, found => found && registerChecks(found, { git, client, listen, timing, settled: (conversation, sha, outcome) => ctx.emit(checksSettled, conversation, sha, outcome) })),
         ),
     )
   },

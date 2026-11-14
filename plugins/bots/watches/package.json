@@ -24,11 +24,6 @@
           "mcp-server"
         ],
         "addon": true
-      },
-      "watches": {
-        "kind": "capability",
-        "label": "Watches",
-        "summary": "Notices when something you follow changes, without spending tokens to check"
       }
     }
   },

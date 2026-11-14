@@ -24,7 +24,7 @@ export const threadConversations = (ctx: TurnsContext): Conversations<Session> =
   }
 
   const reopen = (session: Session) => {
-    if (session.settled !== null) ctx.sessions.update(session.id, { settled: null })
+    if (session.archived !== null) ctx.sessions.update(session.id, { archived: null })
   }
 
   return {

@@ -1,4 +1,4 @@
-import { sessionBusy, sessionRemove, sessionSettle } from '@sand/chats/contract'
+import { sessionBusy, sessionRemove, sessionArchive } from '@sand/chats/contract'
 import type { TurnInfo as EngineTurn } from '@sand/engine/contract'
 import { needs } from '@sand/tools/contract'
 import { turns, type Turns } from '@sand/turns-contract/contract'
@@ -40,7 +40,7 @@ export default definePlugin({
     ctx.provide(turns, service)
     serveTurns(ctx, { service, runner })
     ctx.on(sessionBusy, session => Boolean(runner.current(session)))
-    ctx.on(sessionSettle, session => ctx.providerThreads.release(session))
+    ctx.on(sessionArchive, session => ctx.providerThreads.release(session))
     ctx.on(sessionRemove, id => {
       runner.forget(id)
       ctx.providerThreads.forget({ owner: 'thread', id })

@@ -1,4 +1,4 @@
-import { type LLMEvent, ProviderTrouble, ThreadLost, UsageLimited } from '../contract'
+import { type LLMEvent, ProviderTrouble, RequestRejected, ThreadLost, UsageLimited } from '../contract'
 import { AccountError } from '../errors'
 import type { ShareLine } from '../share/info'
 
@@ -42,6 +42,8 @@ const failureOf = ({ message, detail, kind, waitMs, resetsAt }: ErrorLine, name:
       return new ProviderTrouble(text, waitMs)
     case 'limited':
       return new UsageLimited(text, resetsAt)
+    case 'rejected':
+      return new RequestRejected(text)
     default:
       return new AccountError(text, detail)
   }
