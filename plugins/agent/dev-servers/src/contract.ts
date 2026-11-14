@@ -47,3 +47,8 @@ export const devServerProxiesKeep = request('devServers.proxies.keep', {
   output: type<void>(),
   callers: 'runtime',
 })
+
+export const devServerRelay = request('devServers.relay', {
+  input: () => z.object({ pc: z.string().min(1), links: z.array(z.string().url()).min(1) }),
+  output: type<string[]>(),
+})

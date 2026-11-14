@@ -1,5 +1,6 @@
 import type { Server } from 'bun'
 import type { Passes } from './passes'
+import { firstListening } from './listen'
 import { bridgeOf, type Bridge, upstreamSocket } from './socket'
 
 interface Upstream {
@@ -37,32 +38,20 @@ const withoutCookie = (header: string, name: string) =>
 
 const plainText = (text: string, status: number) => new Response(text, { status, headers: { 'content-type': 'text/plain; charset=utf-8' } })
 
-const firstListening = <T>(hostnames: string[], listen: (hostname: string) => T) => {
-  const failures: unknown[] = []
-  for (const hostname of hostnames) {
-    try {
-      return listen(hostname)
-    } catch (error) {
-      failures.push(error)
-    }
-  }
-  throw new AggregateError(failures, "sand couldn't open a port for this dev server")
-}
-
 export const createProxy = ({ upstream, passes, hostnames }: ProxyOptions) => {
   const origin = `http://${upstream.address}:${upstream.port}`
   const shownOrigin = `http://localhost:${upstream.port}`
   const loopbackOrigins = [shownOrigin, `http://127.0.0.1:${upstream.port}`, `http://[::1]:${upstream.port}`]
   const cookie = `sand-dev-server-${upstream.port}`
 
-  const toUpstream = (value: string, own: string) => (value.startsWith(own) ? shownOrigin + value.slice(own.length) : value)
+  const toUpstream = (value: string) => value.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]+/i, shownOrigin)
 
   const toVisitor = (value: string) => {
     const matched = loopbackOrigins.find(candidate => value.startsWith(candidate))
     return matched ? value.slice(matched.length) || '/' : value
   }
 
-  const upstreamHeaders = (request: Request, own: string) => {
+  const upstreamHeaders = (request: Request) => {
     const headers = new Headers()
     request.headers.forEach((value, name) => {
       if (!HOP_BY_HOP.has(name)) headers.set(name, value)
@@ -70,7 +59,7 @@ export const createProxy = ({ upstream, passes, hostnames }: ProxyOptions) => {
     headers.set('host', `localhost:${upstream.port}`)
     for (const name of ['origin', 'referer']) {
       const value = headers.get(name)
-      if (value) headers.set(name, toUpstream(value, own))
+      if (value) headers.set(name, toUpstream(value))
     }
     const cookies = withoutCookie(headers.get('cookie') ?? '', cookie)
     if (cookies) headers.set('cookie', cookies)
@@ -101,7 +90,7 @@ export const createProxy = ({ upstream, passes, hostnames }: ProxyOptions) => {
     try {
       const response = await fetch(new URL(url.pathname + url.search, origin), {
         method: request.method,
-        headers: upstreamHeaders(request, url.origin),
+        headers: upstreamHeaders(request),
         body: BODILESS.has(request.method) ? undefined : request.body,
         redirect: 'manual',
         decompress: false,
@@ -153,7 +142,7 @@ export const createProxy = ({ upstream, passes, hostnames }: ProxyOptions) => {
   return {
     port,
     upstream,
-    link: (host: string, ticket: string) => `http://${host.includes(':') ? `[${host}]` : host}:${port}${OPEN_PATH}?${TICKET_PARAM}=${encodeURIComponent(ticket)}`,
+    path: (ticket: string) => `${OPEN_PATH}?${TICKET_PARAM}=${encodeURIComponent(ticket)}`,
     stop: () => server.stop(true),
   }
 }

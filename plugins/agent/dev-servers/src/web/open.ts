@@ -1,5 +1,6 @@
 import type { Wire } from '@sand/devices-contract'
-import { devServerOpen } from '../contract'
+import { devicePaths } from '@sand/devices-contract'
+import { devServerOpen, devServerRelay } from '../contract'
 import type { Shown } from './card'
 
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]'])
@@ -22,11 +23,18 @@ const show = (tab: Window | null, link: string) => {
   else window.open(link, '_blank', 'noopener')
 }
 
+const relayed = (wire: Wire, pc: string) => new URL(wire.url('/', pc)).pathname.startsWith(`${devicePaths.via}/`)
+
+const reachableLinks = async (wire: Wire, server: Shown) => {
+  const links = await wire.call(devServerOpen, { port: server.port, session: server.session }, server.device)
+  return relayed(wire, server.device) ? { links: await wire.call(devServerRelay, { pc: server.device, links }), pc: undefined } : { links, pc: server.device }
+}
+
 export const openServer = async (wire: Wire, server: Shown) => {
   const tab = blankTab()
   try {
-    const links = await wire.call(devServerOpen, { port: server.port, session: server.session }, server.device)
-    const link = linkFor(links, hostnameOf(wire.url('/', server.device)))
+    const { links, pc } = await reachableLinks(wire, server)
+    const link = linkFor(links, hostnameOf(wire.url('/', pc)))
     if (!link) throw new Error("sand on that PC doesn't listen on an address this device reaches")
     show(tab, link)
   } catch (error) {

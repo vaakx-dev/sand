@@ -2,6 +2,7 @@ import { afterEach, expect, test } from 'bun:test'
 import { request } from 'node:http'
 import { createPasses } from '../src/host/passes'
 import { createProxy, type Proxy } from '../src/host/proxy'
+import { createRelay } from '../src/host/relay'
 
 let upstream: ReturnType<typeof Bun.serve>
 let proxy: Proxy
@@ -53,7 +54,7 @@ test('only a device with a link reaches the dev server, and pages, redirects, co
   const passes = createPasses()
   proxy = createProxy({ upstream: { port: upstream.port!, address: '127.0.0.1' }, passes, hostnames: ['127.0.0.1'] })
   const base = `http://127.0.0.1:${proxy.port}`
-  const link = proxy.link('127.0.0.1', passes.ticket('phone', upstream.port!))
+  const link = base + proxy.path(passes.ticket('phone', upstream.port!))
 
   expect((await fetch(`${base}/`)).status).toBe(401)
 
@@ -70,4 +71,20 @@ test('only a device with a link reaches the dev server, and pages, redirects, co
   expect(login.headers.get('set-cookie')).toBe('tide=high; Path=/')
 
   expect(await socketReply(proxy.port, cookie)).toEqual({ protocol: 'vite-hmr', reply: 'echo ping' })
+})
+
+test('a PC the device reaches through another one relays the page and its hot reload socket, and still needs the link', async () => {
+  upstream = startUpstream()
+  const passes = createPasses()
+  proxy = createProxy({ upstream: { port: upstream.port!, address: '127.0.0.1' }, passes, hostnames: ['127.0.0.1'] })
+  const relay = createRelay({ hostname: '127.0.0.1', port: proxy.port }, ['127.0.0.1'], () => {})
+  const base = `http://127.0.0.1:${relay.port}`
+
+  expect((await fetch(`${base}/`)).status).toBe(401)
+  const opened = await fetch(base + proxy.path(passes.ticket('phone', upstream.port!)), { redirect: 'manual' })
+  const cookie = opened.headers.get('set-cookie')!.split(';')[0]!
+  const page = await fetch(`${base}/`, { headers: { cookie } })
+  expect(await page.text()).toContain('<title>Tide tables</title>')
+  expect(await socketReply(relay.port, cookie)).toEqual({ protocol: 'vite-hmr', reply: 'echo ping' })
+  relay.stop()
 })
