@@ -1,4 +1,5 @@
 import { type Check, type GitHub, type PullRef, readChecks } from '@sand/github/contract'
+import type { Verdict } from '../contract'
 
 export type PullStatus = 'open' | 'closed' | 'merged'
 
@@ -12,6 +13,7 @@ export interface Review {
   state: string
   body: string | null
   html_url: string
+  submitted_at?: string
 }
 
 export interface ReviewComment {
@@ -21,8 +23,10 @@ export interface ReviewComment {
   path: string
   line: number | null
   original_line: number | null
+  in_reply_to_id?: number
   body: string
   html_url: string
+  created_at: string
 }
 
 export interface IssueComment {
@@ -30,6 +34,7 @@ export interface IssueComment {
   user: Author | null
   body: string
   html_url: string
+  created_at: string
 }
 
 interface Pull {
@@ -55,6 +60,10 @@ export interface Snapshot {
   comments: IssueComment[]
 }
 
+export const VERDICTS: Record<string, Verdict> = { APPROVED: 'approved', CHANGES_REQUESTED: 'requested changes', COMMENTED: 'reviewed', DISMISSED: 'dismissed a review' }
+
+export const who = (author: Author | null) => author?.login ?? 'ghost'
+
 const statusOf = (pull: Pull): PullStatus => {
   if (pull.merged) return 'merged'
   return pull.state
@@ -62,7 +71,7 @@ const statusOf = (pull: Pull): PullStatus => {
 
 const sinceQuery = (after: string | undefined) => (after ? `&since=${encodeURIComponent(after)}` : '')
 
-const submitted = (review: Review) => review.state !== 'PENDING'
+export const submitted = (review: Review) => review.state !== 'PENDING'
 
 export const readPull = async (github: Pick<GitHub, 'rest'>, { repo, number }: PullRef, since: string | undefined): Promise<Snapshot> => {
   const path = `/repos/${repo}`

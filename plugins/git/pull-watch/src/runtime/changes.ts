@@ -2,7 +2,7 @@ import type { Check, CheckOutcome } from '@sand/github/contract'
 import { clip, oneLine, plural, shortSha } from '@sand/util'
 import type { Change } from '@sand/watches/contract'
 import { z } from 'zod'
-import type { IssueComment, PullStatus, Review, ReviewComment, Snapshot } from './read'
+import { type IssueComment, type PullStatus, type Review, type ReviewComment, type Snapshot, VERDICTS, who } from './read'
 
 const seen = z.object({
   status: z.enum(['open', 'closed', 'merged']),
@@ -19,8 +19,6 @@ export type Seen = z.output<typeof seen>
 const DETAIL_MOST = 4_000
 const SKEW_MS = 60_000
 
-const REVIEW_VERBS: Record<string, string> = { APPROVED: 'approved', CHANGES_REQUESTED: 'requested changes', COMMENTED: 'reviewed', DISMISSED: 'dismissed a review' }
-
 const STATUS_SUMMARIES: Record<PullStatus, string> = { open: 'Reopened', closed: 'Closed', merged: 'Merged' }
 
 export const seenOf = (state: unknown) => {
@@ -34,8 +32,6 @@ const verdictOf = (checks: Check[]): CheckOutcome | undefined => {
 }
 
 const newest = (items: { id: number }[], before: number) => Math.max(before, ...items.map(item => item.id))
-
-const who = (author: { login: string } | null) => author?.login ?? 'ghost'
 
 const detailOf = (...parts: (string | null | undefined)[]) => clip(parts.filter(Boolean).join('\n\n'), DETAIL_MOST)
 
@@ -60,7 +56,7 @@ const ciChange = (snapshot: Snapshot, verdict: CheckOutcome) => {
 
 const reviewChange = (review: Review, comments: ReviewComment[]) => {
   const replied = review.state === 'COMMENTED' && !review.body && comments.length > 0
-  const verb = replied ? 'commented' : (REVIEW_VERBS[review.state] ?? 'reviewed')
+  const verb = replied ? 'commented' : (VERDICTS[review.state] ?? 'reviewed')
   const count = comments.length ? plural(comments.length, 'comment') : undefined
   return { summary: `${who(review.user)} ${verb}`, detail: detailOf(count, review.body, ...comments.map(comment => `${placeOf(comment)}\n${comment.body}`), review.html_url) }
 }
