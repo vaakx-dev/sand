@@ -49,10 +49,15 @@ const execute = async (command: string[], env: Record<string, string | undefined
   return { code, output: `${out}${err}` }
 }
 
+const REPLAY = '[plugins.replay]\nsources = [{ id = "replay", api = "anthropic", models = ["m"], replies = [[{ type = "text", text = "Kept." }]] }]\n'
+
+const SIGNED_IN = { replay: { type: 'oauth', access: 'replay', refresh: 'replay', expires: 8e15 } }
+
 export const makeSand = async (): Promise<Sand> => {
   const home = await mkdtemp(join(realpathSync.native(tmpdir()), 'sand-upgrade-'))
   const port = freePort()
-  await Bun.write(join(home, 'sand.toml'), `[host]\nport = ${port}\n\n[plugins.devices-network]\nenabled = false\n`)
+  await Bun.write(join(home, 'sand.toml'), `[host]\nport = ${port}\n\n[plugins.devices-network]\nenabled = false\n\n${REPLAY}`)
+  await Bun.write(join(home, 'auth.json'), JSON.stringify(SIGNED_IN))
   return { home, port, log: () => Bun.file(join(home, 'server.log')).text().catch(() => '') }
 }
 

@@ -325,7 +325,7 @@ if (newest && typeof next.id === "string" && Number.isFinite(next.time) && next.
 EOF
   older=$("$bun" "$work/older.js" "$home" "$work/sand-build.json" "$label" </dev/null 2>&1) || fail "Could not check the installed sand: $older"
   if [ -n "$older" ]; then
-    fail "Sand was left as it is: $older To install the older build anyway, run the command again with --allow-older."
+    fail "Sand was left as it is: $older To install the older build anyway, run the command again with --allow-older (or with SAND_ALLOW_OLDER=1 set)."
   fi
 }
 
