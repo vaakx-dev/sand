@@ -28,6 +28,7 @@ const shellView = (model: Model) => {
   const keyboard = keyboardArea()
   return div(
     {
+      'data-part': 'app',
       class: 'absolute inset-0 flex flex-col bg-neutral-900 px-safe pt-safe pb-safe',
       style: () => ({ overflow: 'clip', ...fitArea(keyboard.get()) }),
       onMount: node => {

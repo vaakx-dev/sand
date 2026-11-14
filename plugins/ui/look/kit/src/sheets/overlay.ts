@@ -60,6 +60,7 @@ export const sheet = ({ size = 'lg', phone = 'sheet', grab, class: extra, ...pro
   return div(
     {
       role: 'dialog',
+      'data-part': 'sheet',
       ...(drag && { style: drag.style }),
       ...props,
       class: ['flex w-full flex-col overflow-hidden pb-safe sm:rounded-xl sm:pb-0 sm:animate-none', phoneFrames[phone], floatingEdge, sheetWidths[size], extra],

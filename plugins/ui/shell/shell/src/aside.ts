@@ -58,7 +58,7 @@ export const asideCard = (model: Model) =>
       ? div(
           { class: [model.kit.layer.sticky, 'pointer-events-none absolute inset-x-0 top-12 bottom-3 flex justify-end pr-3'] },
           div(
-            { 'aria-label': spec.label, class: 'pointer-events-auto flex max-h-full flex-col self-start rounded-2xl bg-neutral-800 p-1.5 shadow-xl', style: { width: '18rem' } },
+            { 'aria-label': spec.label, 'data-part': 'aside', class: 'pointer-events-auto flex max-h-full flex-col self-start rounded-2xl bg-neutral-800 p-1.5 shadow-xl', style: { width: '18rem' } },
             asideHead(model, spec),
             spec.render(beside(model)),
           ),
@@ -70,7 +70,7 @@ const docked = (model: Model, open: Model['openPanel'], look: { class: string; s
   dynamicChild(open, spec =>
     spec
       ? div(
-          { 'aria-label': spec.label, class: ['flex min-h-0 min-w-0 shrink-0 flex-col bg-neutral-950', look.class], style: look.style ?? null },
+          { 'aria-label': spec.label, 'data-part': 'aside', class: ['flex min-h-0 min-w-0 shrink-0 flex-col bg-neutral-950', look.class], style: look.style ?? null },
           asideHead(model, spec),
           spec.render(beside(model)),
         )
@@ -82,4 +82,4 @@ export const asidePanel = (model: Model) => docked(model, model.openPanel, { cla
 export const asideDrawer = (model: Model) => docked(model, model.openDrawer, { class: 'h-64' })
 
 export const asideScreen = (model: Model, spec: Aside) =>
-  div({ 'aria-label': spec.label, class: 'flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-950' }, asideHead(model, spec), spec.render(beside(model)))
+  div({ 'aria-label': spec.label, 'data-part': 'aside', class: 'flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-950' }, asideHead(model, spec), spec.render(beside(model)))

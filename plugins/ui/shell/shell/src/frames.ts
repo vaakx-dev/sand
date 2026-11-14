@@ -28,7 +28,7 @@ export const deskFrames = (model: Model, built: Built) =>
   div(
     { class: 'flex min-h-0 min-w-0 flex-1' },
     section(
-      { class: ['relative', fill] },
+      { 'data-part': 'main', class: ['relative', fill] },
       bar(
         show(
           () => model.state.get() === 'drawer',
@@ -46,4 +46,4 @@ export const deskFrames = (model: Model, built: Built) =>
   )
 
 export const phoneFrame = (model: Model, built: Built | undefined) =>
-  section({ class: fill }, bar(leadButton(model, built), built?.head ?? div({ class: 'flex-1' }), asideToggles(model)), div({ class: fill }, built?.main ?? null))
+  section({ 'data-part': 'main', class: fill }, bar(leadButton(model, built), built?.head ?? div({ class: 'flex-1' }), asideToggles(model)), div({ class: fill }, built?.main ?? null))

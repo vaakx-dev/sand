@@ -16,5 +16,5 @@ export const pageView = (kit: Kit, { store, page }: PageParts) => {
     )
   const body = (shown: SettingsPage | undefined) =>
     kit.pageBody({ intro: shown?.intro }, sections(true), shown?.render?.() ?? null, sections(false))
-  return div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, dynamicChild(page, body))
+  return div({ 'data-part': 'settings', class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, dynamicChild(page, body))
 }

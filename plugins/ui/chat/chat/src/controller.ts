@@ -44,7 +44,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     edge.scrolled()
   }
   const scroller = div(
-    { class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll },
+    { 'data-part': 'transcript', class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll },
     kit.topFade(),
     edge.sentinel,
     slot.node,

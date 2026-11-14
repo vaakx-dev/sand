@@ -17,7 +17,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const reveal = tapReveal()
     return div(
       { class: ['group relative text-sm', () => (railed() ? 'my-1' : 'mt-2 mb-1')], ...context.menu.target(spec, reveal.onClick, 'text') },
-      div({ class: 'chat-row' }, node),
+      div({ 'data-part': 'agent-message', class: 'chat-row' }, node),
       show(
         () => !railed() && !streaming.get(),
         () =>
