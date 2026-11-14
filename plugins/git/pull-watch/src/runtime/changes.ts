@@ -1,10 +1,8 @@
-import type { Check } from '@sand/github/contract'
+import type { Check, CheckOutcome } from '@sand/github/contract'
 import { clip, oneLine, plural, shortSha } from '@sand/util'
 import type { Change } from '@sand/watches/contract'
 import { z } from 'zod'
 import type { IssueComment, PullStatus, Review, ReviewComment, Snapshot } from './read'
-
-type Verdict = 'passed' | 'failed'
 
 const seen = z.object({
   status: z.enum(['open', 'closed', 'merged']),
@@ -23,18 +21,14 @@ const SKEW_MS = 60_000
 
 const REVIEW_VERBS: Record<string, string> = { APPROVED: 'approved', CHANGES_REQUESTED: 'requested changes', COMMENTED: 'reviewed', DISMISSED: 'dismissed a review' }
 
-const STATUS_SUMMARIES: Record<PullStatus, (base: string) => string> = {
-  open: () => 'Reopened',
-  closed: () => 'Closed without merging',
-  merged: base => `Merged into ${base}`,
-}
+const STATUS_SUMMARIES: Record<PullStatus, string> = { open: 'Reopened', closed: 'Closed', merged: 'Merged' }
 
 export const seenOf = (state: unknown) => {
   const parsed = seen.safeParse(state)
   return parsed.success ? parsed.data : undefined
 }
 
-const verdictOf = (checks: Check[]): Verdict | undefined => {
+const verdictOf = (checks: Check[]): CheckOutcome | undefined => {
   if (!checks.length || checks.some(check => check.state === 'running')) return undefined
   return checks.some(check => check.state === 'failed') ? 'failed' : 'passed'
 }
@@ -52,21 +46,26 @@ const placeOf = (comment: ReviewComment) => {
   return line ? `${comment.path}:${line}` : comment.path
 }
 
-const ciChange = (snapshot: Snapshot, verdict: Verdict) => {
+export const ciKeyOf = (sha: string, verdict: CheckOutcome) => `ci:${sha}:${verdict}`
+
+const ciChange = (snapshot: Snapshot, verdict: CheckOutcome) => {
   const failed = snapshot.checks.filter(check => check.state === 'failed')
   const names = [...new Set(failed.map(check => check.name))].join(', ')
-  const summary = verdict === 'passed' ? `CI passed on ${shortSha(snapshot.head)}` : `CI failed on ${shortSha(snapshot.head)}: ${names}`
-  return { summary, detail: detailOf(...failed.map(check => `${check.name}: ${check.url}`)) }
+  return {
+    summary: verdict === 'passed' ? 'CI passed' : `CI failed: ${names}`,
+    detail: detailOf(`On ${shortSha(snapshot.head)}.`, ...failed.map(check => `${check.name}: ${check.url}`)),
+    key: ciKeyOf(snapshot.head, verdict),
+  }
 }
 
 const reviewChange = (review: Review, comments: ReviewComment[]) => {
-  const count = comments.length ? ` (${plural(comments.length, 'comment')})` : ''
-  const replied = review.state === 'COMMENTED' && !review.body && comments.length === 1
-  const summary = replied && comments[0] ? `${who(review.user)} commented on ${placeOf(comments[0])}` : `${who(review.user)} ${REVIEW_VERBS[review.state] ?? 'reviewed'}${count}`
-  return { summary, detail: detailOf(review.body, ...comments.map(comment => `${placeOf(comment)}\n${comment.body}`), review.html_url) }
+  const replied = review.state === 'COMMENTED' && !review.body && comments.length > 0
+  const verb = replied ? 'commented' : (REVIEW_VERBS[review.state] ?? 'reviewed')
+  const count = comments.length ? plural(comments.length, 'comment') : undefined
+  return { summary: `${who(review.user)} ${verb}`, detail: detailOf(count, review.body, ...comments.map(comment => `${placeOf(comment)}\n${comment.body}`), review.html_url) }
 }
 
-const looseComment = (comment: ReviewComment) => ({ summary: `${who(comment.user)} commented on ${placeOf(comment)}`, detail: detailOf(comment.body, comment.html_url) })
+const looseComment = (comment: ReviewComment) => ({ summary: `${who(comment.user)} commented`, detail: detailOf(placeOf(comment), comment.body, comment.html_url) })
 
 const issueComment = (comment: IssueComment) => ({ summary: `${who(comment.user)} commented`, detail: detailOf(comment.body, comment.html_url) })
 
@@ -81,13 +80,13 @@ const reviewChanges = (before: Seen, snapshot: Snapshot) => {
 }
 
 const stateChanges = (before: Seen, snapshot: Snapshot) => [
-  ...(snapshot.status !== before.status ? [{ summary: STATUS_SUMMARIES[snapshot.status](snapshot.base) }] : []),
-  ...(snapshot.status === 'open' && snapshot.conflict && !before.conflict ? [{ summary: `Has merge conflicts with ${snapshot.base}` }] : []),
+  ...(snapshot.status !== before.status ? [{ summary: STATUS_SUMMARIES[snapshot.status], detail: `Base: ${snapshot.base}.` }] : []),
+  ...(snapshot.status === 'open' && snapshot.conflict && !before.conflict ? [{ summary: 'Merge conflicts', detail: `With ${snapshot.base}.` }] : []),
 ]
 
 const ciKey = (snapshot: Snapshot) => {
   const verdict = verdictOf(snapshot.checks)
-  return verdict && `${snapshot.head}:${verdict}`
+  return verdict && ciKeyOf(snapshot.head, verdict)
 }
 
 const ciChanges = (before: Seen, snapshot: Snapshot) => {
@@ -115,11 +114,12 @@ export const changesOf = (from: string, before: Seen | undefined, snapshot: Snap
     ...reviewChanges(before, snapshot),
     ...snapshot.comments.filter(comment => comment.id > before.comment).map(issueComment),
   ]
-  const changes: Change[] = found.map(({ summary, detail }: { summary: string; detail?: string }) => ({
+  const changes: Change[] = found.map(({ summary, detail, key }: { summary: string; detail?: string; key?: string }) => ({
     at,
     from,
     summary: oneLine(summary, 200),
     ...(detail && { detail }),
+    ...(key && { key }),
   }))
   return { seen, changes }
 }

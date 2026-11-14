@@ -86,6 +86,7 @@ export const createFollows = ({ watches, sessions, github }: FollowsDeps) => {
   }
 
   return {
+    thread: rootId,
     list: (id: string) => watches.list(OWNER, rootId(id)).filter(watch => watch.kind === KIND).map(followedOf),
     follow,
     followText: (thread: string, pull: string) => follow(thread, refOf(pull)),

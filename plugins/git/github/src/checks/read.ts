@@ -2,6 +2,8 @@ import type { Rest } from '../api/client'
 
 export type CheckState = 'running' | 'passed' | 'failed'
 
+export type CheckOutcome = 'passed' | 'failed'
+
 export interface Check {
   name: string
   url: string

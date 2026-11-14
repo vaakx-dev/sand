@@ -61,7 +61,7 @@ test("a followed pull request reports each change once: a review with its commen
   pull.comments = [{ id: 30, user: { login: 'jon' }, body: 'Looks good once CI is green.', html_url: 'u30' }]
   pull.mergeable = null
   await until(() => changes.length === 2)
-  expect(changes.map(change => change.summary)).toEqual(['mira requested changes (2 comments)', 'jon commented'])
+  expect(changes.map(change => change.summary)).toEqual(['mira requested changes', 'jon commented'])
   expect(changes[0]?.detail).toContain('src/upload.ts:42\nStop on 4xx.')
   expect(changes[0]?.detail).toContain('src/upload.ts:61\nName it delayMs.')
 
@@ -69,12 +69,12 @@ test("a followed pull request reports each change once: a review with its commen
   await until(() => changes.length === 3)
   pull.mergeable = null
   await Bun.sleep(40)
-  expect(changes.at(-1)?.summary).toBe('Has merge conflicts with main')
+  expect(changes.at(-1)?.summary).toBe('Merge conflicts')
 
   pull.state = 'closed'
   pull.merged = true
   await until(() => changes.length === 4)
-  expect(changes.at(-1)?.summary).toBe('Merged into main')
+  expect(changes.at(-1)?.summary).toBe('Merged')
   const reads = pull.reads
   await Bun.sleep(40)
   expect(pull.reads).toBe(reads)

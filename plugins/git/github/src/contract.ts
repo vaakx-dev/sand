@@ -1,6 +1,7 @@
 import { request, type } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
+import type { CheckOutcome } from './checks/read'
 
 export type PullState = 'open' | 'draft' | 'merged' | 'closed'
 
@@ -30,6 +31,8 @@ export const pullRefOf = (url: string): PullRef | undefined => {
   return match?.[1] && match[2] ? { repo: match[1], number: Number(match[2]) } : undefined
 }
 
+export const checksSettled = event<(conversation: string, sha: string, outcome: CheckOutcome) => void>('github.checks.settled')
+
 export const pullOpened = event<(session: string, pull: Pull) => void>('github.pull.opened')
 
 export const githubPulls = request('github.pulls', {
@@ -44,4 +47,4 @@ export const githubOpenPull = request('github.openPull', {
   place: 'thread',
 })
 
-export { type Check, type CheckState, readChecks } from './checks/read'
+export { type Check, type CheckOutcome, type CheckState, readChecks } from './checks/read'

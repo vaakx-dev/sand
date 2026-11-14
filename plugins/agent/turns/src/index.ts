@@ -32,7 +32,6 @@ export default definePlugin({
       get: turn => found(runner.get(turn)),
       list: (session, before, limit) => runner.list(session, before, limit).map(threadTurn),
       wait: async (turn, until, signal) => threadTurn(await runner.wait(turn, until, signal)),
-      follow: async (session, sent, signal) => found(await runner.follow(session, sent, signal)),
       pending: runner.pending,
       withdraw: runner.withdraw,
       hold: runner.hold,

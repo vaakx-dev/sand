@@ -13,6 +13,8 @@ export interface FollowedPull {
   error?: string
 }
 
+export const PULL_NOTICE = 'pull'
+
 const callers = 'any'
 
 const one = lazy(() => z.object({ thread: z.string().min(1) }))

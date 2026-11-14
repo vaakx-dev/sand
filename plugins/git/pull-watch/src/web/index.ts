@@ -1,3 +1,4 @@
+import { notificationField } from '@sand/chats/contract'
 import { pcHello, wire } from '@sand/devices-contract'
 import { githubPulls, type Pull, pullOpened } from '@sand/github/contract'
 import { inspector } from '@sand/inspector/contract'
@@ -9,7 +10,7 @@ import type { Subject } from '@sand/ui-shell/contract'
 import { sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { type Item, itemsOf, pullRows } from './rows'
-import { pullFollow, pullFollows, pullFollowsChangeWire, pullUnfollow } from '../contract'
+import { PULL_NOTICE, pullFollow, pullFollows, pullFollowsChangeWire, pullUnfollow } from '../contract'
 
 const placeKey = ({ device, cwd }: Subject) => `${device}\0${cwd ?? ''}`
 
@@ -56,7 +57,7 @@ export default definePlugin({
       for (const subject of asked.values()) if (subject.device === device) loadPulls(subject)
     })
     ctx.on(pullOpened, (session, pull) => void act("Couldn't follow the PR", () => follow(session, pull.url)))
-    ctx.watch(transcript, found => found?.notice('watch', { icon: 'eye' }))
+    ctx.watch(transcript, found => found?.notice(PULL_NOTICE, { icon: 'pull-request', title: text => notificationField(text, 'label') }))
     ctx.effect(() =>
       ctx.inspector.row({
         id: 'pulls',

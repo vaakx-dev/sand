@@ -2134,6 +2134,7 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
       },
     },
     "plugins/git/runner": {

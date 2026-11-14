@@ -1,8 +1,16 @@
 import { notificationText, type Sessions } from '@sand/chats/contract'
 import type { Turns } from '@sand/turns-contract/contract'
-import { oneLine, timestamp } from '@sand/util'
+import { timestamp } from '@sand/util'
 import type { Change, Handler, Watch } from '@sand/watches/contract'
+import { PULL_NOTICE } from '../contract'
 import { pullInput } from './kind'
+import type { Known } from './known'
+
+export interface WakeDeps {
+  sessions: Sessions
+  turns: Turns
+  known: Known
+}
 
 const GUIDE = [
   'This thread follows this pull request, and it changed. Deal with it as the agent who opened it:',
@@ -15,30 +23,25 @@ const GUIDE = [
 
 const changeText = ({ at, summary, detail }: Change) => [`${timestamp(at)} ${summary}`, ...(detail ? [detail] : [])].join('\n')
 
-const LABEL_MOST = 160
-
-const labelOf = (watch: Watch, changes: Change[]) => {
-  const { repo, number } = pullInput.parse(watch.input)
-  return oneLine(`${repo}#${number}: ${changes.map(change => change.summary).join('; ')}`, LABEL_MOST)
-}
+const labelOf = (watch: Watch, changes: Change[]) => [`PR #${pullInput.parse(watch.input).number}`, ...new Set(changes.map(change => change.summary))].join(' · ')
 
 const wakePrompt = (watch: Watch, changes: Change[]) =>
   notificationText({
-    from: 'watch',
+    from: PULL_NOTICE,
     id: watch.id,
     kind: 'pull request',
     label: labelOf(watch, changes),
     status: 'changed',
     at: Math.max(...changes.map(change => change.at)),
-    result: [...changes.map(changeText), GUIDE].join('\n\n'),
+    result: [watch.target, ...changes.map(changeText), GUIDE].join('\n\n'),
   })
 
 export const wakeThread =
-  (sessions: Sessions, turns: Turns): Handler =>
-  async (watch, changes, signal) => {
+  ({ sessions, turns, known }: WakeDeps): Handler =>
+  async (watch, changes) => {
     const session = sessions.open(watch.subject)
-    if (!session) return
-    const clientRequestId = `watch:${watch.id}:${Bun.hash(JSON.stringify(changes))}`
-    const sent = await turns.send(session, { prompt: wakePrompt(watch, changes), mode: 'queue', origin: 'wake', label: watch.label, clientRequestId })
-    await turns.follow(session, sent, signal)
+    const fresh = known.fresh(watch.subject, changes)
+    if (!session || !fresh.length) return
+    const clientRequestId = `watch:${watch.id}:${Bun.hash(JSON.stringify(fresh))}`
+    await turns.send(session, { prompt: wakePrompt(watch, fresh), origin: 'wake', label: labelOf(watch, fresh), clientRequestId })
   }

@@ -10,7 +10,7 @@ import { createAuth } from './auth/auth'
 import { registerChecks } from './checks'
 import { listenUser } from './checks/user'
 import { timing } from './checks/wait'
-import { github, githubOpenPull, githubPulls } from './contract'
+import { checksSettled, github, githubOpenPull, githubPulls } from './contract'
 import { openPull, pullsOf } from './pulls'
 
 export default definePlugin({
@@ -35,7 +35,7 @@ export default definePlugin({
                 found.handle(githubOpenPull, ({ cwd, title }) => openPull(git, client, cwd, title)),
               ),
           ),
-          ctx.watch(tools, found => found && registerChecks(found, { git, client, listen, timing })),
+          ctx.watch(tools, found => found && registerChecks(found, { git, client, listen, timing, settled: (conversation, sha, outcome) => ctx.emit(checksSettled, conversation, sha, outcome) })),
         ),
     )
   },
