@@ -1,11 +1,12 @@
 import { isRecord } from '@sand/util'
-import { expandHome, writeAtomic } from '@sand/util/fs'
+import { expandHome, readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 
-const savedRoot = async (file: string) => {
-  const saved: unknown = await Bun.file(file).json().catch(() => undefined)
-  return isRecord(saved) && typeof saved.root === 'string' && saved.root ? saved.root : '~/Projects'
-}
+const DEFAULT_ROOT = '~/Projects'
+
+const rootOf = (saved: unknown) => (isRecord(saved) && typeof saved.root === 'string' && saved.root ? saved.root : DEFAULT_ROOT)
+
+const savedRoot = async (file: string) => (await readState(file, rootOf)) ?? DEFAULT_ROOT
 
 export const projectRoot = async (home: string) => {
   const file = join(home, 'project-root.json')

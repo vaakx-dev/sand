@@ -1,5 +1,5 @@
 import { isRecord, serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { ToolLoad } from '../contract'
 
@@ -14,7 +14,7 @@ const clean = (data: unknown): Record<string, ToolLoad> => {
 
 export const loadChoices = async (home: string) => {
   const file = join(home, 'tools.json')
-  let saved = clean(await Bun.file(file).json().catch(() => ({})))
+  let saved = (await readState(file, clean)) ?? {}
   const queue = serial()
   return {
     get: (group: string): ToolLoad | undefined => saved[group],
