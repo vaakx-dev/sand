@@ -51,7 +51,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
   }
 
   const open = async (id: string) => {
-    const request = () => new Promise(resolve => setTimeout(resolve, 400)).then(() => wire.call(sessionOpen, { session: id }))
+    const request = () => wire.call(sessionOpen, { session: id })
     const opened = await request().catch(error => (reconnecting(id) ? Promise.reject(error) : wait(retryDelay).then(request)))
     return install(opened)
   }
