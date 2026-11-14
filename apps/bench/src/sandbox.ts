@@ -1,5 +1,5 @@
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { Seeded } from './seed'
 
@@ -64,7 +64,7 @@ const seedBox = async (replies: number) => {
   await Bun.write(join(home, 'model.json'), JSON.stringify({ model: 'replay/script' }))
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
-  return printed(out, /throwaway sand \(pid \d+\) in (.+)$/m)
+  return printed(out, /throwaway sand \(pid \d+\) in (.+)$/m).replace(/^~(?=[\\/])/, homedir())
 }
 
 export const startSandbox = async (replies: number, kept?: string, keep = false): Promise<Sandbox> => {
