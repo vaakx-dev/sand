@@ -7,11 +7,11 @@
     "feature": "file-office",
     "web": "./src/web/index.ts",
     "label": "Office",
-    "summary": "Reads Word documents, Excel sheets and PowerPoint slides in the file viewer",
+    "summary": "Word, Excel and PowerPoint files",
     "features": {
       "file-office": {
         "label": "Office",
-        "summary": "Reads Word documents, Excel sheets and PowerPoint slides in the file viewer",
+        "summary": "Word, Excel and PowerPoint files",
         "parent": "file-viewer",
         "addon": true
       }
