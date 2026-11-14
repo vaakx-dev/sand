@@ -1,19 +1,21 @@
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import { modelsAdd, modelsCatalog, modelsNewModels, modelsPref, modelsRefresh, modelsRemove, modelsSeen, type ModelInfo } from '../contract'
+import { modelsAdd, modelsCatalog, modelsNewModels, modelsPref, modelsPrice, modelsRefresh, modelsRemove, modelsSeen, type ModelInfo } from '../contract'
 import type { Catalog } from '../catalog'
 import { qualify, split } from '../catalog/build'
 import { added, favourite, hidden, newModels, removed, seen } from '../catalog/prefs'
+import type { PriceList } from '../catalog/prices'
 import type { Prefs } from '../catalog/types'
 import type { View } from '../catalog/view'
 
 interface ModelsOptions {
   view: View
   catalog: Catalog
+  prices: PriceList
   refreshPeers(): Promise<void>
 }
 
-export const serveModels = (server: Server, { view, catalog, refreshPeers }: ModelsOptions) => {
+export const serveModels = (server: Server, { view, catalog, prices, refreshPeers }: ModelsOptions) => {
   const source = async (value: string) => {
     await catalog.ready
     if (!view.entry(value)) throw new Error(`Unknown model source "${value}"`)
@@ -67,5 +69,6 @@ export const serveModels = (server: Server, { view, catalog, refreshPeers }: Mod
       const remote = !from || !!view.entry(from)?.meta.via
       await Promise.all([catalog.refresh(from), ...(remote ? [refreshPeers()] : [])])
     }),
+    server.handle(modelsPrice, ({ model: wanted, price }) => prices.set(wanted.trim(), price)),
   )
 }

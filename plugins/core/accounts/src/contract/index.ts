@@ -73,6 +73,14 @@ export const modelsPref = request('models.pref', {
   output: type<void>(),
 })
 export const modelsAdd = request('models.add', { input: () => source().extend({ name: z.string() }), output: type<ModelInfo>() })
+export const modelsPrice = request('models.price', {
+  input: () =>
+    model().extend({
+      price: z.object({ input: z.number().nonnegative(), output: z.number().nonnegative(), cacheRead: z.number().nonnegative(), cacheWrite: z.number().nonnegative() }),
+    }),
+  output: type<void>(),
+  callers: 'any',
+})
 export const modelsRemove = request('models.remove', { input: model, output: type<void>() })
 export const modelsNewModels = request('models.newModels', { input: () => source().extend({ mode: z.enum(['show', 'hide']) }), output: type<void>() })
 export const modelsSeen = request('models.seen', { input: source, output: type<void>() })

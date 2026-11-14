@@ -2,13 +2,13 @@ import { definePlugin, evict, type Scope } from 'drydock'
 import { join } from 'node:path'
 import { cli, definitionsIn, featureOf, features, pluginSwitches, sandConfig } from './contract'
 import { createCatalog } from './features/catalog'
-import { writeFeatures } from './features/toml'
 import { addonPlugins, builtinPlugins, entryIn, runsNowhere, sandOf, userPlugins } from './find'
 import { serviceOwners } from './off/owners'
 import { createSwitches } from './off/switches'
 import { startOrder } from './order'
 import { optionsOf } from './plugins'
 import { configPath, readConfig } from './read'
+import { setTomlValues, type TomlValues } from './toml'
 
 export default definePlugin({
   name: 'config',
@@ -18,7 +18,8 @@ export default definePlugin({
     const { home, safe, place, builtins } = ctx.cli
     const path = await configPath(home)
     const table = await readConfig(path)
-    ctx.provide(sandConfig, { path, section: name => table[name] })
+    const set = (table: string[], values: TomlValues) => setTomlValues(path, table, values)
+    ctx.provide(sandConfig, { path, section: name => table[name], set })
 
     const settings = safe ? undefined : table.plugins
     const userRoot = join(home, 'plugins')
@@ -75,11 +76,14 @@ export default definePlugin({
       learnOwners(await serviceOwners(declaring.map(plugin => [plugin.id, plugin.dir] as const)))
     }
 
+    const chosenOnly = (changes: Record<string, boolean>) =>
+      Object.fromEntries(Object.entries(changes).map(([id, on]) => [id, on === catalog.onByDefault(id) ? undefined : on]))
+
     ctx.provide(features, {
       list: () => catalog.list(),
       on: id => catalog.on(id),
       async set(changes) {
-        await writeFeatures(path, changes, catalog.onByDefault)
+        await set(['features'], chosenOnly(changes))
         catalog.choose(changes)
         await sync()
       },

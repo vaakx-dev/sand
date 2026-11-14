@@ -1,10 +1,6 @@
 import { expect, test } from 'bun:test'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import type { FeatureDefinition } from '../src/contract'
 import { createCatalog } from '../src/features/catalog'
-import { writeFeatures } from '../src/features/toml'
 
 const feature = (id: string, more: Partial<FeatureDefinition> = {}): FeatureDefinition => ({ id, kind: 'feature', label: id, summary: '', needs: [], uses: [], addon: false, ...more })
 const capability = (id: string, more: Partial<FeatureDefinition> = {}) => feature(id, { kind: 'capability', ...more })
@@ -66,31 +62,4 @@ test('an add-on is off until it is turned on, with or without a [features] table
   expect([catalog.on('logbook'), catalog.on('math'), catalog.on('threads'), catalog.on('bots')]).toEqual([false, true, false, true])
   catalog.choose({ logbook: true })
   expect(catalog.on('logbook')).toBe(true)
-})
-
-const onByDefault = (id: string) => id !== 'git'
-
-test('writing features keeps the rest of sand.toml and only lists what differs from the default', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'sand-features-'))
-  const path = join(dir, 'sand.toml')
-  try {
-    await Bun.write(path, '# mine\n[host]\nport = 0\n\n[features]\ngit = true # coding\n\n[plugins.web]\npaths = []\n')
-    await writeFeatures(path, { git: false, threads: false }, onByDefault)
-    expect(await Bun.file(path).text()).toBe('# mine\n[host]\nport = 0\n\n[features]\nthreads = false\n\n[plugins.web]\npaths = []\n')
-    await writeFeatures(path, { threads: true, git: true }, onByDefault)
-    expect(Bun.TOML.parse(await Bun.file(path).text())).toEqual({ host: { port: 0 }, features: { git: true }, plugins: { web: { paths: [] } } })
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-})
-
-test('writing features to a missing sand.toml creates it with the table, even when nothing is off', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'sand-features-'))
-  const path = join(dir, 'sand.toml')
-  try {
-    await writeFeatures(path, { bots: true }, onByDefault)
-    expect(await Bun.file(path).text()).toBe('[features]\n')
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
 })

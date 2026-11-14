@@ -1,7 +1,7 @@
 {
   "name": "@sand/models-mcp",
   "version": "0.0.0",
-  "description": "sand's model tools, defined once for its own threads and bots and for outside agents over MCP: list the models they can use",
+  "description": "sand's model tools, defined once for its own threads and bots and for outside agents over MCP: list the models they can use and set the price of a model",
   "type": "module",
   "sand": {
     "feature": "threads-mcp",
@@ -9,9 +9,10 @@
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
     "label": "Model tools",
-    "summary": "Lets your threads, your bots and outside agents list the models they can use"
+    "summary": "Lets your threads, your bots and outside agents list the models they can use and set the price of a model"
   },
   "dependencies": {
+    "@sand/accounts": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/util": "workspace:*",
