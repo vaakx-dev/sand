@@ -17,17 +17,17 @@ interface GroupsInput {
 }
 
 export const threadGroups = ({ entries, known, limit, more, start }: GroupsInput): ShellGroup[] => {
-  const settled = newest(entries.filter(entry => entry.settled))
-  const snoozed = newest(entries.filter(entry => entry.snoozed && !entry.settled))
-  const open = entries.filter(entry => !entry.snoozed && !entry.settled)
+  const archived = newest(entries.filter(entry => entry.archived))
+  const snoozed = newest(entries.filter(entry => entry.snoozed && !entry.archived))
+  const open = entries.filter(entry => !entry.snoozed && !entry.archived)
   const working = newest(open.filter(entry => entry.row.status === 'running'))
   const active = newest(open.filter(entry => entry.row.status !== 'running'))
-  const hidden = settled.length - limit
+  const hidden = archived.length - limit
   return [
     { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row), ...(known && !entries.length && { empty: 'No threads yet.' }) },
     ...group('working', 'Working', working),
     ...group('snoozed', 'Snoozed', snoozed, { folded: true }),
-    ...group('settled', 'Settled', settled.slice(0, limit), {
+    ...group('archived', 'Archived', archived.slice(0, limit), {
       folded: true,
       ...(hidden > 0 && { action: { label: `Show ${Math.min(hidden, pageSize)} more`, icon: 'down', run: more } }),
     }),

@@ -38,7 +38,7 @@ const fixPrompt = (clashes: string[]) =>
 
 const listed = (parts: NeedsParts) => {
   parts.pulse.version.get()
-  return parts.threads.known() ? visibleThreads(parts.threads.list()).filter(thread => !thread.info.settled) : undefined
+  return parts.threads.known() ? visibleThreads(parts.threads.list()).filter(thread => !thread.info.archived) : undefined
 }
 
 const opener = (parts: NeedsParts, thread: Thread): NeedAction => ({ label: 'Open', run: () => openThread(parts.ctx, parts.shell, thread.id) })

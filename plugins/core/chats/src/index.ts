@@ -5,7 +5,7 @@ import { runtimeRelease } from '@sand/host-runtimes/contract'
 import { ledger } from '@sand/ledger/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
-import { sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
+import { sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionArchive, sessionUpdate } from './contract'
 import { migrateChats } from './schema'
 import { usedMedia } from './media'
 import { createStore } from './store'
@@ -23,7 +23,7 @@ export default definePlugin({
       hooks: {
         entry: (session, entry) => ctx.emit(sessionEntry, session, entry),
         update: session => ctx.emit(sessionUpdate, session),
-        settle: session => ctx.emit(sessionSettle, session),
+        archive: session => ctx.emit(sessionArchive, session),
         remove: id => ctx.emit(sessionRemove, id),
       },
       busy: async session => (await ctx.bail(sessionBusy, session)) ?? false,

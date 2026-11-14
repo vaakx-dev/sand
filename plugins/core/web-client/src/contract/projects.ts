@@ -18,7 +18,8 @@ export interface ProjectGroup {
   remote?: string
   icon?: ProjectIcon
   iconFile?: ProjectIconFile
-  hidden: boolean
+  pinned: boolean
+  archived: boolean
   updated: number
   locations: ProjectEntry[]
 }
@@ -39,7 +40,8 @@ export interface ProjectShown {
 export interface Projects {
   list(): ProjectEntry[]
   known(): boolean
-  groups(options?: { hidden?: boolean }): ProjectGroup[]
+  groups(): ProjectGroup[]
+  archived(): ProjectGroup[]
   get(id: string): ProjectGroup | undefined
   group(path: string, device: string): ProjectGroup | undefined
   shown(ref: ProjectRef): ProjectShown
@@ -54,7 +56,8 @@ export interface Projects {
   removeCopy(entry: ProjectEntry): Promise<void>
   remove(group: ProjectGroup): Promise<void>
   rename(group: ProjectGroup, name: string): Promise<void>
-  hide(group: ProjectGroup, hidden: boolean): Promise<void>
+  pin(group: ProjectGroup, pinned: boolean): Promise<void>
+  archive(group: ProjectGroup, archived: boolean): Promise<void>
   setIcon(group: ProjectGroup, icon: ProjectIcon | null): Promise<void>
   setRoot(root: string, device: string): Promise<void>
   create(name: string, device: string): Promise<ProjectEntry>

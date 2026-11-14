@@ -32,17 +32,17 @@ const openActions = (parts: MenuParts, thread: Thread): MenuAction[] => [
 
 const organiseActions = ({ ctx, threads }: MenuParts, thread: Thread): MenuAction[] => {
   const pinned = thread.info.pinned
-  const settled = Boolean(thread.info.settled)
+  const archived = Boolean(thread.info.archived)
   return [
     { id: 'pin', group: 'organise', label: pinned ? 'Unpin' : 'Pin', icon: 'pin', quick: true, active: pinned, run: () => attempt(ctx, "Couldn't pin", () => threads.update(thread.id, { pinned: !pinned })) },
     {
-      id: 'settle',
+      id: 'archive',
       group: 'organise',
-      label: settled ? 'Un-settle' : 'Settle',
-      icon: settled ? 'up' : 'check',
+      label: archived ? 'Unarchive' : 'Archive',
+      icon: archived ? 'up' : 'archive',
       quick: true,
-      active: settled,
-      run: () => attempt(ctx, settled ? "Couldn't un-settle" : "Couldn't settle", () => threads.update(thread.id, { settled: !settled })),
+      active: archived,
+      run: () => attempt(ctx, archived ? "Couldn't unarchive" : "Couldn't archive", () => threads.update(thread.id, { archived: !archived })),
     },
     snoozeAction(threads, thread),
   ]

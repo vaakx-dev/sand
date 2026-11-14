@@ -30,7 +30,7 @@ export const rowOf = (ctx: OrchestratorContext, summary: SessionSummary): Thread
   updated: summary.updated,
   status: threadStatus(ctx, ctx.sessions.require(summary.id)),
   pinned: summary.pinned,
-  settled: summary.settled !== null,
+  archived: summary.archived !== null,
   ...(summary.snoozed !== null && { snoozed: summary.snoozed }),
 })
 

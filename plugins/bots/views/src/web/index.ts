@@ -56,7 +56,7 @@ export default definePlugin({
       store: botStore(ctx),
       toasts: toastsOf(ctx),
       chats: conversations(ctx),
-      projects: owned(ctx, () => known.read(() => ctx.projects.groups({ hidden: true }))),
+      projects: owned(ctx, () => known.read(() => [...ctx.projects.groups(), ...ctx.projects.archived()])),
       shown(project) {
         known.version.get()
         return ctx.projects.shown({ project })
