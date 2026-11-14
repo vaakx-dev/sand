@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { Database } from 'bun:sqlite'
 import { appendFile, mkdtemp, readdir, rm } from 'node:fs/promises'
+import { realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { type Build, derivedBuild, previousBuild, thisBuild } from './builds'
@@ -22,7 +23,7 @@ const laterBuild = () =>
   (later ??= derivedBuild(current, join(work, 'later'), root => appendFile(join(root, 'plugins', 'host', 'daemon', 'src', 'host', 'settings.ts'), `\nexport const upgradeVariant = ${Date.now()}\n`)))
 
 beforeAll(async () => {
-  work = await mkdtemp(join(tmpdir(), 'sand-upgrade-work-'))
+  work = await mkdtemp(join(realpathSync.native(tmpdir()), 'sand-upgrade-work-'))
   ;[previous, current] = await Promise.all([previousBuild(), thisBuild(join(work, 'current'))])
   console.log(`previous build ${previous.id}, this build ${current.id}`)
 }, 20 * minute)

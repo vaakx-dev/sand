@@ -1,6 +1,7 @@
 import { readPointer, readServerInfo, shimFile } from '@sand/boot'
 import { request, type } from '@sand/host-hub/contract'
 import { copyFile, mkdir, mkdtemp, readdir, rm } from 'node:fs/promises'
+import { realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -49,7 +50,7 @@ const execute = async (command: string[], env: Record<string, string | undefined
 }
 
 export const makeSand = async (): Promise<Sand> => {
-  const home = await mkdtemp(join(tmpdir(), 'sand-upgrade-'))
+  const home = await mkdtemp(join(realpathSync.native(tmpdir()), 'sand-upgrade-'))
   const port = freePort()
   await Bun.write(join(home, 'sand.toml'), `[host]\nport = ${port}\n\n[plugins.devices-network]\nenabled = false\n`)
   return { home, port, log: () => Bun.file(join(home, 'server.log')).text().catch(() => '') }

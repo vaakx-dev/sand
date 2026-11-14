@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, realpathSync } from 'node:fs'
 import { mkdir, mkdtemp, readdir, rm, utimes } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -13,7 +13,7 @@ export interface Build {
 
 export const repoRoot = resolve(import.meta.dir, '..', '..', '..', '..', '..')
 
-const cacheFolder = join(tmpdir(), 'sand-upgrade-builds')
+const cacheFolder = join(realpathSync.native(tmpdir()), 'sand-upgrade-builds')
 
 const run = async (command: string[], cwd: string, env: Record<string, string | undefined> = process.env) => {
   const proc = Bun.spawn(command, { cwd, env, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
@@ -32,7 +32,7 @@ export const readBuild = async (folder: string): Promise<Build> => {
 }
 
 const releaseAssets = async (root: string, out: string) => {
-  const home = await mkdtemp(join(tmpdir(), 'sand-upgrade-assets-home-'))
+  const home = await mkdtemp(join(realpathSync.native(tmpdir()), 'sand-upgrade-assets-home-'))
   try {
     await rm(out, { recursive: true, force: true })
     await run([process.execPath, join(root, 'apps', 'sand', 'src', 'main.ts'), 'release-assets', out], root, { ...process.env, SAND_HOME: home })
