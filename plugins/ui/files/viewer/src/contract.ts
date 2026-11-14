@@ -16,6 +16,7 @@ export interface FoundFile {
 export type Found = { file: FoundFile } | { missing: string }
 
 export interface OpenFile extends FoundFile {
+  source(): Promise<string>
   blob(): Promise<Blob>
   bytes(): Promise<Uint8Array<ArrayBuffer>>
   content(): Promise<string>
@@ -56,17 +57,19 @@ export interface FileViewer {
 
 export const fileRoute = '/file'
 
+export const fileStreamRoute = '/file-stream/'
+
 export const fileUrl = ({ path, modified }: FoundFile) => `${fileRoute}?${new URLSearchParams({ path, v: String(modified) })}`
 
 export const formatAddons = {
-  'file-pdf': { label: 'PDF', files: 'PDFs', extensions: ['pdf'] },
+  'file-pdf': { label: 'PDF', files: 'PDF documents', extensions: ['pdf'] },
   'file-office': { label: 'Office', files: 'Word, Excel and PowerPoint files', extensions: ['docx', 'xlsx', 'xlsm', 'pptx'] },
   'file-notebooks': { label: 'Notebooks', files: 'Jupyter notebooks', extensions: ['ipynb'] },
-  'file-documents': { label: 'Documents', files: 'OpenDocument, EPUB and rich text files', extensions: ['odt', 'ods', 'odp', 'epub', 'rtf'] },
-  'file-archives': { label: 'Archives', files: 'Archives', extensions: ['zip', 'jar', 'tar', 'gz', 'tgz'] },
+  'file-documents': { label: 'Documents', files: 'OpenDocument, EPUB and RTF files', extensions: ['odt', 'ods', 'odp', 'epub', 'rtf'] },
+  'file-archives': { label: 'Archives', files: 'Zip, tar and gzip archives', extensions: ['zip', 'jar', 'tar', 'gz', 'tgz'] },
   'file-sqlite': { label: 'SQLite', files: 'SQLite databases', extensions: ['sqlite', 'sqlite3', 'db'] },
   'file-images': { label: 'More images', files: 'TIFF and HEIC images', extensions: ['tif', 'tiff', 'heic', 'heif'] },
-  'file-fonts': { label: 'Fonts', files: 'Fonts', extensions: ['ttf', 'otf', 'woff', 'woff2'] },
+  'file-fonts': { label: 'Fonts', files: 'TrueType, OpenType and WOFF fonts', extensions: ['ttf', 'otf', 'woff', 'woff2'] },
   mermaid: { label: 'Mermaid', files: 'Mermaid diagrams', extensions: ['mmd', 'mermaid'] },
 } satisfies Record<string, FormatAddon>
 
@@ -75,6 +78,12 @@ export const extensionOf = (name: string) => /\.([^./\\]+)$/.exec(name)?.[1]?.to
 export const filesFind = request('files.find', {
   input: () => z.object({ thread: z.string().min(1), mention: z.string().min(1).max(4096) }),
   output: type<Found>(),
+  callers: 'any',
+})
+
+export const filesStream = request('files.stream', {
+  input: () => z.object({ path: z.string().min(1).max(4096) }),
+  output: type<string>(),
   callers: 'any',
 })
 
