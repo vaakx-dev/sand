@@ -1,5 +1,5 @@
 import { logins } from '@sand/logins/contract'
-import { processes } from '@sand/processes/contract'
+import { processes, type TrackedJob } from '@sand/processes/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers, oneLine } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -22,8 +22,8 @@ export default definePlugin({
   }),
   apply(ctx, config) {
     const shell = detect(config.shell)
-    const trackFor = (conversation: string, command: string) => (pid: number) =>
-      ctx.get(processes)?.track({ conversation, pid, label: oneLine(command, LABEL_CHARS), kind: 'command' })
+    const trackFor = (conversation: string, command: string) => (pid: number, job?: TrackedJob) =>
+      ctx.get(processes)?.track({ conversation, pid, label: oneLine(command, LABEL_CHARS), kind: 'command', job })
     ctx.provide(shellRunner, shellRunnerOf(shell, trackFor))
     const powerShell = sidePowerShell(shell)
     const shells = [

@@ -1,4 +1,5 @@
 import type { Subprocess } from 'bun'
+import type { TrackedJob } from '@sand/processes/contract'
 import type { Dispose } from 'drydock'
 import { jobObject } from './job-object'
 
@@ -18,7 +19,7 @@ export interface SpawnOptions {
   track?: Track
 }
 
-export type Track = (pid: number) => Dispose | undefined
+export type Track = (pid: number, job?: TrackedJob) => Dispose | undefined
 
 const taskkill = async (pid: number) => {
   const killer = Bun.spawn(['taskkill', '/pid', String(pid), '/T', '/F'], { stdio: ['ignore', 'ignore', 'ignore'], windowsHide: true })
@@ -26,13 +27,9 @@ const taskkill = async (pid: number) => {
   return code === 0
 }
 
-const windowsTree = (child: Subprocess, killOnClose: boolean) => {
-  const job = jobObject(child.pid, killOnClose)
-  void child.exited.then(() => job?.close())
-  return async () => {
-    if (job) return void job.kill()
-    if (!(await taskkill(child.pid))) child.kill('SIGKILL')
-  }
+const windowsTree = (child: Subprocess, job: ReturnType<typeof jobObject>) => async () => {
+  if (job) return void job.kill()
+  if (!(await taskkill(child.pid))) child.kill('SIGKILL')
 }
 
 const orphanGuard = (group: number) => {
@@ -64,9 +61,10 @@ export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, {
     windowsHide: true,
     windowsVerbatimArguments: verbatim,
   })
-  const untrack = track?.(child.pid)
-  if (untrack) void child.exited.then(untrack)
-  return { child, killTree: windows ? windowsTree(child, killOnClose) : groupTree(child, killOnClose) }
+  const job = windows ? jobObject(child.pid, killOnClose) : undefined
+  const untrack = track?.(child.pid, job)
+  void child.exited.then(() => (untrack ? untrack() : job?.close()))
+  return { child, killTree: windows ? windowsTree(child, job) : groupTree(child, killOnClose) }
 }
 
 export const unixNewlines = (text: string) => (windows ? text.replaceAll('\r\n', '\n') : text)
