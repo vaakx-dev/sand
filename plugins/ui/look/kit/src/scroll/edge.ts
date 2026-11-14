@@ -1,4 +1,4 @@
-import { div, intersectionObserver, onRaf, onTimeout } from '@vaakx-dev/vrui'
+import { collectScope, div, intersectionObserver, onRaf, onTimeout } from '@vaakx-dev/vrui'
 
 const ahead = '200% 0px 0px 0px'
 const idleDelay = 400
@@ -12,10 +12,12 @@ export const topEdge = (grow: () => boolean, trim: () => void) => {
   const pump = () => {
     if (queued || !near) return
     queued = true
-    onRaf(() => {
-      queued = false
-      if (near && grow()) pump()
-    }, sentinel)
+    collectScope(() =>
+      onRaf(() => {
+        queued = false
+        if (near && sentinel.isConnected && grow()) pump()
+      }),
+    )
   }
 
   const watch = (scroller: HTMLElement) =>
