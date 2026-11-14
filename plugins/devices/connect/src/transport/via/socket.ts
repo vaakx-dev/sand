@@ -1,5 +1,5 @@
-import { deviceParams, type SocketHandlers, type TransportSocket, type ViaFrame, viaClose, viaOpen, viaSend } from '@sand/devices-contract'
-import { errorMessage } from '@sand/util'
+import { deviceParams, type SocketHandlers, type SocketInit, type TransportSocket, type ViaFrame, viaClose, viaOpen, viaSend } from '@sand/devices-contract'
+import { errorMessage, untilAborted } from '@sand/util'
 import { sendQueue } from './queue'
 import type { ViaRelay } from './relay'
 
@@ -9,13 +9,26 @@ const ticketOf = (path: string) => {
   return ticket
 }
 
-export const openViaSocket = async (
-  relay: ViaRelay,
-  pc: string,
-  path: string,
-  handlers: SocketHandlers,
-  timeout: number,
-): Promise<TransportSocket> => {
+interface ViaSocket {
+  relay: ViaRelay
+  pc: string
+  path: string
+  handlers: SocketHandlers
+  init: SocketInit
+}
+
+const openStream = (relay: ViaRelay, pc: string, ticket: string, { timeout, signal }: SocketInit) => {
+  const opening = relay.call(viaOpen, { pc, ticket }, { timeout })
+  opening.then(
+    ({ stream }) => {
+      if (signal.aborted) void relay.call(viaClose, { stream }).catch(() => {})
+    },
+    () => {},
+  )
+  return untilAborted(opening, signal)
+}
+
+export const openViaSocket = async ({ relay, pc, path, handlers, init }: ViaSocket): Promise<TransportSocket> => {
   const ticket = ticketOf(path)
   const early: ViaFrame[] = []
   let stream: string | undefined
@@ -39,7 +52,7 @@ export const openViaSocket = async (
   })
 
   try {
-    stream = (await relay.call(viaOpen, { pc, ticket }, { timeout })).stream
+    stream = (await openStream(relay, pc, ticket, init)).stream
   } catch (error) {
     stopFrames()
     throw error

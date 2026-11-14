@@ -17,7 +17,7 @@ export interface UpgradeHost {
 
 export const upgrader = (host: UpgradeHost) => {
   const upgradeTimer = timer()
-  let running: DialRun | undefined
+  let running: AbortController | undefined
 
   const better = (current: Route) => {
     const routes = host.candidates()
@@ -51,11 +51,11 @@ export const upgrader = (host: UpgradeHost) => {
     const leaving = !host.usable(route)
     const routes = better(route)
     if (!routes.length) return leaving ? host.lose('its route was turned off') : undefined
-    const dialRun: DialRun = { stopped: false }
-    running = dialRun
-    const outcome = await host.dial(routes, dialRun)
-    const still = running === dialRun && host.current() === active
-    if (running === dialRun) running = undefined
+    const stop = new AbortController()
+    running = stop
+    const outcome = await host.dial(routes, { signal: stop.signal })
+    const still = running === stop && host.current() === active
+    if (running === stop) running = undefined
     if (!still) {
       if (outcome.ok) outcome.opened.link.close()
       return
@@ -67,7 +67,7 @@ export const upgrader = (host: UpgradeHost) => {
 
   const stop = () => {
     upgradeTimer.clear()
-    if (running) running.stopped = true
+    running?.abort()
     running = undefined
     again = false
   }

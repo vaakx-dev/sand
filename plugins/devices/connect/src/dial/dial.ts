@@ -22,6 +22,8 @@ type Recorder = (attempt: Attempt) => void
 
 const resumeHeadStart = 1500
 
+const stopped: DialOutcome = { ok: false, cause: 'stopped' }
+
 interface Resuming {
   route: Route
   opened: Promise<Opened | undefined>
@@ -38,11 +40,10 @@ const blockedBy = (error: unknown): Blocked | undefined => {
 const allWrongPc = (probes: Probe[]) => probes.length > 0 && probes.every(probe => !probe.ok && probe.result === 'wrong-pc')
 
 const probeAndOpen = async (routes: Route[], context: DialContext, run: DialRun, record: Recorder, resuming?: Resuming): Promise<DialOutcome> => {
-  const expected = context.expected()
   let cause = 'no route answered'
   const probes = routes.map(route =>
-    probeRoute(route, context.transportOf, expected, context.signer).then(probe => {
-      if (!probe.ok) {
+    probeRoute(route, context, run.signal).then(probe => {
+      if (!probe.ok && !run.signal.aborted) {
         cause = probe.error
         record({ route, result: probe.result, at: Date.now(), ms: probe.ms, error: probe.error })
       }
@@ -52,18 +53,19 @@ const probeAndOpen = async (routes: Route[], context: DialContext, run: DialRun,
 
   for await (const probe of passedAsTheyCome(probes)) {
     if (probe.route.key === resuming?.route.key) await resuming.opened
-    if (run.stopped) return { ok: false, cause: 'stopped' }
+    if (run.signal.aborted) return stopped
     context.identified(probe.identity)
     const started = Date.now()
     try {
       const opened = await openRoute(probe, context, run)
-      if (run.stopped) {
+      if (run.signal.aborted) {
         opened.link.close()
-        return { ok: false, cause: 'stopped' }
+        return stopped
       }
       record({ route: probe.route, result: 'ok', at: Date.now(), ms: probe.ms })
       return { ok: true, opened }
     } catch (error) {
+      if (run.signal.aborted) return stopped
       cause = errorMessage(error)
       record({ route: probe.route, result: attemptResultOf(error), at: Date.now(), ms: Date.now() - started, error: cause })
       const blocked = blockedBy(error)
@@ -88,12 +90,12 @@ const tagged = <K extends string, T>(kind: K, promise: Promise<T>) => promise.th
 
 const firstOpened = async (resume: Resumable | undefined, routes: Route[], context: DialContext, run: DialRun, record: Recorder): Promise<DialOutcome> => {
   if (!resume) return probeAndOpen(routes, context, run, record)
-  let resumed = false
+  const resumed = new AbortController()
   const opened = resumeRoute(resume, context, run).then(found => {
-    resumed = found !== undefined
+    if (found) resumed.abort()
     return found
   })
-  const probeRun: DialRun = { greeting: run.greeting, get stopped() { return run.stopped || resumed } }
+  const probeRun: DialRun = { greeting: run.greeting, signal: AbortSignal.any([run.signal, resumed.signal]) }
   const probing = failedOrSlow(opened).then(() => probeAndOpen(routes, context, probeRun, record, { route: resume.route, opened }))
   const first = await Promise.race([tagged('resume', opened), tagged('probe', probing)])
   if (first.kind === 'resume' && first.value) {

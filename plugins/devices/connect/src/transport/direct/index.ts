@@ -4,5 +4,5 @@ import { openDirectSocket } from './socket'
 
 export const directTransport = (url: string): Transport => ({
   fetch: (path, init) => fetchDirect(url, path, init),
-  socket: (path, handlers, timeout) => openDirectSocket(url, path, handlers, timeout),
+  socket: (path, handlers, init) => openDirectSocket(url, path, handlers, init),
 })

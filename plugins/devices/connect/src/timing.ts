@@ -17,6 +17,3 @@ export const probeTimeout = (route: Route) => (nearby(route) ? 3000 : 8000)
 export const pingTimeout = (route: Route) => (nearby(route) ? 3000 : 10_000)
 
 export const wakeGrace = 500
-export const askEvery = 1000
-
-export const silentLimit = (route: Route) => (nearby(route) ? 0 : 2500)

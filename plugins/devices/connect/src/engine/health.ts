@@ -1,15 +1,15 @@
-import { connectionPing, isPcUnavailable, type Route } from '@sand/devices-contract'
+import { connectionPing, isPcUnavailable } from '@sand/devices-contract'
 import { isTimeout } from '../errors/timed-out'
 import type { Link } from '../link/link'
 import { sleep } from '../time/sleep'
 import { timer } from '../time/timer'
-import { askEvery, pingTimeout, quietAfter, silentLimit, wakeGrace } from '../timing'
+import { pingTimeout, quietAfter, wakeGrace } from '../timing'
 
 export interface HealthTarget {
   current(): Link | undefined
   visible(): boolean
-  answers(route: Route): Promise<boolean>
   measured(link: Link, latency: number): void
+  silent(link: Link): void
   failed(link: Link): void
   changed(): void
 }
@@ -20,8 +20,6 @@ interface Check {
 }
 
 const unanswered = (error: unknown) => isTimeout(error) || isPcUnavailable(error)
-
-const sleepUntil = (at: number) => sleep(Math.max(0, at - Date.now()))
 
 export const healthWatch = (target: HealthTarget) => {
   const checkTimer = timer()
@@ -62,19 +60,9 @@ export const healthWatch = (target: HealthTarget) => {
     void ping(link)
   }
 
-  const silent = (wake: Check) => checking === wake && wake.link.heard() < wake.since
-
   const confirm = async (wake: Check) => {
     await Promise.race([ping(wake.link), sleep(wakeGrace)])
-    while (silent(wake)) {
-      const asked = Date.now()
-      if (await target.answers(wake.link.route)) {
-        await sleepUntil(wake.since + silentLimit(wake.link.route))
-        if (silent(wake)) target.failed(wake.link)
-        return
-      }
-      await sleepUntil(asked + askEvery)
-    }
+    if (checking === wake && wake.link.heard() < wake.since) target.silent(wake.link)
   }
 
   return {

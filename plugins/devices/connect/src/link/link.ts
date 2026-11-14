@@ -1,4 +1,4 @@
-import type { Route, Transport, TransportSocket } from '@sand/devices-contract'
+import type { Route, SocketInit, Transport, TransportSocket } from '@sand/devices-contract'
 import type { ClientMessage, Request } from '@sand/host-hub/contract'
 import { TimedOut } from '../errors/timed-out'
 import { seconds } from '../time/seconds'
@@ -29,7 +29,7 @@ export const openLink = async (
   route: Route,
   transport: Transport,
   path: string,
-  timeout: number,
+  init: SocketInit,
   listener: LinkListener,
 ): Promise<Link> => {
   const pending = new Map<number, Waiter>()
@@ -119,7 +119,7 @@ export const openLink = async (
     },
   }
 
-  socket = await transport.socket(path, { message: receive, closed: lost }, timeout)
+  socket = await transport.socket(path, { message: receive, closed: lost }, init)
   if (closed) socket.close()
   return link
 }

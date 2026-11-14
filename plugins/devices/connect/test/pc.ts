@@ -12,6 +12,7 @@ import {
 } from '@sand/devices-contract'
 import { deviceIdOf, generateKeyPair, identityProof, newNonce, sign, signerOf, ticketProof, verify } from '@sand/devices-identity'
 import { type ClientMessage, hello } from '@sand/host-hub/contract'
+import { untilAborted } from '@sand/util'
 import { afterEach } from 'bun:test'
 import { connect, directRoute, memoryResumeStore, memoryRouteStore, Unreachable } from '../src'
 
@@ -85,23 +86,43 @@ export const fakePc = () => {
       handlers.closed('refused')
     })
 
+  const reach = (url: string, signal?: AbortSignal) => {
+    const state = answers.get(url) ?? 'up'
+    const never = new Promise<never>(() => {})
+    if (state === 'hang') return signal ? untilAborted(never, signal) : never
+    if (state === 'down') throw new Unreachable(`couldn't reach ${url}`)
+    return Promise.resolve()
+  }
+
+  const openSocket = async (url: string, path: string, handlers: SocketHandlers, signal: AbortSignal) => {
+    await reach(url, signal)
+    const admitted = await admit(path)
+    const socket: FakeSocket = { silent: false, drop: reason => handlers.closed(reason) }
+    sockets.push(socket)
+    if (admitted.refusal) refuse(handlers, admitted.refusal)
+    return { send: (raw: string) => void answer(handlers, socket, admitted, raw), close: () => {} }
+  }
+
+  const connecting = new Map<string, Promise<unknown>>()
+
+  const oneConnectingPerHost = <T>(url: string, signal: AbortSignal, open: () => Promise<T>) => {
+    const opening = (connecting.get(url) ?? Promise.resolve()).then(() => {
+      signal.throwIfAborted()
+      return open()
+    })
+    connecting.set(url, opening.catch(() => {}))
+    return opening
+  }
+
   const transport = (url: string): Transport => ({
-    async fetch(path) {
+    async fetch(path, init) {
       asked.push(path.split('?')[0]!)
       if (path.startsWith(devicePaths.identity)) probed.push(url)
-      const state = answers.get(url) ?? 'up'
-      if (state === 'hang') return new Promise<never>(() => {})
-      if (state === 'down') throw new Unreachable(`couldn't reach ${url}`)
+      await reach(url, init.signal)
       if (path.startsWith(devicePaths.identity)) return identity(path)
       return Response.json({ ticket: 'ticket', expires: Date.now() + 60_000 })
     },
-    async socket(path, handlers) {
-      const admitted = await admit(path)
-      const socket: FakeSocket = { silent: false, drop: reason => handlers.closed(reason) }
-      sockets.push(socket)
-      if (admitted.refusal) refuse(handlers, admitted.refusal)
-      return { send: raw => void answer(handlers, socket, admitted, raw), close: () => {} }
-    },
+    socket: (path, handlers, { signal }) => oneConnectingPerHost(url, signal, () => openSocket(url, path, handlers, signal)),
   })
 
   const restart = () => {

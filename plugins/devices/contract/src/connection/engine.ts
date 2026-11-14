@@ -24,6 +24,11 @@ export interface TransportInit {
   timeout: number
 }
 
+export interface SocketInit {
+  timeout: number
+  signal: AbortSignal
+}
+
 export interface SocketHandlers {
   message(data: string): void
   closed(reason: string): void
@@ -36,7 +41,7 @@ export interface TransportSocket {
 
 export interface Transport {
   fetch(path: string, init: TransportInit): Promise<Response>
-  socket(path: string, handlers: SocketHandlers, timeout: number): Promise<TransportSocket>
+  socket(path: string, handlers: SocketHandlers, init: SocketInit): Promise<TransportSocket>
 }
 
 export interface Transports {

@@ -51,8 +51,10 @@ const refusalWatch = (listener: LinkListener) => {
 export const openSocket = async (route: Route, path: string, context: DialContext, run: DialRun): Promise<Greeted> => {
   const started = Date.now()
   const watch = refusalWatch(context.listener)
-  const link = await openLink(route, context.transportOf(route), path, probeTimeout(route), watch.listener)
+  const link = await openLink(route, context.transportOf(route), path, { timeout: probeTimeout(route), signal: run.signal }, watch.listener)
   const ms = Date.now() - started
+  const abandon = () => link.close()
+  run.signal.addEventListener('abort', abandon, { once: true })
   run.greeting?.(route)
   try {
     return { link, hello: await link.call(hello, context.greeting(), callTimeout), ms }
@@ -60,5 +62,7 @@ export const openSocket = async (route: Route, path: string, context: DialContex
     link.close()
     const refusal = watch.refused()
     throw refusal ? new AccessRefused(refusal) : error
+  } finally {
+    run.signal.removeEventListener('abort', abandon)
   }
 }
