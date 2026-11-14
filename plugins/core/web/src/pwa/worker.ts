@@ -1,5 +1,6 @@
 import { ASSETS, type Bundle } from '../bundle/build'
 import { offlinePage } from './offline'
+import { SHARE_LANDING, SHARE_PATH, SHARED_DATABASE, SHARED_KEY, SHARED_STORE } from '../contract'
 
 const workerScript = (assets: string[]) => `const offline = ${JSON.stringify(offlinePage)}
 const assets = ${JSON.stringify(assets)}
@@ -56,8 +57,36 @@ const navigate = async request => {
   }
 }
 
+const openShares = () =>
+  new Promise((resolve, reject) => {
+    const opening = indexedDB.open(${JSON.stringify(SHARED_DATABASE)}, 1)
+    opening.onupgradeneeded = () => opening.result.createObjectStore(${JSON.stringify(SHARED_STORE)})
+    opening.onsuccess = () => resolve(opening.result)
+    opening.onerror = () => reject(opening.error)
+  })
+
+const keepShare = async share => {
+  const db = await openShares()
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(${JSON.stringify(SHARED_STORE)}, 'readwrite')
+    tx.objectStore(${JSON.stringify(SHARED_STORE)}).put(share, ${JSON.stringify(SHARED_KEY)})
+    tx.oncomplete = resolve
+    tx.onerror = () => reject(tx.error)
+  })
+  db.close()
+}
+
+const receiveShare = async request => {
+  const form = await request.formData()
+  const text = ['title', 'text', 'url'].map(field => form.get(field)).filter(value => typeof value === 'string' && value.trim()).join('\\n\\n')
+  const files = form.getAll('files').filter(value => value instanceof File && value.size > 0)
+  await keepShare({ text, files }).catch(() => {})
+  return Response.redirect(${JSON.stringify(SHARE_LANDING)}, 303)
+}
+
 self.addEventListener('fetch', event => {
   const request = event.request
+  if (request.method === 'POST' && new URL(request.url).pathname === ${JSON.stringify(SHARE_PATH)}) return event.respondWith(receiveShare(request))
   if (request.method !== 'GET') return
   if (request.mode === 'navigate') return event.respondWith(navigate(request))
   if (isAsset(new URL(request.url))) event.respondWith(asset(request))

@@ -7,6 +7,7 @@ import { listen, onTimeout, sig, type Sig } from '@vaakx-dev/vrui'
 import { attachmentsAdd } from '../contract'
 import type { ShelfContext } from './context'
 import type { Held, Upload } from './contract'
+import { forgetUpload, keepUpload, resumeUpload } from './resume'
 
 interface Place {
   file: File
@@ -86,13 +87,18 @@ export const createUploads = (ctx: ShelfContext) => {
 
   const transfer = async (job: Running) => {
     const fetchFrom = (path: string, init?: RequestInit) => ctx.wire.fetch(path, init, job.device, { timeout: CHUNK_TIMEOUT_MS })
-    const progress = (sent: number) => job.state.set({ phase: 'uploading', sent })
+    const progress = (sent: number) => {
+      job.state.set({ phase: 'uploading', sent })
+      keepUpload(job.file, job.device, job.resumable)
+    }
     const sent = await uploadBlob(fetchFrom, job.file, { progress, signal: job.signal, resumable: job.resumable })
     try {
       return await ctx.wire.call(attachmentsAdd, { ...sent, name: job.file.name }, job.device)
     } catch (error) {
       restart(job.resumable)
       throw error
+    } finally {
+      forgetUpload(job.file, job.device)
     }
   }
 
@@ -121,6 +127,7 @@ export const createUploads = (ctx: ShelfContext) => {
 
   const run = async (job: Running) => {
     job.state.set({ phase: 'queued', sent: job.state.get().sent })
+    if (!job.resumable.arrived.size) await resumeUpload(job.file, job.device, job.resumable)
     await slot()
     try {
       const content = await attempt(job, AUTOMATIC_RETRIES)
@@ -176,7 +183,10 @@ export const createUploads = (ctx: ShelfContext) => {
       if (job) retried(job)
     },
     cancel(file: File) {
-      for (const job of jobs.get(file)?.values() ?? []) job.cancel()
+      for (const job of jobs.get(file)?.values() ?? []) {
+        job.cancel()
+        forgetUpload(file, job.device)
+      }
       jobs.delete(file)
       version.update(count => count + 1)
     },

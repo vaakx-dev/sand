@@ -1,9 +1,9 @@
 import { bytes } from '@sand/util'
-import { effect, input, type Derive, type Sig } from '@vaakx-dev/vrui'
+import { effect, input, span, type Derive, type Props, type Sig } from '@vaakx-dev/vrui'
 import { mediaView } from '@sand/media/web/contract'
 import { helloAttachments } from '../contract'
 import type { ShelfContext } from './context'
-import type { Held, Shelf, ShelfPlace } from './contract'
+import type { Held, PickSource, Shelf, ShelfPlace } from './contract'
 import { drops } from './drop'
 import type { Uploads } from './uploads'
 import { shelfView, type Tray } from './view'
@@ -38,36 +38,51 @@ export const createShelf = (ctx: ShelfContext, attachable: Derive<boolean>, uplo
     },
   }
 
-  const pickers: HTMLInputElement[] = []
-  const filePicker = () => {
-    const picker = input({
+  const pickers: Record<PickSource, HTMLInputElement>[] = []
+  const picker = (props: Props<HTMLInputElement>) => {
+    const found = input({
+      ...props,
       type: 'file',
-      multiple: true,
       hidden: true,
       onChange: () => {
-        add(picker.files ?? [])
-        picker.value = ''
-      },
-      onMount: () => {
-        pickers.push(picker)
-        return () => {
-          pickers.splice(pickers.indexOf(picker), 1)
-        }
+        add(found.files ?? [])
+        found.value = ''
       },
     })
-    return picker
+    return found
+  }
+  const filePickers = () => {
+    const shown = {
+      files: picker({ multiple: true }),
+      camera: picker({ accept: 'image/*', capture: 'environment' }),
+      library: picker({ accept: 'image/*,video/*', multiple: true }),
+    }
+    return span(
+      {
+        hidden: true,
+        onMount: () => {
+          pickers.push(shown)
+          return () => {
+            pickers.splice(pickers.indexOf(shown), 1)
+          }
+        },
+      },
+      shown.files,
+      shown.camera,
+      shown.library,
+    )
   }
 
   return {
     attachable: () => attachable.get(),
     rejected: () => items.get().some(tooLarge),
-    pick: () => pickers.at(-1)?.click(),
+    pick: (source = 'files') => pickers.at(-1)?.[source].click(),
     paste(text) {
       if (text.length <= pasteLimit || !attachable.get()) return false
       add([pastedFile(text)])
       return true
     },
-    view: () => shelfView({ kit: ctx.kit, media: ctx.get(mediaView), tray, picker: filePicker() }),
+    view: () => shelfView({ kit: ctx.kit, media: ctx.get(mediaView), tray, picker: filePickers() }),
     drops: area => drops(ctx.kit, { attachable: () => attachable.get(), add }, area),
   }
 }

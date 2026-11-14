@@ -1,7 +1,7 @@
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, draftStore, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions, type DraftStore } from './contract'
-import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
+import { fileIndex, skillIndex, threadSelect, threadsChange, type SkillIndex } from '@sand/web-client/contract'
 import { keyval } from '@sand/keyval'
 import { owned, pulse } from '@sand/reactive'
 import { quotedText } from '@sand/util'
@@ -31,6 +31,7 @@ import { sendsIn, unsaved, type Send } from './send/outgoing'
 import { createSuggesters } from './suggest/sources'
 import { chatTarget } from './target'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
+import { takeShared } from './share'
 import { createTyping } from './typing'
 
 export default definePlugin({
@@ -69,7 +70,7 @@ export default definePlugin({
     const { model, session, errors, placeholders } = owned(ctx, () => {
       const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf, sendsIn(sends, 'threads'))
       const session = draftSession(ctx, model, () => store.get(), files, () => mounted.forEach(built => built.completion.close()))
-      const inThread = pulse(ctx, [threadSelect]).read(() => Boolean(ctx.threads.current()))
+      const inThread = pulse(ctx, [threadSelect, threadsChange]).read(() => Boolean(ctx.threads.current()))
       listen(window, 'pagehide', () => session.keep())
       return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
     })
@@ -162,7 +163,7 @@ export default definePlugin({
       sending: model.sending,
     }
 
-    void session.start()
+    void session.start().then(takeShared).then(shared => shared && model.merge({ text: shared.text, items: shared.files }))
     void model.resume()
     ctx.watch(draftStore, found => {
       store.set(found)

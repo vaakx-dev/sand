@@ -1,8 +1,7 @@
 import { mkdir, open, readdir, rm, stat, statfs, type FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
-import { chunkBytes, chunkCount, chunkFits, type ChunkedFile } from './chunks'
+import { chunkBytes, chunkCount, chunkFits, TRANSFER_LIFETIME_MS, type ChunkedFile } from './chunks'
 
-const lifetime = 15 * 60_000
 
 const keepFree = 1024 ** 3
 
@@ -97,7 +96,7 @@ export const createTransfers = (folder: string) => {
     },
 
     async sweep() {
-      const cutoff = Date.now() - lifetime
+      const cutoff = Date.now() - TRANSFER_LIFETIME_MS
       for (const held of [outgoing, incoming]) for (const [transfer, entry] of held) if (entry.touched < cutoff) await forget(held, transfer)
       const live = new Set([...outgoing.values(), ...incoming.values(), ...claimed.values()].map(entry => entry.file))
       for (const name of await readdir(folder).catch((): string[] => [])) {

@@ -9,6 +9,8 @@ export type Upload =
   | { phase: 'done'; sent: number; content: UserContent }
   | { phase: 'failed'; sent: number; error: string }
 
+export type PickSource = 'files' | 'camera' | 'library'
+
 export interface ShelfPlace {
   device(): string | undefined
   thread(): string | undefined
@@ -17,7 +19,7 @@ export interface ShelfPlace {
 export interface Shelf {
   attachable(): boolean
   rejected(): boolean
-  pick(): void
+  pick(source?: PickSource): void
   paste(text: string): boolean
   view(): HTMLElement
   drops(area: () => Element | null | undefined): HTMLElement

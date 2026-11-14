@@ -6,6 +6,8 @@ import type { ChunkedFile, PcFetch } from './chunks'
 
 export * from './client'
 
+export { TRANSFER_LIFETIME_MS } from './chunks'
+
 export type { ChunkedFile, PcFetch }
 
 export interface Transfers {
