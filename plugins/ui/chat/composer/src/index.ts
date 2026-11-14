@@ -1,7 +1,7 @@
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, draftStore, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions, type DraftStore } from './contract'
-import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
+import { fileIndex, skillIndex, threadSelect, threadsChange, type SkillIndex } from '@sand/web-client/contract'
 import { keyval } from '@sand/keyval'
 import { owned, pulse } from '@sand/reactive'
 import { quotedText } from '@sand/util'
@@ -70,7 +70,7 @@ export default definePlugin({
     const { model, session, errors, placeholders } = owned(ctx, () => {
       const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf, sendsIn(sends, 'threads'))
       const session = draftSession(ctx, model, () => store.get(), files, () => mounted.forEach(built => built.completion.close()))
-      const inThread = pulse(ctx, [threadSelect]).read(() => Boolean(ctx.threads.current()))
+      const inThread = pulse(ctx, [threadSelect, threadsChange]).read(() => Boolean(ctx.threads.current()))
       listen(window, 'pagehide', () => session.keep())
       return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
     })
