@@ -1,0 +1,28 @@
+{
+  "name": "@sand/file-documents",
+  "version": "0.0.0",
+  "description": "Shows OpenDocument, EPUB and rich text files in the file viewer",
+  "type": "module",
+  "sand": {
+    "feature": "file-documents",
+    "web": "./src/web/index.ts",
+    "label": "Documents",
+    "summary": "OpenDocument, EPUB and RTF files",
+    "features": {
+      "file-documents": {
+        "label": "Documents",
+        "summary": "OpenDocument, EPUB and RTF files",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/zip": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
