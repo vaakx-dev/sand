@@ -1,0 +1,17 @@
+{
+  "name": "@sand/keep-awake",
+  "version": "0.0.0",
+  "description": "Keeps this PC from going to sleep while any thread, bot or subagent chat is working, and lets it sleep again a minute after the last one stops; the screen still turns off and locks as usual",
+  "type": "module",
+  "sand": {
+    "feature": "keep-awake",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Keep awake",
+    "summary": "This PC doesn't sleep while a chat is working"
+  },
+  "dependencies": {
+    "@sand/engine": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
