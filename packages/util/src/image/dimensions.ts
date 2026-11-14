@@ -48,9 +48,12 @@ const webp = (bytes: Uint8Array) => {
   return undefined
 }
 
+const bmp = (bytes: Uint8Array) =>
+  bytes.length >= 26 && ascii(bytes, 0, 'BM') ? { width: Math.abs(view(bytes).getInt32(18, true)), height: Math.abs(view(bytes).getInt32(22, true)) } : undefined
+
 const imageDimensions = (bytes: Uint8Array): Dimensions | undefined => {
   const header = bytes.subarray(0, IMAGE_HEADER_BYTES)
-  return png(header) ?? jpeg(header) ?? gif(header) ?? webp(header)
+  return png(header) ?? jpeg(header) ?? gif(header) ?? webp(header) ?? bmp(header)
 }
 
 export { IMAGE_HEADER_BYTES, imageDimensions, type Dimensions }
