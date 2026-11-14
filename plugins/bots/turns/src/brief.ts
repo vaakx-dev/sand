@@ -1,28 +1,21 @@
 import type { Bots, BotSummary } from '@sand/bots/contract'
+import type { Session } from '@sand/chats/contract'
 import type { ProjectFiles } from '@sand/project/contract'
-import type { ContextBuilder } from '@sand/prompt/contract'
-import type { Brief } from '@sand/provider-threads/contract'
-import { needs, type Tools } from '@sand/tools/contract'
 import { instructions, jobBlock } from './instructions'
-
-export const offered = needs.filter(need => need !== 'thread')
 
 const briefOf = ({ name, jobs, projects }: BotSummary) => [name, ...jobs.map(jobBlock), projects.join()].join('\n')
 
-export const botBrief = (bots: Bots, tools: Tools, context: ContextBuilder, files: () => ProjectFiles | undefined) => {
+export const botBrief = (bots: Bots, files: () => ProjectFiles | undefined) => {
   const briefed = new Map<string, string>()
-  const brief: Brief = {
-    async system(conversation, model) {
-      const bot = bots.get(conversation.id)
-      if (!bot) throw new Error(`No bot ${conversation.id}`)
-      briefed.set(bot.id, briefOf(bot))
-      return context.system(conversation, model, instructions(bot, files()))
-    },
-    tools: (conversation, messages) => tools.specs(messages, conversation),
+  const base = (parts: string[], session: Session) => {
+    const bot = session.owner === 'bot' ? bots.get(session.id) : undefined
+    if (!bot) return parts
+    briefed.set(bot.id, briefOf(bot))
+    return instructions(parts, bot, files())
   }
   const stale = (id: string) => {
     const bot = bots.get(id)
     return bot !== undefined && briefed.get(id) !== briefOf(bot)
   }
-  return { brief, stale }
+  return { base, stale, forget: (id: string) => void briefed.delete(id) }
 }

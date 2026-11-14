@@ -172,7 +172,6 @@ export const threadTools: McpTool[] = [
     input: waitInput,
     access: 'read',
     group: group.name,
-    agents: ['thread'],
     run: ({ thread, until = 'attention', timeoutSeconds = waitSeconds }, { call, signal }) =>
       waitThread(call, thread, until, Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof waitInput>,

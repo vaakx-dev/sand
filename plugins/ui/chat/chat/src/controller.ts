@@ -1,3 +1,4 @@
+import { ownerOf } from '@sand/chats/contract'
 import { composer } from '@sand/composer/contract'
 import { itemNode, itemSpot, type ItemSpot, type ShownChat } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
@@ -12,8 +13,8 @@ import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
 import { slotHost } from './slot'
 import { shownWait } from './wait'
-import { waitLines } from './contract'
-import { failed } from './states'
+import { waitLines, type ChatLook } from './contract'
+import { emptyState, failed } from './states'
 import { foldTurns, unfolding, type FoldOptions, type Unfold } from './turns/fold'
 import { shownRows, type TurnContext } from './turns/rows'
 import { threadColumn, threadView, type ThreadView } from './view'
@@ -176,8 +177,8 @@ export const chatController = (ctx: ChatContext, id: string) => {
     return itemNode(view.rowList, found.spot.key)
   }
 
-  const shownChat: ShownChat = {
-    owner: 'thread',
+  const shownChat = (thread: Thread): ShownChat => ({
+    owner: ownerOf(thread.info.kind),
     conversation: id,
     frame: root,
     scroller,
@@ -187,9 +188,10 @@ export const chatController = (ctx: ChatContext, id: string) => {
       return ctx.threads.older(id)
     },
     reveal: revealEntry,
-  }
+  })
 
   let queued: (() => void) | undefined
+  let look: ChatLook = {}
 
   const unqueue = () => {
     queued?.()
@@ -201,6 +203,8 @@ export const chatController = (ctx: ChatContext, id: string) => {
     const thread = ctx.threads.get(id)
     const problem = thread?.failed
     if (problem && !thread.loaded && !thread.entries.size) return showSlot(`failed:${problem}`, () => failed(kit, problem, () => void ctx.threads.load(id)))
+    const empty = thread?.loaded && !thread.turn && blank(thread) && look.empty
+    if (empty) return showSlot('empty', () => emptyState(kit, empty()))
     if (!thread || blank(thread)) {
       hideThread()
       return slot.clear()
@@ -223,7 +227,8 @@ export const chatController = (ctx: ChatContext, id: string) => {
 
   let stop: (() => void) | undefined
 
-  const show = () => {
+  const show = (shown: ChatLook) => {
+    look = shown
     if (stop) return
     follow.restore()
     stop = joinDisposers(
@@ -249,7 +254,10 @@ export const chatController = (ctx: ChatContext, id: string) => {
         parts.version.get()
         untrack(refresh)
       }),
-      effect(() => (view.visible.get() ? ctx.shownChats.add(shownChat) : undefined)),
+      effect(() => {
+        const thread = view.visible.get() && untrack(shownThread)
+        return thread ? ctx.shownChats.add(shownChat(thread)) : undefined
+      }),
     )
     render()
   }

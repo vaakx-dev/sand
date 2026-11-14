@@ -31,7 +31,7 @@ const opened = <T extends { stop(): void }>() => {
 export default definePlugin({
   name: 'dev-servers-host',
   description:
-    "Carries the web servers threads started to your paired devices: each gets a port on sand's own addresses and on its Tailscale HTTPS address that only a device sand gave a link to can open, relayed through this PC for PCs your device can't reach directly",
+    "Carries the web servers threads and bots started to your paired devices: each gets a port on sand's own addresses and on its Tailscale HTTPS address that only a device sand gave a link to can open, relayed through this PC for PCs your device can't reach directly",
   inject: { hub, hostHttp, auth },
   apply(ctx) {
     const passes = createPasses()

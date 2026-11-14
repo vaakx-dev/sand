@@ -7,14 +7,21 @@ import { rowOf } from './list'
 import { matchSettings } from './settings'
 import { stopThread } from './stop'
 
+type Update = InputOf<typeof threadUpdate>
+
 const moveToWorktree = (ctx: OrchestratorContext, id: string, branch: string | undefined) => {
   const found = ctx.get(worktrees)
   if (!found) throw failure('invalid_request', 'Worktrees are turned off')
   return found.move(id, branch)
 }
 
-export const updateThread = async (ctx: OrchestratorContext, { session, title, pinned, snoozed, archived, worktree, branch, ...asked }: InputOf<typeof threadUpdate>) => {
+const changesListing = ({ title, pinned, snoozed, archived, worktree, branch }: Update) =>
+  [title, pinned, snoozed, archived, worktree, branch].some(value => value !== undefined)
+
+export const updateThread = async (ctx: OrchestratorContext, update: Update) => {
+  const { session, title, pinned, snoozed, archived, worktree, branch, ...asked } = update
   const thread = findThread(ctx, session)
+  if (thread.kind === 'bot' && changesListing(update)) throw failure('invalid_request', "A bot's chat changes only its model; rename the bot in its profile")
   const { id } = thread
   ctx.modelSettings.change(thread, matchSettings(ctx, asked))
   if (title !== undefined) ctx.sessions.rename(id, title)

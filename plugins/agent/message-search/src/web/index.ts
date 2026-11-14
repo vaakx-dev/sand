@@ -1,10 +1,9 @@
-import { botRoster, botRoute } from '@sand/bots/contract'
+import { botRoster } from '@sand/bots/contract'
 import { chatFinder } from '@sand/chat-find/contract'
 import { threadView } from '@sand/chat/contract'
 import { pcs, wire } from '@sand/devices-contract'
 import { palette, type Palette, type PalettePage } from '@sand/palette/contract'
 import { shownChats } from '@sand/transcript/contract'
-import { shell } from '@sand/ui-shell/contract'
 import { searchWords } from '@sand/util'
 import { definePlugin } from 'drydock'
 import type { Fit, Indexing, MessageHit } from '../contract'
@@ -20,14 +19,9 @@ const indexingNote = ({ done, total }: Indexing) => `Indexing messages… ${Math
 export default definePlugin({
   name: 'message-search-web',
   description: 'Search lists the messages that hold the words you type, from every PC, and opens the chat at the message',
-  inject: { wire, pcs, shell, threadView, shownChats },
+  inject: { wire, pcs, threadView, shownChats },
   apply(ctx) {
     const search = new MessageSearch(ctx)
-
-    const openChat = ({ owner, chat }: PcChat) => {
-      if (owner === 'thread') return ctx.threadView.open(chat)
-      ctx.shell.open({ kind: botRoute, id: chat, tab: 'chat' })
-    }
 
     const show = ({ chat }: PcChat, { entry, block, fit }: MessageHit, query: string) => {
       const words = searchWords(query)
@@ -37,13 +31,14 @@ export default definePlugin({
     }
 
     const open = (chat: PcChat, hit: MessageHit, query: string) => {
-      openChat(chat)
+      ctx.threadView.open(chat.chat)
       show(chat, hit, query)
     }
 
     const partsFor = (found: Palette, query: string): RowParts => ({
       used: found.used,
       tint: bot => ctx.get(botRoster)?.find(bot)?.color,
+      route: ctx.threadView.route,
       open: (chat, hit) => open(chat, hit, query),
       more: chat => matchesPage(found, chat, query),
     })

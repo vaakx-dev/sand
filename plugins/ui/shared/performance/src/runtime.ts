@@ -1,19 +1,26 @@
 import { bots } from '@sand/bots/contract'
-import { sessions } from '@sand/chats/contract'
+import { type Session, sessions } from '@sand/chats/contract'
 import { type ChatUse, machineRead, processes, type Range } from '@sand/processes/contract'
 import { pageLeft, server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { type Context, definePlugin } from 'drydock'
-import { type ChatRow, performanceChange, performanceUnwatch, performanceWatch } from './contract'
+import { type ChatPlace, type ChatRow, performanceChange, performanceUnwatch, performanceWatch } from './contract'
 import { shown } from './precision'
 import { Watchers } from './watchers'
 
 const LIVE_MS = 10_000
 
+const UNKNOWN_CHAT = 'A chat'
+
+const placeOf = (session: Session): ChatPlace =>
+  session.kind === 'bot' ? { kind: 'bot' } : { kind: 'thread', cwd: session.cwd, project: session.project, quick: session.kind === 'quick' }
+
+const titleOf = (ctx: Context, session: Session) => (session.kind === 'bot' ? ctx.get(bots)?.get(session.id)?.name : session.title) ?? UNKNOWN_CHAT
+
 const named = (ctx: Context, chat: ChatUse): ChatRow => {
   const session = ctx.get(sessions)?.open(chat.conversation)
-  if (session) return { ...chat, title: session.title, place: { kind: 'thread', cwd: session.cwd, project: session.project, quick: session.kind === 'quick' } }
-  return { ...chat, title: ctx.get(bots)?.get(chat.conversation)?.name ?? 'A chat', place: { kind: 'bot' } }
+  if (!session) return { ...chat, title: UNKNOWN_CHAT, place: { kind: 'bot' } }
+  return { ...chat, title: titleOf(ctx, session), place: placeOf(session) }
 }
 
 export default definePlugin({

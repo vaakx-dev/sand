@@ -1,10 +1,10 @@
-import { botOpen } from '@sand/bot-turns/contract'
-import { botList } from '@sand/bots/contract'
+import { botCreate, botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Computer, Fill, Filled } from '@sand/computers/contract'
 import { computers } from '@sand/computers/contract'
 import { type SandOptions, startSand } from '@sand/harness'
 import type { Request } from '@sand/host-hub/contract'
+import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { readdir } from 'node:fs/promises'
@@ -25,7 +25,13 @@ export const start = (replies: Source['replies'], options: SandOptions = {}) =>
 
 export type Sand = Awaited<ReturnType<typeof start>>
 
-export const models = { main: { model: 'fake/m' }, quick: {} }
+export const newBot = async (sand: Sand, name: string) => {
+  const bot = await sand.ask(botCreate, { name })
+  sand.app.get(modelSettings)!.change(sand.sessions.require(bot.id), { model: 'fake/m' })
+  return bot
+}
+
+export const tellBot = (sand: Sand, bot: string, prompt: string) => sand.turns.send(sand.sessions.require(bot), { prompt, clientRequestId: prompt })
 
 export const browser = (sand: Sand) => {
   const fills: Fill[] = []
@@ -62,9 +68,7 @@ const until = async <T>(found: () => Promise<T | undefined> | T | undefined, wha
 
 type Entries = () => Promise<{ type: string; data: unknown }[]> | { type: string; data: unknown }[]
 
-export const threadEntries = (sand: Sand, id: string) => () => sand.sessions.require(id).path()
-
-export const botEntries = (sand: Sand, bot: string) => async () => (await sand.ask(botOpen, { bot, limit: 500 })).entries
+export const chatEntries = (sand: Sand, id: string) => () => sand.sessions.require(id).path()
 
 export const answer = async <I>(sand: Sand, session: string, entries: Entries, type: string, request: Request<I, unknown>, reply: (id: string) => I) => {
   const id = await until(async () => {

@@ -21,9 +21,11 @@ export interface Entry {
   pinned?: boolean
 }
 
+const LISTED_KINDS = new Set<Thread['info']['kind']>(['thread', 'quick'])
+
 const positionOf = (thread: Thread) => thread.info.position ?? thread.info.created
 
-export const visibleThreads = (threads: Thread[]) => threads.filter(thread => thread.info.kind !== 'agent').sort((a, b) => positionOf(b) - positionOf(a))
+export const visibleThreads = (threads: Thread[]) => threads.filter(thread => LISTED_KINDS.has(thread.info.kind)).sort((a, b) => positionOf(b) - positionOf(a))
 
 const statusOf = (thread: Thread, jobs: number, change: ThreadChanges | undefined): Status | undefined => {
   if (thread.waiting) return 'waiting'

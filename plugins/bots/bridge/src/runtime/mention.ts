@@ -16,8 +16,8 @@ export const routeMentions = (ctx: BridgeContext) => (session: Session, entry: E
   if (message?.role !== 'user') return
   const bots = botsIn(message).filter(bot => ctx.bots.get(bot))
   for (const bot of bots)
-    ctx.botTurns
-      .send(bot, { prompt: promptOf(session, message), origin: 'user', clientRequestId: `${entry.id}:${bot}` })
+    ctx.turns
+      .send(ctx.sessions.require(bot), { prompt: promptOf(session, message), origin: 'user', clientRequestId: `${entry.id}:${bot}` })
       .then(({ turn }) => void session.append(botReplyEntry, { bot, ...(turn && { turn }) } satisfies BotReplyEntry))
       .catch(error => ctx.report(error))
 }

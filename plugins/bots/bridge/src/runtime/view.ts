@@ -1,6 +1,7 @@
-import type { BotTurns } from '@sand/bot-turns/contract'
 import type { Bots } from '@sand/bots/contract'
+import type { Sessions } from '@sand/chats/contract'
 import type { EntryView } from '@sand/engine/contract'
+import type { Turns } from '@sand/turns-contract/contract'
 import { botReplyEntry, type BotReplyEntry } from '../contract'
 
 const said = (name: string, reply: string | undefined) => {
@@ -8,12 +9,14 @@ const said = (name: string, reply: string | undefined) => {
   return reply ? `${name} replied to the user:\n\n${reply}` : `${name} gave no reply.`
 }
 
-export const replyView = (bots: Bots, turns: BotTurns): EntryView => ({
+export const replyView = (bots: Bots, sessions: Sessions, turns: Turns): EntryView => ({
   type: botReplyEntry,
   message(entry) {
     const { bot, turn } = entry.data as BotReplyEntry
     const name = bots.get(bot)?.name || 'The bot'
-    const text = `<bot-reply bot="${bot}">\n${said(name, turn && turns.final(bot, turn))}\n</bot-reply>`
+    const chat = sessions.open(bot)
+    const reply = turn && chat ? turns.reply(chat, turn) : undefined
+    const text = `<bot-reply bot="${bot}">\n${said(name, reply)}\n</bot-reply>`
     return { role: 'user', content: [{ type: 'text', text }] }
   },
 })
