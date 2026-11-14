@@ -17,9 +17,12 @@ const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
 
 const faceStateOf = (bot: BotSummary): FaceState | undefined => (botStatus(bot) === 'running' ? 'running' : undefined)
 
+const askingJob = (bot: BotSummary) => bot.jobs.find(job => job.status === 'needs')
+
 const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
   const at = bot.last?.at
-  const detail = statusLine(bot)
+  const asking = askingJob(bot)
+  const detail = asking ? `${asking.title} needs you` : statusLine(bot)
   return {
     id: bot.id,
     label: botName(bot),
@@ -29,7 +32,7 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
       const state = faceStateOf(bot)
       return parts.ctx.kit.botFace(bot.id, bot.color, 32, state ? { state } : {})
     },
-    ...(botStatus(bot) === 'waiting' && { status: 'waiting' as const }),
+    ...(botStatus(bot) === 'waiting' && !asking && { status: 'waiting' as const }),
     ...(detail && { detail: () => detail }),
     ...(at !== undefined && { at }),
   }

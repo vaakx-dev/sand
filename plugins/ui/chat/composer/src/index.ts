@@ -85,7 +85,14 @@ export default definePlugin({
         suggesters,
         placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
       }
-      return { view: dock(parts, field(parts)), slot: own.add, sending: () => model.shown.get() }
+      const built = field(parts)
+      return {
+        view: dock(parts, built),
+        slot: own.add,
+        sending: () => model.shown.get(),
+        quote: text => built.editor.quote(text),
+        focus: () => built.editor.focus(),
+      }
     }
 
     const settings = () => nextSettings(ctx, model.picked.get())

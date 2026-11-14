@@ -7,6 +7,8 @@ import type { BotsContext } from './context'
 import type { Registry } from './registry'
 import type { BotStore } from './store'
 
+export type BotView = 'jobs' | 'chat'
+
 export interface Parts {
   ctx: BotsContext
   store: BotStore
@@ -18,7 +20,8 @@ export interface Parts {
   defaults: Derive<ModelChoice>
   sections: Registry<BotProfileSection>
   automationSources: Registry<BotAutomationSource>
-  open(bot: string): void
+  open(bot: string, view?: BotView): void
+  showJob(bot: string, job: string): void
   profile(bot: string): void
   create(): void
 }

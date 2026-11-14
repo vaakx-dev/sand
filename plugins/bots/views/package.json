@@ -1,13 +1,13 @@
 {
   "name": "@sand/bot-views",
   "version": "0.0.0",
-  "description": "Bots in the sidebar, each bot's screen with its chat, its profile, New bot and Automations",
+  "description": "Bots in the sidebar, each bot's screen with its jobs and its chat, its profile and New bot",
   "type": "module",
   "sand": {
     "feature": "bots",
     "web": "./src/web/index.ts",
     "label": "Bots",
-    "summary": "Your bots: their chats, the work they started, their plans, profiles and automations"
+    "summary": "Your bots: their jobs, their chats, the work they started, their plans and profiles"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",

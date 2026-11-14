@@ -305,6 +305,7 @@ export interface BotAutomation {
   title: string
   when: string
   detail?: string
+  job?: string
   paused?: boolean
   error?: string
   actions(): MenuAction[]
