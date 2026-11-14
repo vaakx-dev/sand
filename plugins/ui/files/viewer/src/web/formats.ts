@@ -14,7 +14,12 @@ const formatRegistry = (text: FileFormat) => {
 
   const byExtension = (extension: string) => registered.get().find(format => format.extensions.includes(extension))
 
-  const formatOf = (file: FoundFile) => byExtension(extensionOf(file.name)) ?? (file.text ? text : undefined)
+  const formatOf = (file: FoundFile) => {
+    const extension = extensionOf(file.name)
+    const found = byExtension(extension)
+    if (found || ADDON_EXTENSIONS.has(extension)) return found
+    return file.text ? text : undefined
+  }
 
   const known = (extension: string) => ADDON_EXTENSIONS.has(extension) || Boolean(byExtension(extension))
 
