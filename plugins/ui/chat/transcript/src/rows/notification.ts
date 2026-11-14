@@ -33,7 +33,7 @@ export const notificationRenderer = (kit: Kit, registry: Pick<RendererRegistry, 
   const at = instantOf(notificationField(text, 'at'), entry.at)
   const open = sig(false)
   const failed = status.endsWith('failed')
-  const title = [`${capital(kind)} ${outcomes[status] ?? status}`, label].filter(Boolean).join(' ')
+  const title = shape?.title?.(text) ?? [`${capital(kind)} ${outcomes[status] ?? status}`, label].filter(Boolean).join(' ')
   return div(
     { class: 'my-2' },
     stepLine(

@@ -2,11 +2,12 @@ import { cliCommands } from '@sand/cli-commands/contract'
 import { type Daemon, daemon } from '@sand/host-daemon/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { definePlugin } from 'drydock'
-import { type DevServer, devServerList, devServerStop } from './contract'
+import { type DevServer, devServerList, devServerOpen, devServerStop } from './contract'
 import { offerDevServerTools } from './tools'
 
 const usage = [
   'sand servers                 list the web servers your threads started on this PC',
+  'sand servers open <port>     print links that open one from your devices; each opens once, within 10 minutes',
   'sand servers stop <port>     stop one, with the processes that run it',
 ].join('\n')
 
@@ -22,9 +23,14 @@ const stopPort = async (host: Daemon, port: number, json: boolean) => {
   return stopped ? 0 : 1
 }
 
+const openPort = async (host: Daemon, port: number, json: boolean) => {
+  const links = await host.request(devServerOpen, { port })
+  console.log(json ? JSON.stringify({ port, links }) : links.join('\n'))
+}
+
 const actionOf = ([verb, port]: string[]) => {
   if (verb === undefined || verb === 'list') return { kind: 'list' } as const
-  if (verb === 'stop' && Number(port) > 0) return { kind: 'stop', port: Number(port) } as const
+  if ((verb === 'open' || verb === 'stop') && Number(port) > 0) return { kind: verb, port: Number(port) } as const
   return undefined
 }
 
@@ -36,7 +42,7 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.cliCommands.register({
         name: 'servers',
-        summary: 'list and stop the web servers your threads started',
+        summary: 'list, open and stop the web servers your threads started',
         usage,
         options: { json: { type: 'boolean', help: 'sand servers: print JSON' } },
         async run(args, values) {
@@ -46,8 +52,14 @@ export default definePlugin({
             return 2
           }
           const json = values.json === true
-          if (action.kind === 'stop') return stopPort(ctx.daemon, action.port, json)
-          printServers(await ctx.daemon.request(devServerList, {}), json)
+          switch (action.kind) {
+            case 'list':
+              return printServers(await ctx.daemon.request(devServerList, {}), json)
+            case 'open':
+              return openPort(ctx.daemon, action.port, json)
+            case 'stop':
+              return stopPort(ctx.daemon, action.port, json)
+          }
         },
       }),
     )

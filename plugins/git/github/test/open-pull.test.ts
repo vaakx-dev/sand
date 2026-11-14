@@ -3,7 +3,7 @@ import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { Client } from '../src/api/client'
+import type { Rest } from '../src/api/client'
 import { openPull, type PullGit } from '../src/pulls'
 
 let home: string
@@ -43,7 +43,7 @@ const start = async () => {
 
 const recording = () => {
   const calls: [string, string, unknown][] = []
-  const client: Client = {
+  const client: Rest = {
     rest: async <T>(method: string, path: string, body?: unknown) => {
       calls.push([method, path, body])
       const answer = method === 'GET' ? { default_branch: 'main' } : { number: 7, title: 'Fix the cache', state: 'open', draft: false, merged_at: null, html_url: 'https://github.com/acme/tiles/pull/7' }

@@ -1,6 +1,7 @@
 import { inspector } from '@sand/inspector/contract'
 import type { Subject } from '@sand/ui-shell/contract'
 import { wire } from '@sand/devices-contract'
+import { pullOpened } from '@sand/github/contract'
 import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { threads } from '@sand/web-client/contract'
@@ -40,6 +41,7 @@ export default definePlugin({
         title: titleOf(current, facts),
         opened: pull => {
           if (facts.local.branch) model.opened({ device, cwd, branch: facts.local.branch }, pull)
+          ctx.emit(pullOpened, session, pull)
           ctx.kit.openTab(pull.url)
         },
         open: ctx.kit.openTab,

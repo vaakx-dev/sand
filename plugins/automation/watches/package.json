@@ -10,7 +10,14 @@
     "feature": "watches",
     "runtime": "./src/index.ts",
     "label": "Watches",
-    "summary": "Notices when something you follow changes, without spending tokens to check"
+    "summary": "Notices when something you follow changes, without spending tokens to check",
+    "features": {
+      "watches": {
+        "kind": "capability",
+        "label": "Watches",
+        "summary": "Notices when something you follow changes, without spending tokens to check"
+      }
+    }
   },
   "dependencies": {
     "@sand/boot": "workspace:*",

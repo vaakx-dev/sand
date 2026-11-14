@@ -41,6 +41,7 @@ export type RenderEntry = (entry: Entry, conversation: string) => HTMLElement | 
 
 export interface NoticeKind {
   icon?: IconName
+  title?(text: string): string
   actions?(text: string, conversation: string): Child
 }
 

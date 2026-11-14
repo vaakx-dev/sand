@@ -30,7 +30,7 @@ export const startTailscale = async (ctx: TailscaleContext, changed: (state: Tai
   })
   ctx.effect(() => ctx.hub.handle(tailscaleGet, () => runner.refresh()))
   ctx.effect(() => ctx.hub.handle(tailscaleSet, ({ https }) => runner.setHttps(https)))
-  ctx.provide(tailscale, { state: runner.state, refresh: runner.refresh, setHttps: runner.setHttps, peers: runner.peers })
+  ctx.provide(tailscale, { state: runner.state, refresh: runner.refresh, setHttps: runner.setHttps, share: runner.share, peers: runner.peers })
   void runner.resume()
   return runner
 }
