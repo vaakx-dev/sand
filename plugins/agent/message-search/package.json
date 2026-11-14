@@ -28,6 +28,7 @@
   "dependencies": {
     "@sand/bots": "workspace:*",
     "@sand/chat": "workspace:*",
+    "@sand/chat-find": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",

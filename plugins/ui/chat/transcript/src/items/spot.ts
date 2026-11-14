@@ -12,11 +12,12 @@ const replyOf = (entry: Entry) => {
   return message?.role === 'assistant' ? message : undefined
 }
 
+export const blockKey = (entry: Entry, block: number) => (replyOf(entry) ? `${entry.parent}:${block}` : entry.id)
+
 const keysOf = (entry: Entry, block?: number) => {
   const reply = replyOf(entry)
-  if (!reply) return [entry.id]
-  const blocks = block === undefined ? reply.content.map((_, index) => index) : [block]
-  return blocks.map(index => `${entry.parent}:${index}`)
+  if (!reply || block !== undefined) return [blockKey(entry, block ?? 0)]
+  return reply.content.map((_, index) => blockKey(entry, index))
 }
 
 const spotIn = (item: Item, key: string): ItemSpot | undefined => {

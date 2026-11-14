@@ -175,7 +175,9 @@ export interface ToolViews {
 }
 
 export interface ShownChat {
+  owner: 'thread' | 'bot'
   conversation: string
+  frame: HTMLElement
   scroller: HTMLElement
   loaded(): Entry[]
   older(): Promise<boolean>
@@ -189,13 +191,23 @@ export interface ChatSpot {
   words: string[]
 }
 
-export interface ShownChats {
-  add(chat: ShownChat): Dispose
-  get(conversation: string): ShownChat | undefined
-  show(spot: ChatSpot): Promise<boolean>
+export interface ChatAction {
+  id: string
+  label: string
+  icon: IconName
+  run(conversation: string): void
 }
 
-export { itemNode, itemSpot, type ItemSpot } from './items/spot'
+export interface ShownChats {
+  add(chat: ShownChat): Dispose
+  current(): ShownChat | undefined
+  arrived(conversation: string): Promise<ShownChat | undefined>
+  show(spot: ChatSpot): Promise<boolean>
+  action(action: ChatAction): Dispose
+  actions(): ChatAction[]
+}
+
+export { blockKey, itemNode, itemSpot, type ItemSpot } from './items/spot'
 
 export const transcript = service<Transcript>('transcript')
 export const shownChats = service<ShownChats>('shownChats')
