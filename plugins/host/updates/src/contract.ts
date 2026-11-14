@@ -37,7 +37,8 @@ export interface UpdateState {
 export interface HomeNotice {
   id: string
   title: string
-  detail: string
+  summary: string
+  details: string
 }
 
 export interface AddonTarget {

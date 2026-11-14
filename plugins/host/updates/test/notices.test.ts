@@ -3,7 +3,7 @@ import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { homeNotices } from '../src/notices'
+import { homeNotices, setAsideIds } from '../src/notices'
 
 const homes: string[] = []
 
@@ -11,7 +11,7 @@ afterEach(() => {
   for (const home of homes.splice(0)) rmSync(home, { recursive: true, force: true })
 })
 
-test('a damaged file that sand set aside is told to the user with where its copy is, until dismissed', async () => {
+test('damaged files sand set aside are told to the user in one short card, with where the copies are in its details, until dismissed', async () => {
   const home = mkdtempSync(join(tmpdir(), 'sand-notices-'))
   homes.push(home)
   const identity = join(home, 'devices', 'identity.json')
@@ -20,12 +20,12 @@ test('a damaged file that sand set aside is told to the user with where its copy
   await setAside(identity, 'is not valid JSON')
   await setAside(join(home, 'sand.toml'), 'is not valid TOML')
 
-  const notices = await homeNotices(home, () => false)
-  expect(notices.map(notice => notice.title).toSorted()).toEqual([
-    "This PC's identity was reset, so your other PCs and phones must pair with it again",
-    'Your settings in sand.toml were reset',
-  ])
-  const reset = notices.find(notice => notice.id.startsWith('devices/'))!
-  expect(reset.detail).toContain(join(home, 'devices', 'identity.json.damaged-'))
-  expect(await homeNotices(home, id => id === reset.id)).toHaveLength(1)
+  const [card] = await homeNotices(home, () => false)
+  expect(card).toMatchObject({ title: '2 files were reset' })
+  expect(card!.summary).not.toContain(home)
+  expect(card!.summary).toContain('Pair your PCs and phones again')
+  expect(card!.details).toContain(join(home, 'devices', 'identity.json.damaged-'))
+
+  const dismissed = new Set(await setAsideIds(home))
+  expect(await homeNotices(home, id => dismissed.has(id))).toEqual([])
 })

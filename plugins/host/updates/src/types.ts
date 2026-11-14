@@ -9,6 +9,7 @@ import type { GithubRelease } from './github/release'
 export interface Notices {
   read(dismissed: (id: string) => boolean): Promise<HomeNotice[]>
   clearUpdate(): Promise<void>
+  setAside(): Promise<string[]>
 }
 
 export interface PreparedBuild {

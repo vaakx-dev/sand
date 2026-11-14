@@ -17,7 +17,7 @@ const startSelf = async (home: string, { safe }: { safe: boolean }) => {
 }
 
 const stayText = (problem: string, blocked: string) =>
-  `sand updated, but the new build is not fully healthy: ${problem}. It stayed on the new build instead of going back, because the previous ${blocked}. Update again when a newer build is out, or run the install command to repair it.`
+  `sand updated, but the new build is not fully healthy: ${problem}. It stayed on the new build instead of going back, because the previous ${blocked}.`
 
 const problemOf = (outcome: HealthOutcome) => healthText(outcome, 0).split('\n').slice(0, summaryLines).join('; ')
 

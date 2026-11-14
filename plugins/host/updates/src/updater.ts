@@ -6,7 +6,7 @@ import type { BuildInfo } from '@sand/util/release'
 import type { HomeNotice, UpdateChannel, UpdatePhase, UpdateState } from './contract'
 import type { GithubRelease } from './github/release'
 import { cancelled, createInstaller, runningWork } from './install/run'
-import { UPDATE } from './notices'
+import { RESETS, UPDATE } from './notices'
 import { isNewer, releaseInfo } from './offer'
 import { scheduleChecks } from './schedule'
 import type { Updater, UpdaterDeps } from './types'
@@ -67,7 +67,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
 
   const dismiss = async (id: string) => {
     if (id === UPDATE) await deps.notices.clearUpdate()
-    else await store.dismiss(id)
+    if (id === RESETS) for (const copy of await deps.notices.setAside()) await store.dismiss(copy)
     return readNotices()
   }
 

@@ -15,7 +15,7 @@ import { buildAddons, updatesChange } from './contract'
 import { downloadRelease } from './github/download'
 import { findRelease } from './github/release'
 import { hostCodeChanged } from './host-code'
-import { homeNotices } from './notices'
+import { homeNotices, setAsideIds } from './notices'
 import { checkLoads } from './install/check'
 import { cleanupBuilds } from './install/cleanup'
 import { prepareBuild } from './install/prepare'
@@ -52,6 +52,7 @@ export default definePlugin({
         notices: {
           read: dismissed => homeNotices(home, dismissed),
           clearUpdate: () => clearUpdateNotice(home),
+          setAside: () => setAsideIds(home),
         },
         hostChanged: hostCodeChanged,
         switchTo: id => switchTo(home, id),
