@@ -83,14 +83,16 @@ export const conversation = (ctx: BotsContext, bot: string, kept: () => DeviceRe
     if (ctx.wire.ready()) await sync()
   }
 
-  const older = async () => {
+  const older = async (place = (apply: () => void) => apply()) => {
     const oldest = entries.get()?.[0]
     if (!oldest || !more.get() || loading.get()) return
     loading.set(true)
     try {
       const page = await ctx.wire.call(botOpen, { bot, before: oldest.seq })
-      entries.update(list => merged(list ?? [], page.entries))
-      more.set(page.more)
+      place(() => {
+        entries.update(list => merged(list ?? [], page.entries))
+        more.set(page.more)
+      })
     } catch (error) {
       ctx.report(error)
     } finally {

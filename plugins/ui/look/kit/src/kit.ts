@@ -84,7 +84,8 @@ import { ownedByNode } from './page/owned'
 import { isMac } from './page/platform'
 import { style } from './page/style'
 import { openTab } from './page/tab'
-import { firstRowBelow, keepAnchor, loadAbove, nearEnd, toEnd } from './scroll/end'
+import { topEdge } from './scroll/edge'
+import { firstRowBelow, keepAnchor, nearEnd, toEnd } from './scroll/end'
 import { followEnd } from './scroll/follow'
 
 const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, selecting }
@@ -160,7 +161,6 @@ export const kit = {
   linkButton,
   listbox,
   listRow,
-  loadAbove,
   loadingState,
   markerLine,
   menuItem,
@@ -265,6 +265,7 @@ export const kit = {
   toolBody,
   toolCard,
   scrollFade,
+  topEdge,
   topFade,
   viewerShell,
   waitingLine,

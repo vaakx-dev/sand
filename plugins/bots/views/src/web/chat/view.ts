@@ -21,8 +21,6 @@ export interface ChatParts {
   advanced(): boolean
 }
 
-const olderEdge = 240
-
 const working = (status: BotStatus | undefined) => status === 'working' || status === 'waiting'
 
 const statusView = (kit: Kit, talk: Conversation, status: () => BotStatus | undefined) => {
@@ -83,11 +81,16 @@ export const chatView = (parts: ChatParts) => {
     if (talk.entries.get() === undefined) return talk.failure.get() ? 'failed' : 'loading'
     return rows.get().length || busy() ? 'rows' : 'empty'
   })
-  const loadOlder = () => kit.loadAbove(scroller, rowList, talk.older)
-  const onScroll = () => {
-    follow.scrolled()
-    if (scroller.scrollTop < olderEdge) void loadOlder()
+  const loadOlder = async () => {
+    await talk.older(apply => kit.keepAnchor(scroller, rowList, apply))
+    edge.pump()
   }
+  const grow = () => {
+    if (scroller.clientHeight && talk.more.get() && !talk.loading.get()) void loadOlder()
+    return false
+  }
+  const edge = kit.topEdge(grow, () => {})
+  const onScroll = () => follow.scrolled()
   const watched = (node: HTMLElement) => {
     onMount(node, () => follow.watch(node))
     return node
@@ -97,6 +100,7 @@ export const chatView = (parts: ChatParts) => {
   const scroller: HTMLElement = div(
     { class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll },
     kit.topFade(),
+    edge.sentinel,
     div(
       { class: 'flex min-h-full flex-col' },
       show(
@@ -113,6 +117,11 @@ export const chatView = (parts: ChatParts) => {
     ),
   )
   const follow = kit.followEnd(scroller)
+  edge.watch(scroller)
+  effect(() => {
+    talk.entries.get()
+    untrack(edge.pump)
+  })
 
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
