@@ -1,6 +1,7 @@
 import { botCreate, botDelete } from '@sand/bots/contract'
 import type { Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { databaseFile } from '@sand/ledger/contract'
 import type { Reply } from '@sand/replay/contract'
 import { removeFolder } from '@sand/util/fs'
 import { afterEach, expect, setSystemTime, test } from 'bun:test'
@@ -145,3 +146,21 @@ test('messages written while message search was off are found once it starts, an
   expect(result?.type === 'tool_result' && result.content).toEqual([{ type: 'text', text: expect.stringContaining(`"link":"thread:${painted.id}"`) }])
   expect(JSON.stringify(result)).toContain('The gazebo paint is teal.')
 })
+
+test('while message search catches up on old messages, another process still writes to sand.db', async () => {
+  home = mkdtempSync(join(tmpdir(), 'sand-message-search-'))
+  const before = await start({ plugins: [], shared: home })
+  const words = Array.from({ length: 2_000 }, (_, index) => `word${index}`).join(' ')
+  thread(before, 'Backlog', Array.from({ length: 1_500 }, (_, index) => message('user', `${index} ${words}`)))
+  await before.stop()
+  running = []
+
+  const after = await start({ shared: home })
+  thread(after, 'Fresh', [message('user', 'A new message starts the catch-up.')])
+  expect((await after.ask(messagesSearch, { query: 'word1' })).indexing).toBeDefined()
+
+  const writer = Bun.spawn([process.execPath, join(import.meta.dir, 'writer.ts'), databaseFile(home)], { stdout: 'pipe' })
+  const { failed } = JSON.parse(await new Response(writer.stdout).text())
+  expect(failed).toBe(0)
+  expect((await after.ask(messagesSearch, { query: 'word1' })).indexing).toBeDefined()
+}, 30_000)

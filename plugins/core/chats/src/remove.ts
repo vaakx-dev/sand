@@ -17,5 +17,5 @@ export const chatRemover = (db: Database) => {
     const removed = remove(id)
     newEpoch(db)
     return removed
-  })
+  }).immediate
 }

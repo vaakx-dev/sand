@@ -2,6 +2,7 @@ import type { Indexing } from './contract'
 import type { Store } from './store'
 
 const STEP_MS = 15
+const REST_MS = STEP_MS
 
 const deadline = () => performance.now() + STEP_MS
 
@@ -15,8 +16,9 @@ class Keeper {
   ) {}
 
   private async steps() {
-    while (!this.stopped && this.indexing) {
-      await Bun.sleep(0)
+    while (this.indexing) {
+      await Bun.sleep(REST_MS)
+      if (this.stopped) return
       const done = this.indexing.done + this.store.step(deadline())
       const left = this.store.lag()
       if (!left) return
@@ -34,7 +36,7 @@ class Keeper {
   }
 
   refresh() {
-    if (this.indexing || !this.store.lag()) return
+    if (this.stopped || this.indexing || !this.store.lag()) return
     const done = this.store.step(deadline())
     const left = this.store.lag()
     if (left) this.catchUpInSteps({ done, total: done + left }).catch(this.report)

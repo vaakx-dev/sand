@@ -19,6 +19,8 @@ export const ledger = service<Ledger>('ledger')
 
 const DATABASE = 'sand.db'
 
+export const BUSY_TIMEOUT_MS = 5_000
+
 const day = (time: number) => new Date(time).toISOString().slice(0, 10)
 
 const short = (id: string) => id.slice(0, 7)
@@ -32,6 +34,7 @@ export const readUpgrade = (file: string): Upgrade | undefined => {
   if (!existsSync(file)) return undefined
   const db = new Database(file, { readonly: true })
   try {
+    db.run(`pragma busy_timeout = ${BUSY_TIMEOUT_MS}`)
     return db.query<Upgrade, []>('select build, time from upgraded_by').get() ?? undefined
   } catch {
     return undefined
