@@ -331,6 +331,7 @@
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/turns-contract": "workspace:*",
@@ -728,6 +729,8 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/engine": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
         "@sand/logins": "workspace:*",
         "@sand/processes": "workspace:*",
         "@sand/tools": "workspace:*",
@@ -750,6 +753,11 @@
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/dev-servers": "workspace:*",
+        "@sand/harness": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
       },
     },
     "plugins/agent/skills": {

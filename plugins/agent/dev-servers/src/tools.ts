@@ -6,7 +6,7 @@ import { devServerList, devServerOpen, devServerStop } from './contract'
 const group: McpGroup = { name: 'dev-servers', label: 'Dev servers', summary: 'list, open and stop the web servers your threads and bots started' }
 
 const listInput = z.object({
-  thread: z.string().optional().describe("Only this thread's or bot's servers (default: yours when a thread or bot asks, or all of them on this PC)"),
+  thread: z.string().optional().describe("Only this thread's or bot's servers (default: all of them on this PC; each one names its thread or bot)"),
 })
 
 const portInput = z.object({

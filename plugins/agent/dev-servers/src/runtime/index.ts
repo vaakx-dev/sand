@@ -73,10 +73,7 @@ export default definePlugin({
         host &&
         joinDisposers(
           host.hello(helloDevServers, () => current),
-          host.handle(devServerList, ({ session }, caller) => {
-            const chat = session ?? caller.actor?.id
-            return chat ? current.filter(entry => entry.session === chat) : current
-          }),
+          host.handle(devServerList, ({ session }) => (session ? current.filter(entry => entry.session === session) : current)),
           host.handle(devServerStop, ({ port }) => stop(port)),
           host.handle(devServerOpen, ({ port }, caller) => open(port, caller.device)),
           ctx.on(found, servers => host.broadcast(devServersChange, servers)),

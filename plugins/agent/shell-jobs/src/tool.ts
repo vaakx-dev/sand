@@ -1,17 +1,18 @@
-import type { BackgroundJobs } from '@sand/jobs/contract'
-import type { ShellRunner } from '@sand/shell/contract'
 import type { Sessions } from '@sand/chats/contract'
+import type { BackgroundJobs, Job } from '@sand/jobs/contract'
+import { type CommandSpec, outputTail, type ShellRunner } from '@sand/shell/contract'
 import type { Tool } from '@sand/tools/contract'
 import { oneLine } from '@sand/util'
 import type { Context } from 'drydock'
 import { z } from 'zod'
-import { outputTail } from './output'
-import { commandWork } from './work'
+import { commandWork, whenReady } from './work'
 
 const input = z.object({
   command: z.string().describe('Command to run'),
   label: z.string().optional().describe('A short title for the job (default: the command)'),
 })
+
+const commandOf = ({ id, command, cwd, parent, label, origin }: Job): CommandSpec => ({ id, command, cwd, conversation: parent, label, ...(origin && { origin }) })
 
 export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: ShellRunner, sessions: Sessions): Tool<typeof input> => ({
   name: 'run_background',
@@ -28,7 +29,10 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
       command,
       cwd,
       origin: call.id,
-      work: commandWork(ctx, runner, { command, cwd, conversation: conversation.id }, output),
+      work: whenReady(
+        ctx,
+        commandWork(ctx, output, (started, onText) => runner.start(commandOf(started), onText)),
+      ),
       read: output.read,
       output: output.last,
     })
