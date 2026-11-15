@@ -1,3 +1,4 @@
+import { ownerOf } from '@sand/chats/contract'
 import { contextGet } from '@sand/compaction/contract'
 import { type OpenedSession, sessionOpen, sessionSince } from '@sand/server/contract'
 import type { Wire } from '@sand/devices-contract'
@@ -27,7 +28,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     if (thread.turn) thread.started ??= turnStart(thread)
     if (opened.pending) store.pending(thread.id, opened.pending)
     if (opened.settings) store.settings.set(thread.id, opened.settings)
-    void wire.call(contextGet, { session: thread.id, owner: 'thread' }).then(usage => store.context(thread.id, usage), () => {})
+    void wire.call(contextGet, { session: thread.id, owner: ownerOf(thread.info.kind) }).then(usage => store.context(thread.id, usage), () => {})
     store.changed(thread.id, true)
     ctx.emit(modelsChange)
     return thread

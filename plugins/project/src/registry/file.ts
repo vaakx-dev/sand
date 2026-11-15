@@ -1,5 +1,5 @@
 import { isRecord } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { Project, ProjectCopy, ProjectIcon, ProjectIconFile } from '../contract'
 import { isIconHash, isIconType } from '../icons/paths'
@@ -57,8 +57,8 @@ export const parseProject = (value: unknown): Project | undefined => {
   }
 }
 
-const projectsOf = (value: unknown): Project[] => {
-  if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) throw new Error('Not a version 2 projects file')
+const projectsOf = (value: unknown): Project[] | undefined => {
+  if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) return undefined
   return value.projects.flatMap(entry => parseProject(entry) ?? [])
 }
 
@@ -70,11 +70,7 @@ export const parseProjectsFile = (text: string): Project[] | undefined => {
   }
 }
 
-export const readProjectsFile = async (home: string): Promise<Project[]> => {
-  const file = Bun.file(projectsPath(home))
-  if (!(await file.exists())) return []
-  return projectsOf(await file.json())
-}
+export const readProjectsFile = async (home: string): Promise<Project[]> => (await readState(projectsPath(home), projectsOf)) ?? []
 
 export const writeProjectsFile = (home: string, projects: Project[]) =>
   writeAtomic(projectsPath(home), `${JSON.stringify({ version: 2, projects }, null, 2)}\n`)

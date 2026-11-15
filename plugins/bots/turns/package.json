@@ -1,43 +1,34 @@
 {
   "name": "@sand/bot-turns",
   "version": "0.0.0",
-  "description": "Runs each bot's turns on the shared engine: its jobs as instructions, its main model, its conversation as the history",
+  "description": "A bot's extras on its chat's turns: its name, jobs and projects in its prompt, and its turns held while it is paused or over its monthly limit",
   "type": "module",
-  "exports": {
-    "./contract": "./src/contract.ts"
-  },
   "sand": {
     "feature": "bots",
     "runtime": "./src/index.ts",
     "label": "Bot turns",
-    "summary": "Lets your bots answer: runs their turns with their jobs and model"
+    "summary": "Lets your bots answer as themselves, with their jobs and projects"
   },
   "dependencies": {
-    "@sand/accounts": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/context": "workspace:*",
     "@sand/engine": "workspace:*",
-    "@sand/host-hub": "workspace:*",
-    "@sand/model": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/provider-threads": "workspace:*",
-    "@sand/server": "workspace:*",
-    "@sand/tools": "workspace:*",
-    "@sand/util": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "@sand/turns-contract": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
   "devDependencies": {
+    "@sand/accounts": "workspace:*",
     "@sand/bot-memory": "workspace:*",
-    "@sand/compaction": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/harness": "workspace:*",
     "@sand/ledger": "workspace:*",
-    "@sand/media": "workspace:*",
     "@sand/memory": "workspace:*",
-    "@sand/replay": "workspace:*"
+    "@sand/replay": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "zod": "^4.6.5"
   }
 }

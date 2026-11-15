@@ -18,7 +18,7 @@ export default definePlugin({
         name: projectMemorySpace,
         title: 'Project memory',
         about: 'Shared by every thread in this project, on every PC.',
-        of: conversation => (conversation.owner === 'thread' ? (ctx.sessions.open(conversation.id)?.project ?? undefined) : undefined),
+        of: conversation => ctx.sessions.open(conversation.id)?.project ?? undefined,
         folder(project) {
           if (!projectId().safeParse(project).success) throw new Error(`No project ${project}`)
           return join(root, project)

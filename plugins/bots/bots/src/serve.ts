@@ -8,8 +8,6 @@ import {
   botChangeWire,
   botCreate,
   botDelete,
-  botEntry,
-  botEntryWire,
   botList,
   botRemove,
   botRemoveWire,
@@ -50,7 +48,6 @@ export const serveBots = (ctx: Context, service: Bots) => {
       found.handle(jobReport, ({ job, ...report }) => service.jobs.report(job, report)),
       ctx.on(botChange, bot => found.broadcast(botChangeWire, bot)),
       ctx.on(botRemove, id => found.broadcast(botRemoveWire, id)),
-      ctx.on(botEntry, entry => found.broadcast(botEntryWire, entry)),
     )
   })
 }

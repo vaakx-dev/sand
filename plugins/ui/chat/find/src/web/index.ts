@@ -53,7 +53,7 @@ export default definePlugin({
       opened = undefined
     }
 
-    const pcOf = ({ owner, conversation }: ShownChat) => (owner === 'thread' ? ctx.get(threadPcs)?.ofSession(conversation) : undefined)
+    const pcOf = ({ conversation }: ShownChat) => ctx.get(threadPcs)?.ofSession(conversation)
 
     const askOn =
       (chat: ShownChat): Ask =>

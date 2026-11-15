@@ -6,7 +6,8 @@ import type { Moment } from '../contract'
 const mostChars = 180
 
 export const turnMoment = (session: Session, result: TurnResult): Moment | undefined => {
-  if (session.kind === 'agent' || result.stopReason === 'interrupted') return undefined
+  if (session.kind !== 'thread' && session.kind !== 'quick') return undefined
+  if (result.stopReason === 'interrupted') return undefined
   const failed = result.stopReason === 'error'
   return {
     kind: failed ? 'failed' : 'finished',

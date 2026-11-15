@@ -48,6 +48,7 @@
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/host-updates": "workspace:*",
+        "@sand/ledger": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/zip": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -473,6 +474,7 @@
       "name": "@sand/memory-guard",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-notify": "workspace:*",
         "@sand/engine": "workspace:*",
@@ -767,9 +769,9 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/harness": "workspace:*",
+        "@sand/model": "workspace:*",
       },
     },
     "plugins/agent/sub-model": {
@@ -798,7 +800,6 @@
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
-        "@sand/engine": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/paths": "workspace:*",
@@ -954,7 +955,6 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/replay": "workspace:*",
@@ -1028,10 +1028,8 @@
         "@sand/devices-notify": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/ledger": "workspace:*",
-        "@sand/model": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/server": "workspace:*",
-        "@sand/sub-model": "workspace:*",
         "@sand/turns-contract": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/usage": "workspace:*",
@@ -1047,7 +1045,6 @@
       "name": "@sand/bot-bridge",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chat": "workspace:*",
         "@sand/chats": "workspace:*",
@@ -1061,9 +1058,11 @@
         "@sand/prompt": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/transcript": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -1087,7 +1086,6 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/harness": "workspace:*",
       },
     },
@@ -1096,9 +1094,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/attachments": "workspace:*",
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/mcp-server": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -1109,7 +1107,6 @@
         "@sand/chats": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/harness": "workspace:*",
-        "@sand/orchestrator": "workspace:*",
         "@sand/replay": "workspace:*",
         "@sand/tools": "workspace:*",
       },
@@ -1123,7 +1120,6 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/replay": "workspace:*",
       },
@@ -1133,6 +1129,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/bots": "workspace:*",
+        "@sand/chats": "workspace:*",
         "@sand/schedules": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -1158,7 +1155,6 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/replay": "workspace:*",
       },
@@ -1167,7 +1163,6 @@
       "name": "@sand/bot-routines",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
@@ -1177,6 +1172,7 @@
         "@sand/schedules": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/transcript": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1193,52 +1189,42 @@
       "name": "@sand/bot-turns",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/accounts": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
-        "@sand/context": "workspace:*",
         "@sand/engine": "workspace:*",
-        "@sand/host-hub": "workspace:*",
-        "@sand/model": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/project": "workspace:*",
         "@sand/prompt": "workspace:*",
         "@sand/provider-threads": "workspace:*",
-        "@sand/server": "workspace:*",
-        "@sand/tools": "workspace:*",
-        "@sand/util": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
       },
       "devDependencies": {
+        "@sand/accounts": "workspace:*",
         "@sand/bot-memory": "workspace:*",
-        "@sand/compaction": "workspace:*",
         "@sand/devices-notify": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/ledger": "workspace:*",
-        "@sand/media": "workspace:*",
         "@sand/memory": "workspace:*",
         "@sand/replay": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "zod": "^4.6.5",
       },
     },
     "plugins/bots/views": {
       "name": "@sand/bot-views",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/accounts": "workspace:*",
         "@sand/advanced": "workspace:*",
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
+        "@sand/chat": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
-        "@sand/model": "workspace:*",
-        "@sand/model-panel": "workspace:*",
-        "@sand/model-picker": "workspace:*",
         "@sand/needs-you": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/reactive": "workspace:*",
-        "@sand/server": "workspace:*",
         "@sand/toasts": "workspace:*",
         "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",
@@ -1248,12 +1234,14 @@
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
+      "devDependencies": {
+        "playwright": "^1.64.1",
+      },
     },
     "plugins/bots/watches": {
       "name": "@sand/bot-watches",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
@@ -1262,6 +1250,7 @@
         "@sand/orchestrator": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/transcript": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/watches": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
@@ -1302,10 +1291,10 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/harness": "workspace:*",
+        "@sand/model": "workspace:*",
         "@sand/replay": "workspace:*",
       },
     },
@@ -1400,6 +1389,7 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-health": "workspace:*",
+        "@sand/ledger": "workspace:*",
         "@sand/plugin-files": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1581,8 +1571,8 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@sand/bot-turns": "workspace:*",
         "@sand/harness": "workspace:*",
+        "@sand/model": "workspace:*",
         "@sand/replay": "workspace:*",
       },
     },
@@ -1684,7 +1674,6 @@
       },
       "devDependencies": {
         "@sand/accounts": "workspace:*",
-        "@sand/bot-turns": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/calendar": "workspace:*",
         "@sand/chats": "workspace:*",
@@ -1695,6 +1684,7 @@
         "@sand/git-runner": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/html": "workspace:*",
+        "@sand/model": "workspace:*",
         "@sand/schedules": "workspace:*",
         "@sand/tools": "workspace:*",
         "playwright": "^1.64.1",
@@ -1704,6 +1694,7 @@
       "name": "@sand/ledger",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/config": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -2387,6 +2378,7 @@
         "@sand/host-health": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
+        "@sand/ledger": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -2523,7 +2515,6 @@
       "name": "@sand/chat-find",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
@@ -2733,6 +2724,18 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/ui/files/archives": {
+      "name": "@sand/file-archives",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/file-viewer": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/zip": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/ui/files/images": {
       "name": "@sand/file-images",
       "version": "0.0.0",
@@ -2744,6 +2747,32 @@
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "utif2": "^4.1.0",
+      },
+    },
+    "plugins/ui/files/notebooks": {
+      "name": "@sand/file-notebooks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/file-viewer": "workspace:*",
+        "@sand/markdown": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
+    "plugins/ui/files/pdf": {
+      "name": "@sand/file-pdf",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/file-viewer": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "pdfjs-dist": "6.5.438",
       },
     },
     "plugins/ui/files/viewer": {
@@ -2798,7 +2827,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/compaction": "workspace:*",
-        "@sand/devices-contract": "workspace:*",
         "@sand/inspector": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
@@ -3327,6 +3355,30 @@
 
     "@mozilla/readability": ["@mozilla/readability@0.6.0", "", {}, "sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ=="],
 
+    "@napi-rs/canvas": ["@napi-rs/canvas@1.1.1", "", { "optionalDependencies": { "@napi-rs/canvas-android-arm64": "1.1.1", "@napi-rs/canvas-darwin-arm64": "1.1.1", "@napi-rs/canvas-darwin-x64": "1.1.1", "@napi-rs/canvas-linux-arm-gnueabihf": "1.1.1", "@napi-rs/canvas-linux-arm64-gnu": "1.1.1", "@napi-rs/canvas-linux-arm64-musl": "1.1.1", "@napi-rs/canvas-linux-riscv64-gnu": "1.1.1", "@napi-rs/canvas-linux-x64-gnu": "1.1.1", "@napi-rs/canvas-linux-x64-musl": "1.1.1", "@napi-rs/canvas-win32-arm64-msvc": "1.1.1", "@napi-rs/canvas-win32-x64-msvc": "1.1.1" } }, "sha512-UyNspnx0rXclATMOBXiWgy1xtWUSUDm4UOO6+YO8xzyVKaZRpvK+SlJSCtRoSI9J/mEqklJiPYtroN1B+hgLXg=="],
+
+    "@napi-rs/canvas-android-arm64": ["@napi-rs/canvas-android-arm64@1.1.1", "", { "os": "android", "cpu": "arm64" }, "sha512-rSEp3y+/YXw6TxSx4/NHSAFxumZrkMoXy2WiVqpKGT8oF5GHOUDzTKj45e5cvzophX4iFaxwKs3+/gNkJ7FmzQ=="],
+
+    "@napi-rs/canvas-darwin-arm64": ["@napi-rs/canvas-darwin-arm64@1.1.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-NrPTZWpu0ywOGdp9JBDi46gABUzDJK6IzlP7cOEwaAuVVFM8KRakUWk12RK3YQ/Ea5FrNVTWUFTmkXVk4RfHqg=="],
+
+    "@napi-rs/canvas-darwin-x64": ["@napi-rs/canvas-darwin-x64@1.1.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-p3DOT8VBfu8cR3SVBUs6cEzJmzwOUQkNfo1S4nKLgeKDsSlvn2oZsRaa9m0lfMccn1WbwtgKCEpJXmHhp++Zrg=="],
+
+    "@napi-rs/canvas-linux-arm-gnueabihf": ["@napi-rs/canvas-linux-arm-gnueabihf@1.1.1", "", { "os": "linux", "cpu": "arm" }, "sha512-YWGJfMa8TtEhsHd/kDiyBFwT/dAbRQiXwsm0tDev4H5cJiyOk08CC83JihrwnUsePGjIvxC8/8g/zqKKuqjpQA=="],
+
+    "@napi-rs/canvas-linux-arm64-gnu": ["@napi-rs/canvas-linux-arm64-gnu@1.1.1", "", { "os": "linux", "cpu": "arm64", "libc": "glibc" }, "sha512-q1HBkNmB9mc6SF6uSz2492qSgsB46MqS+n3bPbPCE0kUXmWAPkH9vDADeawbhepQYn8RhlV2V/P5u6nykFXbuQ=="],
+
+    "@napi-rs/canvas-linux-arm64-musl": ["@napi-rs/canvas-linux-arm64-musl@1.1.1", "", { "os": "linux", "cpu": "arm64", "libc": "musl" }, "sha512-aF4RkTp2T45fERFPCIqbxeKVhvhHuXeyyk5/jdJ+N0tGLZy4NvMkIrBWt6GOCmAQ7H0G3M/O03hAsc4Li52q4A=="],
+
+    "@napi-rs/canvas-linux-riscv64-gnu": ["@napi-rs/canvas-linux-riscv64-gnu@1.1.1", "", { "os": "linux", "cpu": "none", "libc": "glibc" }, "sha512-rCU4Xo5h0AQFEaa9dNr7Kxbk4gke9Uyi/I6ZXuBGYPSNWxYmWRS6DkrxaSKUJyCgA7c8l6lZBYfx/FtbJo3fMA=="],
+
+    "@napi-rs/canvas-linux-x64-gnu": ["@napi-rs/canvas-linux-x64-gnu@1.1.1", "", { "os": "linux", "cpu": "x64", "libc": "glibc" }, "sha512-7bZfDI9lxKqj9wJRHiSQBimCRanxDGHYE7TugnOmFJ9ScpgFSsLHFQtOH9wvmbQvBwv5nBuDBGJlG0+7iGkN+w=="],
+
+    "@napi-rs/canvas-linux-x64-musl": ["@napi-rs/canvas-linux-x64-musl@1.1.1", "", { "os": "linux", "cpu": "x64", "libc": "musl" }, "sha512-xaFof2p0aO7C7ziMCLeueve09PVEKYCebljLTL3nyxoaRsYpEnBrUBP1aVpfD1Nk464dc7/wPV23fkHdOBie2g=="],
+
+    "@napi-rs/canvas-win32-arm64-msvc": ["@napi-rs/canvas-win32-arm64-msvc@1.1.1", "", { "os": "win32", "cpu": "arm64" }, "sha512-wOLX/WRwWr0xGj2hnDf/t3tZfPlzzL9rGPsO1UnYSuNbRzwas/hC8JXnuhaEs8eCw+J+W4zxOJiVF4RxkvcMfw=="],
+
+    "@napi-rs/canvas-win32-x64-msvc": ["@napi-rs/canvas-win32-x64-msvc@1.1.1", "", { "os": "win32", "cpu": "x64" }, "sha512-6Ge1AF1SVO+Ypjaw9IPcApm95krR3GQ32HgVqlIckbN/WqUlWYS0hnb8ZIdu3e0IbutbJgd8D2qSeb2/Cdpbdw=="],
+
     "@noble/curves": ["@noble/curves@2.4.0", "", { "dependencies": { "@noble/hashes": "2.4.0" } }, "sha512-P4/62zrgfH33CneE3Dn4WhJVA22YUU0eR51wKIan4NVRvwsA0YnPTwWGpNbpuacSujmSFLvyzpyuR30+fbq2Ew=="],
 
     "@noble/hashes": ["@noble/hashes@2.4.0", "", {}, "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA=="],
@@ -3463,7 +3515,13 @@
 
     "@sand/features": ["@sand/features@workspace:plugins/core/features"],
 
+    "@sand/file-archives": ["@sand/file-archives@workspace:plugins/ui/files/archives"],
+
     "@sand/file-images": ["@sand/file-images@workspace:plugins/ui/files/images"],
+
+    "@sand/file-notebooks": ["@sand/file-notebooks@workspace:plugins/ui/files/notebooks"],
+
+    "@sand/file-pdf": ["@sand/file-pdf@workspace:plugins/ui/files/pdf"],
 
     "@sand/file-tools": ["@sand/file-tools@workspace:plugins/agent/file-tools"],
 
@@ -3826,6 +3884,8 @@
     "pako": ["pako@1.0.11", "", {}, "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw=="],
 
     "path-key": ["path-key@3.1.1", "", {}, "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q=="],
+
+    "pdfjs-dist": ["pdfjs-dist@6.5.438", "", { "optionalDependencies": { "@napi-rs/canvas": "^1.0.13" } }, "sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA=="],
 
     "pkce-challenge": ["pkce-challenge@5.0.1", "", {}, "sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ=="],
 

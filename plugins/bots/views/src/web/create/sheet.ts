@@ -1,3 +1,4 @@
+import { threadSend } from '@sand/orchestrator/contract'
 import { errorMessage } from '@sand/util'
 import { div, show, sig } from '@vaakx-dev/vrui'
 import type { Parts } from '../parts'
@@ -20,7 +21,7 @@ export const openNewBot = (parts: Parts) => {
     try {
       const made = fresh.open.get() ? [await createProject(parts, fresh.name.get())] : []
       const bot = await parts.store.create({ projects: [...chosen.get(), ...made], ...(name.get().trim() && { name: name.get().trim() }) })
-      await parts.chats.get(bot.id).send(work.get().trim(), crypto.randomUUID())
+      await parts.ctx.wire.call(threadSend, { session: bot.id, prompt: work.get().trim(), origin: 'user', clientRequestId: crypto.randomUUID() })
       close()
       parts.open(bot.id)
     } catch (error) {

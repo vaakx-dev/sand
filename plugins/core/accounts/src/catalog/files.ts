@@ -1,5 +1,5 @@
 import { isRecord, serial } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { NewModels, PlanModel } from '../contract'
 import type { Checked, ModelCache, Prefs } from './types'
@@ -45,13 +45,7 @@ const cacheOf = (value: unknown): ModelCache =>
 const jsonFile = <T>(path: string, parse: (value: unknown) => T, failed: (error: unknown) => void) => {
   const queue = serial()
   return {
-    async read(): Promise<T> {
-      try {
-        return parse(await Bun.file(path).json())
-      } catch {
-        return parse(undefined)
-      }
-    },
+    read: async (): Promise<T> => (await readState(path, parse)) ?? parse(undefined),
     write(value: T) {
       return queue(() => writePrivateJson(path, value)).catch(failed)
     },

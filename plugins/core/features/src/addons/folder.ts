@@ -1,6 +1,7 @@
 import { errorMessage, uuid } from '@sand/util'
 import { isMissing, moveFresh, removeFolder } from '@sand/util/fs'
-import { addonFolders, type AddonListing, type AddonStamp, addonStampFile } from '@sand/util/release'
+import { addonFault, type AddonFault, type AddonListing, type AddonStamp, addonStampFile, installedAddons } from '@sand/util/release'
+import { readdir } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { z } from 'zod'
 
@@ -60,17 +61,28 @@ const replace = async (staging: string, target: string) => {
   if (had) await removeFolder(old)
 }
 
-const installFolder = async ({ root, listing, catalogUrl, source }: Download) => {
+const stageFolder = async ({ root, listing, catalogUrl, source }: Download) => {
   const bytes = await download(listing, catalogUrl)
   const staging = join(root, `.${listing.id}-${uuid()}`)
   try {
     await unpack(bytes, staging)
     await Bun.write(join(staging, addonStampFile), `${JSON.stringify(stampOf(listing, source), null, 2)}\n`)
-    await replace(staging, join(root, listing.id))
+    return staging
+  } catch (error) {
+    await removeFolder(staging)
+    throw error
+  }
+}
+
+const placeFolder = async (root: string, id: string, staging: string) => {
+  try {
+    await replace(staging, join(root, id))
   } finally {
     await removeFolder(staging)
   }
 }
+
+const installFolder = async (download: Download) => placeFolder(download.root, download.listing.id, await stageFolder(download))
 
 const readStamp = async (folder: string): Promise<AddonStamp | undefined> => {
   const stamp: unknown = await Bun.file(join(folder, addonStampFile))
@@ -81,11 +93,23 @@ const readStamp = async (folder: string): Promise<AddonStamp | undefined> => {
 }
 
 const installedStamps = async (root: string) => {
-  const folders = await addonFolders(root)
+  const folders = await installedAddons(root)
   const stamps = await Promise.all(folders.map(readStamp))
   return new Map(folders.flatMap((folder, index) => (stamps[index] ? [[basename(folder), stamps[index]] as const] : [])))
 }
 
+const faultsFor = async (root: string, ids: string[], build: string) => {
+  const faults = await Promise.all(ids.map(id => addonFault(join(root, id))))
+  return new Map(ids.flatMap((id, index): [string, AddonFault][] => (faults[index]?.build === build ? [[id, faults[index]]] : [])))
+}
+
 const removeAddonFolder = (root: string, id: string) => removeFolder(join(root, id))
 
-export { installedStamps, installFolder, removeAddonFolder }
+const STAGING = /^\.[a-z0-9][a-z0-9-]*-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(-old)?$/
+
+const removeLeftovers = async (root: string) => {
+  const names = (await readdir(root).catch(() => [])).filter(name => STAGING.test(name))
+  await Promise.all(names.map(name => removeFolder(join(root, name)).catch(() => {})))
+}
+
+export { faultsFor, installedStamps, installFolder, placeFolder, removeAddonFolder, removeLeftovers, stageFolder, type Download }

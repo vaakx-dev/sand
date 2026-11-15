@@ -1,7 +1,12 @@
+import type { Actor } from '@sand/host-hub/contract'
 import type { AppendMeta, Entry } from './entry'
 import type { Message } from './message'
 
-export type ChatKind = 'thread' | 'agent' | 'quick'
+export type ChatKind = 'thread' | 'agent' | 'quick' | 'bot'
+
+export type Owner = Actor['owner']
+
+export const ownerOf = (kind: ChatKind): Owner => (kind === 'bot' ? 'bot' : 'thread')
 
 export interface SessionInfo {
   id: string
@@ -67,8 +72,9 @@ export interface SyncedSummaries {
 }
 
 export interface Session extends SessionInfo {
-  owner: 'thread'
+  owner: Owner
   append(type: string, data: unknown, meta?: AppendMeta): Entry
+  entry(id: string): Entry | undefined
   path(): Entry[]
   page(before?: string | null, size?: PageSize): EntryPage
   since(after: number | string): Entry[] | undefined
@@ -84,6 +90,7 @@ export interface Sessions {
   thread(cwd: string, options?: NewThread): Session
   quick(): Session
   agent(spec: NewAgent): Session
+  bot(id: string, cwd: string): Session
   children(parent: string): SessionSummary[]
   update(id: string, patch: ChatPatch): Session
   relocate(id: string, relocation: Relocation): Promise<Session>
@@ -97,5 +104,5 @@ export interface Sessions {
   list(): SessionSummary[]
   synced(since: string | null, active: string[]): SyncedSummaries
   entriesOfType(type: string): Entry[]
-  entriesIn(session: string, type: string): Entry[]
+  entriesIn(session: string, type: string, since?: number): Entry[]
 }

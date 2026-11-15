@@ -37,19 +37,19 @@ const tiles = ({ cpu, cores, totalBytes, freeBytes }: PcReport) =>
 
 const metaOf = (pc: PcView, report: PcReport) => [pc.home ? 'This PC' : '', platformName(pc.platform), amount(report.totalBytes)].filter(Boolean).join(' · ')
 
-const silence = (heard: Heard) => span({ class: 'ml-auto shrink-0 text-xs text-warning-400' }, `Not answering since ${clockTime(heard.failed ?? heard.at)}`)
+const silence = (failed: number) => span({ class: 'ml-auto shrink-0 text-xs text-warning-400' }, `Not answering since ${clockTime(failed)}`)
 
-export const pcCard = (kit: Kit, pc: PcView, heard: Heard, { silent, open, where }: { silent: boolean; open: Sig<ReadonlySet<string>>; where: Where }) =>
+export const pcCard = (kit: Kit, pc: PcView, heard: Heard, { open, where }: { open: Sig<ReadonlySet<string>>; where: Where }) =>
   section(
     { class: 'flex min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-800', 'aria-label': pc.name },
     band(
       'flex items-baseline gap-2',
       span({ class: 'truncate text-sm font-semibold text-neutral-100' }, pc.name),
       span({ class: 'truncate text-xs text-neutral-500' }, metaOf(pc, heard.report)),
-      silent ? silence(heard) : null,
+      heard.failed === undefined ? null : silence(heard.failed),
     ),
     tiles(heard.report),
-    chart(heard.report.bars),
+    chart(heard.report.bars.values),
     usageTable(kit, heard.report, { open, where }),
   )
 

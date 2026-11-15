@@ -1,4 +1,4 @@
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { z } from 'zod'
@@ -8,7 +8,7 @@ const savedSchema = z.object({ off: z.array(momentKindSchema()) })
 
 export const loadMoments = async (home: string) => {
   const file = join(home, 'notify', 'moments.json')
-  let off = (await Bun.file(file).exists()) ? savedSchema.parse(await Bun.file(file).json()).off : []
+  let off = (await readState(file, data => savedSchema.safeParse(data).data?.off)) ?? []
 
   const set = async (kind: MomentKind, on: boolean) => {
     const rest = off.filter(other => other !== kind)

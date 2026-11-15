@@ -3,4 +3,6 @@ import { div, type Child } from '@vaakx-dev/vrui'
 
 const stateFrame = (state: Child) => div({ class: 'flex justify-center pt-4' }, state)
 
+export const emptyState = ({ pageColumn }: Kit, state: Child) => div({ class: [pageColumn, 'px-4 py-4'] }, state)
+
 export const failed = ({ errorState }: Kit, message: string, retry: () => void) => stateFrame(errorState({ text: `Couldn't load this thread: ${message}`, retry }))

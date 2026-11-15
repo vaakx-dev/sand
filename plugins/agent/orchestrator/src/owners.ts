@@ -18,34 +18,31 @@ export const createOwners = (ctx: OrchestratorContext) => {
     return () => void (kinds.get(owner) === kind && kinds.delete(owner))
   }
 
-  ctx.effect(() =>
-    register('thread', {
-      deliver(id, { text, clientRequestId }) {
-        const session = ctx.sessions.open(id)
-        return session && ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId })
-      },
-      label: id => ctx.sessions.open(id)?.title,
-      history: id => ctx.sessions.open(id)?.path(),
-      folder: id => ctx.sessions.open(id)?.cwd,
-    }),
-  )
+  const chatOf = ({ owner, id }: ConversationRef) => {
+    const session = ctx.sessions.open(id)
+    return session?.owner === owner ? session : undefined
+  }
+
+  ctx.effect(() => register('thread', { label: id => ctx.sessions.open(id)?.title }))
 
   return {
     register,
-    deliver: async ({ owner, id }: ConversationRef, notice: Notice) => void (await kinds.get(owner)?.deliver(id, notice)),
+    async deliver(to: ConversationRef, { text, clientRequestId }: Notice) {
+      const session = chatOf(to)
+      if (session) await ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId })
+    },
     sign(prompt: Prompt, from: ConversationRef | undefined): Prompt {
       if (!from) return prompt
       const kind = kinds.get(from.owner)
       if (!kind) throw failure('invalid_request', `Nothing speaks for ${from.owner} conversations`)
       return signed(prompt, { v: 1, id: uuid(), kind: from.owner, label: kind.label(from.id) || from.owner, data: { id: from.id, sent: true } })
     },
-    history({ owner, id }: ConversationRef) {
-      const entries = kinds.get(owner)?.history(id)
-      if (!entries) throw failure('not_found', `No ${owner} ${id}`)
-      return entries
+    history(conversation: ConversationRef) {
+      const session = chatOf(conversation)
+      if (!session) throw failure('not_found', `No ${conversation.owner} ${conversation.id}`)
+      return session.path()
     },
     home: (from: ConversationRef | undefined) => from && kinds.get(from.owner)?.project?.(from.id),
-    folder: (from: ConversationRef) => kinds.get(from.owner)?.folder?.(from.id),
   }
 }
 

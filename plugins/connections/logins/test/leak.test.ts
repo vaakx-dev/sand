@@ -1,5 +1,3 @@
-import { botCreate } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
 import type { Fill } from '@sand/computers/contract'
 import type { Reply } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
@@ -10,7 +8,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { codeAnswer, codeEntry, loginAdd, loginChange, secretEntry, secretSave } from '../src/contract'
 import { totpCode } from '../src/totp'
-import { answer, botEntries, browser, call, idle, leaksIn, leaksInText, models, plugins, resultText, said, type Sand, start, threadEntries } from './fixture'
+import { answer, browser, call, chatEntries, idle, leaksIn, leaksInText, newBot, plugins, resultText, said, type Sand, start, tellBot } from './fixture'
 
 let folders: string[] = []
 
@@ -72,7 +70,7 @@ const setUp = async (home: string) => {
     totp: `otpauth://totp/Northbank:ana?secret=${values.totp.toLowerCase()}&issuer=Northbank`,
   })
   const shop = await sand.ask(loginAdd, { kind: 'website', name: 'Shop', site: 'shop.example', username: values.shopUsername, password: values.shopPassword })
-  const bot = await sand.ask(botCreate, { name: 'Banker', models })
+  const bot = await newBot(sand, 'Banker')
   const chat = sand.chat('fake/m')
   for (const login of [key, bank, shop]) await sand.ask(loginChange, { id: login.id, threads: [chat.id], bots: [bot.id] })
   await sand.stop()
@@ -138,7 +136,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     const codes = [totpCode(values.totp)]
 
     const chat = sand.sessions.require(ids.chat)
-    const thread = threadEntries(sand, chat.id)
+    const thread = chatEntries(sand, chat.id)
     const ran = sand.turns.run(chat, 'Sign in to the bank and the shop')
     await answer(sand, chat.id, thread, secretEntry, secretSave, id => ({ session: chat.id, id, save: true, value: values.threadSecret }))
     await answer(sand, chat.id, thread, codeEntry, codeAnswer, id => ({ session: chat.id, id, code: ` ${values.threadCode} ` }))
@@ -146,12 +144,12 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     expect(await sand.turns.run(chat, 'Carry on')).toMatchObject({ text: 'Thread carried on.' })
     expect(chat.latest('compaction')?.data).toMatchObject({ summary: 'Thread summary.' })
 
-    const bot = botEntries(sand, ids.bot)
-    await sand.ask(botSend, { bot: ids.bot, prompt: 'Sign in to the bank and the shop', clientRequestId: 'sign-in' })
+    const bot = chatEntries(sand, ids.bot)
+    await tellBot(sand, ids.bot, 'Sign in to the bank and the shop')
     await answer(sand, ids.bot, bot, secretEntry, secretSave, id => ({ session: ids.bot, id, save: true, value: values.botSecret }))
     await answer(sand, ids.bot, bot, codeEntry, codeAnswer, id => ({ session: ids.bot, id, code: values.botCode }))
     await idle(sand, ids.bot)
-    await sand.ask(botSend, { bot: ids.bot, prompt: 'Carry on', clientRequestId: 'carry-on' })
+    await tellBot(sand, ids.bot, 'Carry on')
     await idle(sand, ids.bot)
     codes.push(totpCode(values.totp))
 
@@ -163,7 +161,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     expect(await Bun.file(join(work, 'env-thread.json')).json()).toEqual(hashes)
     expect(await Bun.file(join(work, 'env-bot.json')).json()).toEqual(hashes)
 
-    const transcripts = { thread: thread(), bot: await bot() }
+    const transcripts = { thread: thread(), bot: bot() }
     for (const entries of Object.values(transcripts)) {
       expect(resultText(entries, 'shell')).toContain('token=[secret: Deploy key] user=[secret: Northbank] pass=[secret: Northbank]')
       expect(resultText(entries, 'shell')).toContain('TOKEN=[secret: Deploy key]')

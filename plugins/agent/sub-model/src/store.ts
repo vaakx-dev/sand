@@ -1,5 +1,5 @@
 import { serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 import { chosenModel, tiers } from './contract'
 
@@ -9,10 +9,7 @@ const saved = z.object({
 
 export type Saved = z.output<typeof saved>
 
-const read = async (file: string): Promise<Saved> => {
-  const found = Bun.file(file)
-  return saved.parse((await found.exists()) ? await found.json() : {})
-}
+const read = async (file: string): Promise<Saved> => (await readState(file, data => saved.safeParse(data).data)) ?? saved.parse({})
 
 export const put = <R, K extends keyof R>(record: R, key: K, value: R[K] | null): R => {
   const next = { ...record }

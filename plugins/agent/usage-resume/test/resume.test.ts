@@ -1,7 +1,7 @@
-import { botCreate, botList } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
+import { botCreate } from '@sand/bots/contract'
 import type { Session } from '@sand/chats/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
+import { modelSettings } from '@sand/model/contract'
 import type { Reply } from '@sand/replay/contract'
 import { removeFolder } from '@sand/util/fs'
 import { afterEach, expect, test } from 'bun:test'
@@ -115,10 +115,12 @@ test('a resume planned before sand restarts still happens at the reset', async (
 
 test('a bot out of usage continues at the reset', async () => {
   sand = await start([[limit(1_500)], [said('Picked up.')]], { plugins: ['bots/bots', 'bots/turns'] })
-  const bot = await sand.ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
-  await sand.ask(botSend, { bot: bot.id, prompt: 'Start', clientRequestId: 'one' })
+  const bot = await sand.ask(botCreate, { name: 'Errands' })
+  const chat = sand.sessions.require(bot.id)
+  sand.app.get(modelSettings)!.change(chat, { model: 'fake/m' })
+  await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
 
-  await until(async () => (await sand.ask(botList, {})).find(listed => listed.id === bot.id && listed.status === 'idle')?.last?.text === 'Picked up.')
+  await ended(chat, 2)
   expect(sent()).toEqual(['Start', continued])
 })
 

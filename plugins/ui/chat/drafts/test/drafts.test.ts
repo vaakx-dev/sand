@@ -1,6 +1,6 @@
 import { startSand } from '@sand/harness'
 import { expect, test } from 'bun:test'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { draftsAll, draftsRead, draftsWrite } from '../src/contract'
@@ -23,13 +23,15 @@ test('a draft is kept per chat across restarts and cleared once sent', async () 
   rmSync(again.home, { recursive: true, force: true })
 })
 
-test('a damaged drafts file starts drafts empty instead of failing the plugin', async () => {
+test('a damaged drafts file is set aside and drafts start empty instead of failing the plugin', async () => {
   const home = mkdtempSync(join(tmpdir(), 'sand-drafts-'))
   writeFileSync(join(home, 'drafts.json'), '\0\0')
   const sand = await start(home)
   expect(await sand.ask(draftsAll, {})).toEqual([])
   await sand.ask(draftsWrite, { key: 'thread-1', draft: { text: 'kept', items: [] } })
   expect(await Bun.file(join(home, 'drafts.json')).json()).toEqual({ 'thread-1': { text: 'kept', items: [] } })
+  const [aside] = readdirSync(home).filter(name => name.startsWith('drafts.json.damaged-'))
+  expect(readFileSync(join(home, aside!), 'utf8')).toBe('\0\0')
   await sand.stop()
   rmSync(home, { recursive: true, force: true })
 })

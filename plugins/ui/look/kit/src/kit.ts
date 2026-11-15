@@ -64,6 +64,7 @@ import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { overlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetStep } from './sheets/overlay'
 import { viewerShell, zoomControls } from './sheets/viewer'
+import { floatingEdge } from './surface'
 import { emptyPage, emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
@@ -84,7 +85,8 @@ import { ownedByNode } from './page/owned'
 import { isMac } from './page/platform'
 import { style } from './page/style'
 import { openTab } from './page/tab'
-import { firstRowBelow, keepAnchor, loadAbove, nearEnd, toEnd } from './scroll/end'
+import { topEdge } from './scroll/edge'
+import { firstRowBelow, keepAnchor, nearEnd, toEnd } from './scroll/end'
 import { followEnd } from './scroll/follow'
 
 const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, selecting }
@@ -142,6 +144,7 @@ export const kit = {
   expandToggle,
   field,
   floatButton,
+  floatingEdge,
   fileKindMark,
   firstRowBelow,
   followEnd,
@@ -160,7 +163,6 @@ export const kit = {
   linkButton,
   listbox,
   listRow,
-  loadAbove,
   loadingState,
   markerLine,
   menuItem,
@@ -266,6 +268,7 @@ export const kit = {
   toolBody,
   toolCard,
   scrollFade,
+  topEdge,
   topFade,
   viewerShell,
   waitingLine,

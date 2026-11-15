@@ -1,6 +1,6 @@
 import type { UpdateChannel } from '@sand/host-updates/contract'
 import { isRecord, serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 
 interface LaterEntry {
@@ -11,6 +11,7 @@ interface LaterEntry {
 interface Saved {
   channel: UpdateChannel
   later?: LaterEntry
+  dismissed: string[]
 }
 
 export interface UpdateStore {
@@ -18,6 +19,8 @@ export interface UpdateStore {
   setChannel(channel: UpdateChannel): Promise<void>
   hidden(buildId: string): boolean
   hide(buildId: string): Promise<void>
+  dismissed(id: string): boolean
+  dismiss(id: string): Promise<void>
 }
 
 const day = 24 * 60 * 60 * 1000
@@ -33,13 +36,11 @@ const parseLater = (later: unknown): LaterEntry | undefined => {
 
 const parse = (data: unknown): Saved => {
   const saved = isRecord(data) ? data : {}
-  return { channel: isChannel(saved.channel) ? saved.channel : 'release', later: parseLater(saved.later) }
+  const dismissed = Array.isArray(saved.dismissed) ? saved.dismissed.filter(id => typeof id === 'string') : []
+  return { channel: isChannel(saved.channel) ? saved.channel : 'release', later: parseLater(saved.later), dismissed }
 }
 
-const read = (file: string) =>
-  Bun.file(file)
-    .json()
-    .then(parse, () => parse(undefined))
+const read = async (file: string) => (await readState(file, parse)) ?? parse(undefined)
 
 export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')
@@ -55,6 +56,12 @@ export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
     hidden: buildId => !!saved.later && saved.later.build === buildId && saved.later.until > Date.now(),
     hide(buildId) {
       saved.later = { build: buildId, until: Date.now() + day }
+      return save()
+    },
+    dismissed: id => saved.dismissed.includes(id),
+    dismiss(id) {
+      if (saved.dismissed.includes(id)) return Promise.resolve()
+      saved.dismissed = [...saved.dismissed, id]
       return save()
     },
   }

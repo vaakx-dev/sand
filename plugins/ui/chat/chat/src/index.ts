@@ -38,7 +38,7 @@ export default definePlugin({
     const view = threadViewService(ctx, screens)
     ctx.provide(threadView, view)
     ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view)))
-    ctx.watch(shell, found => found && threadRoutes(ctx, found, screens, changes))
+    ctx.watch(shell, found => found && threadRoutes(ctx, found, { screens, view, changes }))
     ctx.watch(shell, found =>
       found?.subject(({ kind, id }) => {
         changes.version.get()

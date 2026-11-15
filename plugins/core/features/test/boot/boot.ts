@@ -1,5 +1,5 @@
 import { llm } from '@sand/accounts/contract'
-import { botList, bots } from '@sand/bots/contract'
+import { bots } from '@sand/bots/contract'
 import { calendars } from '@sand/calendar/contract'
 import { sessions } from '@sand/chats/contract'
 import { computers } from '@sand/computers/contract'
@@ -26,7 +26,7 @@ const watched = { sessions, bots, calendars, computers, engine, llm, tools, sche
 
 type Name = keyof typeof watched
 
-export const boot = (on: string[], off: string[] = [], sources: Parameters<typeof startSand>[0] = on.some(id => ['threads', 'bots', 'computers'].includes(id)) ? [model] : []) => {
+export const boot = (on: string[], off: string[] = [], sources: Parameters<typeof startSand>[0] = on.some(id => ['threads', 'computers'].includes(id)) ? [model] : []) => {
   const lines = [...topLevel.map(id => `${id} = ${on.includes(id) && !off.includes(id)}`), ...off.filter(id => !topLevel.includes(id)).map(id => `${id} = false`)]
   return startSand(sources, { config: `[features]\n${lines.join('\n')}` })
 }
@@ -48,12 +48,4 @@ export const combinations = (list: [string, string[], string[], Name[]][]) => {
         await sand.stop()
       }
     })
-}
-
-export const answer = async (sand: Booted, bot: string) => {
-  for (let tries = 0; tries < 200; tries++) {
-    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
-    if (found?.status === 'idle' && found.last?.role === 'assistant') return found.last.text
-    await Bun.sleep(10)
-  }
 }

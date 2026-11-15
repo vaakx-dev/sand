@@ -1,14 +1,10 @@
 import { serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 
 const saved = z.object({ declined: z.array(z.string()) })
 
-const load = async (file: string) => {
-  const source = Bun.file(file)
-  if (!(await source.exists())) return new Set<string>()
-  return new Set(saved.parse(await source.json()).declined)
-}
+const load = async (file: string) => new Set((await readState(file, data => saved.safeParse(data).data?.declined)) ?? [])
 
 export const createDeclined = (file: string) => {
   let loading: Promise<Set<string>> | undefined
