@@ -32,7 +32,12 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
       .filter(({ device, info }) => device === store.here() && info.kind === 'thread')
       .sort((a, b) => b.info.updated - a.info.updated)[0]?.info.cwd
 
-  const cwd = () => store.currentThread()?.info.cwd ?? store.draft?.cwd ?? recentFolder() ?? ''
+  const currentFolder = () => {
+    const info = store.currentThread()?.info
+    return info?.kind === 'bot' ? undefined : info?.cwd
+  }
+
+  const cwd = () => currentFolder() ?? store.draft?.cwd ?? recentFolder() ?? ''
 
   const plans = new Map<string, DraftTarget>()
 

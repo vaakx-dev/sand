@@ -1,5 +1,5 @@
 import { llmEvent } from '@sand/accounts/contract'
-import type { Session } from '@sand/chats/contract'
+import type { Owner, Session } from '@sand/chats/contract'
 import type { Conversations, TurnInfo as EngineTurn } from '@sand/engine/contract'
 import { contextOverflow } from '@sand/provider-threads/contract'
 import {
@@ -16,9 +16,9 @@ import {
 } from '@sand/turns-contract/contract'
 import type { TurnsContext } from './context'
 
-export const threadTurn = ({ owner, conversation, ...info }: EngineTurn): TurnInfo => ({ ...info, session: conversation })
+export const turnOf = ({ owner, conversation, ...info }: EngineTurn): TurnInfo => ({ ...info, session: conversation })
 
-export const threadConversations = (ctx: TurnsContext): Conversations<Session> => {
+export const sessionConversations = (ctx: TurnsContext, owner: Owner): Conversations<Session> => {
   const unseen = (session: Session) => {
     ctx.sessions.update(session.id, { seen: false })
   }
@@ -27,9 +27,14 @@ export const threadConversations = (ctx: TurnsContext): Conversations<Session> =
     if (session.archived !== null) ctx.sessions.update(session.id, { archived: null })
   }
 
+  const open = (id: string) => {
+    const session = ctx.sessions.open(id)
+    return session?.owner === owner ? session : undefined
+  }
+
   return {
-    owner: 'thread',
-    open: id => ctx.sessions.open(id),
+    owner,
+    open,
     select: session => ctx.modelSettings.select(session),
     step: (session, turn, signal) => ctx.providerThreads.step(session, turn, signal),
     abandon: thread => ctx.providerThreads.abandon(thread),
@@ -39,13 +44,13 @@ export const threadConversations = (ctx: TurnsContext): Conversations<Session> =
     },
     ready: (prompt, session, signal) => ctx.waterfall(turnReady, prompt, session, signal),
     overflow: (session, turn, error, signal) => ctx.bail(contextOverflow, session, turn, error, signal),
-    started: (session, prompt, info) => ctx.emit(turnStart, session, prompt, threadTurn(info)),
+    started: (session, prompt, info) => ctx.emit(turnStart, session, prompt, turnOf(info)),
     ended(session, result, info) {
       unseen(session)
-      ctx.emit(turnEnd, session, result, threadTurn(info))
+      ctx.emit(turnEnd, session, result, turnOf(info))
     },
     lost: unseen,
-    changed: info => ctx.emit(turnChange, threadTurn(info)),
+    changed: info => ctx.emit(turnChange, turnOf(info)),
     queued: session => ctx.emit(turnPending, session),
     streamed: (event, session) => ctx.emit(llmEvent, event, session),
     toolStarted: (call, session) => ctx.emit(toolStart, call, session),

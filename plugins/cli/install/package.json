@@ -16,6 +16,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-health": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/plugin-files": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"

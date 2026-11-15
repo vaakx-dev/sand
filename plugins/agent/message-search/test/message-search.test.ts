@@ -1,4 +1,4 @@
-import { botCreate, botDelete, bots } from '@sand/bots/contract'
+import { botCreate, botDelete } from '@sand/bots/contract'
 import type { Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Reply } from '@sand/replay/contract'
@@ -52,7 +52,7 @@ test('search finds words said in threads and bots as they arrive, words side by 
   sand.sessions.agent({ parent: older.id, cwd: sand.home, title: 'Helper' }).append('message', message('assistant', 'The release checklist, from a subagent.'))
   const newer = thread(sand, 'Newer plan', [message('assistant', 'Done.'), message('assistant', '## Release **checks** passed on main.')])
   const bot = await sand.ask(botCreate, { name: 'Errands' })
-  sand.app.get(bots)!.conversation(bot.id).append('message', message('assistant', 'Your Release checklist is in the drawer.'))
+  sand.sessions.require(bot.id).append('message', message('assistant', 'Your Release checklist is in the drawer.'))
 
   const found = await search('release check')
   expect(titles(found)).toEqual(['Errands', 'Newer plan', 'Older plan', 'Words apart', 'Word starts'])

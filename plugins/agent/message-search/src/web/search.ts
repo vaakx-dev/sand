@@ -25,7 +25,7 @@ const CACHE_MS = 30_000
 const MOST_CACHED = 50
 const CHATS_PER_PC = 10
 
-const keptChats = (pc: string, home: string, { chats }: Found): PcChat[] => chats.filter(chat => chat.owner === 'thread' || pc === home).map(chat => ({ ...chat, pc }))
+const pcChats = (pc: string, { chats }: Found): PcChat[] => chats.map(chat => ({ ...chat, pc }))
 
 const totalIndexing = (found: Found[]) => {
   const busy = found.flatMap(({ indexing }) => (indexing ? [indexing] : []))
@@ -51,10 +51,9 @@ class MessageSearch {
   }
 
   async #searchPcs(query: string): Promise<Searched> {
-    const home = this.#pcs.here().id
     const online = this.#pcs.list().filter(pc => pc.online && this.#wire.ready(pc.id))
     const answers = (await Promise.all(online.map(pc => this.#onPc(pc.id, query)))).filter(answer => answer !== undefined)
-    const chats = answers.flatMap(({ pc, found }) => keptChats(pc, home, found))
+    const chats = answers.flatMap(({ pc, found }) => pcChats(pc, found))
     const indexing = totalIndexing(answers.map(({ found }) => found))
     return { chats, ...(indexing && { indexing }) }
   }

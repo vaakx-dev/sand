@@ -11,16 +11,10 @@ const roster: Roster = {
   starterOf: thread => ({ t1: 'b1', t2: 'gone' })[thread],
 }
 
-test("a bot owns the threads it started, opens them as its own thread screen when the shell is there", () => {
-  const opened: [string, string | undefined][] = []
-  const owners = threadOwnersOf(roster, { open: (bot, tab) => void opened.push([bot, tab]) }, {
-    open: (route: { id?: string; tab?: string }) => void opened.push([route.id ?? '', route.tab]),
-  } as never)
+test('a bot owns the threads it started while it still exists', () => {
+  const owners = threadOwnersOf(roster)
 
-  const owner = owners.owner('t1')
-  expect(owner).toMatchObject({ id: 'b1', label: 'Atlas', color: 'sky' })
-  owner?.open('t1')
-  expect(opened).toEqual([['t1', undefined]])
+  expect(owners.owner('t1')).toEqual({ id: 'b1', label: 'Atlas', color: 'sky' })
   expect(owners.owner('t2')).toBeUndefined()
   expect(owners.owner('t3')).toBeUndefined()
 })

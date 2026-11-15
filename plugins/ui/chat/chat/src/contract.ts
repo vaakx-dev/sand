@@ -1,5 +1,7 @@
 import type { WaitReason } from '@sand/turns-contract/contract'
+import type { Route } from '@sand/ui-shell/contract'
 import { draftRouteKind, threadRouteKind } from '@sand/web-client/contract'
+import type { Child } from '@vaakx-dev/vrui'
 import { type Dispose, service } from 'drydock'
 
 export const threadRoute = threadRouteKind
@@ -8,9 +10,17 @@ export const draftRoute = draftRouteKind
 
 export const threadScheme = 'thread'
 
+export interface ChatLook {
+  empty?(): Child
+}
+
+export type ThreadPlace = (thread: string) => Route | undefined
+
 export interface ThreadView {
-  render(thread: string): HTMLElement
+  render(thread: string, look?: ChatLook): HTMLElement
+  route(thread: string): Route
   open(thread: string): void
+  place(place: ThreadPlace): Dispose
 }
 
 export const threadView = service<ThreadView>('threadView')
@@ -19,7 +29,6 @@ export interface ThreadOwner {
   id: string
   label: string
   color: string
-  open(thread: string): void
 }
 
 export interface ThreadOwners {

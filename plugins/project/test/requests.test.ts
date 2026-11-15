@@ -17,9 +17,7 @@ let sand: Sand
 beforeAll(async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [] }], { plugins: ['project'] })
   const device = (await loadPcIdentity(sand.home)).id
-  const store = await projectStore(sand.home, error => {
-    throw error
-  })
+  const store = await projectStore(sand.home)
   const registry = createRegistry(store, device, { changed() {}, pull: async () => {}, git: () => undefined })
   const host = createHandlers()
   const root = await loadRoot(sand.home)

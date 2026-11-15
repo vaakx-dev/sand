@@ -1,6 +1,5 @@
 import { botMemorySpace } from '@sand/bot-memory/contract'
 import { botCreate, botDelete, botList } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { memoryChange, memory as memoryService, memoryLimit, memoryNoteWrite, memoryRead, memoryWrite } from '@sand/memory/contract'
 import type { Source } from '@sand/replay/contract'
@@ -25,7 +24,7 @@ const start = (replies: Source['replies']) =>
 
 const talk = async (bot: string, prompt: string) => {
   const before = sand.requests('fake').length
-  await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
+  await sand.turns.send(sand.sessions.require(bot), { prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 300; tries++) {
     const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (sand.requests('fake').length > before && found?.status === 'idle' && found.last?.role === 'assistant') return
@@ -68,7 +67,7 @@ test("a bot's memory and notes are Markdown files in its folder that the user ca
 
 test('when a bot compacts, it rewrites its memory from all it drops and summarizes the work in hand, and its next request carries both', async () => {
   sand = await start([[said('Noted.')], [overflow], [said(`<summary>\n${summary}\n</summary>\n\n<memory>\n${remembered}\n</memory>`)], [said('Booked.')]])
-  const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Calendar' })
   await sand.ask(memoryWrite, { ...mine(bot.id), text: '## The user\n- Lives in Lisbon.' })
 
   await talk(bot.id, 'Remember: no meetings before 10.')
@@ -89,7 +88,7 @@ test('near its context limit, a bot checks its memory in the same cached chat, t
   const fix = { type: 'call', name: 'memory', input: { command: 'str_replace', path: '/memories/memory.md', old_str: 'Porto', new_str: 'Lisbon' } } as const
   const rewritten = said(`<summary>\n${summary}\n</summary>\n\n<memory>\n${remembered}\n</memory>`)
   sand = await start([[said('Noted.')], [said('Noted.'), full], [fix], [said('Fixed.')], [rewritten], [said('Booked.')]])
-  const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Calendar' })
   await memory().write(mine(bot.id), '- Lives in Porto.')
   const rewrote = new Promise<void>(resolve => sand.app.on(memoryChange, (_, text) => void (text === `${remembered}\n` && resolve())))
 
@@ -113,7 +112,7 @@ test('near its context limit, a bot checks its memory in the same cached chat, t
 test('a memory over the size limit is sent back once to be cut to fit', async () => {
   const long = `## Decisions\n${'- Something minor.\n'.repeat(1400)}`
   sand = await start([[said('Noted.')], [overflow], [compacted(long)], [compacted(remembered)], [said('Booked.')]])
-  const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Calendar' })
 
   await talk(bot.id, 'Remember: no meetings before 10.')
   await talk(bot.id, 'Book lunch with Ana on Friday')
@@ -142,7 +141,7 @@ test('when a bot compacts, it writes what it learned about its work as notes, li
   const note = '<note name="deploys">\nHow deploys go and what broke them.\n\n## Rollback\n- A failed migration needs a manual rollback (2026-11-02).\n</note>'
   const lookup = { type: 'call', name: 'memory', input: { command: 'search', query: 'rollback migration' } } as const
   sand = await start([[said('Noted.')], [overflow], [compacted(remembered, note)], [lookup], [said('Rolled back.')]])
-  const bot = await sand.ask(botCreate, { name: 'Ops', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Ops' })
 
   await talk(bot.id, 'The deploy failed on the migration.')
   await talk(bot.id, 'Roll it back')
@@ -162,7 +161,7 @@ test('a note the bot changes without having seen it is shown to it, and it write
   const first = compacted(remembered, '<note name="deploys">\n- Production needs a release tag.\n</note>')
   const second = compacted(remembered, `<note name="deploys">\n${merged}\n</note>`)
   sand = await start([[said('Noted.')], [overflow], [first], [second], [said('Tagged.')]])
-  const bot = await sand.ask(botCreate, { name: 'Ops', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Ops' })
   await memory().writeNote(mine(bot.id), { name: 'deploys', text: 'How deploys go.\n- Staging first.\n' })
 
   await talk(bot.id, 'Production needs a release tag now.')
@@ -178,7 +177,7 @@ test('a note the bot changes without having seen it is shown to it, and it write
 test('a bot writes its memory with the memory tool mid-chat; the prompt it is sending stays the same until it compacts', async () => {
   const save = { type: 'call', name: 'memory', input: { command: 'create', path: '/memories/memory.md', file_text: remembered } } as const
   sand = await start([[save], [said('Saved.')], [said('Booked.')], [overflow], [compacted(remembered)], [said('Done.')]])
-  const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Calendar' })
 
   await talk(bot.id, 'Remember: no meetings before 10.')
   await talk(bot.id, 'Book lunch with Ana on Friday')

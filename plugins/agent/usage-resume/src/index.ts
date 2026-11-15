@@ -38,25 +38,26 @@ export default definePlugin({
       return true
     }
 
-    const stoppedThread = (turn: string) => {
-      const info = ctx.engine.turn('thread', turn)
-      const session = info && ctx.get(sessions)?.open(info.conversation)
-      const latest = session && ctx.get(turns)?.list(session, undefined, 1)[0]
+    const stoppedChat = (turn: string) => {
+      const chats = ctx.get(turns)
+      const info = chats?.get(turn)
+      const session = info && ctx.get(sessions)?.open(info.session)
+      const latest = session && chats?.list(session, undefined, 1)[0]
       return info && session && latest?.id === turn ? { info, session } : undefined
     }
 
     const alternative = ({ turn }: { turn: string }) => {
-      const found = stoppedThread(turn)
+      const found = stoppedChat(turn)
       const models = ctx.get(llm)
       return found && models ? alternativeOf(models, found.info.selection.model) : undefined
     }
 
     const switchTo = async ({ turn, model }: { turn: string; model: string }) => {
-      const found = stoppedThread(turn)
+      const found = stoppedChat(turn)
       const offered = alternative({ turn })
-      if (!found || offered?.model !== model) throw new Error('This thread can no longer switch to that model')
+      if (!found || offered?.model !== model) throw new Error('This chat can no longer switch to that model')
       ctx.get(modelSettings)?.change(found.session, { model })
-      await resume({ owner: 'thread', id: found.session.id }, `switch:${turn}`, switched(offered.account))
+      await resume({ owner: found.session.owner, id: found.session.id }, `switch:${turn}`, switched(offered.account))
     }
 
     ctx.effect(() =>

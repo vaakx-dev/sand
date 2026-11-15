@@ -29,7 +29,7 @@ const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'compute
 
 const topLevel = [...core, ...addons]
 
-const kernelPages = ['Add-ons', 'Core features', 'Plugins']
+const kernelPages = ['Add-ons', 'Core features', 'File viewer', 'Plugins']
 
 const fillingShell = ['threads', 'bots', 'calendar']
 
@@ -44,7 +44,7 @@ const combos: Combo[] = [
   { name: 'a new install', pages: ['Models', 'Projects', 'Devices', 'Notifications', 'Updates'], absent: ['Connections'] },
   { name: 'kernel only', off: topLevel, pages: kernelPages, exact: true },
   alone('threads', ['Models', 'Projects']),
-  alone('bots', ['Models']),
+  { name: 'bots on threads', off: topLevel.filter(id => id !== 'bots' && id !== 'threads'), pages: [...kernelPages, 'Models'] },
   alone('connections', ['Connections']),
   alone('computers', ['Models']),
   alone('phone', ['Devices']),
@@ -52,7 +52,7 @@ const combos: Combo[] = [
   alone('outside'),
   alone('updates', ['Updates']),
   { name: 'threads with coding', off: topLevel.filter(id => id !== 'threads' && id !== 'git') },
-  { name: 'bots without notifications and schedules', off: [...topLevel.filter(id => id !== 'bots'), 'schedules'], absent: ['Notifications', 'Connections'] },
+  { name: 'bots without notifications and schedules', off: [...topLevel.filter(id => id !== 'bots' && id !== 'threads'), 'schedules'], absent: ['Notifications', 'Connections'] },
 ]
 
 const chosen = (off: string[]) => [...topLevel.map(id => `${id} = ${!off.includes(id)}`), ...off.filter(id => !topLevel.includes(id)).map(id => `${id} = false`)]

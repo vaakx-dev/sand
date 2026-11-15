@@ -24,4 +24,13 @@ export const sumUsage = (a: Usage, b: Usage): Usage => {
 
 export const emptyTotals = (): UsageTotals => ({ usage: emptyUsage(), turns: 0, cost: 0, billed: 0, unpriced: 0 })
 
+export const addTotals = <T extends UsageTotals>(into: T, from: UsageTotals) => {
+  into.usage = sumUsage(into.usage, from.usage)
+  into.turns += from.turns
+  into.cost += from.cost
+  into.billed += from.billed
+  into.unpriced += from.unpriced
+  return into
+}
+
 export const byCost = (a: UsageTotals, b: UsageTotals) => b.cost - a.cost || tokensOf(b.usage) - tokensOf(a.usage)

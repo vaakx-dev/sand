@@ -25,8 +25,8 @@ export default definePlugin({
     const screens = sig<BotViews | undefined>(undefined)
     ctx.watch(botViews, found => {
       screens.set(found)
-      return found && ctx.provide(threadOwners, threadOwnersOf(roster, found, ctx.shell))
     })
+    ctx.provide(threadOwners, threadOwnersOf(roster))
     ctx.watch(composer, found => found?.trigger(botTrigger(roster), 5))
     ctx.watch(contextChips, found =>
       found?.register({

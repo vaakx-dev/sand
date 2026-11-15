@@ -18,7 +18,7 @@ export const sendDevice = (ctx: ComposerContext) => {
   return current ? current.device : ctx.threads.device()
 }
 
-export const stoppable = (thread: Thread | undefined) => Boolean(thread?.turn) || (thread?.jobs.size ?? 0) > 0
+export const stoppable = (thread: Thread | undefined) => Boolean(thread?.turn)
 
 export const interrupt = async (ctx: ComposerContext) => {
   const current = ctx.threads.current()
