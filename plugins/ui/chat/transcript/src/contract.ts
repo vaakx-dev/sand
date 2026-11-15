@@ -5,7 +5,7 @@ import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { ContextMenu, IconName } from '@sand/ui-kit/contract'
 import type { ToolProgress } from '@sand/web-client/contract'
-import type { Child, Sig } from '@vaakx-dev/vrui'
+import type { Child, Derive, Sig } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
 export type ToolStatus = 'pending' | 'running' | 'done' | 'failed'
@@ -175,6 +175,7 @@ export interface ToolViews {
   outputText(text: Child, error: boolean): HTMLElement
   truncatedNote(count: number, position: TruncatedAt): HTMLElement
   image: MediaImage
+  steps(tools: Sig<ToolView[]> | Derive<ToolView[]>, thread: string): HTMLElement
 }
 
 export interface ShownChat {

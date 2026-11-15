@@ -20,7 +20,7 @@ export default definePlugin({
     const images = chatImages(ctx)
     ctx.effect(() => registry.entry(notificationTag, notificationRenderer(ctx.kit, registry)))
     ctx.provide(transcript, { tool: registry.tool, entry: registry.entry, ending: registry.ending, notice: registry.notice })
-    ctx.provide(toolViews, createToolViews(ctx.kit, images.image))
+    ctx.provide(toolViews, createToolViews(ctx, registry, images.image))
     const flash = flasher()
     ctx.provide(transcriptParts, createParts(ctx, registry, images, flash))
     ctx.provide(shownChats, createShownChats(flash))
