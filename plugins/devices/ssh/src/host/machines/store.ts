@@ -1,5 +1,5 @@
 import { serial } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -20,15 +20,7 @@ export type Machine = z.infer<typeof machineSchema>
 
 const fileSchema = z.object({ machines: z.array(machineSchema) })
 
-const readMachines = async (file: string) => {
-  const text = await Bun.file(file)
-    .text()
-    .catch(() => undefined)
-  if (text === undefined) return []
-  const parsed = fileSchema.safeParse(JSON.parse(text))
-  if (!parsed.success) throw new Error(`${file} isn't a list of SSH machines: ${parsed.error.message}`)
-  return parsed.data.machines
-}
+const readMachines = async (file: string) => (await readState(file, data => fileSchema.safeParse(data).data?.machines)) ?? []
 
 export const openStore = async (home: string) => {
   const folder = join(home, 'ssh')

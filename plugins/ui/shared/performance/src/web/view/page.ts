@@ -1,10 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, onInterval, sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, scoped, sig } from '@vaakx-dev/vrui'
 import { ranges } from '../../contract'
 import type { Model } from '../model'
 import { offRow, pcCard } from './pc'
-
-const REFRESH_MS = 2_000
 
 const guardSwitch = (kit: Kit, model: Model) =>
   div(
@@ -30,7 +28,7 @@ const pcs = (kit: Kit, model: Model, open: ReturnType<typeof sig<ReadonlySet<str
   const all = model.list()
   const cards = all.flatMap(pc => {
     const heard = model.heard(pc.id)
-    return pc.online && heard ? [pcCard(kit, pc, heard, { silent: model.silent(heard), open, where: place => model.where(place, pc.id) })] : []
+    return pc.online && heard ? [pcCard(kit, pc, heard, { open, where: place => model.where(place, pc.id) })] : []
   })
   const waiting = all.some(pc => pc.online && !model.heard(pc.id))
   const off = all.filter(pc => !pc.online).map(pc => offRow(kit, pc))
@@ -44,8 +42,7 @@ const pcs = (kit: Kit, model: Model, open: ReturnType<typeof sig<ReadonlySet<str
 
 export const performancePage = (kit: Kit, model: Model) => {
   const open = sig<ReadonlySet<string>>(new Set())
-  model.open()
-  onInterval(model.refresh, REFRESH_MS)
+  scoped(model.open())
   return div(
     { class: 'min-h-0 flex-1 overflow-auto overscroll-contain' },
     div(

@@ -1,8 +1,9 @@
-import { botTurns } from '@sand/bot-turns/contract'
 import { botRemove, bots, jobRemove } from '@sand/bots/contract'
+import { sessions } from '@sand/chats/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { schedules } from '@sand/schedules/contract'
 import { server } from '@sand/server/contract'
+import { turns } from '@sand/turns-contract/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { definePlugin } from 'drydock'
 import { fireRoutine } from './fire'
@@ -13,13 +14,13 @@ import { offerRoutineTools } from './tools'
 export default definePlugin({
   name: 'bot-routines',
   description: 'Lets bots keep reminders and routines: each runs on a schedule, and when it is due the bot gets a turn with its instructions in its own conversation',
-  inject: { schedules, botTurns },
+  inject: { schedules, turns, sessions },
   apply(ctx) {
     const routines = createRoutines(ctx.schedules)
     const lastSaid = (bot: string) => ctx.get(bots)?.get(bot)?.last?.text ?? ''
     const tell = (moment: Moment) => void ctx.get(notify)?.send(moment).catch(error => ctx.report(error))
     const job = (id: string) => ctx.get(bots)?.jobs.get(id)
-    ctx.effect(() => ctx.schedules.handle(owner, fireRoutine({ turns: ctx.botTurns, job, lastSaid, tell })))
+    ctx.effect(() => ctx.schedules.handle(owner, fireRoutine({ turns: ctx.turns, chat: bot => ctx.sessions.open(bot), job, lastSaid, tell })))
     ctx.on(botRemove, bot => routines.forget(bot))
     ctx.on(jobRemove, found => routines.forgetJob(found))
     ctx.watch(mcpTools, found => found && offerRoutineTools(found))

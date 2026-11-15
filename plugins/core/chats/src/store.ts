@@ -55,7 +55,9 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
   const tasks = quickTasks(scratch)
   const children = childSummaries(db)
   const ofType = db.query<Row, { type: string }>(`select ${entryColumns} from entries e where e.type = $type order by e.at`)
-  const inSession = db.query<Row, { session: string; type: string }>(`select ${entryColumns} from entries e where e.session = $session and e.type = $type order by e.at`)
+  const inSession = db.query<Row, { session: string; type: string; since: number }>(
+    `select ${entryColumns} from entries e where e.session = $session and e.type = $type and e.at >= $since order by e.at`,
+  )
 
   const sessionHooks: SessionHooks = {
     entry(session, entry) {
@@ -115,6 +117,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
     },
     agent: ({ parent, cwd, project, title, origin }) =>
       create({ cwd, project: project === undefined ? projectOf(cwd) : checked(project), kind: 'agent', parent: parent ?? null, title, origin: origin ?? null }),
+    bot: (id, cwd) => create({ id, cwd, project: null, kind: 'bot' }),
     children,
     update(id, patch) {
       const session = sessions.require(id)
@@ -158,7 +161,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
     list: summaries(db),
     synced: syncedSummaries(db),
     entriesOfType: type => ofType.all({ type }).map(parseRow),
-    entriesIn: (session, type) => inSession.all({ session, type }).map(parseRow),
+    entriesIn: (session, type, since = 0) => inSession.all({ session, type, since }).map(parseRow),
   }
 
   return { sessions, forget }

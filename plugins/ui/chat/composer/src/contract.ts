@@ -1,8 +1,8 @@
-import type { ContextRecord, Entry, Prompt, UserContent } from '@sand/chats/contract'
+import type { ContextRecord, Owner, Prompt, UserContent } from '@sand/chats/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName } from '@sand/ui-kit/contract'
-import type { DraftTarget, SkillPlace } from '@sand/web-client/contract'
+import type { DraftTarget } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
 import { event, service, type Context, type Dispose } from 'drydock'
 
@@ -74,7 +74,7 @@ export interface Command {
 }
 
 export interface ChatRef {
-  owner: 'thread' | 'bot'
+  owner: Owner
   id: string
   pc?: string
 }
@@ -86,22 +86,6 @@ export interface Suggestion {
 
 export type Suggester = (chat: ChatRef) => Suggestion | undefined
 
-export interface Chat {
-  ref: ChatRef
-  name(): string
-  skills: SkillPlace
-  running(): boolean
-  path(): Entry[]
-  send(prompt: Prompt, clientRequestId: string): Promise<void>
-  interrupt(): Promise<void>
-  settings?(): SessionSettings
-  choose?(patch: SettingsPatch): void
-}
-
-export interface DockOptions {
-  placeholder?: () => string
-}
-
 export interface Sending {
   id: string
   conversation: string
@@ -110,14 +94,6 @@ export interface Sending {
   failed: boolean
   caption(): string
   actions: MenuAction[]
-}
-
-export interface ChatDock {
-  view: HTMLElement
-  sending(): Sending[]
-  slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
-  quote(text: string): void
-  focus(): void
 }
 
 export interface Composer {
@@ -144,7 +120,6 @@ export interface Composer {
   command(command: Command): Dispose
   settings(): SessionSettings
   choose(patch: SettingsPatch): void
-  dock(chat: Chat, options?: DockOptions): ChatDock
   sending(): Sending[]
 }
 

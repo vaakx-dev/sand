@@ -6,7 +6,7 @@ import { type DevServer, devServerList, devServerOpen, devServerStop } from './c
 import { offerDevServerTools } from './tools'
 
 const usage = [
-  'sand servers                 list the web servers your threads started on this PC',
+  'sand servers                 list the web servers your threads and bots started on this PC',
   'sand servers open <port>     print links that open one from your devices; each opens once, within 10 minutes',
   'sand servers stop <port>     stop one, with the processes that run it',
 ].join('\n')
@@ -19,7 +19,7 @@ const printServers = (servers: DevServer[], json: boolean) => {
 const stopPort = async (host: Daemon, port: number, json: boolean) => {
   const stopped = await host.request(devServerStop, { port })
   if (json) console.log(JSON.stringify({ port, stopped }))
-  else console.log(stopped ? `stopped the server on port ${port}` : `no server of a thread listens on port ${port}`)
+  else console.log(stopped ? `stopped the server on port ${port}` : `no server of a thread or bot listens on port ${port}`)
   return stopped ? 0 : 1
 }
 
@@ -42,7 +42,7 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.cliCommands.register({
         name: 'servers',
-        summary: 'list, open and stop the web servers your threads started',
+        summary: 'list, open and stop the web servers your threads and bots started',
         usage,
         options: { json: { type: 'boolean', help: 'sand servers: print JSON' } },
         async run(args, values) {

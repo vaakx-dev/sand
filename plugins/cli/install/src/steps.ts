@@ -2,6 +2,7 @@ import { appRoot, setCurrentApp } from '@sand/boot'
 import { allowThroughFirewall, dim, done, notice, putSandOnPath } from '@sand/boot/setup'
 import { isChannel, loadUpdateStore } from '@sand/boot/updates'
 import type { Daemon } from '@sand/host-daemon/contract'
+import { databaseFile, olderThanData, readUpgrade } from '@sand/ledger/contract'
 import { bunBinary, readBuildBun, readStamp } from '@sand/util/release'
 
 export interface Installer {
@@ -15,7 +16,10 @@ const again = 'run the install command again'
 export const installedRoot = () => appRoot(Bun.main)
 
 export const checkInstalled = async (root: string, home: string) => {
-  if (!(await readStamp(root))) throw new Error(`${root} is not an installed sand download; ${again}`)
+  const stamp = await readStamp(root)
+  if (!stamp) throw new Error(`${root} is not an installed sand download; ${again}`)
+  const older = process.env.SAND_ALLOW_OLDER === '1' ? undefined : olderThanData(stamp, readUpgrade(databaseFile(home)))
+  if (older) throw new Error(`Sand was not installed: ${older}. To install it anyway, set SAND_ALLOW_OLDER=1 and run the install command again`)
   const version = await readBuildBun(root)
   if (!version || !(await Bun.file(bunBinary(home, version)).exists())) throw new Error(`sand's Bun is missing for ${root}; ${again}`)
 }

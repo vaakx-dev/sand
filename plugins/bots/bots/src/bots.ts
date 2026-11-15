@@ -1,42 +1,55 @@
-import type { LLM } from '@sand/accounts/contract'
-import type { AppendMeta } from '@sand/chats/contract'
+import type { LLM, UsageRecord } from '@sand/accounts/contract'
+import { type Entry, type Session, sessionEntry, type Sessions } from '@sand/chats/contract'
 import { notify } from '@sand/devices-notify/contract'
 import type { Ledger } from '@sand/ledger/contract'
+import { turnChange, type Turns, type TurnStatus } from '@sand/turns-contract/contract'
 import { billedCost } from '@sand/usage/contract'
 import { dollars, uuid } from '@sand/util'
 import type { Context } from 'drydock'
-import { rmSync } from 'node:fs'
+import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { morningIn, recentMessages, runsIn, usageSince } from './chat'
 import {
   type Bot,
   botChange,
-  botEntry,
   type BotHold,
   botName,
   type BotPatch,
   botRemove,
   type Bots,
+  type BotStatus,
   type BotSummary,
   changeEntry,
   type ChangeEntry,
   freshColor,
   gistEntry,
   jobRemove,
-  type ModelChoice,
-  type Morning,
   morningEntry,
-  type MorningEntry,
   type NewBot,
   runEntry,
 } from './contract'
-import { createEntries } from './entries'
 import { createJobs } from './jobs'
 import { lastLine } from './last'
 import { createRecords } from './records'
 
-const scanned = 20
+export interface BotsOptions {
+  ledger: Ledger
+  root: string
+  llm: LLM
+  sessions: Sessions
+  turns: Turns
+}
 
 const SUMMARY_TYPES = new Set(['message', 'usage', gistEntry, runEntry, morningEntry])
+
+const STATUSES: Record<TurnStatus, BotStatus> = {
+  running: 'working',
+  waiting: 'waiting',
+  completed: 'idle',
+  interrupted: 'idle',
+  failed: 'failed',
+  lost: 'failed',
+}
 
 const initialOf = (name = '') => [...name.trim()][0]?.toUpperCase() ?? ''
 
@@ -61,36 +74,39 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
   return undefined
 }
 
-export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: LLM, quick: (main: ModelChoice) => ModelChoice): Bots => {
+export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessions, turns }: BotsOptions): Bots => {
   const records = createRecords(db)
-  const entries = createEntries(db)
-  const jobs = createJobs(db, entries, {
+  const chatOf = (bot: string) => sessions.require(bot)
+  const append = (bot: string, type: string, data: unknown) => chatOf(known(bot).id).append(type, data)
+  const jobs = createJobs(db, {
     known: bot => known(bot).id,
-    append: (bot, type, data) => append(bot, type, data),
+    runs: bot => runsIn(sessions, chatOf(bot)),
+    append,
     changed: bot => void changed(bot),
     removed: job => ctx.emit(jobRemove, job),
   })
-  const statuses = new Map<string, Pick<BotSummary, 'status' | 'waiting'>>()
   const folderOf = (id: string) => join(root, id)
 
-  const morningOf = (bot: string): Morning | undefined => {
-    const [entry] = entries.newest(bot, morningEntry, 1)
-    return entry && { entry: entry.id, at: entry.at, ...(entry.data as MorningEntry) }
+  const statusOf = (chat: Session): Pick<BotSummary, 'status' | 'waiting'> => {
+    const turn = turns.current(chat) ?? turns.list(chat, undefined, 1)[0]
+    const waiting = turn?.waiting?.kind
+    return { status: turn ? STATUSES[turn.status] : 'idle', ...(waiting && { waiting }) }
   }
 
   const summary = (bot: Bot): BotSummary => {
-    const last = lastLine(entries.newest(bot.id, 'message', scanned), entries.newest(bot.id, gistEntry, 1))
-    const spent = billedCost(entries.usage(bot.id, monthStart()), llm)
+    const chat = chatOf(bot.id)
+    const last = lastLine(recentMessages(chat), chat.latest(gistEntry))
+    const spent = billedCost(usageSince(sessions, chat, monthStart()), llm)
     const hold = holdOf(bot, spent)
-    const morning = morningOf(bot.id)
+    const morning = morningIn(chat)
     return {
       ...bot,
       folder: folderOf(bot.id),
-      ...(statuses.get(bot.id) ?? { status: 'idle' }),
+      ...statusOf(chat),
       spent,
       ...(hold && { hold }),
       ...(last && { last }),
-      jobs: jobs.list(bot.id),
+      jobs: jobs.list(bot.id, runsIn(sessions, chat)),
       ...(morning && { morning }),
     }
   }
@@ -113,15 +129,24 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
     ctx.get(notify)?.send({ kind: 'paused', title: botName(bot), text }).catch(error => ctx.report(error))
   }
 
-  const append = (bot: string, type: string, data: unknown, meta?: AppendMeta) => {
-    const before = type === 'usage' ? summary(known(bot)).hold : undefined
-    const entry = entries.append(known(bot).id, type, data, meta)
-    ctx.emit(botEntry, entry)
-    if (!SUMMARY_TYPES.has(type)) return entry
+  const reachedWith = (bot: BotSummary, usage: Entry) => bot.hold === 'limit' && bot.spent - billedCost([usage.data as UsageRecord], llm) < bot.budget!
+
+  const entered = (bot: string, entry: Entry) => {
     const after = changed(bot)
-    if (type === 'usage' && after.hold === 'limit' && before !== 'limit') reached(after)
-    return entry
+    if (entry.type === 'usage' && reachedWith(after, entry)) reached(after)
   }
+
+  const stopped = async (chat: Session) => {
+    const turn = turns.current(chat)
+    if (turn && turns.interrupt(chat, turn.id)) await turns.wait(turn.id, 'end')
+  }
+
+  ctx.on(sessionEntry, (session, entry) => {
+    if (session.owner === 'bot' && SUMMARY_TYPES.has(entry.type) && records.get(session.id)) entered(session.id, entry)
+  })
+  ctx.on(turnChange, info => {
+    if (records.get(info.session)) changed(info.session)
+  })
 
   return {
     list: () => records.list().map(summary),
@@ -131,7 +156,6 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
     },
     create(spec: NewBot) {
       const now = Date.now()
-      const main = spec.models?.main ?? {}
       if (spec.id && records.get(spec.id)) throw new Error(`Bot ${spec.id} already exists`)
       const bot: Bot = {
         id: uuid(),
@@ -143,11 +167,14 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
         paused: false,
         budget: null,
         ...spec,
-        models: { main, quick: spec.models?.quick.model ? spec.models.quick : quick(main) },
         created: now,
         updated: now,
       }
-      records.save(bot)
+      mkdirSync(folderOf(bot.id), { recursive: true })
+      tx(() => {
+        records.save(bot)
+        sessions.bot(bot.id, folderOf(bot.id))
+      })
       return changed(bot.id)
     },
     update(id, patch, by) {
@@ -157,30 +184,19 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
       if (keys.length) append(id, changeEntry, { by, before: pick(bot, keys), after: pick(patch, keys) } satisfies ChangeEntry)
       return changed(id)
     },
-    remove(id) {
-      const removed = tx(() => {
-        entries.remove(id)
+    async remove(id) {
+      if (!records.get(id)) return false
+      const chat = chatOf(id)
+      await stopped(chat)
+      await sessions.remove(chat.id)
+      tx(() => {
         jobs.forget(id)
-        return records.remove(id)
+        records.remove(id)
       })
-      if (!removed) return false
-      statuses.delete(id)
-      rmSync(join(root, id), { recursive: true, force: true })
+      rmSync(folderOf(id), { recursive: true, force: true })
       ctx.emit(botRemove, id)
       return true
     },
-    status(id, status, waiting) {
-      const current = statuses.get(id)
-      if (!records.get(id) || ((current?.status ?? 'idle') === status && current?.waiting === waiting)) return
-      statuses.set(id, { status, ...(waiting && { waiting }) })
-      changed(id)
-    },
-    conversation: id => ({
-      append: (type, data, meta) => append(id, type, data, meta),
-      entries: () => entries.entries(known(id).id),
-      page: range => entries.page(known(id).id, range),
-      entry: entry => entries.entry(known(id).id, entry),
-    }),
     folder: folderOf,
     jobs: jobs.service,
   }

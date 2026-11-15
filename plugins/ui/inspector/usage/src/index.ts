@@ -11,7 +11,7 @@ import { usageCard } from './card'
 
 export default definePlugin({
   name: 'inspector-usage',
-  description: "The inspector's usage row: what a thread and its subagents cost, per model",
+  description: "The inspector's usage row: what a chat and its subagents cost, per model",
   inject: { inspector, kit, wire },
   apply(ctx) {
     const usageOf = wireValues(ctx, ctx.wire, {
@@ -26,7 +26,7 @@ export default definePlugin({
         id: 'usage',
         group: 'usage',
         order: 80,
-        shows: subject => subject.owner === 'thread' && (usageOf(subject)?.total.turns ?? 0) > 0,
+        shows: subject => (usageOf(subject)?.total.turns ?? 0) > 0,
         render: subject => {
           const open = sig(false)
           return dynamicChild(derive(() => usageOf(subject())), usage => (usage ? usageCard(ctx.kit, usage, open) : null))

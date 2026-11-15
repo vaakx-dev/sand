@@ -1,4 +1,3 @@
-import { botCreate, bots } from '@sand/bots/contract'
 import type { Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, expect, test } from 'bun:test'
@@ -12,7 +11,7 @@ afterEach(async () => {
 })
 
 const start = async () => {
-  running = await startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies: [] }], { plugins: ['bots/bots', 'ui/chat/find'] })
+  running = await startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies: [] }], { plugins: ['ui/chat/find'] })
   return running
 }
 
@@ -43,20 +42,4 @@ test("a thread's older history gives where the words are on its current branch, 
   ])
   expect((await find()).map(found => found.entry)).toEqual([asked.id, thought.id, followed.id, loaded.id])
   expect((await find(dropped.id))).toEqual([])
-})
-
-test("a bot's older history gives where the words are, by the order they were said", async () => {
-  const sand = await start()
-  const bot = await sand.ask(botCreate, { name: 'Errands' })
-  const talk = sand.app.get(bots)!.conversation(bot.id)
-  const first = talk.append('message', said('Water the basil and the lemon tree.'))
-  talk.append('message', answered({ type: 'text', text: 'Done.' }))
-  const third = talk.append('message', answered({ type: 'text', text: 'The basil looked dry; basil likes mornings.' }))
-  const newest = talk.append('message', said('Thanks, more basil next week.'))
-
-  expect(await sand.ask(chatFind, { owner: 'bot', chat: bot.id, query: 'basil', before: newest.id })).toEqual([
-    { entry: first.id, block: 0, count: 1 },
-    { entry: third.id, block: 0, count: 2 },
-  ])
-  expect(await sand.ask(chatFind, { owner: 'bot', chat: 'gone', query: 'basil' })).toEqual([])
 })

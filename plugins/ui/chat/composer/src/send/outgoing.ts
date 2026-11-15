@@ -45,8 +45,6 @@ export const sendsIn = (database: KeyVal<Send[]>, scope: string): SendsSaved => 
   save: sends => (sends.length ? database.put(scope, sends) : database.remove(scope)).catch(() => {}),
 })
 
-export const unsaved: SendsSaved = { load: async () => [], save: async () => {} }
-
 export const createOutgoing = ({ target, shelves, saved, returned, edit }: OutgoingParts) => {
   const sends = sig<Send[]>([])
   const chains = new Map<string, Promise<void>>()

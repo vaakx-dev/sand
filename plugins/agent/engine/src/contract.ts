@@ -1,9 +1,9 @@
 import type { Delivery, LLMEvent, LLMRequest, NativeRef, Usage } from '@sand/accounts/contract'
-import type { AppendMeta, Entry, Message, Prompt, StopReason, ToolCallBlock, ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
+import type { AppendMeta, Entry, Message, Owner, Prompt, StopReason, ToolCallBlock, ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
 import { type Dispose, event, service } from 'drydock'
 
-export type Owner = 'thread' | 'bot'
+export type { Owner }
 
 export interface Conversation {
   id: string
@@ -125,7 +125,6 @@ export interface Conversations<C extends Conversation> {
   owner: Owner
   open(id: string): C | undefined
   select(conversation: C): Selection | undefined
-  held?(conversation: C): boolean
   step(conversation: C, turn: TurnInfo, signal: AbortSignal): Promise<Step>
   abandon?(thread: string): void
   prompt?(content: UserContent[], conversation: C): UserContent[] | Promise<UserContent[]>

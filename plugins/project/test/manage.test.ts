@@ -15,9 +15,7 @@ const runtime: Caller = { device: 'runtime', kind: 'runtime' }
 afterAll(() => rmSync(home, { recursive: true, force: true }))
 
 const start = async () => {
-  const store = await projectStore(home, error => {
-    throw error
-  })
+  const store = await projectStore(home)
   const registry = createRegistry(store, 'desk', { changed() {}, pull: async () => {}, git: () => undefined })
   const root = await projectRoot(home)
   const hub = createHandlers()

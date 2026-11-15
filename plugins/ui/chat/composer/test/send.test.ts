@@ -1,10 +1,11 @@
 import type { Prompt } from '@sand/chats/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { expect, test } from 'bun:test'
-import type { Chat } from '../src/contract'
 import { createModel, type Model } from '../src/model'
-import { unsaved } from '../src/send/outgoing'
-import { chatTarget, type Target } from '../src/target'
+import type { SendsSaved } from '../src/send/outgoing'
+import type { Outbound, Target } from '../src/target'
+
+const unsaved: SendsSaved = { load: async () => [], save: async () => {} }
 
 const delivered = (model: Model) =>
   new Promise<void>(resolve => {
@@ -12,43 +13,53 @@ const delivered = (model: Model) =>
     check()
   })
 
+const targetIn = (conversation: () => string, deliver: (to: { conversation: string }, message: Outbound) => Promise<void>): Target => ({
+  place: { device: () => undefined, thread: () => undefined },
+  running: () => false,
+  stoppable: () => false,
+  delivery: () => 'now',
+  pcName: () => 'sand',
+  name: () => 'helper',
+  conversation,
+  chat: () => ({ owner: 'thread', id: conversation() }),
+  path: () => [],
+  ready: () => true,
+  destination: () => ({ conversation: conversation() }),
+  shownIn: to => to.conversation,
+  deliver,
+  interrupt: async () => {},
+})
+
 const sandLosingFirstAnswer = () => {
   const delivered = new Map<string, Prompt>()
   let answers = 0
-  const chat: Chat = {
-    ref: { owner: 'bot', id: 'helper' },
-    name: () => 'helper',
-    skills: { bot: 'helper' },
-    running: () => false,
-    path: () => [],
-    async send(prompt, clientRequestId) {
-      if (!delivered.has(clientRequestId)) delivered.set(clientRequestId, prompt)
-      if (answers++ === 0) throw new Error('bot.send got no answer within 30s')
+  const target = targetIn(
+    () => 'helper',
+    async (_to, { id, text }) => {
+      if (!delivered.has(id)) delivered.set(id, text)
+      if (answers++ === 0) throw new Error('thread.send got no answer within 30s')
     },
-    interrupt: async () => {},
-  }
-  return { chat, delivered }
+  )
+  return { target, delivered }
 }
 
 const twoThreads = () => {
   const open = sig('first')
   const arrived: { thread: string; text: string }[] = []
   let failures = 1
-  const target: Target = {
-    ...chatTarget(sandLosingFirstAnswer().chat),
-    conversation: () => open.get(),
-    destination: () => ({ conversation: open.get() }),
-    async deliver(to, { text }) {
+  const target = targetIn(
+    () => open.get(),
+    async (to, { text }) => {
       if (failures-- > 0) throw new Error('the PC went away')
       arrived.push({ thread: to.conversation, text })
     },
-  }
+  )
   return { open, arrived, target }
 }
 
 test('a message sent again after its answer was lost reaches sand once', async () => {
-  const { chat, delivered: sent } = sandLosingFirstAnswer()
-  const model = createModel(chatTarget(chat), [], sig(undefined), unsaved)
+  const { target, delivered: sent } = sandLosingFirstAnswer()
+  const model = createModel(target, [], sig(undefined), unsaved)
   model.text.set('ship it')
 
   model.send()

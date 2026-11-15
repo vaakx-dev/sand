@@ -40,14 +40,23 @@ export interface PluginSwitches {
   needs(missing: string[]): string[] | undefined
   off(): PluginOff[]
   folder(scope: ScopeView): string | undefined
+  addon(scope: ScopeView): string | undefined
+  fault(addon: string, error: string): Promise<void>
 }
 
 export interface PluginState {
   name: string
   folder?: string
+  addon?: string
   status: Status | 'off'
   problem?: string
   needs?: string[]
+}
+
+export interface PluginProblem {
+  id: string
+  error: string
+  addon?: string
 }
 
 export type FeatureKind = 'feature' | 'capability'
@@ -93,9 +102,10 @@ const problemOf = (scope: ScopeView) => {
 
 const scopeState = (scope: ScopeView, switches: PluginSwitches | undefined): PluginState => {
   const folder = switches?.folder(scope)
+  const addon = switches?.addon(scope)
   const needs = scope.status === 'pending' ? switches?.needs(scope.missing()) : undefined
-  if (needs) return { name: scope.name, folder, status: 'off', needs }
-  return { name: scope.name, folder, status: scope.status, problem: problemOf(scope) }
+  if (needs) return { name: scope.name, folder, addon, status: 'off', needs }
+  return { name: scope.name, folder, addon, status: scope.status, problem: problemOf(scope) }
 }
 
 const turnedOffState = ({ id, dir }: PluginOff): PluginState => ({ name: id, folder: dir, status: 'off', needs: [] })
@@ -107,5 +117,7 @@ export const pluginStates = (ctx: ContextCore): PluginState[] => {
   return [...loaded, ...turnedOff]
 }
 
-export const pluginProblems = (ctx: ContextCore) =>
-  pluginStates(ctx).flatMap(({ name, problem }) => (problem ? [{ id: name, error: problem }] : []))
+export const pluginProblems = (ctx: ContextCore): PluginProblem[] =>
+  pluginStates(ctx).flatMap(({ name, problem, addon }) => (problem ? [{ id: name, error: problem, ...(addon && { addon }) }] : []))
+
+export const coreProblems = (ctx: ContextCore) => pluginProblems(ctx).filter(problem => !problem.addon)

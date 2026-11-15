@@ -1,17 +1,14 @@
 import { isRecord, serial } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 
 export const seenFile = (home: string) => join(home, 'devices', 'seen.json')
 
-const read = async (file: string) => {
-  const saved: unknown = await Bun.file(file)
-    .json()
-    .catch(() => undefined)
-  if (!isRecord(saved)) return new Map<string, number>()
-  return new Map(Object.entries(saved).filter((entry): entry is [string, number] => typeof entry[1] === 'number'))
-}
+const timesOf = (saved: unknown) =>
+  new Map(isRecord(saved) ? Object.entries(saved).filter((entry): entry is [string, number] => typeof entry[1] === 'number') : [])
+
+const read = async (file: string) => (await readState(file, timesOf)) ?? new Map<string, number>()
 
 export const loadSeen = async (home: string) => {
   const file = seenFile(home)
