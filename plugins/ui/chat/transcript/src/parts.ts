@@ -15,6 +15,7 @@ import { itemRows } from './rows'
 import type { RowContext } from './rows/row'
 import { userMessage } from './rows/user'
 import { errorBody, outputText, truncatedNote } from './tools/notes'
+import { toolSteps } from './tools/steps'
 
 export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, images: Images, flash: Flash): TranscriptParts => {
   const custom = (type: string) => Boolean(registry.entryRenderer(type))
@@ -39,11 +40,12 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
   }
 }
 
-export const createToolViews = (kit: Kit, image: MediaImage): ToolViews => ({
+export const createToolViews = (kit: Kit, registry: RendererRegistry, image: MediaImage): ToolViews => ({
   field,
   resultText,
   errorBody,
   outputText,
   truncatedNote: (count, position) => truncatedNote(kit, count, position),
   image,
+  steps: toolSteps(kit, registry),
 })

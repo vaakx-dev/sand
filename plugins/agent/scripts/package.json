@@ -1,0 +1,49 @@
+{
+  "name": "@sand/scripts",
+  "version": "0.0.0",
+  "description": "The script tool: one program makes many tool calls",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "scripts",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Scripts",
+    "summary": "Many tool calls in one program",
+    "features": {
+      "scripts": {
+        "label": "Scripts",
+        "summary": "The agent makes many tool calls in one short program, using fewer tokens",
+        "needs": [
+          "threads"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@jitl/quickjs-singlefile-mjs-release-sync": "^0.32.0",
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "quickjs-emscripten-core": "^0.32.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}
