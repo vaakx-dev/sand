@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { answerEntry, type AskAnswer, logins, loginsState, secretEntry, secretSave } from '../src/contract'
-import { answer, call, leaksIn, said, start, threadEntries } from './fixture'
+import { answer, call, leaksIn, said, start, chatEntries } from './fixture'
 
 let home: string
 
@@ -27,7 +27,7 @@ test('a one-time secret works for one use and is never saved; one the user choos
   let stopped = false
   try {
     const chat = sand.chat('fake/m')
-    const entries = threadEntries(sand, chat.id)
+    const entries = chatEntries(sand, chat.id)
     const ran = sand.turns.run(chat, 'Sign in and publish')
     await answer(sand, chat.id, entries, secretEntry, secretSave, id => ({ session: chat.id, id, save: false, value: values.code }))
     await answer(sand, chat.id, entries, secretEntry, secretSave, id => ({ session: chat.id, id, save: true, value: values.token }))

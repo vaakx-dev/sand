@@ -1,16 +1,18 @@
 import type { Feature, Features } from '@sand/config/contract'
 import type { Runtimes } from '@sand/host-runtimes/contract'
 import { errorMessage, serial } from '@sand/util'
-import type { AddonListing, AddonStamp } from '@sand/util/release'
+import type { AddonFault, AddonListing, AddonStamp } from '@sand/util/release'
 import type { Addon, AddonSource, FeatureChoice } from '../contract'
-import { catalogCache, type Shelf } from './catalog'
-import { installedStamps, installFolder, removeAddonFolder } from './folder'
+import { catalogCache, type Found, type Shelf } from './catalog'
+import { faultsFor, installedStamps, installFolder, removeAddonFolder, removeLeftovers } from './folder'
+import { stageMatch } from './match'
 import { pictureCache } from './picture'
 import { parseSource, sourceOf, type Source, type sourceStore } from './sources'
 
 interface AddonsOptions {
   root: string
   version: string
+  build(): Promise<string>
   features: Features
   runtimes: Pick<Runtimes, 'swap'>
   main: Source
@@ -26,6 +28,7 @@ interface Offer {
 interface Known {
   features: Feature[]
   stamps: Map<string, AddonStamp>
+  faults: Map<string, AddonFault>
   shelves: Shelf[]
   offers: Map<string, Offer>
 }
@@ -54,7 +57,7 @@ const offersIn = (shelves: Shelf[]) => {
 
 const sourceState = ({ source: { id, label, removable }, error }: Shelf): AddonSource => ({ id, label, removable, ...(error && { error }) })
 
-const createAddons = ({ root, version, features, runtimes, main, saved }: AddonsOptions) => {
+const createAddons = ({ root, version, build, features, runtimes, main, saved }: AddonsOptions) => {
   const queue = serial()
   const cache = catalogCache()
   const pictures = pictureCache()
@@ -63,8 +66,8 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
   const sources = async () => [main, ...(await saved.read()).map(sourceOf)]
 
   const known = async (freshness: Freshness): Promise<Known> => {
-    const shelves = await Promise.all((await sources()).map(source => cache[freshness](source)))
-    return { features: features.list(), stamps: await installedStamps(root), shelves, offers: offersIn(shelves) }
+    const [shelves, stamps, running] = await Promise.all([Promise.all((await sources()).map(source => cache[freshness](source))), installedStamps(root), build()])
+    return { features: features.list(), stamps, faults: await faultsFor(root, [...stamps.keys()], running), shelves, offers: offersIn(shelves) }
   }
 
   const offerFrom = ({ shelves, offers }: Known, id: string, from: string) => {
@@ -91,7 +94,8 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
     }
     if (stamp) {
       const newer = listing && listing.hash !== stamp.hash && compatible(listing)
-      return { ...about, status: 'installed', version: stamp.version, ...(newer && { update: listing.version }) }
+      const fault = state.faults.get(id)?.error
+      return { ...about, status: 'installed', version: stamp.version, ...(newer && { update: listing.version }), ...(fault && { fault }) }
     }
     if (feature) return { ...about, status: 'built-in' }
     const fits = !listing || compatible(listing)
@@ -233,7 +237,19 @@ const createAddons = ({ root, version, features, runtimes, main, saved }: Addons
 
   const ready = async () => (await choice()).addons.filter(addon => addon.status === 'available' && !addon.needsSand)
 
-  return { choice, ready, picture, install, update, remove, set, addSource, removeSource }
+  const stage = (hashes: Record<string, string>, shelf: () => Promise<Found>) => queue(() => stageMatch({ root, source: main.id, hashes, shelf }))
+
+  const match = (hashes: Record<string, string>) =>
+    queue(async () => {
+      await removeLeftovers(root)
+      const staged = await stageMatch({ root, source: main.id, hashes, shelf: main.shelf })
+      const placed = await staged.place()
+      if (!placed.length) return
+      console.log(`brought the add-ons ${listed(placed)} up to this sand build`)
+      await reload({})
+    })
+
+  return { choice, ready, picture, install, update, remove, set, addSource, removeSource, stage, match }
 }
 
 export { createAddons }

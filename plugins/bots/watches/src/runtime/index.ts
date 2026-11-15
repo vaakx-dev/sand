@@ -14,7 +14,7 @@ export default definePlugin({
     'Lets a bot listen to things it follows, like a page, a folder, a webhook or a GitHub repo: a cheap watcher runs, and the bot gets a turn in its own conversation only when something changed, to learn and tell the user what matters',
   inject,
   apply(ctx) {
-    ctx.effect(() => ctx.watches.handle(owner, wakeBot(ctx.botTurns, id => ctx.bots.jobs.get(id))))
+    ctx.effect(() => ctx.watches.handle(owner, wakeBot(ctx.turns, bot => ctx.sessions.open(bot), id => ctx.bots.jobs.get(id))))
     ctx.on(botRemove, bot => {
       for (const watch of ctx.watches.list(owner, bot)) ctx.watches.remove(watch.id)
     })

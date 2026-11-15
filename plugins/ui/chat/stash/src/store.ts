@@ -1,11 +1,10 @@
 import { serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 import { entry, type Entry } from './contract'
 
 export const createStore = async (file: string, changed: (entries: Entry[]) => void) => {
-  const found = Bun.file(file)
-  let entries = z.array(entry).parse((await found.exists()) ? await found.json() : [])
+  let entries = (await readState(file, data => z.array(entry).safeParse(data).data)) ?? []
   const queue = serial()
   const save = async (next: Entry[]) => {
     entries = next

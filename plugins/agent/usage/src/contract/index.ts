@@ -44,7 +44,7 @@ export interface ModelUsage extends UsageTotals {
   account: string
 }
 
-export interface PeriodUsage extends UsageTotals {
+export interface PeriodUsage {
   key: string
   accounts: Record<string, UsageTotals>
   models: Record<string, UsageTotals>

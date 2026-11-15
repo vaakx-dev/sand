@@ -1,5 +1,5 @@
 import type { BotHold, BotSummary } from '@sand/bots/contract'
-import type { ChatDock } from '@sand/composer/contract'
+import type { Composer } from '@sand/composer/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { dollars } from '@sand/util'
 import { derive, effect, untrack } from '@vaakx-dev/vrui'
@@ -35,10 +35,10 @@ const holdBanner = ({ banner, secondaryAction }: Kit, parts: HoldParts, { text, 
     actions: [secondaryAction({ size: 'sm', onClick: () => run(parts) }, action)],
   })
 
-export const holdSlot = (kit: Kit, parts: HoldParts, dock: ChatDock) => {
+export const holdSlot = (kit: Kit, parts: HoldParts, composer: Composer) => {
   const hold = derive(() => parts.bot()?.hold)
   return effect(() => {
     const shown = hold.get()
-    return shown ? untrack(() => dock.slot('banner', () => holdBanner(kit, parts, holds[shown]))) : undefined
+    return shown ? untrack(() => composer.slot('banner', () => holdBanner(kit, parts, holds[shown]))) : undefined
   })
 }

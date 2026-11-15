@@ -1,6 +1,6 @@
-import { byCost, emptyTotals, type ModelUsage, type PeriodUsage, type UnpricedModel } from '@sand/usage/contract'
+import { addTotals, byCost, emptyTotals, type ModelUsage, type PeriodUsage, type UnpricedModel } from '@sand/usage/contract'
 import { grouped } from '@sand/util'
-import { addRecord, addTotals } from '../totals'
+import { addRecord } from '../totals'
 import type { PcSummary } from '../types'
 
 export const mergeModels = (parts: PcSummary[]) => {
@@ -18,8 +18,7 @@ export const mergePeriods = (parts: PcSummary[]) => {
   const byKey = new Map<string, PeriodUsage>()
   for (const { summary } of parts)
     for (const period of summary.periods) {
-      const into = grouped(byKey, period.key, (): PeriodUsage => ({ ...emptyTotals(), key: period.key, accounts: {}, models: {} }))
-      addTotals(into, period)
+      const into = grouped(byKey, period.key, (): PeriodUsage => ({ key: period.key, accounts: {}, models: {} }))
       for (const [key, totals] of Object.entries(period.accounts)) addRecord(into.accounts, key, totals)
       for (const [name, totals] of Object.entries(period.models)) addRecord(into.models, name, totals)
     }

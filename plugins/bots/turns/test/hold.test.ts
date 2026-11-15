@@ -1,6 +1,5 @@
-import type { UsageRecord } from '@sand/accounts/contract'
-import { botOpen, botSend } from '@sand/bot-turns/contract'
-import { botCreate, botList, bots, type BotSummary, botUpdate } from '@sand/bots/contract'
+import { llmEvent, type UsageRecord } from '@sand/accounts/contract'
+import { botCreate, botList, type BotSummary, botUpdate } from '@sand/bots/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Reply } from '@sand/replay/contract'
@@ -32,38 +31,49 @@ const until = async (bot: string, done: (found: BotSummary) => boolean) => {
 
 const answered = (text: string) => (found: BotSummary) => found.status === 'idle' && found.last?.text === text
 
+const chatOf = (bot: string) => sand.sessions.require(bot)
+
+const send = (bot: string, prompt: string) => sand.turns.send(chatOf(bot), { prompt, clientRequestId: prompt })
+
+const streaming = () =>
+  new Promise<void>(resolve => {
+    const stop = sand.app.on(llmEvent, event => {
+      if (event.type !== 'text') return
+      stop()
+      resolve()
+    })
+  })
+
 const spend = (bot: string, input: number, billing: UsageRecord['billing']) =>
-  sand.app
-    .get(bots)!
-    .conversation(bot)
-    .append('usage', { id: Bun.randomUUIDv7(), model: 'fake/m', source: 'fake', billing, usage: { input, output: 0, cacheRead: 0, cacheWrite: 0 } } satisfies UsageRecord)
+  chatOf(bot).append('usage', { id: Bun.randomUUIDv7(), model: 'fake/m', source: 'fake', billing, usage: { input, output: 0, cacheRead: 0, cacheWrite: 0 } } satisfies UsageRecord)
 
 test('pausing a bot stops its turn, and what is sent to it meanwhile waits until it is resumed', async () => {
   await start([[said('Half'), { type: 'hold' }], [said('Done.')]])
-  const bot = await sand.ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
-  await sand.ask(botSend, { bot: bot.id, prompt: 'Think', clientRequestId: 'one' })
-  for (let tries = 0; tries < 500 && !(await sand.ask(botOpen, { bot: bot.id })).live.length; tries++) await Bun.sleep(10)
+  const bot = await sand.ask(botCreate, { name: 'Errands' })
+  const streamed = streaming()
+  await send(bot.id, 'Think')
+  await streamed
 
   expect(await sand.ask(botUpdate, { bot: bot.id, patch: { paused: true } })).toMatchObject({ paused: true, hold: 'paused' })
   await until(bot.id, found => found.status === 'idle')
-  expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Then this', clientRequestId: 'two' })).toEqual({ bot: bot.id, status: 'queued' })
+  expect(await send(bot.id, 'Then this')).toMatchObject({ disposition: 'queued' })
   await Bun.sleep(sweep)
   expect(sand.requests('fake')).toHaveLength(1)
-  expect((await sand.ask(botOpen, { bot: bot.id })).pending).toEqual([expect.objectContaining({ kind: 'queue', prompt: 'Then this' })])
+  expect(sand.turns.pending(chatOf(bot.id))).toEqual([expect.objectContaining({ kind: 'queue', prompt: 'Then this' })])
 
   await sand.ask(botUpdate, { bot: bot.id, patch: { paused: false } })
   await until(bot.id, answered('Done.'))
   expect(sand.requests('fake')).toHaveLength(2)
-  expect((await sand.ask(botOpen, { bot: bot.id })).pending).toEqual([])
+  expect(sand.turns.pending(chatOf(bot.id))).toEqual([])
 })
 
 test('a bot that spends its monthly limit in API money holds new work and says so once, and a higher limit lets it go on; plan usage costs nothing', async () => {
   await start([[said('Planned.'), { type: 'usage', input: 3_000_000, output: 0 }], [said('Booked.')]])
   const told: Moment[] = []
   sand.app.provide(notify, { send: async moment => void told.push(moment) })
-  const bot = await sand.ask(botCreate, { name: 'Travel', budget: 2, models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Travel', budget: 2 })
 
-  await sand.ask(botSend, { bot: bot.id, prompt: 'Plan a trip', clientRequestId: 'one' })
+  await send(bot.id, 'Plan a trip')
   const planned = await until(bot.id, answered('Planned.'))
   expect(planned.spent).toBe(0)
   expect(planned.hold).toBeUndefined()
@@ -74,7 +84,7 @@ test('a bot that spends its monthly limit in API money holds new work and says s
   expect((await sand.ask(botList, {})).find(listed => listed.id === bot.id)).toMatchObject({ spent: 3, hold: 'limit' })
   expect(told).toEqual([expect.objectContaining({ kind: 'paused', title: 'Travel' })])
 
-  expect(await sand.ask(botSend, { bot: bot.id, prompt: 'Book it', clientRequestId: 'two' })).toEqual({ bot: bot.id, status: 'queued' })
+  expect(await send(bot.id, 'Book it')).toMatchObject({ disposition: 'queued' })
   await Bun.sleep(sweep)
   expect(sand.requests('fake')).toHaveLength(1)
 

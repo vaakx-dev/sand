@@ -37,9 +37,7 @@ const pc = async (chosen: string[] = ['git = true']) => {
   const sand = await startSand([model], { config: `[features]\n${[...othersOff, ...chosen].join('\n')}` })
   sands.push(sand)
   const device = (await loadPcIdentity(sand.home)).id
-  const store = await projectStore(sand.home, error => {
-    throw error
-  })
+  const store = await projectStore(sand.home)
   const runner = () => sand.app.get(gitRunner)
   const registry = createRegistry(store, device, { changed() {}, pull: async () => {}, git: runner })
   const host = createHandlers()

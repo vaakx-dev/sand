@@ -24,12 +24,17 @@ const releaseAssets = async ([folder]: string[]) => {
   const root = appRoot(Bun.main)
   const [app, { core, addons }, version] = await Promise.all([hashApp(root), splitWorkspace(root), appVersion(root)])
   const stubs = await Promise.all(addons.flatMap(addon => addon.packages).map(contractStub))
-  const parts = { files: coreFiles(app.files, addons, stubs), latest: app.latest, packages: [...core, ...stubs.map(stub => stub.workspace)] }
+  const packed = await Promise.all(addons.map(addon => packAddon(root, addon, app.files, version)))
+  const parts = {
+    files: coreFiles(app.files, addons, stubs),
+    latest: app.latest,
+    packages: [...core, ...stubs.map(stub => stub.workspace)],
+    addons: Object.fromEntries(packed.map(({ listing }) => [listing.id, listing.hash])),
+  }
   const { stamp, bytes } = await packBundle(root, parts, await buildHistory(root))
   await Bun.write(join(out, bundleAsset), bytes)
   await Bun.write(join(out, stampAsset), JSON.stringify(stamp))
   console.log(`build ${stamp.id} (Bun ${stamp.bun}): ${join(out, bundleAsset)} (${bytes.length} bytes), ${join(out, stampAsset)}`)
-  const packed = await Promise.all(addons.map(addon => packAddon(root, addon, app.files, version)))
   for (const { listing, bytes: addonBytes, pictures } of packed) {
     await Bun.write(join(out, listing.file), addonBytes)
     for (const picture of pictures) await Bun.write(join(out, picture.file), picture.bytes)

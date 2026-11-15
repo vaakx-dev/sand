@@ -1,24 +1,14 @@
-import { errorMessage, serial } from '@sand/util'
+import { serial } from '@sand/util'
 import type { Project } from '../contract'
 import { mergeProjects } from '../projects'
-import { projectsPath, readProjectsFile, writeProjectsFile } from './file'
+import { readProjectsFile, writeProjectsFile } from './file'
 
-const loadFailed = (home: string, error: unknown) =>
-  new Error(
-    `Could not load projects from ${projectsPath(home)}: ${errorMessage(error)}. The file is left as it is and project changes are not saved until sand restarts.`,
-    { cause: error },
-  )
-
-export const projectStore = async (home: string, report: (error: unknown) => void) => {
-  const loaded = await readProjectsFile(home).catch(error => {
-    report(loadFailed(home, error))
-    return undefined
-  })
-  let projects = mergeProjects(loaded ?? [], [])
+export const projectStore = async (home: string) => {
+  let projects = mergeProjects(await readProjectsFile(home), [])
   const queue = serial()
   const save = (next: Project[]) => {
     projects = next
-    return loaded ? queue(() => writeProjectsFile(home, projects)) : Promise.resolve()
+    return queue(() => writeProjectsFile(home, projects))
   }
   return {
     all: () => projects,

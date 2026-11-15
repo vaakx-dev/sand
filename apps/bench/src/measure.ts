@@ -14,10 +14,12 @@ export interface Cost {
   pushBytes: number
   calls: Record<string, number>
   blockedMs: number
+  codeBytes: number
   timeline: string[]
 }
 
 interface Resource {
+  name: string
   start: number
   end: number
   transfer: number
@@ -31,6 +33,8 @@ interface Seen {
   up: number
   down: number
 }
+
+const CODE = /\.(js|css)$/
 
 const timeout = 90_000
 const settleMs = 1500
@@ -84,7 +88,8 @@ export const costOf = async (page: Page, traffic: Traffic, since: Seen, start: n
     pushBytes: (events as WireEvent[]).reduce((sum, event) => sum + event.bytes, 0),
     calls: called,
     blockedMs: blocked,
-    timeline: [...(calls as WireCall[]).map(call => ({ start: call.start, end: call.end, text: `${call.type} ${call.received} B` })), ...(resources as (Resource & { name: string })[]).map(resource => ({ start: resource.start, end: resource.end, text: `${new URL(resource.name).pathname} ${resource.transfer}/${resource.decoded} B` }))]
+    codeBytes: (resources as Resource[]).filter(resource => CODE.test(new URL(resource.name).pathname)).reduce((sum, resource) => sum + resource.decoded, 0),
+    timeline: [...(calls as WireCall[]).map(call => ({ start: call.start, end: call.end, text: `${call.type} ${call.received} B` })), ...(resources as Resource[]).map(resource => ({ start: resource.start, end: resource.end, text: `${new URL(resource.name).pathname} ${resource.transfer}/${resource.decoded} B` }))]
       .toSorted((a, b) => a.start - b.start)
       .map(({ start: from, end: to, text }) => `${Math.round(from - start)}-${Math.round(to - start)} ${text}`),
   }

@@ -1,5 +1,5 @@
 import { serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 import { type Theme, type ThemeAction, themeSchema, type ThemeState, trialMs } from '../contract'
 import { safeCss } from '../css'
@@ -12,14 +12,7 @@ const saved = z.object({
 
 const empty: ThemeState = { theme: null, updated: 0 }
 
-const load = async (file: string): Promise<ThemeState> => {
-  const found = Bun.file(file)
-  if (!(await found.exists())) return empty
-  const parsed = saved.safeParse(await found.json().catch(() => undefined))
-  if (parsed.success) return parsed.data
-  console.error(`themes: ${file} is unreadable, so sand starts with its own look`)
-  return empty
-}
+const load = async (file: string): Promise<ThemeState> => (await readState(file, data => saved.safeParse(data).data)) ?? empty
 
 const cleaned = (theme: Theme): Theme => (theme.css === undefined ? theme : { ...theme, css: safeCss(theme.css) })
 

@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import type { ChatKind, Session } from '@sand/chats/contract'
 import type { TurnResult, Turns } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
 import type { WorktreeDeps } from '../deps'
@@ -6,8 +6,10 @@ import { repoAt } from '../repo/local'
 import { threadsIn } from '../sessions/inside'
 import { moveThread } from './move'
 
+const MOVABLE = new Set<ChatKind>(['thread', 'bot'])
+
 const checkMovable = async (deps: WorktreeDeps, session: Session) => {
-  if (session.kind !== 'thread') throw new Error('Only threads move into worktrees.')
+  if (!MOVABLE.has(session.kind)) throw new Error('Only threads and bots move into worktrees.')
   const local = await repoAt(deps.repos, session.cwd)
   const others = threadsIn(deps.sessions, local.root).filter(other => other.id !== session.id && deps.busy(other.id))
   if (others.length) throw new Error(`Another thread is working in ${local.root}, and its uncommitted changes would move too. Start a new thread in a worktree instead.`)
