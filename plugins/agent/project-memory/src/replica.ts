@@ -1,6 +1,6 @@
 import type { Memory } from '@sand/memory/contract'
 import { keyedSerial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -47,10 +47,8 @@ const createReplica = ({ memory, root }: ReplicaOptions) => {
   const versionsPath = (project: string) => join(folder(project), VERSIONS_FILE)
   const refOf = (project: string) => ({ space: projectMemorySpace, id: project })
 
-  const saved = async (project: string): Promise<FileVersions> => {
-    const file = Bun.file(versionsPath(project))
-    return (await file.exists()) ? fileVersions().parse(await file.json()) : {}
-  }
+  const saved = async (project: string): Promise<FileVersions> =>
+    (await readState(versionsPath(project), data => fileVersions().safeParse(data).data)) ?? {}
 
   const save = async (project: string, versions: FileVersions) => {
     await mkdir(folder(project), { recursive: true })

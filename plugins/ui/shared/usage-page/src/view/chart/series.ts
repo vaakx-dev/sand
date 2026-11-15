@@ -1,9 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { emptyTotals, type UsageTotals } from '@sand/usage/contract'
+import { addTotals, emptyTotals, type UsageTotals } from '@sand/usage/contract'
 import { grouped } from '@sand/util'
 import { colorVar } from '@vaakx-dev/vrui'
 import { modelShades } from '../../look'
-import { addTotals } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { periodKeys } from '../../range'
 

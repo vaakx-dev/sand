@@ -23,7 +23,6 @@ const settingPhrases = ({ before, after }: Pick<ChangeEntry, 'before' | 'after'>
     after.name !== undefined && `renamed it ${after.name}`,
     after.initial !== undefined && `changed its initial to ${after.initial}`,
     after.color !== undefined && 'changed its colour',
-    after.models !== undefined && `set its model to ${after.models.main.model ?? 'the default'}`,
     after.computer !== undefined && 'changed its computer',
     after.projects !== undefined && 'changed its projects',
     after.paused !== undefined && (after.paused ? 'paused it' : 'resumed it'),

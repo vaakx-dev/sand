@@ -1,5 +1,5 @@
 import { isRecord, serial } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { SyncFile } from '../types'
 
@@ -13,16 +13,13 @@ const strings = (value: unknown): Record<string, string> =>
 const nested = (value: unknown): Record<string, Record<string, string>> =>
   isRecord(value) ? Object.fromEntries(Object.entries(value).map(([peer, entries]) => [peer, strings(entries)])) : {}
 
-const read = async (file: string): Promise<SyncFile> => {
-  try {
-    const data: unknown = await Bun.file(file).json()
-    if (!isRecord(data)) return empty()
-    const local = Array.isArray(data.local) ? data.local.filter((name): name is string => typeof name === 'string') : []
-    return { local: [...new Set(local)].sort(), bases: nested(data.bases), skipped: nested(data.skipped) }
-  } catch {
-    return empty()
-  }
+const syncFileOf = (data: unknown): SyncFile => {
+  if (!isRecord(data)) return empty()
+  const local = Array.isArray(data.local) ? data.local.filter((name): name is string => typeof name === 'string') : []
+  return { local: [...new Set(local)].sort(), bases: nested(data.bases), skipped: nested(data.skipped) }
 }
+
+const read = async (file: string): Promise<SyncFile> => (await readState(file, syncFileOf)) ?? empty()
 
 const same = (a: Record<string, string> | undefined, b: Record<string, string>) =>
   JSON.stringify(Object.entries(a ?? {}).sort()) === JSON.stringify(Object.entries(b).sort())

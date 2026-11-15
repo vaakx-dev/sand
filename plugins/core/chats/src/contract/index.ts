@@ -15,6 +15,7 @@ export type * from './parts'
 export * from './prompt'
 export * from './searchable'
 export type * from './session'
+export { ownerOf } from './session'
 
 export interface WireSession {
   $session: SessionInfo

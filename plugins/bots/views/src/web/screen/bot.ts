@@ -53,29 +53,29 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
   }
 
   const screen = () => {
+    const { composer, shownChats } = parts.ctx
     const chat = chatView({
-      ctx: parts.ctx,
+      parts,
       id,
-      talk: parts.chats.get(id),
       bot: () => parts.store.find(id),
       shown: () => view() === 'chat',
       profile: () => parts.profile(id),
       resume: () => save({ paused: false }),
-      save,
-      defaults: () => parts.defaults.get(),
-      advanced: () => parts.advanced.get(),
     })
-    const inChat = (then: () => void) => {
-      parts.open(id, 'chat')
-      onRaf(then, chat.view)
+    const answer = (question: string) => {
+      composer.quote(question)
+      composer.focus()
     }
     const jobs = {
       parts,
       bot: id,
-      answer: ({ question }: { question: string }) => inChat(() => chat.answer(question)),
+      answer: ({ question }: { question: string }) => {
+        parts.open(id, 'chat')
+        onRaf(() => answer(question), chat)
+      },
       reveal: (entry: string) => {
         parts.open(id, 'chat')
-        void parts.ctx.shownChats.show({ conversation: id, entry, words: [] })
+        void shownChats.show({ conversation: id, entry, words: [] })
       },
     }
     return div(
@@ -84,7 +84,7 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
         () => view() === 'jobs',
         () => jobsView(jobs),
       ),
-      div({ class: fill, hidden: () => view() !== 'chat' }, chat.view),
+      div({ class: fill, hidden: () => view() !== 'chat' }, chat),
     )
   }
 

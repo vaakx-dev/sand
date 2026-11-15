@@ -10,6 +10,7 @@ interface Owner {
 
 interface Probe {
   web: boolean
+  seen: number
   at: number
 }
 
@@ -19,6 +20,7 @@ interface Reachable extends Listener {
 }
 
 const RETRY_PROBE_MS = 10_000
+const STARTING_MS = 10_000
 
 const ownersOf = (trees: OwnedTree[]) => {
   const owners = new Map<number, Owner>()
@@ -38,15 +40,17 @@ const reachable = (found: Listener[], owners: Map<number, Owner>) => {
 
 const keyOf = ({ pid, port }: Listener) => `${pid}:${port}`
 
+const settled = ({ web, seen, at }: Probe, now: number) => web || (now - seen >= STARTING_MS && now - at < RETRY_PROBE_MS)
+
 export const createScanner = (processes: () => Processes | undefined) => {
   const probes = new Map<string, Probe>()
 
   const probed = async (listener: Reachable) => {
     const key = keyOf(listener)
     const known = probes.get(key)
-    if (known && (known.web || Date.now() - known.at < RETRY_PROBE_MS)) return known.web
+    if (known && settled(known, Date.now())) return known.web
     const web = await servesPages(listener.address, listener.port)
-    probes.set(key, { web, at: Date.now() })
+    probes.set(key, { web, seen: known?.seen ?? Date.now(), at: Date.now() })
     return web
   }
 

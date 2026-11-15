@@ -1,4 +1,3 @@
-import { botSend } from '@sand/bot-turns/contract'
 import { botCreate, botList } from '@sand/bots/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Reply } from '@sand/replay/contract'
@@ -32,7 +31,7 @@ const start = async (replies: Reply[]) => {
 
 const talk = async (bot: string, prompt: string) => {
   const before = sand.requests('fake').length
-  await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
+  await sand.turns.send(sand.sessions.require(bot), { prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 300; tries++) {
     const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     if (sand.requests('fake').length > before && found?.status === 'idle' && found.last?.role === 'assistant') return
@@ -43,7 +42,7 @@ const talk = async (bot: string, prompt: string) => {
 
 test('a bot sees its plan in every request, writes it through its tool, and sees the user edit it on its next step', async () => {
   const changes = await start([use('bot_plan_write', { text: plan }), said('Planned.'), said('Booked.')])
-  const bot = await sand.ask(botCreate, { name: 'Travel', models: { main: { model: 'fake/b' }, quick: {} } })
+  const bot = await sand.ask(botCreate, { name: 'Travel' })
   await sand.ask(planWrite, { bot: bot.id, text: '- Ask about dates\n' })
 
   await talk(bot.id, 'Book my Lisbon flights')

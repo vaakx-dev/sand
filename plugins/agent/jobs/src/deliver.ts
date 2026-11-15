@@ -19,7 +19,7 @@ export const createDelivery = (ctx: JobsContext) => {
 
   return {
     post(job: Job, session: Session, text: string) {
-      const sent = ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId: `${job.id}@${job.ended}` }).catch(error => {
+      const sent = ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId: job.id }).catch(error => {
         ctx.report(error)
         return undefined
       })

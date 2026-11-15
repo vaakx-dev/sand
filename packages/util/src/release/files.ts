@@ -1,6 +1,7 @@
 import { lstat, readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { compare } from '../text/compare'
+import type { AppFile } from './stamp'
 
 const appFolders = ['apps', 'packages', 'plugins']
 const appTopFiles = ['package.json', 'bun.lock', 'tsconfig.json']
@@ -44,24 +45,19 @@ const topFile = async (root: string, name: string) => {
   return info?.isFile() ? { file, mtime: Math.floor(info.mtimeMs) } : undefined
 }
 
-interface ModuleFile {
-  path: string
-  file: string
-}
-
-const walkModule = async (folder: string, path: string, found: ModuleFile[]) => {
+const walkModule = async (folder: string, path: string, found: AppFile[]) => {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     if (skipped(entry.name)) continue
     const file = join(folder, entry.name)
     const child = `${path}/${entry.name}`
     if (entry.isDirectory()) await walkModule(file, child, found)
-    else if (entry.isFile() && !entry.name.endsWith('.map')) found.push({ path: child, file })
+    else if (entry.isFile() && !entry.name.endsWith('.map')) found.push({ path: child, bytes: await Bun.file(file).bytes() })
   }
 }
 
-export const moduleFiles = async (deps: { name: string; dir: string }[]): Promise<ModuleFile[]> => {
-  const found: ModuleFile[] = []
-  for (const { name, dir } of deps) await walkModule(dir, `node_modules/${name}`, found)
+export const moduleFiles = async (deps: { path: string; dir: string }[]): Promise<AppFile[]> => {
+  const found: AppFile[] = []
+  for (const { path, dir } of deps) await walkModule(dir, path, found)
   return found.sort(byPath)
 }
 

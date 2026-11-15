@@ -50,14 +50,19 @@ test('a thread started on an existing branch gets its own worktree, and removing
   expect(git(repo, 'for-each-ref', 'refs/sand')).toBe('')
 })
 
-test('an idle thread moves into a new worktree and branch, taking its uncommitted changes', async () => {
+const chats = {
+  thread: (repo: string) => sand.sessions.thread(repo),
+  bot: (repo: string) => sand.sessions.bot(crypto.randomUUID(), repo),
+}
+
+test.each(Object.keys(chats) as (keyof typeof chats)[])('an idle %s moves into a new worktree and branch, taking its uncommitted changes', async kind => {
   sand = await startSand([], { plugins: ['core/watch', 'git/runner', 'git/git', 'git/worktrees'] })
   const repo = await makeRepo(sand.home)
   await Bun.write(join(repo, 'tracked.txt'), 'changed\n')
-  const thread = sand.sessions.thread(repo)
+  const chat = chats[kind](repo)
 
-  await sand.app.get(worktrees)!.move(thread.id, 'moved')
-  const { cwd } = sand.sessions.require(thread.id)
+  await sand.app.get(worktrees)!.move(chat.id, 'moved')
+  const { cwd } = sand.sessions.require(chat.id)
   expect(cwd.startsWith(join(sand.home, 'worktrees'))).toBe(true)
   expect(git(cwd, 'branch', '--show-current')).toBe('moved')
   expect(await Bun.file(join(cwd, 'tracked.txt')).text()).toBe('changed\n')

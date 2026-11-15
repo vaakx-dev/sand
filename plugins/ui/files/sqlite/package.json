@@ -1,0 +1,33 @@
+{
+  "name": "@sand/file-sqlite",
+  "version": "0.0.0",
+  "description": "Opens SQLite databases in the file viewer: their tables and views, and each table's rows a page at a time",
+  "type": "module",
+  "sand": {
+    "feature": "file-sqlite",
+    "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "SQLite",
+    "summary": "SQLite databases",
+    "features": {
+      "file-sqlite": {
+        "label": "SQLite",
+        "summary": "SQLite databases",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "sql.js": "^1.16.0"
+  },
+  "devDependencies": {
+    "@types/sql.js": "^1.4.11"
+  }
+}

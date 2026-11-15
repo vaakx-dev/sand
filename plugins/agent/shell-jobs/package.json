@@ -22,5 +22,10 @@
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/dev-servers": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/host-runtimes": "workspace:*"
   }
 }

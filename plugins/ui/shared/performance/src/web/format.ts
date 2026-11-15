@@ -1,5 +1,4 @@
-const MB = 1024 * 1024
-const GB = 1024 * MB
+import { GB, MB } from '../precision'
 
 const platformNames: Record<string, string> = { win32: 'Windows', darwin: 'Mac', linux: 'Linux' }
 

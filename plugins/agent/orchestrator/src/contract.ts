@@ -1,4 +1,4 @@
-import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session } from '@sand/chats/contract'
+import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
@@ -86,11 +86,8 @@ export interface SendInput {
 }
 
 export interface OwnerKind {
-  deliver(id: string, notice: Notice): Promise<unknown> | undefined
   label(id: string): string | undefined
-  history(id: string): HistoryEntry[] | undefined
   project?(id: string): string | undefined
-  folder?(id: string): string | undefined
 }
 
 export interface Orchestrator {

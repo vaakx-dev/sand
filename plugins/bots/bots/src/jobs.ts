@@ -1,7 +1,7 @@
 import type { Database } from 'bun:sqlite'
+import type { Entry } from '@sand/chats/contract'
 import { uuid } from '@sand/util'
-import { type BotEntry, type Job, type JobRun, type Jobs, type NewJob, runEntry, type RunEntry } from './contract'
-import type { Entries } from './entries'
+import { type Job, type JobRun, type Jobs, type NewJob, runEntry, type RunEntry } from './contract'
 
 type Row = {
   id: string
@@ -18,7 +18,8 @@ type Record = Omit<Job, 'status' | 'ask' | 'runs'>
 
 export interface JobHooks {
   known(bot: string): string
-  append(bot: string, type: string, data: unknown): BotEntry
+  runs(bot: string): Entry[]
+  append(bot: string, type: string, data: unknown): Entry
   changed(bot: string): void
   removed(job: Job): void
 }
@@ -29,23 +30,25 @@ const toRecord = (row: Row): Record => ({ ...row, paused: row.paused === 1 })
 
 const toRow = (record: Record): Row => ({ ...record, paused: Number(record.paused) })
 
-const runOf = ({ id, at, data }: BotEntry): JobRun => {
+const runOf = ({ id, at, data }: Entry): JobRun => {
   const { outcome, summary } = data as RunEntry
   return { entry: id, at, outcome, summary }
 }
 
-const askOf = (latest: BotEntry | undefined) => {
+const askOf = (latest: Entry | undefined) => {
   const run = latest?.data as RunEntry | undefined
   return run?.outcome === 'needs' && run.question ? { question: run.question, entry: latest!.id } : undefined
 }
 
-const jobOf = (record: Record, runs: BotEntry[]): Job => {
+const runsOf = (record: Record, runs: Entry[]) => runs.filter(entry => (entry.data as RunEntry).job === record.id).slice(0, RECENT_RUNS)
+
+const jobOf = (record: Record, runs: Entry[]): Job => {
   const ask = askOf(runs[0])
   const status = record.paused ? 'paused' : ask ? 'needs' : 'on'
   return { ...record, status, ...(ask && { ask }), runs: runs.map(runOf) }
 }
 
-export const createJobs = (db: Database, entries: Entries, hooks: JobHooks) => {
+export const createJobs = (db: Database, hooks: JobHooks) => {
   const ofBot = db.query<Row, { bot: string }>('select * from bot_jobs where bot = $bot order by created')
   const one = db.query<Row, { id: string }>('select * from bot_jobs where id = $id')
   const save = db.query<unknown, Row>(
@@ -55,7 +58,7 @@ export const createJobs = (db: Database, entries: Entries, hooks: JobHooks) => {
   const removeOne = db.query<unknown, { id: string }>('delete from bot_jobs where id = $id')
   const removeAll = db.query<unknown, { bot: string }>('delete from bot_jobs where bot = $bot')
 
-  const assembled = (record: Record) => jobOf(record, entries.runs(record.bot, record.id, RECENT_RUNS))
+  const assembled = (record: Record, runs = hooks.runs(record.bot)) => jobOf(record, runsOf(record, runs))
 
   const record = (id: string) => {
     const row = one.get({ id })
@@ -96,7 +99,7 @@ export const createJobs = (db: Database, entries: Entries, hooks: JobHooks) => {
 
   return {
     service,
-    list: (bot: string) => ofBot.all({ bot }).map(row => assembled(toRecord(row))),
+    list: (bot: string, runs: Entry[]) => ofBot.all({ bot }).map(row => assembled(toRecord(row), runs)),
     forget: (bot: string) => void removeAll.run({ bot }),
   }
 }

@@ -1,4 +1,4 @@
-import { type BuildStamp, bundleAsset, isStamp, stampAsset } from '@sand/util/release'
+import { addonCatalogAsset, type BuildStamp, bundleAsset, isStamp, stampAsset } from '@sand/util/release'
 import type { ReleaseInfo, UpdateChannel } from '../contract'
 import { repo, repoApi, type ApiRelease } from './api'
 import { GithubError, githubGet } from './request'
@@ -8,6 +8,7 @@ export interface GithubRelease extends ReleaseInfo {
   bundleUrl: string
   bundleSize: number
   bundleSha256?: string
+  catalogUrl?: string
 }
 
 const releasePrefix = 'v'
@@ -47,6 +48,7 @@ export const findRelease = async (channel: UpdateChannel): Promise<GithubRelease
   const tag = release.tag_name
   const bundle = release.assets.find(asset => asset.name === bundleAsset)
   const stamp = release.assets.find(asset => asset.name === stampAsset)
+  const catalog = release.assets.find(asset => asset.name === addonCatalogAsset)
   const missing = [bundle ? '' : bundleAsset, stamp ? '' : stampAsset].filter(Boolean)
   if (!bundle || !stamp) throw new GithubError(`${tag} on GitHub has no ${missing.join(' or ')} yet; it may still be uploading`)
   return {
@@ -59,5 +61,6 @@ export const findRelease = async (channel: UpdateChannel): Promise<GithubRelease
     bundleUrl: bundle.browser_download_url,
     bundleSize: bundle.size,
     bundleSha256: sha256(bundle.digest),
+    ...(catalog && { catalogUrl: catalog.browser_download_url }),
   }
 }
