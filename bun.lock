@@ -2759,6 +2759,18 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/files/documents": {
+      "name": "@sand/file-documents",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/file-viewer": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/zip": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/ui/files/images": {
       "name": "@sand/file-images",
       "version": "0.0.0",
@@ -3575,6 +3587,8 @@
     "@sand/features": ["@sand/features@workspace:plugins/core/features"],
 
     "@sand/file-archives": ["@sand/file-archives@workspace:plugins/ui/files/archives"],
+
+    "@sand/file-documents": ["@sand/file-documents@workspace:plugins/ui/files/documents"],
 
     "@sand/file-images": ["@sand/file-images@workspace:plugins/ui/files/images"],
 
