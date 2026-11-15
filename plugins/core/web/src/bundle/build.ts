@@ -76,6 +76,8 @@ const pack = async ({ outputs, metafile }: BuildOutput) => {
   return { entry: urlOf(entry.path), preload: staticImports(metafile!.outputs, entry.path), assets: new Map(await Promise.all(outputs.map(asset))) }
 }
 
+const extensionProblem = (id: string, error: string) => `Couldn't build the web extension ${id}:\n${error}`
+
 const withoutBroken = async (extensions: Extension[], modules: Modules, error: string | undefined): Promise<Bundle> => {
   const alone = await Promise.all(extensions.map(extension => compile(extensions, [extension], [], modules)))
   const failed: Record<string, string> = {}
@@ -85,7 +87,7 @@ const withoutBroken = async (extensions: Extension[], modules: Modules, error: s
   })
   const broken = new Set(Object.keys(failed))
   const problems = broken.size
-    ? [...broken].map(id => `Couldn't build the web extension ${id}:\n${failed[id]}`)
+    ? [...broken].map(id => extensionProblem(id, failed[id] ?? ''))
     : [`Couldn't build the web extensions:\n${error}`]
   const kept = extensions.filter(extension => !broken.has(extension.id) && (broken.size > 0 || extension.builtin))
   const safe = await compile(extensions, kept, problems, modules)
@@ -99,4 +101,4 @@ const bundle = async (extensions: Extension[], modules: Modules): Promise<Bundle
   return { ...(await pack(full.output)), bundled: full.bundled, problems: [], failed: {} }
 }
 
-export { ASSETS, bundle, type Asset, type Bundle, type Modules }
+export { ASSETS, bundle, extensionProblem, type Asset, type Bundle, type Modules }

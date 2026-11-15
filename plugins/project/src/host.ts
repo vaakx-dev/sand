@@ -24,7 +24,7 @@ export default definePlugin({
     const { home } = ctx.hostOptions
     const device = ctx.thisPc.id
     const report = (error: unknown) => ctx.report(error)
-    const store = await projectStore(home, report)
+    const store = await projectStore(home)
     await seedSandHome(store, home, device).catch(report)
     const root = await projectRoot(home)
     const list = () => projectList(store.all(), { device, home: homedir(), sep, root: root.get() })

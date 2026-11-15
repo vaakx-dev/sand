@@ -8,6 +8,7 @@ interface CoreParts {
   files: AppFile[]
   latest: number
   packages: Workspace[]
+  addons: Record<string, string>
 }
 
 const sharedBun = () => {
@@ -25,12 +26,12 @@ const historyOf = (history: BuildHistory | undefined, saved: BuildStamp | undefi
   return { ...(commit ? { commit } : {}), ...(changes?.length ? { changes } : {}) }
 }
 
-const packBundle = async (root: string, { files, latest, packages }: CoreParts, history?: BuildHistory): Promise<Bundle> => {
+const packBundle = async (root: string, { files, latest, packages, addons }: CoreParts, history?: BuildHistory): Promise<Bundle> => {
   const bun = sharedBun()
   const [saved, modules, links] = await Promise.all([readStamp(root), readModules(root, packages), workspaceLinks(root)])
   const hash = hashFiles(files)
   const build: BuildInfo = saved ? stampBuild(saved) : { id: hash, time: latest }
-  const stamp: BuildStamp = { ...build, ...historyOf(history, saved), hash, modules: moduleHash(modules), links, bun }
+  const stamp: BuildStamp = { ...build, ...historyOf(history, saved), hash, modules: moduleHash(modules), links, bun, addons }
   const entries = {
     ...Object.fromEntries([...files, ...modules].map(file => [file.path, file.bytes])),
     [buildStamp]: JSON.stringify(stamp),

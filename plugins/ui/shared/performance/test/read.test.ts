@@ -2,7 +2,7 @@ import { type Session, textOf } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
-import { performanceRead } from '../src/contract'
+import { performanceWatch } from '../src/contract'
 
 const HELD_MB = 300
 const MB = 1024 * 1024
@@ -26,10 +26,10 @@ test("Performance names the chat a command belongs to and counts the command's m
   const [, job] = /^Started (\S+)\./.exec(await use(chat, 'run_background', { command: holder })) ?? []
   await use(chat, 'job_wait', { jobs: [job], until: 'holding', timeout_ms: HELD_WAIT_MS })
 
-  const report = await sand.ask(performanceRead, { range: '5m' })
+  const report = await sand.ask(performanceWatch, { range: '5m' })
 
   expect(report.chats).toEqual([expect.objectContaining({ conversation: chat.id, title: chat.title, trees: [expect.objectContaining({ label: expect.stringMatching(/^bun -e/), kind: 'command' })] })])
   expect(report.chats[0]!.bytes).toBeGreaterThan(HELD_MB * MB)
   expect(report.totalBytes).toBeGreaterThan(report.freeBytes)
-  expect(report.bars).toHaveLength(30)
+  expect(report.bars.values).toHaveLength(30)
 })

@@ -18,7 +18,7 @@ export default definePlugin({
   inject,
   apply(ctx) {
     ctx.on(sessionEntry, routeMentions(ctx))
-    ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ctx.botTurns)))
+    ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ctx.sessions, ctx.turns)))
     ctx.on(subagentStarted, (subagent, { owner, id }) => void (owner === 'bot' && ctx.get(server)?.broadcast(botSubagentWire, [subagent, id])))
     ctx.on(promptSections, (sections, conversation) => (conversation.owner === 'bot' ? [...sections, threadLinks] : sections))
     ctx.watch(contextKinds, found => found?.register(botContext(ctx.bots)))

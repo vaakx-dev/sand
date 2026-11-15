@@ -1,7 +1,8 @@
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { addonCatalogAsset } from '@sand/util/release'
 import { join } from 'node:path'
 import { z } from 'zod'
+import { fetchShelf, type Found } from './catalog'
 
 type Saved = { kind: 'github'; repo: string } | { kind: 'site'; site: string }
 
@@ -9,7 +10,7 @@ interface Source {
   id: string
   label: string
   removable: boolean
-  url(): Promise<string>
+  shelf(): Promise<Found>
 }
 
 const FILE = 'addon-sources.json'
@@ -44,20 +45,13 @@ const parseSource = (text: string): Saved => {
 }
 
 const sourceOf = (saved: Saved): Source => {
-  if (saved.kind === 'github') return { id: saved.repo.toLowerCase(), label: saved.repo, removable: true, url: async () => githubCatalog(saved.repo) }
-  return { id: saved.site, label: new URL(saved.site).host, removable: true, url: async () => `${saved.site}/${addonCatalogAsset}` }
+  if (saved.kind === 'github') return { id: saved.repo.toLowerCase(), label: saved.repo, removable: true, shelf: () => fetchShelf(githubCatalog(saved.repo)) }
+  return { id: saved.site, label: new URL(saved.site).host, removable: true, shelf: () => fetchShelf(`${saved.site}/${addonCatalogAsset}`) }
 }
 
 const sourceStore = (home: string) => {
   const file = join(home, FILE)
-  const read = async (): Promise<Saved[]> => {
-    const parsed = savedSchema.safeParse(
-      await Bun.file(file)
-        .json()
-        .catch(() => undefined),
-    )
-    return parsed.success ? parsed.data.sources : []
-  }
+  const read = async (): Promise<Saved[]> => (await readState(file, data => savedSchema.safeParse(data).data))?.sources ?? []
   const write = (sources: Saved[]) => writeAtomic(file, `${JSON.stringify({ sources }, null, 2)}\n`)
   return { read, write }
 }

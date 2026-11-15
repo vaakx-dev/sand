@@ -7,6 +7,7 @@ import { type output, z, type ZodObject } from 'zod'
 
 export interface McpToolContext {
   call: Call
+  actor?: Actor
   here?: string
   signal?: AbortSignal
 }

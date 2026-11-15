@@ -50,6 +50,11 @@ export interface Bar {
   memory: number
 }
 
+export interface Bars {
+  end: number
+  values: (Bar | null)[]
+}
+
 export const ranges = ['5m', '15m', '1h'] as const
 
 export type Range = (typeof ranges)[number]
@@ -59,7 +64,7 @@ export interface PcPerformance {
   freeBytes: number
   cpu: number
   cores: number
-  bars: (Bar | null)[]
+  bars: Bars
   chats: ChatUse[]
   sand: Use & { parts: TreeUse[] }
   other: Use

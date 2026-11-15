@@ -3,14 +3,8 @@ import type { Message, Session } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { event, service } from 'drydock'
 
-export interface Own {
-  intro: string
-  parts: string[]
-}
-
 export interface ContextBuilder {
-  thread(session: Session, model: string): Promise<string>
-  system(conversation: Conversation, model: string, own: Own): Promise<string>
+  system(session: Session, model: string): Promise<string>
   tools(session: Session, messages: Message[]): ToolSpec[]
 }
 

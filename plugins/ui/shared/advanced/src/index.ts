@@ -20,7 +20,7 @@ export default definePlugin({
       return settingsSection(
         {},
         settingsRow(
-          { title: 'Advanced controls', detail: 'Show model choice in bot chats' },
+          { title: 'Advanced controls', detail: "Show a bot's computer and monthly limit in its profile" },
           toggleSwitch({ on, 'aria-label': 'Advanced controls', onClick: () => set(!on.get()) }),
         ),
       )

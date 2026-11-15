@@ -44,6 +44,6 @@ test('each morning a bot with jobs sums them up in its chat, what needs the user
       { job: notes.id, status: 'paused', text: '' },
     ],
   })
-  expect(sand.app.get(bots)!.conversation(ferry.id).entries().filter(entry => entry.type === morningEntry)).toHaveLength(1)
+  expect(sand.sessions.entriesIn(ferry.id, morningEntry)).toHaveLength(1)
   expect(junoNow!.morning).toBeUndefined()
 })
