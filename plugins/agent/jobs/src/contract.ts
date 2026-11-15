@@ -22,6 +22,8 @@ export interface Job {
 export type JobWork = (signal: AbortSignal, job: Job) => Promise<string>
 
 export interface JobSpec {
+  id?: string
+  started?: number
   parent: Session
   label: string
   command: string

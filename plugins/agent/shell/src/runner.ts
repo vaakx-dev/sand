@@ -1,14 +1,15 @@
+import type { Commands } from './commands'
 import type { ShellRunner } from './contract'
 import type { Shell } from './detect'
-import type { Track } from './process'
 import { run } from './run'
-import { start } from './start'
 
-export const shellRunnerOf = (shell: Shell, trackFor: (conversation: string, command: string) => Track): ShellRunner => ({
+export const shellRunnerOf = (shell: Shell, commands: Commands): ShellRunner => ({
   name: shell.name,
   async run(command, { cwd, signal, timeoutMs, onText }) {
     const { stopped, ...outcome } = await run(shell.argv(command), { cwd, verbatim: shell.verbatim, signal, silence: timeoutMs, limit: timeoutMs, onText })
     return { ...outcome, timedOut: stopped !== undefined }
   },
-  start: (command, { cwd, conversation, onText }) => start(shell.argv(command), onText, { cwd, verbatim: shell.verbatim, track: trackFor(conversation, command) }),
+  start: (spec, onText) => commands.start({ ...spec, argv: shell.argv(spec.command), verbatim: shell.verbatim ?? false }, onText),
+  attach: commands.attach,
+  follow: commands.follow,
 })

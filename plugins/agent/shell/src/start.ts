@@ -1,7 +1,6 @@
-import type { ShellProcess } from './contract'
 import { drain, spawn, stream, unixNewlines, type SpawnOptions } from './process'
 
-export const start = (argv: string[], onText: (text: string) => void, options: SpawnOptions): ShellProcess => {
+export const start = (argv: string[], onText: (text: string) => void, options: SpawnOptions) => {
   const { child, killTree } = spawn(argv, 'ignore', { ...options, killOnClose: true })
   const write = (text: string) => {
     if (text) onText(unixNewlines(text))
@@ -12,5 +11,5 @@ export const start = (argv: string[], onText: (text: string) => void, options: S
     await drain(streams)
     return code
   })
-  return { exited, kill: killTree }
+  return { pid: child.pid, exited, kill: killTree }
 }

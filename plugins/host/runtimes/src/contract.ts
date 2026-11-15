@@ -3,6 +3,8 @@ import { type Caller, request, type, wireEvent, type WireEvent, type Request as 
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
+export { createHostChannel } from './link/channel'
+
 export type RuntimeHealth = 'starting' | 'ready' | 'failed' | 'restarting'
 
 export type RuntimeAccess = 'denied' | 'public' | 'client'

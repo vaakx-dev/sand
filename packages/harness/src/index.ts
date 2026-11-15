@@ -16,6 +16,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
+import type { TestHost } from './host'
 import { userPlugins } from './user'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
@@ -149,14 +150,18 @@ export interface SandOptions {
   projects?: TestProject[]
   sections?: Record<string, unknown>
   config?: string
+  host?: TestHost
 }
 
 const start = async (models: Models, options: SandOptions) => {
   const shared = options.home
   const home = shared ?? mkdtempSync(join(tmpdir(), 'sand-test-'))
   const app = createApp()
+  const link = options.host?.link()
+  if (link) app.provide(hostChannel, link.channel)
   const stop = async () => {
     await app.dispose()
+    link?.close()
     if (!shared) await removeFolder(home)
   }
   const { wire, routes, heard } = await boot(app, home, models, options).catch(async (error: unknown) => {
@@ -214,4 +219,5 @@ export const startLiveSand = (models: string[], options: SandOptions = {}) => st
 
 export type Sand = Awaited<ReturnType<typeof startSand>>
 
+export { startHost, type TestHost } from './host'
 export { pairPcs } from './pcs'
