@@ -16,10 +16,7 @@ const sharedBun = () => {
   return Bun.version
 }
 
-const readModules = async (root: string, packages: Workspace[]): Promise<AppFile[]> => {
-  const found = await moduleFiles(await runtimeDeps(root, { packages }))
-  return Promise.all(found.map(async ({ path, file }) => ({ path, bytes: await Bun.file(file).bytes() })))
-}
+const readModules = async (root: string, packages: Workspace[]) => moduleFiles(await runtimeDeps(root, { packages }))
 
 const historyOf = (history: BuildHistory | undefined, saved: BuildStamp | undefined): BuildHistory => {
   const { commit, changes } = history ?? saved ?? {}

@@ -43,3 +43,14 @@ export interface MarkdownLinks {
 }
 
 export const markdownLinks = service<MarkdownLinks>('markdownLinks')
+
+export interface CodeRenderer {
+  language: string
+  render(code: string): Node
+}
+
+export interface MarkdownCode {
+  language(renderer: CodeRenderer): Dispose
+}
+
+export const markdownCode = service<MarkdownCode>('markdownCode')

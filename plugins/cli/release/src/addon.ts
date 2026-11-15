@@ -21,10 +21,7 @@ const ownFiles = (files: AppFile[], addon: Addon) =>
     .filter(file => addon.packages.some(workspace => inside(file.path, workspace.path)) && !inside(file.path, mediaFolder(addon)))
     .map(file => ({ ...file, path: file.path.slice(PLUGINS.length) }))
 
-const moduleBytes = async (root: string, addon: Addon): Promise<AppFile[]> => {
-  const found = await moduleFiles(await runtimeDeps(root, { packages: addon.packages, provided: PROVIDED }))
-  return Promise.all(found.map(async ({ path, file }) => ({ path, bytes: await Bun.file(file).bytes() })))
-}
+const moduleBytes = async (root: string, addon: Addon) => moduleFiles(await runtimeDeps(root, { packages: addon.packages, provided: PROVIDED }))
 
 const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 
