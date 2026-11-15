@@ -1,39 +1,10 @@
-import { botPatch, type BotPatch, type BotSummary, type Computer, type ModelPolicy } from '@sand/bots/contract'
+import { botPatch, type BotPatch, type BotSummary, type Computer } from '@sand/bots/contract'
 import { pcs } from '@sand/devices-contract'
-import { modelPicker, type PickerTarget } from '@sand/model-picker/contract'
 import { dollars } from '@sand/util'
-import { models as modelsService } from '@sand/web-client/contract'
 import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
-import { applyChoice, effective } from '../models'
 import type { Parts } from '../parts'
 
 type Bot = () => BotSummary | undefined
-
-type Tier = keyof ModelPolicy
-
-const tiers: { tier: Tier; title: string; detail: string }[] = [
-  { tier: 'main', title: 'Main model', detail: 'Its chat and the work it does itself' },
-  { tier: 'quick', title: 'Quick model', detail: 'Small jobs, like summaries and titles' },
-]
-
-const plainChoice = (parts: Parts, bot: BotSummary | undefined, tier: Tier) =>
-  parts.ctx.get(modelsService)?.label(effective(bot?.models[tier] ?? {}, parts.defaults.get())) ?? ''
-
-const modelRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void, { tier, title, detail }: (typeof tiers)[number]) => {
-  const { kit } = parts.ctx
-  const picker = parts.ctx.get(modelPicker)
-  const target = (found: NonNullable<typeof picker>): PickerTarget => ({
-    shown: () => {
-      const models = bot()?.models
-      return models && found.resolve(effective(models[tier], parts.defaults.get()))
-    },
-    set: patch => {
-      const models = bot()?.models
-      if (models) save({ models: { ...models, [tier]: applyChoice(models[tier], patch) } })
-    },
-  })
-  return kit.settingsRow({ title, detail }, picker ? picker.button(target(picker), { label: title }) : kit.metaLine(() => plainChoice(parts, bot(), tier)))
-}
 
 interface ComputerChoice {
   value: Computer
@@ -105,7 +76,6 @@ export const advancedBlock = (parts: Parts, id: string, bot: Bot) => {
     on
       ? parts.ctx.kit.pageSection(
           { title: 'Advanced' },
-          ...tiers.map(tier => modelRow(parts, bot, save, tier)),
           computerRow(parts, bot, save),
           limitRow(parts, bot, save),
         )

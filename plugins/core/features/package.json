@@ -55,26 +55,7 @@
         "label": "Bots",
         "summary": "Assistants with their own job, memory and model that you chat with",
         "needs": [
-          "engine",
-          "models",
-          "markdown",
-          "transcript",
-          "composer"
-        ],
-        "uses": [
-          "compaction",
-          "memory",
-          "skills",
-          "background",
-          "attachments",
-          "file-tools",
-          "shell",
-          "web-tools",
-          "usage",
-          "usage-resume",
-          "palette",
-          "chat-find",
-          "html"
+          "threads"
         ]
       },
       "routines": {
@@ -355,7 +336,6 @@
   },
   "devDependencies": {
     "@sand/accounts": "workspace:*",
-    "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/calendar": "workspace:*",
     "@sand/chats": "workspace:*",
@@ -366,6 +346,7 @@
     "@sand/git-runner": "workspace:*",
     "@sand/harness": "workspace:*",
     "@sand/html": "workspace:*",
+    "@sand/model": "workspace:*",
     "@sand/schedules": "workspace:*",
     "@sand/tools": "workspace:*",
     "playwright": "^1.64.1"

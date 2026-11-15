@@ -186,6 +186,10 @@ const bunShell: ShellRunner = {
   start() {
     throw new Error('Not used')
   },
+  attach() {
+    throw new Error('Not used')
+  },
+  follow: () => () => {},
 }
 
 test('a command watch stays quiet on its first run and passes the new output once it changes', async () => {

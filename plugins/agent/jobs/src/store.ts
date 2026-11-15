@@ -1,4 +1,5 @@
 import { sessionRemove, type Session } from '@sand/chats/contract'
+import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import type { JobsContext } from './context'
 import { jobEnd, jobNote, jobStart, type Job, type JobSpec, type JobStatus, type JobWork } from './contract'
@@ -37,9 +38,13 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
   const stopAll = (parent: string, reason = stoppedWithChat) => stopNoted(running().filter(({ job }) => job.parent === parent), reason)
 
   let disposing = false
+  let handing = false
+  ctx.on(runtimeDrain, () => {
+    handing = true
+  })
   ctx.effect(() => () => {
     disposing = true
-    stopNoted(running(), restarted)
+    if (!handing) stopNoted(running(), restarted)
   })
 
   ctx.on(sessionRemove, id => {
@@ -80,7 +85,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
       entry.output = output
       ctx.emit(jobEnd, job, output)
       prune()
-      if (!silenced.delete(job.id) && !disposing) deliver(job, spec.parent, output)
+      if (!silenced.delete(job.id) && !disposing && !handing) deliver(job, spec.parent, output)
     }
     untilAborted(work(controller.signal, job), controller.signal)
       .then(
@@ -92,14 +97,14 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
 
   const start = (spec: JobSpec) => {
     const job: Job = {
-      id: `job_${Bun.randomUUIDv7().slice(-8)}`,
+      id: spec.id ?? `job_${Bun.randomUUIDv7().slice(-8)}`,
       label: spec.label,
       command: spec.command,
       cwd: spec.cwd,
       parent: spec.parent.id,
       ...(spec.origin && { origin: spec.origin }),
       status: 'running',
-      started: Date.now(),
+      started: spec.started ?? Date.now(),
       cancel: () => {},
     }
     const entry: Entry = { job, spec }

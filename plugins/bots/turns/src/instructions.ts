@@ -1,6 +1,5 @@
 import type { BotSummary, Job } from '@sand/bots/contract'
 import type { ProjectFiles } from '@sand/project/contract'
-import type { Own } from '@sand/prompt/contract'
 
 const NO_JOBS = `## Your jobs
 
@@ -31,7 +30,4 @@ const projectsOf = ({ projects }: BotSummary, files: ProjectFiles | undefined) =
 
 const whoOf = (name: string) => (name ? `You are ${name}, one of the user's bots in sand.` : "You are one of the user's bots in sand, with no name yet.")
 
-export const instructions = (bot: BotSummary, files: ProjectFiles | undefined): Own => ({
-  intro: whoOf(bot.name),
-  parts: [jobsOf(bot), ...projectsOf(bot, files)],
-})
+export const instructions = ([, ...shared]: string[], bot: BotSummary, files: ProjectFiles | undefined) => [whoOf(bot.name), ...shared, jobsOf(bot), ...projectsOf(bot, files)]

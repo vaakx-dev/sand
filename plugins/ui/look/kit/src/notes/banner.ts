@@ -41,7 +41,7 @@ export const banner = ({ tone = 'neutral', icon: glyph = toneIcons[tone], title,
         { class: 'flex min-w-0 flex-1 flex-wrap items-start gap-x-3 gap-y-2' },
         div(
           { class: 'flex min-w-0 grow flex-col' },
-          span({ class: 'leading-6 wrap-anywhere' }, title),
+          span({ class: 'flex min-h-6 items-center leading-5 wrap-anywhere' }, title),
           detail ? div({ class: 'wrap-anywhere whitespace-pre-wrap' }, secondaryText(detail)) : null,
         ),
         actions.length ? div({ class: 'flex flex-wrap items-center gap-2' }, ...actions) : null,

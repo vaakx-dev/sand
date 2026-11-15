@@ -10,6 +10,7 @@
     "summary": "Stops the chat using the most memory when this PC runs very low"
   },
   "dependencies": {
+    "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/engine": "workspace:*",

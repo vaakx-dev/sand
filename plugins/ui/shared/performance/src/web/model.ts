@@ -1,18 +1,17 @@
-import { type PcView, pcHello, pcs, pcsChange, wire } from '@sand/devices-contract'
+import { isPcUnavailable, type PcView, pcHello, pcs, pcsChange, wire } from '@sand/devices-contract'
 import { featureState, featuresSet } from '@sand/features/contract'
 import { projects } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { tildeHome } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { type ChatPlace, type PcReport, performanceRead, type Range } from '../contract'
+import { applied } from '../change'
+import { type ChatPlace, type PcChange, type PcReport, performanceChange, performanceUnwatch, performanceWatch, type Range } from '../contract'
 
 const GUARD = 'memory-guard'
-const SILENT_AFTER_MS = 10_000
 
 export interface Heard {
   report: PcReport
-  at: number
   failed?: number
 }
 
@@ -25,8 +24,7 @@ export const createModel = (ctx: ModelContext) => {
   const range = sig<Range>('15m')
   const heard = sig(new Map<string, Heard>())
   const choosing = sig<boolean | undefined>(undefined)
-  const reading = new Set<string>()
-  let shownSince = Date.now()
+  let watching = false
 
   const list = () => {
     changes.version.get()
@@ -40,27 +38,35 @@ export const createModel = (ctx: ModelContext) => {
     heard.set(next)
   }
 
-  const read = (pc: PcView) => {
+  const watch = (pc: string) => {
     const asked = range.get()
-    const current = () => range.get() === asked
-    reading.add(pc.id)
-    return ctx.wire
-      .call(performanceRead, { range: asked }, pc.id)
-      .then(
-        report => current() && remember(pc.id, () => ({ report, at: Date.now() })),
-        () => current() && remember(pc.id, old => old && { ...old, failed: old.failed ?? Date.now() }),
-      )
-      .finally(() => reading.delete(pc.id))
+    const current = () => watching && range.get() === asked
+    void ctx.wire.call(performanceWatch, { range: asked }, pc).then(
+      report => current() && remember(pc, () => ({ report })),
+      () => current() && remember(pc, old => old && { ...old, failed: old.failed ?? Date.now() }),
+    )
   }
+
+  const unwatch = (pc: string) =>
+    void ctx.wire.call(performanceUnwatch, {}, pc).catch(error => {
+      if (!isPcUnavailable(error)) ctx.report(error)
+    })
+
+  const changed = (change: PcChange, pc: string) => watching && remember(pc, old => old && { ...old, report: applied(old.report, change) })
 
   const answering = () => list().filter(pc => pc.online)
 
-  const refresh = () => void Promise.all(answering().filter(pc => !reading.has(pc.id)).map(read))
+  const watchAll = () => answering().forEach(pc => watch(pc.id))
 
   const guard = () => {
     changes.version.get()
     return choosing.get() ?? ctx.get(featureState)?.on(GUARD)
   }
+
+  ctx.effect(() => ctx.wire.on(performanceChange, changed, { from: 'all' }))
+  ctx.on(pcHello, pc => {
+    if (watching) watch(pc)
+  })
 
   return {
     range,
@@ -72,15 +78,17 @@ export const createModel = (ctx: ModelContext) => {
       if (place.kind === 'bot') return 'bot'
       return ctx.get(projects)?.shown({ path: place.cwd, device, project: place.project, quick: place.quick }).name ?? tildeHome(place.cwd)
     },
-    silent: (found: Heard | undefined) => found !== undefined && (found.failed !== undefined || Date.now() - Math.max(found.at, shownSince) > SILENT_AFTER_MS),
     open() {
-      shownSince = Date.now()
-      refresh()
+      watching = true
+      watchAll()
+      return () => {
+        watching = false
+        answering().forEach(pc => unwatch(pc.id))
+      }
     },
-    refresh,
     choose(next: Range) {
       range.set(next)
-      void Promise.all(answering().map(read))
+      watchAll()
     },
     async setGuard(on: boolean) {
       choosing.set(on)

@@ -1,7 +1,7 @@
 import { type Session, textOf } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { backgroundJobs } from '@sand/jobs/contract'
-import { threadStop } from '@sand/orchestrator/contract'
+import { threadStop, threadUpdate } from '@sand/orchestrator/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -41,15 +41,24 @@ const startChild = async (session: Session) => {
   return Number(pid)
 }
 
-test('stopping a thread with no turn kills the whole process tree of its background commands', async () => {
+test('stopping a thread ends only its reply; its background commands keep running', async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [] }], { plugins: ['agent/jobs', 'agent/shell', 'agent/shell-jobs'] })
   const thread = sand.chat('fake/m')
   const child = await startChild(thread)
-  expect(alive(child)).toBe(true)
 
-  expect(await sand.ask(threadStop, { session: thread.id })).toBe(true)
+  expect(await sand.ask(threadStop, { session: thread.id })).toBe(false)
+
+  expect(alive(child)).toBe(true)
+  expect(sand.app.get(backgroundJobs)!.list(thread.id).map(job => job.status)).toEqual(['running'])
+})
+
+test('archiving a thread kills the whole process tree of its background commands', async () => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies: [] }], { plugins: ['agent/jobs', 'agent/shell', 'agent/shell-jobs'] })
+  const thread = sand.chat('fake/m')
+  const child = await startChild(thread)
+
+  await sand.ask(threadUpdate, { session: thread.id, archived: true })
 
   expect(await exited(child)).toBe(true)
   expect(sand.app.get(backgroundJobs)!.list(thread.id).map(job => job.status)).toEqual(['cancelled'])
-  expect(await sand.ask(threadStop, { session: thread.id })).toBe(false)
 })

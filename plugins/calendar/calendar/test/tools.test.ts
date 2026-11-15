@@ -1,8 +1,8 @@
-import { botCreate, botList, type BotEntry } from '@sand/bots/contract'
-import { botOpen, botSend } from '@sand/bot-turns/contract'
+import { botCreate } from '@sand/bots/contract'
 import { calendarAgenda, calendarCreate } from '@sand/calendar/contract'
-import { textOf, type Message } from '@sand/chats/contract'
+import { type Entry, textOf, type Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -20,7 +20,7 @@ const start = async (replies: Source['replies'] = []) => {
   return sand
 }
 
-const results = (entries: BotEntry[]) =>
+const results = (entries: Entry[]) =>
   entries.flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content.flatMap(block => (block.type === 'tool_result' ? [textOf(block.content)] : [])) : []))
 
 const use = async (name: string, input: Record<string, unknown>) => {
@@ -40,13 +40,14 @@ test('a bot adds an event to the calendar and reads its agenda back', async () =
     ],
     [{ type: 'text', text: 'Booked lunch with Ana.' }],
   ])
-  const bot = await ask(botCreate, { name: 'Planner', models: { main: { model: 'fake/m' }, quick: {} } })
-  await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana next Friday at 1', clientRequestId: 'one' })
-  for (let tries = 0; tries < 300 && (await ask(botList, {})).find(listed => listed.id === bot.id)?.last?.text !== 'Booked lunch with Ana.'; tries++) await Bun.sleep(10)
+  const bot = await ask(botCreate, { name: 'Planner' })
+  const chat = sand.sessions.require(bot.id)
+  sand.app.get(modelSettings)!.change(chat, { model: 'fake/m' })
+  await sand.turns.run(chat, 'Lunch with Ana next Friday at 1')
 
   const [lunch] = await ask(calendarAgenda, { from: Date.parse('2026-11-13T00:00Z'), to: Date.parse('2026-11-14T00:00Z'), zone })
   expect(lunch).toMatchObject({ title: 'Lunch with Ana', location: 'Café Luna', start: { time: '2026-11-13T13:00:00', zone }, end: { time: '2026-11-13T14:00:00', zone } })
-  const [added, agenda] = results((await ask(botOpen, { bot: bot.id })).entries)
+  const [added, agenda] = results(chat.path())
   expect(added).toMatch(/^Added "Lunch with Ana", Fri, 13 Nov 2026 \d\d:00–\d\d:00 \[id [\w-]+\]$/)
   expect(agenda).toContain(`Lunch with Ana (Café Luna) [id ${lunch!.id}]`)
 })

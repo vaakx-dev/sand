@@ -1,9 +1,11 @@
+import { hostChannel } from '@sand/host-runtimes/contract'
 import { logins } from '@sand/logins/contract'
 import { processes, type TrackedJob } from '@sand/processes/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers, oneLine } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
+import { createCommands, hostKeeping, localKeeping } from './commands'
 import { shellRunner } from './contract'
 import { detect, sidePowerShell } from './detect'
 import { shellRunnerOf } from './runner'
@@ -24,7 +26,14 @@ export default definePlugin({
     const shell = detect(config.shell)
     const trackFor = (conversation: string, command: string) => (pid: number, job?: TrackedJob) =>
       ctx.get(processes)?.track({ conversation, pid, label: oneLine(command, LABEL_CHARS), kind: 'command', job })
-    ctx.provide(shellRunner, shellRunnerOf(shell, trackFor))
+    ctx.watch(hostChannel, channel => {
+      const commands = createCommands({
+        keeping: channel ? hostKeeping(channel) : localKeeping,
+        track: ({ conversation, command }, pid) => trackFor(conversation, command)(pid),
+        report: error => ctx.report(error),
+      })
+      return joinDisposers(ctx.provide(shellRunner, shellRunnerOf(shell, commands)), commands.close)
+    })
     const powerShell = sidePowerShell(shell)
     const shells = [
       {

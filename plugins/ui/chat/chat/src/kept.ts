@@ -1,5 +1,6 @@
 import { whenSettled } from '@sand/reactive'
 import { collectScope, disposeAll, div, list, mount, onMount, scoped, sig, untrack, type Disposer } from '@vaakx-dev/vrui'
+import type { ChatLook } from './contract'
 import type { ChatView } from './controller'
 
 interface Kept {
@@ -10,9 +11,9 @@ interface Kept {
 
 const keptChats = 5
 
-const holder = (chat: ChatView, leave: () => void) => {
+const holder = (chat: ChatView, look: ChatLook, leave: () => void) => {
   const node = div({ class: 'contents' }, chat.node)
-  onMount(node, () => chat.show())
+  onMount(node, () => chat.show(look))
   scoped(() => {
     chat.hide()
     leave()
@@ -64,11 +65,11 @@ export const keptViews = (build: (id: string) => ChatView) => {
     return entry
   }
 
-  const view = (id: string) => {
+  const view = (id: string, look: ChatLook) => {
     const found = kept.get(id)
-    if (found && !isParked(found)) return holder(build(id), () => {})
+    if (found && !isParked(found)) return holder(build(id), look, () => {})
     const entry = found ? reuse(found) : keep(id)
-    return holder(entry.chat, () => park(entry))
+    return holder(entry.chat, look, () => park(entry))
   }
 
   const prepareNow = (id: string) => {

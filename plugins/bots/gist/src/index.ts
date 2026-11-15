@@ -1,5 +1,5 @@
 import { botChange, bots, gistEntry, type GistEntry } from '@sand/bots/contract'
-import type { Message } from '@sand/chats/contract'
+import { type Message, sessions } from '@sand/chats/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { errorMessage } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -9,22 +9,20 @@ const deadline = 20_000
 
 export default definePlugin({
   name: 'bot-gist',
-  description: "Sums up each finished bot reply in one line with the fast sub model and keeps it in the bot's conversation",
-  inject: { bots },
+  description: "Sums up each finished bot reply in one line with the fast sub model and keeps it in the bot's chat",
+  inject: { bots, sessions },
   apply(ctx) {
     const unloaded = new AbortController()
     ctx.effect(() => () => unloaded.abort())
     const asked = new Set<string>()
 
-    const replyOf = (bot: string, entry: string) =>
-      ctx.bots.conversation(bot).entry(entry)?.data as Message | undefined
-
     const sum = async (bot: string, entry: string, signal: AbortSignal) => {
       const sub = ctx.get(subModel)
-      const reply = replyOf(bot, entry)
+      const chat = ctx.sessions.require(bot)
+      const reply = chat.entry(entry)?.data as Message | undefined
       if (!sub?.has('fast') || !reply) return
       const text = await askGist(sub, { bot, reply, signal })
-      ctx.bots.conversation(bot).append(gistEntry, { entry, text } satisfies GistEntry)
+      chat.append(gistEntry, { entry, text } satisfies GistEntry)
     }
 
     ctx.on(botChange, bot => {

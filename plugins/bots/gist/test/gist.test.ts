@@ -1,5 +1,4 @@
 import { botCreate, botList } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { subModelSet } from '@sand/sub-model/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -17,8 +16,8 @@ test("a finished bot reply gets a one-line gist from the fast sub model, shown w
     plugins: ['agent/ask', 'agent/sub-model', 'bots/bots', 'bots/turns', 'bots/gist'],
   })
   await sand.ask(subModelSet, { tier: 'fast', model: { model: 'fake/m' } })
-  const bot = await sand.ask(botCreate, { name: 'Gardener', models: { main: { model: 'fake/m' }, quick: {} } })
-  await sand.ask(botSend, { bot: bot.id, prompt: 'Check the beds', clientRequestId: 'one' })
+  const bot = await sand.ask(botCreate, { name: 'Gardener' })
+  await sand.turns.send(sand.sessions.require(bot.id), { prompt: 'Check the beds', clientRequestId: 'one' })
   while (!(await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last?.gist) await Bun.sleep(10)
   const last = (await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last
   expect(last?.gist).toBe('Watered the dry east bed')

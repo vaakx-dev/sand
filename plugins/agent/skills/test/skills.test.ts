@@ -1,6 +1,6 @@
-import { botCreate, botList, bots } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
+import { botCreate, bots } from '@sand/bots/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { modelSettings } from '@sand/model/contract'
 import { paths } from '@sand/paths/contract'
 import { skills, skillsList } from '@sand/skills/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -22,12 +22,17 @@ const start = async () => {
   while (!(await sand.app.get(skills)!.list()).length) await Bun.sleep(10)
 }
 
+const botChat = async () => {
+  const bot = await sand.ask(botCreate, { name: 'Helper' })
+  const chat = sand.sessions.require(bot.id)
+  sand.app.get(modelSettings)!.change(chat, { model: 'fake/m' })
+  return { bot, chat }
+}
+
 const fromThreadAndBot = async (prompt: string) => {
   await start()
   await sand.turns.run(sand.chat('fake/m'), prompt)
-  const bot = await sand.ask(botCreate, { name: 'Helper', models: { main: { model: 'fake/m' }, quick: {} } })
-  await sand.ask(botSend, { bot: bot.id, prompt, clientRequestId: 'one' })
-  while ((await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last?.role !== 'assistant') await Bun.sleep(10)
+  await sand.turns.run((await botChat()).chat, prompt)
   return sand.requests('fake').map(body => JSON.parse(body))
 }
 
@@ -62,7 +67,7 @@ const names = (list: { name: string }[]) => list.map(skill => skill.name)
 test("a bot's skill list is the one its $mentions load from, not the open thread's", async () => {
   await start()
   const thread = sand.chat('fake/m')
-  const bot = await sand.ask(botCreate, { name: 'Helper', models: { main: { model: 'fake/m' }, quick: {} } })
+  const { bot, chat } = await botChat()
   await skillIn(sand.app.get(paths)!.projectFolder(thread.cwd, thread.project), 'deploy')
   await skillIn(sand.app.get(bots)!.folder(bot.id), 'notes')
 
@@ -71,7 +76,6 @@ test("a bot's skill list is the one its $mentions load from, not the open thread
   expect(forThread).toEqual(['deploy', 'verify'])
   expect(forBot).toEqual(['notes', 'verify'])
 
-  await sand.ask(botSend, { bot: bot.id, prompt: 'Take $notes', clientRequestId: 'one' })
-  while ((await sand.ask(botList, {})).find(listed => listed.id === bot.id)?.last?.role !== 'assistant') await Bun.sleep(10)
+  await sand.turns.run(chat, 'Take $notes')
   expect(firstBlock(JSON.parse(sand.requests('fake').at(-1)!))).toStartWith('<skill name="notes"')
 })

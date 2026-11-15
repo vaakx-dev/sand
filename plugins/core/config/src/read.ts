@@ -1,5 +1,5 @@
 import { errorMessage, isRecord } from '@sand/util'
-import { defaultHome, expandHome } from '@sand/util/fs'
+import { defaultHome, expandHome, setAside } from '@sand/util/fs'
 import { dirname, isAbsolute, join } from 'node:path'
 
 type Table = Record<string, unknown>
@@ -12,11 +12,12 @@ const anchor = (table: Table, dir: string): Table => {
   return { ...table, plugins: Object.fromEntries(plugins) }
 }
 
-const parse = async (path: string) => {
+const parse = async (path: string): Promise<Table> => {
   try {
     return Bun.TOML.parse(await Bun.file(path).text()) as Table
   } catch (error) {
-    throw new Error(`${path}: ${errorMessage(error)}`)
+    await setAside(path, `is not valid TOML (${errorMessage(error)})`)
+    return {}
   }
 }
 

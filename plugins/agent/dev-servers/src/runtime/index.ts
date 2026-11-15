@@ -1,4 +1,3 @@
-import type { Caller } from '@sand/host-hub/contract'
 import { hostChannel } from '@sand/host-runtimes/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { processes } from '@sand/processes/contract'
@@ -13,13 +12,11 @@ import { stopServer } from './stop'
 
 const found = event<(servers: DevServer[]) => void>('devServers.found')
 
-const threadOf = (caller: Caller) => (caller.actor?.owner === 'thread' ? caller.actor.id : undefined)
-
 const sameServers = (first: DevServer[], second: DevServer[]) => JSON.stringify(first) === JSON.stringify(second)
 
 export default definePlugin({
   name: 'dev-servers',
-  description: "Finds the web servers each thread's commands started on this PC, even ones left running in the background, and lists, opens and stops them",
+  description: "Finds the web servers each thread's and bot's commands started on this PC, even ones left running in the background, and lists, opens and stops them",
   config: z.object({ every_ms: z.number().int().positive().default(3_000) }),
   apply(ctx, config) {
     const scanner = createScanner(() => ctx.get(processes))
@@ -50,7 +47,7 @@ export default definePlugin({
 
     const open = (port: number, device: string) => {
       const shown = current.find(entry => entry.port === port)
-      if (!shown) throw new Error(`No server a thread started listens on port ${port}`)
+      if (!shown) throw new Error(`No server a thread or bot started listens on port ${port}`)
       const channel = ctx.get(hostChannel)
       if (!channel) throw new Error("Opening a dev server needs sand's host, which isn't running")
       return channel.call(devServerProxy, { port, address: shown.address, device })
@@ -76,10 +73,7 @@ export default definePlugin({
         host &&
         joinDisposers(
           host.hello(helloDevServers, () => current),
-          host.handle(devServerList, ({ session }, caller) => {
-            const owner = session ?? threadOf(caller)
-            return owner ? current.filter(entry => entry.session === owner) : current
-          }),
+          host.handle(devServerList, ({ session }) => (session ? current.filter(entry => entry.session === session) : current)),
           host.handle(devServerStop, ({ port }) => stop(port)),
           host.handle(devServerOpen, ({ port }, caller) => open(port, caller.device)),
           ctx.on(found, servers => host.broadcast(devServersChange, servers)),
