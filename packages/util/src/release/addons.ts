@@ -1,5 +1,7 @@
-import { readdir } from 'node:fs/promises'
+import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import { isRecord } from '../json/record'
+import { readStamp } from './stamp'
 
 interface AddonListing {
   id: string
@@ -30,9 +32,19 @@ interface AddonStamp {
   sha256: string
 }
 
+interface AddonFault {
+  build: string
+  error: string
+  at: number
+}
+
+const SOURCE_BUILD = 'source'
+
 const addonCatalogAsset = 'sand-addons.json'
 
 const addonStampFile = 'sand-addon.json'
+
+const addonFaultFile = 'sand-addon-fault.json'
 
 const addonAsset = (id: string) => `sand-addon-${id}.tar.gz`
 
@@ -40,7 +52,25 @@ const addonPicture = (id: string, file: string) => `sand-addon-${id}-${file}`
 
 const isAddonFolder = (dir: string) => Bun.file(join(dir, addonStampFile)).exists()
 
-const addonFolders = async (root: string) => {
+const coreBuild = async (builtins: string) => (await readStamp(join(builtins, '..')))?.id ?? SOURCE_BUILD
+
+const parseFault = (value: unknown): AddonFault | undefined =>
+  isRecord(value) && typeof value.build === 'string' && typeof value.error === 'string' && typeof value.at === 'number'
+    ? { build: value.build, error: value.error, at: value.at }
+    : undefined
+
+const addonFault = async (dir: string) =>
+  parseFault(
+    await Bun.file(join(dir, addonFaultFile))
+      .json()
+      .catch(() => undefined),
+  )
+
+const recordAddonFault = (dir: string, fault: AddonFault) => Bun.write(join(dir, addonFaultFile), `${JSON.stringify(fault, null, 2)}\n`)
+
+const clearAddonFault = (dir: string) => rm(join(dir, addonFaultFile), { force: true })
+
+const installedAddons = async (root: string) => {
   const folders = (await readdir(root, { withFileTypes: true }).catch(() => []))
     .filter(entry => entry.isDirectory() && !entry.name.startsWith('.'))
     .map(entry => join(root, entry.name))
@@ -48,4 +78,27 @@ const addonFolders = async (root: string) => {
   return folders.filter((_, index) => addons[index])
 }
 
-export { addonAsset, addonCatalogAsset, addonPicture, addonFolders, addonStampFile, isAddonFolder, type AddonCatalog, type AddonListing, type AddonStamp }
+const addonFolders = async (root: string, build: string) => {
+  const folders = await installedAddons(root)
+  const faults = await Promise.all(folders.map(addonFault))
+  return folders.filter((_, index) => faults[index]?.build !== build)
+}
+
+export {
+  addonAsset,
+  addonCatalogAsset,
+  addonFault,
+  addonFaultFile,
+  addonFolders,
+  addonPicture,
+  addonStampFile,
+  clearAddonFault,
+  coreBuild,
+  installedAddons,
+  isAddonFolder,
+  recordAddonFault,
+  type AddonCatalog,
+  type AddonFault,
+  type AddonListing,
+  type AddonStamp,
+}

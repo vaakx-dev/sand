@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { loginChange, loginPick, loginsState, sourceConnect, sourceDisconnect, type SourceItem, sourceSearch } from '../src/contract'
 import { fakeClis, type World } from './fake-cli'
-import { browser, call, leaksIn, leaksInText, resultText, said, type Sand, start, threadEntries } from './fixture'
+import { browser, call, leaksIn, leaksInText, resultText, said, type Sand, start, chatEntries } from './fixture'
 
 let folders: string[] = []
 
@@ -220,7 +220,7 @@ test('a thread fills, enters codes and passes keys from Bitwarden, Secrets Manag
     expect(await sand.turns.run(thread, 'Sign in to the mail again')).toMatchObject({ text: 'Bitwarden is locked.' })
     expect((await sand.ask(loginsState, {})).sources.bitwarden).toEqual({ status: 'locked', account: 'kai@example.net', saved: true })
 
-    const entries = threadEntries(sand, chat.id)()
+    const entries = chatEntries(sand, chat.id)()
     expect(resultText(entries, 'shell')).toContain('token=[secret: DEPLOY_TOKEN] api=[secret: Weather API] note=[secret: Build server key] user=[secret: Harbor Mail]')
     expect(resultText(entries, 'fails')).toContain('Rejected [secret: DEPLOY_TOKEN] and [secret: Weather API] for [secret: Lighthouse]:[secret: Lighthouse]')
     expect(resultText(entries, 'page')).toContain('"code":"[secret: Harbor Mail]"')

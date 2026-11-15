@@ -5,8 +5,9 @@ function Install-Sand {
   $repo = 'vaakx-dev/sand'
   $ok = [string][char]0x2713
   $arrow = [string][char]0x2192
-  $channel = 'release'
+  $channel = ''
   if ($env:SAND_CHANNEL) { $channel = $env:SAND_CHANNEL }
+  $allowOlder = $env:SAND_ALLOW_OLDER -eq '1'
   $join = $env:SAND_JOIN
   Remove-Item Env:SAND_JOIN, Env:SAND_CHANNEL -ErrorAction SilentlyContinue
   $base = ''
@@ -112,6 +113,45 @@ function Install-Sand {
     return @{ Assets = ('https://github.com/' + $repo + '/releases/download/' + $tag); Label = ('sand ' + $tag) }
   }
 
+  function Get-SavedChannel {
+    try {
+      $saved = [string](Get-Content -Raw -LiteralPath (Join-Path $sandHome 'updates.json') -ErrorAction Stop | ConvertFrom-Json).channel
+    } catch {
+      return 'release'
+    }
+    if ($saved -eq 'nightly' -or $saved -eq 'dev') { return $saved }
+    return 'release'
+  }
+
+  function Get-Older {
+    param([string]$Exe, [string]$Stamp, [string]$Label, [string]$Work)
+    $script = Join-Path $Work 'older.js'
+    $code = @'
+import { Database } from "bun:sqlite"
+import { existsSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+const [home, stampFile, label] = process.argv.slice(2)
+const read = file => { try { return JSON.parse(readFileSync(file, "utf8")) } catch { return undefined } }
+const builds = []
+const add = (id, time, what) => { if (typeof id === "string" && Number.isFinite(time)) builds.push({ id, time, what }) }
+let current = ""
+try { current = readFileSync(join(home, "app", "current"), "utf8").trim() } catch {}
+if (/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(current)) { const stamp = read(join(home, "app", current, "sand-build.json")); add(stamp?.id, stamp?.time, "is installed") }
+const file = join(home, "sand.db")
+if (existsSync(file)) { try { const db = new Database(file, { readonly: true }); try { const row = db.query("select build, time from upgraded_by").get(); add(row?.build, row?.time, "already upgraded your chats and bots") } finally { db.close() } } catch {} }
+const next = read(stampFile) ?? {}
+const newest = builds.sort((a, b) => b.time - a.time)[0]
+const describe = (id, time) => `build ${id.slice(0, 7)} (${new Date(time).toISOString().slice(0, 10)})`
+if (newest && typeof next.id === "string" && Number.isFinite(next.time) && next.time < newest.time) console.log(`${describe(newest.id, newest.time)} ${newest.what}, and ${label} is the older ${describe(next.id, next.time)}.`)
+'@
+    [IO.File]::WriteAllText($script, $code)
+    $ErrorActionPreference = 'Continue'
+    $global:LASTEXITCODE = 1
+    $output = (& $Exe $script $sandHome $Stamp $Label 2>&1 | ForEach-Object { [string]$_ }) -join [Environment]::NewLine
+    if ($LASTEXITCODE -ne 0) { throw ('Could not check the installed sand' + [Environment]::NewLine + $output) }
+    return $output.Trim()
+  }
+
   function Get-Bun {
     param([string]$Version, [string]$Folder, [string]$Work)
     $bun = Join-Path $Folder 'bun.exe'
@@ -150,6 +190,7 @@ function Install-Sand {
 
   try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }
   if ($env:SAND_HOME) { $sandHome = $env:SAND_HOME } else { $sandHome = Join-Path $env:USERPROFILE '.sand' }
+  if (-not $channel) { $channel = Get-SavedChannel }
 
   $work = Join-Path ([IO.Path]::GetTempPath()) ('sand-install-' + [guid]::NewGuid().ToString('N'))
   try {
@@ -173,6 +214,10 @@ function Install-Sand {
     if ($bunVersion -notmatch '^\d+\.\d+\.\d+$') { throw ('The build information of ' + $label + ' names no Bun version.') }
     Write-Host ('Installing ' + $label + ' (build ' + $build + ')') -ForegroundColor DarkGray
     $bun = Get-Bun $bunVersion (Join-Path $sandHome ('bun\' + $bunVersion)) $work
+    if (-not $allowOlder) {
+      $older = Get-Older $bun $stampFile $label $work
+      if ($older) { throw ('Sand was left as it is: ' + $older + ' To install the older build anyway, run $env:SAND_ALLOW_OLDER=''1'' and then the install command again.') }
+    }
 
     Send-Step 'sand'
     Write-Host ('Downloading ' + $label + '...') -ForegroundColor DarkGray

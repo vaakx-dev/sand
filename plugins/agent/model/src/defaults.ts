@@ -1,5 +1,5 @@
 import { isRecord, serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { SessionSettings, SettingsPatch } from './contract'
 import { clean } from './settings'
@@ -9,14 +9,7 @@ export interface Defaults {
   save(patch: SettingsPatch): Promise<void>
 }
 
-const readSaved = async (file: string): Promise<SessionSettings> => {
-  try {
-    const data: unknown = await Bun.file(file).json()
-    return isRecord(data) ? clean(data) : {}
-  } catch {
-    return {}
-  }
-}
+const readSaved = async (file: string): Promise<SessionSettings> => (await readState(file, data => (isRecord(data) ? clean(data) : {}))) ?? {}
 
 export const createDefaults = async (home: string, firstModel: () => string | undefined): Promise<Defaults> => {
   const file = join(home, 'model.json')

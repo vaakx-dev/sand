@@ -4,7 +4,7 @@ import { threadChange, type Thread } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, list, resizeObserver, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import { claims } from './claims'
 import type { ChatContext } from './context'
-import { threadRoute } from './contract'
+import { threadRoute, type ChatLook } from './contract'
 import { chatController } from './controller'
 import { keptViews } from './kept'
 import { sendingRows } from './rows/pending'
@@ -45,9 +45,9 @@ export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefin
     return scroller
   }
 
-  const thread = (id: string) => {
+  const thread = (id: string, look: ChatLook = {}) => {
     if (!ctx.threads.get(id)?.loaded) void ctx.threads.load(id)
-    return screen({ kind: threadRoute, id }, '', chats.view(id))
+    return screen({ kind: threadRoute, id }, '', chats.view(id, look))
   }
 
   return {

@@ -1,7 +1,7 @@
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
-import { composer as composerService, drafts, draftStore, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions, type DraftStore } from './contract'
-import { fileIndex, skillIndex, threadSelect, threadsChange, type SkillIndex } from '@sand/web-client/contract'
+import { composer as composerService, drafts, draftStore, typing as typingService, type Composer, type DraftStore } from './contract'
+import { fileIndex, skillIndex, threadSelect, threadsChange } from '@sand/web-client/contract'
 import { keyval } from '@sand/keyval'
 import { owned, pulse } from '@sand/reactive'
 import { quotedText } from '@sand/util'
@@ -14,9 +14,7 @@ import { inject } from './context'
 import { dock } from './dock/dock'
 import { field, type Field } from './dock/field'
 import { createSlots } from './dock/slots'
-import { dockDrafts } from './drafts/dock'
 import { draftSession } from './drafts/session'
-import { reconnected } from './drafts/reconnected'
 import type { Kept } from './drafts/store'
 import { spacedLink } from './editor/chips/place'
 import { loadEditor } from './editor/view'
@@ -27,9 +25,8 @@ import { createPlaceholders } from './placeholder'
 import { createPlus } from './plus/entries'
 import { createAsides } from './send/aside'
 import { createSendMenu } from './send/menu'
-import { sendsIn, unsaved, type Send } from './send/outgoing'
+import { sendsIn, type Send } from './send/outgoing'
 import { createSuggesters } from './suggest/sources'
-import { chatTarget } from './target'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
 import { takeShared } from './share'
 import { createTyping } from './typing'
@@ -48,8 +45,6 @@ export default definePlugin({
     const plus = createPlus()
     const typing = createTyping()
     const triggers = createTriggers()
-    const threadOnly = createTriggers()
-    const skills = sig<SkillIndex | undefined>(undefined)
     const shelf = sig<Shelves | undefined>(undefined)
     const files = keyval<Kept>('sand-draft-files', 'drafts')
     const sends = keyval<Send[]>('sand-sending', 'sends')
@@ -68,39 +63,12 @@ export default definePlugin({
       })
 
     const { model, session, errors, placeholders } = owned(ctx, () => {
-      const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf, sendsIn(sends, 'threads'))
+      const model = createModel(threadTarget(ctx), [triggers], shelf, sendsIn(sends, 'threads'))
       const session = draftSession(ctx, model, () => store.get(), files, () => mounted.forEach(built => built.completion.close()))
       const inThread = pulse(ctx, [threadSelect, threadsChange]).read(() => Boolean(ctx.threads.current()))
       listen(window, 'pagehide', () => session.keep())
       return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
     })
-
-    const chatDock = (chat: Chat, { placeholder }: DockOptions = {}): ChatDock => {
-      const own = createSlots(shared)
-      const chatOnly = createTriggers()
-      chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
-      const model = createModel(chatTarget(chat), [triggers, chatOnly], shelf, unsaved)
-      dockDrafts(`${chat.ref.owner}:${chat.ref.id}`, model, () => store.get(), files, () => reconnected(ctx))
-      const parts = {
-        ctx,
-        model,
-        slots: own,
-        plus: createPlus(),
-        actions: () => [],
-        typed: typing.typed,
-        asides,
-        suggesters,
-        placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
-      }
-      const built = field(parts)
-      return {
-        view: dock(parts, built),
-        slot: own.add,
-        sending: model.sending,
-        quote: text => built.editor.quote(text),
-        focus: () => built.editor.focus(),
-      }
-    }
 
     const settings = () => nextSettings(ctx, model.picked.get())
     const choose = chooseSettings(ctx, model)
@@ -159,7 +127,6 @@ export default definePlugin({
       command: triggers.addCommand,
       settings,
       choose,
-      dock: chatDock,
       sending: model.sending,
     }
 
@@ -170,11 +137,8 @@ export default definePlugin({
       if (found) void session.start()
     })
     ctx.on(threadSelect, session.open)
-    ctx.watch(fileIndex, found => found && threadOnly.add(fileTrigger(found, ctx.threads)))
-    ctx.watch(skillIndex, found => {
-      skills.set(found)
-      return found && threadOnly.add(skillTrigger(() => found.list()))
-    })
+    ctx.watch(fileIndex, found => found && triggers.add(fileTrigger(found, ctx.threads)))
+    ctx.watch(skillIndex, found => found && triggers.add(skillTrigger(() => found.list())))
     ctx.effect(() => () => session.keep())
     ctx.provide(composerService, composer)
     ctx.provide(drafts, session.drafts)

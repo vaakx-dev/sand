@@ -1,8 +1,8 @@
-import type { BotTurns } from '@sand/bot-turns/contract'
-import { notificationText } from '@sand/chats/contract'
+import { notificationText, type Session } from '@sand/chats/contract'
 import { type Job, runPrompt } from '@sand/bots/contract'
 import type { Moment, MomentKind } from '@sand/devices-notify/contract'
 import type { Fire, Handler } from '@sand/schedules/contract'
+import type { Turns } from '@sand/turns-contract/contract'
 import type { Routine } from './contract'
 import { routineOf } from './routines'
 
@@ -25,20 +25,22 @@ const promptOf = (routine: Routine, fire: Fire, job: Job | undefined) =>
 const moments: Partial<Record<string, MomentKind>> = { completed: 'routine', failed: 'failed', lost: 'failed' }
 
 export interface Firing {
-  turns: BotTurns
+  turns: Turns
+  chat(bot: string): Session | undefined
   job(id: string): Job | undefined
   lastSaid(bot: string): string
   tell(moment: Moment): void
 }
 
 export const fireRoutine =
-  ({ turns, job, lastSaid, tell }: Firing): Handler =>
+  ({ turns, chat, job, lastSaid, tell }: Firing): Handler =>
   async (schedule, fire, signal) => {
     const routine = routineOf(schedule)
     const owned = routine.job ? job(routine.job) : undefined
-    if (owned?.paused) return
-    const sent = await turns.send(routine.bot, { prompt: promptOf(routine, fire, owned), mode: 'queue', origin: 'routine', label: routine.name, clientRequestId: fire.key })
-    const turn = await turns.follow(routine.bot, sent, signal)
+    const session = chat(routine.bot)
+    if (owned?.paused || !session) return
+    const sent = await turns.send(session, { prompt: promptOf(routine, fire, owned), mode: 'queue', origin: 'routine', label: routine.name, clientRequestId: fire.key })
+    const turn = await turns.follow(session, sent, signal)
     const kind = turn && moments[turn.status]
     if (!turn || !kind) return
     if (kind !== 'failed') return tell({ kind, title: routine.name, text: lastSaid(routine.bot) })

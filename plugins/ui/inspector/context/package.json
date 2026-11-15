@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@sand/compaction": "workspace:*",
-    "@sand/devices-contract": "workspace:*",
     "@sand/inspector": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",

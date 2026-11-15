@@ -17,7 +17,7 @@ import { PULL_NOTICE } from '../contract'
 
 const TAB = 'pull'
 
-const shows = (subject: Subject, items: Item[]) => !subject.draft && subject.owner === 'thread' && items.length > 0
+const shows = (subject: Subject, items: Item[]) => !subject.draft && items.length > 0
 
 export default definePlugin({
   name: 'pull-watch-web',

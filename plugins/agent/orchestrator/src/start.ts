@@ -33,7 +33,7 @@ type Open = (cwd: string, project?: string | null) => Session
 
 export type Adopt = (session: Session) => void
 
-const parentOf = (ctx: OrchestratorContext, { from }: Pick<StartInput, 'from'>) => (from?.owner === 'thread' ? ctx.sessions.open(from.id) : undefined)
+const parentOf = (ctx: OrchestratorContext, { from }: Pick<StartInput, 'from'>) => from && ctx.sessions.open(from.id)
 
 const inheritedSettings = (ctx: OrchestratorContext, parent: Session | undefined): SessionSettings => {
   if (!parent) return {}
@@ -44,28 +44,23 @@ const inheritedSettings = (ctx: OrchestratorContext, parent: Session | undefined
 export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starters: Starters, owners: Owners) => {
   const opening = new Map<string, Promise<Session>>()
 
-  const placeOf = ({ cwd, project, from }: StartInput) => (cwd === undefined && project === undefined ? { project: owners.home(from) } : { cwd, project })
-
   const opener = (input: StartInput): Open => {
     const { subagent, from, title } = input
     if (!subagent) return (cwd, project) => ctx.sessions.thread(cwd, project === undefined ? undefined : { project })
     if (!from) throw failure('invalid_request', 'A subagent needs the thread or bot that starts it')
-    return (cwd, project) => ctx.sessions.agent({ ...(from.owner === 'thread' && { parent: from.id }), cwd, project, title: title ?? '', origin: subagent.call })
+    return (cwd, project) => ctx.sessions.agent({ parent: from.id, cwd, project, title: title ?? '', origin: subagent.call })
   }
 
-  const subagentPlace = (from: ConversationRef) => {
-    const parent = parentOf(ctx, { from })
-    if (parent) return { cwd: parent.cwd, project: parent.project }
+  const homeOf = (from: ConversationRef) => {
     const project = owners.home(from)
     if (project) return folderOf(ctx, { project })
-    const cwd = owners.folder(from)
-    return cwd ? { cwd } : undefined
+    const starter = parentOf(ctx, { from })
+    return starter && { cwd: starter.cwd, project: starter.project }
   }
 
-  const folderFor = (input: StartInput) => {
-    const { subagent, from, cwd, project } = input
-    const placed = subagent && from && cwd === undefined && project === undefined ? subagentPlace(from) : undefined
-    return placed ?? folderOf(ctx, placeOf(input))
+  const folderFor = ({ from, cwd, project }: StartInput) => {
+    const placed = from && cwd === undefined && project === undefined ? homeOf(from) : undefined
+    return placed ?? folderOf(ctx, { cwd, project })
   }
 
   const inFolder = (input: StartInput) => {

@@ -1,4 +1,5 @@
 import { healthText } from '@sand/boot'
+import { olderThanData } from '@sand/ledger/contract'
 import { errorMessage } from '@sand/util'
 import type { BuildInfo } from '@sand/util/release'
 import type { GithubRelease } from '../github/release'
@@ -43,12 +44,14 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
   const cleanup = (keep: string[]) =>
     deps.cleanup(keep).catch(failure => console.error(`sand could not remove old builds: ${errorMessage(failure)}`))
 
-  const swapBack = async (before: string, swapped: boolean) => {
+  const swapBack = async (before: string, swapped: boolean, running: BuildInfo) => {
+    const blocked = olderThanData(running, deps.upgrade())
+    if (blocked) return console.error(`the new sand runtime stays until the restart, because the previous ${blocked}`)
     deps.app.use(before)
     if (swapped && !(await deps.runtimes.swap('update'))) console.error('the previous sand runtime did not start again either')
   }
 
-  const swapRuntime = async (prepared: PreparedBuild, ticket: number) => {
+  const swapRuntime = async (prepared: PreparedBuild, ticket: number, running: BuildInfo) => {
     const before = deps.app.root()
     deps.app.use(prepared.root)
     const swapped = await deps.runtimes.swap('update')
@@ -64,7 +67,7 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
     }
     const detail = outcome ? `it was not healthy:\n${healthText(outcome)}` : 'it did not start'
     console.error(`this sand could not run build ${short(prepared.build.id)}'s runtime, so it restarts into it instead; ${detail}`)
-    await swapBack(before, swapped)
+    await swapBack(before, swapped, running)
     return false
   }
 
@@ -74,18 +77,38 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
   const refreshShim = () =>
     deps.refreshShim().catch(failure => console.error(`sand could not update the sand command: ${errorMessage(failure)}`))
 
+  const refuseOlder = (release: GithubRelease) => {
+    const problem = olderThanData(release.build, deps.upgrade())
+    if (problem) throw new Error(`sand did not install it: ${problem}. Wait for a newer build on this channel, or switch to the channel you came from`)
+  }
+
+  const stageAddons = (release: GithubRelease) => deps.addons()?.stage({ addons: release.build.addons, catalog: release.catalogUrl })
+
+  const switchBuild = async (prepared: PreparedBuild, release: GithubRelease, ticket: number) => {
+    const addons = await stageAddons(release)
+    try {
+      progress.step('switching', ticket)
+      ensureLive(ticket)
+      await deps.switchTo(basename(prepared.root))
+    } catch (error) {
+      await addons?.drop()
+      throw error
+    }
+    await addons?.place()
+    await refreshShim()
+  }
+
   const install = async (release: GithubRelease, ticket: number, force: boolean) => {
     try {
+      refuseOlder(release)
+      const running = await deps.current()
       const bytes = await deps.download(release)
       progress.step('installing', ticket)
       const prepared = await deps.prepare(bytes, force)
       await deps.checkLoads(prepared.root, prepared.bunPath)
-      progress.step('switching', ticket)
       const changed = await needsRestart(prepared, force)
-      ensureLive(ticket)
-      await deps.switchTo(basename(prepared.root))
-      await refreshShim()
-      if (!changed && (await swapRuntime(prepared, ticket))) return
+      await switchBuild(prepared, release, ticket)
+      if (!changed && (await swapRuntime(prepared, ticket, running))) return
       progress.step('waiting', ticket)
       await drain(ticket)
       progress.step('restarting', ticket)

@@ -42,7 +42,7 @@ export default definePlugin({
       },
     }
 
-    const skillsOf = ({ owner, id, cwd }: Conversation) => skills.list(cwd, owner === 'thread' ? (ctx.get(sessions)?.require(id).project ?? null) : null)
+    const skillsOf = ({ id, cwd }: Conversation) => skills.list(cwd, ctx.get(sessions)?.require(id).project ?? null)
 
     const refresh = async () => {
       const mine = ++generation

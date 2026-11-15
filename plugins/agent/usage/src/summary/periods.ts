@@ -26,8 +26,8 @@ export const periodBook = (zone: string, bucket: UsageBucket) => {
 
   const add = (at: number, account: string, model: string) => {
     const key = keyOf(at)
-    const period = grouped(periods, key, (): PeriodUsage => ({ ...emptyTotals(), key, accounts: {}, models: {} }))
-    return [period, (period.accounts[account] ??= emptyTotals()), (period.models[model] ??= emptyTotals())] as const
+    const period = grouped(periods, key, (): PeriodUsage => ({ key, accounts: {}, models: {} }))
+    return [(period.accounts[account] ??= emptyTotals()), (period.models[model] ??= emptyTotals())] as const
   }
 
   const finish = () => [...periods.values()].sort((a, b) => a.key.localeCompare(b.key))

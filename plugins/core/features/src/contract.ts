@@ -20,6 +20,7 @@ export interface Addon {
   version?: string
   update?: string
   needsSand?: string
+  fault?: string
   source?: { id: string; label: string }
 }
 

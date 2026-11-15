@@ -14,7 +14,6 @@
     "summary": "Find words in the chat on screen and step through them"
   },
   "dependencies": {
-    "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",

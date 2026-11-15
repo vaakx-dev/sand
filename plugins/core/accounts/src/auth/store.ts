@@ -1,6 +1,6 @@
 import type { PlanTokens, ServerProvider } from '../contract'
 import { serial } from '@sand/util'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { fieldsOf, isText } from './json'
 import { isServerProvider } from './kinds'
 
@@ -55,15 +55,7 @@ export const credentialOf = (saved: Saved, provider: string) => {
 export const authStore = (path: string) => {
   const queue = serial()
   return {
-    async read(): Promise<Saved> {
-      const file = Bun.file(path)
-      if (!(await file.exists())) return {}
-      try {
-        return fieldsOf(await file.json())
-      } catch {
-        return {}
-      }
-    },
+    read: async (): Promise<Saved> => (await readState(path, fieldsOf)) ?? {},
     write(saved: Saved) {
       return queue(() => writePrivateJson(path, saved))
     },

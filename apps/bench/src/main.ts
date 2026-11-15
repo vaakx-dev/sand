@@ -6,7 +6,7 @@ import { slowLink, type LinkShape } from './link'
 import { type Cost, costOf, countAt, fresh as untouched, openRoute, seen, shownAt, tapped } from './measure'
 import { startPhone } from './phone'
 import { startSandbox } from './sandbox'
-import type { SeededChat } from './seed'
+import type { SeededChat } from './seed/chat'
 
 const { values } = parseArgs({
   options: {
@@ -37,7 +37,7 @@ const record = (name: string, cost: Cost) => {
   results.set(name, [...(results.get(name) ?? []), cost])
 }
 
-const sandbox = await startSandbox(runs * 4 + 10, values.box, values.keep)
+const sandbox = await startSandbox({ replies: runs * 4 + 10, box: values.box, keep: values.keep })
 const target = new URL(sandbox.pairUrl)
 const link = await slowLink(target, shape)
 const phone = await startPhone({ cpuSlowdown: Number(values.cpu) })

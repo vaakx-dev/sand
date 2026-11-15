@@ -1,7 +1,6 @@
-import { botOpen, botSend } from '@sand/bot-turns/contract'
 import { routineDelete, routineList, routinePause } from '@sand/bot-routines/contract'
-import { botCreate, botDelete, botList, type BotEntry, jobCreate, jobDelete, jobUpdate } from '@sand/bots/contract'
-import { type Message, textOf } from '@sand/chats/contract'
+import { botCreate, botDelete, botList, jobCreate, jobDelete, jobUpdate } from '@sand/bots/contract'
+import { type Entry, type Message, textOf } from '@sand/chats/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { engine } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -54,15 +53,15 @@ const runTool = async (name: string, input: Record<string, unknown>, conversatio
   return result.content.map(block => (block.type === 'text' ? block.text : '')).join('')
 }
 
-const userMessages = (entries: BotEntry[]) => entries.filter(entry => entry.type === 'message' && (entry.data as Message).role === 'user')
+const userMessages = (entries: Entry[]) => entries.filter(entry => entry.type === 'message' && (entry.data as Message).role === 'user')
 
 test('a bot sets a reminder, and when it is due the bot gets a routine turn in its own chat', async () => {
   setSystemTime(at('2026-11-04T17:58:00Z'))
   const reminder = { name: 'Call Ana', instructions: 'Remind the user to call Ana about lunch', at: '2026-11-04 18:00', zone: 'UTC' }
   const { ask, requests } = await start([[said('On it.'), { type: 'call', name: 'routine_create', input: reminder }], [said('I will remind you at 18:00.')], [said('Time to call Ana about lunch!')]])
-  const bot = await ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await ask(botCreate, { name: 'Errands' })
 
-  await ask(botSend, { bot: bot.id, prompt: 'Remind me at 6pm to call Ana', clientRequestId: 'one' })
+  await sand.turns.send(sand.sessions.require(bot.id), { prompt: 'Remind me at 6pm to call Ana', clientRequestId: 'one' })
   await until(() => answered(bot.id, 'I will remind you at 18:00.'))
   const [routine] = await ask(routineList, { bot: bot.id })
   expect(routine).toMatchObject({ bot: bot.id, name: 'Call Ana', when: { kind: 'once', at: at('2026-11-04T18:00:00Z') }, next: at('2026-11-04T18:00:00Z'), paused: false })
@@ -79,7 +78,7 @@ test('a bot sets a reminder, and when it is due the bot gets a routine turn in i
   expect(prompt).toStartWith(`<task-notification>\n<routine>${routine!.id}</routine>\n<kind>reminder</kind>\n<label>Call Ana</label>\n<status>due</status>`)
   expect(prompt).toContain(`<at>${timestamp(at('2026-11-04T18:00:00Z'))}</at>`)
   expect(prompt).toContain('<instructions>\nRemind the user to call Ana about lunch\n</instructions>')
-  const { entries } = await ask(botOpen, { bot: bot.id })
+  const entries = sand.sessions.require(bot.id).path()
   const fired = userMessages(entries).at(-1)!
   expect(textOf((fired.data as Message).content)).toBe(prompt)
   expect(sand.app.get(engine)!.turn('bot', fired.turn!)?.origin).toBe('routine')
@@ -88,8 +87,8 @@ test('a bot sets a reminder, and when it is due the bot gets a routine turn in i
 test('routines can be paused, resumed and deleted, by any bot, and go when their bot does', async () => {
   setSystemTime(at('2026-11-04T08:00:00Z'))
   const { ask } = await start([])
-  const bot = await ask(botCreate, { name: 'Briefer', models: { main: { model: 'fake/m' }, quick: {} } })
-  const other = await ask(botCreate, { name: 'Other', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await ask(botCreate, { name: 'Briefer' })
+  const other = await ask(botCreate, { name: 'Other' })
   const text = (name: string, input: Record<string, unknown>, conversation = bot.id) => runTool(name, input, conversation)
 
   expect(await text('routine_create', { name: 'Brief', instructions: 'Brief me', repeat: '0 9 * * 1-5', zone: 'UTC' })).toContain('repeats on cron 0 9 * * 1-5 (UTC)')
@@ -119,9 +118,9 @@ test('a routine that fires while its bot is busy waits its turn, and when that t
   const { ask } = await start([[said('Working.'), { type: 'call', name: 'gate', input: {} }], [said('Done.')], [{ type: 'error', message: 'overloaded' }], [said('Time to call Ana.')]])
   const gate = Promise.withResolvers<string>()
   sand.tool('gate', () => gate.promise)
-  const bot = await ask(botCreate, { name: 'Errands', models: { main: { model: 'fake/m' }, quick: {} } })
+  const bot = await ask(botCreate, { name: 'Errands' })
   await runTool('routine_create', { name: 'Call Ana', instructions: 'Remind the user to call Ana', at: '2026-11-04 18:00', zone: 'UTC' }, bot.id)
-  await ask(botSend, { bot: bot.id, prompt: 'Do the long thing', clientRequestId: 'one' })
+  await sand.turns.send(sand.sessions.require(bot.id), { prompt: 'Do the long thing', clientRequestId: 'one' })
 
   setSystemTime(at('2026-11-04T18:00:00Z'))
   await Bun.sleep(1_500)
@@ -143,9 +142,8 @@ test('a routine that fires while its bot is busy waits its turn, and when that t
 test('a routine that runs a job names the job to the bot, skips its runs while the job is paused, and goes when the job is deleted', async () => {
   setSystemTime(at('2026-11-04T07:59:00Z'))
   const { ask, requests } = await start([[said('Main is green again.')]])
-  const models = { main: { model: 'fake/m' }, quick: {} }
-  const bot = await ask(botCreate, { name: 'Ferry', models })
-  const other = await ask(botCreate, { name: 'Juno', models })
+  const bot = await ask(botCreate, { name: 'Ferry' })
+  const other = await ask(botCreate, { name: 'Juno' })
   const job = await ask(jobCreate, { bot: bot.id, title: 'CI triage', goal: 'Fix red builds on main.', done: 'Main is green.' })
   const triage = { name: 'Triage', instructions: 'Check CI on main', repeat: '0 8 * * *', zone: 'UTC', job: job.id }
 

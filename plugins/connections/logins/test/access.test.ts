@@ -1,12 +1,10 @@
-import { botCreate } from '@sand/bots/contract'
-import { botSend } from '@sand/bot-turns/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { loginAdd, loginChange, loginUses } from '../src/contract'
-import { botEntries, browser, call, idle, models, plugins, resultText, said, start, threadEntries } from './fixture'
+import { browser, call, chatEntries, idle, newBot, plugins, resultText, said, start, tellBot } from './fixture'
 
 let home: string
 
@@ -14,7 +12,7 @@ afterEach(() => rmSync(home, { recursive: true, force: true }))
 
 const setUp = async () => {
   const sand = await start([], { home })
-  const bot = await sand.ask(botCreate, { name: 'Deployer', models })
+  const bot = await newBot(sand, 'Deployer')
   const key = await sand.ask(loginAdd, { kind: 'key', name: 'Deploy key', value: 'deploy-key-value' })
   const site = await sand.ask(loginAdd, { kind: 'website', name: 'Northbank', site: 'northbank.example', username: 'ana', password: 'bank-password' })
   for (const login of [key, site]) await sand.ask(loginChange, { id: login.id, bots: [bot.id] })
@@ -50,7 +48,7 @@ test("a bot and its subagents use the bot's logins; any other thread, or anyone 
   try {
     const fills = browser(sand)
 
-    await sand.ask(botSend, { bot: ids.bot, prompt: 'Deploy', clientRequestId: 'bot' })
+    await tellBot(sand, ids.bot, 'Deploy')
     await idle(sand, ids.bot)
     expect(fills).toEqual([{ site: 'northbank.example', username: 'ana', password: 'bank-password' }])
 
@@ -70,14 +68,14 @@ test("a bot and its subagents use the bot's logins; any other thread, or anyone 
 
     const chat = sand.sessions.require(ids.chat)
     expect(await sand.turns.run(chat, 'Deploy')).toMatchObject({ text: 'User thread was refused.' })
-    expect(resultText(threadEntries(sand, chat.id)(), 'shell')).toBe(
+    expect(resultText(chatEntries(sand, chat.id)(), 'shell')).toBe(
       "Not used: the login Deploy key isn't shared with this thread. Tell the user: they can let it use the login in the login's settings (Settings → Logins), or use it themselves.",
     )
 
     for (const id of [ids.key, ids.site]) await sand.ask(loginChange, { id, ask: true })
-    await sand.ask(botSend, { bot: ids.bot, prompt: 'Deploy again', clientRequestId: 'bot-ask' })
+    await tellBot(sand, ids.bot, 'Deploy again')
     await idle(sand, ids.bot)
-    const asked = await botEntries(sand, ids.bot)()
+    const asked = chatEntries(sand, ids.bot)()
     expect(resultText(asked, 'shell')).toEndWith(asksEveryTime('Deploy key'))
     expect(resultText(asked, 'login_fill')).toEndWith(asksEveryTime('Northbank'))
     expect(fills).toHaveLength(1)

@@ -5,7 +5,7 @@ export * from './chips'
 export * from './clipboard'
 
 export interface Reader {
-  kind: ChatKind | 'bot'
+  kind: ChatKind
   cwd: string
 }
 
