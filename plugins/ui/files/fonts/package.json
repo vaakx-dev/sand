@@ -1,0 +1,28 @@
+{
+  "name": "@sand/file-fonts",
+  "version": "0.0.0",
+  "description": "Shows font files in the file viewer as a specimen",
+  "type": "module",
+  "sand": {
+    "feature": "file-fonts",
+    "web": "./src/web/index.ts",
+    "label": "Fonts",
+    "summary": "TrueType, OpenType and WOFF fonts",
+    "features": {
+      "file-fonts": {
+        "label": "Fonts",
+        "summary": "TrueType, OpenType and WOFF fonts",
+        "parent": "file-viewer",
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/file-viewer": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/zip": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
