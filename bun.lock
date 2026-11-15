@@ -2736,6 +2736,19 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/files/notebooks": {
+      "name": "@sand/file-notebooks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/file-viewer": "workspace:*",
+        "@sand/markdown": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "plugins/ui/files/viewer": {
       "name": "@sand/file-viewer",
       "version": "0.0.0",
@@ -3453,6 +3466,8 @@
     "@sand/features": ["@sand/features@workspace:plugins/core/features"],
 
     "@sand/file-archives": ["@sand/file-archives@workspace:plugins/ui/files/archives"],
+
+    "@sand/file-notebooks": ["@sand/file-notebooks@workspace:plugins/ui/files/notebooks"],
 
     "@sand/file-tools": ["@sand/file-tools@workspace:plugins/agent/file-tools"],
 
