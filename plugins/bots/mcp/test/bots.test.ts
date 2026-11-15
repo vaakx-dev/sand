@@ -1,7 +1,6 @@
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client'
 import { McpServer } from '@modelcontextprotocol/server'
-import { botAwait, botOpen, botSend } from '@sand/bot-turns/contract'
-import { botCreate, type BotEntry, botList, botUpdate, changeEntry } from '@sand/bots/contract'
+import { botCreate, botList, botUpdate, changeEntry } from '@sand/bots/contract'
 import { type Message, promptText, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -24,9 +23,9 @@ const start = async (replies: Reply[], plugins: string[] = []) => {
   return sand
 }
 
-const models = { main: { model: 'fake/b' }, quick: {} }
+const createBot = (name: string) => sand.ask(botCreate, { name })
 
-const createBot = (name: string) => sand.ask(botCreate, { name, models })
+const chatOf = (bot: string) => sand.sessions.require(bot)
 
 const asBot = (bot: string): Conversation => ({
   id: bot,
@@ -49,7 +48,7 @@ const use = async (conversation: Conversation, name: string, input: Record<strin
 }
 
 const userTexts = async (bot: string) =>
-  (await sand.ask(botOpen, { bot })).entries.flatMap((entry: BotEntry) =>
+  chatOf(bot).path().flatMap(entry =>
     entry.type === 'message' && (entry.data as Message).role === 'user' ? [promptText(entry.data as Message)] : [],
   )
 
@@ -58,7 +57,7 @@ const seenIn = (request: string) =>
 
 const answered = async (bot: string, prompt: string) => {
   const before = (await sand.ask(botList, {})).find(listed => listed.id === bot)?.last?.at ?? 0
-  await sand.ask(botSend, { bot, prompt, clientRequestId: prompt })
+  await sand.turns.send(chatOf(bot), { prompt, clientRequestId: prompt })
   for (let tries = 0; tries < 300; tries++) {
     const last = (await sand.ask(botList, {})).find(listed => listed.id === bot)?.last
     if (last?.role === 'assistant' && last.at > before) return
@@ -74,7 +73,7 @@ test('a bot cannot message itself', async () => {
   expect(await use(asBot(bot.id), 'bot_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
 })
 
-const changes = async (bot: string) => (await sand.ask(botOpen, { bot })).entries.filter(entry => entry.type === changeEntry).map(entry => entry.data)
+const changes = (bot: string) => sand.sessions.entriesIn(bot, changeEntry).map(entry => entry.data)
 
 test("a bot can pause another bot and change any bot's limit, its own too, and each change shows in that bot's chat with who made it", async () => {
   await start([])
@@ -85,8 +84,8 @@ test("a bot can pause another bot and change any bot's limit, its own too, and e
   expect(await use(asBot(planner.id), 'bot_update', { budget: 50 })).toMatchObject({ bot: planner.id, budget: 50 })
   await sand.ask(botUpdate, { bot: planner.id, patch: { budget: 20, color: planner.color } })
 
-  expect(await changes(travel.id)).toEqual([{ by: { kind: 'bot', id: planner.id, label: 'Planner' }, before: { paused: false, budget: null }, after: { paused: true, budget: 5 } }])
-  expect(await changes(planner.id)).toEqual([
+  expect(changes(travel.id)).toEqual([{ by: { kind: 'bot', id: planner.id, label: 'Planner' }, before: { paused: false, budget: null }, after: { paused: true, budget: 5 } }])
+  expect(changes(planner.id)).toEqual([
     { by: { kind: 'bot', id: planner.id, label: 'Planner' }, before: { budget: null }, after: { budget: 50 } },
     { by: { kind: 'user' }, before: { budget: 50 }, after: { budget: 20 } },
   ])
@@ -98,10 +97,11 @@ test('a bot messages another bot without waiting, and hears back only if that bo
   const travel = await createBot('Travel')
 
   const sent = await use(asBot(asker.id), 'bot_send', { bot: travel.id, prompt: 'Book Friday' })
-  expect(sent).toEqual({ bot: travel.id, turn: expect.any(String), status: 'running', detached: true })
+  expect(sent).toEqual({ bot: travel.id, disposition: 'started', turn: expect.any(String) })
   const [asked] = await userTexts(travel.id)
   expect(asked).toMatch(/^\[Planner\]\(sand-context:\/\/v1\/bot\/[^)]+\) Book Friday$/)
-  expect(await sand.ask(botAwait, { bot: travel.id, turn: sent.turn, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
+  expect(await sand.turns.wait(sent.turn, 'end')).toMatchObject({ status: 'completed' })
+  expect(sand.turns.reply(chatOf(travel.id), sent.turn)).toBe('Booked for Friday.')
   const seen = seenIn(sand.requests('fake')[0]!)
   expect(seen).toContain(`This message is from the user's bot "Planner" (id ${asker.id}), not from the user.`)
   expect(seen).toContain('if it asks to hear back, message it with bot_send')
@@ -132,7 +132,7 @@ test('a bot looks up its own past with history_read: what was said and done, and
 test('a bot with no jobs sets one up and works to it from its next step; its runs mark the job as needing the user until the next report', async () => {
   const notes = { title: 'Notes', goal: "Keep the user's notes tidy.", done: 'Every note has a tag.' }
   await start([[{ type: 'call', name: 'job_create', input: notes }], said('Done.')])
-  const bot = await sand.ask(botCreate, { models })
+  const bot = await sand.ask(botCreate, {})
 
   await answered(bot.id, 'Keep my notes')
   const [, next] = sand.requests('fake').map(body => JSON.parse(body).system[0].text as string)

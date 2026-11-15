@@ -1,6 +1,4 @@
-import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import { sessionSettings, type SessionSettings } from '@sand/model/contract'
 import type { WaitReason } from '@sand/turns-contract/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { lazy } from '@sand/util'
@@ -16,13 +14,6 @@ export const freshColor = (taken: Pick<Bot, 'color'>[]): BotColor => {
   return botColors.reduce((best, color) => (uses(color) < uses(best) ? color : best))
 }
 
-export type ModelChoice = Pick<SessionSettings, 'model' | 'effort'>
-
-export interface ModelPolicy {
-  main: ModelChoice
-  quick: ModelChoice
-}
-
 export type Computer = 'none' | 'own' | 'this-pc' | `pc:${string}`
 
 export interface Bot {
@@ -30,7 +21,6 @@ export interface Bot {
   name: string
   initial: string
   color: BotColor
-  models: ModelPolicy
   computer: Computer
   projects: string[]
   paused: boolean
@@ -145,40 +135,6 @@ export interface BotSummary extends Bot {
   morning?: Morning
 }
 
-export interface BotEntry {
-  id: string
-  bot: string
-  seq: number
-  at: number
-  type: string
-  data: unknown
-  turn?: string
-}
-
-export const chatEntry = ({ bot, ...entry }: BotEntry, parent: string | null): Entry => ({ ...entry, session: bot, parent })
-
-export const chatPath = (entries: BotEntry[]): Entry[] => entries.map((entry, at) => chatEntry(entry, entries[at - 1]?.id ?? null))
-
-export interface EntryPage {
-  entries: BotEntry[]
-  more: boolean
-}
-
-export interface EntryRange {
-  before?: number
-  after?: number
-  limit?: number
-}
-
-export interface Conversation {
-  append(type: string, data: unknown, meta?: AppendMeta): BotEntry
-  entries(): BotEntry[]
-  page(range?: EntryRange): EntryPage
-  entry(id: string): BotEntry | undefined
-}
-
-const modelChoice = lazy(() => sessionSettings().pick({ model: true, effort: true }))
-
 const computer = lazy(() => z.union([z.enum(['none', 'own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])]))
 
 export const projectIds = lazy(() => z.array(z.string().min(1)).transform(ids => [...new Set(ids)]))
@@ -187,7 +143,6 @@ const botFields = lazy(() => z.object({
   name: z.string().trim().min(1).max(60),
   initial: z.string().trim().min(1).max(2),
   color: z.enum(botColors),
-  models: z.object({ main: modelChoice(), quick: modelChoice() }),
   computer: computer(),
   projects: projectIds(),
   paused: z.boolean(),
@@ -257,9 +212,7 @@ export interface Bots {
   get(id: string): BotSummary | undefined
   create(spec: NewBot): BotSummary
   update(id: string, patch: BotPatch, by: Changer): BotSummary
-  remove(id: string): boolean
-  status(id: string, status: BotStatus, waiting?: WaitReason['kind']): void
-  conversation(id: string): Conversation
+  remove(id: string): Promise<boolean>
   folder(id: string): string
   jobs: Jobs
 }
@@ -325,12 +278,10 @@ export const botAutomations = service<BotAutomations>('botAutomations')
 
 export const botChange = event<(bot: BotSummary) => void>('bot.change')
 export const botRemove = event<(id: string) => void>('bot.remove')
-export const botEntry = event<(entry: BotEntry) => void>('bot.entry')
 export const jobRemove = event<(job: Job) => void>('job.remove')
 
 export const botChangeWire = wireEvent<BotSummary>('bot.change')
 export const botRemoveWire = wireEvent<string>('bot.remove')
-export const botEntryWire = wireEvent<BotEntry>('bot.entry')
 
 export const helloBots = helloField<BotSummary[]>('bots')
 

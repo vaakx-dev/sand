@@ -11,9 +11,22 @@ interface Shelf {
   error?: string
 }
 
+interface Found {
+  url: string
+  catalog: AddonCatalog
+}
+
+interface BuildCatalog {
+  hashes?: Record<string, string>
+  channel: UpdateChannel
+  version: string
+  override?: string
+}
+
 const RELEASES = 'https://github.com/vaakx-dev/sand/releases'
 const CATALOG_TIMEOUT_MS = 20_000
 const CATALOG_FRESH_MS = 60_000
+const GONE = "This sand build's add-ons are no longer on GitHub; update sand to get add-ons that fit it"
 
 const listing = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
@@ -34,8 +47,9 @@ const listing = z.object({
 
 const catalogSchema = z.object({ addons: z.array(listing) })
 
-const channelUrl = (channel: UpdateChannel) =>
-  channel === 'release' ? `${RELEASES}/latest/download/${addonCatalogAsset}` : `${RELEASES}/download/${channel}/${addonCatalogAsset}`
+const tagUrl = (tag: string) => `${RELEASES}/download/${tag}/${addonCatalogAsset}`
+
+const channelUrl = (channel: UpdateChannel) => (channel === 'release' ? `${RELEASES}/latest/download/${addonCatalogAsset}` : tagUrl(channel))
 
 const fetchCatalog = async (url: string): Promise<AddonCatalog> => {
   const response = await fetch(url, { headers: { 'user-agent': 'sand' }, signal: AbortSignal.timeout(CATALOG_TIMEOUT_MS) }).catch((error: unknown) => {
@@ -48,17 +62,38 @@ const fetchCatalog = async (url: string): Promise<AddonCatalog> => {
   return parsed.data
 }
 
+const fetchShelf = async (url: string): Promise<Found> => ({ url, catalog: await fetchCatalog(url) })
+
+const fitting = (catalog: AddonCatalog, hashes: Record<string, string>): AddonCatalog => ({ addons: catalog.addons.filter(found => hashes[found.id] === found.hash) })
+
+const candidates = ({ hashes, channel, version, override }: BuildCatalog) => {
+  if (override) return [override]
+  if (!hashes) return [channelUrl(channel)]
+  const own = tagUrl(`v${version}`)
+  return channel === 'release' ? [own] : [tagUrl(channel), own]
+}
+
+const buildShelf = async (build: BuildCatalog): Promise<Found> => {
+  const { hashes } = build
+  if (!hashes) return fetchShelf(candidates(build)[0]!)
+  for (const url of candidates(build)) {
+    const found = await fetchCatalog(url).catch(() => undefined)
+    const catalog = found && fitting(found, hashes)
+    if (catalog?.addons.length) return { url, catalog }
+  }
+  throw new Error(GONE)
+}
+
 const catalogCache = () => {
   const kept = new Map<string, { at: number; url: string; catalog: AddonCatalog }>()
   const fresh = async (source: Source): Promise<Shelf> => {
     const at = Date.now()
-    const url = await source.url()
     try {
-      const catalog = await fetchCatalog(url)
+      const { url, catalog } = await source.shelf()
       kept.set(source.id, { at, url, catalog })
       return { source, url, catalog }
     } catch (error) {
-      return { source, url, error: errorMessage(error) }
+      return { source, error: errorMessage(error) }
     }
   }
   const recent = async (source: Source): Promise<Shelf> => {
@@ -68,4 +103,4 @@ const catalogCache = () => {
   return { fresh, recent, forget: (id: string) => void kept.delete(id) }
 }
 
-export { catalogCache, channelUrl, fetchCatalog, type Shelf }
+export { buildShelf, catalogCache, fetchShelf, fitting, type BuildCatalog, type Found, type Shelf }

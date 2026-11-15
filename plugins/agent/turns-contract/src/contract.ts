@@ -50,6 +50,8 @@ export interface Turns {
   get(turn: string): TurnInfo | undefined
   list(session: Session, before?: number, limit?: number): TurnInfo[]
   wait(turn: string, until: WaitUntil, signal?: AbortSignal): Promise<TurnInfo>
+  follow(session: Session, sent: SendResult, signal?: AbortSignal): Promise<TurnInfo | undefined>
+  reply(session: Session, turn: string): string | undefined
   pending(session: Session): PendingItem[]
   withdraw(session: Session, pending: string): boolean
   hold(session: Session, pending: string, held: boolean): boolean

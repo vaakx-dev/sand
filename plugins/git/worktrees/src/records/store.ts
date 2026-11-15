@@ -1,26 +1,21 @@
 import { pathKey } from '@sand/git/contract'
-import { errorMessage, serial } from '@sand/util'
-import { isWithin, writeAtomic } from '@sand/util/fs'
+import { serial } from '@sand/util'
+import { isWithin, readState, writeAtomic } from '@sand/util/fs'
 import type { WorkspaceKind } from '../contract'
 import { reviveSetup } from '../setup/state'
 import { type Stored, storedSchema, type WorktreeRecord } from './schema'
 
 export type RecordStore = ReturnType<typeof createStore>
 
-const unreadable = (file: string, error: unknown) =>
-  new Error(`Couldn't read ${file}: ${errorMessage(error)}. Fix or move the file; sand won't overwrite it.`)
+const revived = (stored: Stored): Stored => {
+  const records = Object.values(stored.worktrees)
+  for (const record of records) if (record.setup) reviveSetup(record.setup)
+  return { ...stored, worktrees: Object.fromEntries(records.map(record => [pathKey(record.path), record])) }
+}
 
 const load = async (file: string): Promise<Stored> => {
-  const source = Bun.file(file)
-  if (!(await source.exists())) return { worktrees: {}, defaults: {} }
-  try {
-    const stored = storedSchema.parse(JSON.parse(await source.text()))
-    const records = Object.values(stored.worktrees)
-    for (const record of records) if (record.setup) reviveSetup(record.setup)
-    return { ...stored, worktrees: Object.fromEntries(records.map(record => [pathKey(record.path), record])) }
-  } catch (error) {
-    throw unreadable(file, error)
-  }
+  const stored = await readState(file, data => storedSchema.safeParse(data).data)
+  return stored ? revived(stored) : { worktrees: {}, defaults: {} }
 }
 
 export const createStore = (file: string, hold: () => () => void) => {

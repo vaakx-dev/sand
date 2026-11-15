@@ -1,13 +1,14 @@
-import { type BotEntry, gistEntry, type JobRun, runEntry, type RunEntry } from '@sand/bots/contract'
+import { gistEntry, type JobRun, runEntry, type RunEntry } from '@sand/bots/contract'
+import type { Entry } from '@sand/chats/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div } from '@vaakx-dev/vrui'
 import { runRows } from './runs'
 
-type Shown = Pick<BotEntry, 'id' | 'at' | 'data'>
+type Shown = Pick<Entry, 'id' | 'at' | 'data'>
 
-const UNSEEN = new Set(['usage', gistEntry])
+const UNSEEN = new Set(['usage', 'settings', gistEntry])
 
-const quietRun = (entry: BotEntry | undefined, job: string) => {
+const quietRun = (entry: Entry | undefined, job: string) => {
   const run = entry?.type === runEntry ? (entry.data as RunEntry) : undefined
   return run?.outcome === 'nothing' && run.job === job
 }
@@ -17,7 +18,7 @@ const runOf = ({ id, at, data }: Shown): JobRun => {
   return { entry: id, at, outcome, summary }
 }
 
-const quietStreak = (entries: BotEntry[], id: string, job: string) => {
+const quietStreak = (entries: Entry[], id: string, job: string) => {
   const seen = entries.filter(entry => !UNSEEN.has(entry.type))
   const at = seen.findIndex(entry => entry.id === id)
   if (at < 0 || quietRun(seen[at - 1], job)) return []
@@ -26,10 +27,10 @@ const quietStreak = (entries: BotEntry[], id: string, job: string) => {
   return (end < 0 ? rest : rest.slice(0, end)).toReversed()
 }
 
-const runNote = (kit: Kit, entry: Shown, entries: () => BotEntry[] | undefined) => {
+const runNote = (kit: Kit, entry: Shown, entries: () => Entry[]) => {
   const { job, title, outcome, summary } = entry.data as RunEntry
   const mark = outcome === 'needs' ? kit.stateIcon('waiting', 'sm', true) : kit.icon('list-checks', 'sm')
-  const streak = derive(() => (outcome === 'nothing' ? quietStreak(entries() ?? [], entry.id, job) : [entry]))
+  const streak = derive(() => (outcome === 'nothing' ? quietStreak(entries(), entry.id, job) : [entry]))
   const text = () => {
     const [row] = runRows(streak.get().map(runOf))
     if (outcome !== 'nothing' || !row) return `${title} · ${summary}`

@@ -75,7 +75,7 @@ const titled = (store: Store, chats: Chats, blocks: Fitted[]): Titled[] => {
   const { owner, chat } = blocks[0]!.block
   const title = chats.title(owner, chat)
   if (title !== undefined) return [{ blocks, title }]
-  store.drop(owner, chat)
+  store.drop(chat)
   return []
 }
 

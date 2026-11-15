@@ -1,6 +1,6 @@
 import { busyShare, cpuTimes, memory } from '@sand/machine'
 import type { Context } from 'drydock'
-import { type Bar, machineRead, type MachineReading, type Range } from './contract'
+import { type Bar, type Bars, machineRead, type MachineReading, type Range } from './contract'
 
 const HISTORY_MS = 60 * 60 * 1000
 const BARS = 30
@@ -46,13 +46,12 @@ export const startSampler = (ctx: Context, everyMs: number) => {
 
   return {
     latest: async () => history.at(-1) ?? (await read()),
-    bars(range: Range) {
-      const now = Date.now()
+    bars(range: Range): Bars {
       const width = RANGE_MS[range] / BARS
-      return Array.from({ length: BARS }, (_, index) => {
-        const end = now - (BARS - 1 - index) * width
-        return barOf(history.filter(reading => reading.at > end - width && reading.at <= end))
-      })
+      const windowOf = (at: number) => Math.floor(at / width)
+      const byWindow = Map.groupBy(history, reading => windowOf(reading.at))
+      const end = windowOf(Date.now())
+      return { end, values: Array.from({ length: BARS }, (_, offset) => barOf(byWindow.get(end - BARS + 1 + offset) ?? [])) }
     },
   }
 }

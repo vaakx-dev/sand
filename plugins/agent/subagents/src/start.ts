@@ -1,6 +1,5 @@
 import type { Effort } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import type { ConversationRef } from '@sand/engine/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { AgentLimits } from '@sand/orchestrator/contract'
 import { subModel } from '@sand/sub-model/contract'
@@ -10,8 +9,7 @@ import type { Resolve } from './layers'
 import { agentTitle } from './title'
 
 export interface SubagentRequest {
-  from: ConversationRef
-  parent?: Session
+  parent: Session
   call: string
   task: string
   label?: string
@@ -39,8 +37,9 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
   }
 
   return async (request: SubagentRequest) => {
-    const { from, parent, call, task, label, project, worktree } = request
-    const definition = await definitionOf(request.agent, parent?.cwd, project ?? parent?.project)
+    const { parent, call, task, label, project, worktree } = request
+    const from = { owner: parent.owner, id: parent.id }
+    const definition = await definitionOf(request.agent, parent.cwd, project ?? parent.project)
     const scope = limits.child(parent, definition?.name, definition?.tools)
     const preset = presetOf(request, definition)
     const model = request.model ?? preset.model
