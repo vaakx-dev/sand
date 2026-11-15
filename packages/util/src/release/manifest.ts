@@ -16,7 +16,7 @@ export const isModulePath = (path: string) => {
   if (path.includes('\\') || path.startsWith('/') || /^[a-zA-Z]:/.test(path)) return false
   const segments = path.split('/')
   if (segments.length < 3 || segments[0] !== modulesFolder) return false
-  return !segments.some(badSegment) && !segments.slice(1).includes(modulesFolder)
+  return !segments.some(badSegment) && segments.at(-1) !== modulesFolder
 }
 
 export const isLinkEntry = (link: string, target: string) =>
