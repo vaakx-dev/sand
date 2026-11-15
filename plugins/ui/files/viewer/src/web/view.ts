@@ -31,7 +31,7 @@ const placeOf = (path: string, cwd: string | undefined) => {
   return folder.slice(cwd.length + 1) || (cwd.split(/[\\/]/).pop() ?? cwd)
 }
 
-const rendered = (parts: Pick<ViewParts, 'ctx' | 'formats'>, file: OpenFile) => {
+const formatted = (parts: Pick<ViewParts, 'ctx' | 'formats'>, file: OpenFile) => {
   const format = parts.formats.formatOf(file)
   if (!format) return unshown(parts.ctx, file)
   const state = sig<Rendered>({ kind: 'loading' })
@@ -46,13 +46,12 @@ const rendered = (parts: Pick<ViewParts, 'ctx' | 'formats'>, file: OpenFile) => 
   })
 }
 
+const rendered = (parts: Pick<ViewParts, 'ctx' | 'formats'>, file: OpenFile) => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, formatted(parts, file))
+
 const body = (parts: ViewParts, where: Where, file: () => FoundFile) =>
-  div(
-    { class: 'min-h-0 min-w-0 flex-1' },
-    dynamicChild(
-      derive(() => [file().path, file().modified, parts.formats.formatOf(file())?.id ?? ''].join('|')),
-      () => rendered(parts, parts.opened(where.thread(), file())),
-    ),
+  dynamicChild(
+    derive(() => [file().path, file().modified, parts.formats.formatOf(file())?.id ?? ''].join('|')),
+    () => rendered(parts, parts.opened(where.thread(), file())),
   )
 
 const fullScreen = (parts: ViewParts, where: Where, file: () => FoundFile) =>

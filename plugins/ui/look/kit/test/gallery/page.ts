@@ -115,6 +115,7 @@ const roles = () =>
     kit.sectionTitle('Section title'),
     kit.sectionHeading('Group label'),
     kit.secondaryText('Secondary text for descriptions and captions.'),
+    kit.prose('Prose for reading a document, a notebook or a Markdown file, with room between its lines.'),
     line(kit.metaLine('Meta line, 3m ago'), kit.countMark(12)),
     line(kit.projectIcon('harbor', {}, 14), kit.metaLine('harbor'), kit.monoMeta('tide-retry', ' ', kit.badge('success', '#214')), kit.monoMeta(kit.badge('merged', '#209')), kit.shortcutHint('mod+k')),
     kit.textRule('Using script'),
