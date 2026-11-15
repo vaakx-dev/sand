@@ -1,5 +1,4 @@
 import { drawChip, openContext } from '@sand/context/contract'
-import type { Kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
 import type { MediaImage, RendererRegistry, ToolViews, TranscriptParts } from './contract'
 import type { TranscriptContext } from './context'
@@ -40,12 +39,12 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
   }
 }
 
-export const createToolViews = (kit: Kit, registry: RendererRegistry, image: MediaImage): ToolViews => ({
+export const createToolViews = (ctx: TranscriptContext, registry: RendererRegistry, image: MediaImage): ToolViews => ({
   field,
   resultText,
   errorBody,
   outputText,
-  truncatedNote: (count, position) => truncatedNote(kit, count, position),
+  truncatedNote: (count, position) => truncatedNote(ctx.kit, count, position),
   image,
-  steps: toolSteps(kit, registry),
+  steps: toolSteps(ctx, registry),
 })

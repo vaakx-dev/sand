@@ -30,7 +30,11 @@ const scriptDetails = ({ kit, store, views }: DetailsParts) => {
 
   const callsOf = (run: Sig<ScriptRun>) => {
     const found = views()
-    return found && div({ class: 'flex max-h-80 min-w-0 flex-col overflow-y-auto px-2' }, found.steps(derive(() => callViews(run.get()))))
+    return found && div({ class: 'flex max-h-80 min-w-0 flex-col overflow-y-auto px-2' }, found.steps(
+        derive(() => callViews(run.get())),
+        run.get().thread,
+      ),
+    )
   }
 
   const runView = (run: Sig<ScriptRun>) => {

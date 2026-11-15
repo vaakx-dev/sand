@@ -8,6 +8,7 @@ const STACK_BYTES = 1024 * 1024
 const PRELUDE = `(call, log, names) => {
   const show = value => typeof value === 'string' ? value : value instanceof Error ? String(value) : JSON.stringify(value, null, 2) ?? String(value)
   const print = (...values) => log(values.map(show).join(' '))
+  globalThis.require = name => { throw new Error('This is not Node, so there is no ' + name + '. Reach files and commands through tools, like tools.read({ path }) or tools.shell({ command }).') }
   globalThis.console = { log: print, info: print, warn: print, error: print, debug: print }
   const caller = name => input => call(name, JSON.stringify(input ?? {}))
   const listed = Object.fromEntries(JSON.parse(names).map(name => [name, caller(name)]))

@@ -11,7 +11,7 @@ interface StepParts {
   run(tool: ToolView): ScriptRun | undefined
 }
 
-const codeView = ({ codeBlock, fold }: Kit, code: string) => fold({ lines: code.split('\n').length, chars: code.length }, codeBlock({ copy: () => code }, code))
+const codeView = ({ codeBlock, fold }: Kit, code: string) => fold({ lines: code.split('\n').length, chars: code.length }, codeBlock({}, code))
 
 const outputView = (views: ToolViews, tool: ToolView) => tool.result && views.outputText(views.resultText(tool.result) || 'No output', Boolean(tool.result.isError))
 
@@ -31,7 +31,10 @@ const scriptStep = ({ kit, views, run }: StepParts): ToolRenderer => {
     div(
       { class: 'flex min-w-0 flex-col gap-2' },
       codeView(kit, codeOf(tool)),
-      views.steps(derive(() => callViews(run(tool)))),
+      views.steps(
+        derive(() => callViews(run(tool))),
+        tool.thread,
+      ),
       outputView(views, tool),
     ),
   }

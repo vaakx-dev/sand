@@ -175,7 +175,7 @@ export interface ToolViews {
   outputText(text: Child, error: boolean): HTMLElement
   truncatedNote(count: number, position: TruncatedAt): HTMLElement
   image: MediaImage
-  steps(tools: Sig<ToolView[]> | Derive<ToolView[]>, cwd?: string): HTMLElement
+  steps(tools: Sig<ToolView[]> | Derive<ToolView[]>, thread: string): HTMLElement
 }
 
 export interface ShownChat {

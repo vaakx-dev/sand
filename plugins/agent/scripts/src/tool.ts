@@ -16,9 +16,9 @@ const STOP_GRACE_MS = 10_000
 const MAX_OUTPUT = 30_000
 const PROGRESS_CHARS = 120
 
-const DESCRIPTION = `Run JavaScript that calls your other tools. Only what it prints or returns reaches you, so use it to search, read or check many things at once and print just what you need. \`await tools.grep({ pattern: 'x' })\` returns the tool's text and throws if it fails. Use plain tool names, no mcp__ prefix. No fs, fetch or require.`
+const DESCRIPTION = `Run JavaScript that calls your other tools. Their results stay inside the script; only what it prints or returns reaches you. Use it instead of several direct calls when you need only part of their output, like reading many files and printing just the lines that match. \`await tools.read({ path })\` returns the tool's text and throws if it fails. Plain tool names, no mcp__ prefix. It is not Node: no require, fs or fetch; tools are its only access to files, commands and the web.`
 
-const ENVIRONMENT = `Prefer one ${NAME} call over many tool calls whose full results you don't need.`
+const ENVIRONMENT = `Before reading or searching several files directly, consider one ${NAME} call that prints only the lines you need.`
 
 const input = z.object({
   title: z.string().describe('Shown to the user'),
