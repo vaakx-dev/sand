@@ -151,7 +151,7 @@ test('while message search catches up on old messages, another process still wri
   home = mkdtempSync(join(tmpdir(), 'sand-message-search-'))
   const before = await start({ plugins: [], shared: home })
   const words = Array.from({ length: 2_000 }, (_, index) => `word${index}`).join(' ')
-  thread(before, 'Backlog', Array.from({ length: 600 }, (_, index) => message('user', `${index} ${words}`)))
+  thread(before, 'Backlog', Array.from({ length: 1_500 }, (_, index) => message('user', `${index} ${words}`)))
   await before.stop()
   running = []
 
@@ -163,4 +163,4 @@ test('while message search catches up on old messages, another process still wri
   const { failed } = JSON.parse(await new Response(writer.stdout).text())
   expect(failed).toBe(0)
   expect((await after.ask(messagesSearch, { query: 'word1' })).indexing).toBeDefined()
-})
+}, 30_000)
