@@ -25,6 +25,7 @@ export interface BuildStamp extends BuildInfo {
   modules: string
   links: Record<string, string>
   bun: string
+  addons?: Record<string, string>
   changes?: BuildChange[]
 }
 

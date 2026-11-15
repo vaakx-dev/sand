@@ -1,60 +1,60 @@
-import { botChangeWire, type BotViews } from '@sand/bots/contract'
-import { wireHello } from '@sand/devices-contract'
+import type { BotViews } from '@sand/bots/contract'
 import { markdown } from '@sand/markdown/contract'
 import { joinDisposers } from '@sand/util'
-import { div, dynamicChild, resource, span, type Sig } from '@vaakx-dev/vrui'
-import { type BotAnswer, botAwait } from '@sand/bot-turns/contract'
+import { threadChange } from '@sand/web-client/contract'
+import { derive, div, dynamicChild, effect, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BotReplyEntry } from '../contract'
+import { answerOf, type Answer } from './answer'
 import type { BridgeWeb } from './context'
 import { botFace } from './face'
 import type { Roster } from './roster'
-
-const notes: Partial<Record<BotAnswer['status'], string>> = {
-  queued: 'Waiting its turn',
-  waiting: 'Needs you in its chat',
-  interrupted: 'Stopped',
-  failed: "Couldn't answer",
-  lost: "Couldn't answer",
-}
 
 const replyText = (ctx: BridgeWeb, text: string) => {
   const found = ctx.get(markdown)
   return found ? div({ class: 'leading-relaxed wrap-anywhere' }, ...found.nodes(text)) : div({ class: 'whitespace-pre-wrap wrap-anywhere' }, text)
 }
 
-const bodyOf = (ctx: BridgeWeb, answer: BotAnswer | undefined): HTMLElement => {
-  if (!answer || answer.status === 'running') return span({ class: 'text-neutral-500' }, 'Working…')
-  if (answer.reply) return replyText(ctx, answer.reply)
-  if (answer.error) return ctx.kit.errorText(answer.error)
-  return span({ class: 'text-neutral-500' }, notes[answer.status] ?? 'No reply')
+const bodyOf = (ctx: BridgeWeb, answer: Answer): HTMLElement => {
+  switch (answer.kind) {
+    case 'working':
+      return span({ class: 'text-neutral-500' }, 'Working…')
+    case 'looking':
+      return span({ class: 'text-neutral-500' }, ctx.kit.spinner('xs'))
+    case 'reply':
+      return replyText(ctx, answer.text)
+    case 'note':
+      return span({ class: 'text-neutral-500' }, answer.text)
+  }
 }
-
-const ongoing = new Set<BotAnswer['status']>(['running', 'queued', 'waiting'])
 
 const byline = (ctx: BridgeWeb, roster: Roster, screens: Sig<BotViews | undefined>, bot: string) => {
   const look = 'flex min-w-0 items-center gap-2 text-xs'
   const who = () => [botFace(ctx, roster, bot, 16), span({ class: 'truncate' }, () => roster.find(bot)?.name || 'Bot')]
   return dynamicChild(screens, views =>
-    views ? ctx.kit.linkButton({ class: look, onClick: () => views.open(bot) }, ...who()) : span({ class: [look, 'text-neutral-400'] }, ...who()),
+    views ? ctx.kit.linkButton({ class: look, onClick: () => views.open(bot, 'chat') }, ...who()) : span({ class: [look, 'text-neutral-400'] }, ...who()),
   )
 }
 
 export const replyCard = (ctx: BridgeWeb, roster: Roster, screens: Sig<BotViews | undefined>, { bot, turn }: BotReplyEntry) => {
-  const answer = resource(() => (turn ? ctx.wire.call(botAwait, { bot, turn, timeoutMs: 0 }) : Promise.resolve<BotAnswer>({ bot, status: 'queued' })), { lazy: true })
-  const unsettled = () => {
-    const found = answer.data.get()
-    return !found || ongoing.has(found.status)
+  const version = sig(0)
+  const answer = derive(() => {
+    version.get()
+    return answerOf(ctx.threads.get(bot), ctx.threads.path(bot), { ...(turn && { turn }), older: ctx.threads.older(bot) })
+  })
+  const shown = derive(() => JSON.stringify(answer.get()))
+  const looking = derive(() => answer.get().kind === 'looking')
+  const lookBack = () => {
+    if (looking.get() && turn) void untrack(() => ctx.threads.findLast(bot, entry => entry.turn === turn))
   }
-  const follow = () => {
-    if (ctx.wire.ready()) answer.refetch()
-    return joinDisposers(
-      ctx.on(wireHello, answer.refetch),
-      ctx.wire.on(botChangeWire, changed => void (changed.id === bot && unsettled() && answer.refetch())),
+  const follow = () =>
+    joinDisposers(
+      ctx.threads.watch(bot),
+      ctx.on(threadChange, changed => void (changed === bot && version.update(count => count + 1))),
+      effect(lookBack),
     )
-  }
   return div(
     { class: 'my-4 flex max-w-2xl flex-col items-start gap-1.5 text-sm text-neutral-100', onMount: follow },
     byline(ctx, roster, screens, bot),
-    dynamicChild(answer.data, found => bodyOf(ctx, found)),
+    dynamicChild(shown, () => bodyOf(ctx, answer.get())),
   )
 }

@@ -19,12 +19,11 @@ export default definePlugin({
     const written = createInstructions(ctx.tools, ctx.paths, config.instructions)
     const shared = async (conversation: Conversation) => [(await sharedFile).trimEnd(), ...(await ctx.waterfall(promptSections, [], conversation))]
     ctx.provide(context, {
-      async thread(session, model) {
+      async system(session, model) {
         const base = await ctx.waterfall(promptBase, [threadIntro, ...(await shared(session))], session)
         const project = await written.project(session.cwd, session.project)
         return compose(written, session, model, base, [project && `# Project instructions\n\n${project}`])
       },
-      system: async (conversation, model, { intro, parts }) => compose(written, conversation, model, [intro, ...(await shared(conversation))], parts),
       tools: (session, messages) => ctx.tools.specs(messages, session),
     })
   },

@@ -1,5 +1,5 @@
-import { errorMessage, serial } from '@sand/util'
-import { writeAtomic } from '@sand/util/fs'
+import { serial } from '@sand/util'
+import { readState, writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 
 const file = z.object({
@@ -19,15 +19,7 @@ export type MergedRecord = z.infer<typeof record>
 
 export type Merged = ReturnType<typeof createMerged>
 
-const load = async (path: string) => {
-  const source = Bun.file(path)
-  if (!(await source.exists())) return {}
-  try {
-    return stored.parse(await source.json())
-  } catch (error) {
-    throw new Error(`Couldn't read ${path}: ${errorMessage(error)}. Fix or move the file; sand won't overwrite it.`)
-  }
-}
+const load = async (path: string) => (await readState(path, data => stored.safeParse(data).data)) ?? {}
 
 export const createMerged = (path: string, hold: () => () => void) => {
   let data: Record<string, MergedRecord> = {}

@@ -1,5 +1,5 @@
 import { encodeBase64url } from '@sand/devices-identity'
-import { writePrivateJson } from '@sand/util/fs'
+import { readState, writePrivateJson } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { z } from 'zod'
@@ -27,7 +27,7 @@ const create = async (file: string): Promise<Saved> => {
   return saved
 }
 
-const load = async (file: string) => ((await Bun.file(file).exists()) ? savedSchema.parse(await Bun.file(file).json()) : create(file))
+const load = async (file: string) => (await readState(file, data => savedSchema.safeParse(data).data)) ?? create(file)
 
 const part = (value: object) => encodeBase64url(text.encode(JSON.stringify(value)))
 

@@ -1,4 +1,3 @@
-import { bots, chatPath } from '@sand/bots/contract'
 import { type Entry, sessions } from '@sand/chats/contract'
 import type { InputOf } from '@sand/host-hub/contract'
 import { server } from '@sand/server/contract'
@@ -18,12 +17,7 @@ export default definePlugin({
   description: "Counts where words appear in a thread's or bot's history older than what a page has loaded, without sending the messages",
   inject: { sessions },
   apply(ctx) {
-    const botHistory = (bot: string) => {
-      const found = ctx.get(bots)
-      return found?.get(bot) ? chatPath(found.conversation(bot).entries()) : []
-    }
-
-    const history = ({ owner, chat }: Find) => (owner === 'thread' ? (ctx.sessions.open(chat)?.path() ?? []) : botHistory(chat))
+    const history = ({ chat }: Find) => ctx.sessions.open(chat)?.path() ?? []
 
     const find = (input: Find) => blockCounts(olderThan(history(input), input.before), input.query)
 

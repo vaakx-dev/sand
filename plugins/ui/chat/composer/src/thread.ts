@@ -1,3 +1,4 @@
+import { ownerOf } from '@sand/chats/contract'
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import type { EffectiveSettings, SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelButton } from '@sand/model-panel/contract'
@@ -53,8 +54,8 @@ export const threadTarget = (ctx: ComposerContext): Target => {
   const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
   const name = changes.read(() => ctx.threads.current()?.info.title || 'New chat')
   const chat = changes.read((): ChatRef | undefined => {
-    const id = ctx.threads.current()?.id
-    return id ? { owner: 'thread', id, pc: sendDevice(ctx) } : undefined
+    const current = ctx.threads.current()
+    return current && { owner: ownerOf(current.info.kind), id: current.id, pc: sendDevice(ctx) }
   })
 
   return {

@@ -25,8 +25,8 @@ const inputSchema = (ctx: AgentsContext) => {
   return (ctx.get(features)?.on('worktrees') ?? true) ? input.extend({ worktree: worktreeField }) : input
 }
 
-const started = (thread: string, owner: string) =>
-  `Started subagent ${thread}. Its final reply arrives as a <task-notification>. Meanwhile keep working or end your turn; don't sleep or poll for it. To message or stop it, use thread_send or thread_stop with thread ${thread}${owner === 'thread' ? '; thread_wait waits for it' : ''}.`
+const started = (thread: string) =>
+  `Started subagent ${thread}. Its final reply arrives as a <task-notification>. Meanwhile keep working or end your turn; don't sleep or poll for it. To message or stop it, use thread_send or thread_stop with thread ${thread}; thread_wait waits for it.`
 
 export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<ReturnType<typeof inputSchema>> => ({
   name: 'agent',
@@ -42,10 +42,9 @@ export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<Return
     const { thread } = await start({
       ...input,
       ...(effort && { effort: effort as Effort }),
-      from: { owner: conversation.owner, id: conversation.id },
-      ...(conversation.owner === 'thread' && { parent: ctx.sessions.require(conversation.id) }),
+      parent: ctx.sessions.require(conversation.id),
       call: call.id,
     })
-    return started(thread, conversation.owner)
+    return started(thread)
   },
 })

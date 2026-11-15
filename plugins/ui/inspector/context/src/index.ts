@@ -1,7 +1,6 @@
-import { contextChange, contextGet, type ContextPart, type ContextTone, type ContextUsage } from '@sand/compaction/contract'
-import { wire } from '@sand/devices-contract'
+import type { ContextPart, ContextTone, ContextUsage } from '@sand/compaction/contract'
 import { inspector } from '@sand/inspector/contract'
-import { pulse, wireValues } from '@sand/reactive'
+import { pulse } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
 import type { Subject } from '@sand/ui-shell/contract'
 import { tokens } from '@sand/util'
@@ -30,18 +29,11 @@ const percent = (size: number, window: number) => `${window ? (size / window) * 
 export default definePlugin({
   name: 'inspector-context',
   description: "The inspector's context row: how full a thread's or bot's context window is and what fills it",
-  inject: { inspector, kit, threads, wire },
+  inject: { inspector, kit, threads },
   apply(ctx) {
     const changes = pulse(ctx, [threadsChange])
     ctx.on(threadChange, changes.schedule)
-    const served = wireValues(ctx, ctx.wire, {
-      key: ({ session }: Subject) => session,
-      read: ({ session, owner }: Subject) => ctx.wire.call(contextGet, { session, owner }),
-      change: contextChange,
-      changed: payload => payload,
-    })
     const usageOf = (subject: Subject) => {
-      if (subject.owner !== 'thread') return served(subject)
       changes.version.get()
       return ctx.threads.get(subject.session)?.context
     }

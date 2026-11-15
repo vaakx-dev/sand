@@ -1,13 +1,4 @@
-import { emptyTotals, sumUsage, type UsageTotals } from '@sand/usage/contract'
-
-export const addTotals = <T extends UsageTotals>(into: T, from: UsageTotals) => {
-  into.usage = sumUsage(into.usage, from.usage)
-  into.turns += from.turns
-  into.cost += from.cost
-  into.billed += from.billed
-  into.unpriced += from.unpriced
-  return into
-}
+import { addTotals, emptyTotals, type UsageTotals } from '@sand/usage/contract'
 
 export const addRecord = (into: Record<string, UsageTotals>, key: string, from: UsageTotals) => {
   into[key] = addTotals(into[key] ?? emptyTotals(), from)

@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Advanced controls",
-    "summary": "A switch in Settings that shows advanced controls, such as model choice in bot chats"
+    "summary": "A switch in Settings that shows advanced controls, such as a bot's computer and monthly limit"
   },
   "dependencies": {
     "@sand/settings": "workspace:*",

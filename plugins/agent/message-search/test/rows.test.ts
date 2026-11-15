@@ -21,6 +21,7 @@ test('message rows show each chat once with its best line, a second line under i
   const parts: RowParts = {
     used: visits => (visits === 'thread:favourite' ? 0.9 : 0),
     tint: () => undefined,
+    route: id => ({ kind: 'thread', id }),
     open: () => {},
     more: found => ({ id: found.chat, title: found.title }),
   }

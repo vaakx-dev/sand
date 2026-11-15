@@ -1,18 +1,21 @@
 import { appRoot, switchTo, waitHealthy } from '@sand/boot'
 import { buildInfo } from '@sand/boot/build'
 import { writeShim } from '@sand/boot/setup'
+import { clearUpdateNotice } from '@sand/boot/notice'
 import { loadUpdateStore } from '@sand/boot/updates'
 import { peers, thisPc } from '@sand/devices-contract'
 import { hostApp, hostOptions, hostRestart } from '@sand/host-daemon/contract'
 import { hostHealth } from '@sand/host-health/contract'
 import { hub } from '@sand/host-hub/contract'
 import { runtimes } from '@sand/host-runtimes/contract'
+import { databaseFile, readUpgrade } from '@sand/ledger/contract'
 import { definePlugin } from 'drydock'
 import { announcer } from './announce'
-import { updatesChange } from './contract'
+import { buildAddons, updatesChange } from './contract'
 import { downloadRelease } from './github/download'
 import { findRelease } from './github/release'
 import { hostCodeChanged } from './host-code'
+import { homeNotices, setAsideIds } from './notices'
 import { checkLoads } from './install/check'
 import { cleanupBuilds } from './install/cleanup'
 import { prepareBuild } from './install/prepare'
@@ -44,6 +47,13 @@ export default definePlugin({
         download: downloadRelease,
         prepare: (bytes, force) => prepareBuild(home, bytes, force),
         checkLoads,
+        addons: () => ctx.get(buildAddons),
+        upgrade: () => readUpgrade(databaseFile(home)),
+        notices: {
+          read: dismissed => homeNotices(home, dismissed),
+          clearUpdate: () => clearUpdateNotice(home),
+          setAside: () => setAsideIds(home),
+        },
         hostChanged: hostCodeChanged,
         switchTo: id => switchTo(home, id),
         refreshShim: () => writeShim(home),
