@@ -69,8 +69,7 @@ const backdateApp = async (root: string, seconds: number) => {
   for (const name of ['package.json', 'bun.lock', 'tsconfig.json']) if (existsSync(join(root, name))) await utimes(join(root, name), seconds, seconds)
 }
 
-export const previousBuild = async () => {
-  const commit = await baseCommit()
+const commitBuild = async (commit: string): Promise<Build | Error> => {
   const out = join(cacheFolder, `${commit.slice(0, 12)}-${Bun.version}`)
   if (existsSync(join(out, 'sand-build.json')) && existsSync(join(out, 'sand-addons.json'))) return readBuild(out)
   await mkdir(cacheFolder, { recursive: true })
@@ -79,11 +78,21 @@ export const previousBuild = async () => {
   try {
     await run([process.execPath, 'install'], tree)
     await backdateApp(tree, Number(await git('log', '-1', '--format=%ct', commit)))
-    return await releaseAssets(tree, out)
+    return await releaseAssets(tree, out).catch((error: Error) => error)
   } finally {
     await git('worktree', 'remove', '--force', tree).catch(() => rm(tree, { recursive: true, force: true }))
     await git('worktree', 'prune').catch(() => {})
   }
+}
+
+export const previousBuild = async () => {
+  const commits = (await git('rev-list', '--first-parent', await baseCommit())).split('\n')
+  for (const commit of commits) {
+    const build = await commitBuild(commit)
+    if (!(build instanceof Error)) return build
+    console.log(`${commit.slice(0, 12)} shipped no build, so the upgrade starts from its parent:\n${build.message}`)
+  }
+  throw new Error('no commit before this one builds release assets')
 }
 
 export const thisBuild = (out: string) => releaseAssets(repoRoot, out)
