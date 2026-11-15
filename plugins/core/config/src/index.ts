@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/util'
+import { databaseBusy, errorMessage } from '@sand/util'
 import { coreBuild, recordAddonFault } from '@sand/util/release'
 import { definePlugin, evict, type Scope } from 'drydock'
 import { join } from 'node:path'
@@ -11,6 +11,8 @@ import { startOrder } from './order'
 import { optionsOf } from './plugins'
 import { configPath, readConfig } from './read'
 import { setTomlValues, type TomlValues } from './toml'
+
+const BUSY_RETRY_MS = 5_000
 
 export default definePlugin({
   name: 'config',
@@ -69,9 +71,24 @@ export default definePlugin({
     }
     let ownersKnown = false
     let stopped = false
+    let retrying: Timer | undefined
+    const busyScopes = () => [...running.values()].filter(scope => scope.status === 'failed' && databaseBusy(scope.error))
+    const retry = (scopes: Scope[]) => {
+      clearTimeout(retrying)
+      retrying = setTimeout(async () => {
+        await Promise.all(scopes.map(scope => scope.reload()))
+        await ctx.settled()
+        await faultBroken()
+      }, BUSY_RETRY_MS)
+    }
     const faultBroken = async () => {
       if (stopped) return
-      const broken = pluginStates(ctx).flatMap(({ name, addon, problem }) => (addon && problem ? [{ addon, error: `${name}: ${problem}` }] : []))
+      const busy = busyScopes()
+      if (busy.length) retry(busy)
+      const waiting = new Set(busy.map(scope => scope.name))
+      const broken = pluginStates(ctx).flatMap(({ name, addon, problem }) =>
+        addon && problem && !waiting.has(name) ? [{ addon, error: `${name}: ${problem}` }] : [],
+      )
       for (const { addon, error } of broken) await fault(addon, error)
     }
     const sync = async (): Promise<void> => {
@@ -119,6 +136,7 @@ export default definePlugin({
     await sync()
     ctx.effect(() => () => {
       stopped = true
+      clearTimeout(retrying)
       return stop([...running.keys()])
     })
   },

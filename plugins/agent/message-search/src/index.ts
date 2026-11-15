@@ -1,5 +1,6 @@
 import { botName, bots } from '@sand/bots/contract'
 import { sessionEntry, sessionRemove, sessions } from '@sand/chats/contract'
+import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { ledger } from '@sand/ledger/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
 import { server } from '@sand/server/contract'
@@ -29,6 +30,7 @@ export default definePlugin({
     }
 
     ctx.effect(() => () => keeper.stop())
+    ctx.on(runtimeDrain, () => keeper.stop())
     ctx.on(sessionEntry, (session, entry) => {
       if (entry.type === 'message' && session.kind !== 'agent') keeper.refresh()
     })

@@ -35,6 +35,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
     "@sand/ledger": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/palette": "workspace:*",

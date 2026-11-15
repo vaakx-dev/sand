@@ -7,13 +7,13 @@ import { definePlugin } from 'drydock'
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { z } from 'zod'
-import { createLedger, databaseFile, ledger } from './contract'
+import { BUSY_TIMEOUT_MS, createLedger, databaseFile, ledger } from './contract'
 
 const open = (path: string) => {
   mkdirSync(dirname(path), { recursive: true })
   const db = new Database(path, { create: true, strict: true })
   db.run('pragma journal_mode = wal')
-  db.run('pragma busy_timeout = 5000')
+  db.run(`pragma busy_timeout = ${BUSY_TIMEOUT_MS}`)
   return db
 }
 

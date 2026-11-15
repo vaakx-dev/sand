@@ -2,6 +2,7 @@ import type { Effort, Speed, Usage } from '@sand/accounts/contract'
 import type { Message } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
 import { emptyUsage } from '@sand/usage/contract'
+import { databaseBusy } from '@sand/util'
 import type { Database } from 'bun:sqlite'
 import type { ConversationRef, Owner, TurnEnding, TurnInfo, TurnOrigin, TurnStatus, WaitReason } from '../contract'
 import { keyOf } from './key'
@@ -113,6 +114,15 @@ const finishSql = `update turns set status = $status, stop_reason = $stopReason,
 
 type Key = ReturnType<typeof keyOf>
 
+const unlessBusy = <T>(write: () => T) => {
+  try {
+    return write()
+  } catch (error) {
+    if (databaseBusy(error)) return undefined
+    throw error
+  }
+}
+
 export const createTurnStore = (db: Database) => {
   const insert = db.query<Row, Record<string, string | number | null>>(insertSql)
   const byId = db.query<Row, { id: string; owner: Owner }>('select * from turns where id = $id and owner = $owner')
@@ -186,12 +196,8 @@ export const createTurnStore = (db: Database) => {
     step: (id: string) => void stepped.run({ id }),
     thread: (id: string, thread: string) => void threaded.run({ id, thread }),
     usage: (id: string, usage: Usage) => void used.run({ id, usage: JSON.stringify(usage) }),
-    partial: (id: string, message: Message | undefined) =>
-      void written.run({
-        id,
-        partial: message ? JSON.stringify(message) : null,
-      }),
-    outputs: (id: string, outputs: Map<string, string>) => void outputted.run({ id, outputs: JSON.stringify(Object.fromEntries(outputs)) }),
+    partial: (id: string, message: Message | undefined) => unlessBusy(() => written.run({ id, partial: message ? JSON.stringify(message) : null })) !== undefined,
+    outputs: (id: string, outputs: Map<string, string>) => void unlessBusy(() => outputted.run({ id, outputs: JSON.stringify(Object.fromEntries(outputs)) })),
     finish: (id: string, holder: string, { status, stopReason, error, detail }: Ending) =>
       finished.run({
         id,
@@ -202,7 +208,7 @@ export const createTurnStore = (db: Database) => {
         detail: detail ?? null,
         ended: Date.now(),
       }).changes > 0,
-    renew: (holder: string, lease: number) => renewed.all({ holder, lease }),
+    renew: (holder: string, lease: number) => unlessBusy(() => renewed.all({ holder, lease })),
     cancel: (id: string) => void cancelled.run({ id }),
     expired: (owner: Owner, holder: string) => expired.all({ owner, holder, now: Date.now() }).map(staleOf),
     lose: (id: string) => lost.run({ id, now: Date.now() }).changes > 0,

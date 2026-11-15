@@ -16,7 +16,9 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   const until = () => Date.now() + leaseFor
 
   const beat = () => {
-    const kept = new Set(store.renew(holder, until()).flatMap(turn => (turn.cancel ? [] : [turn.id])))
+    const renewed = store.renew(holder, until())
+    if (!renewed) return
+    const kept = new Set(renewed.flatMap(turn => (turn.cancel ? [] : [turn.id])))
     for (const [id, controller] of held) if (!kept.has(id)) controller.abort()
   }
 

@@ -10,7 +10,7 @@ export interface PartialReply {
   stop(): void
 }
 
-export const createPartial = (save: (message: Message | undefined) => void): PartialReply => {
+export const createPartial = (save: (message: Message | undefined) => boolean): PartialReply => {
   const blocks = new Map<number, Block>()
   let changed = false
 
@@ -23,8 +23,7 @@ export const createPartial = (save: (message: Message | undefined) => void): Par
 
   const timer = setInterval(() => {
     if (!changed) return
-    changed = false
-    save(message())
+    changed = !save(message())
   }, flushEvery)
 
   return {
