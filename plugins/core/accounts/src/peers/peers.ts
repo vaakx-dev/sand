@@ -1,6 +1,6 @@
 import { type Peers as PcLinks, reachablePeers } from '@sand/devices-contract'
 import type { Media } from '@sand/media/contract'
-import { AccountGone, type Limits, type LLMEvent, type LLMRequest, ThreadLost } from '../contract'
+import { AccountGone, type Limits, type LLMEvent, type LLMRequest, ThreadLost, UsageLimited } from '../contract'
 import { isKeyKind, keyLabels } from '../auth/kinds'
 import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
@@ -171,7 +171,12 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
         peer.online = true
         changed()
       }
-      yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: droppedBy(peer, pin) }), peer.pc)
+      try {
+        yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: droppedBy(peer, pin) }), peer.pc)
+      } catch (error) {
+        if (error instanceof UsageLimited) await check(found, peer.pc, false)
+        throw error
+      }
       return
     }
     void refresh()

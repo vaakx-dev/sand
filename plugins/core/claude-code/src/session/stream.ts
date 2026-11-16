@@ -26,6 +26,8 @@ const resetOf = (info: Json) => {
   return seconds > 0 ? seconds * 1000 : undefined
 }
 
+export const succeeded = (result: Json) => result.subtype === 'success' && !result.is_error
+
 const failureOf = (result: Json, { rejected, resetsAt }: Limit) =>
   rejected || result.api_error_status === 429 ? new UsageLimited(resultText(result), resetsAt) : new Error(resultText(result))
 
@@ -89,7 +91,7 @@ export const createReader = (output: AppOutput) => {
     },
     finish(result: Json) {
       const limited = limit.take()
-      if (result.subtype === 'success' && !result.is_error) return output.finish(stop)
+      if (succeeded(result)) return output.finish(stop)
       output.fail(failureOf(result, limited))
     },
   }

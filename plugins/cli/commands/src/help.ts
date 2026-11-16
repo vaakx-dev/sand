@@ -11,8 +11,7 @@ const kernelOptions = [
   '  --safe                  safe mode: run only the built-in plugins and ignore sand.toml plugin settings and your own plugins;',
   '                          works with sand, sand serve and sand -p (or set SAND_SAFE=1). Leave it from the banner in the page',
   '  --cwd <dir>             the folder a -p chat works in',
-  '  --home <dir>            keep chats and settings in this folder instead of ~/.sand, e.g. for tests (or set SAND_HOME);',
-  '                          it borrows ~/.sand/sand.toml and ~/.sand/auth.json until it has its own',
+  '  --home <dir>            keep chats and settings in this folder instead of ~/.sand, e.g. for tests (or set SAND_HOME)',
   '  --model, --effort, --fast   the model settings of a -p chat; fast mode is quicker and costs more on models that have it',
 ]
 

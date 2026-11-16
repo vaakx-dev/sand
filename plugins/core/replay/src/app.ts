@@ -1,4 +1,4 @@
-import { type AppCall, type AppOutput, type AppPlace, type AppPlan, type AppSession, type AppSetup, type LimitWindow, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, type AppPlace, type AppPlan, type AppSession, type AppSetup, type LimitWindow, type PlanLimits, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
 import type { ToolResultContent } from '@sand/chats/contract'
 import { appendFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -17,7 +17,15 @@ const windowOf = ({ id, label, used, resetInMs, durationMs }: LimitScript): Limi
 
 const textOf = (content: ToolResultContent[]) => content.map(block => (block.type === 'text' ? block.text : `[${block.type}]`)).join('\n')
 
-export const replayApp = (script: Script, folder: string, another?: (place: AppPlace) => AppPlan) => {
+interface AppOptions {
+  folder: string
+  report(limits: PlanLimits): void
+  another?(place: AppPlace): AppPlan
+}
+
+const spentBy = (resetsAt?: number): PlanLimits => ({ windows: [{ id: 'plan', label: 'Plan limit', used: 1, ...(resetsAt && { resetsAt }) }] })
+
+export const replayApp = (script: Script, { folder, report, another }: AppOptions) => {
   const { id, label = id, logo, limits, replies, resume, inject } = script
   const queue = [...replies]
   const injects = [...inject]
@@ -60,8 +68,11 @@ export const replayApp = (script: Script, folder: string, another?: (place: AppP
             break
           case 'error':
             return out.fail(new Error(part.message))
-          case 'limit':
-            return out.fail(new UsageLimited(`${label} is out of usage`, part.resetInMs && Date.now() + part.resetInMs))
+          case 'limit': {
+            const resetsAt = part.resetInMs && Date.now() + part.resetInMs
+            report(spentBy(resetsAt))
+            return out.fail(new UsageLimited(`${label} is out of usage`, resetsAt))
+          }
           case 'crash':
             return out.exit(new Error(`${label} crashed`))
           case 'hold':

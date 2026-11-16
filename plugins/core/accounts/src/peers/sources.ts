@@ -22,7 +22,7 @@ const slug = (text: string) =>
 
 const pinnedId = (account: string, peer: PeerState) => `${account}@${slug(peer.pc.name) || peer.pc.id}`
 
-const boundToPc = (account: SharedAccount) => account.kind === 'server' || account.method === 'app'
+const boundToPc = (account: SharedAccount) => account.method !== 'api_key'
 
 const nameOf = (model: ModelInfo) => model.name ?? split(model.id)?.name ?? model.id
 
@@ -48,7 +48,7 @@ const sourceOf = (peer: PeerState, account: SharedAccount, id: string, pinned: b
   return { meta, models, prices: Object.fromEntries(priced), ...(pinned && { pc: peer.pc.id }) }
 }
 
-const logins = (peers: Peers, accounts: Accounts): RemoteSource[] => {
+const keys = (peers: Peers, accounts: Accounts): RemoteSource[] => {
   const ids = peers.list().flatMap(peer => (peer.info?.accounts ?? []).filter(found => !boundToPc(found)).map(found => found.id))
   return [...new Set(ids)].flatMap(id => {
     const peer = accounts.signedIn(id) ? undefined : peers.source(id)
@@ -77,4 +77,4 @@ const rank = (source: RemoteSource) => {
 }
 
 export const remoteSources = (peers: Peers, accounts: Accounts): RemoteSource[] =>
-  [...logins(peers, accounts), ...pinned(peers, accounts)].sort((a, b) => rank(a) - rank(b))
+  [...keys(peers, accounts), ...pinned(peers, accounts)].sort((a, b) => rank(a) - rank(b))

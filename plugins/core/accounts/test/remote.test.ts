@@ -136,10 +136,8 @@ const linksTo = (pcs: Record<string, RouteHandler>, down: Set<string>, calls: st
     call: () => Promise.reject(new Error('unused')),
     callEach: async () => [],
     async fetch(pc, path, init) {
-      if (path === sharePaths.stream) {
-        calls.push(pc)
-        if (down.has(pc)) throw new Error('connection refused')
-      }
+      if (path === sharePaths.stream) calls.push(pc)
+      if (down.has(pc)) throw new Error('connection refused')
       return pcs[pc]!(new Request(`http://${pc}${path}`, init), caller)
     },
     on: () => () => {},
@@ -160,16 +158,16 @@ const until = async (ready: () => boolean) => {
   while (!ready()) await Bun.sleep(5)
 }
 
-const borrowed = () => sand.app.get(llm)!.accounts!().find(source => source.id === 'remote')
+const borrowed = (pc: string) => sand.app.get(llm)!.accounts!().find(source => source.pc === pc)
 
-test('a borrowed native session gets its thread, delta and handoff, stays on the PC that holds it, and a lost session starts over anywhere', async () => {
-  sand = await startSand([])
-  const one = await accountPc(nativeCaps, [reply('fresh start')])
-  const two = await accountPc(nativeCaps, [reply('first', { id: 'n1', cwd: '/far' }), reply('second', { id: 'n1', cwd: '/far' }), new ThreadLost('the app exited')])
+test('a borrowed native session gets its thread, delta and handoff, stays on the PC that holds it, and a lost session starts over on its account', async () => {
+  sand = await startSand([], { plugins: ['agent/account-pool'] })
+  const one = await accountPc(nativeCaps, [])
+  const two = await accountPc(nativeCaps, [reply('first', { id: 'n1', cwd: '/far' }), reply('second', { id: 'n1', cwd: '/far' }), new ThreadLost('the app exited'), reply('fresh start')])
   const down = new Set(['one'])
   const calls: string[] = []
   const links = linksTo({ one: one.answer, two: two.answer }, down, calls)
-  await until(() => !!sand.app.get(llm)!.find!('remote/m'))
+  await until(() => !!sand.app.get(llm)!.find!('remote/m') && borrowed('two')?.online === true)
   expect(sand.app.get(llm)!.caps!('remote/m')).toEqual(nativeCaps)
 
   const chat = sand.chat('remote/m')
@@ -186,13 +184,14 @@ test('a borrowed native session gets its thread, delta and handoff, stays on the
 
   down.clear()
   links.reopen('one')
-  await until(() => borrowed()?.pc === 'one' && !!borrowed()?.online)
+  await until(() => borrowed('one')?.online === true)
   expect((await sand.turns.run(chat, 'again')).text).toBe('second')
   expect(two.asked[1]!.thread).toEqual({ ...opened!.thread!, fresh: false, seenHead: expect.any(String), native: { id: 'n1', cwd: '/far' } })
 
   expect((await sand.turns.run(chat, 'more')).text).toBe('fresh start')
-  expect(calls).toEqual(['one', 'two', 'two', 'two', 'one'])
-  const [restarted] = one.asked
+  expect(calls).toEqual(['two', 'two', 'two', 'two'])
+  expect(one.asked).toEqual([])
+  const restarted = two.asked[3]
   expect(restarted!.thread).toMatchObject({ generation: 2, fresh: true })
   expect(restarted!.thread!.native).toBeUndefined()
   expect(restarted!.handoff).toBeDefined()
