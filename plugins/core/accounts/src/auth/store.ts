@@ -52,6 +52,11 @@ export const credentialOf = (saved: Saved, provider: string) => {
   return isCredential(value) ? value : undefined
 }
 
+export const appShareOf = (saved: Saved, id: string) => {
+  const { type, shared } = fieldsOf(saved[id])
+  return type === 'app' && typeof shared === 'boolean' ? shared : undefined
+}
+
 export const authStore = (path: string) => {
   const queue = serial()
   return {

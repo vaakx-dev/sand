@@ -43,7 +43,9 @@ const removeButton = ({ confirm, icon, iconButton }: Kit, account: LoginAccount,
   return iconButton({ size: 'sm', title: action.label, 'aria-label': `${action.label}: ${account.label}`, onClick: stopThen((event: MouseEvent) => confirm(event)(action)) }, icon('trash', 'sm'))
 }
 
-export const shareable = (account: LoginAccount) => account.signedIn && !account.env && !account.app
+export const SHARE_NOTE = 'Turn an account’s switch on to share it with your PCs.'
+
+export const shareable = (account: LoginAccount) => account.signedIn && !account.env
 
 const renameButton = ({ icon, iconButton }: Kit, account: LoginAccount, { rename }: RowActions) =>
   account.signIn ? iconButton({ size: 'sm', title: 'Rename', 'aria-label': `Rename ${account.label}`, onClick: () => rename(account) }, icon('pencil', 'sm')) : null

@@ -1,4 +1,4 @@
-import { UsageLimited } from '@sand/accounts/contract'
+import { AccountGone, UsageLimited } from '@sand/accounts/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { runtime } from '@sand/host-runtimes/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
@@ -12,7 +12,7 @@ import type { Owned } from '../owned'
 import type { Holding } from '../store/pending'
 import type { Begun } from './start'
 
-const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed', limited: 'failed' }
+const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed', limited: 'failed', moved: 'failed' }
 
 const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'all', error: 'all' }
 
@@ -48,7 +48,13 @@ const resultOf = <C extends Conversation>(run: TurnRun<C>, { stopReason, failure
 
 const interrupted = ({ reason }: AbortSignal): Outcome => ({ stopReason: 'interrupted', ...(reason instanceof Interruption && { cause: reason.message }) })
 
-const failed = (error: unknown): Outcome => ({ stopReason: error instanceof UsageLimited ? 'limited' : 'error', failure: { error } })
+const stopReasonOf = (error: unknown): TurnResult['stopReason'] => {
+  if (error instanceof UsageLimited) return 'limited'
+  if (error instanceof AccountGone) return 'moved'
+  return 'error'
+}
+
+const failed = (error: unknown): Outcome => ({ stopReason: stopReasonOf(error), failure: { error } })
 
 export interface Driven {
   result: TurnResult

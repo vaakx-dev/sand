@@ -16,11 +16,13 @@ const CONTINUE = 'Usage is back. Continue where you left off.'
 
 const switched = (account: string) => `Switched to ${account} because the plan ran out. Continue where you left off.`
 
+const PICK_UP = 'Continue where you left off.'
+
 const MOVED = 'Moved to another account on this plan because this one ran out of usage. Continue where you left off.'
 
 export default definePlugin({
   name: 'usage-resume',
-  description: 'Carries a chat on with the same model on another plan account when its account runs out of usage; with none, picks it back up when the usage resets, and holds what is sent to it until then',
+  description: 'Carries a chat on with the same model on another plan account when its account runs out of usage or its PC drops off mid-reply; with none, picks it back up when the usage resets, and holds what is sent to it until then',
   inject: { engine, schedules },
   apply(ctx) {
     const plans = createPlans(ctx.schedules)
@@ -67,9 +69,9 @@ export default definePlugin({
       await move(found.session, offered, `switch:${turn}`)
     }
 
-    const carryOn = (conversation: Conversation, turn: TurnInfo) => {
+    const carryOn = (conversation: Conversation, turn: TurnInfo, note: string) => {
       if (!ctx.get(accountPool)?.spare(turn.selection)) return false
-      void resume({ owner: conversation.owner, id: conversation.id }, `carry-on:${turn.id}`, MOVED)
+      void resume({ owner: conversation.owner, id: conversation.id }, `carry-on:${turn.id}`, note)
       return true
     }
 
@@ -83,7 +85,8 @@ export default definePlugin({
     ctx.on(scheduleRemove, announce)
     ctx.on(turnOpen, conversation => plans.forget(conversation))
     ctx.on(turnClose, (conversation, { stopReason, resetsAt }, turn) => {
-      if (stopReason !== 'limited' || carryOn(conversation, turn)) return
+      if (stopReason === 'moved') return void carryOn(conversation, turn, PICK_UP)
+      if (stopReason !== 'limited' || carryOn(conversation, turn, MOVED)) return
       if (resetsAt && resetsAt > Date.now()) plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: resetsAt })
     })
     ctx.on(turnHold, hold)

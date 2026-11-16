@@ -45,13 +45,20 @@ export const ownAccount = ({ id, kind, label, provider, signIn, added, another }
   }
 }
 
-export const appAccount = ({ id, kind, label, provider, signIn, added, another }: OwnInfo, plan: AppPlan, found: AppStatus, status: Status): LoginAccount => ({
+interface AppState {
+  plan: AppPlan
+  found: AppStatus
+  shared: boolean
+  status: Status
+}
+
+export const appAccount = ({ id, kind, label, provider, signIn, added, another }: OwnInfo, { plan, found, shared, status }: AppState): LoginAccount => ({
   id,
   kind,
   provider,
   label,
   signedIn: found.signedIn,
-  shared: false,
+  shared,
   added,
   another,
   ...(signIn && { signIn }),

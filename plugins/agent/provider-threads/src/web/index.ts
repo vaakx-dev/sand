@@ -7,7 +7,7 @@ import type { HandoffEntry } from '../entry'
 
 export default definePlugin({
   name: 'handoff-row',
-  description: 'Shows in the chat where another model was brought up to date, and how much of the chat it was given',
+  description: 'Shows in the chat where a different model was brought up to date, and how much of the chat it was given',
   inject: { kit },
   apply(ctx) {
     const text = ({ model, selected, omitted }: HandoffEntry) => {

@@ -15,12 +15,31 @@ const pcView = (id: string): PeerView => ({
   attempts: [],
 })
 
+const severable = (body: ReadableStream<Uint8Array>, cuts: Set<() => void>) => {
+  const reader = body.getReader()
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      cuts.add(() => controller.error(new Error('the connection dropped')))
+    },
+    async pull(controller) {
+      const { value, done } = await reader.read()
+      if (done) controller.close()
+      else controller.enqueue(value)
+    },
+    cancel: reason => reader.cancel(reason),
+  })
+}
+
 const link = (far: Sand, farId: string, nearId: string): Link => {
   const view = pcView(farId)
   const opens = new Set<(pc: string) => void>()
+  const changes = new Set<() => void>()
+  const cuts = new Set<() => void>()
   const asNear = far.askAs({ device: nearId, kind: 'pc' })
+  const fetchAsNear = far.fetchAs({ device: nearId, name: nearId, kind: 'pc' })
   let up = true
-  const call: Peers['call'] = (_, request, input) => (up ? asNear(request, input) : Promise.reject(new PcUnavailable(farId, farId, { phase: 'offline' })))
+  const unavailable = () => new PcUnavailable(farId, farId, { phase: 'offline' })
+  const call: Peers['call'] = (_, request, input) => (up ? asNear(request, input) : Promise.reject(unavailable()))
   return {
     peers: {
       list: () => [view],
@@ -32,7 +51,11 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
           value => [{ pc: farId, ok: true, value }],
           (error: unknown) => [{ pc: farId, ok: false, error }],
         ),
-      fetch: () => Promise.reject(new Error('no fetch')),
+      async fetch(_, path, init) {
+        if (!up) throw unavailable()
+        const response = await fetchAsNear(path, init)
+        return response.body ? new Response(severable(response.body, cuts), response) : response
+      },
       on: () => () => {},
       hello: () => undefined,
       directUrl: () => undefined,
@@ -41,14 +64,21 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
         opens.add(listener)
         return () => void opens.delete(listener)
       },
-      onChange: () => () => {},
+      onChange(listener) {
+        changes.add(listener)
+        return () => void changes.delete(listener)
+      },
     },
     open() {
       up = true
+      for (const listener of changes) listener()
       for (const listener of opens) listener(farId)
     },
     drop() {
       up = false
+      for (const cut of cuts) cut()
+      cuts.clear()
+      for (const listener of changes) listener()
     },
   }
 }

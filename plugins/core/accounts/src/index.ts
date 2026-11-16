@@ -108,7 +108,7 @@ export default definePlugin({
     ctx.provide(llmPlans, { register: plans.register, limits: limits.save })
     ctx.watch(pcLinks, found => {
       void peers.refresh()
-      return found?.onOpen(() => void peers.refresh())
+      return found && joinDisposers(found.onOpen(() => void peers.refresh()), found.onChange(peers.linksChanged))
     })
     ctx.effect(() => {
       const peerTimer = setInterval(() => void Promise.all([peers.refresh(), plans.refresh()]), refreshEvery)

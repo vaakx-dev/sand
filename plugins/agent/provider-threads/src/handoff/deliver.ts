@@ -64,6 +64,6 @@ export const handOff = (handoffs: HandoffStore, { conversation, turn, path, thre
     omitted: selected.omitted.length,
     tokens: Buffer.byteLength(text),
   }
-  conversation.append('handoff', entry, { turn: turn.id })
+  if (coverage.models.length) conversation.append('handoff', entry, { turn: turn.id })
   return [...(strategy === 'delta' ? thread.seen : []), { handoff: id, to: before.id }]
 }

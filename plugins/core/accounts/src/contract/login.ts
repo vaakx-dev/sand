@@ -54,6 +54,7 @@ export interface LoginRemoteAccount {
   label: string
   method: LoginMethod
   plan?: string
+  email?: string
   device: string
   pc: string
   online: boolean

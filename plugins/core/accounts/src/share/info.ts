@@ -11,6 +11,7 @@ export interface SharedAccount {
   label: string
   method: LoginMethod
   plan?: string
+  email?: string
   caps?: ProviderCapabilities
 }
 
@@ -28,8 +29,8 @@ export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: 
 
 export const sharedIds = (accounts: Accounts) => accounts.ids().filter(accounts.shared)
 
-const shareable = ({ id, kind, provider, label, method, plan }: LoginAccount, caps?: ProviderCapabilities): SharedAccount[] =>
-  method ? [{ id, kind, provider, label, method, ...(plan && { plan }), ...(caps && { caps }) }] : []
+const shareable = ({ id, kind, provider, label, method, plan, email }: LoginAccount, caps?: ProviderCapabilities): SharedAccount[] =>
+  method ? [{ id, kind, provider, label, method, ...(plan && { plan }), ...(email && { email }), ...(caps && { caps }) }] : []
 
 export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
   const shared = new Set(sharedIds(accounts))

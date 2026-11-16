@@ -68,6 +68,7 @@
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
+        "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/media": "workspace:*",
@@ -143,6 +144,7 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
       },
     },
     "plugins/agent/accounts-mcp": {
