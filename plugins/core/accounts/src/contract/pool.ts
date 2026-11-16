@@ -15,7 +15,11 @@ const windowsBySource = (llm: LLM, now: number) => {
 
 const fullest = (windows: LimitWindow[]) => Math.max(0, ...windows.map(window => window.used))
 
-const soonestReset = (windows: LimitWindow[]) => Math.min(Infinity, ...windows.flatMap(window => (window.resetsAt === undefined ? [] : [window.resetsAt])))
+const span = (window: LimitWindow, now: number) => window.duration ?? (window.resetsAt === undefined ? 0 : window.resetsAt - now)
+
+const longest = (windows: LimitWindow[], now: number) => windows.reduce<LimitWindow | undefined>((long, window) => (!long || span(window, now) > span(long, now) ? window : long), undefined)
+
+const budgetExpires = (windows: LimitWindow[], now: number) => longest(windows, now)?.resetsAt ?? Infinity
 
 export const outOfUsage = (llm: LLM, now = Date.now()) => new Set([...windowsBySource(llm, now)].filter(([, windows]) => fullest(windows) >= 1).map(([source]) => source))
 
@@ -32,11 +36,11 @@ export const drainOrder = (llm: LLM, models: ModelInfo[], now = Date.now()): Mod
   const windows = windowsBySource(llm, now)
   const ranked = models.map((model, at) => {
     const found = windows.get(model.source ?? '') ?? []
-    return { model, at, used: fullest(found), resets: soonestReset(found) }
+    return { model, at, used: fullest(found), expires: budgetExpires(found, now) }
   })
   const tight = (used: number) => (used >= HEADROOM ? 1 : 0)
   return ranked
     .filter(entry => entry.used < 1)
-    .sort((a, b) => tight(a.used) - tight(b.used) || a.resets - b.resets || a.used - b.used || a.at - b.at)
+    .sort((a, b) => tight(a.used) - tight(b.used) || a.expires - b.expires || a.used - b.used || a.at - b.at)
     .map(entry => entry.model)
 }

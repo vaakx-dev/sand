@@ -42,6 +42,23 @@ test('drains the account whose usage resets soonest first, leaves tight ones for
   expect(order(llm)).toEqual(['soon', 'late', 'unknown', 'tight'])
 })
 
+const day = 24 * hour
+
+const session = (used: number, resetsAt: number): LimitWindow => ({ id: 'session', label: 'Session', used, resetsAt, duration: 5 * hour })
+
+const week = (used: number, resetsAt: number): LimitWindow => ({ id: 'week', label: 'Week', used, resetsAt, duration: 7 * day })
+
+test('spends first the weekly budget that would expire unused soonest, not the session that resets soonest', () => {
+  const llm = poolOf([source('session-soon'), source('week-soon'), source('busy'), source('spent')], {
+    'session-soon': [session(0.3, now + hour), week(0.2, now + 6 * day)],
+    'week-soon': [session(0.3, now + 4 * hour), week(0.4, now + day)],
+    busy: [session(0.95, now + 2 * hour), week(0.1, now + day / 2)],
+    spent: [session(1, now + 3 * hour), week(0.1, now + day / 4)],
+  })
+
+  expect(order(llm)).toEqual(['week-soon', 'session-soon', 'busy'])
+})
+
 test('a window whose reset has passed counts as fresh', () => {
   const llm = poolOf([source('reset'), source('waiting')], { reset: [window(1, now - hour)], waiting: [window(0.5, now + hour)] })
 
