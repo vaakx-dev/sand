@@ -3,12 +3,15 @@ import { div, img, show, span } from '@vaakx-dev/vrui'
 import type { Addon } from '../../contract'
 import type { FeatureStore } from '../store'
 
-const coverOf = (store: FeatureStore, { id, label, pictures, cover }: Addon) => {
-  const file = cover ?? pictures[0]
-  const url = file ? store.picture(id, file) : undefined
+const coverFile = ({ pictures, cover }: Addon) => cover ?? pictures[0]
+
+const coverOf = (store: FeatureStore, addon: Addon) => {
+  const file = coverFile(addon)
+  if (!file) return null
+  const url = store.picture(addon.id, file)
   return div(
     { class: 'aspect-video w-full overflow-hidden rounded-t-md bg-neutral-950' },
-    url ? show(() => Boolean(url.get()), () => img({ src: () => url.get() ?? '', alt: `${label} in use`, class: 'h-full w-full object-contain' })) : null,
+    show(() => Boolean(url.get()), () => img({ src: () => url.get() ?? '', alt: `${addon.label} in use`, class: 'h-full w-full object-contain' })),
   )
 }
 
@@ -23,4 +26,4 @@ const addonCard = (kit: Kit, store: FeatureStore, addon: Addon, open: (id: strin
     ),
   )
 
-export { addonCard }
+export { addonCard, coverFile }

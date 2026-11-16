@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, media, show } from '@vaakx-dev/vrui'
 import type { Addon, FeatureChoice } from '../contract'
-import { addonCard } from './addon/card'
+import { addonCard, coverFile } from './addon/card'
 import { addonControls, addonLine } from './addon/controls'
 import { extrasLine, hostsOf, isExtra } from './addon/extras'
 import { detail, row, tree, working } from './rows'
@@ -11,7 +11,6 @@ import type { FeatureStore } from './store'
 
 interface AddonLinks {
   open(id: string): void
-  has(id: string): boolean
   core(): void
 }
 
@@ -26,7 +25,7 @@ const installedRows = ({ kit, store, links, choice }: Shown, addon: Addon) => {
   const feature = choice.features.find(found => found.id === addon.id)
   const line = [addonLine(choice, addon, feature), extrasLine(choice, addon.id)].filter(Boolean).join(' · ')
   const head = kit.settingsRow(
-    { title: addon.label, detail: detail(addon.summary, line), ...(links.has(addon.id) && { onOpen: () => links.open(addon.id) }) },
+    { title: addon.label, detail: detail(addon.summary, line), onOpen: () => links.open(addon.id) },
     working(kit, store, addon.id),
     ...addonControls(kit, store, choice, addon, feature),
   )
@@ -42,9 +41,11 @@ const unreachable = ({ sources, addons }: FeatureChoice) => {
   return `Can't reach ${failed.join(' and ')} right now.${kept}`
 }
 
+const picturedFirst = (addons: Addon[]) => addons.toSorted((a, b) => Number(!coverFile(a)) - Number(!coverFile(b)))
+
 const cards = ({ kit, store, links }: Shown, available: Addon[]) => {
   const wide = media('(min-width: 640px)')
-  return div({ class: () => ['grid gap-3', wide.get() ? 'grid-cols-2' : 'grid-cols-1'] }, ...available.map(addon => addonCard(kit, store, addon, links.open)))
+  return div({ class: () => ['grid gap-3', wide.get() ? 'grid-cols-2' : 'grid-cols-1'] }, ...picturedFirst(available).map(addon => addonCard(kit, store, addon, links.open)))
 }
 
 const addonSections = (shown: Shown, found: Addon[], note: string | undefined) => {
