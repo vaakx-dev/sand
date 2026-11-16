@@ -9,16 +9,16 @@ const planOf = (subscription: unknown, method: unknown) => {
   return method === 'claude.ai' ? undefined : 'API'
 }
 
-export const signOutClaude = async () => {
+export const signOutClaude = async (config?: string) => {
   const binary = await findClaude()
   if (!binary) return
-  await Bun.spawn([binary, 'auth', 'logout'], { env: claudeEnv(), stdout: 'ignore', stderr: 'ignore', windowsHide: true }).exited
+  await Bun.spawn([binary, 'auth', 'logout'], { env: claudeEnv(config), stdout: 'ignore', stderr: 'ignore', windowsHide: true }).exited
 }
 
-export const readStatus = async (): Promise<AppStatus> => {
+export const readStatus = async (config?: string): Promise<AppStatus> => {
   const binary = await findClaude()
   if (!binary) return { installed: false, signedIn: false }
-  const child = Bun.spawn([binary, 'auth', 'status', '--json'], { env: claudeEnv(), stdout: 'pipe', stderr: 'pipe', windowsHide: true })
+  const child = Bun.spawn([binary, 'auth', 'status', '--json'], { env: claudeEnv(config), stdout: 'pipe', stderr: 'pipe', windowsHide: true })
   const [text] = await Promise.all([new Response(child.stdout).text(), child.exited])
   let status
   try {

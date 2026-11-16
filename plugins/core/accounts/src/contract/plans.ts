@@ -116,6 +116,11 @@ export interface AppSession {
   close(): Promise<void>
 }
 
+export interface AppPlace {
+  id: string
+  folder: string
+}
+
 export interface AppPlan extends PlanInfo {
   app: string
   install: string
@@ -129,6 +134,7 @@ export interface AppPlan extends PlanInfo {
   usage?(): Promise<PlanLimits | undefined>
   open(setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession>
   sessionFiles?(id: string): Promise<string[]>
+  another?(place: AppPlace): AppPlan
 }
 
 export type AnyPlan = Plan | AppPlan

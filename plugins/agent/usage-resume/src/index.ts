@@ -1,14 +1,14 @@
 import { llm } from '@sand/accounts/contract'
-import { noteBlock, sessions } from '@sand/chats/contract'
-import { type Conversation, type ConversationRef, engine, type HoldStep, turnClose, turnHold, turnOpen, type TurnOrigin } from '@sand/engine/contract'
+import { noteBlock, type Session, sessions } from '@sand/chats/contract'
+import { type Conversation, type ConversationRef, engine, type HoldStep, turnClose, turnHold, turnOpen, type TurnInfo, type TurnOrigin } from '@sand/engine/contract'
 import { modelSettings } from '@sand/model/contract'
 import { scheduleChange, scheduleRemove, schedules, type Schedule } from '@sand/schedules/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { turns } from '@sand/turns-contract/contract'
-import { alternativeOf } from './alternative'
-import { helloResumes, resumeAlternative, resumeCancel, resumesChange, resumeSwitch } from './contract'
+import { alternativeOf, carryOnOf } from './alternative'
+import { type Alternative, helloResumes, resumeAlternative, resumeCancel, resumesChange, resumeSwitch } from './contract'
 import { createPlans } from './plans'
 
 const CONTINUE = 'Usage is back. Continue where you left off.'
@@ -17,7 +17,7 @@ const switched = (account: string) => `Switched to ${account} because the plan r
 
 export default definePlugin({
   name: 'usage-resume',
-  description: 'Picks a chat back up when the usage its account ran out of resets, and holds what is sent to it until then',
+  description: 'Carries a chat on with the same model on another plan account when its account runs out of usage; with none, picks it back up when the usage resets, and holds what is sent to it until then',
   inject: { engine, schedules },
   apply(ctx) {
     const plans = createPlans(ctx.schedules)
@@ -52,12 +52,25 @@ export default definePlugin({
       return found && models ? alternativeOf(models, found.info.selection.model) : undefined
     }
 
+    const move = (session: Session, offered: Alternative, key: string) => {
+      ctx.get(modelSettings)?.change(session, { model: offered.model })
+      return resume({ owner: session.owner, id: session.id }, key, switched(offered.account))
+    }
+
     const switchTo = async ({ turn, model }: { turn: string; model: string }) => {
       const found = stoppedChat(turn)
       const offered = alternative({ turn })
       if (!found || offered?.model !== model) throw new Error('This chat can no longer switch to that model')
-      ctx.get(modelSettings)?.change(found.session, { model })
-      await resume({ owner: found.session.owner, id: found.session.id }, `switch:${turn}`, switched(offered.account))
+      await move(found.session, offered, `switch:${turn}`)
+    }
+
+    const carryOn = (conversation: Conversation, turn: TurnInfo) => {
+      const models = ctx.get(llm)
+      const offered = models && carryOnOf(models, turn.selection.model)
+      const session = ctx.get(sessions)?.open(conversation.id)
+      if (!offered || !session) return false
+      void move(session, offered, `carry-on:${turn.id}`)
+      return true
     }
 
     ctx.effect(() =>
@@ -70,7 +83,8 @@ export default definePlugin({
     ctx.on(scheduleRemove, announce)
     ctx.on(turnOpen, conversation => plans.forget(conversation))
     ctx.on(turnClose, (conversation, { stopReason, resetsAt }, turn) => {
-      if (stopReason === 'limited' && resetsAt && resetsAt > Date.now()) plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: resetsAt })
+      if (stopReason !== 'limited' || carryOn(conversation, turn)) return
+      if (resetsAt && resetsAt > Date.now()) plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: resetsAt })
     })
     ctx.on(turnHold, hold)
     ctx.watch(

@@ -1,4 +1,4 @@
-import type { DetectedServer, KeyKind, LoginPending, PlanTokens, ServerDraft, SignInFlow } from '../contract'
+import type { DetectedServer, LoginAccount, KeyKind, LoginPending, PlanTokens, ServerDraft, SignInFlow } from '../contract'
 import { trimSlash } from '@sand/util'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
@@ -14,7 +14,7 @@ const pendingOf = (started: Flow): LoginPending => {
 
 export type Login = ReturnType<typeof createLogin>
 
-export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
+export const createLogin = (accounts: Accounts, plans: PlanRegistry, forget: (account: string) => void) => {
   const running = new Map<string, AbortController>()
   const pastes = new Map<string, (code: string) => Promise<PlanTokens | void>>()
 
@@ -24,10 +24,36 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
     pastes.delete(account)
   }
 
-  const complete = async (account: string, tokens: PlanTokens | void) => {
+  const signOut = async (account: string) => {
+    const app = plans.app(account)
+    if (!app) return accounts.signOut(account)
+    await app.signOut()
+    await plans.refresh(account)
+  }
+
+  const twin = (account: string) => {
+    const listed = accounts.list()
+    const own = listed.find(found => found.id === account)
+    const same = (other: LoginAccount) => other.id !== account && other.kind === own?.kind && other.signedIn && other.email === own.email
+    return own?.email ? listed.find(same) : undefined
+  }
+
+  const refuseTwin = async (account: string) => {
+    const found = twin(account)
+    if (!found) return
+    await signOut(account)
+    throw new Error(`That's the account ${found.label} already uses. Open the link in the browser signed in to the other account.`)
+  }
+
+  const settle = async (account: string, tokens: PlanTokens | void) => {
     if (tokens) return accounts.signIn(account, tokens)
     await plans.refresh(account)
     accounts.pend(account, undefined)
+  }
+
+  const complete = async (account: string, tokens: PlanTokens | void) => {
+    await settle(account, tokens)
+    await refuseTwin(account)
   }
 
   const wait = (account: string, controller: AbortController, tokens: Promise<PlanTokens | void>) =>
@@ -98,15 +124,23 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
     return (await detectServers()).filter(found => !added.has(trimSlash(found.url)))
   }
 
+  const add = async (base: string) => (await plans.add(base)).id
+
+  const rename = (account: string, name: string) => {
+    if (!plans.placeOf(account)) throw new Error(`${accounts.label(account)} keeps its name`)
+    return plans.rename(account, name)
+  }
+
   const logout = async (account: string) => {
     cancel(account)
-    const app = plans.app(account)
-    if (!app) return accounts.signOut(account)
-    await app.signOut()
-    await plans.refresh(account)
+    const added = !!plans.placeOf(account)
+    const gone = added || !!accounts.server(account)
+    await signOut(account)
+    if (added) await plans.remove(account)
+    if (gone) forget(account)
   }
 
   const dispose = () => [...running.keys()].forEach(stop)
 
-  return { start, finish, key, server, detect, cancel, logout, dispose }
+  return { start, finish, key, server, detect, cancel, logout, add, rename, dispose }
 }

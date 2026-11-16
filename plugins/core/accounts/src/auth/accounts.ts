@@ -1,8 +1,8 @@
-import type { AccountKind, AnyPlan, KeyKind, LoginAccount, LoginConflict, LoginMethod, LoginPending, LoginSignIn, PlanApi, PlanTokens } from '../contract'
+import type { AccountKind, AnyPlan, KeyKind, LoginAccount, LoginConflict, LoginMethod, LoginPending, PlanApi, PlanTokens } from '../contract'
 import { errorMessage } from '@sand/util'
 import { envKey, envNames } from './env'
 import { isKeyKind, keyApis, keyKinds, keyLabels, signInError } from './kinds'
-import { appAccount, ownAccount, serverAccount, type Status } from './listing'
+import { appAccount, ownAccount, type OwnInfo, serverAccount, type Status } from './listing'
 import type { PlanRegistry } from './plans'
 import { authStore, credentialOf, serversOf, type Credential, type OAuth, type Saved, type ServerEntry } from './store'
 
@@ -35,7 +35,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     if (ownIds().some(credential) || servers().length) changed()
   })
 
-  const label = (id: string) => plans.get(id)?.label ?? (isKeyKind(id) ? keyLabels[id] : (server(id)?.name ?? id))
+  const label = (id: string) => plans.placeOf(id)?.name ?? plans.get(id)?.label ?? (isKeyKind(id) ? keyLabels[id] : (server(id)?.name ?? id))
 
   const shared = (id: string) => {
     const found = stored(id) ?? server(id)
@@ -112,17 +112,17 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
 
   const provider = (id: string) => plans.get(id)?.logo ?? (isKeyKind(id) ? id : (server(id)?.provider ?? 'server'))
 
-  const ownListing = (id: string, signIn?: LoginSignIn) =>
-    ownAccount(
-      { id, label: label(id), provider: provider(id), ...(signIn && { signIn }) },
-      { credential: credential(id), fromEnv: !stored(id), shared: shared(id), status: status(id) },
-    )
+  const ownListing = (info: OwnInfo) =>
+    ownAccount(info, { credential: credential(info.id), fromEnv: !stored(info.id), shared: shared(info.id), status: status(info.id) })
+
+  const keyListing = (id: KeyKind) => ownListing({ id, kind: id, label: label(id), provider: provider(id), added: false, another: false })
 
   const planListing = (plan: AnyPlan) => {
+    const place = plans.placeOf(plan.id)
     const signIn = { name: plan.name, detail: plan.detail }
+    const info = { id: plan.id, kind: place?.plan ?? plan.id, label: label(plan.id), provider: plan.logo, signIn, added: !!place, another: !place && plans.another(plan.id) }
     const app = plans.app(plan.id)
-    if (!app) return ownListing(plan.id, signIn)
-    return appAccount({ id: app.id, label: app.label, provider: app.logo, signIn }, app, plans.status(app.id), status(app.id))
+    return app ? appAccount(info, app, plans.status(plan.id), status(plan.id)) : ownListing(info)
   }
 
   return {
@@ -134,7 +134,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     provider,
     list: (): LoginAccount[] => [
       ...plans.list().map(planListing),
-      ...keyKinds.map(id => ownListing(id)),
+      ...keyKinds.map(keyListing),
       ...servers().map(entry => serverAccount(entry, status(entry.id))),
     ],
     ids: () => [...ownIds().filter(id => !!credential(id) || viaApp(id)), ...servers().map(found => found.id)],
@@ -145,7 +145,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     },
     known: (id: string) => owned(id) || !!server(id),
     kind(id: string): AccountKind | undefined {
-      if (owned(id)) return id
+      if (owned(id)) return plans.placeOf(id)?.plan ?? id
       return server(id) ? 'server' : undefined
     },
     method(id: string): LoginMethod | undefined {

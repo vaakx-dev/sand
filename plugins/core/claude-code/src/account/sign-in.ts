@@ -6,6 +6,7 @@ import { readStatus } from './status'
 const authorizeUrl = /https:\/\/[^\s\x07\x1b]+\/oauth\/authorize[^\s\x07\x1b]*/
 const badCode = /invalid code/i
 const startTimeout = 20_000
+const NO_BROWSER = 'none'
 
 const refusal = () => {
   const made = Promise.withResolvers<never>()
@@ -23,9 +24,10 @@ const watch = (stream: ReadableStream<Uint8Array>, onText: (all: string) => void
     }
   })()
 
-export const signInClaude = async (signal: AbortSignal): Promise<SignInFlow<void>> => {
+export const signInClaude = async (signal: AbortSignal, config?: string): Promise<SignInFlow<void>> => {
   const binary = await requireClaude()
-  const child = Bun.spawn([binary, 'auth', 'login', '--claudeai'], { env: claudeEnv(), stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
+  const env = { ...claudeEnv(config), BROWSER: NO_BROWSER }
+  const child = Bun.spawn([binary, 'auth', 'login', '--claudeai'], { env, stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
   signal.addEventListener('abort', () => child.kill(), { once: true })
 
   const shown = Promise.withResolvers<string>()
@@ -42,7 +44,7 @@ export const signInClaude = async (signal: AbortSignal): Promise<SignInFlow<void
   })
 
   const finished = child.exited.then(async code => {
-    if ((await readStatus()).signedIn) return
+    if ((await readStatus(config)).signedIn) return
     throw new Error(code ? `Claude Code sign-in stopped (exit ${code})` : "Claude Code didn't finish signing in")
   })
   finished.catch(() => {})

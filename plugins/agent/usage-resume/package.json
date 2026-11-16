@@ -1,7 +1,7 @@
 {
   "name": "@sand/usage-resume",
   "version": "0.0.0",
-  "description": "Picks a thread, bot or subagent chat back up by itself when the usage its account ran out of resets, and holds what is sent to it until then",
+  "description": "Carries a thread, bot or subagent chat on with the same model on another plan account when its account runs out of usage; with none, picks it back up by itself when the usage resets, and holds what is sent to it until then",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -11,7 +11,7 @@
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Resume at reset",
-    "summary": "Chats that run out of usage pick up again when it resets"
+    "summary": "Chats that run out of usage carry on with another plan account, or pick up again when it resets"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",

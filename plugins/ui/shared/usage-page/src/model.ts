@@ -1,4 +1,4 @@
-import type { Limits } from '@sand/accounts/contract'
+import type { Limits, SourceInfo } from '@sand/accounts/contract'
 import type { Wire } from '@sand/devices-contract'
 import { usageQuery } from '@sand/usage/contract'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
@@ -16,6 +16,7 @@ export interface UsageDeps {
   wire: Wire
   pcs(): Pc[]
   limits(): Limits[]
+  sources(): SourceInfo[]
   refreshLimits(): Promise<void>
 }
 
@@ -78,7 +79,7 @@ export const usageModel = (deps: UsageDeps) => {
     const merged = mergeSummaries(list)
     const self = home()
     const showsHome = selected.get().some(machine => machine.id === self?.id)
-    return { ...merged, accounts: withLiveLimits(merged.accounts, deps.limits(), self, showsHome) }
+    return { ...merged, accounts: withLiveLimits(merged.accounts, deps.limits(), { home: self, addMissing: showsHome, sources: deps.sources() }) }
   })
 
   const historyOf = derive((): History | undefined => {

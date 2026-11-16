@@ -60,7 +60,7 @@ test('a chat out of usage keeps what is sent meanwhile, continues at the reset, 
   expect(sent()).toEqual(['Start', continued, 'And this'])
 })
 
-test('cancelling a chat’s resume keeps what waits until the reset, then sends it without continuing', async () => {
+test('cancelling a chatï¿½s resume keeps what waits until the reset, then sends it without continuing', async () => {
   sand = await start([[said('Half'), limit(2_500)], [said('Answered.')]])
   const chat = sand.chat('fake/m')
   await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
@@ -124,11 +124,31 @@ test('a bot out of usage continues at the reset', async () => {
   expect(sent()).toEqual(['Start', continued])
 })
 
-test('a thread out of usage can switch to the same model on another account and continue there at once', async () => {
+const sentTo = (source: string) => sand.native(source).flatMap(call => (call.type === 'send' ? [call.text] : []))
+
+test('a thread out of usage carries on at once with the same model on another plan account', async () => {
   sand = await startSand(
     [
       { id: 'fake', label: 'Fake Plan', models: ['m'], replies: [[said('Half'), limit(60_000)]] },
-      { id: 'other', label: 'Other Plan', models: ['m'], replies: [[said('Picked up elsewhere.')]] },
+      { id: 'other', label: 'Other Plan', models: ['m'], replies: [[said('Picked up elsewhere.')], [said('Answered.')]] },
+    ],
+    { plugins: ['automation/schedules', 'agent/usage-resume'] },
+  )
+  const chat = sand.chat('fake/m')
+  await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
+  await ended(chat, 2)
+  expect(sentTo('other')).toEqual([expect.stringContaining('Switched to Other Plan')])
+
+  await sand.turns.send(chat, { prompt: 'And this', clientRequestId: 'two' })
+  await ended(chat, 3)
+  expect(sentTo('other')).toEqual([expect.stringContaining('Switched to Other Plan'), then])
+})
+
+test('a thread out of usage can switch to another model on another account and continue there at once', async () => {
+  sand = await startSand(
+    [
+      { id: 'fake', label: 'Fake Plan', models: ['m'], replies: [[said('Half'), limit(60_000)]] },
+      { id: 'other', label: 'Other Plan', models: ['n'], replies: [[said('Picked up elsewhere.')]] },
     ],
     { plugins: ['automation/schedules', 'agent/usage-resume'] },
   )
@@ -137,10 +157,10 @@ test('a thread out of usage can switch to the same model on another account and 
   const [stopped] = await ended(chat, 1)
 
   const offered = await sand.ask(resumeAlternative, { turn: stopped!.id })
-  expect(offered).toEqual({ model: 'other/m', label: 'm', account: 'Other Plan' })
-  await sand.ask(resumeSwitch, { turn: stopped!.id, model: 'other/m' })
+  expect(offered).toEqual({ model: 'other/n', label: 'n', account: 'Other Plan' })
+  await sand.ask(resumeSwitch, { turn: stopped!.id, model: 'other/n' })
 
   await ended(chat, 2)
-  expect(sand.native('other').flatMap(call => (call.type === 'send' ? [call.text] : []))).toEqual([expect.stringContaining('Switched to Other Plan')])
+  expect(sentTo('other')).toEqual([expect.stringContaining('Switched to Other Plan')])
   expect(await sand.ask(resumeAlternative, { turn: stopped!.id })).toBeUndefined()
 })

@@ -3,7 +3,7 @@ import type { Request } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { loginChange, loginDetect, loginStatus, type DetectedServer, type LoginState } from '../contract'
+import { loginAdd, loginChange, loginDetect, loginStatus, type DetectedServer, type LoginState } from '../contract'
 
 export const loginState = (ctx: Context<{ wire: typeof wire }>) => {
   const state = sig<LoginState | undefined>(undefined)
@@ -30,9 +30,11 @@ export const loginState = (ctx: Context<{ wire: typeof wire }>) => {
 
   const detect = () => ctx.wire.call(loginDetect, {}).catch((): DetectedServer[] => [])
 
+  const add = (plan: string) => ctx.wire.call(loginAdd, { account: plan })
+
   const account = (id: string) => state.get()?.accounts.find(found => found.id === id)
 
-  return { state, unavailable, load, send, run, detect, account }
+  return { state, unavailable, load, send, run, detect, add, account }
 }
 
 export type LoginControl = ReturnType<typeof loginState>

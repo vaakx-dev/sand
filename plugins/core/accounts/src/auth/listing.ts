@@ -8,10 +8,13 @@ export interface Status {
   error?: string
 }
 
-interface OwnInfo {
+export interface OwnInfo {
   id: string
+  kind: string
   label: string
   provider: string
+  added: boolean
+  another: boolean
   signIn?: LoginSignIn
 }
 
@@ -22,15 +25,17 @@ interface OwnState {
   status: Status
 }
 
-export const ownAccount = ({ id, label, provider, signIn }: OwnInfo, { credential, fromEnv, shared, status }: OwnState): LoginAccount => {
+export const ownAccount = ({ id, kind, label, provider, signIn, added, another }: OwnInfo, { credential, fromEnv, shared, status }: OwnState): LoginAccount => {
   const oauth = credential?.type === 'oauth' ? credential : undefined
   return {
     id,
-    kind: id,
+    kind,
     provider,
     label,
     signedIn: !!credential,
     shared,
+    added,
+    another,
     ...(signIn && { signIn }),
     ...(credential && { method: credential.type }),
     ...(credential && fromEnv && { env: envNames[id] }),
@@ -40,13 +45,15 @@ export const ownAccount = ({ id, label, provider, signIn }: OwnInfo, { credentia
   }
 }
 
-export const appAccount = ({ id, label, provider, signIn }: OwnInfo, plan: AppPlan, found: AppStatus, status: Status): LoginAccount => ({
+export const appAccount = ({ id, kind, label, provider, signIn, added, another }: OwnInfo, plan: AppPlan, found: AppStatus, status: Status): LoginAccount => ({
   id,
-  kind: id,
+  kind,
   provider,
   label,
   signedIn: found.signedIn,
   shared: false,
+  added,
+  another,
   ...(signIn && { signIn }),
   app: { name: plan.app, installed: found.installed, install: plan.install, ...(found.problem && { problem: found.problem }) },
   ...(found.signedIn && { method: 'app' as const }),
@@ -62,6 +69,8 @@ export const serverAccount = (entry: ServerEntry, status: Status): LoginAccount 
   label: entry.name,
   signedIn: true,
   shared: entry.shared !== false,
+  added: false,
+  another: false,
   method: 'server',
   url: entry.url,
   ...status,

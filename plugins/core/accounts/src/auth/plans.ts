@@ -1,7 +1,9 @@
 import type { AnyPlan, AppPlan, AppStatus, Payload, Plan, PlanTokens } from '../contract'
 import { errorMessage } from '@sand/util'
+import { mkdir } from 'node:fs/promises'
 import type { AppStatuses } from './app-status'
 import { isKeyKind, signInError } from './kinds'
+import type { Place, Places } from './places'
 
 export type PlanRegistry = ReturnType<typeof createPlans>
 
@@ -19,20 +21,23 @@ const statusOf = async (plan: AppPlan): Promise<AppStatus> => {
 
 interface PlansOptions {
   saved: AppStatuses
+  places: Places
   save(statuses: AppStatuses): Promise<void>
   changed(): void
   dropped(plan: AppPlan): void
 }
 
-export const createPlans = ({ saved, save, changed, dropped }: PlansOptions) => {
+export const createPlans = ({ saved, places, save, changed, dropped }: PlansOptions) => {
   const plans = new Map<string, AnyPlan>()
   const statuses = new Map(Object.entries(saved))
+
+  const keep = () => void save(Object.fromEntries(statuses)).catch(() => {})
 
   const check = async (plan: AppPlan) => {
     const found = await statusOf(plan)
     if (plans.get(plan.id) !== plan || JSON.stringify(found) === JSON.stringify(statuses.get(plan.id))) return
     statuses.set(plan.id, found)
-    void save(Object.fromEntries(statuses)).catch(() => {})
+    keep()
     changed()
   }
 
@@ -46,21 +51,70 @@ export const createPlans = ({ saved, save, changed, dropped }: PlansOptions) => 
     return isApp(plan) ? undefined : plan
   }
 
+  const put = (plan: AnyPlan) => {
+    const before = plans.get(plan.id)
+    if (isApp(before)) dropped(before)
+    plans.set(plan.id, plan)
+    if (isApp(plan)) void check(plan)
+  }
+
+  const drop = (plan: AnyPlan | undefined) => {
+    if (!plan || plans.get(plan.id) !== plan) return
+    if (isApp(plan)) dropped(plan)
+    plans.delete(plan.id)
+  }
+
+  const appPlace = ({ id }: Place) => ({ id, folder: places.folder(id) })
+
+  const maker = (base: AnyPlan | undefined): ((place: Place) => AnyPlan) | undefined => {
+    if (!base) return undefined
+    if (!isApp(base)) return place => ({ ...base, id: place.id })
+    const { another } = base
+    return another && (place => another(appPlace(place)))
+  }
+
+  const others = (base: AnyPlan) => {
+    const make = maker(base)
+    return make ? places.of(base.id).map(make) : []
+  }
+
   return {
     register(plan: AnyPlan) {
       if (isKeyKind(plan.id) || plan.id === 'server') throw new Error(`"${plan.id}" is taken by a built-in account`)
-      const before = plans.get(plan.id)
-      if (isApp(before)) dropped(before)
-      plans.set(plan.id, plan)
+      const added = [plan, ...others(plan)]
+      added.forEach(put)
       changed()
-      if (isApp(plan)) void check(plan)
       return () => {
-        if (isApp(plan)) dropped(plan)
         if (plans.get(plan.id) !== plan) return
-        plans.delete(plan.id)
+        const removed = [plan, ...places.of(plan.id).map(place => plans.get(place.id))]
+        removed.forEach(drop)
         changed()
       }
     },
+    async add(base: string) {
+      const plan = plans.get(base)
+      const make = maker(plan)
+      if (!plan || !make) throw new Error(`${plan?.label ?? base} can't keep another account`)
+      const place = await places.add(base, plan.label)
+      if (isApp(plan)) await mkdir(places.folder(place.id), { recursive: true })
+      const added = make(place)
+      put(added)
+      changed()
+      return added
+    },
+    async rename(id: string, name: string) {
+      await places.rename(id, name)
+      changed()
+    },
+    async remove(id: string) {
+      drop(plans.get(id))
+      statuses.delete(id)
+      keep()
+      await places.remove(id)
+      changed()
+    },
+    placeOf: (id: string) => places.get(id),
+    another: (id: string) => !!maker(plans.get(id)),
     get: (id: string) => plans.get(id),
     list: () => [...plans.values()].sort((a, b) => a.label.localeCompare(b.label)),
     api,

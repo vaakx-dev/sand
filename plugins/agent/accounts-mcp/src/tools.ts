@@ -1,4 +1,4 @@
-import { loginCancel, loginDetect, loginFinish, loginKey, loginLogout, loginServer, loginShared, loginStart, loginStatus } from '@sand/accounts/contract'
+import { loginAdd, loginCancel, loginDetect, loginFinish, loginKey, loginLogout, loginRename, loginServer, loginShared, loginStart, loginStatus } from '@sand/accounts/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
@@ -6,7 +6,7 @@ import { z } from 'zod'
 const group: McpGroup = {
   name: 'accounts',
   label: 'Model accounts',
-  summary: 'sign in and out of model accounts, save API keys and add local model servers',
+  summary: 'sign in and out of model accounts, add more plan accounts, save API keys and add local model servers',
 }
 
 const state = 'Returns every account (id, label, whether it is signed in, how, and any pending sign-in or error). Keys and tokens never come back.'
@@ -34,6 +34,7 @@ const serverInput = z.object({
   key: z.string().optional().describe('The API key the server needs, when it needs one'),
   provider: z.enum(['ollama', 'lmstudio', 'server']).optional().describe('What runs it (default: guessed from the port)'),
 })
+const renameInput = z.object({ account, name: z.string().trim().min(1).max(60).describe('The new name, like "Work"') })
 const shareInput = z.object({ account, shared: z.boolean().describe('Whether your other PCs may use this account') })
 
 const listTool: McpTool<typeof listInput> = {
@@ -71,6 +72,26 @@ const finishTool: McpTool<typeof finishInput> = {
   access: 'operate',
   group: group.name,
   run: (input, { call }) => call(loginFinish, input),
+}
+
+const addTool: McpTool<typeof accountInput> = {
+  name: 'account_add',
+  description:
+    'Add another account of a sign-in plan beside the one already signed in, like a second Claude account, kept in its own place so the first stays signed in. Pass the plan account whose "another" is true. Returns the new account id; then start its sign-in with account_sign_in.',
+  input: accountInput,
+  access: 'operate',
+  group: group.name,
+  run: (input, { call }) => call(loginAdd, input),
+}
+
+const renameTool: McpTool<typeof renameInput> = {
+  name: 'account_rename',
+  description: `Rename an account added with account_add. The name tells it apart in sand. ${state}`,
+  parts: [shared],
+  input: renameInput,
+  access: 'operate',
+  group: group.name,
+  run: (input, { call }) => call(loginRename, input),
 }
 
 const cancelTool: McpTool<typeof accountInput> = {
@@ -116,7 +137,7 @@ const findServersTool: McpTool<typeof listInput> = {
 
 const signOutTool: McpTool<typeof accountInput> = {
   name: 'account_sign_out',
-  description: `Sign out of an account, forget its saved key, or remove a model server. ${state}`,
+  description: `Sign out of an account, forget its saved key, remove a model server, or remove an account added with account_add along with its sign-in. ${state}`,
   parts: [shared],
   input: accountInput,
   access: 'operate',
@@ -135,7 +156,7 @@ const shareTool: McpTool<typeof shareInput> = {
   run: (input, { call }) => call(loginShared, input),
 }
 
-const accountTools = [listTool, signInTool, finishTool, cancelTool, keyTool, serverTool, findServersTool, signOutTool, shareTool]
+const accountTools = [listTool, addTool, signInTool, finishTool, renameTool, cancelTool, keyTool, serverTool, findServersTool, signOutTool, shareTool]
 
 const offerAccountTools = (tools: McpTools) => joinDisposers(tools.group(group), ...accountTools.map(tool => tools.register(tool)))
 

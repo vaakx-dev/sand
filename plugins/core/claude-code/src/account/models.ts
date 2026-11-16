@@ -21,19 +21,19 @@ const offeredOf = (entry: Json): Offered[] => {
 
 const byVariantLast = (a: Offered, b: Offered) => Number(variant.test(a.cli)) - Number(variant.test(b.cli))
 
-const offered = () =>
-  probe(async connection => {
+const offered = (config?: string) =>
+  probe(config, async connection => {
     const { models } = await connection.request('initialize', {})
     const found = (Array.isArray(models) ? models : []).map(fieldsOf).flatMap(offeredOf).sort(byVariantLast)
     return [...new Map(found.map(item => [item.model.name, item])).values()]
   })
 
-export const modelCatalog = () => {
+export const modelCatalog = (config?: string) => {
   let cliNames = new Map<string, string>()
   let loading: Promise<PlanModel[]> | undefined
 
   const list = async () => {
-    const found = await offered()
+    const found = await offered(config)
     cliNames = new Map(found.map(({ model, cli }) => [model.name, cli]))
     return found.map(({ model }) => model)
   }

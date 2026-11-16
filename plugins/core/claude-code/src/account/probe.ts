@@ -4,8 +4,8 @@ import { claudeArgs, claudeEnv } from '../cli/args'
 import { connect, type Connection } from '../cli/connection'
 import { usageLimits } from './usage'
 
-export const probe = async <T>(work: (connection: Connection) => Promise<T>) => {
-  const connection = await connect({ args: claudeArgs({}), env: claudeEnv(), cwd: tmpdir(), handle: async () => ({}), onMessage: () => {}, onExit: () => {} })
+export const probe = async <T>(config: string | undefined, work: (connection: Connection) => Promise<T>) => {
+  const connection = await connect({ args: claudeArgs({}), env: claudeEnv(config), cwd: tmpdir(), handle: async () => ({}), onMessage: () => {}, onExit: () => {} })
   try {
     return await work(connection)
   } finally {
@@ -13,8 +13,8 @@ export const probe = async <T>(work: (connection: Connection) => Promise<T>) => 
   }
 }
 
-export const readUsage = (): Promise<PlanLimits | undefined> =>
-  probe(async connection => {
+export const readUsage = (config?: string): Promise<PlanLimits | undefined> =>
+  probe(config, async connection => {
     await connection.request('initialize', {})
     return usageLimits(await connection.request('get_usage', { skip_behaviors: true }))
   })

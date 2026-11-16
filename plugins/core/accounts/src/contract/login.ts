@@ -33,6 +33,8 @@ export interface LoginAccount {
   label: string
   signedIn: boolean
   shared: boolean
+  added: boolean
+  another: boolean
   signIn?: LoginSignIn
   app?: LoginApp
   method?: LoginMethod

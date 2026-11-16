@@ -1,7 +1,7 @@
 import { pcs, wire } from '@sand/devices-contract'
 import { kit } from '@sand/ui-kit/contract'
 import { shell, type Shell } from '@sand/ui-shell/contract'
-import { limits, limitsChange } from '@sand/web-client/contract'
+import { limits, limitsChange, models, modelsChange } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
 import { derive, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
@@ -18,7 +18,7 @@ export default definePlugin({
   description: 'Usage page, opened from the sidebar foot: a forecast of the plan limit that runs out first, every limit per account, and daily cost by model, beside the other views added to it, like Performance',
   inject: { wire, kit, pcs },
   apply(ctx) {
-    const changes = pulse(ctx, [limitsChange], [limits])
+    const changes = pulse(ctx, [limitsChange, modelsChange], [limits, models])
     const pcViews = pcList(ctx)
 
     const render = () =>
@@ -28,6 +28,10 @@ export default definePlugin({
         limits: () => {
           changes.version.get()
           return ctx.get(limits)?.all() ?? []
+        },
+        sources: () => {
+          changes.version.get()
+          return ctx.get(models)?.sources() ?? []
         },
         refreshLimits: () => ctx.get(limits)?.refresh().catch(() => {}) ?? Promise.resolve(),
       })
