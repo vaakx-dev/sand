@@ -31,7 +31,7 @@ const pinOf = (pc: string | undefined, request: LLMRequest): Pin | undefined => 
 export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog, idleMs: number) => {
   const remotes = cached(() => remoteIndex(peers, accounts))
   const pooled = cached(() =>
-    poolEntries([...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))], { label: accounts.label, entry: catalog.entry }),
+    poolEntries([...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))], { label: accounts.planLabel, entry: catalog.entry }),
   )
   const view = viewOf(() => pooled.get().entries)
 

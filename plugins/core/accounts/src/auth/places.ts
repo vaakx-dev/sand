@@ -28,10 +28,14 @@ const nextName = (label: string, taken: Place[]) => {
 
 export type Places = Awaited<ReturnType<typeof readPlaces>>
 
+const namesOf = (value: unknown) => Object.fromEntries(Object.entries(fieldsOf(value)).filter((entry): entry is [string, string] => isText(entry[1])))
+
 export const readPlaces = async (apps: string) => {
   const path = join(apps, 'accounts.json')
+  const namesPath = join(apps, 'account-names.json')
   const queue = serial()
   let list = (await readState(path, placesOf)) ?? []
+  let names = (await readState(namesPath, namesOf)) ?? {}
 
   const save = (next: Place[]) => {
     list = next
@@ -49,7 +53,12 @@ export const readPlaces = async (apps: string) => {
       await save([...list, place])
       return place
     },
-    rename: (id: string, name: string) => save(list.map(place => (place.id === id ? { ...place, name } : place))),
+    name: (id: string) => list.find(place => place.id === id)?.name ?? names[id],
+    rename(id: string, name: string) {
+      if (list.some(place => place.id === id)) return save(list.map(place => (place.id === id ? { ...place, name } : place)))
+      names = { ...names, [id]: name }
+      return queue(() => writeAtomic(namesPath, JSON.stringify(names, null, 2)))
+    },
     async remove(id: string) {
       await removeFolder(folder(id))
       await save(list.filter(place => place.id !== id))

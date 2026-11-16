@@ -25,6 +25,10 @@ test('an added account joins its plan under its own name without a model of its 
   expect(sand.llm.models?.().map(model => model.id)).toEqual(['fake/m'])
   expect(sand.llm.find?.(`${added}/m`)?.id).toBe('fake/m')
 
+  const renamed = (await sand.ask(loginRename, { account: 'fake', name: 'Main' })).accounts.map(({ id, label }) => ({ id, label }))
+  expect(renamed).toContainEqual({ id: 'fake', label: 'Main' })
+  expect(sand.llm.sources?.().map(source => source.label)).toEqual(['Fake Plan'])
+
   await sand.ask(loginLogout, { account: added })
   await until(() => !members().includes(added))
   expect(members()).toEqual(['fake'])

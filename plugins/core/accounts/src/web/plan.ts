@@ -58,7 +58,7 @@ const planSheet = (kit: Kit, parts: PlanParts, plan: string): SheetSpec => {
   const name = planName(untrack(() => accounts.get())[0])
   const list = () => {
     const shown = untrack(() => accounts.get())
-    return shown.length ? div({ class: 'contents' }, shown.map(account => accountRow(rows, account))) : emptyState({ text: `No ${name} accounts on this PC.` })
+    return shown.length ? div({ class: 'contents' }, shown.map(account => accountRow(rows, account, true))) : emptyState({ text: `No ${name} accounts on this PC.` })
   }
   return {
     label: name,

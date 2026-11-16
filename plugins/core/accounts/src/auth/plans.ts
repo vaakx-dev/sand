@@ -119,6 +119,7 @@ export const createPlans = ({ saved, places, save, changed, dropped }: PlansOpti
       changed()
     },
     placeOf: (id: string) => places.get(id),
+    nameOf: (id: string) => places.name(id),
     another: (id: string) => !!maker(plans.get(id)),
     get: (id: string) => plans.get(id),
     list: () => [...plans.values()].sort((a, b) => a.label.localeCompare(b.label)),
