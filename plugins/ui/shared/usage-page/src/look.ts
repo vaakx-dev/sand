@@ -1,5 +1,5 @@
-import type { LimitWindow } from '@sand/accounts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import type { PoolState } from '@sand/usage/contract'
 import { span } from '@vaakx-dev/vrui'
 
 export type Tone = 'even' | 'ahead' | 'out'
@@ -28,20 +28,11 @@ export const TONE_FILL: Record<Tone, string> = {
   out: 'bg-danger-400/20',
 }
 
-export const elapsedOf = (window: LimitWindow, now: number) => {
-  if (!window.duration || !window.resetsAt) return undefined
-  const elapsed = 1 - (window.resetsAt - now) / window.duration
-  return elapsed > 0 && elapsed < 1 ? elapsed : undefined
-}
+const aheadOfPace = ({ left, pace }: PoolState) => pace !== undefined && 1 - pace > PACE_MARGIN && pace - left > PACE_MARGIN
 
-const aheadOfPace = (window: LimitWindow, now: number) => {
-  const elapsed = elapsedOf(window, now)
-  return elapsed !== undefined && elapsed > PACE_MARGIN && window.used - elapsed > PACE_MARGIN
-}
-
-export const toneOf = (window: LimitWindow, now: number, outAt?: number): Tone => {
-  if (window.used >= 1) return 'out'
-  return outAt !== undefined || aheadOfPace(window, now) ? 'ahead' : 'even'
+export const toneOf = (state: PoolState, outAt?: number): Tone => {
+  if (state.left <= 0) return 'out'
+  return outAt !== undefined || aheadOfPace(state) ? 'ahead' : 'even'
 }
 
 export const modelShades = <T extends Shaded>(kit: Kit, ranked: T[]) => {

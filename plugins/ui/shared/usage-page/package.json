@@ -1,7 +1,7 @@
 {
   "name": "@sand/usage-page",
   "version": "0.0.0",
-  "description": "Usage page, opened from the sidebar foot: a forecast of the plan limit that runs out first, every limit per account, and daily cost by model, across your PCs",
+  "description": "Usage page, opened from the sidebar foot: a forecast of the plan limit that runs out first, what is left of each plan across its pooled accounts on every PC, and daily cost by model",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

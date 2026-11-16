@@ -1,25 +1,22 @@
-import type { UsageSummary } from '@sand/usage/contract'
-import { isSummary } from '../data/valid'
-
-export interface Cached {
+export interface Cached<T> {
   at: number
-  summary: UsageSummary
+  summary: T
 }
 
 const keyOf = (pc: string, view: string) => `sand.usage.summary.${pc}.${view}`
 
-export const readCache = (pc: string, view: string): Cached | undefined => {
+export const readCache = <T>(pc: string, view: string, valid: (value: unknown) => value is T): Cached<T> | undefined => {
   try {
     const saved: unknown = JSON.parse(localStorage.getItem(keyOf(pc, view)) ?? 'null')
     if (!saved || typeof saved !== 'object' || !('at' in saved) || !('summary' in saved)) return undefined
     const { at, summary } = saved
-    return typeof at === 'number' && isSummary(summary) ? { at, summary } : undefined
+    return typeof at === 'number' && valid(summary) ? { at, summary } : undefined
   } catch {
     return undefined
   }
 }
 
-export const writeCache = (pc: string, view: string, cached: Cached) => {
+export const writeCache = <T>(pc: string, view: string, cached: Cached<T>) => {
   try {
     localStorage.setItem(keyOf(pc, view), JSON.stringify(cached))
   } catch {}

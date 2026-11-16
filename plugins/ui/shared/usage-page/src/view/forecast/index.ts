@@ -1,54 +1,38 @@
-import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { colorVar, derive, div, dynamicChild, line, sig, span, svg, type Child, type Sig } from '@vaakx-dev/vrui'
-import { type Forecast, forecastsOf, type History } from '@sand/usage/contract'
-import { accountName, plansOf } from '../../data/plans'
-import type { Account } from '../../data/types'
+import { colorVar, div, line, sig, span, svg, type Child, type Sig } from '@vaakx-dev/vrui'
+import type { Forecast } from '@sand/usage/contract'
+import type { Gauge } from '../../data/gauges'
 import { whenText } from '../plans/pace'
 import { DASH, forecastChart, readout } from './chart'
 
 export interface ForecastProps {
   kit: Kit
-  now: Sig<number>
-  history: Sig<History | undefined>
+  gauges: Gauge[]
+  now: number
   chosen: Sig<string>
 }
 
-interface Entry {
-  key: string
-  label: string
-  account: Account
-  window: LimitWindow
-  forecast?: Forecast
-}
+const labelOf = ({ plan, window }: Gauge) => `${plan.label} ${window.label}`
 
-const entriesOf = (accounts: Account[], history: History, now: number) =>
-  plansOf(accounts).flatMap(plan =>
-    plan.accounts.flatMap(account => {
-      const forecasts = forecastsOf(account.key, account.limits?.windows ?? [], history, now)
-      const named = plan.accounts.length > 1 ? ` · ${accountName(account)}` : ''
-      return (account.limits?.windows ?? [])
-        .filter(window => window.resetsAt && window.duration)
-        .map((window): Entry => {
-          const forecast = forecasts.get(window.id)
-          return { key: `${account.key}|${window.id}`, label: `${plan.label} ${window.label}${named}`, account, window, ...(forecast && { forecast }) }
-        })
-    }),
-  )
+const timed = ({ window }: Gauge) => window.members.some(member => member.window.duration)
 
-const urgency = ({ forecast }: Entry) => {
+const urgency = ({ forecast }: Gauge) => {
   if (!forecast) return 2
   return forecast.outAt === undefined ? 1 : 0
 }
 
-const pick = (entries: Entry[], chosen: string) =>
-  entries.find(entry => entry.key === chosen) ?? entries.toSorted((first, second) => urgency(first) - urgency(second) || (first.forecast?.outAt ?? 0) - (second.forecast?.outAt ?? 0) || (second.window.duration ?? 0) - (first.window.duration ?? 0))[0]
+const longest = ({ window }: Gauge) => Math.max(0, ...window.members.map(member => member.window.duration ?? 0))
 
-const verdict = (forecast: Forecast) =>
-  forecast.outAt
-    ? span({ class: 'text-warning-400' }, `At this pace you run out ${whenText(forecast.outAt)}`)
-    : span(`At this pace about ${percent(forecast.leftAtReset)} is left at the reset, ${whenText(forecast.reset)}`)
+const pick = (gauges: Gauge[], chosen: string) =>
+  gauges.find(gauge => gauge.key === chosen) ??
+  gauges.toSorted((first, second) => urgency(first) - urgency(second) || (first.forecast?.outAt ?? 0) - (second.forecast?.outAt ?? 0) || longest(second) - longest(first))[0]
+
+const verdict = ({ outAt, backAt, reset, leftAtReset }: Forecast, now: number) => {
+  if (outAt !== undefined && outAt <= now) return span({ class: 'text-danger-400' }, `Used up until ${whenText(backAt ?? reset)}`)
+  if (outAt !== undefined) return span({ class: 'text-warning-400' }, `At this pace you run out ${whenText(outAt)}`)
+  return span(`At this pace about ${percent(leftAtReset)} is left unused by ${whenText(reset)}`)
+}
 
 const legendLine = (color: string, dashed: boolean) =>
   svg(
@@ -66,53 +50,46 @@ const legend = ({ metaLine }: Kit, color: string) =>
     ] as const).map(([color, dashed, label]) => span({ class: 'inline-flex items-center gap-2' }, legendLine(color, dashed), metaLine(label))),
   )
 
-const chooser = (kit: Kit, entries: Entry[], shown: Entry, chosen: Sig<string>) => {
-  if (entries.length < 2) return null
+const chooser = (kit: Kit, gauges: Gauge[], shown: Gauge, chosen: Sig<string>) => {
+  if (gauges.length < 2) return null
   const { choiceItem, dropdown, icon, secondaryAction } = kit
   return dropdown({
     placement: 'below-right',
-    trigger: press => secondaryAction({ ...press, title: 'Limit to forecast', class: 'max-w-64' }, span({ class: 'truncate' }, shown.label), icon('down', 'sm')),
+    trigger: press => secondaryAction({ ...press, title: 'Limit to forecast', class: 'max-w-64' }, span({ class: 'truncate' }, labelOf(shown)), icon('down', 'sm')),
     items: close =>
-      entries.map(entry =>
+      gauges.map(gauge =>
         choiceItem(
           {
-            selected: () => entry.key === shown.key,
+            selected: () => gauge.key === shown.key,
             onClick: () => {
-              chosen.set(entry.key)
+              chosen.set(gauge.key)
               close()
             },
           },
-          span({ class: 'min-w-0 flex-1 truncate' }, entry.label),
+          span({ class: 'min-w-0 flex-1 truncate' }, labelOf(gauge)),
         ),
       ),
   })
 }
 
-const missing = (window: LimitWindow) =>
-  window.used >= 1 ? `The ${window.label.toLowerCase()} limit is used up until it resets.` : `There isn't enough usage in sand yet to forecast the ${window.label.toLowerCase()} limit.`
+const missing = ({ window, state }: Gauge) =>
+  state.left <= 0 ? `The ${window.label.toLowerCase()} limit is used up until it resets.` : `There isn't enough usage in sand yet to forecast the ${window.label.toLowerCase()} limit.`
 
-const body = (kit: Kit, shown: Entry): Child => {
+const body = (kit: Kit, shown: Gauge, now: number): Child => {
   const { forecast } = shown
-  if (!forecast) return kit.secondaryText(missing(shown.window))
+  if (!forecast) return kit.secondaryText(missing(shown))
   const hovered = sig<number | undefined>(undefined)
-  const color = kit.providerColor(shown.account.provider)
+  const color = kit.providerColor(shown.plan.provider)
   return div(
     { class: 'flex flex-col gap-3' },
-    div({ class: 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm' }, readout(kit, forecast, hovered), span({ class: 'text-xs text-neutral-500' }, verdict(forecast))),
-    forecastChart(kit, shown.window, forecast, color, hovered),
+    div({ class: 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm' }, readout(kit, forecast, hovered), span({ class: 'text-xs text-neutral-500' }, verdict(forecast, now))),
+    forecastChart(kit, labelOf(shown), forecast, color, hovered),
     legend(kit, color),
   )
 }
 
-export const forecastSection = (accounts: Account[], { kit, now, history, chosen }: ForecastProps) => {
-  const state = derive(() => {
-    const found = history.get()
-    const entries = found ? entriesOf(accounts, found, now.get()) : []
-    return { entries, shown: pick(entries, chosen.get()) }
-  })
-  return dynamicChild(state, ({ entries, shown }) =>
-    shown
-      ? kit.pageSection({ title: 'Forecast', action: chooser(kit, entries, shown, chosen) }, body(kit, shown))
-      : null,
-  )
+export const forecastSection = ({ kit, gauges, now, chosen }: ForecastProps) => {
+  const shown = gauges.filter(timed)
+  const picked = pick(shown, chosen.get())
+  return picked ? kit.pageSection({ title: 'Forecast', action: chooser(kit, shown, picked, chosen) }, body(kit, picked, now)) : null
 }

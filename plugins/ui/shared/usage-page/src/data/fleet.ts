@@ -1,50 +1,64 @@
-import { day, historyWeeks, startOfHour, usageSummary, type UsageQuery, type UsageSummary } from '@sand/usage/contract'
+import { historyQuery, usageHistory, type UsageHistory, usageQuery, type UsageRange, usageSummary, type UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/devices-contract'
 import { unanswered } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
 import type { Pc } from './types'
+import { isHistory, isSummary } from './valid'
 
-export interface FleetView {
+export interface FleetView<T> {
   key: string
-  query: UsageQuery
+  load(wire: Wire, pc: string): Promise<T>
+  valid(value: unknown): value is T
 }
 
-export const historyView = (): FleetView => ({
-  key: 'history',
-  query: { since: startOfHour(Date.now()) - historyWeeks * 7 * day, bucket: 'hour', zone: Intl.DateTimeFormat().resolvedOptions().timeZone },
-})
-
-interface PcState {
+interface PcState<T> {
   at: number
-  summary?: UsageSummary
+  summary?: T
   failure: string
   busy: boolean
 }
 
-const idle = (cached?: Cached): PcState => ({ at: cached?.at ?? 0, summary: cached?.summary, failure: '', busy: false })
+export const summaryView = (range: UsageRange): FleetView<UsageSummary> => ({
+  key: range,
+  load: (wire, pc) => wire.call(usageSummary, usageQuery(range), pc),
+  valid: isSummary,
+})
 
-export const fleetLoader = (wire: Wire, pcs: () => Pc[], view: () => FleetView) => {
-  const states = sig(new Map<string, PcState>())
+export const historyView: FleetView<UsageHistory> = {
+  key: 'history',
+  load: (wire, pc) => {
+    const { since, zone } = historyQuery(Date.now())
+    return wire.call(usageHistory, { since, zone }, pc)
+  },
+  valid: isHistory,
+}
+
+const idle = <T>(cached?: Cached<T>): PcState<T> => ({ at: cached?.at ?? 0, summary: cached?.summary, failure: '', busy: false })
+
+export const fleetLoader = <T>(wire: Wire, pcs: () => Pc[], view: () => FleetView<T>) => {
+  const states = sig(new Map<string, PcState<T>>())
   const asked = new Set<string>()
   let generation = 0
 
-  const put = (id: string, patch: Partial<PcState>) => {
+  const put = (id: string, patch: Partial<PcState<T>>) => {
     const next = new Map(states.get())
-    next.set(id, { ...(next.get(id) ?? idle()), ...patch })
+    next.set(id, { ...(next.get(id) ?? idle<T>()), ...patch })
     states.set(next)
   }
 
-  const seed = (pc: Pc) => put(pc.id, idle(readCache(pc.id, view().key)))
+  const seed = (pc: Pc) => {
+    const { key, valid } = view()
+    put(pc.id, idle(readCache(pc.id, key, valid)))
+  }
 
   const ask = (pc: Pc) => {
-    const { key, query } = view()
+    const { key, load } = view()
     const run = generation
     asked.add(pc.id)
     put(pc.id, { busy: true })
-    wire
-      .call(usageSummary, query, pc.id)
+    load(wire, pc.id)
       .then(result => {
         if (run !== generation) return
         const cached = { at: Date.now(), summary: result }

@@ -1,5 +1,4 @@
-import type { PeriodUsage } from '../contract'
-import { tokensOf } from '../records'
+import type { HourUsage, Spend } from './history'
 import { hourKey } from './keys'
 
 export const hour = 3_600_000
@@ -12,22 +11,36 @@ export type Hourly = Map<string, number>
 
 export type Pattern = (at: number) => number
 
+type Measure = (spend: Spend) => number
+
 export const startOfHour = (at: number) => {
   const date = new Date(at)
   date.setMinutes(0, 0, 0)
   return date.getTime()
 }
 
-const recordOf = (periods: PeriodUsage[], account: string, measure: (period: PeriodUsage) => number) => {
+const byCost: Measure = spend => spend.cost
+
+const byTokens: Measure = spend => spend.tokens
+
+const measureOf = (periods: HourUsage[], accounts: string[]): Measure =>
+  periods.some(period => accounts.some(account => (period.accounts[account]?.cost ?? 0) > 0)) ? byCost : byTokens
+
+const recordOf = (periods: HourUsage[], accounts: string[], measure: Measure) => {
   const record: Hourly = new Map()
-  for (const period of periods) if (period.accounts[account]) record.set(period.key, measure(period))
+  for (const period of periods) {
+    const found = accounts.flatMap(account => period.accounts[account] ?? [])
+    if (found.length) record.set(period.key, found.reduce((sum, spend) => sum + measure(spend), 0))
+  }
   return record
 }
 
-export const hourlyOf = (periods: PeriodUsage[], account: string): Hourly => {
-  const cost = recordOf(periods, account, period => period.accounts[account]!.cost)
-  if ([...cost.values()].some(value => value > 0)) return cost
-  return recordOf(periods, account, period => tokensOf(period.accounts[account]!.usage))
+export const hourlyOf = (periods: HourUsage[], accounts: string[]) => {
+  const measure = measureOf(periods, accounts)
+  return {
+    total: recordOf(periods, accounts, measure),
+    each: new Map(accounts.map(account => [account, recordOf(periods, [account], measure)])),
+  }
 }
 
 export const spentBetween = (hourly: Hourly, from: number, until: number) => {

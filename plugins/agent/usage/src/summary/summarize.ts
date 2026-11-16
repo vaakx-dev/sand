@@ -4,7 +4,7 @@ import type { UsageQuery, UsageSummary } from '../contract'
 import { isBilled } from '../contract/billed'
 import { emptyTotals } from '../records'
 import { accountBook } from './accounts'
-import { identityResolver } from './identity'
+import { identityResolver, knownAccounts } from './identity'
 import { modelBook, nameOf } from './models'
 import { periodBook } from './periods'
 import { projectBook } from './projects'
@@ -18,8 +18,9 @@ export interface UsageSources {
 
 export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): UsageSummary => {
   const infos = new Map(sessions.list().map(info => [info.id, info]))
-  const identify = identityResolver(llm)
-  const accounts = accountBook(llm)
+  const known = knownAccounts(llm)
+  const identify = identityResolver(llm, known)
+  const accounts = accountBook(known, llm)
   const models = modelBook(llm)
   const periods = periodBook(query.zone, query.bucket)
   const projects = projectBook(infos)
@@ -39,7 +40,6 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
     for (const totals of groups) addUsage(totals, turn.usage, price, isBilled(id.billing))
   }
 
-  const limits = llm?.limits?.()
   return {
     ...query,
     until: Date.now(),
@@ -48,6 +48,5 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
     ...models.finish(),
     periods: periods.finish(),
     projects: projects.finish(),
-    ...(limits && { limits }),
   }
 }

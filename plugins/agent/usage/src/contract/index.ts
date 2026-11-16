@@ -2,14 +2,16 @@ import type { Billing, Limits, Usage } from '@sand/accounts/contract'
 import { request, type } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
+import type { UsageHistory } from '../forecast/history'
 
 export * from '../records'
 export { billedCost } from './billed'
 export { usageCost } from './cost'
 export { periodLabel, periodTitle } from './period'
 export { threadUsage } from '../summary/thread'
-export { forecastsOf, type History } from '../forecast'
-export { day, historyWeeks, hour, startOfHour } from '../forecast/hours'
+export { forecastsOf, type Member, poolForecast, poolState, type PoolState } from '../forecast'
+export { type History, historyOf, historyQuery, type HourUsage, type Spend, type UsageHistory } from '../forecast/history'
+export { day, hour, startOfHour } from '../forecast/hours'
 export type { Forecast, Point } from '../forecast/project'
 export { hourKey, keyOf } from '../forecast/keys'
 
@@ -35,6 +37,7 @@ export interface AccountUsage extends UsageTotals {
   label: string
   provider: string
   billing: Billing
+  kind?: string
   plan?: string
   pc?: string
   pcName?: string
@@ -73,7 +76,6 @@ export interface UsageSummary extends UsageQuery {
   periods: PeriodUsage[]
   projects: ProjectUsage[]
   unpriced: UnpricedModel[]
-  limits?: Limits
 }
 
 export interface ThreadModel extends UsageTotals {
@@ -98,4 +100,9 @@ export const usageReader = service<UsageReader>('usageReader')
 export const usageSummary = request('usage.summary', {
   input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string() }),
   output: type<UsageSummary>(),
+})
+
+export const usageHistory = request('usage.history', {
+  input: () => z.object({ since: z.number(), zone: z.string() }),
+  output: type<UsageHistory>(),
 })
