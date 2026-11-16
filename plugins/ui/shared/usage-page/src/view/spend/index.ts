@@ -8,6 +8,7 @@ import { rangeLabel } from '../../range'
 import { plot } from '../chart/plot'
 import { seriesOf } from '../chart/series'
 import { headline, modelList } from './figures'
+import { pcFilter } from './pcs'
 
 const periodPicker = ({ segmented }: Kit, model: UsageModel) =>
   segmented(
@@ -36,6 +37,6 @@ const overview = (kit: Kit, usage: Merged) => {
 
 export const spendSection = (kit: Kit, usage: Merged, model: UsageModel) =>
   kit.pageSection(
-    { title: 'Spend', action: periodPicker(kit, model) },
+    { title: 'Spend', action: div({ class: 'flex items-center gap-2' }, pcFilter(kit, model), periodPicker(kit, model)) },
     usage.total.turns ? overview(kit, usage) : kit.emptyState({ text: 'No usage in this range.' }),
   )

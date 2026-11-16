@@ -1,7 +1,7 @@
 import { llm, type LLM, type ModelInfo, unavailable, windowsBySource } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
-import { accountKey, day, historyWeeks, type History, startOfHour, usageReader } from '@sand/usage/contract'
+import { accountKey, type History, historyOf, historyQuery, usageReader } from '@sand/usage/contract'
 import { definePlugin } from 'drydock'
 import { accountPool, type Placement } from './contract'
 import { planAccounts } from './plan'
@@ -20,9 +20,7 @@ export default definePlugin({
       if (kept && now - kept.at < HISTORY_TTL) return kept.history
       const reader = ctx.get(usageReader)
       if (!reader) return undefined
-      const since = startOfHour(now) - historyWeeks * 7 * day
-      const summary = reader.summary({ since, bucket: 'hour', zone: Intl.DateTimeFormat().resolvedOptions().timeZone })
-      kept = { at: now, history: { since, periods: summary.periods } }
+      kept = { at: now, history: historyOf(reader.summary(historyQuery(now))) }
       return kept.history
     }
 

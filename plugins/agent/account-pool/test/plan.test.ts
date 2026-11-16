@@ -1,5 +1,5 @@
 import type { LimitWindow } from '@sand/accounts/contract'
-import { day, emptyUsage, type History, hour, hourKey, type PeriodUsage, startOfHour } from '@sand/usage/contract'
+import { day, type History, hour, hourKey, type HourUsage, startOfHour } from '@sand/usage/contract'
 import { expect, test } from 'bun:test'
 import { type Candidate, planAccounts } from '../src/plan'
 
@@ -7,11 +7,8 @@ const now = startOfHour(Date.now()) + 30 * 60_000
 
 const steadyHistory = (accounts: string[]): History => {
   const since = now - 3 * day
-  const periods: PeriodUsage[] = []
-  for (let at = startOfHour(since); at < now; at += hour) {
-    const totals = { usage: emptyUsage(), turns: 1, cost: 1, billed: 0, unpriced: 0 }
-    periods.push({ key: hourKey(at), accounts: Object.fromEntries(accounts.map(account => [account, totals])), models: {} })
-  }
+  const periods: HourUsage[] = []
+  for (let at = startOfHour(since); at < now; at += hour) periods.push({ key: hourKey(at), accounts: Object.fromEntries(accounts.map(account => [account, { cost: 1, tokens: 0 }])) })
   return { since, periods }
 }
 

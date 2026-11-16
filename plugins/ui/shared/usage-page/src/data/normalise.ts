@@ -1,9 +1,10 @@
-import { accountKey, type AccountUsage, type UsageSummary, type UsageTotals } from '@sand/usage/contract'
-import { ownsLimits } from './limits'
-import { addRecord } from './totals'
+import { accountKey, type AccountUsage, type Spend, type UsageHistory } from '@sand/usage/contract'
+import { addSpend } from './totals'
 import type { Pc } from './types'
 
-const owned = (account: AccountUsage, pc: Pc, nameOf: (id: string) => string | undefined): AccountUsage => {
+type NameOf = (id: string) => string | undefined
+
+const owned = (account: AccountUsage, pc: Pc, nameOf: NameOf): AccountUsage => {
   const owner = account.pc ?? pc.id
   return {
     ...account,
@@ -13,26 +14,16 @@ const owned = (account: AccountUsage, pc: Pc, nameOf: (id: string) => string | u
   }
 }
 
-const withSummaryLimits = (account: AccountUsage, summary: UsageSummary, pc: Pc) =>
-  !account.limits && summary.limits && ownsLimits(account, summary.limits, pc.id) ? { ...account, limits: summary.limits } : account
-
-export const normalise = (summary: UsageSummary, pc: Pc, nameOf: (id: string) => string | undefined): UsageSummary => {
-  const keys = new Map<string, string>()
-  const accounts = summary.accounts.map(account => {
-    const next = withSummaryLimits(owned(account, pc, nameOf), summary, pc)
-    keys.set(account.key, next.key)
-    return next
-  })
-  const remap = (key: string) => keys.get(key) ?? key
-  const remapRecord = (record: Record<string, UsageTotals>) => {
-    const next: Record<string, UsageTotals> = {}
-    for (const [key, totals] of Object.entries(record)) addRecord(next, remap(key), totals)
+export const normaliseHistory = (history: UsageHistory, pc: Pc, nameOf: NameOf): UsageHistory => {
+  const accounts = history.accounts.map(account => owned(account, pc, nameOf))
+  const keys = new Map(history.accounts.map((account, index) => [account.key, accounts[index]!.key]))
+  const remap = (record: Record<string, Spend>) => {
+    const next: Record<string, Spend> = {}
+    for (const [key, spend] of Object.entries(record)) {
+      const owner = keys.get(key) ?? key
+      next[owner] = addSpend(next[owner], spend)
+    }
     return next
   }
-  return {
-    ...summary,
-    accounts,
-    models: summary.models.map(model => ({ ...model, account: remap(model.account) })),
-    periods: summary.periods.map(period => ({ ...period, accounts: remapRecord(period.accounts) })),
-  }
+  return { ...history, accounts, periods: history.periods.map(period => ({ ...period, accounts: remap(period.accounts) })) }
 }

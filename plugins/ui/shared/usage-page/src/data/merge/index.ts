@@ -1,8 +1,6 @@
 import { addTotals, emptyTotals } from '@sand/usage/contract'
 import type { Merged, PcSummary } from '../types'
-import { mergeAccounts } from './accounts'
 import { mergeModels, mergePeriods, mergeUnpriced } from './groups'
-import { mergeProjects, pcUsage } from './places'
 
 const latest = (parts: PcSummary[]) => parts.reduce((best, part) => (part.summary.until > best.summary.until ? part : best)).summary
 
@@ -15,11 +13,8 @@ export const mergeSummaries = (parts: PcSummary[]): Merged => {
     until,
     bucket,
     total,
-    accounts: mergeAccounts(parts),
     models: mergeModels(parts),
     periods: mergePeriods(parts),
-    projects: mergeProjects(parts),
-    pcs: pcUsage(parts),
     unpriced: mergeUnpriced(parts),
   }
 }

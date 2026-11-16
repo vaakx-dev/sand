@@ -1,15 +1,14 @@
 import type { Limits, SourceInfo } from '@sand/accounts/contract'
 import type { Wire } from '@sand/devices-contract'
-import { usageQuery } from '@sand/usage/contract'
+import type { UsageHistory } from '@sand/usage/contract'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
-import { fleetLoader } from './data/fleet'
-import type { History } from '@sand/usage/contract'
-import { historyView } from './data/fleet'
-import { withLiveLimits } from './data/limits'
+import { fleetLoader, historyView, summaryView } from './data/fleet'
 import { mergeSummaries } from './data/merge'
-import { mergePeriods } from './data/merge/groups'
-import { normalise } from './data/normalise'
-import type { Pc, PcSummary } from './data/types'
+import { mergeHistory } from './data/merge/groups'
+import { normaliseHistory } from './data/normalise'
+import { gaugesOf } from './data/gauges'
+import { plansOf } from './data/pool'
+import type { Pc } from './data/types'
 import { allPcs, usagePrefs } from './prefs'
 
 export interface UsageDeps {
@@ -37,8 +36,8 @@ export const usageModel = (deps: UsageDeps) => {
     signature.get()
     return untrack(deps.pcs)
   })
-  const fleet = fleetLoader(deps.wire, () => pcs.get(), () => ({ key: range.get(), query: usageQuery(range.get()) }))
-  const history = fleetLoader(deps.wire, () => pcs.get(), historyView)
+  const fleet = fleetLoader(deps.wire, () => pcs.get(), () => summaryView(range.get()))
+  const history = fleetLoader(deps.wire, () => pcs.get(), () => historyView)
   const checking = sig(false)
   const now = clock(30_000)
 
@@ -53,7 +52,7 @@ export const usageModel = (deps: UsageDeps) => {
   })
 
   const nameOf = (id: string) => pcs.get().find(machine => machine.id === id)?.name
-  const home = () => pcs.get().find(pc => pc.home)
+  const home = derive(() => pcs.get().find(machine => machine.home))
 
   const selected = derive(() => {
     const list = pcs.get()
@@ -61,32 +60,41 @@ export const usageModel = (deps: UsageDeps) => {
     return wanted !== allPcs && list.some(machine => machine.id === wanted) ? list.filter(machine => machine.id === wanted) : list
   })
 
-  const partsOf = (loader: typeof fleet) =>
-    derive(() => {
-      const states = loader.states.get()
-      return selected.get().flatMap((machine): PcSummary[] => {
-        const summary = states.get(machine.id)?.summary
-        return summary ? [{ pc: machine, summary: normalise(summary, machine, nameOf) }] : []
-      })
+  const parts = derive(() => {
+    const states = fleet.states.get()
+    return selected.get().flatMap(machine => {
+      const summary = states.get(machine.id)?.summary
+      return summary ? [{ pc: machine, summary }] : []
     })
+  })
 
-  const parts = partsOf(fleet)
-  const historyParts = partsOf(history)
+  const histories = derive(() => {
+    const states = history.states.get()
+    return new Map(
+      pcs.get().flatMap((machine): [string, UsageHistory][] => {
+        const found = states.get(machine.id)?.summary
+        return found ? [[machine.id, normaliseHistory(found, machine, nameOf)]] : []
+      }),
+    )
+  })
 
   const usage = derive(() => {
     const list = parts.get()
-    if (!list.length) return undefined
-    const merged = mergeSummaries(list)
-    const self = home()
-    const showsHome = selected.get().some(machine => machine.id === self?.id)
-    return { ...merged, accounts: withLiveLimits(merged.accounts, deps.limits(), { home: self, addMissing: showsHome, sources: deps.sources() }) }
+    return list.length ? mergeSummaries(list) : undefined
   })
 
-  const historyOf = derive((): History | undefined => {
-    const list = historyParts.get()
-    if (!list.length) return undefined
-    return { since: Math.min(...list.map(part => part.summary.since)), periods: mergePeriods(list) }
+  const merged = derive(() => {
+    const list = [...histories.get().values()]
+    return list.length ? mergeHistory(list) : undefined
   })
+
+  const plans = derive(() => {
+    const self = home.get()
+    const own = self && histories.get().get(self.id)
+    return self && own ? plansOf({ accounts: own.accounts, live: deps.limits(), sources: deps.sources(), home: self.id }) : []
+  })
+
+  const gauges = derive(() => gaugesOf(plans.get(), merged.get(), now.get()))
 
   const notices = derive(() => {
     const states = fleet.states.get()
@@ -111,7 +119,10 @@ export const usageModel = (deps: UsageDeps) => {
     history.refresh()
   }
 
-  if (outdated(untrack(deps.limits))) checkWith()
+  const homeOnline = derive(() => !!home.get()?.online)
+  effect(() => {
+    if (homeOnline.get() && outdated(untrack(deps.limits))) untrack(() => checkWith())
+  })
 
   return {
     range,
@@ -120,11 +131,11 @@ export const usageModel = (deps: UsageDeps) => {
     checking,
     now,
     usage,
-    history: historyOf,
+    plans,
+    gauges,
     notices,
     busy: fleet.busy,
     pcs,
-    nameOf: (id: string) => nameOf(id) ?? id,
     reload: () => checkWith(refresh),
   }
 }

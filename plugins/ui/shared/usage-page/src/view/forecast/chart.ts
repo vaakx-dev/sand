@@ -1,4 +1,3 @@
-import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, div, line, path, rect, show, span, type Sig } from '@vaakx-dev/vrui'
@@ -38,8 +37,8 @@ export const readout = ({ metaLine }: Kit, forecast: Forecast, hovered: Sig<numb
   )
 }
 
-export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast, color: string, hovered: Sig<number | undefined>) => {
-  const { start, now, reset, outAt } = forecast
+export const forecastChart = (kit: Kit, label: string, forecast: Forecast, color: string, hovered: Sig<number | undefined>) => {
+  const { start, now, reset, outAt, backAt = reset } = forecast
   const toX = (at: number) => ((at - start) / (reset - start)) * width
   const toY = (left: number) => height - left * (height - top)
   const trace = (points: Point[]) => points.map((point, index) => `${index ? 'L' : 'M'}${toX(point.at).toFixed(1)},${toY(point.left).toFixed(1)}`).join(' ')
@@ -65,15 +64,15 @@ export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast,
     {
       width,
       height,
-      label: `${window.label} limit left, with forecast`,
+      label: `${label} limit left, with forecast`,
       axis: levels.map(level => ({ text: percent(level), top: cssPercent(toY(level) / height) })),
       onPointerMove: track,
       onPointerLeave: leave,
     },
     [
       levels.map(level => gridLine(width, toY(level))),
-      outAt ? rect({ x: toX(outAt), y: 0, width: width - toX(outAt), height, fill: colorVar('warning', 500), fillOpacity: 0.12 }) : null,
-      line({ x1: 0, x2: width, y1: toY(1), y2: toY(0), stroke: colorVar('neutral', 500), strokeDasharray: DASH, vectorEffect: 'non-scaling-stroke' }),
+      outAt ? rect({ x: toX(outAt), y: 0, width: toX(backAt) - toX(outAt), height, fill: colorVar('warning', 500), fillOpacity: 0.12 }) : null,
+      path({ d: trace(forecast.pace), fill: 'none', stroke: colorVar('neutral', 500), strokeDasharray: DASH, vectorEffect: 'non-scaling-stroke' }),
       path({ d: `${trace(forecast.past)} L${toX(now)},${height} L0,${height} Z`, fill: color, fillOpacity: 0.08 }),
       path({ d: band, fill: color, fillOpacity: 0.08 }),
       path({ d: trace(forecast.past), ...stroke }),
