@@ -6,6 +6,7 @@ import { owned } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 import { addAccount } from './add/sheet'
 import { accountsPage } from './page'
+import { accountRename } from './rename'
 import { loginState } from './state'
 import { welcomeModel } from './welcome/model'
 import { welcomeView } from './welcome/view'
@@ -17,9 +18,10 @@ export default definePlugin({
   apply(ctx) {
     const control = loginState(ctx)
     const add = addAccount(ctx, control)
+    const rename = accountRename(ctx, control)
     ctx.on(wireHello, () => void control.load())
     if (ctx.wire.ready()) void control.load()
-    ctx.watch(settings, found => found?.page({ id: 'accounts', label: 'Accounts', intro: 'The sign-ins and API keys your models run on.', icon: 'lock', group: 'accounts', order: 25, render: () => accountsPage(ctx.kit, control, add) }))
+    ctx.watch(settings, found => found?.page({ id: 'accounts', label: 'Accounts', intro: 'The sign-ins and API keys your models run on.', icon: 'lock', group: 'accounts', order: 25, render: () => accountsPage(ctx.kit, { control, add, rename }) }))
     const welcome = owned(ctx, () => welcomeModel(ctx, control))
     place(ctx, 'overlay', () => welcomeView(ctx.kit, welcome, control), 0.5)
   },

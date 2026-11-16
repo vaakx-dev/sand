@@ -34,8 +34,10 @@ const groups: Group[] = [
   },
 ]
 
-const planOption = ({ id, provider, label, signIn }: LoginAccount): Option[] =>
-  signIn ? [{ step: { kind: 'sign-in', account: id }, logo: provider, title: label, detail: signIn.detail }] : []
+const planStep = ({ id, another, signedIn }: LoginAccount): Step => (another && signedIn ? { kind: 'another', account: id } : { kind: 'sign-in', account: id })
+
+const planOption = (account: LoginAccount): Option[] =>
+  account.signIn && !account.added ? [{ step: planStep(account), logo: account.provider, title: account.label, detail: account.signIn.detail }] : []
 
 const groupsFor = (state: LoginState | undefined): Group[] => {
   const plans = state?.accounts.flatMap(planOption) ?? []
@@ -45,6 +47,7 @@ const groupsFor = (state: LoginState | undefined): Group[] => {
 const accountOf = (step: Step) => (step.kind === 'sign-in' || step.kind === 'key' ? step.account : undefined)
 
 const whereFound = (state: LoginState | undefined, step: Step) => {
+  if (step.kind === 'another') return 'Add another'
   const id = accountOf(step)
   if (!id) return null
   const own = state?.accounts.find(account => account.id === id)

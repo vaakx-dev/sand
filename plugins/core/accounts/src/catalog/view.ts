@@ -39,7 +39,15 @@ export const viewOf = (entries: () => Entry[]) => {
     return ids.get(id) ?? named(shown, id)
   }
 
-  const find = (id: string) => lookup(id) ?? lookup(canonicalModel(id))
+  const onPlan = (model: ModelInfo) => !!model.source && billing(model.source) === 'plan'
+
+  const elsewhere = (id: string) => {
+    const parts = split(canonicalModel(id))
+    if (!parts || entry(parts.source)) return undefined
+    return index.get().shown.find(model => model.name === parts.name && onPlan(model))
+  }
+
+  const find = (id: string) => lookup(id) ?? lookup(canonicalModel(id)) ?? elsewhere(id)
 
   const resolve = (wanted?: string): ModelInfo | undefined => {
     if (!wanted) return undefined

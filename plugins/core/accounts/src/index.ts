@@ -14,6 +14,7 @@ import { createAccounts } from './auth/accounts'
 import { appStatusFile } from './auth/app-status'
 import { createLogin } from './auth/login'
 import { authPath } from './auth/path'
+import { readPlaces } from './auth/places'
 import { createPlans } from './auth/plans'
 import { createCatalog } from './catalog'
 import { PriceList, priceSchema } from './catalog/prices'
@@ -54,12 +55,13 @@ export default definePlugin({
     await mkdir(appsFolder, { recursive: true })
     const bridges = createBridges(appsFolder, tracked => ctx.get(processes)?.track(tracked))
     const statusFile = appStatusFile(appsFolder)
-    const plans = createPlans({ saved: await statusFile.read(), save: statusFile.write, changed, dropped: bridges.forget })
+    const [saved, places] = await Promise.all([statusFile.read(), readPlaces(appsFolder)])
+    const plans = createPlans({ saved, places, save: statusFile.write, changed, dropped: bridges.forget })
     const accounts = createAccounts(await authPath(home), plans, changed)
-    const login = createLogin(accounts, plans)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
     const prices = new PriceList(options.prices, ctx.sandConfig)
     const catalog = createCatalog({ home, accounts, plans, prices, changed, report: error => ctx.report(error) })
+    const login = createLogin(accounts, plans, catalog.forget)
 
     const limits = createLimits({
       saved: (ctx.hot.data.sourceLimits ?? {}) as Record<string, Limits>,

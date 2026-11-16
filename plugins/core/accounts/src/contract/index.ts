@@ -74,6 +74,8 @@ export const loginServer = request('login.server', {
   callers: 'any',
 })
 export const loginDetect = request('login.detect', { input: () => z.object({}), output: type<DetectedServer[]>(), callers: 'any' })
+export const loginAdd = request('login.add', { input: account, output: type<string>(), callers: 'any' })
+export const loginRename = request('login.rename', { input: () => account().extend({ name: z.string().trim().min(1).max(60) }), output: login, callers: 'any' })
 export const loginCancel = request('login.cancel', { input: account, output: login, callers: 'any' })
 export const loginLogout = request('login.logout', { input: account, output: login, callers: 'any' })
 export const loginShared = request('login.shared', { input: () => account().extend({ shared: z.boolean() }), output: login, callers: 'any' })

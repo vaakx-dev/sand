@@ -10,6 +10,7 @@ import {
   settingsGet,
   type SettingsState,
 } from '@sand/model/contract'
+import type { ModelInfo } from '@sand/accounts/contract'
 import type { Pcs, Wire, WireListen } from '@sand/devices-contract'
 import type { Context } from 'drydock'
 import { type Models, modelsChange, type Threads } from '../contract'
@@ -88,10 +89,19 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
     return known
   }
 
-  const labelOn = (device: string, { model, effort, speed }: SessionSettings) =>
-    [infoOn(device, model)?.label ?? model ?? 'Choose a model', catalogOf(device).levels.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
+  const accountOn = (device: string, info: ModelInfo | undefined) => {
+    const { models, sources } = catalogOf(device)
+    const named = (found: ModelInfo) => found.name ?? found.label
+    const elsewhere = info && models.some(other => other.source !== info.source && named(other) === named(info))
+    return elsewhere ? sources.find(source => source.id === info.source)?.label : undefined
+  }
+
+  const labelOn = (device: string, { model, effort, speed }: SessionSettings) => {
+    const info = infoOn(device, model)
+    return [info?.label ?? model ?? 'Choose a model', accountOn(device, info), catalogOf(device).levels.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
       .filter(Boolean)
       .join(' · ')
+  }
 
   const summary = (settings: SessionSettings) => {
     const model = settings.model ?? catalogOf().defaults.model

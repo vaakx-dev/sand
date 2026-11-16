@@ -2,11 +2,13 @@ import { callerAllowed, type Caller } from '@sand/host-hub/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import {
+  loginAdd,
   loginCancel,
   loginDetect,
   loginFinish,
   loginKey,
   loginLogout,
+  loginRename,
   loginServer,
   loginShared,
   loginStart,
@@ -72,6 +74,8 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
     server.handle(loginKey, withState(({ account, key, baseUrl }) => login.key(account, key.trim(), (baseUrl ?? '').trim()))),
     server.handle(loginServer, withState(draft => login.server(draft))),
     server.handle(loginDetect, () => login.detect()),
+    server.handle(loginAdd, ({ account }) => login.add(planId(account))),
+    server.handle(loginRename, withState(({ account, name }) => login.rename(planId(account), name))),
     server.handle(loginCancel, withState(async ({ account }) => login.cancel(await known(account)))),
     server.handle(loginLogout, withState(async ({ account }) => login.logout(await known(account)))),
     server.handle(loginShared, withState(async ({ account, shared }) => accounts.setShared(await known(account), shared))),

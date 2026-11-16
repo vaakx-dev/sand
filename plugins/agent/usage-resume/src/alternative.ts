@@ -11,11 +11,22 @@ const usable = (llm: LLM, current: ModelInfo) => {
   return { sources, models: (llm.models?.() ?? []).filter(model => !model.hidden && model.source && sources.has(model.source)) }
 }
 
+const offerOf = (sources: Map<string, SourceInfo>, chosen: ModelInfo | undefined): Alternative | undefined => {
+  const source = chosen?.source ? sources.get(chosen.source) : undefined
+  return chosen && source ? { model: chosen.id, label: chosen.label, account: accountName(source) } : undefined
+}
+
 export const alternativeOf = (llm: LLM, model: string): Alternative | undefined => {
   const current = llm.find?.(model)
   if (!current) return undefined
   const { sources, models } = usable(llm, current)
-  const chosen = models.find(found => found.name === current.name) ?? models[0]
-  const source = chosen?.source ? sources.get(chosen.source) : undefined
-  return chosen && source ? { model: chosen.id, label: chosen.label, account: accountName(source) } : undefined
+  return offerOf(sources, models.find(found => found.name === current.name) ?? models[0])
+}
+
+export const carryOnOf = (llm: LLM, model: string): Alternative | undefined => {
+  const current = llm.find?.(model)
+  if (!current) return undefined
+  const { sources, models } = usable(llm, current)
+  const onPlan = (found: ModelInfo) => sources.get(found.source ?? '')?.billing === 'plan'
+  return offerOf(sources, models.find(found => found.name === current.name && onPlan(found)))
 }

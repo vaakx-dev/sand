@@ -8,6 +8,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createAccounts } from '../src/auth/accounts'
+import { readPlaces } from '../src/auth/places'
 import { createPlans } from '../src/auth/plans'
 import { viewOf } from '../src/catalog/view'
 import { llm, type LLMEvent, type LLMRequest, type NativeRef, type Plan, type ProviderCapabilities, statelessCaps, ThreadLost } from '../src/contract'
@@ -67,7 +68,7 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<
   const home = mkdtempSync(join(tmpdir(), 'sand-account-pc-'))
   homes.push(home)
   await Bun.write(join(home, 'auth.json'), JSON.stringify({ remote: { type: 'oauth', access: 'a', refresh: 'r', expires: 8e15 } }))
-  const plans = createPlans({ saved: {}, save: async () => {}, changed() {}, dropped() {} })
+  const plans = createPlans({ saved: {}, places: await readPlaces(home), save: async () => {}, changed() {}, dropped() {} })
   plans.register(plan)
   const accounts = createAccounts(join(home, 'auth.json'), plans, () => {})
   await accounts.ready

@@ -48,7 +48,7 @@ const pasteView = (kit: Kit, kind: string, account: () => LoginAccount | undefin
   }
   return sheetStep(
     [
-      step(kit, 1, 'Approve sand in your browser', openLink(kit, pending.url)),
+      step(kit, 1, 'Open the link in the browser signed in to the account you want', openLink(kit, pending.url)),
       step(kit, 2, 'Paste the code it shows'),
       textInput({
         placeholder: `Code from ${hostOf(pending.url)}`,

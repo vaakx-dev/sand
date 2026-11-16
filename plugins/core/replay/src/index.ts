@@ -1,4 +1,4 @@
-import { llmPlans } from '@sand/accounts/contract'
+import { type AppPlace, llmPlans } from '@sand/accounts/contract'
 import { paths } from '@sand/paths/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { replayApi } from './api'
 import { replayApp } from './app'
-import { replayRequests, sourceSchema } from './contract'
+import { replayRequests, type Script, sourceSchema } from './contract'
 
 export default definePlugin({
   name: 'replay',
@@ -19,7 +19,14 @@ export default definePlugin({
     const apis = new Map(sources.flatMap(source => (source.api ? [[source.id, replayApi(source, () => base)] as const] : [])))
     const folder = join(ctx.paths.home, 'replay')
     mkdirSync(folder, { recursive: true })
-    const apps = new Map(sources.flatMap(source => (source.api ? [] : [[source.id, replayApp(source, folder)] as const])))
+    const apps = new Map<string, ReturnType<typeof replayApp>>()
+    const added = (script: Script) => (place: AppPlace) => {
+      const made = replayApp({ ...script, id: place.id }, folder)
+      apps.set(place.id, made)
+      return made.plan
+    }
+    for (const source of sources) if (!source.api) apps.set(source.id, replayApp(source, folder, added(source)))
+    const own = [...apps.values()]
     ctx.effect(() => {
       if (!apis.size) return undefined
       const server = Bun.serve({
@@ -31,6 +38,6 @@ export default definePlugin({
       return () => void server.stop(true)
     })
     ctx.provide(replayRequests, { bodies: source => apis.get(source)?.bodies ?? [], native: source => apps.get(source)?.calls ?? [] })
-    ctx.watch(llmPlans, plans => plans && joinDisposers(...[...apis.values(), ...apps.values()].map(({ plan }) => plans.register(plan))))
+    ctx.watch(llmPlans, plans => plans && joinDisposers(...[...apis.values(), ...own].map(({ plan }) => plans.register(plan))))
   },
 })

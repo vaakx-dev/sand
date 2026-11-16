@@ -17,6 +17,13 @@ export const signInFlow = (control: LoginControl, step: Sig<Step>, done: () => v
     return whileBusy(busy, () => control.run(loginStart, { account, ...(anyway && { anyway: true }) }))
   }
 
+  const another = async (plan: string) => {
+    step.set({ kind: 'another', account: plan })
+    const added = await control.add(plan).catch(() => undefined)
+    if (added) await start(added)
+    else step.set({ kind: 'choose' })
+  }
+
   const cancel = () => {
     for (const account of touched) {
       const found = control.account(account)
@@ -39,5 +46,5 @@ export const signInFlow = (control: LoginControl, step: Sig<Step>, done: () => v
     retry: () => void start(account),
   })
 
-  return { busy, start, cancel, actionsFor }
+  return { busy, start, another, cancel, actionsFor }
 }

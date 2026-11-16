@@ -24,7 +24,8 @@ export const howText = (account: Described) => {
   return account.kind === 'server' ? 'Server' : 'API key'
 }
 
-export const removeLabel = (account: { kind: AccountKind; app?: LoginApp }) => {
+export const removeLabel = (account: { kind: AccountKind; app?: LoginApp; added: boolean }) => {
+  if (account.added) return 'Remove'
   if (account.app) return `Sign out of ${account.app.name}`
   return account.kind === 'server' ? 'Remove' : 'Sign out'
 }

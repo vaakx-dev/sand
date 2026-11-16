@@ -1,12 +1,10 @@
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, sig, span, stopThen } from '@vaakx-dev/vrui'
 import { loginShared, type LoginAccount, type LoginState } from '../contract'
 import { accountLogo, howText } from './names'
-import { accountSpec, removeAction } from './account-menu'
+import { accountSpec, removeAction, type RowActions } from './account-menu'
 import { whileBusy } from './parts'
 import type { LoginControl } from './state'
-
-type Fix = (account: LoginAccount) => void
 
 const shareSwitch = ({ toggleSwitch }: Kit, account: LoginAccount, control: LoginControl) => {
   const busy = sig(false)
@@ -28,43 +26,58 @@ const detail = (kit: Kit, account: LoginAccount) => {
   return [howText(account), account.email].filter(Boolean).join(' · ')
 }
 
-const fixLabel = (account: LoginAccount) => (account.kind === 'server' ? 'Edit' : 'Sign in again')
+const fixLabel = (account: LoginAccount) => {
+  if (account.kind === 'server') return 'Edit'
+  return account.error ? 'Sign in again' : 'Sign in'
+}
 
-const rowControls = (kit: Kit, account: LoginAccount, control: LoginControl, fix: Fix) => {
-  const { confirmButton, quietButton } = kit
+const removeButton = ({ confirm, icon, iconButton }: Kit, account: LoginAccount, control: LoginControl) => {
+  const action = removeAction(account, control)
+  return iconButton({ size: 'sm', title: action.label, 'aria-label': `${action.label}: ${account.label}`, onClick: stopThen((event: MouseEvent) => confirm(event)(action)) }, icon('trash', 'sm'))
+}
+
+const renameButton = ({ icon, iconButton }: Kit, account: LoginAccount, { rename }: RowActions) =>
+  account.added ? iconButton({ size: 'sm', title: 'Rename', 'aria-label': `Rename ${account.label}`, onClick: () => rename(account) }, icon('pencil', 'sm')) : null
+
+const rowControls = (kit: Kit, account: LoginAccount, control: LoginControl, actions: RowActions) => {
+  const { quietButton } = kit
   if (account.env) return []
   const server = account.kind === 'server'
   return [
-    server && account.error ? quietButton({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
+    server && account.error ? quietButton({ size: 'sm', onClick: () => actions.fix(account) }, 'Edit') : null,
     account.app ? null : shareSwitch(kit, account, control),
-    confirmButton({ action: removeAction(account, control) }),
+    renameButton(kit, account, actions),
+    removeButton(kit, account, control),
   ]
 }
 
-const signedInRow = (kit: Kit, account: LoginAccount, control: LoginControl, fix: Fix, menu: ContextMenu) => {
+const signedInRow = (kit: Kit, account: LoginAccount, control: LoginControl, actions: RowActions, menu: ContextMenu) => {
   const { settingsRow } = kit
-  const spec = () => accountSpec(account, control, fix)
+  const spec = () => accountSpec(account, control, actions)
   return settingsRow(
     { ...menu.target(spec), lead: accountLogo(kit, account.provider), title: account.label, detail: detail(kit, account) },
-    ...rowControls(kit, account, control, fix),
+    ...rowControls(kit, account, control, actions),
     menu.button(spec),
   )
 }
 
-const brokenRow = (kit: Kit, account: LoginAccount, fix: Fix) => {
+const brokenDetail = (account: LoginAccount) => (account.error ? span({ class: 'text-danger-400' }, account.error) : 'Not signed in')
+
+const brokenRow = (kit: Kit, account: LoginAccount, control: LoginControl, actions: RowActions) => {
   const { secondaryAction, settingsRow } = kit
   return settingsRow(
-    { lead: accountLogo(kit, account.provider), title: account.label, detail: span({ class: 'text-danger-400' }, account.error ?? '') },
-    secondaryAction({ size: 'sm', onClick: () => fix(account) }, fixLabel(account)),
+    { lead: accountLogo(kit, account.provider), title: account.label, detail: brokenDetail(account) },
+    secondaryAction({ size: 'sm', onClick: () => actions.fix(account) }, fixLabel(account)),
+    account.added ? removeButton(kit, account, control) : null,
   )
 }
 
-const shown = (state: LoginState) => state.accounts.filter(account => account.signedIn || (account.error && !account.pending))
+const shown = (state: LoginState) => state.accounts.filter(account => account.signedIn || account.added || (account.error && !account.pending))
 
 const emptyText = (state: LoginState) =>
   state.remote.length ? 'No accounts on this PC yet. The ones from your PCs below work too.' : 'No accounts on this PC yet. Add one to start using sand.'
 
-export const localSection = (kit: Kit, control: LoginControl, add: () => void, fix: Fix) => {
+export const localSection = (kit: Kit, control: LoginControl, add: () => void, actions: RowActions) => {
   const { contextMenu, emptyState, icon, loadingState, secondaryAction, settingsSection } = kit
   const menu = contextMenu()
   return settingsSection(
@@ -82,7 +95,7 @@ export const localSection = (kit: Kit, control: LoginControl, add: () => void, f
         if (!list.length) return emptyState({ text: emptyText(state) })
         return div(
           { class: 'contents' },
-          list.map(account => (account.signedIn ? signedInRow(kit, account, control, fix, menu) : brokenRow(kit, account, fix))),
+          list.map(account => (account.signedIn ? signedInRow(kit, account, control, actions, menu) : brokenRow(kit, account, control, actions))),
         )
       },
     ),

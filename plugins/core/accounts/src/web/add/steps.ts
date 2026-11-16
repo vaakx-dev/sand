@@ -4,6 +4,7 @@ import { isKeyKind, isServerProvider } from '../../auth/kinds'
 export type Step =
   | { kind: 'choose' }
   | { kind: 'sign-in'; account: string }
+  | { kind: 'another'; account: string }
   | { kind: 'key'; account: KeyKind }
   | { kind: 'detect' }
   | { kind: 'server'; draft: ServerDraft }

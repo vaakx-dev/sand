@@ -1,4 +1,4 @@
-import { type AppCall, type AppOutput, type AppPlan, type AppSession, type AppSetup, type LimitWindow, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, type AppPlace, type AppPlan, type AppSession, type AppSetup, type LimitWindow, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
 import type { ToolResultContent } from '@sand/chats/contract'
 import { appendFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -17,7 +17,7 @@ const windowOf = ({ id, label, used, resetInMs, durationMs }: LimitScript): Limi
 
 const textOf = (content: ToolResultContent[]) => content.map(block => (block.type === 'text' ? block.text : `[${block.type}]`)).join('\n')
 
-export const replayApp = (script: Script, folder: string) => {
+export const replayApp = (script: Script, folder: string, another?: (place: AppPlace) => AppPlan) => {
   const { id, label = id, logo, limits, replies, resume, inject } = script
   const queue = [...replies]
   const injects = [...inject]
@@ -133,6 +133,7 @@ export const replayApp = (script: Script, folder: string) => {
       calls.push({ type: 'open', cwd: setup.cwd, ...(reopened && { resume: reopened }) })
       return session(setup, out, reopened)
     },
+    ...(another && { another }),
   }
   return { plan, calls }
 }

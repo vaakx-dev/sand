@@ -15,6 +15,7 @@ const resumable = (saved?: Saved) => (saved?.start === 'fork' ? undefined : save
 
 export interface SessionNeeds {
   media: Media
+  config?: string
   report(limits: PlanLimits): void
 }
 
@@ -68,7 +69,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
 
   const connection = await connect({
     args: claudeArgs({ ...setup, saved }),
-    env: { ...claudeEnv(), CLAUDE_CODE_PROMPT_CACHE_TTL: '5m' },
+    env: { ...claudeEnv(needs.config), CLAUDE_CODE_PROMPT_CACHE_TTL: '5m' },
     cwd: setup.cwd,
     handle,
     onMessage,

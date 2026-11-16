@@ -50,10 +50,10 @@ const dropped = new Set(['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CO
 
 const settings = { disableAllHooks: true }
 
-export const claudeEnv = (): Record<string, string> => {
+export const claudeEnv = (config?: string): Record<string, string> => {
   const env: Record<string, string> = {}
   for (const [key, value] of Object.entries(process.env)) if (value !== undefined && !dropped.has(key)) env[key] = value
-  return { ...env, ...locked }
+  return { ...env, ...locked, ...(config && { CLAUDE_CONFIG_DIR: config }) }
 }
 
 export const claudeArgs = ({ model, effort, saved }: RunOptions) => [

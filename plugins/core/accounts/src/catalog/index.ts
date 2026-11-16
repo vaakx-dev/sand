@@ -1,4 +1,4 @@
-import type { AccountKind, ModelInfo, ModelPrice } from '../contract'
+import type { ModelInfo, ModelPrice } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import { newModelsOf } from '../auth/kinds'
 import type { PlanRegistry } from '../auth/plans'
@@ -28,7 +28,7 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
   let prefs = emptyPrefs()
   let cache: ModelCache = {}
   const running = new Map<string, Promise<void>>()
-  const prints = new Map<string, { print: string; kind: AccountKind }>()
+  const prints = new Map<string, string>()
 
   const ready = Promise.all([prefsStore.read(), cacheStore.read()]).then(([readPrefs, readCache]) => {
     prefs = readPrefs
@@ -91,21 +91,21 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
   }
 
   const forget = (id: string) => {
-    const server = prints.get(id)?.kind === 'server'
-    prints.delete(id)
-    if (!server) return
+    const { [id]: _, ...kept } = cache
+    cache = kept
     prefs = forgotten(prefs, id)
-    void prefsStore.write(prefs)
+    void Promise.all([prefsStore.write(prefs), cacheStore.write(cache)])
+    changed()
   }
 
   const sync = () => {
     const metas = localMetas(accounts)
     const ids = new Set(metas.map(meta => meta.id))
-    for (const id of [...prints.keys()]) if (!ids.has(id)) forget(id)
+    for (const id of [...prints.keys()]) if (!ids.has(id)) prints.delete(id)
     for (const meta of metas) {
       const print = accounts.fingerprint(meta.id)
-      if (prints.get(meta.id)?.print === print) continue
-      prints.set(meta.id, { print, kind: meta.kind })
+      if (prints.get(meta.id) === print) continue
+      prints.set(meta.id, print)
       void refreshOne(meta)
     }
   }
@@ -118,6 +118,7 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
     setPrefs,
     refresh,
     sync,
+    forget,
     idle: () => Promise.all([prefsStore.idle(), cacheStore.idle()]),
     price(id: string): ModelPrice | undefined {
       const parts = split(id)

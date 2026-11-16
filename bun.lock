@@ -1621,6 +1621,7 @@
         "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/media": "workspace:*",
+        "@sand/picker": "workspace:*",
         "@sand/processes": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",

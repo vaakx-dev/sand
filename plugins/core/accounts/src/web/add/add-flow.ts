@@ -19,11 +19,12 @@ const serverTitle = ({ id, name }: ServerDraft) => {
 }
 
 const titleOf = (step: Step, account: LoginAccount | undefined) => {
-  if (step.kind === 'choose') return 'Add an account'
+  if (step.kind === 'choose' || step.kind === 'another') return 'Add an account'
   if (step.kind === 'key') return `Add an ${keyNames[step.account]} API key`
   if (step.kind === 'detect') return 'Ollama or LM Studio'
   if (step.kind === 'server') return serverTitle(step.draft)
-  return account?.conflict ? planName(account) : `Sign in to ${planName(account)}`
+  const name = account?.added ? account.label : planName(account)
+  return account?.conflict ? name : `Sign in to ${name}`
 }
 
 export const addFlow = (control: LoginControl, done: () => void) => {
@@ -32,6 +33,7 @@ export const addFlow = (control: LoginControl, done: () => void) => {
 
   const go = (next: Step) => {
     if (next.kind === 'sign-in') void flow.start(next.account)
+    else if (next.kind === 'another') void flow.another(next.account)
     else step.set(next)
   }
 
@@ -62,6 +64,7 @@ export const addFlow = (control: LoginControl, done: () => void) => {
     if (current.kind === 'detect')
       return detectStep(kit, control, server => go({ kind: 'server', draft: { name: server.name, url: server.url, provider: server.provider } }), () => go(customServer))
     if (current.kind === 'server') return serverStep(kit, control, current.draft, done)
+    if (current.kind === 'another') return kit.sheetStep(kit.loadingState({ flush: true, text: 'Starting…' }))
     const phase = phaseOf(untrack(() => control.account(current.account)))
     return signInView(kit, current.account, phase, control, flow.actionsFor(current.account), flow.busy, surface)
   }
