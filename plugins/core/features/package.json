@@ -36,6 +36,7 @@
           "web-tools",
           "usage",
           "usage-resume",
+          "account-pool",
           "palette",
           "chat-find",
           "picker",
@@ -263,6 +264,15 @@
         "label": "Usage",
         "summary": "Plan limits, cost and tokens",
         "stops": "Plan limits, cost and tokens are no longer shown.",
+        "needs": [
+          "models"
+        ]
+      },
+      "account-pool": {
+        "kind": "capability",
+        "label": "Account pool",
+        "summary": "With several plan accounts, each new chat starts on the one whose usage resets soonest and stays there",
+        "stops": "New chats start on the default model's own account.",
         "needs": [
           "models"
         ]

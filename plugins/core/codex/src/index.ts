@@ -1,15 +1,15 @@
-import { llmPlans, type AppPlan, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
+import { llmPlans, type AppPlace, type AppPlan, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
 import { cli } from '@sand/config/contract'
-import { media } from '@sand/media/contract'
+import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { codexAccount } from './account/account'
 import { limitsOf } from './account/limits'
-import { installUrl } from './server/binary'
-import { createPool, type Pool } from './server/pool'
+import { codexHome, installUrl } from './server/binary'
+import { type CodexPlace, createPool, type Pool } from './server/pool'
 import { sessionFiles } from './session/files'
-import { openSession, type SessionNeeds } from './session/session'
+import { openSession } from './session/session'
 import pkg from '../package.json'
 
 const caps: ProviderCapabilities = {
@@ -22,21 +22,10 @@ const caps: ProviderCapabilities = {
   cacheTtlMs: 10 * 60_000,
 }
 
-const codexPlan = (needs: SessionNeeds): AppPlan => ({
-  id: 'codex',
-  label: 'Codex',
-  name: 'ChatGPT',
-  detail: 'Uses your sign-in from the Codex app on this PC',
-  logo: 'openai',
-  app: 'Codex',
-  install: installUrl,
-  family: 'openai',
-  caps,
-  fixedTools: true,
-  ...codexAccount(needs.pool),
-  open: (setup, output, resume) => openSession(needs, setup, output, resume),
-  sessionFiles,
-})
+interface Needs {
+  media: Media
+  report(account: string, limits: PlanLimits): void
+}
 
 const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>
   pool.listen((method, params) => {
@@ -45,23 +34,39 @@ const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>
     if (limits) report(limits)
   })
 
+const codexAccountPlan = ({ media, report }: Needs, id: string, place: CodexPlace): AppPlan => {
+  const pool = createPool(place, pkg.version)
+  reportLimits(pool, limits => report(id, limits))
+  return {
+    id,
+    label: 'Codex',
+    name: 'ChatGPT',
+    detail: 'Uses your sign-in from the Codex app on this PC',
+    logo: 'openai',
+    app: 'Codex',
+    install: installUrl,
+    family: 'openai',
+    caps,
+    fixedTools: true,
+    ...codexAccount(pool),
+    open: (setup, output, resume) => openSession({ pool, media }, setup, output, resume),
+    sessionFiles: sessionFiles(place.home),
+    close: () => pool.close(),
+  }
+}
+
+const codexPlan = (needs: Needs, folder: string): AppPlan => ({
+  ...codexAccountPlan(needs, 'codex', { folder, home: codexHome() }),
+  another: ({ id, folder }: AppPlace) => codexAccountPlan(needs, id, { folder, home: folder }),
+})
+
 export default definePlugin({
   name: 'codex',
-  description: 'Adds Codex to Settings → Accounts using the Codex app on this PC: sand runs codex app-server with sand’s own tools and prompt, and the app keeps its own sign-in',
+  description: 'Adds Codex to Settings → Accounts using the Codex app on this PC: sand runs codex app-server with sand’s own tools and prompt; the app keeps its own sign-in, and each ChatGPT account added beside it keeps its sign-in in its own folder',
   inject: { cli, media },
   async apply(ctx) {
     const folder = join(ctx.cli.home, 'apps', 'codex')
     await mkdir(folder, { recursive: true })
-    const pool = createPool(folder, pkg.version)
-    ctx.effect(() => () => pool.close())
-    ctx.watch(llmPlans, plans => {
-      if (!plans) return
-      const stopLimits = reportLimits(pool, limits => plans.limits('codex', limits))
-      const unregister = plans.register(codexPlan({ pool, media: ctx.media }))
-      return () => {
-        stopLimits()
-        unregister()
-      }
-    })
+    ctx.watch(llmPlans, plans => plans?.register(codexPlan({ media: ctx.media, report: (account, limits) => plans.limits(account, limits) }, folder)))
   },
 })

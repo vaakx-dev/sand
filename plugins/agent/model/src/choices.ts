@@ -1,3 +1,4 @@
+import { accountPool } from '@sand/account-pool/contract'
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
@@ -30,7 +31,7 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
   const own = (session: Session) => {
     const settings = settingsOf(session)
     const { model } = resolved(settings)
-    if (model && !settings.model) writeSettings(session, { ...settings, model })
+    if (model && !settings.model) writeSettings(session, { ...settings, model: ctx.get(accountPool)?.start(model) ?? model })
   }
 
   const select = (session: Session): Selection | undefined => {

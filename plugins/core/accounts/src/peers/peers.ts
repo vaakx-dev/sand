@@ -17,7 +17,7 @@ import { tagged } from './tag'
 export interface PeerState {
   pc: SharePc
   info?: CachedInfo
-  limits?: Limits
+  limits: Limits[]
   online: boolean
   checked: boolean
   refused: boolean
@@ -66,7 +66,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
       return found
     }
     const info = saved[pc.id]
-    const fresh: PeerState = { pc, online: false, checked: false, refused: false, ...(info && { info }) }
+    const fresh: PeerState = { pc, limits: [], online: false, checked: false, refused: false, ...(info && { info }) }
     states.set(pc.id, fresh)
     return fresh
   }
@@ -77,11 +77,11 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   }
 
   const remember = (pc: SharePc, { limits: sent, ...info }: ShareInfo) => {
-    const limits = sent && ownedBy(pc, sent)
+    const limits = sent.map(found => ownedBy(pc, found))
     const current = state(pc)
-    const before = current.limits
+    const before = new Map(current.limits.map(found => [found.source, found]))
     Object.assign(current, { info, limits, online: true, checked: true, refused: false, error: undefined })
-    if (limits && !same(limits, before)) limitsChanged(limits)
+    limits.filter(found => !same(found, before.get(found.source))).forEach(limitsChanged)
     if (!same(saved[pc.id], info)) save({ ...saved, [pc.id]: info })
   }
 
@@ -171,6 +171,6 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
     account,
     source,
     stream,
-    limits: () => list().flatMap(peer => (peer.limits && source(peer.limits.source) === peer ? [peer.limits] : [])),
+    limits: () => list().flatMap(peer => peer.limits.filter(found => source(found.source) === peer)),
   }
 }

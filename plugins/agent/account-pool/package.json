@@ -1,0 +1,24 @@
+{
+  "name": "@sand/account-pool",
+  "version": "0.0.0",
+  "description": "Spreads new chats over the plan accounts that offer their model: the account whose usage resets soonest goes first, one close to its limit goes last and one out of usage is skipped, and the chat then stays on that account",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "account-pool",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Account pool",
+    "summary": "New chats start on the plan account whose usage resets soonest"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/harness": "workspace:*"
+  }
+}

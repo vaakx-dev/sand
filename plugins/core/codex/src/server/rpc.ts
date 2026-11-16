@@ -24,6 +24,7 @@ const rpcError = (raw: unknown) => {
 interface RpcOptions {
   binary: string
   args: string[]
+  home: string
   onNotify(method: string, params: Json): void
   onRequest(method: string, params: Json): Promise<unknown>
   onExit(error: Error): void
@@ -36,7 +37,7 @@ interface Waiting {
 
 export type Rpc = ReturnType<typeof startRpc>
 
-export const startRpc = ({ binary, args, onNotify, onRequest, onExit }: RpcOptions) => {
+export const startRpc = ({ binary, args, home, onNotify, onRequest, onExit }: RpcOptions) => {
   const waiting = new Map<number, Waiting>()
   let count = 0
   let closed = false
@@ -70,7 +71,7 @@ export const startRpc = ({ binary, args, onNotify, onRequest, onExit }: RpcOptio
   }
 
   const lines = spawnJsonLines([binary, ...args], {
-    env: { ...process.env, OPENAI_API_KEY: undefined },
+    env: { ...process.env, OPENAI_API_KEY: undefined, CODEX_HOME: home },
     onMessage: receive,
     onExit(code, stderr) {
       const error = new Error(`Codex stopped (exit ${code})${stderr ? `: ${stderr.split('\n').slice(-3).join(' ')}` : ''}`)

@@ -14,6 +14,7 @@
     "summary": "Model, effort and fast mode for the chat"
   },
   "dependencies": {
+    "@sand/account-pool": "workspace:*",
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",

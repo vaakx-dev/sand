@@ -1,6 +1,5 @@
 import { isRecord } from '@sand/util'
 import { join } from 'node:path'
-import { codexHome } from './binary'
 
 const dropped = ['tool_mode', 'multi_agent_version', 'apply_patch_tool_type', 'web_search_tool_type']
 
@@ -18,8 +17,8 @@ const withSandTools = (model: Record<string, unknown>) => ({
   ...sandOnly,
 })
 
-export const writeCatalog = async (folder: string) => {
-  const cached: unknown = await Bun.file(join(codexHome(), 'models_cache.json'))
+export const writeCatalog = async (folder: string, home: string) => {
+  const cached: unknown = await Bun.file(join(home, 'models_cache.json'))
     .json()
     .catch(() => undefined)
   const models = isRecord(cached) && Array.isArray(cached.models) ? cached.models.filter(isRecord) : []

@@ -51,16 +51,21 @@ export const createPlans = ({ saved, places, save, changed, dropped }: PlansOpti
     return isApp(plan) ? undefined : plan
   }
 
+  const retire = (plan: AnyPlan | undefined) => {
+    if (!isApp(plan)) return
+    dropped(plan)
+    plan.close?.()
+  }
+
   const put = (plan: AnyPlan) => {
-    const before = plans.get(plan.id)
-    if (isApp(before)) dropped(before)
+    retire(plans.get(plan.id))
     plans.set(plan.id, plan)
     if (isApp(plan)) void check(plan)
   }
 
   const drop = (plan: AnyPlan | undefined) => {
     if (!plan || plans.get(plan.id) !== plan) return
-    if (isApp(plan)) dropped(plan)
+    retire(plan)
     plans.delete(plan.id)
   }
 
