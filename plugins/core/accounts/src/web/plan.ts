@@ -7,7 +7,7 @@ import type { RowActions } from './account-menu'
 import type { AddAccount } from './add/sheet'
 import { planStep } from './add/steps'
 import { accountLogo, planName, presence } from './names'
-import { accountRow, type Rows } from './row'
+import { accountRow, type Rows, SHARE_NOTE, shareable } from './row'
 import type { LoginControl } from './state'
 
 interface Plan {
@@ -78,11 +78,11 @@ const pcGroup = (kit: Kit, accounts: LoginRemoteAccount[]) => {
 
 const members = (kit: Kit, rows: Rows, { local, remote }: Plan) => {
   const own = local.map(account => accountRow(rows, account, true))
-  if (!remote.length) return div({ class: 'contents' }, own)
+  const head = { ...(remote.length && { title: 'This PC' }), ...(local.some(shareable) && { note: SHARE_NOTE }) }
   const pcs = Map.groupBy(remote, account => account.device)
   return div(
     { class: 'flex flex-col gap-4' },
-    local.length ? kit.settingsSection({ title: 'This PC' }, own) : null,
+    local.length ? kit.settingsSection(head, own) : null,
     [...pcs.values()].map(accounts => pcGroup(kit, accounts)),
   )
 }

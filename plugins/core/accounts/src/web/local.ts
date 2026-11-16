@@ -3,7 +3,7 @@ import { derive, div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { LoginState } from '../contract'
 import type { RowActions } from './account-menu'
 import { entriesOf, listed, planRow, type PlanSheets, pooledRemote } from './plan'
-import { accountRow, type Rows, shareable } from './row'
+import { accountRow, type Rows, SHARE_NOTE, shareable } from './row'
 import type { LoginControl } from './state'
 
 interface LocalParts {
@@ -16,9 +16,8 @@ interface LocalParts {
 const emptyText = (state: LoginState) =>
   state.remote.length ? 'No accounts on this PC yet. The ones from your PCs below work too.' : 'No accounts on this PC yet. Add one to start using sand.'
 
-const SHARE_NOTE = 'Turn an account’s switch on to share it with your PCs.'
-
-const shareNote = (state: LoginState | undefined) => (state && listed(state).some(shareable) ? SHARE_NOTE : '')
+const shareNote = (state: LoginState | undefined) =>
+  state && entriesOf(state).some(entry => entry.kind === 'account' && shareable(entry.account)) ? SHARE_NOTE : ''
 
 const entries = (rows: Rows, state: LoginState, plans: PlanSheets) =>
   entriesOf(state).map(entry => (entry.kind === 'plan' ? planRow(rows.kit, entry.plan, plans.open) : accountRow(rows, entry.account)))
