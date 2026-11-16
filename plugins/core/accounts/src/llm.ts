@@ -1,8 +1,10 @@
-import { type LLM, type LLMEvent, type LLMRequest, type ModelInfo, type ProviderInfo, statelessCaps } from './contract'
+import { type LLM, type LLMEvent, type LLMRequest, type ModelInfo, outOfUsage, type ProviderInfo, statelessCaps } from './contract'
 import type { Accounts } from './auth/accounts'
 import type { Catalog } from './catalog'
 import { qualify } from './catalog/build'
 import { cached } from './catalog/cached'
+import { poolEntries } from './catalog/pool'
+import { sourceInfo } from './catalog/sources'
 import { viewOf } from './catalog/view'
 import { watchIdle } from './idle'
 import type { LocalLLM } from './local'
@@ -28,7 +30,10 @@ const pinOf = (pc: string | undefined, request: LLMRequest): Pin | undefined => 
 
 export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog, idleMs: number) => {
   const remotes = cached(() => remoteIndex(peers, accounts))
-  const view = viewOf(() => [...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))])
+  const pooled = cached(() =>
+    poolEntries([...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))], { label: accounts.planLabel, entry: catalog.entry }),
+  )
+  const view = viewOf(() => pooled.get().entries)
 
   const remote = async function* (model: ModelInfo, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
     const source = remotes.get().byId.get(model.source ?? '')
@@ -49,17 +54,31 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     return meta ? { id: meta.id, label: meta.label, billing: meta.billing, ...(meta.plan && { plan: meta.plan }) } : fallback
   }
 
+  const members = (id: string) => {
+    const found = view.find(id)
+    return found ? pooled.get().members(found) : []
+  }
+
+  const account = (model: ModelInfo, wanted?: string) => {
+    const all = pooled.get().members(model)
+    const out = outOfUsage(llm)
+    return all.find(member => member.source === wanted) ?? all.find(member => !out.has(member.source ?? '')) ?? all[0] ?? model
+  }
+
   const llm: Required<LLM> = {
     models: view.models,
     find: view.find,
     sources: view.sources,
+    accounts: () => pooled.get().accounts.map(sourceInfo),
+    members,
     levels: local.levels,
     async *stream(request, signal) {
       await Promise.all([accounts.ready, catalog.ready, peers.ready])
       const model = view.resolve(request.model)
       if (!model?.source) throw view.missing(request.model)
-      const source = (attempt: AbortSignal) => (model.via ? remote(model, request, attempt) : local.stream({ ...request, model: model.id }, attempt))
-      yield* watchIdle(model.id, idleMs, source, signal)
+      const chosen = account(model, request.source)
+      const source = (attempt: AbortSignal) => (chosen.via ? remote(chosen, request, attempt) : local.stream({ ...request, model: chosen.id }, attempt))
+      for await (const event of watchIdle(model.id, idleMs, source, signal)) yield event.type === 'start' ? { ...event, model: model.id } : event
     },
     provider,
     limits: () => local.limits() ?? borrowed()[0],
@@ -80,6 +99,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
 
   const reset = () => {
     remotes.reset()
+    pooled.reset()
     view.reset()
   }
   return { llm, view, reset }

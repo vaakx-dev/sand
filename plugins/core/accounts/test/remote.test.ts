@@ -160,7 +160,7 @@ const until = async (ready: () => boolean) => {
   while (!ready()) await Bun.sleep(5)
 }
 
-const borrowed = () => sand.app.get(llm)!.sources!().find(source => source.id === 'remote')
+const borrowed = () => sand.app.get(llm)!.accounts!().find(source => source.id === 'remote')
 
 test('a borrowed native session gets its thread, delta and handoff, stays on the PC that holds it, and a lost session starts over anywhere', async () => {
   sand = await startSand([])

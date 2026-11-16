@@ -1,4 +1,4 @@
-import { day, hour, startOfHour } from '../../data/forecast/hours'
+import { day, hour, startOfHour } from '@sand/usage/contract'
 
 export interface Tick {
   at: number

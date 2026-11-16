@@ -19,7 +19,7 @@ export interface ShareInfo {
   models: ModelInfo[]
   levels: EffortLevel[]
   prices: Record<string, ModelPrice>
-  limits?: Limits
+  limits: Limits[]
 }
 
 export type ShareFailure = 'lost' | 'trouble' | 'limited' | 'rejected'
@@ -41,6 +41,6 @@ export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
     }),
   )
   const list = accounts.list().flatMap(found => (shared.has(found.id) ? shareable(found, local.view.entry(found.id)?.meta.caps) : []))
-  const limits = local.allLimits().find(found => shared.has(found.source))
-  return { accounts: list, models, levels: local.levels(), prices, ...(limits && { limits }) }
+  const limits = local.allLimits().filter(found => shared.has(found.source))
+  return { accounts: list, models, levels: local.levels(), prices, limits }
 }

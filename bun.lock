@@ -131,6 +131,20 @@
         "@sand/util": "workspace:*",
       },
     },
+    "plugins/agent/account-pool": {
+      "name": "@sand/account-pool",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
+        "@sand/usage": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/accounts-mcp": {
       "name": "@sand/accounts-mcp",
       "version": "0.0.0",
@@ -524,6 +538,7 @@
       "name": "@sand/model",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/account-pool": "workspace:*",
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
@@ -973,6 +988,7 @@
       "name": "@sand/usage-resume",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/account-pool": "workspace:*",
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
@@ -3511,6 +3527,8 @@
     "@noble/curves": ["@noble/curves@2.4.0", "", { "dependencies": { "@noble/hashes": "2.4.0" } }, "sha512-P4/62zrgfH33CneE3Dn4WhJVA22YUU0eR51wKIan4NVRvwsA0YnPTwWGpNbpuacSujmSFLvyzpyuR30+fbq2Ew=="],
 
     "@noble/hashes": ["@noble/hashes@2.4.0", "", {}, "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA=="],
+
+    "@sand/account-pool": ["@sand/account-pool@workspace:plugins/agent/account-pool"],
 
     "@sand/accounts": ["@sand/accounts@workspace:plugins/core/accounts"],
 

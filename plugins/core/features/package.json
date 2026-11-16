@@ -36,6 +36,7 @@
           "web-tools",
           "usage",
           "usage-resume",
+          "account-pool",
           "palette",
           "chat-find",
           "picker",
@@ -263,6 +264,15 @@
         "label": "Usage",
         "summary": "Plan limits, cost and tokens",
         "stops": "Plan limits, cost and tokens are no longer shown.",
+        "needs": [
+          "models"
+        ]
+      },
+      "account-pool": {
+        "kind": "capability",
+        "label": "Account pool",
+        "summary": "With several accounts on a plan, each chat runs on the one that wastes the least usage at your pace, and moves on when it runs out",
+        "stops": "Chats run on the first account of a plan that has usage left.",
         "needs": [
           "models"
         ]

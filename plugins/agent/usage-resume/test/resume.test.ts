@@ -126,22 +126,22 @@ test('a bot out of usage continues at the reset', async () => {
 
 const sentTo = (source: string) => sand.native(source).flatMap(call => (call.type === 'send' ? [call.text] : []))
 
-test('a thread out of usage carries on at once with the same model on another plan account', async () => {
+test('a thread out of usage carries on at once on another account of its plan', async () => {
   sand = await startSand(
     [
       { id: 'fake', label: 'Fake Plan', models: ['m'], replies: [[said('Half'), limit(60_000)]] },
-      { id: 'other', label: 'Other Plan', models: ['m'], replies: [[said('Picked up elsewhere.')], [said('Answered.')]] },
+      { id: 'other', of: 'fake', label: 'Fake Plan 2', models: ['m'], replies: [[said('Picked up elsewhere.')], [said('Answered.')]] },
     ],
-    { plugins: ['automation/schedules', 'agent/usage-resume'] },
+    { plugins: ['automation/schedules', 'agent/usage-resume', 'agent/account-pool'] },
   )
   const chat = sand.chat('fake/m')
   await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
   await ended(chat, 2)
-  expect(sentTo('other')).toEqual([expect.stringContaining('Switched to Other Plan')])
+  expect(sentTo('other')).toEqual([expect.stringContaining('Moved to another account')])
 
   await sand.turns.send(chat, { prompt: 'And this', clientRequestId: 'two' })
   await ended(chat, 3)
-  expect(sentTo('other')).toEqual([expect.stringContaining('Switched to Other Plan'), then])
+  expect(sentTo('other')).toEqual([expect.stringContaining('Moved to another account'), then])
 })
 
 test('a thread out of usage can switch to another model on another account and continue there at once', async () => {

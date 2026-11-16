@@ -1,5 +1,6 @@
 import type { Billing, Limits, Usage } from '@sand/accounts/contract'
 import { request, type } from '@sand/host-hub/contract'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export * from '../records'
@@ -7,6 +8,10 @@ export { billedCost } from './billed'
 export { usageCost } from './cost'
 export { periodLabel, periodTitle } from './period'
 export { threadUsage } from '../summary/thread'
+export { forecastsOf, type History } from '../forecast'
+export { day, historyWeeks, hour, startOfHour } from '../forecast/hours'
+export type { Forecast, Point } from '../forecast/project'
+export { hourKey, keyOf } from '../forecast/keys'
 
 export type UsageBucket = 'hour' | 'day'
 
@@ -83,6 +88,12 @@ export interface ThreadUsage {
   total: UsageTotals
   models: ThreadModel[]
 }
+
+export interface UsageReader {
+  summary(query: UsageQuery): UsageSummary
+}
+
+export const usageReader = service<UsageReader>('usageReader')
 
 export const usageSummary = request('usage.summary', {
   input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string() }),

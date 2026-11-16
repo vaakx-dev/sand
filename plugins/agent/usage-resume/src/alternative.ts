@@ -1,32 +1,23 @@
-import type { LLM, ModelInfo, SourceInfo } from '@sand/accounts/contract'
+import { type LLM, type ModelInfo, outOfUsage, type SourceInfo } from '@sand/accounts/contract'
 import type { Alternative } from './contract'
-
-const outOfUsage = (llm: LLM) => new Set((llm.sourceLimits?.() ?? []).filter(limits => !limits.pc && limits.windows.some(window => window.used >= 1)).map(limits => limits.source))
 
 const accountName = ({ label, via }: SourceInfo) => (via ? `${label} on ${via}` : label)
 
-const usable = (llm: LLM, current: ModelInfo) => {
-  const out = outOfUsage(llm)
-  const sources = new Map((llm.sources?.() ?? []).filter(source => source.online !== false && source.id !== current.source && !out.has(source.id)).map(source => [source.id, source]))
-  return { sources, models: (llm.models?.() ?? []).filter(model => !model.hidden && model.source && sources.has(model.source)) }
+const offerOf = (llm: LLM, chosen: ModelInfo | undefined): Alternative | undefined => {
+  const source = chosen && llm.sources?.().find(found => found.id === chosen.source)
+  return chosen && source ? { model: chosen.id, label: chosen.label, account: accountName(source) } : undefined
 }
 
-const offerOf = (sources: Map<string, SourceInfo>, chosen: ModelInfo | undefined): Alternative | undefined => {
-  const source = chosen?.source ? sources.get(chosen.source) : undefined
-  return chosen && source ? { model: chosen.id, label: chosen.label, account: accountName(source) } : undefined
+const open = (llm: LLM, model: ModelInfo) => {
+  const out = outOfUsage(llm)
+  const members = llm.members?.(model.id) ?? []
+  return members.length ? members.some(member => !out.has(member.source ?? '')) : !out.has(model.source ?? '')
 }
 
 export const alternativeOf = (llm: LLM, model: string): Alternative | undefined => {
   const current = llm.find?.(model)
   if (!current) return undefined
-  const { sources, models } = usable(llm, current)
-  return offerOf(sources, models.find(found => found.name === current.name) ?? models[0])
-}
-
-export const carryOnOf = (llm: LLM, model: string): Alternative | undefined => {
-  const current = llm.find?.(model)
-  if (!current) return undefined
-  const { sources, models } = usable(llm, current)
-  const onPlan = (found: ModelInfo) => sources.get(found.source ?? '')?.billing === 'plan'
-  return offerOf(sources, models.find(found => found.name === current.name && onPlan(found)))
+  const online = new Set((llm.sources?.() ?? []).filter(source => source.online !== false).map(source => source.id))
+  const models = (llm.models?.() ?? []).filter(found => found.source !== current.source && online.has(found.source ?? '') && open(llm, found))
+  return offerOf(llm, models.find(found => found.name === current.name) ?? models[0])
 }

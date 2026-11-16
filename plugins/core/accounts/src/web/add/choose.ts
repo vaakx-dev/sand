@@ -2,7 +2,7 @@ import type { Kit, Surface } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { LoginAccount, LoginState } from '../../contract'
 import { accountLogo } from '../names'
-import { customServer, type Step } from './steps'
+import { customServer, planStep, type Step } from './steps'
 
 interface Option {
   step: Step
@@ -33,8 +33,6 @@ const groups: Group[] = [
     ],
   },
 ]
-
-const planStep = ({ id, another, signedIn }: LoginAccount): Step => (another && signedIn ? { kind: 'another', account: id } : { kind: 'sign-in', account: id })
 
 const planOption = (account: LoginAccount): Option[] =>
   account.signIn && !account.added ? [{ step: planStep(account), logo: account.provider, title: account.label, detail: account.signIn.detail }] : []

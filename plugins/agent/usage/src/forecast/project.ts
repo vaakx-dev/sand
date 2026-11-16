@@ -1,5 +1,5 @@
 import type { LimitWindow } from '@sand/accounts/contract'
-import { hourKey } from '../../range'
+import { hourKey } from './keys'
 import { hour, spentBetween, startOfHour, type Hourly, type Pattern } from './hours'
 
 const spread = 0.3

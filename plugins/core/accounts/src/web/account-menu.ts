@@ -24,7 +24,7 @@ const shareAction = (account: LoginAccount, control: LoginControl): MenuAction[]
       ]
 
 const renameAction = (account: LoginAccount, { rename }: RowActions): MenuAction[] =>
-  account.added ? [{ id: 'rename', group: 'use', label: 'Rename', icon: 'pencil', run: () => rename(account) }] : []
+  account.signIn ? [{ id: 'rename', group: 'use', label: 'Rename', icon: 'pencil', run: () => rename(account) }] : []
 
 export const removeAction = (account: LoginAccount, control: LoginControl): MenuAction => {
   const label = removeLabel(account)

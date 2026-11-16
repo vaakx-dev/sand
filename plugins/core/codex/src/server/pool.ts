@@ -3,7 +3,7 @@ import { requireCodex } from './binary'
 import { writeCatalog } from './catalog'
 import { unwantedFeatures } from './features'
 import type { Json, Rpc } from './rpc'
-import { type ServerHandlers, startServer } from './server'
+import { type Launch, type ServerHandlers, startServer } from './server'
 
 type Listener = (method: string, params: Json) => void
 
@@ -25,22 +25,27 @@ const unhandled = (params: Json) => Promise.reject(new Error(`No sand chat runs 
 
 export type Pool = ReturnType<typeof createPool>
 
-export const createPool = (folder: string, version: string) => {
+export interface CodexPlace {
+  folder: string
+  home: string
+}
+
+export const createPool = ({ folder, home }: CodexPlace, version: string) => {
   const listeners = new Set<Listener>()
   const members = new Map<Member, Rpc>()
-  let launch: Promise<{ binary: string; args: string[] }> | undefined
+  let launch: Promise<Launch> | undefined
   let control: Promise<Rpc> | undefined
 
   const broadcast: Listener = (method, params) => listeners.forEach(listen => listen(method, params))
 
   const survey = async () => {
     const binary = await requireCodex()
-    const plain = await startServer(binary, plainArgs, version, { notify() {}, call: unhandled, exit() {} })
+    const plain = await startServer({ binary, args: plainArgs, home }, version, { notify() {}, call: unhandled, exit() {} })
     const features = await plain
       .request('model/list', {})
       .then(() => unwantedFeatures(plain))
       .finally(() => plain.close())
-    return { binary, args: sandArgs({ catalog: await writeCatalog(folder), features }) }
+    return { binary, home, args: sandArgs({ catalog: await writeCatalog(folder, home), features }) }
   }
 
   const surveyed = () =>
@@ -49,10 +54,7 @@ export const createPool = (folder: string, version: string) => {
       throw error
     }))
 
-  const spawn = async (handlers: ServerHandlers) => {
-    const { binary, args } = await surveyed()
-    return startServer(binary, args, version, handlers)
-  }
+  const spawn = async (handlers: ServerHandlers) => startServer(await surveyed(), version, handlers)
 
   const controlRpc = () =>
     (control ??= spawn({ notify: broadcast, call: unhandled, exit: () => (control = undefined) }).catch(error => {

@@ -135,6 +135,7 @@ export interface AppPlan extends PlanInfo {
   open(setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession>
   sessionFiles?(id: string): Promise<string[]>
   another?(place: AppPlace): AppPlan
+  close?(): void
 }
 
 export type AnyPlan = Plan | AppPlan

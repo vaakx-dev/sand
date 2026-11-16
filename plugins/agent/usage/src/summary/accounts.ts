@@ -25,7 +25,7 @@ const limitsOwner = (limits: Limits, seeds: Map<string, AccountId>): AccountId =
   return seed ?? { key, source, ...facts, ...(limits.pc && { pc: limits.pc }), ...(limits.pcName && { pcName: limits.pcName }) }
 }
 
-const ownSources = (llm?: LLM) => (llm?.sources?.() ?? []).filter(source => !source.via && source.billing !== 'local')
+const ownSources = (llm?: LLM) => (llm?.accounts?.() ?? []).filter(source => !source.via && source.billing !== 'local')
 
 export const accountBook = (llm?: LLM) => {
   const tallies = new Map<string, AccountUsage>()

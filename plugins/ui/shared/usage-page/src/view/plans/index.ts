@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
-import { forecastsOf, type History } from '../../data/forecast'
+import { forecastsOf, type History } from '@sand/usage/contract'
 import { accountName, type Plan, plansOf, type WindowRow } from '../../data/plans'
 import type { Account } from '../../data/types'
 import type { Segment } from './bar'
@@ -50,7 +50,7 @@ export const plansSection = (accounts: Account[], { kit, now, history }: PlansPr
     if (!plans.length) return kit.emptyState({ text: 'No plan limits reported.' })
     const state = derive(() => ({ found: history.get(), at: now.get() }))
     return dynamicChild(state, ({ found, at }) => {
-      const forecasts: Forecasts = account => (found ? forecastsOf(account, found, at) : undefined)
+      const forecasts: Forecasts = account => (found ? forecastsOf(account.key, account.limits?.windows ?? [], found, at) : undefined)
       return div({ class: 'flex flex-col gap-6' }, plans.map(plan => planBlock(kit, plan, forecasts, at)))
     })
   }

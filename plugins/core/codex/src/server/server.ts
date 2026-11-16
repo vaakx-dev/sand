@@ -14,8 +14,14 @@ const answer = (handlers: ServerHandlers) => async (method: string, params: Json
   throw new Error(`sand doesn't handle ${method}`)
 }
 
-export const startServer = async (binary: string, args: string[], version: string, handlers: ServerHandlers) => {
-  const rpc = startRpc({ binary, args, onNotify: handlers.notify, onRequest: answer(handlers), onExit: handlers.exit })
+export interface Launch {
+  binary: string
+  args: string[]
+  home: string
+}
+
+export const startServer = async ({ binary, args, home }: Launch, version: string, handlers: ServerHandlers) => {
+  const rpc = startRpc({ binary, args, home, onNotify: handlers.notify, onRequest: answer(handlers), onExit: handlers.exit })
   try {
     await rpc.request('initialize', { clientInfo: { name: 'sand', title: 'sand', version }, capabilities: { experimentalApi: true } })
   } catch (error) {

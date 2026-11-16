@@ -35,7 +35,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     if (ownIds().some(credential) || servers().length) changed()
   })
 
-  const label = (id: string) => plans.placeOf(id)?.name ?? plans.get(id)?.label ?? (isKeyKind(id) ? keyLabels[id] : (server(id)?.name ?? id))
+  const label = (id: string) => plans.nameOf(id) ?? plans.get(id)?.label ?? (isKeyKind(id) ? keyLabels[id] : (server(id)?.name ?? id))
 
   const shared = (id: string) => {
     const found = stored(id) ?? server(id)
@@ -130,6 +130,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     servers,
     server,
     label,
+    planLabel: (id: string) => plans.get(id)?.label ?? label(id),
     shared,
     provider,
     list: (): LoginAccount[] => [

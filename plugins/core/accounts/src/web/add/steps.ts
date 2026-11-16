@@ -18,6 +18,8 @@ const draftOf = ({ id, label, url, provider }: LoginAccount): ServerDraft => ({
   ...(isServerProvider(provider) && { provider }),
 })
 
+export const planStep = ({ id, another, signedIn }: LoginAccount): Step => (another && signedIn ? { kind: 'another', account: id } : { kind: 'sign-in', account: id })
+
 export const stepFor = (account: LoginAccount): Step => {
   if (account.kind === 'server') return { kind: 'server', draft: draftOf(account) }
   if (isKeyKind(account.kind)) return { kind: 'key', account: account.kind }

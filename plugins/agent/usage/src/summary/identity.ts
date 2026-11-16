@@ -22,7 +22,7 @@ const prefixOf = (model: string) => {
 }
 
 export const identityResolver = (llm?: LLM) => {
-  const sources = new Map((llm?.sources?.() ?? []).map(found => [found.id, found]))
+  const sources = new Map((llm?.accounts?.() ?? []).map(found => [found.id, found]))
   const sourceOf = (turn: Tagged) => turn.source ?? prefixOf(turn.model) ?? llm?.find?.(turn.model)?.source ?? unknownSource
 
   return (turn: Tagged): AccountId => {

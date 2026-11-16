@@ -26,6 +26,7 @@ const window = z.object({ id: z.string(), label: z.string(), used: z.number(), r
 export const sourceSchema = z.object({
   id: z.string(),
   label: z.string().optional(),
+  of: z.string().optional(),
   logo: z.string().default('replay'),
   plan: z.string().optional(),
   limits: z.array(window).optional(),

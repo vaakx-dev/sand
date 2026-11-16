@@ -14,6 +14,7 @@
     "summary": "Chats that run out of usage carry on with another plan account, or pick up again when it resets"
   },
   "dependencies": {
+    "@sand/account-pool": "workspace:*",
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",

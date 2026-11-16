@@ -1,0 +1,26 @@
+{
+  "name": "@sand/account-pool",
+  "version": "0.0.0",
+  "description": "Runs each plan model on the pool of accounts signed in to that plan: from how fast each account's 5-hour and weekly windows are being used, a chat starts on the account that would otherwise let the most usage reset unused, eases off accounts on track to run out early, stays on its account for the cache and moves on at a limit",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "account-pool",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Account pool",
+    "summary": "Chats run on whichever plan account wastes the least usage"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/usage": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

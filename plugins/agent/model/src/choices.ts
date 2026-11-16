@@ -1,3 +1,4 @@
+import { accountPool } from '@sand/account-pool/contract'
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
@@ -36,7 +37,7 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
   const select = (session: Session): Selection | undefined => {
     own(session)
     const { model, effort, speed } = resolved(settingsOf(session))
-    return model ? { source: modelSource(model), model, ...(effort && { effort }), speed } : undefined
+    return model ? { source: ctx.get(accountPool)?.source(session, model) ?? modelSource(model), model, ...(effort && { effort }), speed } : undefined
   }
 
   const change = (session: Session, patch: SettingsPatch) => {
