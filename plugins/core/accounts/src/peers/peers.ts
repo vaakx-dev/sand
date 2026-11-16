@@ -119,6 +119,13 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
 
   const refresh = (limits = false) => (checking ??= run(limits).finally(() => (checking = undefined)))
 
+  const linksChanged = () => {
+    const connected = new Set(links()?.connected() ?? [])
+    const lost = [...states.values()].filter(peer => peer.online && !connected.has(peer.pc.id))
+    for (const peer of lost) Object.assign(peer, { online: false, error: `${peer.pc.name} is offline` })
+    if (lost.length) changed()
+  }
+
   const ready = cache.read().then(found => {
     saved = found
     const linked = links()
@@ -167,10 +174,11 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   return {
     ready,
     refresh,
+    linksChanged,
     list,
     account,
     source,
     stream,
-    limits: () => list().flatMap(peer => peer.limits.filter(found => source(found.source) === peer)),
+    limits: () => list().flatMap(peer => peer.limits),
   }
 }

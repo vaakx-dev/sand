@@ -1,4 +1,5 @@
-import { type LLM, type LLMEvent, type LLMRequest, type ModelInfo, outOfUsage, type ProviderInfo, statelessCaps } from './contract'
+import { type LLM, type LLMEvent, type LLMRequest, type ModelInfo, type ProviderInfo, statelessCaps, unavailable } from './contract'
+import { heldKey } from './contract/pool'
 import type { Accounts } from './auth/accounts'
 import type { Catalog } from './catalog'
 import { qualify } from './catalog/build'
@@ -18,6 +19,7 @@ const remoteIndex = (peers: Peers, accounts: Accounts) => {
   return {
     sources,
     byId: new Map(sources.map(source => [source.meta.id, source])),
+    held: new Set(sources.map(({ meta }) => heldKey(meta.account, meta.pc))),
     prices: new Map(sources.flatMap(source => Object.entries(source.prices))),
   }
 }
@@ -38,11 +40,11 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
   const remote = async function* (model: ModelInfo, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
     const source = remotes.get().byId.get(model.source ?? '')
     if (!source) throw view.missing(model.id)
-    const sent = { ...request, model: qualify(source.account, model.name ?? model.id) }
-    for await (const event of peers.stream(source.account, sent, signal, pinOf(source.pc, request))) yield event.type === 'start' ? { ...event, model: model.id } : event
+    const sent = { ...request, model: qualify(source.meta.account, model.name ?? model.id) }
+    for await (const event of peers.stream(source.meta.account, sent, signal, pinOf(source.pc, request))) yield event.type === 'start' ? { ...event, model: model.id } : event
   }
 
-  const borrowed = () => peers.limits().filter(found => !accounts.signedIn(found.source))
+  const borrowed = () => peers.limits().filter(found => remotes.get().held.has(heldKey(found.source, found.pc)))
 
   const metaOf = (model?: string) => {
     const found = view.resolve(model)
@@ -61,7 +63,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
 
   const account = (model: ModelInfo, wanted?: string) => {
     const all = pooled.get().members(model)
-    const out = outOfUsage(llm)
+    const out = unavailable(llm)
     return all.find(member => member.source === wanted) ?? all.find(member => !out.has(member.source ?? '')) ?? all[0] ?? model
   }
 
@@ -84,10 +86,8 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     limits: () => local.limits() ?? borrowed()[0],
     sourceLimits: () => [...local.allLimits(), ...borrowed()],
     refreshLimits: async () => {
-      const own = await local.refreshLimits()
-      if (own) return own
-      await peers.refresh(true)
-      return borrowed()[0]
+      const [own] = await Promise.all([local.refreshLimits(), peers.refresh(true)])
+      return own ?? borrowed()[0]
     },
     price: model => {
       const id = view.find(model)?.id ?? model

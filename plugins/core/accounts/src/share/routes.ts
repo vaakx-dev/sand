@@ -2,7 +2,7 @@ import { isRecord, joinDisposers } from '@sand/util'
 import type { RouteCaller } from '@sand/host-gateway/contract'
 import type { Media } from '@sand/media/contract'
 import type { Server } from '@sand/server/contract'
-import { type LLMRequest, type ModelInfo, rankSources, type ThreadRef } from '../contract'
+import { type LLMRequest, type ModelInfo, type NativeRef, rankSources, type ThreadRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 import { shareInfo, sharedIds, sharePaths } from './info'
@@ -26,10 +26,12 @@ const isThread = (value: unknown) => value === undefined || (isRecord(value) && 
 const isRequest = (value: unknown): value is LLMRequest & { media?: unknown } =>
   isRecord(value) && typeof value.system === 'string' && Array.isArray(value.messages) && Array.isArray(value.tools) && isThread(value.thread)
 
+const heldHere = ({ pc: _, ...native }: NativeRef): NativeRef => native
+
 const callerThread = (caller: RouteCaller, { id, native, ...thread }: ThreadRef): ThreadRef => ({
   ...thread,
   id: `${caller.device}:${id}`,
-  ...(native && { native: { id: native.id, cwd: native.cwd } }),
+  ...(native && { native: heldHere(native) }),
 })
 
 const sharedModel = (local: LocalLLM, accounts: Accounts, wanted: string) => {

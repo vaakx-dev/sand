@@ -11,6 +11,7 @@ export interface SourceMeta {
   plan?: string
   via?: string
   pc?: string
+  account?: string
   online?: boolean
 }
 

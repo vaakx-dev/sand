@@ -20,7 +20,7 @@ const nameOf = (model: ModelInfo) => model.name ?? model.id
 
 const poolMeta = (kind: string, group: Entry[], label: string): SourceMeta => {
   const lead = group.find(entry => entry.meta.id === kind) ?? group[0]!
-  const { via: _, pc: __, online: ___, ...meta } = lead.meta
+  const { via: _, pc: __, account: ___, online: ____, ...meta } = lead.meta
   return { ...meta, id: kind, label, online: group.some(entry => entry.meta.online !== false) }
 }
 

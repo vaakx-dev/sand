@@ -1,6 +1,7 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
 import { cli, pluginProblems, sandConfig, setTomlValues } from '@sand/config/contract'
+import type { RouteCaller } from '@sand/host-gateway/contract'
 import { type Caller, createHandlers, type Request, type WireEvent } from '@sand/host-hub/contract'
 import { hostChannel, runtime } from '@sand/host-runtimes/contract'
 import { media } from '@sand/media/contract'
@@ -170,10 +171,10 @@ const start = async (models: Models, options: SandOptions) => {
     await stop()
     throw error
   })
-  const fetch = async (path: string, init?: RequestInit) => {
+  const fetchAs = (caller?: RouteCaller) => async (path: string, init?: RequestInit) => {
     const url = new URL(path, 'http://sand')
     const handler = routes.get(url.pathname) ?? routes.get(url.pathname.slice(0, url.pathname.indexOf('/', 1) + 1))
-    return handler ? handler(new Request(url, init)) : new Response('Not found', { status: 404 })
+    return handler ? handler(new Request(url, init), caller) : new Response('Not found', { status: 404 })
   }
   const askAs =
     (caller: Caller) =>
@@ -206,7 +207,8 @@ const start = async (models: Models, options: SandOptions) => {
     ask: askAs({ device: 'page', kind: 'browser' }),
     heard,
     askAs,
-    fetch,
+    fetch: fetchAs(),
+    fetchAs,
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },

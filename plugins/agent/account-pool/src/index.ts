@@ -1,4 +1,4 @@
-import { llm, type LLM, type ModelInfo, outOfUsage, windowsBySource } from '@sand/accounts/contract'
+import { llm, type LLM, type ModelInfo, unavailable, windowsBySource } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
 import { accountKey, day, historyWeeks, type History, startOfHour, usageReader } from '@sand/usage/contract'
@@ -25,20 +25,19 @@ export default definePlugin({
     }
 
     const usable = (models: LLM, members: ModelInfo[], except?: string) => {
-      const out = outOfUsage(models)
+      const out = unavailable(models)
       return members.filter(member => member.source && member.source !== except && !out.has(member.source))
     }
 
     const best = (models: LLM, members: ModelInfo[]) => {
       const now = Date.now()
       const windows = windowsBySource(models, now)
-      const pcs = new Map((models.accounts?.() ?? []).map(account => [account.id, account.pc]))
-      const candidates = members.flatMap(member => {
-        const source = member.source
-        if (!source) return []
-        const pc = pcs.get(source)
-        return [{ source, key: accountKey({ source, ...(pc && { pc }) }), windows: windows.get(source) ?? [] }]
-      })
+      const accounts = new Map((models.accounts?.() ?? []).map(account => [account.id, account]))
+      const keyOf = (source: string) => {
+        const found = accounts.get(source)
+        return accountKey({ source: found?.account ?? source, ...(found?.pc && { pc: found.pc }) })
+      }
+      const candidates = members.flatMap(({ source }) => (source ? [{ source, key: keyOf(source), windows: windows.get(source) ?? [] }] : []))
       return planAccounts(candidates, history(now), now)[0]?.source
     }
 

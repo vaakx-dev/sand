@@ -1,4 +1,4 @@
-import type { DetectedServer, LoginAccount, KeyKind, LoginPending, PlanTokens, ServerDraft, SignInFlow } from '../contract'
+import { type DetectedServer, type KeyKind, type LoginPending, type PlanTokens, sameSignIn, type ServerDraft, type SignInFlow } from '../contract'
 import { trimSlash } from '@sand/util'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
@@ -27,15 +27,14 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry, forget: (ac
   const signOut = async (account: string) => {
     const app = plans.app(account)
     if (!app) return accounts.signOut(account)
-    await app.signOut()
+    await Promise.all([app.signOut(), accounts.signOut(account)])
     await plans.refresh(account)
   }
 
   const twin = (account: string) => {
     const listed = accounts.list()
     const own = listed.find(found => found.id === account)
-    const same = (other: LoginAccount) => other.id !== account && other.kind === own?.kind && other.signedIn && other.email === own.email
-    return own?.email ? listed.find(same) : undefined
+    return own && listed.find(other => other.id !== account && other.signedIn && sameSignIn(own, other))
   }
 
   const refuseTwin = async (account: string) => {

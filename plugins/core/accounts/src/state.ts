@@ -1,6 +1,8 @@
 import type { LoginPc, LoginRemoteAccount, LoginState } from './contract'
 import type { Accounts } from './auth/accounts'
+import { heldKey } from './contract/pool'
 import type { Peers, PeerState } from './peers/peers'
+import { remoteSources } from './peers/sources'
 import type { ShareUsers } from './share/users'
 
 const pcOf = (peer: PeerState): LoginPc => ({
@@ -12,21 +14,24 @@ const pcOf = (peer: PeerState): LoginPc => ({
   ...(peer.error && { error: peer.error }),
 })
 
-const remoteAccounts = (peers: Peers, accounts: Accounts): LoginRemoteAccount[] =>
-  peers.list().flatMap(peer =>
-    (peer.info?.accounts ?? []).map(({ id, kind, provider, label, method, plan }) => ({
+const remoteAccounts = (peers: Peers, accounts: Accounts): LoginRemoteAccount[] => {
+  const used = new Set(remoteSources(peers, accounts).map(({ meta }) => heldKey(meta.account, meta.pc)))
+  return peers.list().flatMap(peer =>
+    (peer.info?.accounts ?? []).map(({ id, kind, provider, label, method, plan, email }) => ({
       id,
       kind,
       provider,
       label,
       method,
       ...(plan && { plan }),
+      ...(email && { email }),
       device: peer.pc.id,
       pc: peer.pc.name,
       online: peer.online && !peer.refused,
-      inUse: kind === 'server' ? !peer.refused : !accounts.signedIn(id) && peers.source(id)?.pc.id === peer.pc.id,
+      inUse: used.has(heldKey(id, peer.pc.id)),
     })),
   )
+}
 
 export const loginState = (accounts: Accounts, peers: Peers, users: ShareUsers): LoginState => ({
   accounts: accounts.list(),

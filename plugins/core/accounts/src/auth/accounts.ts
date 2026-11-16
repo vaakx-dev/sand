@@ -4,7 +4,7 @@ import { envKey, envNames } from './env'
 import { isKeyKind, keyApis, keyKinds, keyLabels, signInError } from './kinds'
 import { appAccount, ownAccount, type OwnInfo, serverAccount, type Status } from './listing'
 import type { PlanRegistry } from './plans'
-import { authStore, credentialOf, serversOf, type Credential, type OAuth, type Saved, type ServerEntry } from './store'
+import { appShareOf, authStore, credentialOf, serversOf, type Credential, type OAuth, type Saved, type ServerEntry } from './store'
 
 const margin = 5 * 60_000
 
@@ -38,6 +38,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
   const label = (id: string) => plans.nameOf(id) ?? plans.get(id)?.label ?? (isKeyKind(id) ? keyLabels[id] : (server(id)?.name ?? id))
 
   const shared = (id: string) => {
+    if (plans.app(id)) return viaApp(id) && appShareOf(saved, id) !== false
     const found = stored(id) ?? server(id)
     return !!found && found.shared !== false
   }
@@ -63,7 +64,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
   const saveServers = (list: ServerEntry[]) => save({ servers: list.length ? list : undefined })
 
   const forget = async (id: string, fromDisk: Saved) => {
-    if (credentialOf({ ...saved, ...fromDisk }, id)) await save({ [id]: undefined })
+    if ({ ...saved, ...fromDisk }[id] !== undefined) await save({ [id]: undefined })
     else changed()
   }
 
@@ -122,7 +123,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     const signIn = { name: plan.name, detail: plan.detail }
     const info = { id: plan.id, kind: place?.plan ?? plan.id, label: label(plan.id), provider: plan.logo, signIn, added: !!place, another: !place && plans.another(plan.id) }
     const app = plans.app(plan.id)
-    return app ? appAccount(info, app, plans.status(plan.id), status(plan.id)) : ownListing(info)
+    return app ? appAccount(info, { plan: app, found: plans.status(plan.id), shared: shared(plan.id), status: status(plan.id) }) : ownListing(info)
   }
 
   return {
@@ -171,7 +172,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     async setShared(id: string, value: boolean) {
       await ready
       if (server(id)) return saveServers(servers().map(found => (found.id === id ? { ...found, shared: value } : found)))
-      if (plans.app(id)) throw new Error(`${label(id)} runs through the app on this PC, so it stays on this PC`)
+      if (plans.app(id)) return save({ [id]: { type: 'app', shared: value } })
       const found = stored(id)
       if (!found) throw new Error(credential(id) ? `This key comes from ${envNames[id]}, so it stays on this PC` : signInError(label(id)).message)
       await save({ [id]: { ...found, shared: value } })

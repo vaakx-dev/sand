@@ -18,13 +18,9 @@ const emptyText = (state: LoginState) =>
 
 const SHARE_NOTE = 'Turn an account’s switch on to share it with your PCs.'
 
-const APP_NOTE = 'Accounts that run through an app, like Claude Code or Codex, stay on this PC.'
-
 const shareNote = (state: LoginState | undefined) => {
   const shown = state ? listed(state) : []
-  const switches = entriesOf(shown).some(entry => entry.kind === 'account' && shareable(entry.account))
-  const apps = shown.some(account => account.app)
-  return [switches && SHARE_NOTE, switches && apps && APP_NOTE].filter(Boolean).join(' ')
+  return entriesOf(shown).some(entry => entry.kind === 'account' && shareable(entry.account)) ? SHARE_NOTE : ''
 }
 
 const entries = (rows: Rows, state: LoginState, plans: PlanSheets) =>

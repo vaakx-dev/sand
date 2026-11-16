@@ -1,4 +1,4 @@
-import { type LLM, type ModelInfo, outOfUsage, type SourceInfo } from '@sand/accounts/contract'
+import { type LLM, type ModelInfo, type SourceInfo, unavailable } from '@sand/accounts/contract'
 import type { Alternative } from './contract'
 
 const accountName = ({ label, via }: SourceInfo) => (via ? `${label} on ${via}` : label)
@@ -9,7 +9,7 @@ const offerOf = (llm: LLM, chosen: ModelInfo | undefined): Alternative | undefin
 }
 
 const open = (llm: LLM, model: ModelInfo) => {
-  const out = outOfUsage(llm)
+  const out = unavailable(llm)
   const members = llm.members?.(model.id) ?? []
   return members.length ? members.some(member => !out.has(member.source ?? '')) : !out.has(model.source ?? '')
 }

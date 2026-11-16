@@ -9,19 +9,14 @@ export interface RowActions {
   rename(account: LoginAccount): void
 }
 
-const shareAction = (account: LoginAccount, control: LoginControl): MenuAction[] =>
-  account.app
-    ? []
-    : [
-        {
-          id: 'share',
-          group: 'use',
-          label: 'Share with my PCs',
-          icon: 'monitor',
-          active: account.shared,
-          run: () => control.run(loginShared, { account: account.id, shared: !account.shared }),
-        },
-      ]
+const shareAction = (account: LoginAccount, control: LoginControl): MenuAction => ({
+  id: 'share',
+  group: 'use',
+  label: 'Share with my PCs',
+  icon: 'monitor',
+  active: account.shared,
+  run: () => control.run(loginShared, { account: account.id, shared: !account.shared }),
+})
 
 const renameAction = (account: LoginAccount, { rename }: RowActions): MenuAction[] =>
   account.signIn ? [{ id: 'rename', group: 'use', label: 'Rename', icon: 'pencil', run: () => rename(account) }] : []
@@ -46,7 +41,7 @@ export const accountSpec = (account: LoginAccount, control: LoginControl, action
     title: account.label,
     subtitle: account.email ?? account.url,
     actions: [
-      ...shareAction(account, control),
+      shareAction(account, control),
       ...renameAction(account, actions),
       { id: 'fix', group: 'use', label: server ? 'Edit' : 'Sign in again', icon: server ? 'pencil' : 'key', run: () => actions.fix(account) },
       removeAction(account, control),
