@@ -7,13 +7,16 @@ import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { turns } from '@sand/turns-contract/contract'
-import { alternativeOf, carryOnOf } from './alternative'
+import { accountPool } from '@sand/account-pool/contract'
+import { alternativeOf } from './alternative'
 import { type Alternative, helloResumes, resumeAlternative, resumeCancel, resumesChange, resumeSwitch } from './contract'
 import { createPlans } from './plans'
 
 const CONTINUE = 'Usage is back. Continue where you left off.'
 
 const switched = (account: string) => `Switched to ${account} because the plan ran out. Continue where you left off.`
+
+const MOVED = 'Moved to another account on this plan because this one ran out of usage. Continue where you left off.'
 
 export default definePlugin({
   name: 'usage-resume',
@@ -65,11 +68,8 @@ export default definePlugin({
     }
 
     const carryOn = (conversation: Conversation, turn: TurnInfo) => {
-      const models = ctx.get(llm)
-      const offered = models && carryOnOf(models, turn.selection.model)
-      const session = ctx.get(sessions)?.open(conversation.id)
-      if (!offered || !session) return false
-      void move(session, offered, `carry-on:${turn.id}`)
+      if (!ctx.get(accountPool)?.spare(turn.selection)) return false
+      void resume({ owner: conversation.owner, id: conversation.id }, `carry-on:${turn.id}`, MOVED)
       return true
     }
 

@@ -2,8 +2,7 @@ import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, derive, div, dynamicChild, line, sig, span, svg, type Child, type Sig } from '@vaakx-dev/vrui'
-import { forecastsOf, type History } from '../../data/forecast'
-import type { Forecast } from '../../data/forecast/project'
+import { type Forecast, forecastsOf, type History } from '@sand/usage/contract'
 import { accountName, plansOf } from '../../data/plans'
 import type { Account } from '../../data/types'
 import { whenText } from '../plans/pace'
@@ -27,7 +26,7 @@ interface Entry {
 const entriesOf = (accounts: Account[], history: History, now: number) =>
   plansOf(accounts).flatMap(plan =>
     plan.accounts.flatMap(account => {
-      const forecasts = forecastsOf(account, history, now)
+      const forecasts = forecastsOf(account.key, account.limits?.windows ?? [], history, now)
       const named = plan.accounts.length > 1 ? ` · ${accountName(account)}` : ''
       return (account.limits?.windows ?? [])
         .filter(window => window.resetsAt && window.duration)

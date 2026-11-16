@@ -136,10 +136,12 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
+        "@sand/usage": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
       "devDependencies": {
-        "@sand/chats": "workspace:*",
         "@sand/harness": "workspace:*",
       },
     },
@@ -986,6 +988,7 @@
       "name": "@sand/usage-resume",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/account-pool": "workspace:*",
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",

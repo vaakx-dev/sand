@@ -1,16 +1,7 @@
-import type { UsageBucket } from '@sand/usage/contract'
+import { keyOf, type UsageBucket } from '@sand/usage/contract'
 import type { PageRange } from './prefs'
 
 export const rangeLabel = (range: PageRange) => ({ '7d': '7 days', '30d': '30 days', '90d': '90 days' } as const)[range]
-
-const pad = (value: number) => String(value).padStart(2, '0')
-
-const keyOf = (date: Date, bucket: UsageBucket) => {
-  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-  return bucket === 'day' ? day : `${day} ${pad(date.getHours())}`
-}
-
-export const hourKey = (at: number) => keyOf(new Date(at), 'hour')
 
 export const periodKeys = (since: number, until: number, bucket: UsageBucket) => {
   const keys: string[] = []

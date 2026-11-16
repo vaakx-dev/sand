@@ -1,11 +1,11 @@
-import { type PeriodUsage, tokensOf, type UsageQuery } from '@sand/usage/contract'
-import { hourKey } from '../../range'
-import type { FleetView } from '../fleet'
+import type { PeriodUsage } from '../contract'
+import { tokensOf } from '../records'
+import { hourKey } from './keys'
 
 export const hour = 3_600_000
 export const day = 24 * hour
 
-const weeks = 4
+export const historyWeeks = 4
 const slots = 7 * 24
 
 export type Hourly = Map<string, number>
@@ -16,15 +16,6 @@ export const startOfHour = (at: number) => {
   const date = new Date(at)
   date.setMinutes(0, 0, 0)
   return date.getTime()
-}
-
-export const historyView = (): FleetView => {
-  const query: UsageQuery = {
-    since: startOfHour(Date.now()) - weeks * 7 * day,
-    bucket: 'hour',
-    zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }
-  return { key: 'history', query }
 }
 
 const recordOf = (periods: PeriodUsage[], account: string, measure: (period: PeriodUsage) => number) => {

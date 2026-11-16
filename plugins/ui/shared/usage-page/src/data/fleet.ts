@@ -1,4 +1,4 @@
-import { usageSummary, type UsageQuery, type UsageSummary } from '@sand/usage/contract'
+import { day, historyWeeks, startOfHour, usageSummary, type UsageQuery, type UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/devices-contract'
 import { unanswered } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
@@ -10,6 +10,11 @@ export interface FleetView {
   key: string
   query: UsageQuery
 }
+
+export const historyView = (): FleetView => ({
+  key: 'history',
+  query: { since: startOfHour(Date.now()) - historyWeeks * 7 * day, bucket: 'hour', zone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+})
 
 interface PcState {
   at: number

@@ -87,6 +87,7 @@ export interface LLMRequest {
   messages: Message[]
   tools: ToolSpec[]
   model?: string
+  source?: string
   effort?: Effort
   speed?: Speed
   session?: string
@@ -120,6 +121,8 @@ export interface LLM {
   models?(): ModelInfo[]
   find?(id: string): ModelInfo | undefined
   sources?(): SourceInfo[]
+  accounts?(): SourceInfo[]
+  members?(model: string): ModelInfo[]
   levels?(): EffortLevel[]
   stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent>
   provider?(model?: string): ProviderInfo

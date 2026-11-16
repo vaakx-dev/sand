@@ -21,11 +21,11 @@ export default definePlugin({
     mkdirSync(folder, { recursive: true })
     const apps = new Map<string, ReturnType<typeof replayApp>>()
     const added = (script: Script) => (place: AppPlace) => {
-      const made = replayApp({ ...script, id: place.id }, folder)
+      const made = replayApp(sources.find(source => source.id === place.id && source.of === script.id) ?? { ...script, id: place.id }, folder)
       apps.set(place.id, made)
       return made.plan
     }
-    for (const source of sources) if (!source.api) apps.set(source.id, replayApp(source, folder, added(source)))
+    for (const source of sources) if (!source.api && !source.of) apps.set(source.id, replayApp(source, folder, added(source)))
     const own = [...apps.values()]
     ctx.effect(() => {
       if (!apis.size) return undefined

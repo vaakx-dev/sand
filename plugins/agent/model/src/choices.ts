@@ -31,13 +31,13 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
   const own = (session: Session) => {
     const settings = settingsOf(session)
     const { model } = resolved(settings)
-    if (model && !settings.model) writeSettings(session, { ...settings, model: ctx.get(accountPool)?.start(model) ?? model })
+    if (model && !settings.model) writeSettings(session, { ...settings, model })
   }
 
   const select = (session: Session): Selection | undefined => {
     own(session)
     const { model, effort, speed } = resolved(settingsOf(session))
-    return model ? { source: modelSource(model), model, ...(effort && { effort }), speed } : undefined
+    return model ? { source: ctx.get(accountPool)?.source(session, model) ?? modelSource(model), model, ...(effort && { effort }), speed } : undefined
   }
 
   const change = (session: Session, patch: SettingsPatch) => {

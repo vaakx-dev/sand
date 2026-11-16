@@ -1,7 +1,7 @@
 import type { LimitWindow } from '@sand/accounts/contract'
 import { leftOf, percent } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
-import type { Forecast } from '../../data/forecast/project'
+import type { Forecast } from '@sand/usage/contract'
 import { accountName, type Share } from '../../data/plans'
 import { elapsedOf, TONE_FILL, TONE_TEXT, type Tone, toneOf } from '../../look'
 import { whenText } from './pace'

@@ -3,7 +3,7 @@ import { sessions } from '@sand/chats/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { usageSummary } from './contract'
+import { usageReader, usageSummary } from './contract'
 import { summaryHandler } from './summary/serve'
 
 export default definePlugin({
@@ -15,8 +15,8 @@ export default definePlugin({
       const current = ctx.get(llm)
       return current?.refreshLimits?.() ?? current?.limits?.()
     }
-    ctx.watch(server, found =>
-      found ? joinDisposers(found.handle(usageSummary, summaryHandler(ctx.sessions, () => ctx.get(llm))), found.handle(limitsRefresh, refreshLimits)) : undefined,
-    )
+    const summary = summaryHandler(ctx.sessions, () => ctx.get(llm))
+    ctx.provide(usageReader, { summary })
+    ctx.watch(server, found => (found ? joinDisposers(found.handle(usageSummary, summary), found.handle(limitsRefresh, refreshLimits)) : undefined))
   },
 })

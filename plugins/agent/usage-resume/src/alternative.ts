@@ -1,4 +1,4 @@
-import { drainOrder, type LLM, type ModelInfo, outOfUsage, planSiblings, type SourceInfo } from '@sand/accounts/contract'
+import { type LLM, type ModelInfo, outOfUsage, type SourceInfo } from '@sand/accounts/contract'
 import type { Alternative } from './contract'
 
 const accountName = ({ label, via }: SourceInfo) => (via ? `${label} on ${via}` : label)
@@ -8,22 +8,16 @@ const offerOf = (llm: LLM, chosen: ModelInfo | undefined): Alternative | undefin
   return chosen && source ? { model: chosen.id, label: chosen.label, account: accountName(source) } : undefined
 }
 
-const usable = (llm: LLM, current: ModelInfo) => {
+const open = (llm: LLM, model: ModelInfo) => {
   const out = outOfUsage(llm)
-  const sources = new Set((llm.sources?.() ?? []).filter(source => source.online !== false && source.id !== current.source && !out.has(source.id)).map(source => source.id))
-  return (llm.models?.() ?? []).filter(model => !model.hidden && model.source && sources.has(model.source))
+  const members = llm.members?.(model.id) ?? []
+  return members.length ? members.some(member => !out.has(member.source ?? '')) : !out.has(model.source ?? '')
 }
 
 export const alternativeOf = (llm: LLM, model: string): Alternative | undefined => {
   const current = llm.find?.(model)
   if (!current) return undefined
-  const models = usable(llm, current)
+  const online = new Set((llm.sources?.() ?? []).filter(source => source.online !== false).map(source => source.id))
+  const models = (llm.models?.() ?? []).filter(found => found.source !== current.source && online.has(found.source ?? '') && open(llm, found))
   return offerOf(llm, models.find(found => found.name === current.name) ?? models[0])
-}
-
-export const carryOnOf = (llm: LLM, model: string): Alternative | undefined => {
-  const current = llm.find?.(model)
-  if (!current) return undefined
-  const others = planSiblings(llm, current).filter(found => found.source !== current.source)
-  return offerOf(llm, drainOrder(llm, others)[0])
 }

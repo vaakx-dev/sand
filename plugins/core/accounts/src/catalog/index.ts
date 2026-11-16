@@ -87,7 +87,7 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
 
   const refresh = async (source?: string) => {
     await Promise.all([ready, accounts.ready])
-    await Promise.all(localMetas(accounts).filter(meta => !source || meta.id === source).map(refreshOne))
+    await Promise.all(localMetas(accounts).filter(meta => !source || meta.id === source || meta.kind === source).map(refreshOne))
   }
 
   const forget = (id: string) => {

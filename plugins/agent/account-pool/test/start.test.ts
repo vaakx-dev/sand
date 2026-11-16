@@ -8,7 +8,7 @@ afterEach(() => sand.stop())
 
 const hour = 3_600_000
 
-const session = (used: number, resetInMs: number) => [{ id: 'session', label: 'Session', used, resetInMs }]
+const week = (used: number, resetInMs: number) => [{ id: 'week', label: 'Week', used, resetInMs, durationMs: 7 * 24 * hour }]
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
@@ -21,23 +21,39 @@ const ended = async (chat: Session, count: number) => {
   throw new Error('The turn never ended')
 }
 
-test('a new chat starts on the plan account whose usage resets soonest and stays there', async () => {
-  sand = await startSand(
+const pool = () =>
+  startSand(
     [
-      { id: 'late', models: ['m'], limits: session(0.1, 5 * hour), replies: replies() },
-      { id: 'soon', models: ['m'], limits: session(0.5, hour), replies: replies() },
-      { id: 'spent', models: ['m'], limits: session(1, hour / 2), replies: replies() },
+      { id: 'plan', label: 'Plan', models: ['m'], limits: week(0.1, 100 * hour), replies: replies() },
+      { id: 'plan-soon', of: 'plan', label: 'Plan 2', models: ['m'], limits: week(0.5, 20 * hour), replies: replies() },
+      { id: 'plan-spent', of: 'plan', label: 'Plan 3', models: ['m'], limits: week(1, 10 * hour), replies: replies() },
     ],
     { plugins: ['agent/account-pool'] },
   )
-  await sand.llm.refreshLimits?.()
-  const chat = sand.sessions.thread(sand.home)
 
+test('a plan with several accounts is one model, and a chat on it runs on the account to spend first and stays there', async () => {
+  sand = await pool()
+  await sand.llm.refreshLimits?.()
+  expect(sand.llm.models?.().map(model => model.id)).toEqual(['plan/m'])
+
+  const chat = sand.sessions.thread(sand.home)
   await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
   await ended(chat, 1)
   await sand.turns.send(chat, { prompt: 'Then', clientRequestId: 'two' })
   await ended(chat, 2)
 
-  expect(sentTo('soon')).toEqual([expect.stringMatching(/Start$/), expect.stringMatching(/Then$/)])
-  expect([...sentTo('late'), ...sentTo('spent')]).toEqual([])
+  expect(sentTo('plan-soon')).toEqual([expect.stringMatching(/Start$/), expect.stringMatching(/Then$/)])
+  expect([...sentTo('plan'), ...sentTo('plan-spent')]).toEqual([])
+})
+
+test('a chat that saved the model of one account runs on the plan, past that account being out', async () => {
+  sand = await pool()
+  await sand.llm.refreshLimits?.()
+  const saved = sand.chat('plan-spent/m')
+
+  await sand.turns.send(saved, { prompt: 'Old', clientRequestId: 'old' })
+  await ended(saved, 1)
+
+  expect(sand.turns.list(saved)[0]?.selection).toMatchObject({ model: 'plan/m', source: 'plan-soon' })
+  expect(sentTo('plan-soon')).toEqual([expect.stringMatching(/Old$/)])
 })

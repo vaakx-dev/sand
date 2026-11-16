@@ -53,6 +53,7 @@ export const buildRequest = async (
       messages,
       tools,
       model: thread.model,
+      source: thread.source,
       ...(effort && { effort }),
       speed,
       session: conversation.id,

@@ -109,6 +109,8 @@ const copiesStub = (projects: TestProject[]): ProjectFiles => ({
 
 const boot = async (app: Context, home: string, models: Models, { plugins: extra = [], options = {}, projects = [], sections = {}, config }: SandOptions) => {
   if (models.replay) await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(models.replay)))
+  const places = (models.replay ?? []).flatMap(({ id, of, label = id }) => (of ? [{ id, plan: of, name: label }] : []))
+  if (places.length) await Bun.write(join(home, 'apps', 'accounts.json'), JSON.stringify(places))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, args: [], exit() {} })
