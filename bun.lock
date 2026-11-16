@@ -144,6 +144,7 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
       },
     },
     "plugins/agent/accounts-mcp": {

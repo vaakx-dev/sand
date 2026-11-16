@@ -8,6 +8,8 @@ import { planAccounts } from './plan'
 
 const HISTORY_TTL = 10 * 60_000
 
+const MOVED_OFF = new Set(['limited', 'moved'])
+
 export default definePlugin({
   name: 'account-pool',
   description: 'Runs each plan model on the pool of accounts signed in to that plan: a chat starts on the account that would otherwise waste the most usage at its pace, stays there for its cache, and moves on when that account runs out',
@@ -49,9 +51,9 @@ export default definePlugin({
         const members = models?.members?.(model) ?? []
         if (!models || !members.length) return undefined
         const last = latest(session)
-        const limited = last?.stopReason === 'limited' ? last.selection.source : undefined
-        const open = usable(models, members, limited)
-        const staying = last && !limited && open.find(member => member.source === last.selection.source)
+        const left = last?.stopReason && MOVED_OFF.has(last.stopReason) ? last.selection.source : undefined
+        const open = usable(models, members, left)
+        const staying = last && !left && open.find(member => member.source === last.selection.source)
         return staying ? staying.source : (best(models, open) ?? members[0]?.source)
       },
       spare({ model, source }: Placement) {

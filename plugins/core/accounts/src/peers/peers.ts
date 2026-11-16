@@ -1,8 +1,7 @@
 import { type Peers as PcLinks, reachablePeers } from '@sand/devices-contract'
 import type { Media } from '@sand/media/contract'
-import { type Limits, type LLMEvent, type LLMRequest, ThreadLost } from '../contract'
+import { AccountGone, type Limits, type LLMEvent, type LLMRequest, ThreadLost } from '../contract'
 import { isKeyKind, keyLabels } from '../auth/kinds'
-import { rawMessage } from '../errors'
 import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
 import { failure } from './failure'
@@ -27,6 +26,7 @@ export interface PeerState {
 export interface Pin {
   pc: string
   native?: boolean
+  movable?(): boolean
 }
 
 interface PeersOptions {
@@ -49,6 +49,8 @@ const ownedBy = (pc: SharePc, { windows, status, updated, source }: Limits): Lim
 })
 
 const rank = (state: PeerState) => (state.refused ? 2 : state.online ? 0 : 1)
+
+const lostOn = (pin?: Pin) => (text: string, cause?: unknown) => (pin?.movable?.() ? new AccountGone(text, { cause }) : new ThreadLost(text, { cause }))
 
 export type Peers = ReturnType<typeof createPeers>
 
@@ -90,7 +92,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
     current.checked = true
     if (error instanceof Refused && error.status === 401) Object.assign(current, { online: true, refused: true, error: `${pc.name} no longer accepts this PC — pair it again` })
     else if (error instanceof Refused) Object.assign(current, { online: true, refused: false, info: undefined, error: `${pc.name} doesn't share accounts` })
-    else Object.assign(current, { online: false, error: `${pc.name} is offline: ${rawMessage(error)}` })
+    else Object.assign(current, { online: false, error: undefined })
   }
 
   const check = async (found: PcLinks, pc: SharePc, limits: boolean) => {
@@ -122,7 +124,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   const linksChanged = () => {
     const connected = new Set(links()?.connected() ?? [])
     const lost = [...states.values()].filter(peer => peer.online && !connected.has(peer.pc.id))
-    for (const peer of lost) Object.assign(peer, { online: false, error: `${peer.pc.name} is offline` })
+    for (const peer of lost) Object.assign(peer, { online: false, error: undefined })
     if (lost.length) changed()
   }
 
@@ -140,6 +142,12 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   const source = (id: string) => candidates(id).find(peer => !peer.refused)
   const nameOf = (id: string) => (isKeyKind(id) ? keyLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
 
+  const droppedBy = (peer: PeerState, pin?: Pin) => (text: string, cause?: unknown) => {
+    peer.online = false
+    changed()
+    return lostOn(pin)(text, cause)
+  }
+
   async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pin?: Pin): AsyncGenerator<LLMEvent> {
     await first
     const found = reachablePeers(links())
@@ -155,7 +163,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
         const failed = failure(peer.pc.name, name, error)
         if (!(error instanceof Refused) || error.status === 401 || error.status === 404) fail(peer.pc, error)
         changed()
-        if (pin?.native && !(error instanceof Refused)) throw new ThreadLost(failed.message, { cause: error })
+        if ((pin?.native || pin?.movable?.()) && !(error instanceof Refused)) throw lostOn(pin)(failed.message, error)
         problem ??= failed
         continue
       }
@@ -163,7 +171,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
         peer.online = true
         changed()
       }
-      yield* tagged(readEvents(body, peer.pc.name, signal), peer.pc)
+      yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: droppedBy(peer, pin) }), peer.pc)
       return
     }
     void refresh()

@@ -1,4 +1,5 @@
-import { type ModelInfo, type ModelPrice, sameSignIn, statelessCaps } from '../contract'
+import { type ModelInfo, type ModelPrice, statelessCaps } from '../contract'
+import { sameSignIn } from '../auth/twin'
 import type { Accounts } from '../auth/accounts'
 import { billingOf, kindOrder } from '../auth/kinds'
 import { qualify, split } from '../catalog/build'

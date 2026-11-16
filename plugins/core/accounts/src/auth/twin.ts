@@ -1,4 +1,4 @@
-import type { AccountKind } from './login'
+import type { AccountKind } from '../contract'
 
 interface SignIn {
   kind: AccountKind

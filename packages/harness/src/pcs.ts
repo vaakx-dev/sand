@@ -15,10 +15,26 @@ const pcView = (id: string): PeerView => ({
   attempts: [],
 })
 
+const severable = (body: ReadableStream<Uint8Array>, cuts: Set<() => void>) => {
+  const reader = body.getReader()
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      cuts.add(() => controller.error(new Error('the connection dropped')))
+    },
+    async pull(controller) {
+      const { value, done } = await reader.read()
+      if (done) controller.close()
+      else controller.enqueue(value)
+    },
+    cancel: reason => reader.cancel(reason),
+  })
+}
+
 const link = (far: Sand, farId: string, nearId: string): Link => {
   const view = pcView(farId)
   const opens = new Set<(pc: string) => void>()
   const changes = new Set<() => void>()
+  const cuts = new Set<() => void>()
   const asNear = far.askAs({ device: nearId, kind: 'pc' })
   const fetchAsNear = far.fetchAs({ device: nearId, name: nearId, kind: 'pc' })
   let up = true
@@ -35,7 +51,11 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
           value => [{ pc: farId, ok: true, value }],
           (error: unknown) => [{ pc: farId, ok: false, error }],
         ),
-      fetch: (_, path, init) => (up ? fetchAsNear(path, init) : Promise.reject(unavailable())),
+      async fetch(_, path, init) {
+        if (!up) throw unavailable()
+        const response = await fetchAsNear(path, init)
+        return response.body ? new Response(severable(response.body, cuts), response) : response
+      },
       on: () => () => {},
       hello: () => undefined,
       directUrl: () => undefined,
@@ -56,6 +76,8 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
     },
     drop() {
       up = false
+      for (const cut of cuts) cut()
+      cuts.clear()
       for (const listener of changes) listener()
     },
   }

@@ -1,4 +1,5 @@
-import { type DetectedServer, type KeyKind, type LoginPending, type PlanTokens, sameSignIn, type ServerDraft, type SignInFlow } from '../contract'
+import type { DetectedServer, KeyKind, LoginPending, PlanTokens, ServerDraft, SignInFlow } from '../contract'
+import { sameSignIn } from './twin'
 import { trimSlash } from '@sand/util'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
