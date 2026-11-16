@@ -29,7 +29,7 @@ const addons = ['git', 'terminal', 'calendar', 'connections', 'logins', 'compute
 
 const topLevel = [...core, ...addons]
 
-const kernelPages = ['Add-ons', 'Core features', 'File viewer', 'Plugins']
+const kernelPages = ['Add-ons', 'Core features', 'Plugins']
 
 const fillingShell = ['threads', 'bots', 'calendar']
 
@@ -94,7 +94,7 @@ const stuck = (page: Page) =>
       .map(scope => `${scope.name} ${scope.status}`),
   )
 
-const shown = (page: Page) => page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.pages().map(found => found.label) ?? [])
+const shown = (page: Page) => page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.pages().flatMap(found => (found.id.startsWith('addon:') ? [] : [found.label])) ?? [])
 
 const shellState = (page: Page) => page.evaluate(() => window.sand.get<Shell>({ id: 'shell' })?.state())
 

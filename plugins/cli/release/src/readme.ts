@@ -30,10 +30,15 @@ const coverOf = async (addon: Addon): Promise<Picture | undefined> => {
   return (await file.exists()) ? { file: addonPicture(addon.id, COVER), bytes: await file.bytes() } : undefined
 }
 
+const noReadme = (addon: Addon, cover: Picture | undefined): Readme => {
+  if (!addon.parent) throw new Error(`${addon.id} has no ${README} in ${addon.home.path}, so its add-on page would be empty`)
+  return { readme: '', pictures: [], ...(cover && { cover }) }
+}
+
 const addonReadme = async (addon: Addon): Promise<Readme> => {
   const file = Bun.file(join(addon.home.dir, README))
   const cover = await coverOf(addon)
-  if (!(await file.exists())) return { readme: '', pictures: [], ...(cover && { cover }) }
+  if (!(await file.exists())) return noReadme(addon, cover)
   const text = await file.text()
   const local = [...new Set([...text.matchAll(IMAGE)].map(([, , path]) => path!).filter(localImage))]
   const named = new Map(local.map(path => [path, addonPicture(addon.id, basename(path))]))

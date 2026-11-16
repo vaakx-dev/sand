@@ -2,14 +2,12 @@ import type { Settings } from '@sand/settings/contract'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { Addon } from '../../contract'
-import { extrasOf, isExtra } from './extras'
+import { isExtra } from './extras'
 import { addonPage, type PageParts } from './page'
 
 const LIST = 'features'
 
 const pageId = (id: string) => `addon:${id}`
-
-const described = (addon: Addon) => Boolean(addon.readme || addon.pictures.length)
 
 const addonPages = (host: Settings, parts: PageParts) => {
   const shown = new Map<string, { label: string; dispose: Dispose }>()
@@ -32,12 +30,11 @@ const addonPages = (host: Settings, parts: PageParts) => {
   }
   const stop = effect(() => {
     const choice = parts.store.choice.get()
-    const addons = choice ? choice.addons.filter(addon => !isExtra(choice, addon) && (described(addon) || extrasOf(choice, addon.id).length > 0)) : []
+    const addons = choice ? choice.addons.filter(addon => !isExtra(choice, addon)) : []
     untrack(() => sync(addons))
   })
   return {
     open: (id: string) => host.open(pageId(id)),
-    has: (id: string) => shown.has(id),
     dispose() {
       stop()
       for (const { dispose } of shown.values()) void dispose()
