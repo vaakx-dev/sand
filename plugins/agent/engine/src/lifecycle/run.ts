@@ -14,7 +14,7 @@ import type { Begun } from './start'
 
 const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed', limited: 'failed', moved: 'failed' }
 
-const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'all', error: 'all' }
+const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'user', error: 'user' }
 
 const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail === 'string' && error.detail) || undefined
 
