@@ -8,7 +8,7 @@ import { dollars, uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { morningIn, recentMessages, runsIn, usageSince } from './chat'
+import { morningIn, recentMessages, runsIn, talkedSince, usageSince } from './chat'
 import {
   type Bot,
   botChange,
@@ -38,6 +38,7 @@ export interface BotsOptions {
   llm: LLM
   sessions: Sessions
   turns: Turns
+  settleDays(): number
 }
 
 const SUMMARY_TYPES = new Set(['message', 'usage', gistEntry, runEntry, morningEntry])
@@ -50,6 +51,8 @@ const STATUSES: Record<TurnStatus, BotStatus> = {
   failed: 'failed',
   lost: 'failed',
 }
+
+const DAY_MS = 86_400_000
 
 const initialOf = (name = '') => [...name.trim()][0]?.toUpperCase() ?? ''
 
@@ -74,7 +77,7 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
   return undefined
 }
 
-export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessions, turns }: BotsOptions): Bots => {
+export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessions, turns, settleDays }: BotsOptions): Bots => {
   const records = createRecords(db)
   const chatOf = (bot: string) => sessions.require(bot)
   const append = (bot: string, type: string, data: unknown) => chatOf(known(bot).id).append(type, data)
@@ -93,6 +96,17 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return { status: turn ? STATUSES[turn.status] : 'idle', ...(waiting && { waiting }) }
   }
 
+  const workingSubagents = (id: string): number =>
+    sessions.children(id).reduce((count, child) => count + (turns.current(chatOf(child.id))?.status === 'running' ? 1 : 0) + workingSubagents(child.id), 0)
+
+  const botOf = (session: string): string | undefined => {
+    if (records.get(session)) return session
+    const parent = sessions.open(session)?.parent
+    return parent ? botOf(parent) : undefined
+  }
+
+  const talkedOf = (bot: Bot, chat: Session) => talkedSince(sessions, chat, Date.now() - settleDays() * DAY_MS) ?? bot.created
+
   const summary = (bot: Bot): BotSummary => {
     const chat = chatOf(bot.id)
     const last = lastLine(recentMessages(chat), chat.latest(gistEntry))
@@ -102,6 +116,8 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return {
       ...bot,
       folder: folderOf(bot.id),
+      talked: talkedOf(bot, chat),
+      subagents: workingSubagents(bot.id),
       ...statusOf(chat),
       spent,
       ...(hold && { hold }),
@@ -145,7 +161,8 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     if (session.owner === 'bot' && SUMMARY_TYPES.has(entry.type) && records.get(session.id)) entered(session.id, entry)
   })
   ctx.on(turnChange, info => {
-    if (records.get(info.session)) changed(info.session)
+    const bot = botOf(info.session)
+    if (bot) changed(bot)
   })
 
   return {

@@ -15,6 +15,7 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/ledger": "workspace:*",

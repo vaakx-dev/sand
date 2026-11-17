@@ -4,6 +4,9 @@ import {
   botDelete,
   botRemoveWire,
   botUpdate,
+  botSettle,
+  botSettleChange,
+  helloBotSettle,
   helloBots,
   jobCreate,
   jobDelete,
@@ -56,13 +59,20 @@ export const botStore = (ctx: BotsContext) => {
     }),
   )
 
-  const greeted = () => loaded.set(ctx.wire.hello(helloBots) ?? [])
+  const settleDays = sig<number | undefined>(undefined)
+
+  const greeted = () => {
+    loaded.set(ctx.wire.hello(helloBots) ?? [])
+    settleDays.set(ctx.wire.hello(helloBotSettle))
+  }
   ctx.on(wireHello, greeted)
   if (ctx.wire.ready()) greeted()
-  ctx.effect(() => joinDisposers(ctx.wire.on(botChangeWire, keep), ctx.wire.on(botRemoveWire, drop)))
+  ctx.effect(() => joinDisposers(ctx.wire.on(botChangeWire, keep), ctx.wire.on(botRemoveWire, drop), ctx.wire.on(botSettleChange, days => settleDays.set(days))))
 
   return {
     bots,
+    settleDays,
+    settle: (days: number) => ctx.wire.call(botSettle, { days }).then(days => settleDays.set(days)),
     find: (id: string) => loaded.get()?.find(bot => bot.id === id),
     create: (spec: NewBot) => ctx.wire.call(botCreate, spec).then(keep),
     update: (bot: string, patch: BotPatch) => ctx.wire.call(botUpdate, { bot, patch }).then(keep),

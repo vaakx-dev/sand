@@ -22,6 +22,8 @@ import { toastsOf } from '@sand/toasts/contract'
 import { transcript } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { projects, projectsChange } from '@sand/web-client/contract'
+import { settings } from '@sand/settings/contract'
+import { clock } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changeNote } from './chat/change'
 import { botChats } from './chat/chats'
@@ -33,9 +35,12 @@ import { type BotView, projectNames, type Parts } from './parts'
 import { openProfile } from './profile/sheet'
 import { registry } from './registry'
 import { botScreen } from './screen/bot'
-import { botsGroup } from './sidebar'
+import { settlePage } from './settle'
+import { botsGroups } from './sidebar'
 import { botStore } from './store'
 import { botNeeds } from './needs'
+
+const HOUR_MS = 3_600_000
 
 const VIEWS: BotView[] = ['jobs', 'chat']
 
@@ -43,7 +48,7 @@ const viewOf = (tab: string | undefined) => VIEWS.find(view => view === tab)
 
 export default definePlugin({
   name: 'bot-views',
-  description: "Bots in the sidebar; each bot's screen with its jobs and its chat; its profile and New bot; bots waiting on you in Needs you",
+  description: "Bots in the sidebar, the ones you haven't talked to lately settled at the back, and the setting for when; each bot's screen with its jobs and its chat; its profile and New bot; bots waiting on you in Needs you",
   inject,
   apply(ctx) {
     const sections = registry<BotProfileSection>()
@@ -78,7 +83,9 @@ export default definePlugin({
     ctx.provide(botProfile, { section: sections.add })
     ctx.provide(botAutomations, { source: automationSources.add })
 
-    ctx.effect(() => ctx.shell.section({ id: 'bots', order: 10, groups: () => [botsGroup(parts)] }))
+    const hour = owned(ctx, () => clock(HOUR_MS))
+    ctx.effect(() => ctx.shell.section({ id: 'bots', order: 10, groups: () => botsGroups(parts, hour.get()) }))
+    ctx.watch(settings, found => found?.page({ id: 'bots', label: 'Bots', icon: 'bot', group: 'agents', order: 21, render: () => settlePage(parts) }))
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
     ctx.watch(needs, found => found?.source(botNeeds(parts)))
     const chats = botChats(ctx)

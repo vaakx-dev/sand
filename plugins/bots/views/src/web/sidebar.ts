@@ -1,9 +1,8 @@
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
-import type { FaceState } from '@sand/ui-kit/contract'
 import type { MenuAction, ShellGroup, ShellRow } from '@sand/ui-shell/contract'
 import { deleteAction } from './delete'
 import type { Parts } from './parts'
-import { botStatus, statusLine } from './work'
+import { botStatus, faceStateOf, settled, statusLine } from './work'
 
 const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
   { id: 'profile', label: 'Profile', icon: 'sliders', run: () => parts.profile(bot.id) },
@@ -15,14 +14,10 @@ const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
   deleteAction(parts, bot.id, botName(bot)),
 ]
 
-const faceStateOf = (bot: BotSummary): FaceState | undefined => (botStatus(bot) === 'running' ? 'running' : undefined)
-
-const askingJob = (bot: BotSummary) => bot.jobs.find(job => job.status === 'needs')
-
 const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
   const at = bot.last?.at
-  const asking = askingJob(bot)
-  const detail = asking ? `${asking.title} needs you` : statusLine(bot)
+  const detail = statusLine(bot)
+  const status = botStatus(bot)
   return {
     id: bot.id,
     label: botName(bot),
@@ -32,19 +27,30 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
       const state = faceStateOf(bot)
       return parts.ctx.kit.botFace(bot.id, bot.color, 32, state ? { state } : {})
     },
-    ...(botStatus(bot) === 'waiting' && !asking && { status: 'waiting' as const }),
+    ...(status ? { status } : { quiet: true }),
     ...(detail && { detail: () => detail }),
     ...(at !== undefined && { at }),
   }
 }
 
-export const botsGroup = (parts: Parts): ShellGroup => {
+const activeAt = (bot: BotSummary) => Math.max(bot.last?.at ?? 0, bot.talked, bot.updated)
+
+const newest = (bots: BotSummary[]) => bots.toSorted((a, b) => activeAt(b) - activeAt(a))
+
+export const botsGroups = (parts: Parts, now: number): ShellGroup[] => {
   const bots = parts.store.bots.get()
-  return {
-    id: 'bots',
-    label: 'Bots',
-    action: { label: 'New bot', icon: 'plus', run: parts.create },
-    rows: (bots ?? []).map(bot => rowOf(parts, bot)),
-    ...(bots?.length === 0 && { empty: 'No bots yet.' }),
-  }
+  const days = parts.store.settleDays.get()
+  const isSettled = (bot: BotSummary) => days !== undefined && settled(bot, days, now)
+  const back = newest((bots ?? []).filter(isSettled))
+  const front = newest((bots ?? []).filter(bot => !isSettled(bot)))
+  return [
+    {
+      id: 'bots',
+      label: 'Bots',
+      action: { label: 'New bot', icon: 'plus', run: parts.create },
+      rows: front.map(bot => rowOf(parts, bot)),
+      ...(bots?.length === 0 && { empty: 'No bots yet.' }),
+    },
+    ...(back.length ? [{ id: 'settled', label: 'Settled', settled: true, rows: back.map(bot => rowOf(parts, bot)) }] : []),
+  ]
 }

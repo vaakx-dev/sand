@@ -126,6 +126,8 @@ export interface Morning extends MorningEntry {
 
 export interface BotSummary extends Bot {
   folder: string
+  talked: number
+  subagents: number
   status: BotStatus
   waiting?: WaitReason['kind']
   spent: number
@@ -284,12 +286,18 @@ export const botChangeWire = wireEvent<BotSummary>('bot.change')
 export const botRemoveWire = wireEvent<string>('bot.remove')
 
 export const helloBots = helloField<BotSummary[]>('bots')
+export const helloBotSettle = helloField<number>('botSettleDays')
+
+export const settleChoices = [1, 3, 7, 14] as const
+
+export const botSettleChange = wireEvent<number>('bot.settle')
 
 const one = lazy(() => z.object({ bot: z.string() }))
 
 export const botList = request('bot.list', { input: () => z.object({}), output: type<BotSummary[]>(), callers: 'any' })
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>(), callers: 'any' })
 export const botUpdate = request('bot.update', { input: () => z.object({ bot: z.string().optional(), patch: botPatch() }), output: type<BotSummary>(), callers: 'any' })
+export const botSettle = request('bot.settle', { input: () => z.object({ days: z.number().int().min(1).max(365) }), output: type<number>(), callers: 'any' })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>(), callers: 'any' })
 
 const oneJob = lazy(() => z.object({ job: z.string().describe('The job id') }))
