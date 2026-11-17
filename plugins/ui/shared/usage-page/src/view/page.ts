@@ -1,17 +1,15 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
-import type { Merged } from '../data/types'
 import { usageModel, type UsageDeps, type UsageModel } from '../model'
 import { forecastSection } from './forecast'
 import { plansSection } from './plans'
 import { spendSection } from './spend'
 import { toolbar } from './toolbar'
 
-type BodyState = Merged | 'waiting' | 'empty' | 'missing'
+type BodyState = 'ready' | 'waiting' | 'empty' | 'missing'
 
 const stateOf = (model: UsageModel): BodyState => {
-  const usage = model.usage.get()
-  if (usage) return usage
+  if (model.usage.get()) return 'ready'
   if (model.busy.get()) return 'waiting'
   return model.notices.get().length ? 'missing' : 'empty'
 }
@@ -19,10 +17,10 @@ const stateOf = (model: UsageModel): BodyState => {
 const poolSections = (kit: Kit, model: UsageModel) =>
   div({ class: 'flex flex-col gap-10' }, forecastSection({ kit, gauges: model.gauges, chosen: model.forecast }), plansSection(kit, { gauges: model.gauges, now: model.now }))
 
-const sections = (kit: Kit, usage: Merged, model: UsageModel) => div({ class: 'flex flex-col gap-10' }, poolSections(kit, model), spendSection(kit, usage, model))
+const sections = (kit: Kit, model: UsageModel) => div({ class: 'flex flex-col gap-10' }, poolSections(kit, model), spendSection(kit, model))
 
 const bodyOf = (kit: Kit, state: BodyState, model: UsageModel) => {
-  if (typeof state === 'object') return sections(kit, state, model)
+  if (state === 'ready') return sections(kit, model)
   if (state === 'waiting') return kit.loadingState()
   return state === 'empty' ? kit.emptyState({ text: 'No usage yet.' }) : null
 }

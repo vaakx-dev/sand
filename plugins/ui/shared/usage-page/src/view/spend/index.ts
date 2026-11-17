@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import type { UsageModel } from '../../model'
 import { listText } from '../../names'
@@ -35,8 +35,13 @@ const overview = (kit: Kit, usage: Merged) => {
   )
 }
 
-export const spendSection = (kit: Kit, usage: Merged, model: UsageModel) =>
+const spendBody = (kit: Kit, usage: Merged | undefined) => {
+  if (!usage) return null
+  return usage.total.turns ? overview(kit, usage) : kit.emptyState({ text: 'No usage in this range.' })
+}
+
+export const spendSection = (kit: Kit, model: UsageModel) =>
   kit.pageSection(
     { title: 'Spend', action: div({ class: 'flex items-center gap-2' }, pcFilter(kit, model), periodPicker(kit, model)) },
-    usage.total.turns ? overview(kit, usage) : kit.emptyState({ text: 'No usage in this range.' }),
+    dynamicChild(model.usage, usage => spendBody(kit, usage)),
   )
