@@ -1081,6 +1081,7 @@
       "dependencies": {
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/config": "workspace:*",
         "@sand/devices-notify": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/ledger": "workspace:*",
@@ -1281,6 +1282,7 @@
         "@sand/orchestrator": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/reactive": "workspace:*",
+        "@sand/settings": "workspace:*",
         "@sand/toasts": "workspace:*",
         "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",
