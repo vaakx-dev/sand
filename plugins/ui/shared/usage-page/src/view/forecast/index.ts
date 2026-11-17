@@ -1,6 +1,6 @@
 import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { colorVar, div, line, sig, span, svg, type Child, type Sig } from '@vaakx-dev/vrui'
+import { colorVar, derive, div, dynamicChild, line, list, show, sig, span, svg, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { Forecast } from '@sand/usage/contract'
 import type { Gauge } from '../../data/gauges'
 import type { Plan } from '../../data/pool'
@@ -9,8 +9,7 @@ import { DASH, forecastChart, readout } from './chart'
 
 export interface ForecastProps {
   kit: Kit
-  gauges: Gauge[]
-  now: number
+  gauges: Derive<Gauge[]>
   chosen: Sig<string>
 }
 
@@ -34,7 +33,7 @@ const forecastedOf = (gauges: Gauge[]): Forecasted[] =>
 
 const pick = (plans: Forecasted[], chosen: string) => plans.find(({ plan }) => plan.kind === chosen) ?? plans.toSorted((first, second) => soonestOut(first) - soonestOut(second))[0]
 
-const verdict = ({ outAt, backAt, reset, leftAtReset }: Forecast, now: number) => {
+const verdict = ({ outAt, backAt, reset, leftAtReset, now }: Forecast) => {
   if (outAt !== undefined && outAt <= now) return span({ class: 'text-danger-400' }, `Used up until ${whenText(backAt ?? reset)}`)
   if (outAt !== undefined) return span({ class: 'text-warning-400' }, `At this pace you run out ${whenText(outAt)}`)
   if (leftAtReset < UNUSED_SHOWN) return span(`At this pace you use about all of it by ${whenText(reset)}`)
@@ -57,27 +56,28 @@ const legend = ({ metaLine }: Kit, color: string) =>
     ] as const).map(([color, dashed, label]) => span({ class: 'inline-flex items-center gap-2' }, legendLine(color, dashed), metaLine(label))),
   )
 
-const chooser = (kit: Kit, plans: Forecasted[], shown: Plan, chosen: Sig<string>) => {
-  if (plans.length < 2) return null
-  const { choiceItem, dropdown, icon, secondaryAction } = kit
-  return dropdown({
-    placement: 'below-right',
-    trigger: press => secondaryAction({ ...press, title: 'Plan to forecast', class: 'max-w-64' }, span({ class: 'truncate' }, shown.label), icon('down', 'sm')),
-    items: close =>
-      plans.map(({ plan }) =>
-        choiceItem(
-          {
-            selected: () => plan === shown,
-            onClick: () => {
-              chosen.set(plan.kind)
-              close()
-            },
-          },
-          span({ class: 'min-w-0 flex-1 truncate' }, plan.label),
-        ),
-      ),
-  })
-}
+const chooser = ({ choiceItem, dropdown, icon, secondaryAction }: Kit, plans: Derive<Forecasted[]>, shown: Derive<Forecasted | undefined>, chosen: Sig<string>) =>
+  show(
+    () => plans.get().length > 1,
+    () =>
+      dropdown({
+        placement: 'below-right',
+        trigger: press => secondaryAction({ ...press, title: 'Plan to forecast', class: 'max-w-64' }, span({ class: 'truncate' }, () => shown.get()?.plan.label ?? ''), icon('down', 'sm')),
+        items: close =>
+          plans.get().map(({ plan }) =>
+            choiceItem(
+              {
+                selected: () => shown.get()?.plan.kind === plan.kind,
+                onClick: () => {
+                  chosen.set(plan.kind)
+                  close()
+                },
+              },
+              span({ class: 'min-w-0 flex-1 truncate' }, plan.label),
+            ),
+          ),
+      }),
+  )
 
 const missing = ({ window, state, resetAt }: Gauge) => {
   const name = window.label.toLowerCase()
@@ -85,31 +85,45 @@ const missing = ({ window, state, resetAt }: Gauge) => {
   return resetAt ? `There isn't enough usage in sand yet to forecast the ${name} limit.` : `The ${name} limit starts with your next message.`
 }
 
-const limitForecast = (kit: Kit, gauge: Gauge, now: number): Child => {
+const limitForecast = (kit: Kit, gauge: Gauge, hovered: Sig<number | undefined>) => {
   const { forecast } = gauge
   const name = kit.rowName(gauge.window.label)
   if (!forecast) return div({ class: 'flex flex-col gap-1' }, name, kit.secondaryText(missing(gauge)))
-  const hovered = sig<number | undefined>(undefined)
   return div(
     { class: 'flex flex-col gap-3' },
     div(
       { class: 'flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm' },
       span({ class: 'flex min-w-0 items-baseline gap-3' }, name, readout(kit, forecast, hovered)),
-      span({ class: 'text-xs text-neutral-500' }, verdict(forecast, now)),
+      span({ class: 'text-xs text-neutral-500' }, verdict(forecast)),
     ),
     forecastChart(kit, labelOf(gauge), forecast, kit.providerColor(gauge.plan.provider), hovered),
   )
 }
 
-const body = (kit: Kit, { plan, limits }: Forecasted, now: number) =>
+const limitRow = (kit: Kit, gauge: Sig<Gauge>) => {
+  const hovered = sig<number | undefined>(undefined)
+  return dynamicChild(gauge, shown => limitForecast(kit, shown, hovered))
+}
+
+const legendColor = (kit: Kit, shown: Forecasted | undefined) => (shown?.limits.some(gauge => gauge.forecast) ? kit.providerColor(shown.plan.provider) : '')
+
+const body = (kit: Kit, shown: Derive<Forecasted | undefined>) =>
   div(
     { class: 'flex flex-col gap-8' },
-    limits.map(gauge => limitForecast(kit, gauge, now)),
-    limits.some(gauge => gauge.forecast) ? legend(kit, kit.providerColor(plan.provider)) : null,
+    list(
+      derive(() => shown.get()?.limits ?? []),
+      gauge => gauge.key,
+      gauge => limitRow(kit, gauge),
+      div({ class: 'flex flex-col gap-8' }),
+    ),
+    dynamicChild(derive(() => legendColor(kit, shown.get())), color => (color ? legend(kit, color) : null)),
   )
 
-export const forecastSection = ({ kit, gauges, now, chosen }: ForecastProps) => {
-  const plans = forecastedOf(gauges)
-  const shown = pick(plans, chosen.get())
-  return shown ? kit.pageSection({ title: 'Forecast', action: chooser(kit, plans, shown.plan, chosen) }, body(kit, shown, now)) : null
+export const forecastSection = ({ kit, gauges, chosen }: ForecastProps) => {
+  const plans = derive(() => forecastedOf(gauges.get()))
+  const shown = derive(() => pick(plans.get(), chosen.get()))
+  return show(
+    () => !!shown.get(),
+    () => kit.pageSection({ title: 'Forecast', action: chooser(kit, plans, shown, chosen) }, body(kit, shown)),
+  )
 }
