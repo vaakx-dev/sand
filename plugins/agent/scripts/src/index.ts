@@ -2,7 +2,7 @@ import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { helloScripts, scriptStop, scriptUpdate, scriptUpdateWire } from './contract'
+import { helloScripts, scriptUpdate, scriptUpdateWire } from './contract'
 import { createRuns } from './runs'
 import { scriptTool } from './tool'
 
@@ -17,7 +17,6 @@ export default definePlugin({
       found
         ? joinDisposers(
             found.hello(helloScripts, runs.list),
-            found.handle(scriptStop, ({ id }) => runs.stop(id)),
             ctx.on(scriptUpdate, update => found.broadcast(scriptUpdateWire, update)),
           )
         : undefined,

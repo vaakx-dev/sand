@@ -9,7 +9,7 @@ export interface Timings {
   retry_ms: number
 }
 
-export const createDelivery = (book: Book, handlers: Map<string, Handler>, { debounce_ms, retry_ms }: Timings) => {
+export const createDelivery = (book: Book, handlers: Map<string, Handler>, { debounce_ms, retry_ms }: Timings, drained: (id: string) => void) => {
   const timers = new Map<string, Timer>()
   const running = new Set<string>()
   const stopped = new AbortController()
@@ -44,6 +44,7 @@ export const createDelivery = (book: Book, handlers: Map<string, Handler>, { deb
     }
     book.put({ ...rest, watch: watch.error ? { ...watch, error: undefined } : watch, queue })
     if (queue.changes.length) later(id, debounce_ms)
+    else drained(id)
   }
 
   const send = async (id: string) => {
@@ -61,6 +62,7 @@ export const createDelivery = (book: Book, handlers: Map<string, Handler>, { deb
 
   return {
     soon,
+    idle: (id: string) => !timers.has(id) && !running.has(id),
     wake(owner: string) {
       for (const { watch, queue } of book.all()) if (watch.owner === owner && queue.changes.length) soon(watch.id)
     },

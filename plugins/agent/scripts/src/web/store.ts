@@ -1,7 +1,7 @@
 import { pcHello, type Pcs, type Wire, type WireListen } from '@sand/devices-contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { helloScripts, scriptStop, scriptUpdateWire, type ScriptCall, type ScriptRun, type ScriptUpdate } from '../contract'
+import { helloScripts, scriptUpdateWire, type ScriptCall, type ScriptRun, type ScriptUpdate } from '../contract'
 
 interface Known {
   run: ScriptRun
@@ -19,8 +19,6 @@ const withCall = (calls: ScriptCall[], call: ScriptCall) => {
   const index = calls.findIndex(known => known.call.id === call.call.id)
   return index < 0 ? [...calls, call] : calls.with(index, call)
 }
-
-const newestFirst = (a: ScriptRun, b: ScriptRun) => b.started - a.started
 
 const createStore = (ctx: Context, { wire, pcs }: StoreParts) => {
   const known = sig(new Map<string, Known>())
@@ -44,12 +42,6 @@ const createStore = (ctx: Context, { wire, pcs }: StoreParts) => {
 
   return {
     run: (id: string) => known.get().get(id)?.run,
-    inThread: (thread: string) =>
-      [...known.get().values()]
-        .map(found => found.run)
-        .filter(run => run.thread === thread)
-        .toSorted(newestFirst),
-    stop: (id: string) => wire.call(scriptStop, { id }, known.get().get(id)?.device),
   }
 }
 

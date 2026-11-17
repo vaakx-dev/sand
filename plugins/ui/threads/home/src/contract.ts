@@ -31,19 +31,16 @@ export const threadRows = service<ThreadRows>('threadRows')
 
 export const copyPathAction = (kit: Kit, path: string): MenuAction => ({ id: 'copy-path', group: 'copy', label: 'Copy path', icon: 'folder', run: () => kit.copyText(path) })
 
-export interface FactsSpec<K, T> {
-  key(source: K): string
-  device(source: K): string
-  touched(thread: Thread): string | undefined
-  load(source: K): Promise<T>
-}
+type Folder = Omit<RowThread, 'id'>
 
-export const threadFacts = <K, T>(ctx: Context, threads: Threads, { key, device, touched, load }: FactsSpec<K, T>) => {
+const folderKey = ({ cwd, device }: Folder) => `${device}\0${cwd}`
+
+export const folderFacts = <T>(ctx: Context, threads: Threads, load: (folder: Folder) => Promise<T>) => {
   const facts = sig<ReadonlyMap<string, T>>(new Map())
-  const asked = new Map<string, K>()
+  const asked = new Map<string, Folder>()
   const running = new Map<string, boolean>()
-  const fetch = (source: K) => {
-    const at = key(source)
+  const fetch = (source: Folder) => {
+    const at = folderKey(source)
     asked.set(at, source)
     const keep = (value: T | undefined) =>
       facts.update(current => {
@@ -54,10 +51,7 @@ export const threadFacts = <K, T>(ctx: Context, threads: Threads, { key, device,
       })
     void load(source).then(keep, () => keep(undefined))
   }
-  const askedFor = (thread: Thread) => {
-    const at = touched(thread)
-    return at === undefined ? undefined : asked.get(at)
-  }
+  const askedFor = (thread: Thread) => asked.get(folderKey({ cwd: thread.info.cwd, device: thread.device }))
   ctx.on(threadChange, id => {
     const thread = threads.get(id)
     if (!thread) return
@@ -67,25 +61,15 @@ export const threadFacts = <K, T>(ctx: Context, threads: Threads, { key, device,
     if (ended && source) fetch(source)
   })
   ctx.on(pcHello, pc => {
-    for (const source of asked.values()) if (device(source) === pc) fetch(source)
+    for (const source of asked.values()) if (source.device === pc) fetch(source)
   })
   return {
-    get(source: K) {
-      if (!asked.has(key(source))) untrack(() => fetch(source))
-      return facts.get().get(key(source))
+    get(source: Folder) {
+      if (!asked.has(folderKey(source))) untrack(() => fetch(source))
+      return facts.get().get(folderKey(source))
     },
     reload: () => {
       for (const source of asked.values()) fetch(source)
     },
   }
 }
-
-const folderKey = ({ cwd, device }: Omit<RowThread, 'id'>) => `${device}\0${cwd}`
-
-export const folderFacts = <T>(ctx: Context, threads: Threads, load: (folder: RowThread) => Promise<T>) =>
-  threadFacts(ctx, threads, {
-    key: folderKey,
-    device: folder => folder.device,
-    touched: thread => folderKey({ cwd: thread.info.cwd, device: thread.device }),
-    load,
-  })

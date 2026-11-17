@@ -20,7 +20,8 @@ export const createWatches = (ctx: Context, book: Book, timings: Timings): Watch
   const kinds = new Map<string, Kind>()
   const handlers = new Map<string, Handler>()
   const instances = new Map<string, Instance>()
-  const delivery = createDelivery(book, handlers, timings)
+  const finished = new Set<string>()
+  const delivery = createDelivery(book, handlers, timings, id => retire(id))
 
   const contextOf = (id: string, signal: AbortSignal): KindContext => {
     const update = (change: (stored: Stored) => Stored) => {
@@ -39,6 +40,12 @@ export const createWatches = (ctx: Context, book: Book, timings: Timings): Watch
         delivery.soon(id)
       },
       fail: error => update(failedWith(error)),
+      finish() {
+        if (signal.aborted) return
+        finished.add(id)
+        halt(id)
+        retire(id)
+      },
     }
   }
 
@@ -66,6 +73,18 @@ export const createWatches = (ctx: Context, book: Book, timings: Timings): Watch
       halt(watch.id)
       throw error
     }
+  }
+
+  const drop = (id: string) => {
+    halt(id)
+    delivery.forget(id)
+    finished.delete(id)
+    return book.drop(id)
+  }
+
+  const retire = (id: string) => {
+    const pending = book.get(id)?.queue.changes.length
+    if (finished.has(id) && !pending && delivery.idle(id)) drop(id)
   }
 
   const resume = (watch: Watch) => launch(watch).catch((error: unknown) => book.update(watch.id, failedWith(error)))
@@ -111,11 +130,7 @@ export const createWatches = (ctx: Context, book: Book, timings: Timings): Watch
       }
       return book.get(watch.id)?.watch ?? watch
     },
-    remove(id) {
-      halt(id)
-      delivery.forget(id)
-      return book.drop(id)
-    },
+    remove: drop,
     get: id => book.get(id)?.watch,
     list: (owner, subject) =>
       book

@@ -176,6 +176,23 @@ test('removing a watch stops it and forgets its pending changes, and unknown kin
   await expect(service.create({ owner: 'test', subject: 'a', kind: 'weather', input: {}, label: 'Weather' })).rejects.toThrow('No watch kind named weather')
 })
 
+test('a watch that finishes delivers its last changes, then stops and is gone', async () => {
+  const service = await start()
+  const { live, emit } = fakeKind(service)
+  const batches = handled(service)
+  const watch = await create(service)
+  const context = live.get(watch.id)!
+
+  emit(watch.id, 'merged')
+  context.finish()
+  expect(context.signal.aborted).toBe(true)
+  expect(service.get(watch.id)).toBeDefined()
+  await until(() => batches.length === 1)
+  await until(() => service.get(watch.id) === undefined)
+  expect(batches).toEqual([['merged']])
+  expect(service.list('test')).toEqual([])
+})
+
 const bunShell: ShellRunner = {
   name: 'bun',
   async run(command, { cwd }) {

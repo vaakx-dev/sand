@@ -9,7 +9,7 @@ interface Line {
 }
 
 interface Card<T> {
-  caption(): string
+  caption: string
   items(): T[]
   key(item: T): string
   line(item: T): Line

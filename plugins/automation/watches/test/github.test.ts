@@ -55,6 +55,7 @@ const watching = (github: GitHub, repo: { polls: number }, state?: unknown, inpu
     save: next => void (context.state = next),
     emit: change => void changes.push(change),
     fail: error => void errors.push(error),
+    finish: () => {},
     signal: stopped.signal,
   }
   const started = githubKind(github, 10).start({ repo: 'o/r', ...input }, context) as Started | void

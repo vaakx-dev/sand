@@ -15,6 +15,7 @@ export interface KindContext {
   save(state: unknown): void
   emit(change: Change): void
   fail(error: unknown): void
+  finish(): void
   signal: AbortSignal
 }
 

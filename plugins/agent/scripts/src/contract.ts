@@ -1,7 +1,6 @@
 import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { helloField, wireEvent } from '@sand/host-hub/contract'
 import { event } from 'drydock'
-import { z } from 'zod'
 
 export type ScriptStatus = 'running' | 'done' | 'failed' | 'stopped'
 
@@ -37,4 +36,3 @@ export const scriptUpdateWire = wireEvent<ScriptUpdate>('script.update')
 
 export const helloScripts = helloField<ScriptRun[]>('scripts')
 
-export const scriptStop = request('script.stop', { input: () => z.object({ id: z.string() }), output: type<boolean>() })
