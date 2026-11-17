@@ -1,5 +1,5 @@
 import type { UsageRecord } from '@sand/accounts/contract'
-import { type Entry, type Message, type Session, type Sessions, typedByPerson } from '@sand/chats/contract'
+import type { Entry, Session, Sessions } from '@sand/chats/contract'
 import { type Morning, type MorningEntry, morningEntry, runEntry } from './contract'
 
 const SCANNED = 20
@@ -7,9 +7,6 @@ const SCANNED = 20
 const newestFirst = (entries: Entry[]) => entries.toReversed()
 
 export const recentMessages = (chat: Session) => newestFirst(chat.page(null, { entries: SCANNED }).entries.filter(entry => entry.type === 'message'))
-
-export const talkedSince = (sessions: Sessions, chat: Session, at: number) =>
-  sessions.entriesIn(chat.id, 'message', at).findLast(entry => typedByPerson(entry.data as Message))?.at
 
 export const runsIn = (sessions: Sessions, chat: Session) => newestFirst(sessions.entriesIn(chat.id, runEntry))
 

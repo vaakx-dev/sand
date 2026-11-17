@@ -1,21 +1,26 @@
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
+import { isBack, listGroups, snoozeAction, snoozedUntil, type ListEntry } from '@sand/threads-home/contract'
 import type { MenuAction, ShellGroup, ShellRow } from '@sand/ui-shell/contract'
 import { deleteAction } from './delete'
 import type { Parts } from './parts'
-import { botStatus, faceStateOf, settled, statusLine } from './work'
+import { activeAt, botStatus, faceStateOf, statusLine, subagentsSince } from './work'
 
-const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
-  { id: 'profile', label: 'Profile', icon: 'sliders', run: () => parts.profile(bot.id) },
-  {
-    id: 'pause',
-    label: bot.paused ? 'Resume' : 'Pause',
-    run: () => parts.toasts.attempt(`Couldn’t ${bot.paused ? 'resume' : 'pause'} ${botName(bot)}`, () => parts.store.update(bot.id, { paused: !bot.paused })),
-  },
-  deleteAction(parts, bot.id, botName(bot)),
-]
+const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => {
+  const chat = parts.chat(bot.id)
+  return [
+    { id: 'profile', label: 'Profile', icon: 'sliders', run: () => parts.profile(bot.id) },
+    {
+      id: 'pause',
+      label: bot.paused ? 'Resume' : 'Pause',
+      run: () => parts.toasts.attempt(`Couldn’t ${bot.paused ? 'resume' : 'pause'} ${botName(bot)}`, () => parts.store.update(bot.id, { paused: !bot.paused })),
+    },
+    ...(chat ? [snoozeAction(parts.ctx.threads, chat)] : []),
+    deleteAction(parts, bot.id, botName(bot)),
+  ]
+}
 
 const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
-  const at = bot.last?.at
+  const at = bot.status === 'working' ? bot.last?.at : (subagentsSince(bot) ?? bot.last?.at)
   const detail = statusLine(bot)
   const status = botStatus(bot)
   return {
@@ -27,30 +32,28 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
       const state = faceStateOf(bot)
       return parts.ctx.kit.botFace(bot.id, bot.color, 32, state ? { state } : {})
     },
-    ...(status ? { status } : { quiet: true }),
+    ...(status && { status }),
     ...(detail && { detail: () => detail }),
     ...(at !== undefined && { at }),
   }
 }
 
-const activeAt = (bot: BotSummary) => Math.max(bot.last?.at ?? 0, bot.talked, bot.updated)
-
-const newest = (bots: BotSummary[]) => bots.toSorted((a, b) => activeAt(b) - activeAt(a))
+const entryOf = (parts: Parts, bot: BotSummary): ListEntry => {
+  const chat = parts.chat(bot.id)
+  const snoozed = chat && !botStatus(bot) ? snoozedUntil(chat) : undefined
+  const woke = chat && isBack(chat) ? (chat.info.snoozed ?? 0) : 0
+  return { row: rowOf(parts, bot), moved: Math.max(activeAt(bot), woke), talked: Math.max(bot.talked, woke), ...(snoozed && { snoozed }) }
+}
 
 export const botsGroups = (parts: Parts, now: number): ShellGroup[] => {
   const bots = parts.store.bots.get()
-  const days = parts.store.settleDays.get()
-  const isSettled = (bot: BotSummary) => days !== undefined && settled(bot, days, now)
-  const back = newest((bots ?? []).filter(isSettled))
-  const front = newest((bots ?? []).filter(bot => !isSettled(bot)))
-  return [
-    {
-      id: 'bots',
-      label: 'Bots',
-      action: { label: 'New bot', icon: 'plus', run: parts.create },
-      rows: front.map(bot => rowOf(parts, bot)),
-      ...(bots?.length === 0 && { empty: 'No bots yet.' }),
-    },
-    ...(back.length ? [{ id: 'settled', label: 'Settled', settled: true, rows: back.map(bot => rowOf(parts, bot)) }] : []),
-  ]
+  return listGroups({
+    id: 'bots',
+    label: 'Bots',
+    entries: (bots ?? []).map(bot => entryOf(parts, bot)),
+    settleDays: parts.threadRows.get()?.settleDays(),
+    now,
+    action: { label: 'New bot', icon: 'plus', run: parts.create },
+    ...(bots && { empty: 'No bots yet.' }),
+  })
 }

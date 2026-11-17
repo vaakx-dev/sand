@@ -15,12 +15,12 @@ const moveToWorktree = (ctx: OrchestratorContext, id: string, branch: string | u
   return found.move(id, branch)
 }
 
-const changesListing = ({ title, pinned, snoozed, archived }: Update) => [title, pinned, snoozed, archived].some(value => value !== undefined)
+const changesListing = ({ title, pinned, archived }: Update) => [title, pinned, archived].some(value => value !== undefined)
 
 export const updateThread = async (ctx: OrchestratorContext, update: Update) => {
   const { session, title, pinned, snoozed, archived, worktree, branch, ...asked } = update
   const thread = findThread(ctx, session)
-  if (thread.kind === 'bot' && changesListing(update)) throw failure('invalid_request', "A bot's chat has no title, pin, snooze or archive; rename the bot in its profile")
+  if (thread.kind === 'bot' && changesListing(update)) throw failure('invalid_request', "A bot's chat has no title, pin or archive; rename the bot in its profile")
   const { id } = thread
   ctx.modelSettings.change(thread, matchSettings(ctx, asked))
   if (title !== undefined) ctx.sessions.rename(id, title)

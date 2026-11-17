@@ -1,6 +1,6 @@
 import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
-import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
+import { type Actor, helloField, request, type Request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SendResult, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
 import { type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
@@ -244,6 +244,12 @@ export const threadUpdate = request('thread.update', {
   callers,
   place,
 })
+
+export const settleChoices = [1, 3, 7, 14] as const
+
+export const helloSettleDays = helloField<number>('settleDays')
+export const settleDaysChange = wireEvent<number>('settle.days')
+export const settleDaysSet = request('settle.days', { input: () => z.object({ days: z.number().int().min(1).max(365) }), output: type<number>(), callers: 'any' })
 
 export const settled = (status: ThreadStatus, until: WaitUntil) => status !== 'running' && (until === 'attention' || status !== 'waiting')
 

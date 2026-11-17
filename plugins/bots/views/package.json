@@ -20,7 +20,7 @@
     "@sand/orchestrator": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/settings": "workspace:*",
+    "@sand/threads-home": "workspace:*",
     "@sand/toasts": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",

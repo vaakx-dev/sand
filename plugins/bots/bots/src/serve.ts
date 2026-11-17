@@ -11,9 +11,6 @@ import {
   botList,
   botRemove,
   botRemoveWire,
-  botSettle,
-  botSettleChange,
-  helloBotSettle,
   type Bots,
   botUpdate,
   type Changer,
@@ -24,12 +21,7 @@ import {
   jobUpdate,
 } from './contract'
 
-export interface Settle {
-  days(): number
-  set(days: number): Promise<void>
-}
-
-export const serveBots = (ctx: Context, service: Bots, settle: Settle) => {
+export const serveBots = (ctx: Context, service: Bots) => {
   const changerOf = ({ kind, actor }: Caller): Changer => {
     if (actor?.owner === 'bot') return { kind: 'bot', id: actor.id, label: service.get(actor.id)?.name || 'a bot' }
     if (actor) return { kind: 'thread', id: actor.id, label: ctx.get(sessions)?.open(actor.id)?.title || 'a thread' }
@@ -46,14 +38,7 @@ export const serveBots = (ctx: Context, service: Bots, settle: Settle) => {
     if (!found) return
     return joinDisposers(
       found.hello(helloBots, () => service.list()),
-      found.hello(helloBotSettle, settle.days),
       found.handle(botList, () => service.list()),
-      found.handle(botSettle, async ({ days }) => {
-        await settle.set(days)
-        found.broadcast(botSettleChange, days)
-        service.list().forEach(bot => found.broadcast(botChangeWire, bot))
-        return days
-      }),
       found.handle(botCreate, spec => service.create(spec)),
       found.handle(botUpdate, ({ bot, patch }, caller) => service.update(botOf(bot, caller), patch, changerOf(caller))),
       found.handle(botDelete, ({ bot }) => service.remove(bot)),
