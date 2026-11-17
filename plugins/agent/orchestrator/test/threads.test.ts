@@ -9,8 +9,8 @@ afterEach(() => sand.stop())
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
-const start = async (replies: Source['replies']) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies }])
+const start = async (replies: Source['replies'], queue = false) => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies }], { options: { turns: { queue } } })
   return { cwd: sand.home, model: 'fake/m', origin: 'cli', clientRequestId: 'first' } as const
 }
 
@@ -50,13 +50,13 @@ test('archiving a running thread stops its turn first', async () => {
   expect(sand.turns.get(sent.turn!)).toMatchObject({ status: 'interrupted' })
 })
 
-test('a message the page queues with a label waits as pending, and holding, releasing or withdrawing it is one call', async () => {
-  const base = await start([[{ type: 'hold' }]])
+test('with queueing on, a message sent with a label waits as pending, and holding, releasing or withdrawing it is one call', async () => {
+  const base = await start([[{ type: 'hold' }]], true)
   const { thread } = await sand.ask(threadStart, { ...base, prompt: 'go' })
   const chat = sand.sessions.require(thread)
   const prompt = [{ type: 'text', text: 'and then this' }] as const
 
-  const queued = await sand.ask(threadSend, { session: thread, prompt: [...prompt], mode: 'queue', label: 'Next step', origin: 'user', clientRequestId: 'next' })
+  const queued = await sand.ask(threadSend, { session: thread, prompt: [...prompt], label: 'Next step', origin: 'user', clientRequestId: 'next' })
   if (queued.disposition === 'started') throw new Error('a busy thread started a second turn')
   const pending = queued.pending
   expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, kind: 'queue', label: 'Next step', origin: 'user', held: false })])

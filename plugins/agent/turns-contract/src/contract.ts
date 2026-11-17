@@ -19,15 +19,15 @@ import {
   type TurnResult,
   type WaitUntil,
 } from '@sand/engine/contract'
-import { helloField, wireEvent } from '@sand/host-hub/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import type { SettingsPatch } from '@sand/model/contract'
 import { event, service } from 'drydock'
+import { z } from 'zod'
 
 export type {
   PendingItem,
   PendingKind,
   RunOptions,
-  SendMode,
   SendResult,
   TurnEnding,
   TurnOrigin,
@@ -36,7 +36,7 @@ export type {
   WaitReason,
   WaitUntil,
 } from '@sand/engine/contract'
-export { sendModes, turnOrigins } from '@sand/engine/contract'
+export { turnOrigins } from '@sand/engine/contract'
 
 export type TurnInfo = Omit<EngineTurn, 'owner' | 'conversation'> & { session: string }
 
@@ -79,3 +79,11 @@ export const toolProgressWire = wireEvent<[call: ToolCallBlock, text: string, se
 export const toolResultWire = wireEvent<[result: ToolResultBlock, call: ToolCallBlock, session: WireSessionRef]>('tool.result')
 
 export const helloTurns = helloField<Record<string, TurnInfo>>('turns')
+
+export interface Sending {
+  queue: boolean
+}
+
+export const helloSending = helloField<Sending>('turns.sending')
+export const sendingChange = wireEvent<Sending>('turns.sending')
+export const sendingSet = request('turns.sending.set', { input: () => z.object({ queue: z.boolean() }), output: type<Sending>() })

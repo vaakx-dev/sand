@@ -1,7 +1,6 @@
 import { stored, type Held, type Shelves } from '@sand/attachments/web/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
-import type { SendOptions } from '@sand/web-client/contract'
 import { derive, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { commandChar } from './complete/detect'
 import { boundTriggers, type Triggers } from './complete/registry'
@@ -133,7 +132,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     if (to) sendPrompt({ ...send, to, at: Date.now(), failed: undefined })
   }
 
-  const send = async (mode?: SendOptions['mode']) => {
+  const send = async () => {
     if (blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
     const withAttachments = attachments.get().length > 0
@@ -142,7 +141,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     if (!value && !withAttachments) return target.interrupt().catch(error => fail(errorMessage(error)))
     const to = target.destination()
     if (!to || !target.ready(picked.get())) return
-    sendPrompt({ id: requestId(), to, draft: draft(), at: Date.now(), ...(mode && { mode }) })
+    sendPrompt({ id: requestId(), to, draft: draft(), at: Date.now() })
   }
 
   return {

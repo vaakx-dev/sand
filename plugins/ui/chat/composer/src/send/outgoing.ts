@@ -2,7 +2,6 @@ import { promptOf } from '@sand/attachments/contract'
 import { stored, type Held, type Progress, type Shelves } from '@sand/attachments/web/contract'
 import type { UserContent } from '@sand/chats/contract'
 import type { KeyVal } from '@sand/keyval'
-import type { SendOptions } from '@sand/web-client/contract'
 import { bytes, errorMessage } from '@sand/util'
 import { derive, effect, onTimeout, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Sending } from '../contract'
@@ -14,7 +13,6 @@ export interface Send {
   id: string
   to: Destination
   draft: Saved
-  mode?: SendOptions['mode']
   at: number
   failed?: string
 }
@@ -88,7 +86,7 @@ export const createOutgoing = ({ target, shelves, saved, returned, edit }: Outgo
     const { draft, to } = send
     const items = await contentOf(draft.items, to.device)
     const content = [...items, ...contextOf(draft.records)]
-    await target.deliver(to, { id: send.id, text: draft.text.trim(), content, settings: draft.settings ?? {}, ...(send.mode && { mode: send.mode }) })
+    await target.deliver(to, { id: send.id, text: draft.text.trim(), content, settings: draft.settings ?? {} })
   }
 
   const run = (send: Send) => {

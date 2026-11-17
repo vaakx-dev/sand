@@ -1,8 +1,5 @@
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { sig } from '@vaakx-dev/vrui'
-import type { Model } from '../model'
-
-const queueAction = (model: Model): MenuAction => ({ id: 'queue', label: 'Queue for next turn', icon: 'clock', run: () => model.send('queue') })
 
 export const createSendMenu = () => {
   const actions = sig<MenuAction[]>([])
@@ -12,7 +9,7 @@ export const createSendMenu = () => {
   }
   return {
     add,
-    actions: (model: Model) => () => [...(model.running.get() ? [queueAction(model)] : []), ...actions.get()],
+    actions: () => actions.get(),
   }
 }
 

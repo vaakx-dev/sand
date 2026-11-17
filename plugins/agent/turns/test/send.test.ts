@@ -10,8 +10,8 @@ afterEach(() => sand.stop())
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
-const start = async (replies: Source['replies']) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies }])
+const start = async (replies: Source['replies'], queue = false) => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies }], { options: { turns: { queue } } })
   const opened = Promise.withResolvers<void>()
   const released = Promise.withResolvers<string>()
   sand.tool('gate', () => {
@@ -37,13 +37,8 @@ const asked = (chat: Session) =>
     return message.content!.flatMap(block => (block.type === 'text' ? [{ text: block.text, turn: entry.turn }] : []))
   })
 
-test('a send starts an idle chat; while it runs, auto steers into it once and queue waits, one turn each in order', async () => {
-  const { chat, opened, release } = await start([
-    [{ type: 'call', name: 'gate' }],
-    [said('Took the steer.')],
-    [said('First queued.')],
-    [said('Second queued.')],
-  ])
+test('a send starts an idle chat, and whatever is sent while it runs reaches that turn at its next step, once', async () => {
+  const { chat, opened, release } = await start([[{ type: 'call', name: 'gate' }], [said('Took both.')]])
 
   const started = await sand.turns.send(chat, { prompt: 'go', clientRequestId: 'go' })
   expect(started).toEqual({ disposition: 'started', turn: expect.any(String) })
@@ -51,11 +46,28 @@ test('a send starts an idle chat; while it runs, auto steers into it once and qu
 
   const steered = await sand.turns.send(chat, { prompt: 'also this', clientRequestId: 'steer' })
   expect(steered).toEqual({ disposition: 'steered', pending: expect.any(String), turn: turnOf(started) })
-  expect(await sand.turns.send(chat, { prompt: 'also this', mode: 'queue', clientRequestId: 'steer' })).toEqual(steered)
-  expect(await sand.turns.send(chat, { prompt: 'one', mode: 'queue', clientRequestId: 'one' })).toMatchObject({ disposition: 'queued' })
-  await sand.turns.send(chat, { prompt: 'two', mode: 'queue', clientRequestId: 'two' })
+  expect(await sand.turns.send(chat, { prompt: 'also this', clientRequestId: 'steer' })).toEqual(steered)
+  expect(await sand.turns.send(chat, { prompt: 'job finished', origin: 'job', clientRequestId: 'job' })).toMatchObject({ disposition: 'steered' })
+
+  release()
+  await idle(chat)
+
+  expect(asked(chat)).toEqual([
+    { text: 'go', turn: turnOf(started) },
+    { text: 'also this', turn: turnOf(started) },
+    { text: 'job finished', turn: turnOf(started) },
+  ])
+  expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Took both.')] })
+})
+
+test('with queueing on, what is sent while a turn runs waits, one turn each in order', async () => {
+  const { chat, opened, release } = await start([[{ type: 'call', name: 'gate' }], [said('Done.')], [said('First queued.')], [said('Second queued.')]], true)
+  const started = await sand.turns.send(chat, { prompt: 'go', clientRequestId: 'go' })
+  await opened
+
+  expect(await sand.turns.send(chat, { prompt: 'one', clientRequestId: 'one' })).toMatchObject({ disposition: 'queued' })
+  await sand.turns.send(chat, { prompt: 'two', clientRequestId: 'two' })
   expect(sand.turns.pending(chat).map(item => [item.kind, item.label])).toEqual([
-    ['steer', 'also this'],
     ['queue', 'one'],
     ['queue', 'two'],
   ])
@@ -63,10 +75,9 @@ test('a send starts an idle chat; while it runs, auto steers into it once and qu
   release()
   await idle(chat)
 
-  const [go, steer, one, two] = asked(chat)
-  expect([go, steer, one, two].map(message => message?.text)).toEqual(['go', 'also this', 'one', 'two'])
-  expect(steer!.turn).toBe(go!.turn)
-  expect(new Set([go!.turn, one!.turn, two!.turn]).size).toBe(3)
+  const [go, one, two] = asked(chat)
+  expect([go, one, two].map(message => message?.text)).toEqual(['go', 'one', 'two'])
+  expect(new Set([turnOf(started), one!.turn, two!.turn]).size).toBe(3)
   expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Second queued.')] })
   expect(sand.turns.pending(chat)).toEqual([])
 })

@@ -18,10 +18,10 @@ export const createTurns = (wire: Wire, store: Store, outbox: ReturnType<typeof 
   const changePending = async (id: string, pending: string, action: PendingAction) => void (await wire.call(threadPending, { session: id, pending, action }))
 
   return {
-    async send(id, prompt, { label, settings, mode, clientRequestId = crypto.randomUUID() } = {}) {
+    async send(id, prompt, { label, settings, clientRequestId = crypto.randomUUID() } = {}) {
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
-      const item = { id: clientRequestId, session: id, pc: thread.device, prompt, mode, label: promptLabel(label ?? prompt), settings, at: Date.now() }
+      const item = { id: clientRequestId, session: id, pc: thread.device, prompt, label: promptLabel(label ?? prompt), settings, at: Date.now() }
       await outbox.submit(item)
     },
     stop: id => wire.call(threadStop, { session: id }),

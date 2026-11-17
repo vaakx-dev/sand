@@ -1,7 +1,7 @@
 import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
-import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
+import { type SendResult, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
 import { type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
@@ -77,7 +77,6 @@ export const reportOf = ({ from: { owner, id }, label, status, at, result }: Rep
 
 export interface SendInput {
   prompt: Prompt
-  mode?: SendMode
   label?: string
   settings?: SettingsPatch
   origin: TurnOrigin
@@ -185,7 +184,6 @@ export const threadStart = request('thread.start', {
 export const threadSend = request('thread.send', {
   input: () => session().extend({
     prompt: prompt(),
-    mode: z.enum(sendModes).optional(),
     label: z.string().optional(),
     settings: sessionSettings().optional(),
     origin: origin(),

@@ -53,10 +53,10 @@ export const destination = (ctx: ComposerContext): Destination | undefined => {
   return draft && { conversation: draft.id, device, draft }
 }
 
-export const submit = async (ctx: ComposerContext, thread: string | undefined, to: Destination, { id, text, content, settings, mode }: Outbound) => {
+export const submit = async (ctx: ComposerContext, thread: string | undefined, to: Destination, { id, text, content, settings }: Outbound) => {
   const prompt = promptOf(text, content)
   const label = labelOf(text, content)
-  if (thread) return ctx.turns.send(await known(ctx, thread), prompt, { label, mode, clientRequestId: id })
+  if (thread) return ctx.turns.send(await known(ctx, thread), prompt, { label, clientRequestId: id })
   if (!to.draft) throw new Error('Pick a project for a new thread first')
   await ctx.threads.start(to.draft, { prompt, label, settings })
 }

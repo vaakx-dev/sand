@@ -106,26 +106,20 @@ test('a model reply cut off when its process died is asked for again', async () 
   ])
 })
 
-test('what was sent while a turn was down is steered into it or stays queued for after it', async () => {
+test('what was sent while a turn was down is steered into it when it carries on', async () => {
   const died = await killDuring([[{ type: 'call', name: 'gate' }]], 'gate')
   const witness = await start()
   const down = witness.sessions.require(died.chat)
   await witness.turns.send(down, { prompt: 'and then this', clientRequestId: 'steer' })
-  await witness.turns.send(down, { prompt: 'later', mode: 'queue', clientRequestId: 'queue' })
   await stop(witness)
 
-  const { next, chat } = await restart(died, [[said('Steered.')], [said('Queued.')]])
-  while (!next.turns.list(chat)[0]?.ended || next.turns.list(chat).length < 2) await Bun.sleep(20)
+  const { next, chat, ended } = await restart(died, [[said('Steered.')]])
 
-  expect(next.turns.list(chat).map(({ ordinal, status }) => ({ ordinal, status }))).toEqual([
-    { ordinal: 2, status: 'completed' },
-    { ordinal: 1, status: 'completed' },
-  ])
+  expect(ended).toMatchObject({ status: 'completed' })
+  expect(next.turns.list(chat)).toHaveLength(1)
   expect(chat.messages().slice(3)).toEqual([
     { role: 'user', content: [said('and then this')] },
     { role: 'assistant', content: [said('Steered.')] },
-    { role: 'user', content: [said('later')] },
-    { role: 'assistant', content: [said('Queued.')] },
   ])
 })
 

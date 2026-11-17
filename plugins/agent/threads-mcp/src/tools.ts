@@ -3,7 +3,6 @@ import { historyItem, historyReading } from '@sand/chats/contract'
 import { compactTimeoutMs, contextCompact } from '@sand/compaction/contract'
 import type { McpGroup, McpTool, McpToolContext } from '@sand/mcp-server/contract'
 import { historyRead, itemRead, pendingActions, readLimit, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
-import { sendModes } from '@sand/turns-contract/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 
@@ -62,7 +61,6 @@ const sendInput = z.object({
   thread,
   prompt,
   files: filesInput(),
-  mode: z.enum(sendModes).optional().describe('auto (default): a running turn takes it at its next step, an idle thread starts a turn; queue: run it as the next turn'),
   clientRequestId,
 })
 
