@@ -23,20 +23,24 @@ export interface StoreOptions {
 
 type NewChat = Pick<SessionInfo, 'cwd' | 'project' | 'kind'> & Partial<SessionInfo>
 
-const blank = (chat: NewChat): SessionInfo => ({
-  id: Bun.randomUUIDv7(),
-  created: Date.now(),
-  head: null,
-  parent: null,
-  origin: null,
-  title: '',
-  seen: true,
-  pinned: false,
-  archived: null,
-  snoozed: null,
-  position: null,
-  ...chat,
-})
+const blank = (chat: NewChat): SessionInfo => {
+  const created = Date.now()
+  return {
+    id: Bun.randomUUIDv7(),
+    created,
+    talked: created,
+    head: null,
+    parent: null,
+    origin: null,
+    title: '',
+    seen: true,
+    pinned: false,
+    archived: null,
+    snoozed: null,
+    position: null,
+    ...chat,
+  }
+}
 
 const pinPatch = (pinned: boolean): ChatPatch => (pinned ? { pinned, archived: null, snoozed: null } : { pinned })
 

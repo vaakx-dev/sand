@@ -8,6 +8,7 @@ const columnOf: Record<keyof ChatColumns, string> = {
   cwd: 'cwd',
   project: 'project',
   title: 'title',
+  talked: 'talked',
   seen: 'seen',
   pinned: 'pinned',
   archived: 'archived',
@@ -15,8 +16,8 @@ const columnOf: Record<keyof ChatColumns, string> = {
   position: 'position',
 }
 
-const insertSql = `insert into chats (id, created, cwd, project, head, kind, parent, origin, title, seen, pinned, archived, snoozed, position)
-  values ($id, $created, $cwd, $project, $head, $kind, $parent, $origin, $title, $seen, $pinned, $archived, $snoozed, $position)`
+const insertSql = `insert into chats (id, created, cwd, project, head, kind, parent, origin, title, talked, seen, pinned, archived, snoozed, position)
+  values ($id, $created, $cwd, $project, $head, $kind, $parent, $origin, $title, $talked, $seen, $pinned, $archived, $snoozed, $position)`
 
 export const chatRecords = (db: Database) => {
   const insert = db.query(insertSql)

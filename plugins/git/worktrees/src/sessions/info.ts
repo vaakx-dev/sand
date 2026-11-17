@@ -10,6 +10,7 @@ export const infoOf = (session: SessionInfo): SessionInfo => ({
   parent: session.parent,
   origin: session.origin,
   title: session.title,
+  talked: session.talked,
   seen: session.seen,
   pinned: session.pinned,
   archived: session.archived,

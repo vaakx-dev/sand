@@ -18,6 +18,7 @@ export interface SessionInfo {
   parent: string | null
   origin: string | null
   title: string
+  talked: number
   seen: boolean
   pinned: boolean
   archived: number | null
@@ -25,7 +26,7 @@ export interface SessionInfo {
   position: number | null
 }
 
-export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'seen' | 'pinned' | 'archived' | 'snoozed' | 'position'>>
+export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'talked' | 'seen' | 'pinned' | 'archived' | 'snoozed' | 'position'>>
 
 export interface NewAgent {
   parent?: string
