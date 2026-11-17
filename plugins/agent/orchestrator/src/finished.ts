@@ -1,6 +1,7 @@
 import type { Session } from '@sand/chats/contract'
 import type { ConversationRef } from '@sand/engine/contract'
 import { turnEnd, type TurnInfo, type TurnResult } from '@sand/turns-contract/contract'
+import { carrying } from '@sand/usage-resume/contract'
 import type { OrchestratorContext } from './context'
 import { reportOf } from './contract'
 import type { Owners } from './owners'
@@ -19,11 +20,11 @@ export const reportFinished = (ctx: OrchestratorContext, starters: Starters, wai
 
   const archived = ({ id }: ConversationRef) => Boolean(ctx.sessions.open(id)?.archived)
 
-  const carriedOn = ({ stopReason, resetsAt }: TurnResult) => stopReason === 'moved' || (stopReason === 'limited' && resetsAt !== undefined)
+  const carriedOn = (result: TurnResult, info: TurnInfo) => !!ctx.get(carrying)?.continues(result, info.selection)
 
   ctx.on(turnEnd, (session, result, info) => {
     const starter = starters.of(session)
-    if (!starter || carriedOn(result) || archived(starter) || waits.has(starter, session.id) || busy(session)) return
+    if (!starter || carriedOn(result, info) || archived(starter) || waits.has(starter, session.id) || busy(session)) return
     owners.deliver(starter, { text: noticeOf(session, result, info), clientRequestId: `${session.id}@${info.id}` }).catch(error => ctx.report(error))
   })
 }

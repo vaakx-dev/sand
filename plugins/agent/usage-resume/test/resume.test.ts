@@ -164,3 +164,22 @@ test('a thread out of usage can switch to another model on another account and c
   expect(sentTo('other')).toEqual([expect.stringContaining('Switched to Other Plan')])
   expect(await sand.ask(resumeAlternative, { turn: stopped!.id })).toBeUndefined()
 })
+
+test('with every plan account out, a chat resumes once at the earliest reset among them, on the account that resets', async () => {
+  sand = await startSand(
+    [
+      { id: 'fake', label: 'Fake Plan', models: ['m'], replies: [[said('Half'), limit(60_000)]] },
+      { id: 'other', of: 'fake', label: 'Fake Plan 2', models: ['m'], limits: [{ id: 'session', label: '5-hour', used: 1, resetInMs: 1_500 }], replies: [[said('Picked up.')]] },
+    ],
+    { plugins: ['automation/schedules', 'agent/usage-resume', 'agent/account-pool'] },
+  )
+  await sand.llm.refreshLimits?.()
+  const chat = sand.chat('fake/m')
+  await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
+  await ended(chat, 1)
+  expect(sentTo('other')).toEqual([])
+
+  await ended(chat, 2)
+  expect(sentTo('other')).toEqual([continued])
+  expect(sent()).toEqual([expect.stringMatching(/Start$/)])
+})

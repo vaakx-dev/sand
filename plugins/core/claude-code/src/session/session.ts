@@ -52,7 +52,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
   const checkUsage = () =>
     connection.request('get_usage', { skip_behaviors: true }).then(
       usage => {
-        const limits = usageLimits(usage)
+        const limits = usageLimits(usage, reader.resets())
         if (limits) report(limits)
       },
       () => {},

@@ -585,6 +585,7 @@
         "@sand/project": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/turns-contract": "workspace:*",
+        "@sand/usage-resume": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/worktrees": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
