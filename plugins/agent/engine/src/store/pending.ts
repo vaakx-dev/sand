@@ -14,7 +14,7 @@ interface Row {
 
 export type NewPending = Pick<PendingItem, 'kind' | 'prompt' | 'label' | 'origin'>
 
-export type Holding = 'all' | 'user' | 'none'
+export type Holding = 'user' | 'none'
 
 type Key = ReturnType<typeof keyOf>
 
@@ -29,7 +29,7 @@ const itemOf = (row: Row): PendingItem => ({
 })
 
 const settleSql = `update pending set kind = 'queue',
-  held = case $holding when 'all' then 1 when 'user' then origin = 'user' else 0 end
+  held = $holding = 'user' and origin = 'user'
   where owner = $owner and conversation = $conversation and kind = 'steer'`
 
 const scoped = 'owner = $owner and conversation = $conversation'

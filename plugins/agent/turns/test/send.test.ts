@@ -71,23 +71,24 @@ test('a send starts an idle chat; while it runs, auto steers into it once and qu
   expect(sand.turns.pending(chat)).toEqual([])
 })
 
-test('an interrupt holds the steers the turn had not taken, and resuming one starts it', async () => {
-  const { chat, opened } = await start([[{ type: 'call', name: 'gate' }], [said('Resumed.')]])
+test('an interrupt holds the user steers the turn had not taken and runs the rest next, and resuming a held one starts it', async () => {
+  const { chat, opened } = await start([[{ type: 'call', name: 'gate' }], [said('Noted the job.')], [said('Resumed.')]])
   const sent = await sand.turns.send(chat, { prompt: 'go', clientRequestId: 'go' })
   await opened
   await sand.turns.send(chat, { prompt: 'actually, this', clientRequestId: 'steer' })
+  await sand.turns.send(chat, { prompt: 'job finished', origin: 'job', clientRequestId: 'job' })
 
   expect(sand.turns.interrupt(chat)).toBe(true)
   const ended = await sand.turns.wait(turnOf(sent), 'end')
   expect(ended).toMatchObject({ status: 'interrupted' })
+  await idle(chat)
   const [held] = sand.turns.pending(chat)
-  expect(held).toMatchObject({ kind: 'queue', held: true, label: 'actually, this' })
-  await Bun.sleep(2_200)
-  expect(sand.turns.current(chat)).toBeUndefined()
+  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ kind: 'queue', held: true, label: 'actually, this' })])
+  expect(asked(chat).map(message => message.text)).toEqual(['go', 'job finished'])
 
   expect(sand.turns.hold(chat, held!.id, false)).toBe(true)
   await idle(chat)
-  expect(asked(chat).map(message => message.text)).toEqual(['go', 'actually, this'])
+  expect(asked(chat).map(message => message.text)).toEqual(['go', 'job finished', 'actually, this'])
   expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Resumed.')] })
 }, 10_000)
 
