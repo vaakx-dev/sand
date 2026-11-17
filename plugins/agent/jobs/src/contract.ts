@@ -37,6 +37,7 @@ export interface JobSpec {
 export interface BackgroundJobs {
   start(spec: JobSpec): Job
   list(parent?: string): Job[]
+  stopAll(parent: string, reason?: string): boolean
 }
 
 export type WireJob = Omit<Job, 'cancel'>
