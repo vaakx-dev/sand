@@ -16,8 +16,7 @@ const pick = (steps: number[], span: number, unit: number) => steps.find(step =>
 const hourTicks = (start: number, end: number): Tick[] => {
   const step = pick(hourSteps, end - start, hour)
   const ticks: Tick[] = []
-  for (let at = startOfHour(start) + hour; at < end; at += hour)
-    if (new Date(at).getHours() % step === 0) ticks.push({ at, label: new Date(at).toLocaleTimeString('en', { hour: 'numeric' }) })
+  for (let at = startOfHour(start) + hour; at < end; at += step * hour) ticks.push({ at, label: new Date(at).toLocaleTimeString('en', { hour: 'numeric' }) })
   return ticks
 }
 
