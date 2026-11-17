@@ -1,4 +1,3 @@
-import { wire } from '@sand/devices-contract'
 import { inspector } from '@sand/inspector/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
@@ -9,8 +8,8 @@ import { subagentsOf } from './subagents'
 
 export default definePlugin({
   name: 'inspector-helpers',
-  description: 'The subagents and background commands of a chat: listed in its Details with the last few finished ones, each with a menu to copy or stop it, and running subagents counted above its composer',
-  inject: { inspector, kit, threads, turns, wire },
+  description: 'The subagents and background commands of a chat: the running ones listed in its Details, each with a menu to copy or stop it, and running subagents counted above its composer',
+  inject: { inspector, kit, threads, turns },
   apply(ctx) {
     const subagents = subagentsOf(ctx, ctx)
     const commands = commandsOf(ctx, ctx.kit)

@@ -32,6 +32,7 @@ const watching = (state?: unknown) => {
     save: next => void (context.state = next),
     emit: change => void changes.push(change),
     fail: error => void errors.push(error),
+    finish: () => {},
     signal: new AbortController().signal,
   }
   const started = (running: Started | void) => {

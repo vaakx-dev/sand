@@ -23,8 +23,8 @@ export const cardItem = ({ lead, end, menu = false, mono = false, class: extra, 
   const height = itemHeight()
   const parts = [
     span({ class: 'inline-flex shrink-0 text-neutral-400' }, lead),
-    span({ class: ['min-w-0 flex-1 truncate', mono ? 'font-mono text-xs' : ''] }, ...label),
-    end === undefined ? null : span({ class: 'max-w-40 min-w-0 truncate text-xs whitespace-nowrap text-neutral-500 tabular-nums' }, end),
+    span({ class: ['min-w-0 truncate', end === undefined ? 'flex-1' : '', mono ? 'font-mono text-xs' : ''] }, ...label),
+    end === undefined ? null : span({ class: 'min-w-0 flex-1 truncate text-right text-xs whitespace-nowrap text-neutral-500 tabular-nums' }, end),
     menu ? span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 'xs')) : null,
   ]
   if (!props.onClick) return div({ title: props.title, class: () => [itemLook(false), height(), extra] }, ...parts)

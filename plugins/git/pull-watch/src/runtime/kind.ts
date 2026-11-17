@@ -2,7 +2,7 @@ import type { GitHub } from '@sand/github/contract'
 import type { Kind, KindContext } from '@sand/watches/contract'
 import { z } from 'zod'
 import { changesOf, seenOf } from './changes'
-import { readPull } from './read'
+import { type PullStatus, readPull } from './read'
 
 export interface KindTimings {
   pollMs: number
@@ -42,6 +42,8 @@ const listen = async (github: GitHub, pull: PullInput, signal: AbortSignal, hear
   for await (const _ of github.changes(pull, signal)) heard()
 }
 
+const ended = (status: PullStatus) => status !== 'open'
+
 const follow = (github: GitHub, pull: PullInput, context: KindContext, { pollMs, settleMs }: KindTimings) => {
   const stopped = new AbortController()
   const signal = AbortSignal.any([context.signal, stopped.signal])
@@ -61,7 +63,7 @@ const follow = (github: GitHub, pull: PullInput, context: KindContext, { pollMs,
     let settling = false
     while (!signal.aborted) {
       const snapshot = await check().catch(error => void context.fail(error))
-      if (snapshot?.status === 'merged') return stopped.abort()
+      if (snapshot && ended(snapshot.status)) return context.finish()
       settling = !settling && snapshot?.status === 'open' && snapshot.conflict === undefined
       await rest(settling ? settleMs : pollMs)
     }
@@ -79,5 +81,9 @@ export const pullKind = (github: GitHub, timings: KindTimings): Kind<typeof pull
     'One pull request: its CI finishing (pass or fail), new reviews and comments, merging, closing and merge conflicts. Hears GitHub event streams where the account has them, and checks every minute otherwise; the first check only notes where things stand.',
   input: pullInput,
   describe: ({ repo, number }) => `${repo}#${number} on GitHub`,
-  start: (pull, context) => (seenOf(context.state)?.status === 'merged' ? {} : follow(github, pull, context, timings)),
+  start(pull, context) {
+    const seen = seenOf(context.state)
+    if (seen && ended(seen.status)) return context.finish()
+    return follow(github, pull, context, timings)
+  },
 })

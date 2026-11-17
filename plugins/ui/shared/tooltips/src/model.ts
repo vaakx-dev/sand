@@ -77,7 +77,7 @@ export const tooltipModel = () => {
   const underPointer = () => {
     frame = undefined
     const target = point && elementAt(point)
-    if (target && source !== 'focus') hover(target)
+    if (target && source === 'pointer') hover(target)
   }
 
   return {

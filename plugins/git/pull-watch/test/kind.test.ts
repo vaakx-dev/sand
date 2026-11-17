@@ -24,6 +24,7 @@ const fakePull = () => {
 
 const watching = (github: GitHub) => {
   const changes: Change[] = []
+  const watched = { finished: false }
   const controller = new AbortController()
   let state: unknown
   const context: KindContext = {
@@ -36,10 +37,11 @@ const watching = (github: GitHub) => {
     fail: error => {
       throw error
     },
+    finish: () => void (watched.finished = true),
     signal: controller.signal,
   }
   void pullKind(github, { pollMs: 10, settleMs: 5 }).start({ repo: 'acme/tiles', number: 7 }, context)
-  return { changes, stop: () => controller.abort() }
+  return { changes, watched, stop: () => controller.abort() }
 }
 
 const until = async (done: () => boolean) => {
@@ -47,9 +49,9 @@ const until = async (done: () => boolean) => {
   expect(done()).toBe(true)
 }
 
-test("a followed pull request reports each change once: a review with its comments, a conflict once GitHub knows, and nothing after it merges", async () => {
+test("a followed pull request reports each change once: a review with its comments, a conflict once GitHub knows, and nothing after it merges, when it is done", async () => {
   const { pull, github } = fakePull()
-  const { changes, stop } = watching(github)
+  const { changes, watched, stop } = watching(github)
   await until(() => pull.reads >= 2)
   expect(changes).toEqual([])
 
@@ -79,5 +81,6 @@ test("a followed pull request reports each change once: a review with its commen
   await Bun.sleep(40)
   expect(pull.reads).toBe(reads)
   expect(changes).toHaveLength(4)
+  expect(watched.finished).toBe(true)
   stop()
 })

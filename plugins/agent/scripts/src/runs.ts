@@ -2,26 +2,20 @@ import type { ScriptCall, ScriptHead, ScriptRun, ScriptStatus, ScriptUpdate } fr
 
 type Started = Pick<ScriptHead, 'id' | 'thread' | 'title' | 'code'>
 
-interface Kept {
-  run: ScriptRun
-  stop: AbortController
-}
-
 const FINISHED_KEPT = 3
 
 const headOf = ({ calls: _, ...head }: ScriptRun): ScriptHead => head
 
 const createRuns = (updated: (update: ScriptUpdate) => void) => {
-  const kept = new Map<string, Kept>()
+  const kept = new Map<string, ScriptRun>()
 
-  const finishedIn = (thread: string) => [...kept.values()].filter(({ run }) => run.thread === thread && run.status !== 'running')
+  const finishedIn = (thread: string) => [...kept.values()].filter(run => run.thread === thread && run.status !== 'running')
 
-  const prune = (thread: string) => finishedIn(thread).slice(0, -FINISHED_KEPT).forEach(({ run }) => kept.delete(run.id))
+  const prune = (thread: string) => finishedIn(thread).slice(0, -FINISHED_KEPT).forEach(run => kept.delete(run.id))
 
   const start = (started: Started) => {
     const run: ScriptRun = { ...started, status: 'running', started: Date.now(), calls: [] }
-    const stop = new AbortController()
-    kept.set(run.id, { run, stop })
+    kept.set(run.id, run)
     updated({ head: headOf(run) })
 
     const record = (call: ScriptCall) => {
@@ -37,17 +31,10 @@ const createRuns = (updated: (update: ScriptUpdate) => void) => {
       return run
     }
 
-    return { signal: stop.signal, record, end }
+    return { record, end }
   }
 
-  const stop = (id: string) => {
-    const found = kept.get(id)
-    if (found?.run.status !== 'running') return false
-    found.stop.abort()
-    return true
-  }
-
-  return { start, stop, list: () => [...kept.values()].map(({ run }) => run) }
+  return { start, list: () => [...kept.values()] }
 }
 
 type Runs = ReturnType<typeof createRuns>

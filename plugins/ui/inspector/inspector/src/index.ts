@@ -60,7 +60,7 @@ export default definePlugin({
           const subject = ctx.shell.subjectOf(route)
           return subject ? shownRows(subject).length > 0 : false
         },
-        render: route => div({ class: 'flex min-w-0 flex-col' }, card(route)),
+        render: route => div({ class: 'scrollbars-thin flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain' }, card(route)),
       }),
     )
     ctx.provide(inspector, {

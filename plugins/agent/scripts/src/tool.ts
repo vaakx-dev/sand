@@ -54,8 +54,7 @@ const statusOf = (outcome: Outcome, signal: AbortSignal): ScriptStatus => {
   return outcome.error === undefined ? 'done' : 'failed'
 }
 
-const stoppedLead = (stopped: AbortSignal, seconds: number) =>
-  stopped.aborted ? 'The user stopped the script.' : `Stopped at the ${plural(seconds, 'second')} limit.`
+const limitLead = (seconds: number) => `Stopped at the ${plural(seconds, 'second')} limit.`
 
 const plain = (name: string) => name.replace(/^mcp__[^_]+__|^mcp_/, '').toLowerCase()
 
@@ -91,13 +90,13 @@ const scriptTool = (tools: Tools, runs: Runs): Tool<typeof input> => {
   const run = async ({ title, code, timeout_seconds: seconds = DEFAULT_SECONDS }: Input, context: ToolContext) => {
     const started = runs.start({ id: context.call.id, thread: context.conversation.id, title, code })
     const deadline = AbortSignal.timeout(seconds * 1000)
-    const signal = AbortSignal.any([context.signal, started.signal, deadline])
+    const signal = AbortSignal.any([context.signal, deadline])
     const names = callable(tools, context)
     const outcome = await runSandboxed({ code, names, signal, call: toolCall(started, context, signal, names) })
     const ended = started.end(statusOf(outcome, signal))
     context.conversation.append(scriptEntry, ended, { turn: context.turn })
     context.signal.throwIfAborted()
-    if (ended.status === 'stopped') throw new Error(withPrinted(stoppedLead(started.signal, seconds), outcome, callsNote(ended)))
+    if (ended.status === 'stopped') throw new Error(withPrinted(limitLead(seconds), outcome, callsNote(ended)))
     if (ended.status === 'failed') throw new Error(withPrinted(`The script failed: ${outcome.error}`, outcome))
     return printedText(outcome)
   }
