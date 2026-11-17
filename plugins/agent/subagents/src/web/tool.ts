@@ -22,8 +22,8 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: ChildWatch, act
 
   const outcome = ({ running, ended }: Thread): ToolBadge | undefined => {
     if (running || !ended) return undefined
-    if (ended.stopReason === 'error') return { text: kit.statusLabel('failed'), tone: 'danger' }
     if (ended.stopReason === 'interrupted') return { text: kit.statusLabel('cancelled'), tone: 'neutral' }
+    if (ended.error) return { text: kit.statusLabel('failed'), tone: 'danger' }
   }
 
   const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: kit.statusLabel('failed'), tone: 'danger' } : undefined)

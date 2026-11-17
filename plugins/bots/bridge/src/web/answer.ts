@@ -19,7 +19,9 @@ const spokenOf = ({ type, data }: Entry) => {
 
 const endingOf = (entries: Entry[]) => {
   const ending = entries.find(entry => entry.type === 'turn-ending')
-  return ending && endings[(ending.data as TurnEnding).stopReason]
+  if (!ending) return undefined
+  const { stopReason, error } = ending.data as TurnEnding
+  return endings[stopReason] ?? error
 }
 
 const ongoing = (thread: Thread, path: Entry[], turn: string) => thread.turn && path.findLast(entry => entry.turn)?.turn === turn

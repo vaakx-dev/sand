@@ -55,6 +55,18 @@ test('a model error fails the turn and records why', async () => {
   expect(chat.latest('turn-ending')?.data).toEqual({ stopReason: 'error', error: 'overloaded' })
 })
 
+test('a refusal fails the turn and says the model declined', async () => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies: [[{ type: 'stop', reason: 'refusal' }]] }])
+  const chat = sand.chat('fake/m')
+
+  const result = await sand.turns.run(chat, 'go')
+
+  const declined = 'The model declined to continue'
+  expect(result).toMatchObject({ stopReason: 'refusal', error: declined })
+  expect(chat.latest('turn-ending')?.data).toEqual({ stopReason: 'refusal', error: declined })
+  expect(sand.turns.list(chat).at(-1)).toMatchObject({ status: 'failed', stopReason: 'refusal', error: declined })
+})
+
 test('each tool result is stored as soon as its call finishes, and an interrupt answers the call still running', async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [[{ type: 'call', name: 'echo', input: { word: 'pong' } }, { type: 'call', name: 'gate' }]] }])
   const gateOpened = Promise.withResolvers<void>()

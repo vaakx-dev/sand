@@ -12,7 +12,19 @@ import type { Owned } from '../owned'
 import type { Holding } from '../store/pending'
 import type { Begun } from './start'
 
-const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed', limited: 'failed', moved: 'failed' }
+const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = {
+  interrupted: 'interrupted',
+  error: 'failed',
+  limited: 'failed',
+  moved: 'failed',
+  refusal: 'failed',
+  max_tokens: 'failed',
+}
+
+const unfinished: Partial<Record<TurnResult['stopReason'], string>> = {
+  refusal: 'The model declined to continue',
+  max_tokens: 'The reply stopped at the output token limit',
+}
 
 const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'user', error: 'user' }
 
@@ -34,7 +46,7 @@ interface Opened<C extends Conversation> {
 const resultOf = <C extends Conversation>(run: TurnRun<C>, { stopReason, failure, cause }: Outcome): TurnResult => {
   const detail = failure && detailOf(failure.error)
   const resetsAt = failure?.error instanceof UsageLimited ? failure.error.resetsAt : undefined
-  const error = failure ? errorMessage(failure.error) : cause
+  const error = failure ? errorMessage(failure.error) : (cause ?? unfinished[stopReason])
   return {
     stopReason,
     usage: run.usage,
