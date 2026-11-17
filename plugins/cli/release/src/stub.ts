@@ -1,5 +1,4 @@
-import { isRecord } from '@sand/util'
-import { readManifest } from '@sand/util/release'
+import { type Manifest, readManifest } from '@sand/util/release'
 import { dirname, relative, resolve, sep } from 'node:path'
 import type { Workspace } from './split'
 
@@ -35,17 +34,17 @@ const contractFiles = async (entries: string[]) => {
   return { files: [...files], packages }
 }
 
-const exportedFiles = (dir: string, exports: unknown) =>
-  Object.values(isRecord(exports) ? exports : {})
+const exportedFiles = (dir: string, exports: Manifest['exports'] = {}) =>
+  (typeof exports === 'string' ? [exports] : Object.values(exports))
     .filter(file => typeof file === 'string')
     .map(file => resolve(dir, file))
 
 const appPath = (workspace: Workspace, file: string) => `${workspace.path}/${relative(workspace.dir, file).split(sep).join('/')}`
 
 const contractStub = async (workspace: Workspace): Promise<Stub> => {
-  const { name, version, description, type, exports, dependencies } = (await readManifest(workspace.dir)) ?? {}
+  const { name, version, description, type, exports, dependencies } = await readManifest(workspace.dir)
   const { files, packages } = await contractFiles(exportedFiles(workspace.dir, exports))
-  const used = Object.entries(isRecord(dependencies) ? dependencies : {}).filter(([dependency]) => packages.has(dependency))
+  const used = Object.entries(dependencies).filter(([dependency]) => packages.has(dependency))
   const manifest = { name, version, description, type, exports, dependencies: Object.fromEntries(used) }
   return {
     files: files.map(file => appPath(workspace, file)),

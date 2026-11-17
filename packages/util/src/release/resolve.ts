@@ -7,8 +7,8 @@ import { readManifest, workspacePackages, type Manifest } from './workspaces'
 
 const hasEntry = ({ main, module, exports }: Manifest) => {
   if (main || module) return true
-  if (exports === undefined || exports === null) return false
-  if (typeof exports !== 'object' || Array.isArray(exports)) return true
+  if (exports === undefined) return false
+  if (typeof exports === 'string') return true
   const keys = Object.keys(exports)
   return !keys.every(key => key.startsWith('.')) || keys.includes('.')
 }
@@ -17,9 +17,7 @@ const reason = (error: unknown) => errorMessage(error).split('\n')[0]
 
 const locate = async (dir: string, from: string, name: string) => {
   const folder = join(dir, modulesFolder, name)
-  const manifest = await readManifest(folder)
-  if (!manifest) throw new Error('it is not in the sand folder')
-  return hasEntry(manifest) ? Bun.resolveSync(name, from) : join(folder, 'package.json')
+  return hasEntry(await readManifest(folder)) ? Bun.resolveSync(name, from) : join(folder, 'package.json')
 }
 
 const checkDependency = async (dir: string, real: string, workspace: { name: string; dir: string }, name: string) => {

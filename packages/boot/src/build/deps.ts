@@ -1,7 +1,7 @@
 import { realpath } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { compare } from '@sand/util'
-import { dependencyNames, type Manifest, modulesFolder, readManifest, workspacePackages } from '@sand/util/release'
+import { type Manifest, modulesFolder, readManifest, workspacePackages } from '@sand/util/release'
 
 interface RuntimeDep {
   name: string
@@ -46,9 +46,9 @@ const visiblePlaces = (at: string, name: string) => {
 
 const sameModule = (placed: RuntimeDep, dir: string, version: string) => placed.dir === dir || placed.version === version
 
-const dependenciesOf = (manifest: Manifest | undefined, from: RuntimeDep): Wanted[] => [
-  ...dependencyNames(manifest?.dependencies).map(name => ({ name, from: from.dir, at: from.path, by: from.name, optional: false })),
-  ...dependencyNames(manifest?.optionalDependencies).map(name => ({ name, from: from.dir, at: from.path, by: from.name, optional: true })),
+const dependenciesOf = ({ dependencies, optionalDependencies }: Manifest, from: RuntimeDep): Wanted[] => [
+  ...Object.keys(dependencies).map(name => ({ name, from: from.dir, at: from.path, by: from.name, optional: false })),
+  ...Object.keys(optionalDependencies).map(name => ({ name, from: from.dir, at: from.path, by: from.name, optional: true })),
 ]
 
 const runtimeDeps = async (root: string, { packages, provided = new Set() }: DepsOptions): Promise<RuntimeDep[]> => {
@@ -73,7 +73,7 @@ const runtimeDeps = async (root: string, { packages, provided = new Set() }: Dep
       throw new Error(`${name} (needed by ${by}) is not installed; run bun install`)
     }
     const manifest = await readManifest(dir)
-    const version = typeof manifest?.version === 'string' ? manifest.version : ''
+    const version = manifest.version ?? ''
     const path = placeFor(wanted, dir, version)
     if (!path) return []
     const dep = { name, dir, version, path }
