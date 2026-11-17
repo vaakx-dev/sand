@@ -13,6 +13,6 @@ export const wakeBot =
     const chat = chatOf(watch.subject)
     if (owned?.paused || !chat) return
     const clientRequestId = `watch:${watch.id}:${Bun.hash(JSON.stringify(changes))}`
-    const sent = await turns.send(chat, { prompt: wakePrompt(watch, changes, owned), mode: 'queue', origin: 'wake', label: watch.label, clientRequestId })
+    const sent = await turns.send(chat, { prompt: wakePrompt(watch, changes, owned), origin: 'wake', label: watch.label, clientRequestId })
     await turns.follow(chat, sent, signal)
   }

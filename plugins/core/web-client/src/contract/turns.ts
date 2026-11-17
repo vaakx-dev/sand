@@ -1,11 +1,9 @@
 import type { Prompt } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { SendMode } from '@sand/turns-contract/contract'
 
 export interface SendOptions {
   label?: string
   settings?: SessionSettings
-  mode?: SendMode
   clientRequestId?: string
 }
 

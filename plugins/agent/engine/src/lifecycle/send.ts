@@ -19,25 +19,25 @@ export interface SendDeps<C extends Conversation> {
   ready(): boolean
 }
 
-export const createSend = <C extends Conversation>(ctx: EngineContext, { stores, announce }: Owned<C>, { opener, drive, dispatch, recover, ready }: SendDeps<C>) => {
-  const route = (conversation: C, input: SendInput, opening: Opening<C> | undefined): Routed<C> => {
+export const createSend = <C extends Conversation>(ctx: EngineContext, { conversations, stores, announce }: Owned<C>, { opener, drive, dispatch, recover, ready }: SendDeps<C>) => {
+  const route = (conversation: C, input: SendInput, opening: Opening<C> | undefined, held: boolean): Routed<C> => {
     const running = stores.turns.current(conversation)
     if (!running && opening) {
       const started = opener.open(opening)
       return { kind: 'started', started, result: { disposition: 'started', turn: started.info.id } }
     }
-    const kind = running && input.mode !== 'queue' ? 'steer' : 'queue'
+    const kind = running && !held && !conversations.queues?.() ? 'steer' : 'queue'
     const label = input.label ?? promptLabel(input.prompt)
     const item = stores.pending.add(conversation, { kind, prompt: input.prompt, label, origin: input.origin ?? 'user' })
     const disposition = kind === 'steer' ? 'steered' : 'queued'
     return { kind: 'pending', running, result: { disposition, pending: item.id, ...(running && { turn: running.id }) } }
   }
 
-  const store = (conversation: C, input: SendInput, opening: Opening<C> | undefined) =>
+  const store = (conversation: C, input: SendInput, opening: Opening<C> | undefined, held: boolean) =>
     ctx.ledger.tx((): Routed<C> => {
       const earlier = stores.receipts.get(conversation, input.clientRequestId)
       if (earlier) return { kind: 'repeat', result: earlier }
-      const routed = route(conversation, input, opening)
+      const routed = route(conversation, input, opening, held)
       stores.receipts.put(conversation, input.clientRequestId, routed.result)
       return routed
     })
@@ -46,10 +46,9 @@ export const createSend = <C extends Conversation>(ctx: EngineContext, { stores,
     const earlier = stores.receipts.get(conversation, input.clientRequestId)
     if (earlier) return earlier
     recover(new Set([conversation.id]))
-    const held = await ctx.bail(turnHold, conversation, input.origin ?? 'user', 'send')
-    const routing: SendInput = held ? { ...input, mode: 'queue' } : input
+    const held = Boolean(await ctx.bail(turnHold, conversation, input.origin ?? 'user', 'send'))
     const opening = held || !ready() || stores.turns.current(conversation) ? undefined : await opener.prepare(conversation, input.prompt, input.origin ?? 'user')
-    const routed = store(conversation, routing, opening)
+    const routed = store(conversation, input, opening, held)
     if (routed.kind === 'started') drive.start(routed.started)
     if (routed.kind === 'pending') {
       announce.pending(conversation)

@@ -113,9 +113,9 @@ test('routines can be paused, resumed and deleted, by any bot, and go when their
   expect(await ask(routineList, { bot: bot.id })).toEqual([])
 })
 
-test('a routine that fires while its bot is busy waits its turn, and when that turn fails it is tried again a minute later', async () => {
+test('a routine that fires while its bot is busy joins the running turn, and when that turn fails it is tried again a minute later', async () => {
   setSystemTime(at('2026-11-04T17:59:58Z'))
-  const { ask } = await start([[said('Working.'), { type: 'call', name: 'gate', input: {} }], [said('Done.')], [{ type: 'error', message: 'overloaded' }], [said('Time to call Ana.')]])
+  const { ask } = await start([[said('Working.'), { type: 'call', name: 'gate', input: {} }], [{ type: 'error', message: 'overloaded' }], [said('Time to call Ana.')]])
   const gate = Promise.withResolvers<string>()
   sand.tool('gate', () => gate.promise)
   const bot = await ask(botCreate, { name: 'Errands' })

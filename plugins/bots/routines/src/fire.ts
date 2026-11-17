@@ -39,7 +39,7 @@ export const fireRoutine =
     const owned = routine.job ? job(routine.job) : undefined
     const session = chat(routine.bot)
     if (owned?.paused || !session) return
-    const sent = await turns.send(session, { prompt: promptOf(routine, fire, owned), mode: 'queue', origin: 'routine', label: routine.name, clientRequestId: fire.key })
+    const sent = await turns.send(session, { prompt: promptOf(routine, fire, owned), origin: 'routine', label: routine.name, clientRequestId: fire.key })
     const turn = await turns.follow(session, sent, signal)
     const kind = turn && moments[turn.status]
     if (!turn || !kind) return

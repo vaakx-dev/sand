@@ -18,7 +18,7 @@ import type { TurnsContext } from './context'
 
 export const turnOf = ({ owner, conversation, ...info }: EngineTurn): TurnInfo => ({ ...info, session: conversation })
 
-export const sessionConversations = (ctx: TurnsContext, owner: Owner): Conversations<Session> => {
+export const sessionConversations = (ctx: TurnsContext, owner: Owner, queues: () => boolean): Conversations<Session> => {
   const unseen = (session: Session) => {
     ctx.sessions.update(session.id, { seen: false })
   }
@@ -52,6 +52,7 @@ export const sessionConversations = (ctx: TurnsContext, owner: Owner): Conversat
     lost: unseen,
     changed: info => ctx.emit(turnChange, turnOf(info)),
     queued: session => ctx.emit(turnPending, session),
+    queues,
     streamed: (event, session) => ctx.emit(llmEvent, event, session),
     toolStarted: (call, session) => ctx.emit(toolStart, call, session),
     toolProgress: (call, text, session) => ctx.emit(toolProgress, call, text, session),

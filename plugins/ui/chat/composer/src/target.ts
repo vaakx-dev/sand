@@ -1,7 +1,7 @@
 import type { ShelfPlace } from '@sand/attachments/web/contract'
 import type { Entry, UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { DraftTarget, SendOptions } from '@sand/web-client/contract'
+import type { DraftTarget } from '@sand/web-client/contract'
 import type { ChatRef } from './contract'
 
 export type Delivery = 'now' | 'queued' | 'unreachable'
@@ -17,7 +17,6 @@ export interface Outbound {
   text: string
   content: UserContent[]
   settings: SessionSettings
-  mode?: SendOptions['mode']
 }
 
 export interface Target {

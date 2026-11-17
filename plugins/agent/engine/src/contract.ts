@@ -73,13 +73,8 @@ export interface TurnInfo {
   ended?: number
 }
 
-export const sendModes = ['auto', 'steer', 'queue'] as const
-
-export type SendMode = (typeof sendModes)[number]
-
 export interface SendInput {
   prompt: Prompt
-  mode?: SendMode
   label?: string
   origin?: TurnOrigin
   clientRequestId: string
@@ -135,6 +130,7 @@ export interface Conversations<C extends Conversation> {
   lost?(conversation: C, turn: TurnInfo): void
   changed?(turn: TurnInfo): void
   queued?(conversation: C): void
+  queues?(): boolean
   streamed?(event: LLMEvent, conversation: C): void
   toolStarted?(call: ToolCallBlock, conversation: C): void
   toolProgress?(call: ToolCallBlock, text: string, conversation: C): void

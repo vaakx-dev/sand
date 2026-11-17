@@ -60,8 +60,8 @@ export const createOutbox = ({ link, saved, sent, changed }: OutboxOptions) => {
   }
 
   const deliver = async (item: OutboxItem) => {
-    const { id, session, prompt, mode, label, settings } = item
-    const input = { session, prompt, mode, label, settings, origin: 'user', clientRequestId: id } as const
+    const { id, session, prompt, label, settings } = item
+    const input = { session, prompt, label, settings, origin: 'user', clientRequestId: id } as const
     for (let attempt = 1; ; attempt++) {
       try {
         return sent(item, await link.send(item.pc, input))

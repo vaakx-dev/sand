@@ -13,6 +13,7 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/prompt": "workspace:*",
@@ -21,12 +22,12 @@
     "@sand/tools": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@sand/harness": "workspace:*",
     "@sand/ledger": "workspace:*",
-    "@sand/replay": "workspace:*",
-    "zod": "^4.6.5"
+    "@sand/replay": "workspace:*"
   }
 }

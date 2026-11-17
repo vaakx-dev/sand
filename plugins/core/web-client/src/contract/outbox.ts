@@ -1,13 +1,11 @@
 import type { Prompt } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { SendMode } from '@sand/turns-contract/contract'
 
 export interface OutboxItem {
   id: string
   session: string
   pc: string
   prompt: Prompt
-  mode?: SendMode
   label: string
   settings?: SessionSettings
   at: number
