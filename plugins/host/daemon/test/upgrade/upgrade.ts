@@ -78,28 +78,29 @@ describe('updating a real install', () => {
     withSand(async target => {
       github.point('dev', previous.folder)
       await installed(target, 'dev', previous)
-      const addons = wantedAddons.filter(id => previous.addons[id] && current.addons[id])
+      const next = previous.id === current.id ? await laterBuild() : current
+      const addons = wantedAddons.filter(id => previous.addons[id] && next.addons[id])
       expect(addons.length).toBeGreaterThan(0)
       const added = await sand(target, github, 'addons', 'install', ...addons)
       expect(added.code, added.output).toBe(0)
       for (const id of addons) expect((await addonStamp(target, id)).hash).toBe(previous.addons[id]!)
       const used = await useDatabase(target)
 
-      github.point('dev', current.folder)
-      const result = await update(target, current)
+      github.point('dev', next.folder)
+      const result = await update(target, next)
       const log = await target.log()
 
-      expect(result.current).toStartWith(current.id)
+      expect(result.current).toStartWith(next.id)
       expectNoRollback(log)
       expect(result.health?.runtime).toBe('ready')
       expect(result.health?.web).toBe(true)
       expect(result.health?.failedPlugins).toEqual([])
-      expect(result.state?.current?.id).toBe(current.id)
+      expect(result.state?.current?.id).toBe(next.id)
       const threads = await ask<{ thread: string }[]>(target, 'thread.list', {})
       expect(threads.map(row => row.thread)).toContain(used.thread)
       const bots = await ask<{ id: string }[]>(target, 'bot.list', {})
       expect(bots.map(bot => bot.id)).toContain(used.bot)
-      for (const id of addons) expect((await addonStamp(target, id)).hash).toBe(current.addons[id]!)
+      for (const id of addons) expect((await addonStamp(target, id)).hash).toBe(next.addons[id]!)
     }),
     20 * minute,
   )

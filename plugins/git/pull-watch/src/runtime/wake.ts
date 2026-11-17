@@ -13,7 +13,7 @@ export interface WakeDeps {
 }
 
 const GUIDE = [
-  'This thread follows this pull request, and it changed. Deal with it as the agent who opened it:',
+  'You follow this pull request, and it changed. Deal with it as the agent who owns it:',
   '- CI failed: find out why from the failing checks, fix it and push.',
   '- A review or comment asks for changes: make them and push; answer questions in your reply to the user.',
   '- Merge conflicts: bring the branch up to date with its base and push.',

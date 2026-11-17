@@ -1,4 +1,4 @@
-import type { Session, Sessions } from '@sand/chats/contract'
+import type { Sessions } from '@sand/chats/contract'
 import type { GitHub, PullRef } from '@sand/github/contract'
 import type { Watch, Watches } from '@sand/watches/contract'
 import { keyedSerial } from '@sand/util'
@@ -42,19 +42,9 @@ export const followedOf = (watch: Watch): FollowedPull => {
 export const createFollows = ({ watches, sessions, github }: FollowsDeps) => {
   const serially = keyedSerial()
 
-  const rootOf = (session: Session): Session => {
-    const parent = session.kind === 'agent' && session.parent ? sessions.open(session.parent) : undefined
-    return parent ? rootOf(parent) : session
-  }
-
-  const rootId = (id: string) => {
-    const session = sessions.open(id)
-    return session ? rootOf(session).id : id
-  }
-
   const threadOf = (id: string) => {
     if (!sessions.open(id)) throw new Error(`No thread ${id}`)
-    return rootId(id)
+    return id
   }
 
   const find = (thread: string, ref: PullRef) => watches.list(OWNER, thread).find(watch => sameRef(watch, ref))
@@ -78,12 +68,11 @@ export const createFollows = ({ watches, sessions, github }: FollowsDeps) => {
   }
 
   return {
-    thread: rootId,
-    list: (id: string) => watches.list(OWNER, rootId(id)).filter(watch => watch.kind === KIND).map(followedOf),
+    list: (id: string) => watches.list(OWNER, id).filter(watch => watch.kind === KIND).map(followedOf),
     follow,
     followText: (thread: string, pull: string) => follow(thread, refOf(pull)),
     unfollow(id: string, pull: string) {
-      const found = find(rootId(id), refOf(pull))
+      const found = find(id, refOf(pull))
       return found ? watches.remove(found.id) : false
     },
     forget(thread: string) {
