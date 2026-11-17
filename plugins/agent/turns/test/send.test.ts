@@ -149,3 +149,15 @@ test('a tool waiting for the user puts its turn in the waiting state until it an
   expect(await sand.turns.wait(turn, 'end')).toMatchObject({ status: 'completed' })
   expect(sand.turns.get(turn)?.waiting).toBeUndefined()
 })
+
+test('only a user turn counts as talking to the chat', async () => {
+  const { chat } = await start([[said('Hi.')], [said('Done.')]])
+  const created = chat.talked
+
+  await sand.turns.run(chat, 'job finished', { origin: 'job' })
+  expect(chat.talked).toBe(created)
+
+  await Bun.sleep(5)
+  await sand.turns.run(chat, 'hello')
+  expect(chat.talked).toBeGreaterThan(created)
+})

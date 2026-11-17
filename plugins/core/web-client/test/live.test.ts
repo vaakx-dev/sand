@@ -47,6 +47,7 @@ const info = (id: string): SessionInfo => ({
   parent: null,
   origin: null,
   title: '',
+  talked: 0,
   seen: true,
   pinned: false,
   archived: null,

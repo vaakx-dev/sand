@@ -921,6 +921,7 @@
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/engine": "workspace:*",
+        "@sand/ledger": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/prompt": "workspace:*",
         "@sand/provider-threads": "workspace:*",
@@ -933,7 +934,6 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
-        "@sand/ledger": "workspace:*",
         "@sand/replay": "workspace:*",
       },
     },

@@ -64,7 +64,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes
       menu: () => threadMenu(parts, thread.id),
     },
     moved: isBack(thread) ? Math.max(thread.info.updated, thread.info.snoozed ?? 0) : thread.info.updated,
-    talked: thread.info.updated,
+    talked: thread.info.talked,
     snoozed,
     archived: Boolean(thread.info.archived),
     pinned: Boolean(thread.info.pinned),

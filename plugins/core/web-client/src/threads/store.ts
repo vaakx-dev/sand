@@ -11,6 +11,7 @@ const listKey = ({ info, device, running, started }: Thread) =>
     running ? 0 : info.updated,
     info.project,
     info.title,
+    info.talked,
     info.messages,
     info.cwd,
     info.kind,

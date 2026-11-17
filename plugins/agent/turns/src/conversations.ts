@@ -44,7 +44,10 @@ export const sessionConversations = (ctx: TurnsContext, owner: Owner, queues: ()
     },
     ready: (prompt, session, signal) => ctx.waterfall(turnReady, prompt, session, signal),
     overflow: (session, turn, error, signal) => ctx.bail(contextOverflow, session, turn, error, signal),
-    started: (session, prompt, info) => ctx.emit(turnStart, session, prompt, turnOf(info)),
+    started(session, prompt, info) {
+      if (info.origin === 'user') ctx.sessions.update(session.id, { talked: info.started })
+      ctx.emit(turnStart, session, prompt, turnOf(info))
+    },
     ended(session, result, info) {
       unseen(session)
       ctx.emit(turnEnd, session, result, turnOf(info))

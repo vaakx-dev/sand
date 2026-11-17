@@ -99,10 +99,6 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
       return [...(turn?.status === 'running' ? [turn.started] : []), ...subagentStarts(child.id)]
     })
 
-  const TALK_SCAN = 50
-
-  const talkedOf = (bot: Bot, chat: Session) => turns.list(chat, undefined, TALK_SCAN).find(turn => turn.origin === 'user')?.started ?? bot.created
-
   const botOf = (session: string): string | undefined => {
     if (records.get(session)) return session
     const parent = sessions.open(session)?.parent
@@ -119,7 +115,7 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
       ...bot,
       folder: folderOf(bot.id),
       subagents: subagentStarts(bot.id),
-      talked: talkedOf(bot, chat),
+      talked: chat.talked,
       ...statusOf(chat),
       spent,
       ...(hold && { hold }),
