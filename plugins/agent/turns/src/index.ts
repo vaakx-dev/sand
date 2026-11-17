@@ -9,6 +9,7 @@ import { inject, type TurnsContext } from './context'
 import { sessionConversations, turnOf } from './conversations'
 import { finalReply } from './reply'
 import { serveTurns } from './serve'
+import { talkedBackfill } from './talked'
 
 const found = (info: EngineTurn | undefined) => info && turnOf(info)
 
@@ -30,6 +31,7 @@ export default definePlugin({
   inject,
   config: z.object({ queue: z.boolean().default(false) }).default({ queue: false }),
   apply(ctx, config) {
+    ctx.ledger.migrate('turns-talked', talkedBackfill)
     let sending: Sending = config
     const currentSending = () => sending
     const runners: Record<Owner, Runner<Session>> = { thread: attach(ctx, 'thread', currentSending), bot: attach(ctx, 'bot', currentSending) }
