@@ -39,6 +39,7 @@ export const createPlans = (schedules: Schedules) => {
       plans()
         .filter(found => found.turn === turn && found.resume)
         .forEach(found => plan({ ...found, resume: false })),
+    waiting: () => plans().filter(found => !found.resume),
     list: (): Resume[] => plans().flatMap(({ turn, at, resume }) => (resume ? [{ turn, at }] : [])),
   }
 }

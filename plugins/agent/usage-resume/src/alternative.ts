@@ -17,7 +17,7 @@ const open = (llm: LLM, model: ModelInfo) => {
 export const alternativeOf = (llm: LLM, model: string): Alternative | undefined => {
   const current = llm.find?.(model)
   if (!current) return undefined
-  const online = new Set((llm.sources?.() ?? []).filter(source => source.online !== false).map(source => source.id))
+  const online = new Set((llm.sources?.() ?? []).filter(source => source.online !== false && source.billing === 'plan').map(source => source.id))
   const models = (llm.models?.() ?? []).filter(found => found.source !== current.source && online.has(found.source ?? '') && open(llm, found))
   return offerOf(llm, models.find(found => found.name === current.name) ?? models[0])
 }
