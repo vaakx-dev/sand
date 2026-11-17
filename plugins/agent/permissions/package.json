@@ -25,6 +25,7 @@
     }
   },
   "dependencies": {
+    "@sand/ask": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
@@ -42,7 +43,6 @@
     "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
-    "@sand/sub-model": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",
@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@sand/harness": "workspace:*",
+    "@sand/model": "workspace:*",
     "@sand/replay": "workspace:*"
   }
 }

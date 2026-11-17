@@ -1,6 +1,6 @@
 import type { GrepMatch } from '@sand/project/contract'
 import type { EffortLevel, Limits, ModelInfo, SourceInfo } from '@sand/accounts/contract'
-import type { EffectiveSettings, SessionSettings, SettingsState } from '@sand/model/contract'
+import type { EffectiveSettings, LevelPicks, SessionSettings, SettingsState } from '@sand/model/contract'
 import type { SkillSummary } from '@sand/skills/contract'
 
 export interface Models {
@@ -8,9 +8,9 @@ export interface Models {
   list(): ModelInfo[]
   known(): boolean
   sources(): SourceInfo[]
-  levels(): EffortLevel[]
+  efforts(): EffortLevel[]
+  levels(): LevelPicks
   info(id?: string): ModelInfo | undefined
-  defaults(): SessionSettings
   state(thread?: string): SettingsState | undefined
   settings(thread?: string): EffectiveSettings | undefined
   label(settings: SessionSettings): string

@@ -1,5 +1,5 @@
 import { type Message, textOf } from '@sand/chats/contract'
-import type { SubModel } from '@sand/sub-model/contract'
+import type { Ask } from '@sand/ask/contract'
 import { oneLine } from '@sand/util'
 import { z } from 'zod'
 
@@ -12,9 +12,9 @@ const summed = z.object({ gist: z.string() })
 
 const cleaned = (gist: string) => oneLine(gist.replace(/^[\s"'`]+|[\s"'`.]+$/g, ''), mostGistChars)
 
-export const askGist = async (sub: SubModel, { bot, reply, signal }: { bot: string; reply: Message; signal: AbortSignal }) => {
+export const askGist = async (ask: Ask, { bot, reply, signal }: { bot: string; reply: Message; signal: AbortSignal }) => {
   const prompt = textOf(reply.content, '\n').slice(0, mostReplyChars)
-  const answer = await sub.json({ tier: 'fast', system, prompt, session: bot, signal }, summed)
+  const answer = await ask.json({ level: 'background', system, prompt, session: bot, signal }, summed)
   const gist = cleaned(answer.gist)
   if (!gist) throw new Error('the model sent an empty gist')
   return gist

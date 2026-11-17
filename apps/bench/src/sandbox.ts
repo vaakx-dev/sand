@@ -57,6 +57,12 @@ const settings = ({ replies, gapMs }: Script, addons: string[]) =>
     'models = ["script"]',
     `replies = [${Array.from({ length: replies }, (_, index) => `[${streamed(index + 1, gapMs)}]`).join(', ')}]`,
     '',
+    '[plugins.model.levels.main]',
+    'model = "replay/script"',
+    '',
+    '[plugins.thread-titles]',
+    'enabled = false',
+    '',
   ].join('\n')
 
 const printed = (out: string, pattern: RegExp) => {
@@ -101,7 +107,6 @@ class Sand {
     cpSync(join(REPO, 'docs/images/phone-chat.png'), join(folder, 'plot.png'))
     await Bun.write(join(folder, 'package.json'), JSON.stringify({ name: 'bench-seed', type: 'module', sand: { runtime: `./${plugin}` } }))
     await Bun.write(join(home, 'sandbox.toml'), settings(script, addons))
-    await Bun.write(join(home, 'model.json'), JSON.stringify({ model: 'replay/script' }))
     const out = await this.run(home, 'sandbox')
     rmSync(home, { recursive: true, force: true })
     return printed(out, /throwaway sand \(pid \d+\) in (.+)$/m).replace(/^~(?=[\\/])/, homedir())

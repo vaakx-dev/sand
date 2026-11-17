@@ -4,7 +4,7 @@ import { threadList } from '@sand/orchestrator/contract'
 import { type Entry, type Message, promptText, type Session, textOf, type UserContent } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { defaultsSet, modelSettings } from '@sand/model/contract'
+import { levelSet, modelSettings } from '@sand/model/contract'
 import type { Reply } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -161,7 +161,7 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
 
 test("a bot starts a thread in its own folder, or in its only project, which says the bot sent it and stands on its own: no report back, not listed as the bot's", async () => {
   await start([said('Tidied.'), said('README fixed.'), said('Hi back.')], [])
-  await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
+  await sand.ask(levelSet, { level: 'main', model: 'fake/t' })
   const bot = await createBot('Builder')
 
   const tidy = await use(asBot(bot.id), 'thread_start', { prompt: 'Tidy your folder' })

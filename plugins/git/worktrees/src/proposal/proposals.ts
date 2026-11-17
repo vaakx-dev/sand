@@ -1,6 +1,6 @@
 import { pathKey } from '@sand/git/contract'
 import { type GitRunner } from '@sand/git-runner/contract'
-import type { SubModel } from '@sand/sub-model/contract'
+import type { Ask } from '@sand/ask/contract'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { SetupAnswer, SetupLines, SetupProposal } from '../contract'
@@ -19,13 +19,13 @@ export interface ProposalDeps {
   store: RecordStore
   setups: Setups
   file: string
-  sub(): SubModel | undefined
+  ask(): Ask | undefined
   send(proposal: SetupProposal): void
 }
 
 export type Proposals = ReturnType<typeof createProposals>
 
-export const createProposals = ({ git, store, setups, file, sub, send }: ProposalDeps) => {
+export const createProposals = ({ git, store, setups, file, ask, send }: ProposalDeps) => {
   const declined = createDeclined(file)
   const offered = new Set<string>()
   const shown = new Map<string, SetupLines>()
@@ -49,9 +49,9 @@ export const createProposals = ({ git, store, setups, file, sub, send }: Proposa
 
   return {
     async offer(record: WorktreeRecord) {
-      const model = sub()
+      const model = ask()
       const project = pathKey(record.main)
-      if (!model?.has('fast') || offered.has(project)) return
+      if (!model || offered.has(project)) return
       offered.add(project)
       if (existsSync(join(record.main, setupFileName)) || (await declined.has(project))) return
       const facts = await gatherFacts(git, record.main)

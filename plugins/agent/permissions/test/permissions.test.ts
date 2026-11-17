@@ -3,7 +3,7 @@ import { startSand } from '@sand/harness'
 import { botCreate } from '@sand/bots/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
 import type { Source } from '@sand/replay/contract'
-import { subModelSet } from '@sand/sub-model/contract'
+import { levelSet } from '@sand/model/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { z } from 'zod'
@@ -32,7 +32,7 @@ const start = async (replies: Source['replies'], judge: Source['replies'] = [], 
       { id: 'fake', models: ['m'], replies, api: 'anthropic' },
       { id: 'judge', models: ['j'], replies: judge, api: 'anthropic' },
     ],
-    { plugins: ['agent/ask', 'agent/sub-model', 'agent/permissions', ...plugins] },
+    { plugins: ['agent/ask', 'agent/permissions', ...plugins] },
   )
   running.push(sand)
   return sand
@@ -152,7 +152,7 @@ test('an unanswered question denies its call at the deadline, and a late allow l
   await last
 })
 
-test('auto mode asks the sub model, tells the agent what it blocked, and asks the user after three blocks in a row', async () => {
+test('auto mode asks the sub level model, tells the agent what it blocked, and asks the user after three blocks in a row', async () => {
   const sand = await start(
     [
       [said(pleading), call('send_mail', { to: 'team' })],
@@ -165,7 +165,7 @@ test('auto mode asks the sub model, tells the agent what it blocked, and asks th
   )
   const ran = register(sand)
   const chat = sand.chat('fake/m')
-  await sand.ask(subModelSet, { tier: 'smart', model: { model: 'judge/j' } })
+  await sand.ask(levelSet, { level: 'sub', model: 'judge/j' })
   service(sand).setMode({ owner: 'thread', id: chat.id }, 'auto')
 
   const asked = nextAsk(sand)

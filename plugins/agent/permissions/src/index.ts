@@ -6,7 +6,7 @@ import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { ledger } from '@sand/ledger/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
-import { subModel } from '@sand/sub-model/contract'
+import { ask } from '@sand/ask/contract'
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
 import { type Decision, modeWire, permissionAsked, permissions, questionsWire, settingsWire } from './contract'
@@ -25,7 +25,7 @@ const PRUNE_EVERY_MS = 60 * 60 * 1000
 export default definePlugin({
   name: 'permissions',
   description:
-    'Permission modes for threads and bots: off, ask (asks the user before risky calls, with saved rules and a deadline) and auto (the sub model decides what would have asked); stricter defaults for threads a bot starts, and a log of every decision',
+    'Permission modes for threads and bots: off, ask (asks the user before risky calls, with saved rules and a deadline) and auto (the model set for the sub level decides what would have asked); stricter defaults for threads a bot starts, and a log of every decision',
   inject: { ledger, tools, engine },
   apply(ctx) {
     const stores = openStores(ctx.ledger)
@@ -67,7 +67,7 @@ export default definePlugin({
           questions,
           secrets: () => ctx.tools.secrets(),
           review: request => {
-            const found = ctx.get(subModel)
+            const found = ctx.get(ask)
             return found && reviewCall(found, request)
           },
           title,

@@ -6,7 +6,6 @@ const keys = ['model', 'effort', 'speed'] as const
 export const clean = (settings: SettingsPatch): SessionSettings =>
   Object.fromEntries(Object.entries(settings).filter(([, value]) => value !== undefined && value !== null))
 
-export const knownPatch = (patch: SettingsPatch): SettingsPatch => Object.fromEntries(keys.filter(key => key in patch).map(key => [key, patch[key]]))
 
 export const settingsOf = (session?: Session): SessionSettings =>
   (session?.latest('settings')?.data as SessionSettings | undefined) ?? {}

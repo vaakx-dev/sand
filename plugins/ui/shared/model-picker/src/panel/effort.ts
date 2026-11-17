@@ -8,7 +8,7 @@ export const effortBar = (ctx: PickerContext, { shown, target }: Scene, flash: b
   const { segmented } = ctx.kit
   const model = ctx.models.info(shown.model)
   const bar = segmented(
-    ctx.models.levels().map(level => ({
+    ctx.models.efforts().map(level => ({
       value: level.id,
       label: level.label,
       disabled: !shown.supportsEffort || !model?.efforts.includes(level.id),

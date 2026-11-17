@@ -1,5 +1,5 @@
 import type { Effort } from '@sand/accounts/contract'
-import { tiers } from '@sand/sub-model/contract'
+import { levels } from '@sand/model/contract'
 import { errorMessage, parseFrontmatter } from '@sand/util'
 import { scanFolder } from '@sand/util/fs'
 import { basename, join } from 'node:path'
@@ -21,17 +21,17 @@ const parseEffort = (value: unknown, efforts: Effort[]) => {
   return effort
 }
 
-const parseTier = (value: unknown) => {
+const parseLevel = (value: unknown) => {
   if (value === undefined || value === null) return undefined
-  const tier = tiers.find(known => known === value)
-  if (!tier) throw new Error(`tier must be one of ${tiers.join(', ')}`)
-  return tier
+  const level = levels.find(known => known === value)
+  if (!level) throw new Error(`level must be one of ${levels.join(', ')}`)
+  return level
 }
 
 const parse = async (path: string, efforts: Effort[]): Promise<AgentDefinition> => {
   const { meta, body: prompt } = parseFrontmatter(await Bun.file(path).text())
   const effort = parseEffort(meta.effort, efforts)
-  const tier = parseTier(meta.tier)
+  const level = parseLevel(meta.level)
   const tools = list(meta.tools)
   return {
     name: String(meta.name ?? basename(path, '.md')),
@@ -40,7 +40,7 @@ const parse = async (path: string, efforts: Effort[]): Promise<AgentDefinition> 
     ...(tools && { tools }),
     ...(meta.model != null && { model: String(meta.model) }),
     ...(effort && { effort }),
-    ...(tier && { tier }),
+    ...(level && { level }),
   }
 }
 

@@ -23,7 +23,6 @@
     "@sand/paths": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/sub-model": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",

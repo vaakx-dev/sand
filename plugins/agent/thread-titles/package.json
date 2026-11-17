@@ -1,7 +1,7 @@
 {
   "name": "@sand/thread-titles",
   "version": "0.0.0",
-  "description": "Titles a new thread with the fast sub model while its first turn runs",
+  "description": "Titles a new thread with the background model while its first turn runs",
   "type": "module",
   "sand": {
     "feature": "threads",
@@ -10,8 +10,8 @@
     "summary": "Swaps a new thread's cut-off first message for a short AI title"
   },
   "dependencies": {
+    "@sand/ask": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/sub-model": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

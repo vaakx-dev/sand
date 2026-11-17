@@ -217,7 +217,7 @@ const start = async (models: Models, options: SandOptions) => {
 }
 
 export const startSand = (sources: Source[], options: SandOptions = {}) =>
-  start({ ids: sources.flatMap(source => source.models.map(name => `${source.id}/${name}`)), replay: sources }, options)
+  start({ ids: sources.flatMap(source => source.models.map(model => `${source.id}/${typeof model === 'string' ? model : model.name}`)), replay: sources }, options)
 
 export const startLiveSand = (models: string[], options: SandOptions = {}) => start({ ids: models }, { ...options, options: { ...options.options, accounts: { auth_file: userAuthFile(), ...options.options?.accounts } } })
 

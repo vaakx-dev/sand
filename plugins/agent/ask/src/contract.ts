@@ -1,13 +1,11 @@
-import type { Effort, Speed } from '@sand/accounts/contract'
+import type { Level } from '@sand/model/contract'
 import { service } from 'drydock'
 import type { z } from 'zod'
 
 export interface AskRequest {
   system: string
   prompt: string
-  model: string
-  effort?: Effort
-  speed?: Speed
+  level: Level
   session?: string
   signal?: AbortSignal
 }

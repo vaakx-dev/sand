@@ -28,7 +28,7 @@ const offTopLevel = ['bots', 'notifications', 'updates']
 
 test('with Notifications off, a thread turn finishes and nothing fails', async () => {
   const model = { id: 'fake', models: ['m'], replies: [[{ type: 'text' as const, text: 'Done' }]] }
-  const sand = await startSand([model], { config: `[features]\n${offTopLevel.map(id => `${id} = false`).join('\n')}` })
+  const sand = await startSand([model], { config: `[features]\n${offTopLevel.map(id => `${id} = false`).join('\n')}\n\n[plugins.thread-titles]\nenabled = false\n` })
   try {
     expect(sand.app.get(notify)).toBeUndefined()
     const result = await sand.turns.run(sand.chat('fake/m'), 'hi')

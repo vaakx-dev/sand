@@ -24,7 +24,7 @@ const changeRow = (ctx: PanelContext, open: () => void, shown: Picked): Row => (
 
 const effortRows = (ctx: PanelContext, target: ModelTarget, info: ModelInfo, shown?: Picked): Row[] =>
   ctx.models
-    .levels()
+    .efforts()
     .filter(level => info.efforts.includes(level.id))
     .map(level => ({
       item: {

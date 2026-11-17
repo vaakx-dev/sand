@@ -1,6 +1,6 @@
 import { type Message, notificationTag, textOf, type ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
-import type { SubModel } from '@sand/sub-model/contract'
+import type { Ask } from '@sand/ask/contract'
 import type { Act } from '@sand/tools/contract'
 import { z } from 'zod'
 
@@ -55,5 +55,5 @@ const promptOf = ({ conversation, call, act }: ReviewRequest) => {
   ].join('\n\n')
 }
 
-export const reviewCall = async (sub: SubModel, request: ReviewRequest): Promise<Review> =>
-  sub.json({ tier: 'smart', system, prompt: promptOf(request), signal: request.signal }, verdict)
+export const reviewCall = async (ask: Ask, request: ReviewRequest): Promise<Review> =>
+  ask.json({ level: 'sub', system, prompt: promptOf(request), signal: request.signal }, verdict)

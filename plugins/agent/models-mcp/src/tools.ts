@@ -2,9 +2,9 @@ import { modelsPrice } from '@sand/accounts/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { modelsList } from '@sand/model/contract'
+import { levels, levelSet, levelsGet, modelsList } from '@sand/model/contract'
 
-const group: McpGroup = { name: 'models', label: 'Models', summary: 'list the models you can use and set the price of a model' }
+const group: McpGroup = { name: 'models', label: 'Models', summary: 'list the models you can use, set the model of each level and set the price of a model' }
 
 const listInput = z.object({ thread: z.string().optional().describe('Mark the model this thread uses (default: you, when you are a thread)') })
 
@@ -17,6 +17,32 @@ const priceInput = z.object({
   cache_read: dollars('cached input tokens read (default: the input price)').optional(),
   cache_write: dollars('input tokens written to the cache (default: the input price)').optional(),
 })
+
+const levelsInput = z.object({})
+
+const levelSetInput = z.object({
+  level: z.enum(levels).describe("bot: a bot's own chat; main: threads and agents doing the main work; sub: routine edits and clear jobs; light: finding things and basic computer use; background: titles, summaries and other small jobs"),
+  model: z.string().min(1).nullable().optional().describe('A model id or name from model_list; null clears the level so it uses the next heavier one'),
+  effort: z.string().min(1).optional().describe('Its effort level, such as low, medium or high, if its model has effort levels'),
+})
+
+const levelsTool: McpTool<typeof levelsInput> = {
+  name: 'model_levels',
+  description: 'The model and effort the user set for each level. A level left out uses the next heavier one: background, light, sub, main; bot uses main',
+  input: levelsInput,
+  access: 'read',
+  group: group.name,
+  run: (input, { call }) => call(levelsGet, input),
+}
+
+const levelSetTool: McpTool<typeof levelSetInput> = {
+  name: 'model_level_set',
+  description: "Set the model or effort of a level when the user asks; saved in sand.toml. Returns every level's choice",
+  input: levelSetInput,
+  access: 'operate',
+  group: group.name,
+  run: (input, { call }) => call(levelSet, input),
+}
 
 const listTool: McpTool<typeof listInput> = {
   name: 'model_list',
@@ -41,6 +67,7 @@ const priceTool: McpTool<typeof priceInput> = {
   },
 }
 
-const offerModelTools = (tools: McpTools) => joinDisposers(tools.group(group), tools.register(listTool), tools.register(priceTool))
+const offerModelTools = (tools: McpTools) =>
+  joinDisposers(tools.group(group), tools.register(listTool), tools.register(levelsTool), tools.register(levelSetTool), tools.register(priceTool))
 
-export { listTool, offerModelTools, priceTool }
+export { levelSetTool, levelsTool, listTool, offerModelTools, priceTool }
