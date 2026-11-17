@@ -1,9 +1,7 @@
 import { dirname, join, sep } from 'node:path'
-import { isRecord } from '../json/record'
+import { z } from 'zod'
 import { compare } from '../text/compare'
 import { isLinkEntry, modulesFolder } from './manifest'
-
-export type Manifest = Record<string, unknown>
 
 interface WorkspacePackage {
   name: string
@@ -12,20 +10,27 @@ interface WorkspacePackage {
   dependencies: string[]
 }
 
-export const readManifest = async (dir: string): Promise<Manifest | undefined> => {
-  const manifest: unknown = await Bun.file(join(dir, 'package.json'))
-    .json()
-    .catch(() => undefined)
-  return isRecord(manifest) ? manifest : undefined
-}
+const dependencies = z.record(z.string(), z.string()).default({})
 
-export const dependencyNames = (deps: unknown) => (isRecord(deps) ? Object.keys(deps) : [])
+const manifest = z.object({
+  name: z.string().optional(),
+  version: z.string().optional(),
+  description: z.string().optional(),
+  type: z.string().optional(),
+  main: z.string().optional(),
+  module: z.string().optional(),
+  exports: z.union([z.string(), z.record(z.string(), z.json())]).optional(),
+  dependencies,
+  optionalDependencies: dependencies,
+  workspaces: z.union([z.array(z.string()), z.object({ packages: z.array(z.string()) })]).optional(),
+  sand: z.object({ feature: z.string().optional(), features: z.record(z.string(), z.json()).optional() }).optional(),
+})
 
-const workspaceGlobs = (manifest: Manifest | undefined) => {
-  const workspaces = manifest?.workspaces
-  const globs = isRecord(workspaces) ? workspaces.packages : workspaces
-  return Array.isArray(globs) ? globs.filter((glob): glob is string => typeof glob === 'string') : []
-}
+export type Manifest = z.output<typeof manifest>
+
+export const readManifest = async (dir: string): Promise<Manifest> => manifest.parse(await Bun.file(join(dir, 'package.json')).json())
+
+const workspaceGlobs = ({ workspaces = [] }: Manifest) => (Array.isArray(workspaces) ? workspaces : workspaces.packages)
 
 const toSlashes = (path: string) => path.split(sep).join('/')
 
@@ -36,9 +41,8 @@ export const workspacePackages = async (root: string): Promise<WorkspacePackage[
       const path = toSlashes(dirname(file))
       if (path.split('/').includes(modulesFolder) || found.has(path)) continue
       const dir = join(root, path)
-      const manifest = await readManifest(dir)
-      const name = manifest?.name
-      if (typeof name === 'string' && name) found.set(path, { name, dir, path, dependencies: dependencyNames(manifest?.dependencies) })
+      const { name, dependencies } = await readManifest(dir)
+      if (name) found.set(path, { name, dir, path, dependencies: Object.keys(dependencies) })
     }
   }
   return [...found.values()].sort((a, b) => compare(a.path, b.path))

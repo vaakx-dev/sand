@@ -1,16 +1,11 @@
-import { basename, join } from 'node:path'
-import { isRecord } from '@sand/util'
+import { readManifest } from '@sand/util/release'
+import { basename } from 'node:path'
 
 const installTimeout = 120_000
 
-const dependencyVersions = async (folder: string) => {
-  const manifest: unknown = await Bun.file(join(folder, 'package.json'))
-    .json()
-    .catch(() => undefined)
-  return isRecord(manifest) && isRecord(manifest.dependencies) ? Object.values(manifest.dependencies) : []
-}
+const dependencyVersions = async (folder: string) => Object.values((await readManifest(folder)).dependencies)
 
-const isWorkspace = (version: unknown) => typeof version === 'string' && version.startsWith('workspace:')
+const isWorkspace = (version: string) => version.startsWith('workspace:')
 
 export const installDependencies = async (folder: string): Promise<void> => {
   const versions = await dependencyVersions(folder)

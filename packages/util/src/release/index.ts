@@ -22,4 +22,4 @@ export { hashModules, isLinkEntry, isModulePath, moduleHash, modulesFolder, rele
 export { readyRelease } from './ready'
 export { hashApp, hashFiles, isStamp, readStamp, type AppFile, type BuildChange, type BuildInfo, type BuildStamp } from './stamp'
 export { appVersion } from './version'
-export { dependencyNames, readManifest, workspaceLinks, workspacePackages, type Manifest } from './workspaces'
+export { readManifest, workspaceLinks, workspacePackages, type Manifest } from './workspaces'

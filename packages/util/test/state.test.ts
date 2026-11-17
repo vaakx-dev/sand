@@ -2,12 +2,12 @@ import { expect, test } from 'bun:test'
 import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { isRecord } from '../src'
+import { z } from 'zod'
 import { readState } from '../src/fs'
 
 const DAMAGED = /^drafts\.json\.damaged-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z$/
 
-const counted = (data: unknown) => (isRecord(data) && typeof data.count === 'number' ? data.count : undefined)
+const counted = (data: unknown) => z.object({ count: z.number() }).safeParse(data).data?.count
 
 test('readState reads a good file and sets a damaged one aside with a timestamp so callers start from defaults', async () => {
   const home = await mkdtemp(join(tmpdir(), 'sand-state-'))

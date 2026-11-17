@@ -120,6 +120,9 @@
     "packages/util": {
       "name": "@sand/util",
       "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.6.5",
+      },
     },
     "packages/vault": {
       "name": "@sand/vault",

@@ -1,18 +1,8 @@
 import type { UpdateChannel } from '@sand/host-updates/contract'
-import { isRecord, serial } from '@sand/util'
+import { serial } from '@sand/util'
 import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
-
-interface LaterEntry {
-  build: string
-  until: number
-}
-
-interface Saved {
-  channel: UpdateChannel
-  later?: LaterEntry
-  dismissed: string[]
-}
+import { z } from 'zod'
 
 export interface UpdateStore {
   channel(): UpdateChannel
@@ -25,22 +15,17 @@ export interface UpdateStore {
 
 const day = 24 * 60 * 60 * 1000
 
-export const isChannel = (value: unknown): value is UpdateChannel => value === 'release' || value === 'nightly' || value === 'dev'
+const channels = z.enum(['release', 'nightly', 'dev'] satisfies UpdateChannel[])
 
-const parseLater = (later: unknown): LaterEntry | undefined => {
-  if (!isRecord(later)) return
-  const { build, until } = later
-  if (typeof build !== 'string' || !build || typeof until !== 'number') return
-  return { build, until }
-}
+const savedSchema = z.object({
+  channel: channels,
+  later: z.object({ build: z.string(), until: z.number() }).optional(),
+  dismissed: z.array(z.string()).default([]),
+})
 
-const parse = (data: unknown): Saved => {
-  const saved = isRecord(data) ? data : {}
-  const dismissed = Array.isArray(saved.dismissed) ? saved.dismissed.filter(id => typeof id === 'string') : []
-  return { channel: isChannel(saved.channel) ? saved.channel : 'release', later: parseLater(saved.later), dismissed }
-}
+export const isChannel = (value: unknown): value is UpdateChannel => channels.safeParse(value).success
 
-const read = async (file: string) => (await readState(file, parse)) ?? parse(undefined)
+const read = async (file: string) => (await readState(file, data => savedSchema.safeParse(data).data)) ?? { channel: 'release', dismissed: [] }
 
 export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')

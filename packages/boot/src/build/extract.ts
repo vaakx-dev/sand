@@ -32,10 +32,7 @@ const readEntries = async (bytes: Uint8Array) => {
 }
 
 const parseStamp = async (entries: Entries) => {
-  const stamp: unknown = await entries
-    .get(buildStamp)!
-    .json()
-    .catch(() => undefined)
+  const stamp: unknown = await entries.get(buildStamp)!.json()
   if (!isStamp(stamp)) throw new Error(releaseDamaged)
   return stamp
 }
