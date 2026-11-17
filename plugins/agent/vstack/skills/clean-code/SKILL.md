@@ -117,7 +117,8 @@ Branching on a fixed set of cases:
 - TS: return new values instead of mutating inputs. Rust: `&mut self` methods are fine.
 - TS: use `function` declarations, `interface` for object shapes, `async/await`, and type inference except at exported signatures.
 - Each piece of state has one owner. Derive values instead of syncing copies. A second flag that must match the first means the shape is wrong.
-- Check outside input once, where it comes in. Past that point, trust the types.
+- Check outside input (files, network or peer replies, user config, stored browser data) once, where it comes into the program.
+- Past that point, and for any value the code just built or whose type is already known, write no guards, type checks (like an `isRecord` or "is it an object" test), fallbacks, defaults, null checks or try/catch for cases the types rule out.
 - Catch an error only where you can do something real with it.
 
 ## Fast by design
