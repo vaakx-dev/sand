@@ -1,4 +1,5 @@
 import { sessionRemove, type Session } from '@sand/chats/contract'
+import { conversationStop } from '@sand/engine/contract'
 import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import type { JobsContext } from './context'
@@ -35,7 +36,9 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     return stopped.length > 0
   }
 
-  const stopAll = (parent: string, reason = stoppedWithChat) => stopNoted(running().filter(({ job }) => job.parent === parent), reason)
+  ctx.on(conversationStop, (conversation, interruption) => {
+    stopNoted(running().filter(({ job }) => job.parent === conversation.id), interruption?.note ?? stoppedWithChat)
+  })
 
   let disposing = false
   let handing = false
@@ -121,7 +124,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     return entry
   }
 
-  return { start, list, own, stop, stopAll }
+  return { start, list, own, stop }
 }
 
 export type Store = ReturnType<typeof createStore>

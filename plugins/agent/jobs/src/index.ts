@@ -13,7 +13,7 @@ export default definePlugin({
   apply(ctx) {
     const delivery = createDelivery(ctx)
     const store = createStore(ctx, delivery)
-    const jobs: BackgroundJobs = { start: store.start, list: store.list, stopAll: store.stopAll }
+    const jobs: BackgroundJobs = { start: store.start, list: store.list }
     ctx.provide(backgroundJobs, jobs)
     serveJobs(ctx, store)
     jobTools(ctx, store, delivery)

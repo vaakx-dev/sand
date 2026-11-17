@@ -348,6 +348,7 @@
       "dependencies": {
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
+        "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/server": "workspace:*",
@@ -497,7 +498,6 @@
         "@sand/chats": "workspace:*",
         "@sand/devices-notify": "workspace:*",
         "@sand/engine": "workspace:*",
-        "@sand/jobs": "workspace:*",
         "@sand/machine": "workspace:*",
         "@sand/processes": "workspace:*",
         "@sand/util": "workspace:*",
@@ -583,7 +583,6 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
-        "@sand/jobs": "workspace:*",
         "@sand/ledger": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/project": "workspace:*",
@@ -597,6 +596,7 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/replay": "workspace:*",
         "@sand/tools": "workspace:*",
       },

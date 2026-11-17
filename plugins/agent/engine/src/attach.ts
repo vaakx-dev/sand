@@ -1,4 +1,4 @@
-import type { Conversation, Conversations, Runner } from './contract'
+import { type Conversation, type Conversations, conversationStop, type Interruption, type Runner } from './contract'
 import type { EngineContext } from './context'
 import { createDispatch } from './lifecycle/dispatch'
 import type { Leases } from './lifecycle/lease'
@@ -19,6 +19,7 @@ export interface Shared {
 
 export interface Attached<C extends Conversation> {
   runner: Runner<C>
+  stop(id: string, interruption: Interruption): boolean
   sweep(): void
   recover(released?: ReadonlySet<string>): void
 }
@@ -37,6 +38,18 @@ export const attachConversations = <C extends Conversation>(
   const dispatch = createDispatch(ctx, owned, { opener, drive, running })
   const recover = createRecovery(ctx, owned, { drive, running })
 
+  const halt = (conversation: C, interruption?: Interruption) => {
+    const current = stores.turns.current(conversation)
+    if (current) leases.interrupt(current.id, interruption)
+    ctx.emit(conversationStop, conversation, interruption)
+    return current !== undefined
+  }
+
+  const stop = (id: string, interruption: Interruption) => {
+    const conversation = conversations.open(id)
+    return conversation ? halt(conversation, interruption) : false
+  }
+
   const runner: Runner<C> = {
     send: createSend(ctx, owned, { opener, drive, dispatch, recover, ready }),
     async run(conversation, prompt, { origin = 'user', signal } = {}) {
@@ -50,10 +63,8 @@ export const attachConversations = <C extends Conversation>(
       return result
     },
     interrupt(conversation, turn) {
-      const current = stores.turns.current(conversation)
-      if (!current || (turn && turn !== current.id)) return false
-      leases.interrupt(current.id)
-      return true
+      if (turn && turn !== stores.turns.current(conversation)?.id) return false
+      return halt(conversation)
     },
     current: conversation => stores.turns.current(conversation),
     get: id => stores.turns.get(owner, id),
@@ -90,5 +101,5 @@ export const attachConversations = <C extends Conversation>(
     }
   }
 
-  return { runner, sweep, recover }
+  return { runner, stop, sweep, recover }
 }

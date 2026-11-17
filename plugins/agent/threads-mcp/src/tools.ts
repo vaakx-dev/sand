@@ -175,7 +175,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof waitInput>,
   {
     name: 'thread_stop',
-    description: "Stop a thread's running turn. Its background commands keep running",
+    description: "Stop a thread's running turn, along with the subagents and background commands it started",
     input: stopInput,
     access: 'operate',
     group: group.name,

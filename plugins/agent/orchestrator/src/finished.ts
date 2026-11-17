@@ -15,7 +15,7 @@ const noticeOf = (session: Session, result: TurnResult, info: TurnInfo) =>
 export const runningSubagents = (ctx: OrchestratorContext, session: Session) =>
   ctx.sessions.children(session.id).some(child => threadStatus(ctx, ctx.sessions.require(child.id)) === 'running')
 
-export const reportFinished = (ctx: OrchestratorContext, starters: Starters, waits: Waits, owners: Owners) => {
+export const reportFinished = (ctx: OrchestratorContext, starters: Starters, waits: Waits, owners: Owners, stopped: Set<string>) => {
   const busy = (session: Session) => ctx.turns.pending(session).some(item => !item.held) || runningSubagents(ctx, session)
 
   const archived = ({ id }: ConversationRef) => Boolean(ctx.sessions.open(id)?.archived)
@@ -24,7 +24,10 @@ export const reportFinished = (ctx: OrchestratorContext, starters: Starters, wai
 
   ctx.on(turnEnd, (session, result, info) => {
     const starter = starters.of(session)
+    const quiet = stopped.delete(session.id)
     if (!starter || carriedOn(result, info) || archived(starter) || waits.has(starter, session.id) || busy(session)) return
-    owners.deliver(starter, { text: noticeOf(session, result, info), clientRequestId: `${session.id}@${info.id}` }).catch(error => ctx.report(error))
+    const text = noticeOf(session, result, info)
+    const told = quiet ? owners.record(starter, text) : owners.deliver(starter, { text, clientRequestId: `${session.id}@${info.id}` })
+    told.catch(error => ctx.report(error))
   })
 }

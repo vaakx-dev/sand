@@ -2,7 +2,6 @@ import { bots } from '@sand/bots/contract'
 import { type Session, sessions } from '@sand/chats/contract'
 import { notify } from '@sand/devices-notify/contract'
 import { type Engine, Interruption } from '@sand/engine/contract'
-import { backgroundJobs } from '@sand/jobs/contract'
 import type { Memory } from '@sand/machine'
 import type { ChatMemory } from '@sand/processes/contract'
 import { bytes } from '@sand/util'
@@ -35,7 +34,6 @@ const tell = (ctx: Context, chat: ChatMemory, { freeBytes }: Memory) => {
 export const stopChat = (ctx: Context, engine: Engine, chat: ChatMemory, memory: Memory) => {
   const interruption = new Interruption(OUT_OF_MEMORY, noteOf(chat, memory))
   engine.stop(chat.conversation, interruption)
-  ctx.get(backgroundJobs)?.stopAll(chat.conversation, interruption.note)
   chat.pids.filter(pid => pid !== process.pid).forEach(kill)
   tell(ctx, chat, memory)
 }

@@ -14,7 +14,6 @@
     "@sand/chats": "workspace:*",
     "@sand/devices-notify": "workspace:*",
     "@sand/engine": "workspace:*",
-    "@sand/jobs": "workspace:*",
     "@sand/machine": "workspace:*",
     "@sand/processes": "workspace:*",
     "@sand/util": "workspace:*",

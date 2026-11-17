@@ -31,6 +31,13 @@ export const createOwners = (ctx: OrchestratorContext) => {
       const session = chatOf(to)
       if (session) await ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId })
     },
+    async record(to: ConversationRef, text: string) {
+      const session = chatOf(to)
+      if (!session) return
+      const turn = ctx.turns.current(session)
+      if (turn) await ctx.turns.wait(turn.id, 'end')
+      session.append('message', { role: 'user', content: [{ type: 'text', text }] })
+    },
     sign(prompt: Prompt, from: ConversationRef | undefined): Prompt {
       if (!from) return prompt
       const kind = kinds.get(from.owner)

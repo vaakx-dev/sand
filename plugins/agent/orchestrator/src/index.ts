@@ -11,6 +11,7 @@ import { createPcs } from './pcs'
 import { openReceipts } from './receipts'
 import { schema } from './schema'
 import { archiveSubagents } from './archive'
+import { stopSubagents } from './stop'
 import { serveThreads } from './serve'
 import { serveSettle } from './settle'
 import { z } from 'zod'
@@ -46,7 +47,7 @@ export default definePlugin({
     }
     ctx.provide(orchestrator, threads)
     ctx.on(sessionRemove, starters.remove)
-    reportFinished(ctx, starters, waits, owners)
+    reportFinished(ctx, starters, waits, owners, stopSubagents(ctx))
     archiveSubagents(ctx)
     serveThreads(ctx, threads, start, createPcs(ctx))
     serveSettle(ctx, settle_days)

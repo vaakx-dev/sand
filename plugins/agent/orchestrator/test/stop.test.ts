@@ -41,15 +41,15 @@ const startChild = async (session: Session) => {
   return Number(pid)
 }
 
-test('stopping a thread ends only its reply; its background commands keep running', async () => {
+test('stopping a thread kills the whole process tree of its background commands', async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [] }], { plugins: ['agent/jobs', 'agent/shell', 'agent/shell-jobs'] })
   const thread = sand.chat('fake/m')
   const child = await startChild(thread)
 
   expect(await sand.ask(threadStop, { session: thread.id })).toBe(false)
 
-  expect(alive(child)).toBe(true)
-  expect(sand.app.get(backgroundJobs)!.list(thread.id).map(job => job.status)).toEqual(['running'])
+  expect(await exited(child)).toBe(true)
+  expect(sand.app.get(backgroundJobs)!.list(thread.id).map(job => job.status)).toEqual(['cancelled'])
 })
 
 test('archiving a thread kills the whole process tree of its background commands', async () => {
