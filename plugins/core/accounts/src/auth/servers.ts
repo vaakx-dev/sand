@@ -1,7 +1,6 @@
 import { bearer } from '@sand/util/host'
 import type { ServerDraft, ServerProvider } from '../contract'
 import { errorMessage, trimSlash } from '@sand/util'
-import { isServerProvider } from './kinds'
 import type { ServerEntry } from './store'
 
 const ports: Record<string, ServerProvider> = { '11434': 'ollama', '1234': 'lmstudio' }
@@ -42,7 +41,7 @@ export const serverEntry = (draft: ServerDraft, servers: ServerEntry[], taken: (
   const { url, port } = urlOf(draft.url)
   const before = draft.id ? servers.find(server => server.id === draft.id) : undefined
   if (draft.id && !before) throw new Error(`Unknown server "${draft.id}"`)
-  const provider = isServerProvider(draft.provider) ? draft.provider : (before?.provider ?? ports[port] ?? 'server')
+  const provider = draft.provider ?? before?.provider ?? ports[port] ?? 'server'
   const id = before?.id ?? uniqueId(baseId(name, provider), taken)
   const key = draft.key === undefined ? before?.key : draft.key.trim()
   return { id, name, url, provider, ...(key && { key }), ...(before?.shared !== undefined && { shared: before.shared }) }
