@@ -1,20 +1,37 @@
-import { isRecord } from '@sand/util'
 import { join } from 'node:path'
+import { z } from 'zod'
 import type { PluginCustomised } from './contract'
 
-const text = (value: unknown) => (typeof value === 'string' && value.trim() ? value.trim() : undefined)
+const text = z
+  .string()
+  .transform(value => value.trim() || undefined)
+  .catch(undefined)
 
-const readJson = async (folder: string) => {
-  const data: unknown = await Bun.file(join(folder, 'package.json')).json().catch(() => undefined)
-  return isRecord(data) ? data : undefined
-}
+const customised = z
+  .object({
+    version: text,
+    build: text,
+    hash: z.string().min(1),
+    time: z.number().catch(0),
+  })
+  .transform(({ version, build, hash, time }): PluginCustomised => ({ version: version ?? '', build: build ?? '', hash, time }))
+  .optional()
+  .catch(undefined)
 
-const record = (value: unknown): PluginCustomised | undefined => {
-  if (!isRecord(value)) return undefined
-  const { version, build, hash, time } = value
-  if (typeof hash !== 'string' || !hash) return undefined
-  return { version: text(version) ?? '', build: text(build) ?? '', hash, time: typeof time === 'number' ? time : 0 }
-}
+const manifest = z.object({
+  description: text,
+  dependencies: z
+    .record(z.string(), z.unknown())
+    .transform(dependencies => Object.keys(dependencies))
+    .catch([]),
+  sand: z
+    .object({ label: text, summary: text, customised })
+    .catch({ label: undefined, summary: undefined, customised: undefined }),
+})
+
+const editable = z.looseObject({ sand: z.looseObject({}).catch({}) })
+
+const readJson = async (folder: string): Promise<unknown> => await Bun.file(join(folder, 'package.json')).json().catch(() => undefined)
 
 export interface PluginManifestInfo {
   label?: string
@@ -24,20 +41,14 @@ export interface PluginManifestInfo {
 }
 
 export const readManifest = async (folder: string): Promise<PluginManifestInfo | undefined> => {
-  const data = await readJson(folder)
-  if (!data) return undefined
-  const sand = isRecord(data.sand) ? data.sand : {}
-  return {
-    label: text(sand.label),
-    description: text(data.description) ?? text(sand.summary),
-    from: record(sand.customised),
-    dependencies: isRecord(data.dependencies) ? Object.keys(data.dependencies) : [],
-  }
+  const parsed = manifest.safeParse(await readJson(folder))
+  if (!parsed.success) return undefined
+  const { description, dependencies, sand } = parsed.data
+  return { label: sand.label, description: description ?? sand.summary, from: sand.customised, dependencies }
 }
 
 export const writeCustomised = async (folder: string, from: PluginCustomised) => {
-  const data = (await readJson(folder)) ?? {}
-  const sand = isRecord(data.sand) ? data.sand : {}
-  const next = { ...data, sand: { ...sand, customised: from } }
+  const data = editable.safeParse(await readJson(folder)).data ?? { sand: {} }
+  const next = { ...data, sand: { ...data.sand, customised: from } }
   await Bun.write(join(folder, 'package.json'), `${JSON.stringify(next, null, 2)}\n`)
 }

@@ -1,15 +1,17 @@
-import { isRecord, serial } from '@sand/util'
+import { serial } from '@sand/util'
 import { writePrivateJson } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { z } from 'zod'
 import type { ShareInfo } from '../share/info'
 
 export type CachedInfo = Omit<ShareInfo, 'limits'>
 
 export type PeerCache = Record<string, CachedInfo>
 
-const valid = (value: unknown): value is CachedInfo =>
-  isRecord(value) && Array.isArray(value.accounts) && Array.isArray(value.models) && Array.isArray(value.levels) && !!value.prices
+const cachedShape = z.looseObject({ accounts: z.array(z.unknown()), models: z.array(z.unknown()), levels: z.array(z.unknown()), prices: z.unknown().refine(Boolean) })
+
+const valid = (value: unknown): value is CachedInfo => cachedShape.safeParse(value).success
 
 export const peerCache = (home: string) => {
   const file = join(home, 'cache', 'shared-accounts.json')

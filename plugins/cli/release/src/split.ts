@@ -1,6 +1,6 @@
 import { definitionsIn, type FeatureDefinition, featureOf } from '@sand/config/contract'
-import { isRecord } from '@sand/util'
 import { readManifest, workspacePackages } from '@sand/util/release'
+import { z } from 'zod'
 
 interface Workspace {
   name: string
@@ -26,7 +26,7 @@ interface Split {
 
 const sandOf = async (workspace: Workspace) => {
   const sand = (await readManifest(workspace.dir))?.sand
-  return isRecord(sand) ? sand : {}
+  return z.record(z.string(), z.unknown()).catch({}).parse(sand)
 }
 
 const rootFinder = (definitions: FeatureDefinition[]) => {
@@ -53,7 +53,7 @@ const splitWorkspace = async (root: string): Promise<Split> => {
   const definitions = definitionsIn(manifests)
   const rootOf = rootFinder(definitions)
   const owners = manifests.map(sand => rootOf(featureOf(sand)))
-  const homeOf = (id: string) => workspaces[manifests.findIndex(sand => isRecord(sand.features) && id in sand.features)]!
+  const homeOf = (id: string) => workspaces[manifests.findIndex(sand => definitionsIn([sand]).some(definition => definition.id === id))]!
   const addons = definitions.filter(definition => definition.addon).map(definition => ({
     ...addonOf(definition, definitions, rootOf),
     home: homeOf(definition.id),

@@ -1,7 +1,8 @@
 import { AccountGone, UsageLimited } from '@sand/accounts/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { runtime } from '@sand/host-runtimes/contract'
-import { errorMessage, isRecord, joinDisposers } from '@sand/util'
+import { errorMessage, joinDisposers } from '@sand/util'
+import { z } from 'zod'
 import { type Conversation, Interruption, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
 import type { EngineContext } from '../context'
 import { createPartial } from '../loop/partial'
@@ -16,7 +17,9 @@ const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interr
 
 const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'all', error: 'all' }
 
-const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail === 'string' && error.detail) || undefined
+const detailed = z.object({ detail: z.string() })
+
+const detailOf = (error: unknown) => detailed.safeParse(error).data?.detail || undefined
 
 interface Outcome {
   stopReason: TurnResult['stopReason']

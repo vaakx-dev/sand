@@ -1,7 +1,8 @@
 import { pushTargetSchema } from '@sand/devices-contract'
 import { decodeBase64url } from '@sand/devices-identity'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
+import { z } from 'zod'
 import type { Notice } from '../contract'
 
 export type Support = 'ready' | 'insecure' | 'install' | 'missing'
@@ -36,11 +37,14 @@ export const showNotice = async (notice: Notice) => {
 
 export type Target = { thread: string } | { bot: string }
 
+const noticeSchema = lazy(() =>
+  z.object({ notice: z.object({ thread: z.string().optional().catch(undefined), bot: z.string().optional().catch(undefined) }) }),
+)
+
 const targetOf = (data: unknown): Target | undefined => {
-  if (!isRecord(data) || !isRecord(data.notice)) return undefined
-  const { thread, bot } = data.notice
-  if (typeof thread === 'string') return { thread }
-  return typeof bot === 'string' ? { bot } : undefined
+  const notice = noticeSchema().safeParse(data).data?.notice
+  if (notice?.thread !== undefined) return { thread: notice.thread }
+  return notice?.bot === undefined ? undefined : { bot: notice.bot }
 }
 
 export const onNoticeOpen = (open: (target: Target) => void) =>

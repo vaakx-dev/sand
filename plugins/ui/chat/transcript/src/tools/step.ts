@@ -2,7 +2,8 @@ import type { ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contra
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { stepBody, stepLine, stepMark, type StepState } from '../rows/line'
-import { isRecord, tildeHome } from '@sand/util'
+import { tildeHome } from '@sand/util'
+import { z } from 'zod'
 import { relativeTo } from './relative'
 
 const states: Record<ToolStatus, StepState> = { pending: 'running', running: 'running', done: 'done', failed: 'failed' }
@@ -40,8 +41,12 @@ const badgeTones: Record<ToolBadge['tone'], string> = { danger: 'text-danger-400
 
 const FILE_FIELDS = ['path', 'file_path', 'filePath', 'notebook_path']
 
-const filePathOf = (input: unknown) =>
-  isRecord(input) ? FILE_FIELDS.map(field => input[field]).find((value): value is string => typeof value === 'string' && value !== '') : undefined
+const toolInput = z.record(z.string(), z.unknown()).catch({})
+
+const filePathOf = (input: unknown) => {
+  const fields = toolInput.parse(input)
+  return FILE_FIELDS.map(field => fields[field]).find((value): value is string => typeof value === 'string' && value !== '')
+}
 
 const badgeView = (found: ToolBadge | undefined) => found && span({ class: ['shrink-0', badgeTones[found.tone]] }, found.text)
 

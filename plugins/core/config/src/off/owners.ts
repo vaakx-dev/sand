@@ -1,10 +1,9 @@
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 import { contractFor } from '../find'
 
-const serviceIds = (module: unknown) =>
-  Object.values(isRecord(module) ? module : {}).flatMap(value =>
-    isRecord(value) && value.kind === 'service' && typeof value.id === 'string' ? [value.id] : [],
-  )
+const service = z.object({ kind: z.literal('service'), id: z.string() })
+
+const serviceIds = (module: object) => Object.values(module).flatMap(value => service.safeParse(value).data?.id ?? [])
 
 const declaredBy = async (dir: string) => {
   const contract = await contractFor(dir)

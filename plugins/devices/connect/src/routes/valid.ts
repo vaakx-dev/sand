@@ -1,31 +1,27 @@
-import type { PcRoutes, PublishedRoute, Route } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import type { PublishedRoute } from '@sand/devices-contract'
+import { routePrefsSchema } from '@sand/devices-contract'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
+import { validEntries } from '../saved/entries'
 
-const routeKinds = ['local', 'lan', 'tailscale', 'via']
-const directKinds = ['local', 'lan', 'tailscale']
-const routeSources = ['published', 'seed', 'added']
+const directKinds = ['local', 'lan', 'tailscale'] as const
 
-const oneOf = (list: string[], value: unknown) => typeof value === 'string' && list.includes(value)
+const routeSchema = lazy(() =>
+  z.object({
+    key: z.string(),
+    kind: z.enum([...directKinds, 'via']),
+    source: z.enum(['published', 'seed', 'added']),
+    url: z.string().optional(),
+    via: z.string().optional(),
+  }),
+)
 
-const optionalText = (value: unknown) => value === undefined || typeof value === 'string'
+const pcRoutesSchema = lazy(() => z.object({ routes: z.array(routeSchema()), prefs: routePrefsSchema() }))
 
-const isKeys = (value: unknown): value is string[] => Array.isArray(value) && value.every(key => typeof key === 'string')
+const publishedRoutesSchema = lazy(() => z.array(z.object({ url: z.string(), kind: z.enum(directKinds) })))
 
-const isRoute = (value: unknown): value is Route =>
-  isRecord(value) &&
-  typeof value.key === 'string' &&
-  oneOf(routeKinds, value.kind) &&
-  oneOf(routeSources, value.source) &&
-  optionalText(value.url) &&
-  optionalText(value.via)
+const savedRoutes = (saved: unknown) => validEntries(saved, pcRoutesSchema())
 
-export const isPcRoutes = (value: unknown): value is PcRoutes =>
-  isRecord(value) &&
-  Array.isArray(value.routes) &&
-  value.routes.every(isRoute) &&
-  isRecord(value.prefs) &&
-  isKeys(value.prefs.order) &&
-  isKeys(value.prefs.disabled)
+const isPublishedRoutes = (value: unknown): value is PublishedRoute[] => publishedRoutesSchema().safeParse(value).success
 
-export const isPublishedRoutes = (value: unknown): value is PublishedRoute[] =>
-  Array.isArray(value) && value.every(route => isRecord(route) && typeof route.url === 'string' && oneOf(directKinds, route.kind))
+export { isPublishedRoutes, savedRoutes }

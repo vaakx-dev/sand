@@ -1,11 +1,13 @@
 import type { ToolCallBlock } from '@sand/chats/contract'
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
+
+const inputSchema = z.record(z.string(), z.unknown())
 
 export const parseToolInput = (block: ToolCallBlock, json: string) => {
   if (!json.trim()) return
   try {
-    const input: unknown = JSON.parse(json)
-    if (isRecord(input)) block.input = input
+    const input = inputSchema.safeParse(JSON.parse(json))
+    if (input.success) block.input = input.data
     else block.malformed = json
   } catch {
     block.malformed = json

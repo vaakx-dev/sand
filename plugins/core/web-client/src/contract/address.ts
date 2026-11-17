@@ -1,5 +1,5 @@
 import { listen } from '@vaakx-dev/vrui'
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 
 type AddressParams = Record<string, string | undefined>
 type AddressState = Record<string, unknown>
@@ -22,7 +22,7 @@ export const draftRouteKind = 'draft'
 
 export const addressedThread = () => (addressParam(routeParams.kind) === threadRouteKind ? addressParam(routeParams.id) : undefined)
 
-export const addressState = (): AddressState => (isRecord(history.state) ? history.state : {})
+export const addressState = (): AddressState => z.record(z.string(), z.unknown()).catch({}).parse(history.state)
 
 const layerKey = 'layer'
 

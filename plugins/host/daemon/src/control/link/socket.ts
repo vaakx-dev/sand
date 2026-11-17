@@ -1,6 +1,7 @@
 import { deviceParams, devicePaths } from '@sand/devices-contract'
 import type { ClientMessage, ServerMessage } from '@sand/host-hub/contract'
-import { isRecord, trimSlash } from '@sand/util'
+import { trimSlash } from '@sand/util'
+import { z } from 'zod'
 
 const openTimeout = 5000
 
@@ -26,13 +27,12 @@ const json = (raw: string): unknown => {
   }
 }
 
-const parse = (raw: string): ServerMessage | undefined => {
-  const value = json(raw)
-  if (!isRecord(value)) return undefined
-  if (value.type === 'event' && typeof value.name === 'string') return { type: 'event', name: value.name, payload: value.payload }
-  if (value.type !== 'result' || typeof value.id !== 'number') return undefined
-  return { type: 'result', id: value.id, result: value.result, ...(typeof value.error === 'string' && { error: value.error }) }
-}
+const serverMessage = z.union([
+  z.object({ type: z.literal('event'), name: z.string(), payload: z.unknown() }),
+  z.object({ type: z.literal('result'), id: z.number(), result: z.unknown(), error: z.string().optional().catch(undefined) }),
+])
+
+const parse = (raw: string): ServerMessage | undefined => serverMessage.safeParse(json(raw)).data
 
 const opened = (socket: WebSocket) =>
   new Promise<void>((resolve, reject) => {

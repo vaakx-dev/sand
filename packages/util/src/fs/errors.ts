@@ -1,6 +1,8 @@
-import { isRecord } from '../json/record'
+import { z } from 'zod'
 
-export const errorCode = (error: unknown) => (isRecord(error) && typeof error.code === 'string' ? error.code : undefined)
+const coded = z.object({ code: z.string() })
+
+export const errorCode = (error: unknown) => coded.safeParse(error).data?.code
 
 export const isMissing = (error: unknown) => {
   const code = errorCode(error)

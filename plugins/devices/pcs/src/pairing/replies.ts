@@ -1,16 +1,22 @@
 import { type DeviceRecord, deviceRecordSchema, type JoinTicket } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 
-export const deviceOf = (body: unknown): DeviceRecord | undefined => {
-  if (!isRecord(body)) return undefined
-  const parsed = deviceRecordSchema().safeParse(body.device)
-  return parsed.success ? parsed.data : undefined
+const deviceReplySchema = lazy(() => z.object({ device: deviceRecordSchema() }))
+
+const reasonReplySchema = lazy(() => z.object({ reason: z.string() }))
+
+const phaseReplySchema = lazy(() => z.object({ phase: z.string() }))
+
+const joinTicketSchema = lazy(() => z.object({ id: z.string(), code: z.string(), expires: z.number(), approve: z.array(z.unknown()) }))
+
+export const deviceOf = (body: unknown): DeviceRecord | undefined => deviceReplySchema().safeParse(body).data?.device
+
+export const reasonOf = <R extends string>(body: unknown, reasons: readonly R[]): R | undefined => {
+  const reason = reasonReplySchema().safeParse(body).data?.reason
+  return reasons.find(found => found === reason)
 }
 
-export const reasonOf = <R extends string>(body: unknown, reasons: readonly R[]): R | undefined =>
-  isRecord(body) && reasons.includes(body.reason as R) ? (body.reason as R) : undefined
+export const isJoinTicket = (body: unknown): body is JoinTicket => joinTicketSchema().safeParse(body).success
 
-export const isJoinTicket = (body: unknown): body is JoinTicket =>
-  isRecord(body) && typeof body.id === 'string' && typeof body.code === 'string' && typeof body.expires === 'number' && Array.isArray(body.approve)
-
-export const phaseOf = (body: unknown) => (isRecord(body) && typeof body.phase === 'string' ? body.phase : undefined)
+export const phaseOf = (body: unknown) => phaseReplySchema().safeParse(body).data?.phase

@@ -1,5 +1,14 @@
 import type { ServerMessage } from '@sand/host-hub/contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
+
+const messageSchema = lazy(() =>
+  z.union([
+    z.object({ type: z.literal('event'), name: z.string(), payload: z.unknown() }),
+    z.object({ type: z.literal('result'), id: z.number(), error: z.string() }),
+    z.object({ type: z.literal('result'), id: z.number(), result: z.unknown() }),
+  ]),
+)
 
 const parsed = (raw: string): unknown => {
   try {
@@ -9,12 +18,4 @@ const parsed = (raw: string): unknown => {
   }
 }
 
-export const parseServerMessage = (raw: string): ServerMessage | undefined => {
-  const value = parsed(raw)
-  if (!isRecord(value)) return undefined
-  if (value.type === 'event' && typeof value.name === 'string') return { type: 'event', name: value.name, payload: value.payload }
-  if (value.type !== 'result' || typeof value.id !== 'number') return undefined
-  return typeof value.error === 'string'
-    ? { type: 'result', id: value.id, error: value.error }
-    : { type: 'result', id: value.id, result: value.result }
-}
+export const parseServerMessage = (raw: string): ServerMessage | undefined => messageSchema().safeParse(parsed(raw)).data

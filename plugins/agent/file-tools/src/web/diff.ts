@@ -1,7 +1,8 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { isRecord, tildeHome } from '@sand/util'
+import { tildeHome } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
+import { z } from 'zod'
 import { readAtLine } from '../at-line'
 
 type Kind = 'same' | 'add' | 'del'
@@ -59,10 +60,9 @@ const rowView = ({ kind, number, text }: Row) => [
 
 const pathView = (path: string, first: boolean) => span({ class: ['px-3 pb-1 text-neutral-200', !first && 'pt-3'], style: { gridColumn: '1 / -1' } }, tildeHome(path))
 
-const changeInputs = (input: unknown): unknown[] => {
-  if (!isRecord(input)) return []
-  return Array.isArray(input.edits) ? input.edits : [input]
-}
+const changeList = z.union([z.object({ edits: z.array(z.unknown()) }).transform(({ edits }) => edits), z.looseObject({}).transform(change => [change])])
+
+const changeInputs = (input: unknown): unknown[] => changeList.safeParse(input).data ?? []
 
 export const editRenderer = ({ fold }: Kit, { errorBody, field, resultText }: ToolViews): ToolRenderer => {
   const changes = (tool: ToolView): Change[] => {

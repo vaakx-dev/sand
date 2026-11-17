@@ -1,5 +1,6 @@
 import type { Item, ToolView } from '@sand/transcript/contract'
-import { isRecord, plural } from '@sand/util'
+import { plural } from '@sand/util'
+import { z } from 'zod'
 
 type Kind = 'read' | 'edit' | 'write' | 'search' | 'shell' | 'test' | 'build' | 'web' | 'helper' | 'skill' | 'page'
 
@@ -59,11 +60,11 @@ const kindOf = ({ call }: ToolView): Kind | undefined => {
 const toolsIn = (work: Item[]): ToolView[] =>
   work.flatMap(item => (item.kind === 'tools' ? item.steps.flatMap(step => (step.kind === 'tool' ? [step.tool] : [])) : []))
 
+const editInput = z.object({ path: z.string().optional().catch(undefined), edits: z.array(z.unknown()).optional().catch(undefined) })
+
 const pathsOf = (input: unknown): string[] => {
-  if (!isRecord(input)) return []
-  const own = typeof input.path === 'string' ? [input.path] : []
-  const changed = Array.isArray(input.edits) ? input.edits.flatMap(pathsOf) : []
-  return [...own, ...changed]
+  const { path, edits = [] } = editInput.safeParse(input).data ?? {}
+  return [...(path === undefined ? [] : [path]), ...edits.flatMap(pathsOf)]
 }
 
 const keysOf = ({ call }: ToolView, kind: Kind) => {

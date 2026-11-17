@@ -1,5 +1,5 @@
 import { dirname, join, sep } from 'node:path'
-import { isRecord } from '../json/record'
+import { z } from 'zod'
 import { compare } from '../text/compare'
 import { isLinkEntry, modulesFolder } from './manifest'
 
@@ -12,20 +12,22 @@ interface WorkspacePackage {
   dependencies: string[]
 }
 
+const fields = z.record(z.string(), z.unknown())
+
+const globs = z.array(z.unknown()).transform(list => list.filter(glob => typeof glob === 'string'))
+
+const workspaces = z.union([globs, z.object({ packages: globs }).transform(field => field.packages)])
+
 export const readManifest = async (dir: string): Promise<Manifest | undefined> => {
   const manifest: unknown = await Bun.file(join(dir, 'package.json'))
     .json()
     .catch(() => undefined)
-  return isRecord(manifest) ? manifest : undefined
+  return fields.safeParse(manifest).data
 }
 
-export const dependencyNames = (deps: unknown) => (isRecord(deps) ? Object.keys(deps) : [])
+export const dependencyNames = (deps: unknown) => Object.keys(fields.safeParse(deps).data ?? {})
 
-const workspaceGlobs = (manifest: Manifest | undefined) => {
-  const workspaces = manifest?.workspaces
-  const globs = isRecord(workspaces) ? workspaces.packages : workspaces
-  return Array.isArray(globs) ? globs.filter((glob): glob is string => typeof glob === 'string') : []
-}
+const workspaceGlobs = (manifest: Manifest | undefined) => workspaces.safeParse(manifest?.workspaces).data ?? []
 
 const toSlashes = (path: string) => path.split(sep).join('/')
 

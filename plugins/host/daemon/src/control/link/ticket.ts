@@ -1,7 +1,8 @@
-import { devicePaths, type TicketBody, type TicketGrant } from '@sand/devices-contract'
+import { devicePaths, type TicketBody } from '@sand/devices-contract'
 import { sign, ticketProof } from '@sand/devices-identity'
 import type { PcKeys } from '@sand/devices-identity/pc'
-import { isRecord, trimSlash } from '@sand/util'
+import { trimSlash } from '@sand/util'
+import { z } from 'zod'
 
 const ticketTimeout = 5000
 const refusedKey = "sand refused this PC's key"
@@ -12,9 +13,11 @@ const refusals = new Map<string, string>([
   ['nonce', 'sand refused the sign-in it had just offered; try again'],
 ])
 
-const isGrant = (value: unknown): value is TicketGrant => isRecord(value) && typeof value.ticket === 'string' && typeof value.expires === 'number'
+const grant = z.object({ ticket: z.string(), expires: z.number() })
 
-const refusalOf = (value: unknown) => (isRecord(value) && typeof value.reason === 'string' && refusals.get(value.reason)) || refusedKey
+const refusal = z.object({ reason: z.string() })
+
+const refusalOf = (value: unknown) => refusals.get(refusal.safeParse(value).data?.reason ?? '') ?? refusedKey
 
 export const requestTicket = async (url: string, keys: PcKeys, nonce: string) => {
   const body: TicketBody = { publicKey: keys.publicKey, nonce, signature: await sign(ticketProof(nonce, keys.id, keys.publicKey), keys.secretKey) }
@@ -26,6 +29,7 @@ export const requestTicket = async (url: string, keys: PcKeys, nonce: string) =>
   })
   const reply: unknown = await response.json().catch(() => undefined)
   if (response.status === 401) throw new Error(refusalOf(reply))
-  if (!response.ok || !isGrant(reply)) throw new Error(`sand gave this PC no ticket (HTTP ${response.status})`)
-  return reply.ticket
+  const granted = grant.safeParse(reply)
+  if (!response.ok || !granted.success) throw new Error(`sand gave this PC no ticket (HTTP ${response.status})`)
+  return granted.data.ticket
 }

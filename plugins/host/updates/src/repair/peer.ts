@@ -2,7 +2,8 @@ import { healthText, parseHealth, waitHealthy, type HealthOutcome } from '@sand/
 import type { Peers } from '@sand/devices-contract'
 import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
 import type { Request } from '@sand/host-hub/contract'
-import { errorMessage, isRecord } from '@sand/util'
+import { errorMessage } from '@sand/util'
+import { z } from 'zod'
 import { updatesRepair, updatesState, type PcRepairResult } from '../contract'
 
 export interface RepairDeps {
@@ -24,14 +25,19 @@ const healthTimeout = 120_000
 
 const short = (id: string | undefined) => (id ?? 'unknown').slice(0, 6)
 
-const buildId = (value: unknown) => (isRecord(value) && typeof value.id === 'string' ? value.id : undefined)
+const buildId = z
+  .object({ id: z.string() })
+  .transform(build => build.id)
+  .optional()
+  .catch(undefined)
 
-const parseState = (value: unknown): PeerState | undefined => {
-  if (!isRecord(value) || typeof value.phase !== 'string') return
-  return { phase: value.phase, error: typeof value.error === 'string' ? value.error : undefined, current: buildId(value.current) }
-}
+const peerState = z.object({ phase: z.string(), error: z.string().optional().catch(undefined), current: buildId })
 
-const targetOf = (value: unknown) => (isRecord(value) ? buildId(value.target) : undefined)
+const peerTarget = z.object({ target: buildId })
+
+const parseState = (value: unknown): PeerState | undefined => peerState.safeParse(value).data
+
+const targetOf = (value: unknown) => peerTarget.safeParse(value).data?.target
 
 const finished = (state: PeerState | undefined) => state?.phase === 'idle' || state?.phase === 'failed'
 

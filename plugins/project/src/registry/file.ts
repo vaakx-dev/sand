@@ -1,66 +1,81 @@
-import { isRecord } from '@sand/util'
 import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
-import type { Project, ProjectCopy, ProjectIcon, ProjectIconFile } from '../contract'
+import { z } from 'zod'
+import type { Project, ProjectCopy, ProjectIcon } from '../contract'
 import { isIconHash, isIconType } from '../icons/paths'
-
-const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 
 export const projectsPath = (home: string) => join(home, 'projects.json')
 
-const parseCopy = (value: unknown): ProjectCopy | undefined => {
-  if (!isRecord(value) || typeof value.path !== 'string' || !value.path || !isTime(value.added) || !isTime(value.updated)) return undefined
-  return { path: value.path, added: value.added, updated: value.updated, ...(value.removed === true ? { removed: true } : {}) }
-}
+const flag = z.literal(true).optional().catch(undefined)
 
-const parseCopies = (value: Record<string, unknown>) => {
-  const copies: Record<string, ProjectCopy> = {}
-  for (const [device, raw] of Object.entries(value)) {
-    const copy = parseCopy(raw)
-    if (device && copy) copies[device] = copy
-  }
-  return copies
-}
+const copy = z
+  .object({ path: z.string().min(1), added: z.number(), updated: z.number(), removed: flag })
+  .transform(({ path, added, updated, removed }): ProjectCopy => ({ path, added, updated, ...(removed ? { removed } : {}) }))
 
-const isShape = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0
+const copies = z
+  .record(z.string(), z.unknown())
+  .transform(byDevice => {
+    const parsed: Record<string, ProjectCopy> = {}
+    for (const [device, raw] of Object.entries(byDevice)) {
+      const found = copy.safeParse(raw).data
+      if (device && found) parsed[device] = found
+    }
+    return parsed
+  })
 
-const isHue = (value: unknown): value is number => typeof value === 'number' && value >= 0 && value < 360
+const icon = z
+  .object({
+    shape: z.number().int().positive().optional().catch(undefined),
+    hue: z.number().min(0).lt(360).optional().catch(undefined),
+  })
+  .transform(({ shape, hue }): ProjectIcon | undefined => {
+    const parsed = { ...(shape === undefined ? {} : { shape }), ...(hue === undefined ? {} : { hue }) }
+    return Object.keys(parsed).length ? parsed : undefined
+  })
+  .catch(undefined)
 
-const parseIcon = (value: unknown): ProjectIcon | undefined => {
-  if (!isRecord(value)) return undefined
-  const icon = { ...(isShape(value.shape) ? { shape: value.shape } : {}), ...(isHue(value.hue) ? { hue: value.hue } : {}) }
-  return Object.keys(icon).length ? icon : undefined
-}
+const iconFile = z
+  .object({
+    hash: z.string().refine(isIconHash),
+    type: z.string().refine(isIconType),
+    updated: z.number(),
+  })
+  .optional()
+  .catch(undefined)
 
-const parseIconFile = (value: unknown): ProjectIconFile | undefined => {
-  if (!isRecord(value) || !isIconHash(value.hash) || !isIconType(value.type) || !isTime(value.updated)) return undefined
-  return { hash: value.hash, type: value.type, updated: value.updated }
-}
+const project = z
+  .object({
+    id: z.string().min(1),
+    name: z.string(),
+    remote: z.string().optional(),
+    icon,
+    iconFile,
+    copies,
+    updated: z.number(),
+    pinned: flag,
+    archived: flag,
+    deleted: flag,
+  })
+  .transform(
+    ({ id, name, remote, icon: look, iconFile: file, copies: byDevice, updated, pinned, archived, deleted }): Project => ({
+      id,
+      name,
+      ...(remote === undefined ? {} : { remote }),
+      ...(look ? { icon: look } : {}),
+      ...(file ? { iconFile: file } : {}),
+      copies: byDevice,
+      updated,
+      ...(pinned ? { pinned } : {}),
+      ...(archived ? { archived } : {}),
+      ...(deleted ? { deleted } : {}),
+    }),
+  )
 
-export const parseProject = (value: unknown): Project | undefined => {
-  if (!isRecord(value) || typeof value.id !== 'string' || !value.id || typeof value.name !== 'string') return undefined
-  if (!isTime(value.updated) || !isRecord(value.copies)) return undefined
-  if (value.remote !== undefined && typeof value.remote !== 'string') return undefined
-  const icon = parseIcon(value.icon)
-  const iconFile = parseIconFile(value.iconFile)
-  return {
-    id: value.id,
-    name: value.name,
-    ...(typeof value.remote === 'string' ? { remote: value.remote } : {}),
-    ...(icon ? { icon } : {}),
-    ...(iconFile ? { iconFile } : {}),
-    copies: parseCopies(value.copies),
-    updated: value.updated,
-    ...(value.pinned === true ? { pinned: true } : {}),
-    ...(value.archived === true ? { archived: true } : {}),
-    ...(value.deleted === true ? { deleted: true } : {}),
-  }
-}
+const projectsFile = z.object({ version: z.literal(2), projects: z.array(z.unknown()) })
 
-const projectsOf = (value: unknown): Project[] | undefined => {
-  if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) return undefined
-  return value.projects.flatMap(entry => parseProject(entry) ?? [])
-}
+export const parseProject = (value: unknown): Project | undefined => project.safeParse(value).data
+
+const projectsOf = (value: unknown): Project[] | undefined => projectsFile.safeParse(value).data?.projects.flatMap(entry => parseProject(entry) ?? [])
 
 export const parseProjectsFile = (text: string): Project[] | undefined => {
   try {

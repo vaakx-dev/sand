@@ -1,23 +1,26 @@
-import { isRecord, serial } from '@sand/util'
+import { serial } from '@sand/util'
 import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 import type { SyncFile } from '../types'
 
 const empty = (): SyncFile => ({ local: [], bases: {}, skipped: {} })
 
-const strings = (value: unknown): Record<string, string> =>
-  isRecord(value)
-    ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
-    : {}
+const strings = z
+  .record(z.string(), z.unknown())
+  .transform(value => Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string')))
+  .catch({})
 
-const nested = (value: unknown): Record<string, Record<string, string>> =>
-  isRecord(value) ? Object.fromEntries(Object.entries(value).map(([peer, entries]) => [peer, strings(entries)])) : {}
+const nested = z.record(z.string(), strings).catch({})
 
-const syncFileOf = (data: unknown): SyncFile => {
-  if (!isRecord(data)) return empty()
-  const local = Array.isArray(data.local) ? data.local.filter((name): name is string => typeof name === 'string') : []
-  return { local: [...new Set(local)].sort(), bases: nested(data.bases), skipped: nested(data.skipped) }
-}
+const names = z
+  .array(z.unknown())
+  .transform(value => [...new Set(value.filter((name): name is string => typeof name === 'string'))].sort())
+  .catch([])
+
+const syncFile = z.object({ local: names, bases: nested, skipped: nested }).catch(empty)
+
+const syncFileOf = (data: unknown): SyncFile => syncFile.parse(data)
 
 const read = async (file: string): Promise<SyncFile> => (await readState(file, syncFileOf)) ?? empty()
 

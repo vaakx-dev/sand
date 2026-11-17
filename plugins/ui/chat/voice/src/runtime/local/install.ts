@@ -1,10 +1,12 @@
-import { isRecord } from '@sand/util'
 import { exists } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 const ENGINE = ['transcribe-cpp@0.4.1', 'koffi@3.3.8']
 
 const ENGINE_VERSION = '0.4.1'
+
+const withVersion = z.object({ version: z.literal(ENGINE_VERSION) })
 
 const BUILDS: Record<string, string> = {
   'win32-x64': 'win32-x64-cpu-vulkan',
@@ -37,7 +39,7 @@ const installed = async (folder: string) => {
   const manifest: unknown = await Bun.file(join(packageFolder(folder), 'package.json'))
     .json()
     .catch(() => undefined)
-  return isRecord(manifest) && manifest.version === ENGINE_VERSION
+  return withVersion.safeParse(manifest).success
 }
 
 const lastLine = (text: string) => text.trim().split('\n').at(-1)?.trim() || 'bun add failed'

@@ -1,10 +1,10 @@
 import type { TicketRefusal } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 
-const refusalReasons = ['removed', 'unknown', 'nonce']
+const refusalSchema = lazy(() => z.object({ reason: z.enum(['removed', 'unknown', 'nonce']) }))
 
-export const isRefusal = (value: unknown): value is TicketRefusal =>
-  isRecord(value) && typeof value.reason === 'string' && refusalReasons.includes(value.reason)
+export const isRefusal = (value: unknown): value is TicketRefusal => refusalSchema().safeParse(value).success
 
 export class AccessRefused extends Error {
   override readonly name = 'AccessRefused'

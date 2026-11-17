@@ -1,7 +1,11 @@
-import type { Resume, SavedResume } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import type { Resume } from '@sand/devices-contract'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 
-export const isResume = (value: unknown): value is Resume => isRecord(value) && typeof value.nonce === 'string' && typeof value.expires === 'number'
+const resumeSchema = lazy(() => z.object({ nonce: z.string(), expires: z.number() }))
 
-export const isSavedResume = (value: unknown): value is SavedResume =>
-  isResume(value) && 'route' in value && typeof value.route === 'string' && 'signature' in value && typeof value.signature === 'string'
+const savedResumeSchema = lazy(() => resumeSchema().extend({ route: z.string(), signature: z.string() }))
+
+const isResume = (value: unknown): value is Resume => resumeSchema().safeParse(value).success
+
+export { isResume, savedResumeSchema }

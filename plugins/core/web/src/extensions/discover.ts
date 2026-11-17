@@ -1,6 +1,6 @@
-import { isRecord } from '@sand/util'
 import { addonFolders } from '@sand/util/release'
 import { basename, join, resolve } from 'node:path'
+import { z } from 'zod'
 import { pluginFolders } from './folders'
 
 export interface Extension {
@@ -22,9 +22,9 @@ export interface Folder {
 const text = (value: unknown) => (typeof value === 'string' && value.trim() ? value.trim() : undefined)
 
 const modulesOf = (dir: string, name: unknown, exports: unknown): Record<string, string> =>
-  typeof name === 'string' && isRecord(exports)
+  typeof name === 'string'
     ? Object.fromEntries(
-        Object.entries(exports)
+        Object.entries(z.record(z.string(), z.unknown()).catch({}).parse(exports))
           .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
           .map(([path, file]) => [`${name}${path.slice(1)}`, resolve(dir, file)]),
       )

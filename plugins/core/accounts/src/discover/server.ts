@@ -1,7 +1,7 @@
 import { bearer } from '@sand/util/host'
 import type { PlanModel } from '../contract'
-import { isRecord, trimSlash } from '@sand/util'
-import { listIn, nonEmpty } from './fields'
+import { trimSlash } from '@sand/util'
+import { listIn, modelId } from './fields'
 import { getJson } from './http'
 import { contexts, isOllama } from './ollama'
 
@@ -13,7 +13,7 @@ const sourceOf = (base: string) => {
   }
 }
 
-export const modelIds = (source: string, body: unknown) => listIn(source, body, 'data').flatMap(entry => nonEmpty(isRecord(entry) ? entry.id : undefined) ?? [])
+export const modelIds = (source: string, body: unknown) => listIn(source, body).flatMap(entry => modelId.safeParse(entry).data?.id ?? [])
 
 export const discoverServer = async (base: string, key?: string): Promise<PlanModel[]> => {
   const url = trimSlash(base)

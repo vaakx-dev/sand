@@ -1,14 +1,24 @@
 import type { AppStatus } from '../contract'
-import { isRecord } from '@sand/util'
 import { writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 export type AppStatuses = Record<string, AppStatus>
 
+const savedSchema = z.record(z.string(), z.unknown())
+
+const statusSchema = z.object({
+  installed: z.boolean(),
+  signedIn: z.boolean(),
+  email: z.string().optional().catch(undefined),
+  plan: z.string().optional().catch(undefined),
+})
+
 const statusOf = (value: unknown): AppStatus | undefined => {
-  if (!isRecord(value) || typeof value.installed !== 'boolean' || typeof value.signedIn !== 'boolean') return undefined
-  const { installed, signedIn, email, plan } = value
-  return { installed, signedIn, ...(typeof email === 'string' && { email }), ...(typeof plan === 'string' && { plan }) }
+  const found = statusSchema.safeParse(value).data
+  if (!found) return undefined
+  const { installed, signedIn, email, plan } = found
+  return { installed, signedIn, ...(email !== undefined && { email }), ...(plan !== undefined && { plan }) }
 }
 
 export const appStatusFile = (folder: string) => {
@@ -17,8 +27,7 @@ export const appStatusFile = (folder: string) => {
   return {
     async read(): Promise<AppStatuses> {
       try {
-        const saved: unknown = await file.json()
-        if (!isRecord(saved)) return {}
+        const saved = savedSchema.parse(await file.json())
         return Object.fromEntries(
           Object.entries(saved).flatMap(([id, value]) => {
             const found = statusOf(value)

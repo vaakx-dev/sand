@@ -1,7 +1,7 @@
 import type { TailscalePeer } from '@sand/devices-contract'
 import { dnsName, ipv4Of, readStatus, type StatusNode } from './status'
 
-const peerOf = (node: StatusNode | undefined): TailscalePeer[] => {
+const peerOf = (node: StatusNode | null | undefined): TailscalePeer[] => {
   const ip = ipv4Of(node)
   const name = dnsName(node) ?? node?.HostName
   return ip && name ? [{ name, ip, online: node?.Online === true }] : []

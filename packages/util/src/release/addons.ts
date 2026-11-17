@@ -1,6 +1,6 @@
 import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import { isRecord } from '../json/record'
+import { z } from 'zod'
 import { readStamp } from './stamp'
 
 interface AddonListing {
@@ -32,11 +32,9 @@ interface AddonStamp {
   sha256: string
 }
 
-interface AddonFault {
-  build: string
-  error: string
-  at: number
-}
+const fault = z.object({ build: z.string(), error: z.string(), at: z.number() })
+
+type AddonFault = z.infer<typeof fault>
 
 const SOURCE_BUILD = 'source'
 
@@ -54,17 +52,12 @@ const isAddonFolder = (dir: string) => Bun.file(join(dir, addonStampFile)).exist
 
 const coreBuild = async (builtins: string) => (await readStamp(join(builtins, '..')))?.id ?? SOURCE_BUILD
 
-const parseFault = (value: unknown): AddonFault | undefined =>
-  isRecord(value) && typeof value.build === 'string' && typeof value.error === 'string' && typeof value.at === 'number'
-    ? { build: value.build, error: value.error, at: value.at }
-    : undefined
-
 const addonFault = async (dir: string) =>
-  parseFault(
+  fault.safeParse(
     await Bun.file(join(dir, addonFaultFile))
       .json()
       .catch(() => undefined),
-  )
+  ).data
 
 const recordAddonFault = (dir: string, fault: AddonFault) => Bun.write(join(dir, addonFaultFile), `${JSON.stringify(fault, null, 2)}\n`)
 

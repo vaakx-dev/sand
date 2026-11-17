@@ -1,10 +1,12 @@
-import { isRecord } from '@sand/util'
 import { expandHome, readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 const DEFAULT_ROOT = '~/Projects'
 
-const rootOf = (saved: unknown) => (isRecord(saved) && typeof saved.root === 'string' && saved.root ? saved.root : DEFAULT_ROOT)
+const savedFile = z.object({ root: z.string().min(1) })
+
+const rootOf = (saved: unknown) => savedFile.safeParse(saved).data?.root ?? DEFAULT_ROOT
 
 const savedRoot = async (file: string) => (await readState(file, rootOf)) ?? DEFAULT_ROOT
 

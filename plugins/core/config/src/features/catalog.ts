@@ -1,10 +1,10 @@
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 import type { Feature, FeatureDefinition } from '../contract'
 
 const onByDefault = (definition: FeatureDefinition | undefined) => !definition?.addon
 
 const offIn = (definitions: FeatureDefinition[], table: unknown) => {
-  const chosen = isRecord(table) ? table : {}
+  const chosen = z.record(z.string(), z.unknown()).catch({}).parse(table)
   const on = (definition: FeatureDefinition) => {
     const value = chosen[definition.id]
     return typeof value === 'boolean' ? value : onByDefault(definition)

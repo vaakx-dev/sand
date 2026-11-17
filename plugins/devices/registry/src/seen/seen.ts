@@ -1,12 +1,15 @@
-import { isRecord, serial } from '@sand/util'
+import { lazy, serial } from '@sand/util'
 import { readState, writePrivateJson } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { z } from 'zod'
 
 export const seenFile = (home: string) => join(home, 'devices', 'seen.json')
 
+const savedSchema = lazy(() => z.record(z.string(), z.unknown()))
+
 const timesOf = (saved: unknown) =>
-  new Map(isRecord(saved) ? Object.entries(saved).filter((entry): entry is [string, number] => typeof entry[1] === 'number') : [])
+  new Map(Object.entries(savedSchema().safeParse(saved).data ?? {}).filter((entry): entry is [string, number] => typeof entry[1] === 'number'))
 
 const read = async (file: string) => (await readState(file, timesOf)) ?? new Map<string, number>()
 

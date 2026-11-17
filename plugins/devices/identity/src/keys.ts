@@ -1,7 +1,8 @@
 import { ed25519 } from '@noble/curves/ed25519.js'
 import { sha256 } from '@noble/hashes/sha2.js'
 import type { KeyPair } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 import { decodeBase64url, encodeBase64url } from './base64url'
 
 const deviceIdLength = 22
@@ -16,8 +17,7 @@ export const publicKeyOf = (secretKey: string) => encodeBase64url(ed25519.getPub
 
 export const deviceIdOf = (publicKey: string) => encodeBase64url(sha256(decodeBase64url(publicKey))).slice(0, deviceIdLength)
 
-const isKey = (value: unknown) => {
-  if (typeof value !== 'string') return false
+const isKey = (value: string) => {
   try {
     return decodeBase64url(value).length === keyBytes
   } catch {
@@ -25,6 +25,10 @@ const isKey = (value: unknown) => {
   }
 }
 
-export const isKeyPair = (value: unknown): value is KeyPair => isRecord(value) && isKey(value.publicKey) && isKey(value.secretKey)
+const keySchema = lazy(() => z.string().refine(isKey))
+
+const keyPairSchema = lazy(() => z.object({ publicKey: keySchema(), secretKey: keySchema() }))
+
+export const isKeyPair = (value: unknown): value is KeyPair => keyPairSchema().safeParse(value).success
 
 export const keysMatch = ({ publicKey, secretKey }: KeyPair) => publicKeyOf(secretKey) === publicKey

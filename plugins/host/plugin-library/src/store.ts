@@ -1,14 +1,19 @@
-import { isRecord } from '@sand/util'
 import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 type Kept = Record<string, string>
 
-const keptOf = (data: unknown): Kept => {
-  const kept = isRecord(data) ? data.kept : undefined
-  if (!isRecord(kept)) return {}
-  return Object.fromEntries(Object.entries(kept).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
-}
+const keptFile = z
+  .object({
+    kept: z
+      .record(z.string(), z.unknown())
+      .transform(kept => Object.fromEntries(Object.entries(kept).filter((entry): entry is [string, string] => typeof entry[1] === 'string')))
+      .catch({}),
+  })
+  .catch({ kept: {} })
+
+const keptOf = (data: unknown): Kept => keptFile.parse(data).kept
 
 const readKept = async (file: string): Promise<Kept> => (await readState(file, keptOf)) ?? {}
 

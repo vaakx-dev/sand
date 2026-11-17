@@ -1,15 +1,10 @@
 import type { PcRoutes, RouteStore } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
-import { isPcRoutes } from '../routes/valid'
+import { savedRoutes } from '../routes/valid'
 import { readStored, writeStored } from './integrations/storage'
 
 export const browserRoutesKey = 'sand.routes'
 
-const readAll = (): Record<string, PcRoutes> => {
-  const saved = readStored(browserRoutesKey)
-  if (!isRecord(saved)) return {}
-  return Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, PcRoutes] => isPcRoutes(entry[1])))
-}
+const readAll = (): Record<string, PcRoutes> => savedRoutes(readStored(browserRoutesKey))
 
 export const browserRouteStore = (): RouteStore => ({
   load: pc => readAll()[pc],

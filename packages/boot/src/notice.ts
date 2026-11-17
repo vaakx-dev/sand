@@ -1,22 +1,18 @@
 import { databaseFile, olderThanData, readUpgrade } from '@sand/ledger/contract'
-import { isRecord } from '@sand/util'
 import { readState, writeAtomic } from '@sand/util/fs'
 import { readStamp } from '@sand/util/release'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import { z } from 'zod'
 import { buildFolder, readPointer } from './layout'
 
-export interface UpdateNotice {
-  text: string
-  at: number
-}
+const notice = z.object({ text: z.string(), at: z.number() })
+
+export type UpdateNotice = z.infer<typeof notice>
 
 export const updateNoticeFile = (home: string) => join(home, 'update-notice.json')
 
-const parseNotice = (value: unknown): UpdateNotice | undefined =>
-  isRecord(value) && typeof value.text === 'string' && typeof value.at === 'number' ? { text: value.text, at: value.at } : undefined
-
-export const readUpdateNotice = (home: string) => readState(updateNoticeFile(home), parseNotice)
+export const readUpdateNotice = (home: string) => readState(updateNoticeFile(home), value => notice.safeParse(value).data)
 
 export const writeUpdateNotice = (home: string, text: string) => writeAtomic(updateNoticeFile(home), `${JSON.stringify({ text, at: Date.now() }, null, 2)}\n`)
 

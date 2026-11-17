@@ -1,8 +1,9 @@
 import { parseHealth } from '@sand/boot'
 import { installParams } from '@sand/devices-contract'
 import type { HttpRoute } from '@sand/host-gateway/contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
 import { readText } from '@sand/util/host'
+import { z } from 'zod'
 import type { Installs } from '../installs'
 import { expired, installToken } from './token'
 
@@ -20,18 +21,23 @@ const parseJson = (body: string): unknown => {
   }
 }
 
+const accountsSchema = lazy(() => z.object({ accounts: z.array(z.unknown()) }))
+
+const failureSchema = lazy(() =>
+  z.object({ health: z.unknown(), error: z.string().optional().catch(undefined) }).catch({ health: undefined, error: undefined }),
+)
+
 const accountsOf = (body: string | undefined) => {
-  const data = parseJson(body ?? '')
-  const accounts = isRecord(data) ? data.accounts : undefined
-  return Array.isArray(accounts) ? accounts.filter((name): name is string => typeof name === 'string' && !!name).slice(0, 8) : []
+  const accounts = accountsSchema().safeParse(parseJson(body ?? '')).data?.accounts ?? []
+  return accounts.filter((name): name is string => typeof name === 'string' && !!name).slice(0, 8)
 }
 
 const failure = (body: string, json: boolean) => {
   const data = json ? parseJson(body) : undefined
   if (data === undefined || data === null) return { error: body || unknownFailure }
-  const fields = isRecord(data) ? data : {}
+  const fields = failureSchema().parse(data)
   const report = parseHealth(fields.health)
-  const error = typeof fields.error === 'string' ? fields.error.trim() : ''
+  const error = fields.error?.trim()
   return { error: error || unknownFailure, ...(report ? { health: report } : {}) }
 }
 

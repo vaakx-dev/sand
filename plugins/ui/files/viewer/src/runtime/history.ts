@@ -1,7 +1,7 @@
 import type { Message, ToolCallBlock } from '@sand/chats/contract'
-import { isRecord } from '@sand/util'
 import { expandHome, fromMsys } from '@sand/util/fs'
 import { dirname } from 'node:path'
+import { z } from 'zod'
 
 interface Trail {
   folders: string[]
@@ -25,11 +25,13 @@ const operands = (command: string) => [...command.matchAll(CHANGE_FOLDER)].map(m
 const foldersOf = (command: string, start: string) =>
   operands(command).reduce<string[]>((visited, operand) => [...visited, located(operand, visited.at(-1) ?? start)], [])
 
+const toolInput = z.record(z.string(), z.unknown()).catch({})
+
 const callTrail = (call: ToolCallBlock, cwd: string): Trail => {
-  if (!isRecord(call.input)) return { folders: [], files: [] }
-  const base = strings(call.input, FOLDER_FIELDS).map(folder => located(folder, cwd))[0] ?? cwd
-  const files = strings(call.input, FILE_FIELDS).map(file => located(file, base))
-  const commands = strings(call.input, COMMAND_FIELDS).flatMap(command => foldersOf(command, base))
+  const input = toolInput.parse(call.input)
+  const base = strings(input, FOLDER_FIELDS).map(folder => located(folder, cwd))[0] ?? cwd
+  const files = strings(input, FILE_FIELDS).map(file => located(file, base))
+  const commands = strings(input, COMMAND_FIELDS).flatMap(command => foldersOf(command, base))
   const folders = [...(base === cwd ? [] : [base]), ...files.map(file => dirname(file)), ...commands]
   return { folders, files }
 }

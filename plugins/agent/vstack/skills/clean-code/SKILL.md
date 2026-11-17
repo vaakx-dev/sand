@@ -16,6 +16,7 @@ These come before every other rule in this skill.
 - **Build for the future.** Make the change you would want to find a year from now, not the one that is quickest today. Each change should look as if it had been the design from the start, so rework the code around it.
 - **Only the best change.** If you see a better design than the one you were about to write, write the better one, even when it takes more code or new modules. Build everything the best change needs and nothing it doesn't: no kinds, formats, options or behaviour the request didn't ask for.
 - **Better and faster each time.** Leave the code you touch cleaner and faster than you found it.
+- **Not defensive.** Check outside input once, where it comes in, with a schema. Past that point, trust the types and your own code: no guards, fallbacks, try/catch, null checks or defaults for cases they already rule out. Guard only what can really happen.
 - **No hacks and no quick fixes.** No special cases, guards or flags that hide a problem instead of fixing its cause.
 - **Never bolt one system onto another.** If two systems don't fit, change their shapes until they do. No adapters, shims or glue code that only exist to make them talk.
 - **Replace, don't add.** When new code does what old code did, move every caller to the new code and delete the old system in the same change.
@@ -117,7 +118,6 @@ Branching on a fixed set of cases:
 - TS: return new values instead of mutating inputs. Rust: `&mut self` methods are fine.
 - TS: use `function` declarations, `interface` for object shapes, `async/await`, and type inference except at exported signatures.
 - Each piece of state has one owner. Derive values instead of syncing copies. A second flag that must match the first means the shape is wrong.
-- Check outside input once, where it comes in. Past that point, trust the types.
 - Catch an error only where you can do something real with it.
 
 ## Fast by design

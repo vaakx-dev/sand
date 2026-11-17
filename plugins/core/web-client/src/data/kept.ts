@@ -1,11 +1,9 @@
 import type { ProjectList } from '@sand/project/contract'
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 
-const isList = (value: unknown): value is ProjectList =>
-  isRecord(value) &&
-  typeof value.home === 'string' &&
-  Array.isArray(value.projects) &&
-  Array.isArray(value.missing)
+const list = z.looseObject({ home: z.string(), projects: z.array(z.unknown()), missing: z.array(z.unknown()) })
+
+const kept = z.record(z.string(), z.unknown()).catch({})
 
 export const keptLists = (value: unknown): [string, ProjectList][] =>
-  isRecord(value) ? Object.entries(value).filter((entry): entry is [string, ProjectList] => isList(entry[1])) : []
+  Object.entries(kept.parse(value)).filter((entry): entry is [string, ProjectList] => list.safeParse(entry[1]).success)

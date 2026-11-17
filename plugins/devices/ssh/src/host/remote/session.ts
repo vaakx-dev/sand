@@ -1,6 +1,7 @@
 import type { InstallPlatform } from '@sand/devices-contract'
 import type { ServerInfo } from '@sand/host-gateway/contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 import type { Answers } from '../askpass/answers'
 import { sshFailure, succeeded } from '../ssh/failure'
 import type { Ssh, SshCall } from '../ssh/run'
@@ -39,7 +40,9 @@ export const detectPlatform = async (session: Session) => {
   return result.code === 0 ? platformOf(result.stdout) : 'win32'
 }
 
-const isServerInfo = (value: unknown): value is ServerInfo => isRecord(value) && typeof value.url === 'string' && typeof value.pid === 'number'
+const serverSchema = lazy(() => z.object({ url: z.string(), pid: z.number() }))
+
+const isServerInfo = (value: unknown): value is ServerInfo => serverSchema().safeParse(value).success
 
 const parseJson = (text: string): unknown => {
   try {

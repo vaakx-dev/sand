@@ -1,16 +1,18 @@
-import { isRecord, serial } from '@sand/util'
+import { serial } from '@sand/util'
 import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
+import { fieldsOf as record } from '../auth/json'
 import type { NewModels, PlanModel } from '../contract'
 import type { Checked, ModelCache, Prefs } from './types'
 
-const record = (value: unknown): Record<string, unknown> => (isRecord(value) ? value : {})
+const planModelShape = z.object({ name: z.string().min(1), label: z.string() })
 
 const names = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.length > 0) : [])
 
 const isNewModels = (mode: unknown): mode is NewModels => mode === 'show' || mode === 'hide'
 
-const isPlanModel = (model: unknown): model is PlanModel => isRecord(model) && typeof model.name === 'string' && !!model.name && typeof model.label === 'string'
+const isPlanModel = (model: unknown): model is PlanModel => planModelShape.safeParse(model).success
 
 const lists = (value: unknown) => Object.fromEntries(Object.entries(record(value)).map(([key, list]) => [key, names(list)]))
 

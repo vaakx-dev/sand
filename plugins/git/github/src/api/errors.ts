@@ -1,4 +1,5 @@
-import { errorMessage, isRecord } from '@sand/util'
+import { errorMessage } from '@sand/util'
+import { z } from 'zod'
 
 export class GitHubError extends Error {
   override name = 'GitHubError'
@@ -16,19 +17,26 @@ const sentence = (text: string) => {
   return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`
 }
 
-const detailOf = (entry: unknown) => {
-  if (typeof entry === 'string') return entry
-  if (!isRecord(entry)) return ''
-  if (typeof entry.message === 'string') return entry.message
-  return [entry.resource, entry.field, entry.code].filter(part => typeof part === 'string').join(' ')
-}
+const optionalText = z.string().optional().catch(undefined)
 
-const reasonOf = (data: unknown) => {
-  if (!isRecord(data)) return ''
-  const details = Array.isArray(data.errors) ? data.errors.map(detailOf).filter(Boolean) : []
-  if (details.length) return details.join('; ')
-  return typeof data.message === 'string' ? data.message : ''
-}
+const detail = z
+  .union([
+    z.string(),
+    z
+      .object({ message: optionalText, resource: optionalText, field: optionalText, code: optionalText })
+      .transform(entry => entry.message ?? [entry.resource, entry.field, entry.code].filter(part => part !== undefined).join(' ')),
+  ])
+  .catch('')
+
+const reason = z
+  .object({ errors: z.array(detail).optional().catch(undefined), message: optionalText })
+  .transform(({ errors = [], message }) => {
+    const details = errors.filter(Boolean)
+    return details.length ? details.join('; ') : (message ?? '')
+  })
+  .catch('')
+
+const reasonOf = (data: unknown) => reason.parse(data)
 
 export const restError = (status: number, data: unknown) => {
   const said = reasonOf(data)

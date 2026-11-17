@@ -1,24 +1,20 @@
 import type { Hello, HelloField, HelloValues, hello, InputOf } from '@sand/host-hub/contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 import { readStored, writeStored } from '../integrations/storage'
 
 const keptTags = 4
 
-interface Kept {
-  tag: string
-  shared: HelloValues
-}
-
-const isKept = (value: unknown): value is Kept => isRecord(value) && typeof value.tag === 'string' && isRecord(value.shared)
+const keptSchema = lazy(() => z.object({ tag: z.string(), shared: z.record(z.string(), z.unknown()) }))
 
 export const helloMemory = (pc: string) => {
   const key = `sand-hello-${pc}`
   const shared = new Map<string, HelloValues>()
-  const kept = readStored(key)
+  const kept = keptSchema().safeParse(readStored(key)).data
   let tag: string | undefined
   let taken: string | undefined
   let values: HelloValues | undefined
-  if (isKept(kept)) {
+  if (kept) {
     shared.set(kept.tag, kept.shared)
     tag = kept.tag
   }

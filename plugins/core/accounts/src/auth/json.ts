@@ -1,7 +1,9 @@
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 
 export type Json = Record<string, unknown>
 
-export const fieldsOf = (value: unknown): Json => (isRecord(value) ? value : {})
+const fields = z.record(z.string(), z.unknown())
+
+export const fieldsOf = (value: unknown): Json => fields.catch({}).parse(value)
 
 export const isText = (value: unknown): value is string => typeof value === 'string' && value.length > 0

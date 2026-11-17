@@ -10,9 +10,12 @@ import {
   type PcIdentity,
 } from '@sand/devices-contract'
 import { isIdentityReply, newNonce, provesIdentity } from '@sand/devices-identity'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 
 const timeout = 10_000
+
+const refusalSchema = lazy(() => z.object({ reason: z.string() }))
 
 const refusalText: Record<string, string> = {
   invalid: 'the link has expired or was already used',
@@ -24,7 +27,7 @@ const refusalText: Record<string, string> = {
 
 const failure = async (base: string, response: Response) => {
   const body: unknown = await response.json().catch(() => undefined)
-  const reason = isRecord(body) && typeof body.reason === 'string' ? refusalText[body.reason] : undefined
+  const reason = refusalText[refusalSchema().safeParse(body).data?.reason ?? '']
   return new Error(`${new URL(base).host} said no: ${reason ?? `HTTP ${response.status}`}`)
 }
 

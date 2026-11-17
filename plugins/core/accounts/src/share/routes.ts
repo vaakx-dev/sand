@@ -1,4 +1,4 @@
-import { isRecord, joinDisposers } from '@sand/util'
+import { joinDisposers } from '@sand/util'
 import type { RouteCaller } from '@sand/host-gateway/contract'
 import type { Media } from '@sand/media/contract'
 import type { Server } from '@sand/server/contract'
@@ -9,6 +9,7 @@ import { shareInfo, sharedIds, sharePaths } from './info'
 import { keepCarried } from './media'
 import { streamLines } from './stream'
 import type { ShareUsers } from './users'
+import { z } from 'zod'
 
 interface ShareOptions {
   local: LocalLLM
@@ -21,10 +22,14 @@ const refuse = (text: string, status = 403) => new Response(text, { status, head
 
 const unpaired = () => refuse('only paired PCs can use the accounts on this PC', 401)
 
-const isThread = (value: unknown) => value === undefined || (isRecord(value) && typeof value.id === 'string' && typeof value.generation === 'number')
+const requestShape = z.looseObject({
+  system: z.string(),
+  messages: z.array(z.unknown()),
+  tools: z.array(z.unknown()),
+  thread: z.looseObject({ id: z.string(), generation: z.number() }).optional(),
+})
 
-const isRequest = (value: unknown): value is LLMRequest & { media?: unknown } =>
-  isRecord(value) && typeof value.system === 'string' && Array.isArray(value.messages) && Array.isArray(value.tools) && isThread(value.thread)
+const isRequest = (value: unknown): value is LLMRequest & { media?: unknown } => requestShape.safeParse(value).success
 
 const heldHere = ({ pc: _, ...native }: NativeRef): NativeRef => native
 

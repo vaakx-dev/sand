@@ -1,19 +1,21 @@
-import { isRecord } from '@sand/util'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 export interface ProjectToml {
   name?: string
   setup?: string
 }
 
-const text = (value: unknown) => (typeof value === 'string' && value.trim() ? value.trim() : undefined)
+const text = z
+  .string()
+  .transform(value => value.trim() || undefined)
+  .catch(undefined)
+
+const projectToml = z.object({ name: text, setup: text })
 
 export const readProjectToml = async (folder: string): Promise<ProjectToml> => {
   try {
-    const data: unknown = Bun.TOML.parse(await Bun.file(join(folder, '.sand', 'project.toml')).text())
-    if (!isRecord(data)) return {}
-    const name = text(data.name)
-    const setup = text(data.setup)
+    const { name, setup } = projectToml.parse(Bun.TOML.parse(await Bun.file(join(folder, '.sand', 'project.toml')).text()))
     return { ...(name ? { name } : {}), ...(setup ? { setup } : {}) }
   } catch {
     return {}

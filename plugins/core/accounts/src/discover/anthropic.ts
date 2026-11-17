@@ -1,31 +1,47 @@
 import { efforts, type PlanModel } from '../contract'
 import type { ApiKey } from '../auth/store'
-import { isRecord, trimSlash } from '@sand/util'
-import { listIn, nonEmpty, positive } from './fields'
+import { trimSlash } from '@sand/util'
+import { z } from 'zod'
+import { count, flag, listIn, text } from './fields'
 import { getJson } from './http'
 
 const defaultBase = 'https://api.anthropic.com'
 const source = 'Anthropic'
 const pages = 20
-const supported = (value: unknown) => isRecord(value) && value.supported === true
 
-const canStopThinking = (thinking: unknown) => isRecord(thinking) && isRecord(thinking.types) && supported(thinking.types.disabled)
+const levelFlags = z.record(z.string(), z.unknown())
 
-const effortsOf = ({ effort, thinking }: Record<string, unknown>) =>
-  efforts.filter(level => (level === 'none' ? canStopThinking(thinking) : isRecord(effort) && supported(effort) && supported(effort[level])))
+const noThinking = z
+  .object({ types: z.object({ disabled: flag }) })
+  .transform(thinking => thinking.types.disabled)
+  .catch(false)
+
+const capabilitiesSchema = z.object({ image_input: flag, thinking: noThinking, effort: levelFlags.catch({}) })
+
+const entrySchema = z.object({
+  id: z.string().min(1),
+  display_name: text,
+  max_input_tokens: count,
+  max_tokens: count,
+  capabilities: capabilitiesSchema.catch({ image_input: false, thinking: false, effort: {} }),
+})
+
+const pageSchema = z.object({ has_more: z.unknown(), last_id: z.string() })
+
+const effortsOf = ({ effort, thinking }: z.infer<typeof capabilitiesSchema>) =>
+  efforts.filter(level => (level === 'none' ? thinking : flag.parse(effort) && flag.parse(effort[level])))
 
 const describe = (entry: unknown): PlanModel | undefined => {
-  if (!isRecord(entry)) return undefined
-  const id = nonEmpty(entry.id)
-  if (!id) return undefined
-  const capabilities = isRecord(entry.capabilities) ? entry.capabilities : {}
+  const found = entrySchema.safeParse(entry).data
+  if (!found) return undefined
+  const { id, display_name, max_input_tokens, max_tokens, capabilities } = found
   return {
     name: id,
-    label: nonEmpty(entry.display_name) ?? id,
-    context: positive(entry.max_input_tokens),
-    maxOutput: positive(entry.max_tokens),
+    label: display_name ?? id,
+    context: max_input_tokens,
+    maxOutput: max_tokens,
     efforts: effortsOf(capabilities),
-    images: supported(capabilities.image_input),
+    images: capabilities.image_input,
   }
 }
 
@@ -37,9 +53,10 @@ export const discoverAnthropic = async (credential: ApiKey): Promise<PlanModel[]
   for (let page = 0; page < pages; page++) {
     const url = `${base}/v1/models?limit=1000${after ? `&after_id=${encodeURIComponent(after)}` : ''}`
     const body = await getJson(source, url, headers)
-    found.push(...listIn(source, body, 'data').flatMap(entry => describe(entry) ?? []))
-    if (!isRecord(body) || !body.has_more || typeof body.last_id !== 'string') break
-    after = body.last_id
+    found.push(...listIn(source, body).flatMap(entry => describe(entry) ?? []))
+    const next = pageSchema.safeParse(body).data
+    if (!next?.has_more) break
+    after = next.last_id
   }
   return found
 }

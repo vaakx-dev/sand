@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@sand/host-plugin-sync": "workspace:*",
-    "@sand/util": "workspace:*"
+    "@sand/util": "workspace:*",
+    "zod": "^4.6.5"
   }
 }

@@ -12,6 +12,7 @@
     "@noble/curves": "^2.4.0",
     "@noble/hashes": "^2.4.0",
     "@sand/devices-contract": "workspace:*",
-    "@sand/util": "workspace:*"
+    "@sand/util": "workspace:*",
+    "zod": "^4.6.5"
   }
 }

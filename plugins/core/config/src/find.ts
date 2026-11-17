@@ -1,9 +1,11 @@
-import { isRecord } from '@sand/util'
 import { addonFolders } from '@sand/util/release'
 import { readdir } from 'node:fs/promises'
 import { basename, isAbsolute, join, resolve } from 'node:path'
+import { z } from 'zod'
 
 type Table = Record<string, unknown>
+
+const table = z.record(z.string(), z.unknown()).catch({})
 
 export type Found = readonly [id: string, dir: string, addon?: string]
 
@@ -11,8 +13,7 @@ const skipped = (name: string) => name.startsWith('.') || name === 'node_modules
 
 const readManifest = async (dir: string): Promise<Table> => {
   try {
-    const manifest: unknown = await Bun.file(join(dir, 'package.json')).json()
-    return isRecord(manifest) ? manifest : {}
+    return table.parse(await Bun.file(join(dir, 'package.json')).json())
   } catch {
     return {}
   }
@@ -51,21 +52,21 @@ const ownPlugins = async (root: string): Promise<Found[]> => {
   return folders.filter((_, index) => plugins[index]).map(dir => [basename(dir), dir])
 }
 
-export const userPlugins = async (root: string, table: unknown, build: string): Promise<Found[]> => {
-  const paths = Object.keys(isRecord(table) ? table : {})
+export const userPlugins = async (root: string, plugins: unknown, build: string): Promise<Found[]> => {
+  const paths = Object.keys(table.parse(plugins))
     .filter(id => isAbsolute(id))
     .map((path): Found => [path, path])
   return [...(await ownPlugins(root)), ...(await addonPlugins(root, build)), ...paths]
 }
 
-const fileIn = (dir: string, table: unknown, key: string) => {
-  const file = isRecord(table) ? table[key] : undefined
+const fileIn = (dir: string, files: unknown, key: string) => {
+  const file = table.parse(files)[key]
   return typeof file === 'string' ? resolve(dir, file) : undefined
 }
 
 export const sandOf = async (dir: string): Promise<Table> => {
   const { sand } = await readManifest(dir)
-  return isRecord(sand) ? sand : {}
+  return table.parse(sand)
 }
 
 export const entryIn = (dir: string, sand: Table, place: string) => fileIn(dir, sand, place)

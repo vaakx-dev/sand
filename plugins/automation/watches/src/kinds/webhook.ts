@@ -1,6 +1,6 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
 import type { Server } from '@sand/server/contract'
-import { bytes, clip, isRecord, oneLine } from '@sand/util'
+import { bytes, clip, oneLine } from '@sand/util'
 import { randomSecret } from '@sand/util/fs'
 import { z } from 'zod'
 import type { Change, Kind, KindContext } from '../contract'
@@ -38,8 +38,8 @@ const senderOf = (request: Request, caller: RouteCaller | undefined) => {
 }
 
 const hintOf = (value: unknown) => {
-  if (!isRecord(value)) return
-  return hintKeys.map(key => value[key]).find((field): field is string => typeof field === 'string' && field.trim() !== '')
+  const body = z.record(z.string(), z.unknown()).safeParse(value).data
+  return hintKeys.map(key => body?.[key]).find((field): field is string => typeof field === 'string' && field.trim() !== '')
 }
 
 const summaryOf = (request: Request, value: unknown, text: string) => {

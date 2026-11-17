@@ -1,9 +1,9 @@
 import { copyPlugin, removeFolder, removePlugin } from '@sand/plugin-files'
-import { isRecord } from '@sand/util'
 import { exists, moveFresh } from '@sand/util/fs'
 import type { BuildInfo } from '@sand/util/release'
 import { lstat } from 'node:fs/promises'
 import { join } from 'node:path'
+import { z } from 'zod'
 import { builtinPlugins } from './builtins'
 import { linkDependencies } from './links'
 import { writeCustomised } from './manifest'
@@ -17,10 +17,11 @@ export interface ActionOptions {
   report: (error: unknown) => void
 }
 
+const withVersion = z.object({ version: z.string() })
+
 const appVersion = async (appRoot: string) => {
   const data: unknown = await Bun.file(join(appRoot, 'apps', 'sand', 'package.json')).json().catch(() => undefined)
-  const version = isRecord(data) ? data.version : undefined
-  return typeof version === 'string' ? version : ''
+  return withVersion.safeParse(data).data?.version ?? ''
 }
 
 export const libraryActions = ({ paths, kept, build, report }: ActionOptions) => {

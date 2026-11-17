@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { isRecord } from '../json/record'
+import { z } from 'zod'
 import { buildStamp, scanApp } from './files'
 
 export interface BuildInfo {
@@ -31,25 +31,22 @@ export interface BuildStamp extends BuildInfo {
 
 const buildId = /^[0-9a-f]{6,64}$/
 
-const isLinkMap = (links: unknown): links is Record<string, string> =>
-  isRecord(links) && Object.values(links).every(target => typeof target === 'string')
+const stamp = z.object({
+  id: z.string().regex(buildId),
+  hash: z.string(),
+  time: z.number(),
+  modules: z.string(),
+  links: z.record(z.string(), z.string()),
+  bun: z.string(),
+})
 
-export const isStamp = (value: unknown): value is BuildStamp =>
-  isRecord(value) &&
-  typeof value.id === 'string' &&
-  buildId.test(value.id) &&
-  typeof value.hash === 'string' &&
-  typeof value.time === 'number' &&
-  Number.isFinite(value.time) &&
-  typeof value.modules === 'string' &&
-  isLinkMap(value.links) &&
-  typeof value.bun === 'string'
+export const isStamp = (value: unknown): value is BuildStamp => stamp.safeParse(value).success
 
 export const readStamp = async (root: string): Promise<BuildStamp | undefined> => {
-  const stamp: unknown = await Bun.file(join(root, buildStamp))
+  const found: unknown = await Bun.file(join(root, buildStamp))
     .json()
     .catch(() => undefined)
-  return isStamp(stamp) ? stamp : undefined
+  return isStamp(found) ? found : undefined
 }
 
 export const hashFiles = (files: AppFile[]) => {

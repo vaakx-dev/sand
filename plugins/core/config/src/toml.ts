@@ -1,5 +1,5 @@
-import { isRecord } from '@sand/util'
 import { writeAtomic } from '@sand/util/fs'
+import { z } from 'zod'
 
 type TomlValue = string | number | boolean
 
@@ -16,7 +16,9 @@ const parsed = (text: string) => {
   }
 }
 
-const field = (value: unknown, key: string) => (isRecord(value) ? value[key] : undefined)
+const fields = z.record(z.string(), z.unknown())
+
+const field = (value: unknown, key: string) => fields.safeParse(value).data?.[key]
 
 const tableIn = (text: string, table: string[]) => table.reduce(field, parsed(text))
 
@@ -26,7 +28,7 @@ const valueText = (value: TomlValue) => (typeof value === 'string' ? JSON.string
 
 const keyOf = (line: string) => {
   const entry = parsed(line)
-  return isRecord(entry) ? Object.keys(entry)[0] : undefined
+  return Object.keys(fields.catch({}).parse(entry))[0]
 }
 
 const heads = (line: string, table: string[]) => {
@@ -56,7 +58,7 @@ const edited = (text: string, table: string[], values: TomlValues) => {
 
 const holds = (text: string, table: string[], values: TomlValues) => {
   const found = tableIn(text, table)
-  return isRecord(found) && Object.entries(values).every(([key, value]) => found[key] === value)
+  return Object.entries(values).every(([key, value]) => field(found, key) === value)
 }
 
 const setTomlValues = async (path: string, table: string[], values: TomlValues) => {

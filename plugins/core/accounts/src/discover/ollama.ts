@@ -1,6 +1,10 @@
-import { isRecord } from '@sand/util'
-import { positive } from './fields'
+import { z } from 'zod'
+import { count } from './fields'
 import { getJson } from './http'
+
+const versionSchema = z.object({ version: z.string() })
+
+const showSchema = z.object({ model_info: z.record(z.string(), z.unknown()) })
 
 const concurrency = 10
 const probe = 1_500
@@ -9,7 +13,7 @@ export const isOllama = async (root: string) => {
   if (new URL(root).port === '11434') return true
   try {
     const body = await getJson('Ollama', `${root}/api/version`, {}, probe)
-    return isRecord(body) && typeof body.version === 'string'
+    return versionSchema.safeParse(body).success
   } catch {
     return false
   }
@@ -25,9 +29,9 @@ const contextOf = async (root: string, model: string) => {
     })
     if (!response.ok) return undefined
     const body: unknown = await response.json()
-    const info: Record<string, unknown> = isRecord(body) && isRecord(body.model_info) ? body.model_info : {}
+    const info = showSchema.safeParse(body).data?.model_info ?? {}
     const key = Object.keys(info).find(name => name.endsWith('.context_length'))
-    return positive(key ? info[key] : undefined)
+    return count.parse(key ? info[key] : undefined)
   } catch {
     return undefined
   }

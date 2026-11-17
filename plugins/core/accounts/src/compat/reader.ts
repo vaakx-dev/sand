@@ -1,6 +1,6 @@
 import type { StopReason } from '@sand/chats/contract'
 import { cacheLifetimes, type LLMEvent, type Usage, writtenTtl } from '../contract'
-import { isRecord } from '@sand/util'
+import { fieldsOf } from '../auth/json'
 import type { CompatChunk, CompatUsage } from './chunks'
 import { Collector } from './collect'
 
@@ -21,8 +21,8 @@ const stopOf = (reason: string, calls: boolean): StopReason => {
 
 const errorText = (error: unknown) => {
   if (typeof error === 'string') return error
-  const own = isRecord(error) ? (error.message ?? error.code) : undefined
-  return own ?? JSON.stringify(error)
+  const { message, code } = fieldsOf(error)
+  return message ?? code ?? JSON.stringify(error)
 }
 
 const failure = (error: unknown, name: string) => new Error(`${name} error: ${errorText(error)}`)

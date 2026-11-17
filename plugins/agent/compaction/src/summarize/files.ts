@@ -1,13 +1,22 @@
 import type { Message } from '@sand/chats/contract'
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 import type { CompactedFiles } from '../contract'
 
 const readers = new Set(['read'])
 const writers = new Set(['write', 'edit'])
 
-const pathOf = (input: unknown) => (isRecord(input) && typeof input.path === 'string' ? [input.path] : [])
+const pathInput = z.object({ path: z.string() })
+const editsInput = z.object({ edits: z.array(z.unknown()) })
 
-const pathsOf = (input: unknown) => (isRecord(input) && Array.isArray(input.edits) ? input.edits.flatMap(pathOf) : pathOf(input))
+const pathOf = (input: unknown) => {
+  const parsed = pathInput.safeParse(input)
+  return parsed.success ? [parsed.data.path] : []
+}
+
+const pathsOf = (input: unknown) => {
+  const parsed = editsInput.safeParse(input)
+  return parsed.success ? parsed.data.edits.flatMap(pathOf) : pathOf(input)
+}
 
 export const filesOf = (messages: Message[], previous?: CompactedFiles): CompactedFiles => {
   const read = new Set(previous?.read)

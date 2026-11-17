@@ -1,5 +1,6 @@
 import { type PcIcon, pcIconSchema } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 import { readStored, writeStored } from '../integrations/storage'
 
 export interface KnownPc {
@@ -14,16 +15,18 @@ export interface KnownPc {
 const knownKey = 'sand.pcs'
 const seenPrecision = 30_000
 
-const optionalIcon = (value: unknown) => value === undefined || pcIconSchema().safeParse(value).success
+const knownSchema = lazy(() =>
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    platform: z.string().optional(),
+    icon: pcIconSchema().optional(),
+    detectedIcon: pcIconSchema().optional(),
+    seen: z.number().optional(),
+  }),
+)
 
-const isKnown = (value: unknown): value is KnownPc =>
-  isRecord(value) &&
-  typeof value.id === 'string' &&
-  typeof value.name === 'string' &&
-  (value.platform === undefined || typeof value.platform === 'string') &&
-  optionalIcon(value.icon) &&
-  optionalIcon(value.detectedIcon) &&
-  (value.seen === undefined || typeof value.seen === 'number')
+const isKnown = (value: unknown): value is KnownPc => knownSchema().safeParse(value).success
 
 const same = (a: KnownPc | undefined, b: KnownPc) =>
   a?.name === b.name && a.platform === b.platform && a.icon === b.icon && a.detectedIcon === b.detectedIcon

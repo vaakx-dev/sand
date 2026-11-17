@@ -1,13 +1,15 @@
 import { basename, join } from 'node:path'
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 
 const installTimeout = 120_000
 
+const manifest = z.object({ dependencies: z.record(z.string(), z.unknown()) })
+
 const dependencyVersions = async (folder: string) => {
-  const manifest: unknown = await Bun.file(join(folder, 'package.json'))
+  const data: unknown = await Bun.file(join(folder, 'package.json'))
     .json()
     .catch(() => undefined)
-  return isRecord(manifest) && isRecord(manifest.dependencies) ? Object.values(manifest.dependencies) : []
+  return Object.values(manifest.safeParse(data).data?.dependencies ?? {})
 }
 
 const isWorkspace = (version: unknown) => typeof version === 'string' && version.startsWith('workspace:')

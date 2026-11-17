@@ -1,14 +1,16 @@
-import { errorMessage, isRecord } from '@sand/util'
+import { errorMessage } from '@sand/util'
 import { defaultHome, expandHome, setAside } from '@sand/util/fs'
 import { dirname, isAbsolute, join } from 'node:path'
+import { z } from 'zod'
 
 type Table = Record<string, unknown>
 
 const isPath = (id: string) => id.startsWith('.') || id.startsWith('~') || isAbsolute(id)
 
 const anchor = (table: Table, dir: string): Table => {
-  if (!isRecord(table.plugins)) return table
-  const plugins = Object.entries(table.plugins).map(([id, config]) => [isPath(id) ? expandHome(id, dir) : id, config])
+  const configured = z.record(z.string(), z.unknown()).safeParse(table.plugins)
+  if (!configured.success) return table
+  const plugins = Object.entries(configured.data).map(([id, config]) => [isPath(id) ? expandHome(id, dir) : id, config])
   return { ...table, plugins: Object.fromEntries(plugins) }
 }
 

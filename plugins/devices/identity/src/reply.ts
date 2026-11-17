@@ -1,12 +1,15 @@
 import type { IdentityReply } from '@sand/devices-contract'
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 import { deviceIdOf } from './keys'
 import { identityProof } from './payloads'
 import { verify } from './sign'
 
-const textFields = ['id', 'name', 'platform', 'publicKey', 'nonce', 'signature'] as const
+const replySchema = lazy(() =>
+  z.object({ id: z.string(), name: z.string(), platform: z.string(), publicKey: z.string(), nonce: z.string(), signature: z.string() }),
+)
 
-export const isIdentityReply = (value: unknown): value is IdentityReply => isRecord(value) && textFields.every(field => typeof value[field] === 'string')
+export const isIdentityReply = (value: unknown): value is IdentityReply => replySchema().safeParse(value).success
 
 const ownsId = (reply: IdentityReply) => {
   try {

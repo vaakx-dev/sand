@@ -1,9 +1,12 @@
-import { errorMessage, isRecord } from '@sand/util'
+import { errorMessage } from '@sand/util'
 import { spawnJsonLines } from '@sand/util/host'
+import { z } from 'zod'
 
 export type Json = Record<string, unknown>
 
-export const fieldsOf = (value: unknown): Json => (isRecord(value) ? value : {})
+const fields = z.record(z.string(), z.unknown())
+
+export const fieldsOf = (value: unknown): Json => fields.catch({}).parse(value)
 
 export class RpcError extends Error {
   override name = 'RpcError'

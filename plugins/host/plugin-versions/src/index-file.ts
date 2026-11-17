@@ -1,6 +1,6 @@
-import { isRecord } from '@sand/util'
 import { readState, writePrivateJson } from '@sand/util/fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 import type { Version, VersionSource } from './contract'
 
 export interface VersionIndex {
@@ -8,33 +8,36 @@ export interface VersionIndex {
   good: Record<string, string>
 }
 
-const sources: VersionSource[] = ['start', 'edit', 'customise', 'restore', 'sync', 'auto-restore']
+const sources = ['start', 'edit', 'customise', 'restore', 'sync', 'auto-restore'] as const satisfies readonly VersionSource[]
 
-const parseVersion = (value: unknown): Version | undefined => {
-  if (!isRecord(value)) return undefined
-  const { id, at, hash, note } = value
-  const source = sources.find(item => item === value.source)
-  if (typeof id !== 'string' || typeof at !== 'number' || typeof hash !== 'string' || !source) return undefined
-  return { id, at, hash, source, ...(typeof note === 'string' ? { note } : {}) }
-}
+const version = z.object({
+  id: z.string(),
+  at: z.number(),
+  hash: z.string(),
+  source: z.enum(sources),
+  note: z.string().optional().catch(undefined),
+})
 
-const parseList = (value: unknown) => (Array.isArray(value) ? value.map(parseVersion).filter(item => item !== undefined) : [])
+const versionList = z
+  .array(z.unknown())
+  .transform(items => items.flatMap(item => version.safeParse(item).data ?? []))
+  .catch([])
 
-const parseTargets = (value: unknown): Record<string, Version[]> => {
-  if (!isRecord(value)) return {}
-  const entries = Object.entries(value).map(([key, list]) => [key, parseList(list)] as const)
-  return Object.fromEntries(entries.filter(([, list]) => list.length))
-}
+const targets = z
+  .record(z.string(), versionList)
+  .transform(byTarget => Object.fromEntries(Object.entries(byTarget).filter(([, list]) => list.length)))
+  .catch({})
 
-const parseGood = (value: unknown): Record<string, string> => {
-  if (!isRecord(value)) return {}
-  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
-}
+const good = z
+  .record(z.string(), z.unknown())
+  .transform(value => Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string')))
+  .catch({})
+
+const indexShape = z.object({ targets, good }).catch({ targets: {}, good: {} })
 
 const indexPath = (root: string) => join(root, 'index.json')
 
-const parseIndex = (data: unknown): VersionIndex =>
-  isRecord(data) ? { targets: parseTargets(data.targets), good: parseGood(data.good) } : { targets: {}, good: {} }
+const parseIndex = (data: unknown): VersionIndex => indexShape.parse(data)
 
 export const readIndex = async (root: string): Promise<VersionIndex> => (await readState(indexPath(root), parseIndex)) ?? parseIndex(undefined)
 

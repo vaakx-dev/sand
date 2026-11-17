@@ -1,4 +1,5 @@
-import { isRecord } from '@sand/util'
+import { lazy } from '@sand/util'
+import { z } from 'zod'
 
 const tag = 'sand-beacon'
 const maxBytes = 512
@@ -9,7 +10,14 @@ export interface BeaconMessage {
   ask: boolean
 }
 
-const isPort = (value: unknown): value is number => Number.isInteger(value) && (value as number) > 0 && (value as number) < 65_536
+const beaconSchema = lazy(() =>
+  z.object({
+    tag: z.literal(tag),
+    id: z.string().min(1).max(64),
+    ask: z.unknown().transform(ask => ask === true),
+    port: z.number().int().min(1).max(65_535).optional().catch(undefined),
+  }),
+)
 
 export const encodeBeacon = (message: BeaconMessage) => JSON.stringify({ tag, ...message })
 
@@ -21,6 +29,6 @@ export const decodeBeacon = (raw: Buffer): BeaconMessage | undefined => {
   } catch {
     return undefined
   }
-  if (!isRecord(value) || value.tag !== tag || typeof value.id !== 'string' || !value.id || value.id.length > 64) return undefined
-  return { id: value.id, ask: value.ask === true, ...(isPort(value.port) ? { port: value.port } : {}) }
+  const beacon = beaconSchema().safeParse(value).data
+  return beacon && { id: beacon.id, ask: beacon.ask, ...(beacon.port === undefined ? {} : { port: beacon.port }) }
 }

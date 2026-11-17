@@ -1,18 +1,8 @@
 import type { UpdateChannel } from '@sand/host-updates/contract'
-import { isRecord, serial } from '@sand/util'
+import { serial } from '@sand/util'
 import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
-
-interface LaterEntry {
-  build: string
-  until: number
-}
-
-interface Saved {
-  channel: UpdateChannel
-  later?: LaterEntry
-  dismissed: string[]
-}
+import { z } from 'zod'
 
 export interface UpdateStore {
   channel(): UpdateChannel
@@ -25,22 +15,24 @@ export interface UpdateStore {
 
 const day = 24 * 60 * 60 * 1000
 
-export const isChannel = (value: unknown): value is UpdateChannel => value === 'release' || value === 'nightly' || value === 'dev'
+const channel = z.enum(['release', 'nightly', 'dev'] satisfies UpdateChannel[])
 
-const parseLater = (later: unknown): LaterEntry | undefined => {
-  if (!isRecord(later)) return
-  const { build, until } = later
-  if (typeof build !== 'string' || !build || typeof until !== 'number') return
-  return { build, until }
-}
+export const isChannel = (value: unknown): value is UpdateChannel => channel.safeParse(value).success
 
-const parse = (data: unknown): Saved => {
-  const saved = isRecord(data) ? data : {}
-  const dismissed = Array.isArray(saved.dismissed) ? saved.dismissed.filter(id => typeof id === 'string') : []
-  return { channel: isChannel(saved.channel) ? saved.channel : 'release', later: parseLater(saved.later), dismissed }
-}
+const stored = z
+  .object({
+    channel: channel.catch('release'),
+    later: z.object({ build: z.string().min(1), until: z.number() }).optional().catch(undefined),
+    dismissed: z
+      .array(z.unknown())
+      .catch([])
+      .transform(ids => ids.filter(id => typeof id === 'string')),
+  })
+  .catch({ channel: 'release', later: undefined, dismissed: [] })
 
-const read = async (file: string) => (await readState(file, parse)) ?? parse(undefined)
+type Saved = z.infer<typeof stored>
+
+const read = async (file: string): Promise<Saved> => (await readState(file, data => stored.parse(data))) ?? stored.parse(undefined)
 
 export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')

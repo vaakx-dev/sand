@@ -1,7 +1,8 @@
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 
-export const optionsOf = (table: unknown, id: string) => {
-  const config = isRecord(table) ? table[id] : undefined
-  const { enabled = true, ...options } = isRecord(config) ? config : {}
+const table = z.record(z.string(), z.unknown()).catch({})
+
+export const optionsOf = (plugins: unknown, id: string) => {
+  const { enabled = true, ...options } = table.parse(table.parse(plugins)[id])
   return enabled === false ? undefined : options
 }

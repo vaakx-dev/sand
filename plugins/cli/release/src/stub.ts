@@ -1,6 +1,6 @@
-import { isRecord } from '@sand/util'
 import { readManifest } from '@sand/util/release'
 import { dirname, relative, resolve, sep } from 'node:path'
+import { z } from 'zod'
 import type { Workspace } from './split'
 
 interface Stub {
@@ -36,7 +36,7 @@ const contractFiles = async (entries: string[]) => {
 }
 
 const exportedFiles = (dir: string, exports: unknown) =>
-  Object.values(isRecord(exports) ? exports : {})
+  Object.values(z.record(z.string(), z.unknown()).catch({}).parse(exports))
     .filter(file => typeof file === 'string')
     .map(file => resolve(dir, file))
 
@@ -45,7 +45,7 @@ const appPath = (workspace: Workspace, file: string) => `${workspace.path}/${rel
 const contractStub = async (workspace: Workspace): Promise<Stub> => {
   const { name, version, description, type, exports, dependencies } = (await readManifest(workspace.dir)) ?? {}
   const { files, packages } = await contractFiles(exportedFiles(workspace.dir, exports))
-  const used = Object.entries(isRecord(dependencies) ? dependencies : {}).filter(([dependency]) => packages.has(dependency))
+  const used = Object.entries(z.record(z.string(), z.unknown()).catch({}).parse(dependencies)).filter(([dependency]) => packages.has(dependency))
   const manifest = { name, version, description, type, exports, dependencies: Object.fromEntries(used) }
   return {
     files: files.map(file => appPath(workspace, file)),

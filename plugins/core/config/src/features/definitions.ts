@@ -1,27 +1,34 @@
-import { isRecord } from '@sand/util'
+import { z } from 'zod'
 import type { FeatureDefinition } from '../contract'
 
-const words = (value: unknown) => (Array.isArray(value) ? value.filter(item => typeof item === 'string') : [])
+const words = z
+  .array(z.unknown())
+  .catch([])
+  .transform(items => items.filter(item => typeof item === 'string'))
+
+const optionalText = z.string().optional().catch(undefined)
+
+const definition = z
+  .object({
+    kind: z.enum(['feature', 'capability']).catch('feature'),
+    label: z.string(),
+    summary: z.string().catch(''),
+    parent: optionalText,
+    needs: words,
+    uses: words,
+    addon: z.boolean().catch(false),
+    stops: optionalText,
+  })
+  .transform(({ parent, stops, ...rest }) => ({ ...rest, ...(parent !== undefined && { parent }), ...(stops !== undefined && { stops }) }))
+
+const features = z.record(z.string(), z.unknown()).catch({})
 
 const definitionOf = (id: string, value: unknown): FeatureDefinition[] => {
-  if (!isRecord(value) || typeof value.label !== 'string') return []
-  const { label, summary, parent, stops } = value
-  return [
-    {
-      id,
-      kind: value.kind === 'capability' ? 'capability' : 'feature',
-      label,
-      summary: typeof summary === 'string' ? summary : '',
-      ...(typeof parent === 'string' && { parent }),
-      needs: words(value.needs),
-      uses: words(value.uses),
-      addon: value.addon === true,
-      ...(typeof stops === 'string' && { stops }),
-    },
-  ]
+  const parsed = definition.safeParse(value)
+  return parsed.success ? [{ id, ...parsed.data }] : []
 }
 
 export const featureOf = (sand: Record<string, unknown>) => (typeof sand.feature === 'string' ? sand.feature : undefined)
 
 export const definitionsIn = (manifests: Record<string, unknown>[]) =>
-  manifests.flatMap(sand => Object.entries(isRecord(sand.features) ? sand.features : {}).flatMap(([id, value]) => definitionOf(id, value)))
+  manifests.flatMap(sand => Object.entries(features.parse(sand.features)).flatMap(([id, value]) => definitionOf(id, value)))

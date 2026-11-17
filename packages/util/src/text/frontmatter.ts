@@ -1,4 +1,6 @@
-import { isRecord } from '../json/record'
+import { z } from 'zod'
+
+const fields = z.record(z.string(), z.unknown())
 
 const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/
 
@@ -6,5 +8,5 @@ export const parseFrontmatter = (text: string): { meta: Record<string, unknown>;
   const match = frontmatter.exec(text)
   if (!match) return { meta: {}, body: text.trim() }
   const meta: unknown = Bun.YAML.parse(match[1]!)
-  return { meta: isRecord(meta) ? meta : {}, body: match[2]!.trim() }
+  return { meta: fields.safeParse(meta).data ?? {}, body: match[2]!.trim() }
 }
