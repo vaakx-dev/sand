@@ -19,6 +19,8 @@ interface Forecasted {
   limits: Gauge[]
 }
 
+const UNUSED_SHOWN = 0.005
+
 const labelOf = ({ plan, window }: Gauge) => `${plan.label} ${window.label}`
 
 const timed = ({ window }: Gauge) => window.members.some(member => member.window.duration)
@@ -35,6 +37,7 @@ const pick = (plans: Forecasted[], chosen: string) => plans.find(({ plan }) => p
 const verdict = ({ outAt, backAt, reset, leftAtReset }: Forecast, now: number) => {
   if (outAt !== undefined && outAt <= now) return span({ class: 'text-danger-400' }, `Used up until ${whenText(backAt ?? reset)}`)
   if (outAt !== undefined) return span({ class: 'text-warning-400' }, `At this pace you run out ${whenText(outAt)}`)
+  if (leftAtReset < UNUSED_SHOWN) return span(`At this pace you use about all of it by ${whenText(reset)}`)
   return span(`At this pace about ${percent(leftAtReset)} is left unused by ${whenText(reset)}`)
 }
 
