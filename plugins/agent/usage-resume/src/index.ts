@@ -1,4 +1,4 @@
-import { llm } from '@sand/accounts/contract'
+import { llm, llmLimits } from '@sand/accounts/contract'
 import { noteBlock, type Session, sessions } from '@sand/chats/contract'
 import { type Conversation, type ConversationRef, engine, type HoldStep, turnClose, turnHold, turnOpen, type TurnInfo, type TurnOrigin } from '@sand/engine/contract'
 import { modelSettings } from '@sand/model/contract'
@@ -36,12 +36,27 @@ export default definePlugin({
       await sent?.catch(error => ctx.report(error))
     }
 
+    const usageBack = (conversation: Conversation, turn: string) => {
+      const selection = ctx.engine.turn(conversation.owner, turn)?.selection
+      return !!selection && !!ctx.get(accountPool)?.spare({ model: selection.model, source: '' })
+    }
+
     const hold = (conversation: Conversation, origin: TurnOrigin, step: HoldStep) => {
       const found = plans.of(conversation)
       if (!found || origin === 'resume') return undefined
-      if (!found.resume && origin === 'user' && step === 'send') plans.forget(conversation)
+      if (!found.resume && (usageBack(conversation, found.turn) || (origin === 'user' && step === 'send'))) plans.forget(conversation)
       return true
     }
+
+    const release = () =>
+      plans.waiting().forEach(found => {
+        const conversation = ctx.engine.open(found)
+        const session = ctx.get(sessions)?.open(found.id)
+        const first = session && ctx.get(turns)?.pending(session)[0]
+        if (!conversation || !session || !first || !usageBack(conversation, found.turn)) return
+        plans.forget(found)
+        ctx.get(turns)?.hold(session, first.id, false)
+      })
 
     const stoppedChat = (turn: string) => {
       const chats = ctx.get(turns)
@@ -90,6 +105,7 @@ export default definePlugin({
       if (resetsAt && resetsAt > Date.now()) plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: resetsAt })
     })
     ctx.on(turnHold, hold)
+    ctx.on(llmLimits, release)
     ctx.watch(
       server,
       found =>
