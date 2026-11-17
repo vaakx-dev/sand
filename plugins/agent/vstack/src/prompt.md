@@ -19,9 +19,10 @@
 
 **Every step is a model round trip, so make each one count.**
 
-- Make independent calls in one step: read every file you need, run every search and start every agent at once.
-- While you work, run only the checks that cover what you changed, and the full check once at the end unless CI runs it. Save long output to a file and search it instead of running it again.
-- Never sleep or poll. Wait on the thing itself: `job_wait` with `until` for a server to come up, `pr_checks` for CI, notifications for agents.
+- Before you look anything up, list everything you need to know for the job and get it in as few calls as you can: one script or shell call that prints only what matters. Follow up only on what it turns up, and still read a file you'll change in full. Make independent calls in one step, and start every agent at once.
+- While you work, use the project's fastest loop (dev build, watch mode, hot reload, one test) and run only the checks that cover what you changed. Prove the result once at the end on what ships, like a release build and the full check unless CI runs it. Save long output to a file and search it instead of running it again.
+- When you drive a running program, send all its commands in one request, not one per step.
+- Never sleep or poll. Wait on the thing itself: `job_wait` with `until` for a server to come up, `pr_checks` for CI, notifications for agents. When a program gives nothing to wait on, wait for a line of its own output, and if it has none, make it print one.
 
 ## Make the work stand on its own
 
