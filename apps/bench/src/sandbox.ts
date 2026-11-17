@@ -60,6 +60,9 @@ const settings = ({ replies, gapMs }: Script, addons: string[]) =>
     '[plugins.model.levels.main]',
     'model = "replay/script"',
     '',
+    '[plugins.thread-titles]',
+    'enabled = false',
+    '',
   ].join('\n')
 
 const printed = (out: string, pattern: RegExp) => {

@@ -45,7 +45,7 @@ beforeAll(async () => {
   const home = mkdtempSync(join(tmpdir(), 'sand-parts-'))
   await Bun.write(
     join(home, 'sandbox.toml'),
-    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [[{ type = "text", text = "Hello from the thread" }]]\n\n[plugins.model.levels.main]\nmodel = "replay/script"\n`,
+    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [[{ type = "text", text = "Hello from the thread" }]]\n\n[plugins.model.levels.main]\nmodel = "replay/script"\n\n[plugins.thread-titles]\nenabled = false\n`,
   )
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
