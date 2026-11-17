@@ -20,6 +20,7 @@ const block = (index: number, start: Record<string, unknown>, deltas: Record<str
 const events = (reply: Reply, model: string, ids: () => string): Played => {
   const out: Step[] = [{ type: 'message_start', message: { model, usage: { input_tokens: 0, output_tokens: 0 } } }]
   let calls = false
+  let stop: string | undefined
   for (const [index, part] of reply.entries()) {
     switch (part.type) {
       case 'text':
@@ -52,9 +53,12 @@ const events = (reply: Reply, model: string, ids: () => string): Played => {
         return { out, end: 'hold' }
       case 'drop':
         return { out, end: 'drop' }
+      case 'stop':
+        stop = part.reason
+        break
     }
   }
-  out.push({ type: 'message_delta', delta: { stop_reason: calls ? 'tool_use' : 'end_turn' } }, { type: 'message_stop' })
+  out.push({ type: 'message_delta', delta: { stop_reason: stop ?? (calls ? 'tool_use' : 'end_turn') } }, { type: 'message_stop' })
   return { out, end: 'close' }
 }
 

@@ -8,11 +8,10 @@ const mostChars = 180
 export const turnMoment = (session: Session, result: TurnResult): Moment | undefined => {
   if (session.kind !== 'thread' && session.kind !== 'quick') return undefined
   if (result.stopReason === 'interrupted') return undefined
-  const failed = result.stopReason === 'error'
   return {
-    kind: failed ? 'failed' : 'finished',
+    kind: result.error ? 'failed' : 'finished',
     thread: session.id,
     title: session.title,
-    text: oneLine(failed ? (result.error ?? '') : result.text, mostChars),
+    text: oneLine(result.error ?? result.text, mostChars),
   }
 }

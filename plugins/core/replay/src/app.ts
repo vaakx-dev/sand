@@ -45,6 +45,7 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
     }
 
     const play = async (reply: Reply) => {
+      let stop: string | undefined
       for (const part of reply) {
         switch (part.type) {
           case 'wait':
@@ -77,10 +78,13 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
             return out.exit(new Error(`${label} crashed`))
           case 'hold':
             return
+          case 'stop':
+            stop = part.reason
+            break
         }
       }
       if (waiting.size) out.pause()
-      else out.finish()
+      else out.finish(stop)
     }
 
     const next = () => {

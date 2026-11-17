@@ -14,15 +14,14 @@ const endings: Record<string, { text: string; tone: NoticeTone }> = {
   interrupted: { text: 'Interrupted', tone: 'dim' },
   error: { text: 'The turn failed', tone: 'error' },
   lost: { text: 'Sand stopped during this turn', tone: 'error' },
-  refusal: { text: 'The model declined to continue', tone: 'error' },
-  max_tokens: { text: 'Stopped at the output token limit', tone: 'error' },
   limited: { text: 'Out of usage', tone: 'error' },
 }
 
 const endingNotice = ({ stopReason, error }: TurnEnding): { text: string; tone: NoticeTone } | undefined => {
   if (stopReason === 'interrupted' && error) return { text: `Stopped · ${error}`, tone: 'error' }
   const known = endings[stopReason]
-  return known && { text: error ? `${known.text}: ${error}` : known.text, tone: known.tone }
+  if (!known) return error ? { text: error, tone: 'error' } : undefined
+  return { text: error ? `${known.text}: ${error}` : known.text, tone: known.tone }
 }
 
 export const endingType = (stopReason: string) => `turn-ending:${stopReason}`
