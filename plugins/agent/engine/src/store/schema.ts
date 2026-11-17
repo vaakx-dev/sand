@@ -103,4 +103,8 @@ export const schema = [
   ['alter table turns add column pending text'],
   ['alter table turns add column outputs text', 'alter table turns add column recoveries integer not null default 0'],
   ['alter table turns add column handed integer not null default 0'],
+  [
+    `update chats set talked = coalesce((select max(started) from turns where owner = case chats.kind when 'bot' then 'bot' else 'thread' end
+      and conversation = chats.id and origin = 'user'), created)`,
+  ],
 ]
