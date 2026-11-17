@@ -1,7 +1,7 @@
 import { botName, type BotSummary } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
-import { div, dynamicChild, effect, untrack } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, untrack } from '@vaakx-dev/vrui'
 import type { Parts } from '../parts'
 import { holdSlot, type HoldParts } from './hold'
 
@@ -24,7 +24,8 @@ const composerExtras = (chat: ChatParts) => {
 }
 
 export const chatView = (chat: ChatParts) => {
-  effect(() => (chat.shown() ? untrack(() => composerExtras(chat)) : undefined))
+  const shown = derive(chat.shown)
+  effect(() => (shown.get() ? untrack(() => composerExtras(chat)) : undefined))
   const look = { empty: () => emptyChat(chat.parts.ctx.kit, chat.bot) }
   return div(
     { class: 'flex min-h-0 min-w-0 flex-1 flex-col' },

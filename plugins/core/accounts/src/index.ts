@@ -86,6 +86,7 @@ export default definePlugin({
     const state = () => loginState(accounts, peers, users)
     const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
     let offered = signature()
+    let told = ''
 
     onChange = () => {
       local.view.reset()
@@ -96,7 +97,11 @@ export default definePlugin({
         offered = now
         ctx.emit(llmModels)
       }
-      server?.broadcast(loginChange, state())
+      const current = state()
+      const shown = JSON.stringify(current)
+      if (!server || shown === told) return
+      told = shown
+      server.broadcast(loginChange, current)
     }
     catalog.sync()
 

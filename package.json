@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
-    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.10",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
     "typescript": "^7.0.2"
   },
   "overrides": {

@@ -1,6 +1,6 @@
-import { grouped, plural } from '@sand/util'
+import { plural } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, show, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, show, sig, span, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { Gauge } from '../../data/gauges'
 import type { Plan } from '../../data/pool'
 import { type Tone, toneOf } from '../../look'
@@ -8,7 +8,10 @@ import { accountList } from './accounts'
 import { whenText } from './pace'
 import { framed, windowRow } from './row'
 
-export type Opened = Map<string, Sig<boolean>>
+export interface PlansProps {
+  gauges: Derive<Gauge[]>
+  now: Sig<number>
+}
 
 const pooled = (plan: Plan) => plan.accounts.length > 1
 
@@ -25,11 +28,18 @@ const resetText = ({ plan, resetAt }: Gauge, tone: Tone) => {
   return pooled(plan) ? `next reset ${whenText(resetAt)}` : whenText(resetAt)
 }
 
-const planHead = (kit: Kit, plan: Plan, open: Sig<boolean>) =>
+const planHead = (kit: Kit, plan: Sig<Plan>, open: Sig<boolean>) =>
   div(
     { class: 'flex flex-wrap items-center gap-x-4 gap-y-1' },
-    span({ class: 'flex items-center gap-2' }, kit.modelLogo(plan.provider, 16), kit.rowName(plan.label)),
-    pooled(plan) ? kit.expandToggle(open, placesOf(plan)) : kit.metaLine(soleLine(plan.accounts)),
+    span(
+      { class: 'flex items-center gap-2' },
+      dynamicChild(() => plan.get().provider, provider => kit.modelLogo(provider, 16)),
+      kit.rowName(() => plan.get().label),
+    ),
+    dynamicChild(
+      () => pooled(plan.get()),
+      many => (many ? kit.expandToggle(open, () => placesOf(plan.get())) : kit.metaLine(() => soleLine(plan.get().accounts))),
+    ),
   )
 
 const gaugeRow = (gauge: Gauge, first: boolean) => {
@@ -37,22 +47,22 @@ const gaugeRow = (gauge: Gauge, first: boolean) => {
   return windowRow({ label: gauge.window.label, state: gauge.state, tone, when: resetText(gauge, tone) }, first)
 }
 
-const planBlock = (kit: Kit, plan: Plan, gauges: Gauge[], now: number, opened: Opened) => {
-  const open = grouped(opened, plan.kind, () => sig(false))
+const planBlock = (kit: Kit, plan: Sig<Plan>, { gauges, now }: PlansProps) => {
+  const open = sig(false)
+  const rows = derive(() => gauges.get().filter(gauge => gauge.plan.kind === plan.get().kind))
   return div(
     { class: 'flex flex-col gap-2' },
     planHead(kit, plan, open),
-    framed(gauges.map((gauge, index) => gaugeRow(gauge, index === 0))),
-    show(open, () => accountList(kit, plan, now)),
+    dynamicChild(rows, shown => framed(shown.map((gauge, index) => gaugeRow(gauge, index === 0)))),
+    show(open, () => dynamicChild(derive(() => ({ shown: plan.get(), at: now.get() })), ({ shown, at }) => accountList(kit, shown, at))),
   )
 }
 
-export const plansSection = (kit: Kit, gauges: Gauge[], now: number, opened: Opened) => {
-  const plans = [...new Set(gauges.map(gauge => gauge.plan))]
+export const plansSection = (kit: Kit, props: PlansProps) => {
+  const plans = derive(() => [...new Set(props.gauges.get().map(gauge => gauge.plan))])
   return kit.pageSection(
     { title: 'Plans' },
-    plans.length
-      ? div({ class: 'flex flex-col gap-6' }, plans.map(plan => planBlock(kit, plan, gauges.filter(gauge => gauge.plan === plan), now, opened)))
-      : kit.emptyState({ text: 'No plan limits reported.' }),
+    show(() => !plans.get().length, () => kit.emptyState({ text: 'No plan limits reported.' })),
+    list(plans, plan => plan.kind, plan => planBlock(kit, plan, props), div({ class: 'flex flex-col gap-6' })),
   )
 }
