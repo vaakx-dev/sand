@@ -1,6 +1,5 @@
 import type { LimitWindow } from '@sand/accounts/contract'
-import { hourKey } from './keys'
-import { hour, spentBetween, startOfHour, type Hourly, type Pattern } from './hours'
+import { hour, hourSpend, spentBetween, startOfHour, type Hourly, type Pattern } from './hours'
 
 const SPREAD = 0.3
 
@@ -81,7 +80,7 @@ const pastOf = (drawn: Drawn[], start: number, now: number) => {
   const points: Point[] = [{ at: start, left: leftAt(start) }]
   for (let at = startOfHour(start); at < now; at += hour) {
     drawn.forEach((budget, index) => {
-      if (begun(budget, at)) spent[index]! += budget.hourly.get(hourKey(at)) ?? 0
+      spent[index]! += hourSpend(budget.hourly, budget.start, at)
     })
     points.push({ at: Math.max(start, Math.min(at + hour, now)), left: leftAt(at) })
   }

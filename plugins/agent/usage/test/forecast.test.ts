@@ -29,6 +29,13 @@ test('a pool spends the budget that resets first, and what is left in each accou
   expect(forecast?.outAt).toBeUndefined()
 })
 
+test('a window that starts mid-hour counts only the usage after it starts', () => {
+  const fiveHours = { id: 'five', label: '5-hour', used: 0.35, duration: 5 * hour, resetsAt: now + hour }
+  const forecast = poolForecast([{ account: 'a', window: fiveHours }], steadyUse('a'), now)
+
+  expect(forecast?.leftAtReset).toBeCloseTo(0.55, 3)
+})
+
 test('a pool runs out only once every account is spent, and is back when the first one resets', () => {
   const forecast = poolForecast(
     [

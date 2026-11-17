@@ -43,9 +43,13 @@ export const hourlyOf = (periods: HourUsage[], accounts: string[]) => {
   }
 }
 
+const shareAfter = (from: number, at: number) => Math.max(0, Math.min(1, (at + hour - from) / hour))
+
+export const hourSpend = (hourly: Hourly, from: number, at: number) => (hourly.get(hourKey(at)) ?? 0) * shareAfter(from, at)
+
 export const spentBetween = (hourly: Hourly, from: number, until: number) => {
   let total = 0
-  for (let at = startOfHour(from); at < until; at += hour) total += hourly.get(hourKey(at)) ?? 0
+  for (let at = startOfHour(from); at < until; at += hour) total += hourSpend(hourly, from, at)
   return total
 }
 
