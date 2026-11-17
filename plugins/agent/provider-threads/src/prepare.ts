@@ -35,7 +35,7 @@ interface Plan extends Built {
   handoff?: string
 }
 
-const same = (thread: ProviderThreadInfo, { source, model }: Selection) => thread.source === source && thread.model === model
+const same = (thread: ProviderThreadInfo, { model }: Selection) => thread.model === model
 
 const promptOf = (path: Path, id: string) => (path.entries[path.index.get(id) ?? -1]?.data as Message | undefined)?.content ?? []
 
@@ -67,8 +67,8 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     return stores.threads.create({ conversation, ...found, system: system ?? (await brief.system(conversation, found.selection.model)) })
   }
 
-  const roomFor = (thread: ProviderThreadInfo, native: number, current: number) => ({
-    cap,
+  const roomFor = (thread: ProviderThreadInfo, native: number, current: number, strategy: HandoffStrategy) => ({
+    cap: strategy === 'transcript' ? Infinity : cap,
     window: windowOf(ctx.llm.find?.(thread.model)?.context, ctx.get(contextLimits)?.limit(thread.model)),
     native,
     current,
@@ -80,7 +80,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
   }
 
   const handOver = async (step: Step, thread: ProviderThreadInfo, strategy: HandoffStrategy) => {
-    const budget = budgetOf(roomFor(thread, await nativeFor(step, thread, strategy), step.current))
+    const budget = budgetOf(roomFor(thread, await nativeFor(step, thread, strategy), step.current, strategy))
     const made = madeBy(ctx, step.path, step.conversation.owner)
     return ctx.ledger.tx(() => {
       const seen = handOff(stores.handoffs, { ...step, thread, strategy, made, budget })
@@ -103,7 +103,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
       last: target === threads[0],
       onPath: onPath(target.seen, path),
       compacted,
-      fits: fits(roomFor(target, target.context, step.current)),
+      fits: fits(roomFor(target, target.context, step.current, 'delta')),
       now: Date.now(),
     }
     const available = !!ctx.llm.find?.(selection.model)
@@ -115,7 +115,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     }
     if (transition.strategy === 'delta' && target) return handOver(step, target, 'delta')
     if (target) retire(target.id)
-    return handOver(step, await create(step, selection), 'full')
+    return handOver(step, await create(step, selection), transition.strategy)
   }
 
   const prepare = async (conversation: Conversation, turn: TurnInfo, signal: AbortSignal): Promise<Plan> => {

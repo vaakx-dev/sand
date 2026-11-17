@@ -25,7 +25,7 @@ export interface ProviderThreadInfo {
   created: number
 }
 
-export type HandoffStrategy = 'full' | 'delta'
+export type HandoffStrategy = 'full' | 'delta' | 'transcript'
 
 export type Transition =
   | { type: 'reuse' }

@@ -6,7 +6,7 @@ import type { HandoffStore } from '../store/handoffs'
 import { fullBasis, headOf } from '../view/basis'
 import type { Path } from '../view/path'
 import type { Producers } from '../view/producers'
-import { itemsOf } from './items'
+import { CLIPS, itemsOf } from './items'
 import { coverageText, handoffText, renderItem } from './render'
 import { select } from './select'
 
@@ -34,13 +34,14 @@ export const handOff = (handoffs: HandoffStore, { conversation, turn, path, thre
   const end = path.index.get(turn.prompt) ?? path.entries.length
   const before = path.entries[end - 1]
   const covered = coveredBy(path, thread, strategy, end)
-  const items = itemsOf(path, covered, made)
+  const clips = CLIPS[strategy]
+  const items = itemsOf(path, covered, made, clips)
   if (!before || !items.length) return undefined
   const models = [...new Set(items.flatMap(item => (item.model && item.model !== thread.model ? [item.model] : [])))]
   const first = covered.reduce((low, entry) => Math.min(low, entry.seq), Infinity)
   const last = covered.reduce((high, entry) => Math.max(high, entry.seq), 0)
   const coverage = { models, first, last }
-  const selected = select(items.map(renderItem), coverageText(coverage), budget)
+  const selected = select(items.map(renderItem(clips)), coverageText(coverage), budget)
   const text = handoffText(selected.context, selected.items)
   const id = handoffs.create({
     conversation,

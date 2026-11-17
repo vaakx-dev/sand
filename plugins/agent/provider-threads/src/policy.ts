@@ -22,10 +22,13 @@ export interface Candidate {
 const reuse: Transition = { type: 'reuse' }
 const full: Transition = { type: 'handoff', strategy: 'full' }
 const delta: Transition = { type: 'handoff', strategy: 'delta' }
+const transcript: Transition = { type: 'handoff', strategy: 'transcript' }
 
 const settings = ['effort', 'speed'] as const
 
 const movedFolder = ({ native }: ProviderThreadInfo, cwd: string) => !!native && !native.pc && native.cwd !== cwd
+
+const stranded = ({ caps, selection }: Target, { thread }: Candidate) => caps.native && thread.source !== selection.source
 
 const continuing = ({ caps, selection, cwd }: Target, { thread, onPath, compacted }: Candidate): Transition => {
   if (!onPath) return caps.native ? full : reuse
@@ -42,5 +45,6 @@ const returning = ({ caps }: Target, { thread, onPath, fits, now }: Candidate) =
 export const decide = (target: Target, candidate: Candidate | undefined): Transition => {
   if (!target.available) return { type: 'reject', reason: `${target.selection.model} is not available; pick another model` }
   if (!candidate) return target.history ? full : reuse
+  if (stranded(target, candidate)) return transcript
   return candidate.last ? continuing(target, candidate) : returning(target, candidate)
 }

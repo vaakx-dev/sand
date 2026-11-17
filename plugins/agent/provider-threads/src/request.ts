@@ -39,11 +39,11 @@ export const buildRequest = async (
   brief: Brief,
   conversation: Conversation,
   thread: ProviderThreadInfo,
-  { effort, speed }: Selection,
+  { source, effort, speed }: Selection,
 ): Promise<Built> => {
   const path = currentPath(ctx, conversation)
   const basis = threadBasis(thread.id, thread.seen, path, lookupOf(conversation))
-  const { messages, delta } = renderView(basis, path, { source: thread.source, made: madeBy(ctx, path, conversation.owner), handoff: handoffs.text })
+  const { messages, delta } = renderView(basis, path, { source, made: madeBy(ctx, path, conversation.owner), handoff: handoffs.text })
   const tools = await brief.tools(conversation, messages)
   const kind = brief.kind?.(conversation)
   const handoff = handoffs.pending(thread.id)
@@ -53,7 +53,7 @@ export const buildRequest = async (
       messages,
       tools,
       model: thread.model,
-      source: thread.source,
+      source,
       ...(effort && { effort }),
       speed,
       session: conversation.id,
