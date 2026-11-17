@@ -36,7 +36,7 @@ export default definePlugin({
       opened.result(result, session)
       return result
     })
-    ctx.on(checksSettled, (conversation, sha, outcome) => known.add(follows.thread(conversation), ciKeyOf(sha, outcome)))
+    ctx.on(checksSettled, (conversation, sha, outcome) => known.add(conversation, ciKeyOf(sha, outcome)))
     ctx.on(sessionRemove, thread => {
       follows.forget(thread)
       opened.forget(thread)

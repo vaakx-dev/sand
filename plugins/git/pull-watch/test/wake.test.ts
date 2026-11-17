@@ -74,11 +74,23 @@ test('a thread follows the PR it opens, and wakes to deal with its failed CI', a
   fake.repo.ci = { status: 'completed', conclusion: 'failure' }
   await until(() => lastSaid(chat, 'Fixing the e2e test.'))
   const wake = userTexts(chat.messages()).at(-1)
-  expect(wake).toContain('<label>PR #7 · CI failed: e2e</label>')
+  expect(wake).toContain('<label>PR #7 Â· CI failed: e2e</label>')
   expect(wake).toContain('e2e: https://ci.example.com/e2e')
 
   expect(await sand.ask(pullUnfollow, { thread: chat.id, pull: 'acme/tiles#7' })).toBe(true)
   expect(await sand.ask(pullFollows, { thread: chat.id })).toEqual([])
+})
+
+test("a subagent's follow is its own, and its parent doesn't follow the PR", async () => {
+  await start([])
+  const parent = sand.chat('fake/m')
+  const agent = sand.sessions.agent({ parent: parent.id, cwd: sand.home, title: 'Helper' })
+
+  await sand.ask(pullFollow, { thread: agent.id, pull: 'acme/tiles#7' })
+
+  expect(await sand.ask(pullFollows, { thread: agent.id })).toMatchObject([{ thread: agent.id, number: 7 }])
+  expect(await sand.ask(pullFollows, { thread: parent.id })).toEqual([])
+  expect(await sand.ask(pullUnfollow, { thread: parent.id, pull: 'acme/tiles#7' })).toBe(false)
 })
 
 test('a change that lands while the thread works reaches its running turn, and CI it already saw finish wakes it for nothing', async () => {
@@ -94,7 +106,7 @@ test('a change that lands while the thread works reaches its running turn, and C
   await sand.turns.run(chat, 'Fix the upload retries')
 
   expect(sand.turns.list(chat)).toHaveLength(1)
-  expect(userTexts(chat.messages()).some(text => text.includes('<label>PR #7 · jon commented</label>'))).toBe(true)
+  expect(userTexts(chat.messages()).some(text => text.includes('<label>PR #7 Â· jon commented</label>'))).toBe(true)
 
   sand.app.emit(checksSettled, chat.id, SHA, 'passed')
   fake.repo.ci = { status: 'completed', conclusion: 'success' }
