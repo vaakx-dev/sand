@@ -1,4 +1,4 @@
-import { defaultsSet, modelSettings } from '@sand/model/contract'
+import { levelSet, modelSettings } from '@sand/model/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, beforeEach, expect, test } from 'bun:test'
 
@@ -20,7 +20,7 @@ afterEach(() => sand.stop())
 const opus = 'fake-a/opus'
 const deepseek = 'fake-b/deepseek'
 
-const setDefault = (model: string) => sand.ask(defaultsSet, { patch: { model } })
+const setDefault = (model: string) => sand.ask(levelSet, { level: 'main', model })
 
 const effective = (id: string) => sand.app.get(modelSettings)?.effective(sand.sessions.require(id)).model
 

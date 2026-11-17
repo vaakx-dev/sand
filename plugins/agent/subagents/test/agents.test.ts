@@ -1,6 +1,6 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { modelSettings } from '@sand/model/contract'
+import { levelSet, modelSettings } from '@sand/model/contract'
 import { threadSend, threadUpdate } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -147,4 +147,17 @@ test('only agents defined in the home folder can be named, and they run with the
   expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ name: 'scout', depth: 1, tools: ['read', 'grep'] })
   await until(() => sand.requests('child').length > 0)
   expect(bodies('child')[0]!.system[0]!.text).toContain('# Your role\n\nOnly look, never touch.')
+})
+
+test('a subagent started with a level runs on the model set for that level, and a light one is told to report rather than guess', async () => {
+  await start([delegate({ model: undefined, level: 'light' }), said('Started.'), said('Noted.')], [said('Found nothing.')])
+  await sand.ask(levelSet, { level: 'sub', model: 'child/m' })
+  const parent = sand.chat('parent/m')
+
+  await sand.turns.run(parent, 'Look it up')
+  const child = await childOf(parent)
+
+  expect(sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model).toBe('child/m')
+  await until(() => sand.requests('child').length > 0)
+  expect(bodies('child')[0]!.system[0]!.text).toContain("say so rather than guessing")
 })

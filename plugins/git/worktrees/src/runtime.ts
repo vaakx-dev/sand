@@ -5,7 +5,7 @@ import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { type Server, server } from '@sand/server/contract'
 import { shellReady, shellRunner } from '@sand/shell/contract'
-import { subModel } from '@sand/sub-model/contract'
+import { ask } from '@sand/ask/contract'
 import { tools } from '@sand/tools/contract'
 import { turnEnd, turnPrompt, turnStart, turns } from '@sand/turns-contract/contract'
 import { errorMessage, joinDisposers, keyedSerial } from '@sand/util'
@@ -47,7 +47,7 @@ export default definePlugin({
       store,
       setups,
       file: join(ctx.paths.home, 'worktree-proposals.json'),
-      sub: () => ctx.get(subModel),
+      ask: () => ctx.get(ask),
       send: proposal => live?.broadcast(worktreesProposed, proposal),
     })
     const serialByRepo = keyedSerial()
@@ -70,7 +70,7 @@ export default definePlugin({
       queue: (main, task) => serialByRepo(pathKey(main), task),
       busy,
       projectOf: folder => ctx.get(projectFiles)?.ofFolder(folder) ?? null,
-      sub: () => ctx.get(subModel),
+      ask: () => ctx.get(ask),
       async changed(main, ...folders) {
         live?.broadcast(worktreesChange, { main })
         await Promise.all([main, ...folders].map(folder => ctx.gitRepo.refresh(folder).catch(report)))

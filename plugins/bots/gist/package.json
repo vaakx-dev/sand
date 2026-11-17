@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-gist",
   "version": "0.0.0",
-  "description": "Sums up each bot reply in one short line with the fast sub model, for the bot's sidebar row",
+  "description": "Sums up each bot reply in one short line with the background model, for the bot's sidebar row",
   "type": "module",
   "sand": {
     "feature": "bots",
@@ -10,14 +10,15 @@
     "summary": "Swaps a bot row's cut-off last reply for a one-line AI summary"
   },
   "dependencies": {
+    "@sand/ask": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/sub-model": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@sand/harness": "workspace:*"
+    "@sand/harness": "workspace:*",
+    "@sand/model": "workspace:*"
   }
 }

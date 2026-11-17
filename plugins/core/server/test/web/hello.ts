@@ -57,9 +57,8 @@ beforeAll(async () => {
   const home = mkdtempSync(join(tmpdir(), 'sand-hello-'))
   await Bun.write(
     join(home, 'sandbox.toml'),
-    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [[{ type = "text", text = "Hello from the thread" }]]\n`,
+    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [[{ type = "text", text = "Hello from the thread" }]]\n\n[plugins.model.levels.main]\nmodel = "replay/script"\n`,
   )
-  await Bun.write(join(home, 'model.json'), JSON.stringify({ model: 'replay/script' }))
   mkdirSync(join(home, 'plugins', 'stuck'), { recursive: true })
   await Bun.write(join(home, 'plugins', 'stuck', 'package.json'), JSON.stringify({ name: 'stuck', type: 'module', sand: { runtime: './index.js' } }))
   await Bun.write(join(home, 'plugins', 'stuck', 'index.js'), stuckPlugin)

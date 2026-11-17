@@ -1,8 +1,9 @@
 import {
-  helloDefaults,
+  helloEfforts,
   helloLevels,
   helloModels,
   helloSources,
+  levelSettings,
   type ModelsUpdate,
   modelsChange as modelsUpdate,
   type SessionSettings,
@@ -17,13 +18,13 @@ import { type Models, modelsChange, type Threads } from '../contract'
 import { type HelloRead, helloOf, onPcHello } from '../greeted'
 import type { Store } from '../threads/store'
 
-const empty: ModelsUpdate = { models: [], sources: [], levels: [], defaults: {} }
+const empty: ModelsUpdate = { models: [], sources: [], efforts: [], levels: {} }
 
 const fromHello = (read: HelloRead): ModelsUpdate => ({
   models: read(helloModels) ?? [],
   sources: read(helloSources) ?? [],
-  levels: read(helloLevels) ?? [],
-  defaults: read(helloDefaults) ?? {},
+  efforts: read(helloEfforts) ?? [],
+  levels: read(helloLevels) ?? {},
 })
 
 const everyPc: WireListen = { from: 'all' }
@@ -63,7 +64,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   const useCatalog = (device: string, next: ModelsUpdate) => {
     catalogs.set(device, next)
     for (const thread of [...store.settings.keys()]) if (store.deviceOf(thread) === device) store.settings.delete(thread)
-    if (device === store.device() && wire.hello(helloDefaults, device) !== undefined) refreshDefaults()
+    if (device === store.device() && wire.hello(helloLevels, device) !== undefined) refreshDefaults()
     changed()
   }
 
@@ -98,13 +99,13 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
 
   const labelOn = (device: string, { model, effort, speed }: SessionSettings) => {
     const info = infoOn(device, model)
-    return [info?.label ?? model ?? 'Choose a model', accountOn(device, info), catalogOf(device).levels.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
+    return [info?.label ?? model ?? 'Choose a model', accountOn(device, info), catalogOf(device).efforts.find(level => level.id === effort)?.label, speed === 'fast' && 'Fast']
       .filter(Boolean)
       .join(' · ')
   }
 
   const summary = (settings: SessionSettings) => {
-    const model = settings.model ?? catalogOf().defaults.model
+    const model = settings.model ?? levelSettings(catalogOf().levels, 'main').model
     if (!model) return 'no model chosen'
     const known = infoOn(store.device(), model)
     const effort = settings.effort && known?.efforts.includes(settings.effort) ? settings.effort : undefined
@@ -116,9 +117,9 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
     list: () => catalogOf().models,
     known: () => knownCatalog() !== undefined,
     sources: () => catalogOf().sources,
+    efforts: () => catalogOf().efforts,
     levels: () => catalogOf().levels,
     info: id => infoOn(store.device(), id),
-    defaults: () => catalogOf().defaults,
     state,
     settings: thread => state(thread)?.current,
     label: settings => labelOn(store.device(), settings),

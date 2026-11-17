@@ -1,4 +1,4 @@
-import type { JobRequest, SubModel } from '@sand/sub-model/contract'
+import type { Ask, AskRequest } from '@sand/ask/contract'
 import { z } from 'zod'
 import type { SetupLines } from '../contract'
 import type { Facts } from './facts'
@@ -16,9 +16,9 @@ const describe = ({ files, commands }: Facts) =>
     ...(commands.length ? commands.map(({ command, why }) => `- ${command} (${why})`) : ['(none)']),
   ].join('\n')
 
-export const askSetup = async (sub: SubModel, facts: Facts, session: string | undefined): Promise<SetupLines> => {
-  const request: JobRequest = { tier: 'fast', system, prompt: describe(facts), ...(session ? { session } : {}) }
-  const answer = await sub.json(request, chosen)
+export const askSetup = async (ask: Ask, facts: Facts, session: string | undefined): Promise<SetupLines> => {
+  const request: AskRequest = { level: 'background', system, prompt: describe(facts), ...(session ? { session } : {}) }
+  const answer = await ask.json(request, chosen)
   return {
     copy: facts.files.filter(file => answer.copy.includes(file)),
     run: facts.commands.map(({ command }) => command).filter(command => answer.run.includes(command)),

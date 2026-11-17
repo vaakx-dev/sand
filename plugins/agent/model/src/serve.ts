@@ -1,36 +1,42 @@
-import { llm, llmModels } from '@sand/accounts/contract'
+import { type LLM, llm, llmModels } from '@sand/accounts/contract'
 import { sessionEntry, sessions, type Sessions } from '@sand/chats/contract'
-import type { Actor } from '@sand/host-hub/contract'
+import type { Actor, InputOf } from '@sand/host-hub/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
 import type { Choices } from './choices'
 import {
-  defaultsSet,
-  helloDefaults,
+  helloEfforts,
   helloLevels,
   helloModels,
   helloSources,
+  type LevelPicks,
+  levelSet,
+  levelsGet,
   modelsChange,
   modelSettingsChange,
-  modelSettingsDefaults,
   settingsChange,
   modelsList,
   settingsGet,
-  type SettingsPatch,
 } from './contract'
-import type { Defaults } from './defaults'
 import { canonical } from './effective'
+import type { Levels } from './levels'
+import { matchSettings } from './match'
 import { modelRows } from './list'
-import { knownPatch } from './settings'
+import { clean } from './settings'
 
-const hellos = (ctx: Context, server: Server, defaults: Defaults) =>
+const shownPicks = (current: LLM | undefined, picks: LevelPicks): LevelPicks =>
+  Object.fromEntries(Object.entries(picks).map(([level, pick]) => [level, canonical(current, pick)]))
+
+const hellos = (ctx: Context, server: Server, levels: Levels) =>
   joinDisposers(
     server.hello(helloModels, () => ctx.get(llm)?.models?.()),
     server.hello(helloSources, () => ctx.get(llm)?.sources?.()),
-    server.hello(helloLevels, () => ctx.get(llm)?.levels?.()),
-    server.hello(helloDefaults, () => canonical(ctx.get(llm), defaults.get())),
+    server.hello(helloEfforts, () => ctx.get(llm)?.levels?.()),
+    server.hello(helloLevels, () => shownPicks(ctx.get(llm), levels.picks())),
   )
+
+type LevelChange = InputOf<typeof levelSet>
 
 const callerThread = (actor: Actor | undefined) => (actor?.owner === 'thread' ? actor.id : undefined)
 
@@ -52,28 +58,38 @@ const serveThreadSettings = (ctx: Context, server: Server, choices: Choices, thr
   )
 }
 
-export const serveSettings = (ctx: Context, server: Server, choices: Choices, defaults: Defaults) => {
+const saveLevel = async (ctx: Context, levels: Levels, { level, model, effort, speed }: LevelChange) => {
+  if (model === null) return levels.save(level, undefined)
+  const patch = matchSettings({ model, effort, speed }, ctx.get(llm))
+  const kept = patch.model ? {} : levels.settings(level)
+  const next = clean({ ...kept, ...patch })
+  if (!next.model) throw new Error(`Choose a model for the ${level} level first`)
+  return levels.save(level, next)
+}
+
+export const serveSettings = (ctx: Context, server: Server, choices: Choices, levels: Levels) => {
   const shareModels = () => {
     const current = ctx.get(llm)
     server.broadcast(modelsChange, {
       models: current?.models?.() ?? [],
       sources: current?.sources?.() ?? [],
-      levels: current?.levels?.() ?? [],
-      defaults: canonical(current, defaults.get()),
+      efforts: current?.levels?.() ?? [],
+      levels: shownPicks(current, levels.picks()),
     })
   }
-  const saveDefaults = async (patch: SettingsPatch) => {
-    await defaults.save(patch)
-    ctx.emit(modelSettingsDefaults)
+  const changeLevel = async (change: LevelChange) => {
+    const picks = await saveLevel(ctx, levels, change)
+    shareModels()
+    return shownPicks(ctx.get(llm), picks)
   }
   return joinDisposers(
-    hellos(ctx, server, defaults),
+    hellos(ctx, server, levels),
     server.handle(settingsGet, ({ session, settings }) => {
       const opened = session === undefined ? undefined : ctx.get(sessions)?.open(session)
-      return opened ? choices.state(opened) : { current: choices.resolved(settings ?? {}) }
+      return opened ? choices.state(opened) : { current: choices.resolved(settings ?? {}, 'main') }
     }),
-    server.handle(defaultsSet, ({ patch }) => saveDefaults(knownPatch(patch))),
-    ctx.on(modelSettingsDefaults, shareModels),
+    server.handle(levelsGet, () => shownPicks(ctx.get(llm), levels.picks())),
+    server.handle(levelSet, changeLevel),
     ctx.on(llmModels, shareModels),
     ctx.watch(llm, shareModels),
     ctx.watch(sessions, found => found && serveThreadSettings(ctx, server, choices, found)),

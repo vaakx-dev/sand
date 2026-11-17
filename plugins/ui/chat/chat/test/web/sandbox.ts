@@ -26,9 +26,8 @@ export const startSandbox = async (replies: Reply[]) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-chat-'))
   await Bun.write(
     join(home, 'sandbox.toml'),
-    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [${replies.map(replyToml).join(', ')}]\n`,
+    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [${replies.map(replyToml).join(', ')}]\n\n[plugins.model.levels.main]\nmodel = "replay/script"\n`,
   )
-  await Bun.write(join(home, 'model.json'), JSON.stringify({ model: 'replay/script' }))
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
   const box = printed(out, /throwaway sand \(pid \d+\) in (.+)$/m)

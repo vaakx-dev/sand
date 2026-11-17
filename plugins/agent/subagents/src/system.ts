@@ -7,10 +7,12 @@ const preamble = `You are a sand subagent doing a task for another agent. You ha
 
 Finish the task. Your final reply goes back to the agent that started you. Put in what you found or did, with sources, such as file paths or links, and results.`
 
+const finder = `You were started to find things: files, docs, web pages, or what is on a screen. Gather what is relevant to the task and report it. When you can't find something, say so rather than guessing.`
+
 export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
   ctx.on(promptBase, async (_, session) => {
     const info = meta(session)
     if (!info || session.kind !== 'agent') return undefined
     const role = info.name && (await resolve(session.cwd, session.project)).get(info.name)?.prompt
-    return role ? [preamble, `# Your role\n\n${role}`] : [preamble]
+    return [preamble, ...(info.level === 'light' ? [finder] : []), ...(role ? [`# Your role\n\n${role}`] : [])]
   })

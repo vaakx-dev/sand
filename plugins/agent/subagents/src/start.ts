@@ -1,8 +1,7 @@
 import type { Effort } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import type { SessionSettings } from '@sand/model/contract'
+import { type Level, modelSettings, type SessionSettings } from '@sand/model/contract'
 import type { AgentLimits } from '@sand/orchestrator/contract'
-import { subModel } from '@sand/sub-model/contract'
 import type { AgentsContext } from './context'
 import type { AgentDefinition } from './contract'
 import type { Resolve } from './layers'
@@ -16,6 +15,7 @@ export interface SubagentRequest {
   agent?: string
   model?: string
   effort?: Effort
+  level?: Level
   project?: string
   worktree?: boolean
 }
@@ -29,19 +29,19 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
     return definition
   }
 
-  const presetOf = (request: SubagentRequest, definition: AgentDefinition | undefined): SessionSettings => {
-    const sub = ctx.get(subModel)
-    const tier = request.model || definition?.model ? undefined : definition?.tier
-    const own = definition ?? {}
-    return tier && sub?.has(tier) ? { ...sub.settings(tier), ...own } : own
-  }
+  const levelOf = (request: SubagentRequest, definition: AgentDefinition | undefined) =>
+    request.model ? undefined : (request.level ?? (definition?.model ? undefined : definition?.level))
+
+  const presetOf = (level: Level | undefined, definition: AgentDefinition | undefined): SessionSettings =>
+    level ? (ctx.get(modelSettings)?.level(level) ?? {}) : (definition ?? {})
 
   return async (request: SubagentRequest) => {
     const { parent, call, task, label, project, worktree } = request
     const from = { owner: parent.owner, id: parent.id }
     const definition = await definitionOf(request.agent, parent.cwd, project ?? parent.project)
     const scope = limits.child(parent, definition?.name, definition?.tools)
-    const preset = presetOf(request, definition)
+    const level = levelOf(request, definition)
+    const preset = presetOf(level, definition)
     const model = request.model ?? preset.model
     const effort = request.effort ?? preset.effort
     return ctx.orchestrator.start(
@@ -58,7 +58,7 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
         from,
         subagent: { call },
       },
-      session => limits.give(session, scope),
+      session => limits.give(session, { ...scope, ...(level && { level }) }),
     )
   }
 }

@@ -1,5 +1,5 @@
 import { type Message, type Session, type UserPart, userParts } from '@sand/chats/contract'
-import type { SubModel } from '@sand/sub-model/contract'
+import type { Ask } from '@sand/ask/contract'
 import { oneLine } from '@sand/util'
 import { z } from 'zod'
 
@@ -25,11 +25,8 @@ const messageText = (message: Message) =>
 
 const cleaned = (title: string) => oneLine(title.replace(/^[\s"'`]+|[\s"'`.]+$/g, ''), mostTitleChars)
 
-export const askTitle = async (sub: SubModel, session: Session, message: Message, signal: AbortSignal) => {
-  const reply = await sub.json(
-    { tier: 'fast', system, prompt: messageText(message), session: session.id, signal },
-    titled,
-  )
+export const askTitle = async (ask: Ask, session: Session, message: Message, signal: AbortSignal) => {
+  const reply = await ask.json({ level: 'background', system, prompt: messageText(message), session: session.id, signal }, titled)
   const title = cleaned(reply.title)
   if (!title) throw new Error('the model sent an empty title')
   return title

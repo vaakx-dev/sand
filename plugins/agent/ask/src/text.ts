@@ -1,11 +1,14 @@
 import type { llm } from '@sand/accounts/contract'
+import type { modelSettings } from '@sand/model/contract'
 import { sessions } from '@sand/chats/contract'
 import { usageRecord } from '@sand/usage/contract'
 import type { Context } from 'drydock'
 import type { AskRequest } from './contract'
 import { reply } from './reply'
 
-export type AskContext = Context<{ llm: typeof llm }>
+export type AskContext = Context<{ llm: typeof llm; modelSettings: typeof modelSettings }>
+
+const noModel = 'No model chosen. Choose one for the main level in Settings › Models.'
 
 const charsPerToken = 4
 const promptShare = 0.6
@@ -14,7 +17,9 @@ const capped = (prompt: string, context: number | undefined) => (context ? promp
 
 export const createText =
   (ctx: AskContext) =>
-  async ({ system, prompt, model, effort, speed, session: id, signal }: AskRequest) => {
+  async ({ system, prompt, level, session: id, signal }: AskRequest) => {
+    const { model, effort, speed } = ctx.modelSettings.level(level)
+    if (!model) throw new Error(noModel)
     const session = id ? ctx.get(sessions)?.open(id) : undefined
     const text = capped(prompt, ctx.llm.find?.(model)?.context)
     const release = ctx.busy()

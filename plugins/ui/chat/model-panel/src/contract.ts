@@ -24,11 +24,3 @@ export interface ModelTargets {
 }
 
 export const modelTargets = service<ModelTargets>('modelTargets')
-
-export type DefaultsView = () => HTMLElement
-
-export interface ModelDefaults {
-  slot(view: DefaultsView, order?: number): Dispose
-}
-
-export const modelDefaults = service<ModelDefaults>('modelDefaults')

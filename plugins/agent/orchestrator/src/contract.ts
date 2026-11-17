@@ -2,7 +2,7 @@ import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryR
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, helloField, request, type Request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SendResult, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
-import { type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
+import { type Level, type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
@@ -107,6 +107,7 @@ export interface AgentMeta {
   name?: string
   depth: number
   tools?: string[]
+  level?: Level
 }
 
 export interface AgentLimits {
