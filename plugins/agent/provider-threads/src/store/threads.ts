@@ -59,7 +59,7 @@ const infoOf = (row: Row): ProviderThreadInfo => ({
 const insertSql = `insert into provider_threads (id, owner, conversation, source, model, generation, status, system, seen, effort, speed, context, used, created)
   values ($id, $owner, $conversation, $source, $model,
     (select coalesce(max(generation), 0) + 1 from provider_threads
-      where owner = $owner and conversation = $conversation and source = $source and model = $model),
+      where owner = $owner and conversation = $conversation and model = $model),
     'idle', $system, $seen, $effort, $speed, $context, $used, $created)
   returning *`
 
@@ -69,7 +69,7 @@ export const createThreadStore = (db: Database) => {
   const open = db.query<Row, Key>(
     "select * from provider_threads where owner = $owner and conversation = $conversation and status != 'retired' order by used desc",
   )
-  const activated = db.query("update provider_threads set status = 'active', used = $used, effort = $effort, speed = $speed where id = $id")
+  const activated = db.query("update provider_threads set status = 'active', used = $used, source = $source, effort = $effort, speed = $speed where id = $id")
   const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, native = coalesce($native, native) where id = $id")
   const saw = db.query('update provider_threads set seen = $seen where id = $id')
   const briefed = db.query('update provider_threads set system = $system where id = $id')
@@ -96,7 +96,7 @@ export const createThreadStore = (db: Database) => {
       })
       return infoOf(row!)
     },
-    activate: (id: string, { effort, speed }: Selection) => void activated.run({ id, used: Date.now(), effort: effort ?? null, speed }),
+    activate: (id: string, { source, effort, speed }: Selection) => void activated.run({ id, used: Date.now(), source, effort: effort ?? null, speed }),
     settle: (id: string, { seen, context, native }: Settled) =>
       void settled.run({ id, seen: JSON.stringify(seen), context, native: native ? JSON.stringify(native) : null }),
     see: (id: string, seen: Segment[]) => void saw.run({ id, seen: JSON.stringify(seen) }),

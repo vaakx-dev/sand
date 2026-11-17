@@ -153,3 +153,31 @@ test('an interrupt keeps the native session, and the next turn is delivered into
   ])
   expect(generations()).toEqual(['1:idle'])
 })
+
+test('a chat moved to another account of its plan gives that account the whole transcript, tool output included, without a handoff row', async () => {
+  const output = 'x'.repeat(5_000)
+  sand = await startSand(
+    [
+      { id: 'n', models: ['m'], replies: [[{ type: 'call', id: 'c1', name: 'echo', input: { word: output } }], [said('n1')], [{ type: 'limit', resetInMs: 60_000 }]] },
+      { id: 'n-2', of: 'n', models: ['m'], replies: [[said('n2')]] },
+    ],
+    { plugins: ['agent/account-pool'] },
+  )
+  sand.tool('echo', ({ word }) => String(word))
+  const chat = sand.chat('n/m')
+
+  await sand.turns.run(chat, 'one')
+  await sand.turns.run(chat, 'two').catch(() => undefined)
+  await sand.turns.run(chat, 'three')
+
+  const moved = sand.native('n-2').flatMap(call => (call.type === 'send' ? [call.text] : []))
+  expect(moved).toHaveLength(1)
+  expect(moved[0]).toContain(`\n${output}\n`)
+  expect(moved[0]).toContain('\nn1\n')
+  expect(moved[0]).toEndWith('three')
+  expect(chat.entries().filter(entry => entry.type === 'handoff')).toEqual([])
+  expect(query<{ source: string; status: string }>('select source, status from provider_threads order by created')).toEqual([
+    { source: 'n', status: 'retired' },
+    { source: 'n-2', status: 'idle' },
+  ])
+})

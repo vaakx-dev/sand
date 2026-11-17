@@ -26,6 +26,6 @@ export const currentOf = (content: Block[]) => {
 
 export const nativeOf = (system: string, tools: unknown) => bytes(system) + bytes(JSON.stringify(tools))
 
-export const budgetOf = ({ cap, window, native, current }: Room) => Math.max(0, Math.min(cap, handoffCap.max, window - native - current - reserveOf(window)))
+export const budgetOf = ({ cap, window, native, current }: Room) => Math.max(0, Math.min(cap, window - native - current - reserveOf(window)))
 
 export const fits = (room: Room) => room.native + budgetOf(room) + room.current + reserveOf(room.window) <= room.window

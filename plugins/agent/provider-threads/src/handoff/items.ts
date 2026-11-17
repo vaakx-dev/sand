@@ -1,6 +1,7 @@
 import { type Block, type Entry, fileText, type Message, textOf, type ToolReferenceBlock, type ToolResultBlock } from '@sand/chats/contract'
 import type { TurnEnding } from '@sand/engine/contract'
 import { clip } from '@sand/util'
+import type { HandoffStrategy } from '../contract'
 import type { Path } from '../view/path'
 import { resetOf } from '../view/path'
 import type { Producers } from '../view/producers'
@@ -17,7 +18,14 @@ export interface Item {
   output?: string
 }
 
-const inputLimit = 800
+export interface Clips {
+  input: number
+  output: number
+}
+
+const SHORT: Clips = { input: 800, output: 2_000 }
+
+export const CLIPS: Record<HandoffStrategy, Clips> = { full: SHORT, delta: SHORT, transcript: { input: Infinity, output: Infinity } }
 
 const notes: Partial<Record<TurnEnding['stopReason'], string>> = {
   interrupted: 'The user interrupted this turn.',
@@ -53,7 +61,7 @@ const outcome = (result: ToolResultBlock | undefined) => {
   return result.isError ? 'error' : 'ok'
 }
 
-export const itemsOf = (path: Path, entries: Entry[], made: Producers): Item[] => {
+export const itemsOf = (path: Path, entries: Entry[], made: Producers, { input }: Clips): Item[] => {
   const results = resultsOf(path)
 
   const item = (entry: Entry, kind: ItemKind, role: Item['role'], text: string, id = entry.id): Item => {
@@ -70,7 +78,7 @@ export const itemsOf = (path: Path, entries: Entry[], made: Producers): Item[] =
     const tools = message.content.flatMap(block => {
       if (block.type !== 'tool_call') return []
       const result = results.get(block.id)
-      const call = `Tool ${block.name}(${clip(JSON.stringify(block.input ?? {}), inputLimit)}) → ${outcome(result)}`
+      const call = `Tool ${block.name}(${clip(JSON.stringify(block.input ?? {}), input)}) → ${outcome(result)}`
       const output = result ? contentText(result.content) : ''
       return [{ ...item(entry, 'tool', 'assistant', call, `${entry.id}#${block.id}`), ...(output && { output }) }]
     })

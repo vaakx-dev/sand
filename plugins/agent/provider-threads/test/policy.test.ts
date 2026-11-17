@@ -59,6 +59,8 @@ test.each([
   ['a native thread on the PC that shares the account, in its own folder', target({ caps: native }), candidate({}, { native: { id: 'n', cwd: '/elsewhere', pc: 'other' } }), { type: 'reuse' }],
   ['a new effort the source takes per request', target({ selection: { source: 'a', model: 'a/m', effort: 'low', speed: 'normal' } }), candidate(), { type: 'reconfigure' }],
   ['a new effort a native thread needs a restart for', target({ caps: native, selection: { source: 'a', model: 'a/m', effort: 'low', speed: 'normal' } }), candidate(), { type: 'restart_and_resume' }],
+  ['the model used last, moved to another account of its plan', target({ selection: { source: 'b', model: 'a/m', effort: 'high', speed: 'normal' } }), candidate(), { type: 'reuse' }],
+  ['a native thread moved to another account of its plan', target({ caps: native, selection: { source: 'b', model: 'a/m', effort: 'high', speed: 'normal' } }), candidate(), { type: 'handoff', strategy: 'transcript' }],
   ['a model returned to while its cache is warm', target(), candidate({ last: false }), { type: 'handoff', strategy: 'delta' }],
   ['a model returned to after its cache went cold', target(), candidate({ last: false, now: 2_000_000 }), full],
   ['a model returned to whose context would overflow', target(), candidate({ last: false, fits: false }), full],

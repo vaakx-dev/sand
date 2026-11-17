@@ -10,7 +10,7 @@ test('a handoff gets what fits after the native context, the prompt and a quarte
   expect(budgetOf({ ...room, window: 128_000, native: 90_000 })).toBe(128_000 - 90_000 - 1_000 - 32_000)
   expect(budgetOf({ ...room, window: 32_000, native: 10_000 })).toBe(32_000 - 10_000 - 1_000 - 16_000)
   expect(budgetOf({ ...room, native: 190_000 })).toBe(0)
-  expect(budgetOf({ ...room, cap: 100_000 })).toBe(64_000)
+  expect(budgetOf({ ...room, cap: Infinity })).toBe(200_000 - 10_000 - 1_000 - 50_000)
   expect(fits({ ...room, window: 128_000, native: 90_000 })).toBe(true)
   expect(fits({ ...room, native: 190_000 })).toBe(false)
 })
