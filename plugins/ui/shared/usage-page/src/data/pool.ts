@@ -36,12 +36,14 @@ const pooled = (account: AccountUsage) => account.billing === 'plan' && !!accoun
 
 const newest = (saved?: Limits, live?: Limits) => (!saved || (live && live.updated > saved.updated) ? live : saved)
 
+const keyedByLabel = (window: LimitWindow): LimitWindow => ({ ...window, id: window.label })
+
 const poolAccount = (account: AccountUsage, limits?: Limits): PoolAccount => ({
   key: account.key,
   label: account.label,
   pcName: account.pcName ?? '',
   ...(account.plan && { plan: account.plan }),
-  windows: limits?.windows ?? [],
+  windows: limits?.windows.map(keyedByLabel) ?? [],
   updated: limits?.updated ?? 0,
 })
 
