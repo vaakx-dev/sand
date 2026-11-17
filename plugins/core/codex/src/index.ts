@@ -36,7 +36,8 @@ const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>
 
 const codexAccountPlan = ({ media, report }: Needs, id: string, place: CodexPlace): AppPlan => {
   const pool = createPool(place, pkg.version)
-  reportLimits(pool, limits => report(id, limits))
+  const reported = (limits: PlanLimits) => report(id, limits)
+  reportLimits(pool, reported)
   return {
     id,
     label: 'Codex',
@@ -49,7 +50,7 @@ const codexAccountPlan = ({ media, report }: Needs, id: string, place: CodexPlac
     caps,
     fixedTools: true,
     ...codexAccount(pool),
-    open: (setup, output, resume) => openSession({ pool, media }, setup, output, resume),
+    open: (setup, output, resume) => openSession({ pool, media, report: reported }, setup, output, resume),
     sessionFiles: sessionFiles(place.home),
     close: () => pool.close(),
   }

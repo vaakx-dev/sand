@@ -18,7 +18,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
 import type { TestHost } from './host'
-import { userPlugins } from './user'
+import { userAuthFile, userPlugins } from './user'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
 
@@ -219,7 +219,7 @@ const start = async (models: Models, options: SandOptions) => {
 export const startSand = (sources: Source[], options: SandOptions = {}) =>
   start({ ids: sources.flatMap(source => source.models.map(name => `${source.id}/${name}`)), replay: sources }, options)
 
-export const startLiveSand = (models: string[], options: SandOptions = {}) => start({ ids: models }, options)
+export const startLiveSand = (models: string[], options: SandOptions = {}) => start({ ids: models }, { ...options, options: { ...options.options, accounts: { auth_file: userAuthFile(), ...options.options?.accounts } } })
 
 export type Sand = Awaited<ReturnType<typeof startSand>>
 

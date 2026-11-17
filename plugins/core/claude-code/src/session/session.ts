@@ -6,7 +6,7 @@ import { connect, fieldsOf, type Json } from '../cli/connection'
 import { usageLimits } from '../account/usage'
 import { askAside } from './aside'
 import { messageBlock } from './content'
-import { createReader } from './stream'
+import { createReader, succeeded } from './stream'
 import { serverName, toolServer } from './tools'
 
 const savedOf = (setup: AppSetup, given?: Saved): Saved | undefined => given ?? (setup.persist ? { id: crypto.randomUUID(), start: 'new' } : undefined)
@@ -58,13 +58,18 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
       () => {},
     )
 
+  const interrupted = (waiting: PromiseWithResolvers<void>) => {
+    stopped = undefined
+    waiting.resolve()
+  }
+
   const onMessage = (message: Json) => {
     if (message.type !== 'result') return reader.read(message)
     running = false
-    void checkUsage()
-    if (!stopped) return reader.finish(message)
-    stopped.resolve()
-    stopped = undefined
+    const checked = checkUsage()
+    if (stopped) return interrupted(stopped)
+    if (succeeded(message)) return reader.finish(message)
+    void checked.then(() => reader.finish(message))
   }
 
   const connection = await connect({

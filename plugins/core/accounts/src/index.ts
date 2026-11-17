@@ -13,7 +13,6 @@ import { createBridges } from './apps/bridges'
 import { createAccounts } from './auth/accounts'
 import { appStatusFile } from './auth/app-status'
 import { createLogin } from './auth/login'
-import { authPath } from './auth/path'
 import { readPlaces } from './auth/places'
 import { createPlans } from './auth/plans'
 import { createCatalog } from './catalog'
@@ -40,7 +39,11 @@ export default definePlugin({
   name: 'accounts',
   inject: { cli, media, sandConfig },
   config: z
-    .object({ prices: z.record(z.string(), priceSchema).default({}), stream_idle_ms: z.number().int().positive().default(streamIdleMs) })
+    .object({
+      prices: z.record(z.string(), priceSchema).default({}),
+      stream_idle_ms: z.number().int().positive().default(streamIdleMs),
+      auth_file: z.string().optional(),
+    })
     .default({ prices: {}, stream_idle_ms: streamIdleMs }),
   async apply(ctx, options) {
     let server: Server | undefined
@@ -57,7 +60,7 @@ export default definePlugin({
     const statusFile = appStatusFile(appsFolder)
     const [saved, places] = await Promise.all([statusFile.read(), readPlaces(appsFolder)])
     const plans = createPlans({ saved, places, save: statusFile.write, changed, dropped: bridges.forget })
-    const accounts = createAccounts(await authPath(home), plans, changed)
+    const accounts = createAccounts(options.auth_file ?? join(home, 'auth.json'), plans, changed)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
     const prices = new PriceList(options.prices, ctx.sandConfig)
     const catalog = createCatalog({ home, accounts, plans, prices, changed, report: error => ctx.report(error) })

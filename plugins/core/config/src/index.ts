@@ -9,7 +9,7 @@ import { serviceOwners } from './off/owners'
 import { createSwitches } from './off/switches'
 import { startOrder } from './order'
 import { optionsOf } from './plugins'
-import { configPath, readConfig } from './read'
+import { readConfig } from './read'
 import { setTomlValues, type TomlValues } from './toml'
 
 const BUSY_RETRY_MS = 5_000
@@ -20,7 +20,7 @@ export default definePlugin({
   inject: { cli },
   async apply(ctx) {
     const { home, safe, place, builtins } = ctx.cli
-    const path = await configPath(home)
+    const path = join(home, 'sand.toml')
     const table = await readConfig(path)
     const set = (table: string[], values: TomlValues) => setTomlValues(path, table, values)
     ctx.provide(sandConfig, { path, section: name => table[name], set })

@@ -1,4 +1,4 @@
-import { type AppAside, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, UsageLimited } from '@sand/accounts/contract'
+import { type AppAside, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
 import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { limitsOf, resetOf } from '../account/limits'
@@ -44,16 +44,27 @@ const asideOf = (reply: Json): AppAside => {
 
 const failureText = (turn: Json) => String(fieldsOf(turn.error).message ?? 'Codex stopped this turn')
 
+export interface SessionNeeds {
+  pool: Pool
+  media: Media
+  report(limits: PlanLimits): void
+}
+
 const usageLimited = (turn: Json) => fieldsOf(turn.error).codexErrorInfo === 'usageLimitExceeded'
 
-const readReset = (pool: Pool) =>
+const readLimits = (pool: Pool) =>
   pool.request('account/rateLimits/read', {}).then(
-    read => resetOf(limitsOf(read.rateLimits)),
+    read => limitsOf(read.rateLimits),
     () => undefined,
   )
 
-const failure = async (pool: Pool, turn: Json) =>
-  usageLimited(turn) ? new UsageLimited(failureText(turn), await readReset(pool)) : new Error(failureText(turn))
+const limitReached = async ({ pool, report }: SessionNeeds, turn: Json) => {
+  const limits = await readLimits(pool)
+  if (limits) report(limits)
+  return new UsageLimited(failureText(turn), resetOf(limits))
+}
+
+const failure = async (needs: SessionNeeds, turn: Json) => (usageLimited(turn) ? limitReached(needs, turn) : new Error(failureText(turn)))
 
 const mcpServers = async (server: ThreadServer, cwd: string) => Object.keys(fieldsOf(fieldsOf((await server.request('config/read', { cwd })).config).mcp_servers))
 
@@ -72,12 +83,8 @@ const begin = async (server: ThreadServer, setup: AppSetup, resume?: string) => 
   return String(fieldsOf(started.thread).id)
 }
 
-export interface SessionNeeds {
-  pool: Pool
-  media: Media
-}
-
-export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession> => {
+export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession> => {
+  const { pool, media } = needs
   const toItem = inputItem(media)
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
   const meter = usageMeter(output)
@@ -112,7 +119,7 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
       stopped.resolve()
       stopped = undefined
     } else if (turn.status === 'completed') output.finish()
-    else void failure(pool, turn).then(output.fail)
+    else void failure(needs, turn).then(output.fail)
   }
 
   const notify = (method: string, params: Json) => {

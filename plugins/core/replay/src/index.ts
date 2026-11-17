@@ -1,4 +1,4 @@
-import { type AppPlace, llmPlans } from '@sand/accounts/contract'
+import { type AppPlace, llmPlans, type PlanLimits } from '@sand/accounts/contract'
 import { paths } from '@sand/paths/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -20,12 +20,13 @@ export default definePlugin({
     const folder = join(ctx.paths.home, 'replay')
     mkdirSync(folder, { recursive: true })
     const apps = new Map<string, ReturnType<typeof replayApp>>()
+    const report = (id: string) => (limits: PlanLimits) => ctx.get(llmPlans)?.limits(id, limits)
     const added = (script: Script) => (place: AppPlace) => {
-      const made = replayApp(sources.find(source => source.id === place.id && source.of === script.id) ?? { ...script, id: place.id }, folder)
+      const made = replayApp(sources.find(source => source.id === place.id && source.of === script.id) ?? { ...script, id: place.id }, { folder, report: report(place.id) })
       apps.set(place.id, made)
       return made.plan
     }
-    for (const source of sources) if (!source.api && !source.of) apps.set(source.id, replayApp(source, folder, added(source)))
+    for (const source of sources) if (!source.api && !source.of) apps.set(source.id, replayApp(source, { folder, report: report(source.id), another: added(source) }))
     const own = [...apps.values()]
     ctx.effect(() => {
       if (!apis.size) return undefined

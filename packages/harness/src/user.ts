@@ -18,8 +18,12 @@ const runtimeEntry = async (dir: string) => {
   return typeof entry === 'string' ? resolve(dir, entry) : undefined
 }
 
+const userHome = () => join(homedir(), '.sand')
+
+export const userAuthFile = () => join(userHome(), 'auth.json')
+
 export const userPlugins = async (builtins: string) => {
-  const root = join(homedir(), '.sand', 'plugins')
+  const root = join(userHome(), 'plugins')
   const folders = (await readdir(root, { withFileTypes: true }).catch(() => [])).filter(entry => entry.isDirectory() || entry.isSymbolicLink())
   const found = await Promise.all(folders.map(async ({ name }): Promise<Plugin[]> => {
     const entry = await runtimeEntry(join(root, name))

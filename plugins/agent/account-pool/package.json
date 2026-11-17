@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@sand/harness": "workspace:*",
-    "@sand/replay": "workspace:*"
+    "@sand/replay": "workspace:*",
+    "@sand/schedules": "workspace:*"
   }
 }

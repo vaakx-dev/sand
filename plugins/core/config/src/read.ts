@@ -1,6 +1,6 @@
 import { errorMessage, isRecord } from '@sand/util'
-import { defaultHome, expandHome, setAside } from '@sand/util/fs'
-import { dirname, isAbsolute, join } from 'node:path'
+import { expandHome, setAside } from '@sand/util/fs'
+import { dirname, isAbsolute } from 'node:path'
 
 type Table = Record<string, unknown>
 
@@ -19,11 +19,6 @@ const parse = async (path: string): Promise<Table> => {
     await setAside(path, `is not valid TOML (${errorMessage(error)})`)
     return {}
   }
-}
-
-export const configPath = async (home: string) => {
-  const own = join(home, 'sand.toml')
-  return (await Bun.file(own).exists()) ? own : join(defaultHome(), 'sand.toml')
 }
 
 export const readConfig = async (path: string): Promise<Table> => {
