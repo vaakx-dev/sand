@@ -10,11 +10,13 @@ import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange, type Thread } from '@sand/web-client/contract'
-import { derive, sig } from '@vaakx-dev/vrui'
+import { clock, derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
 import { threadRows, type RowPart } from './contract'
-import { pageSize, threadGroups } from './groups'
+import { listGroups, pageSize } from './groups'
+import { settleDays, settleRow } from './settle'
+import { settings } from '@sand/settings/contract'
 import { threadEntries, threadRow } from './items/items'
 import { RowLooks } from './items/looks'
 import { chooseDraftPlace, newThread } from './launch/launch'
@@ -24,14 +26,17 @@ import { openThread } from './open'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
 
+const HOUR_MS = 3_600_000
+
 export default definePlugin({
   name: 'threads-home',
-  description: "Threads in the sidebar grouped Threads, Working, Snoozed and Archived, newest first; New thread opens a new chat in the last project, and its header picks another; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search; thread links in chats drawn as their sidebar row",
+  description: "Threads in the sidebar grouped Threads, Working, Snoozed, Settled and Archived, newest first, with the one setting for when threads and bots settle; New thread opens a new chat in the last project, and its header picks another; threads waiting on a sign-in, unmerged or ready to merge in Needs you; New thread in Search; threads and projects in Search; thread links in chats drawn as their sidebar row",
   inject: { kit, threads, projects, shell, wire },
   apply(ctx) {
     const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs])
     const changes = changesModel(ctx, ctx.wire)
     const parts = { ctx, kit: ctx.kit, threads: ctx.threads, projects: ctx.projects, shell: ctx.shell }
+    const days = settleDays(ctx)
     const limit = sig(pageSize)
     const more = () => limit.update(shown => shown + pageSize)
     const trail = sig<RowPart[]>([])
@@ -51,9 +56,25 @@ export default definePlugin({
         return () => trail.update(found => found.filter(other => other !== part))
       },
       row,
+      settleDays: () => days.get(),
     })
     ctx.provide(draftPlaces, { choose: draft => chooseDraftPlace(parts, draft) })
-    const groups = owned(ctx, () => derive(() => threadGroups({ entries: entries.get(), known: ctx.threads.known(), limit: limit.get(), more, start: () => newThread(parts) })))
+    const hour = owned(ctx, () => clock(HOUR_MS))
+    const groups = owned(ctx, () =>
+      derive(() =>
+        listGroups({
+          id: 'active',
+          label: 'Threads',
+          entries: entries.get(),
+          settleDays: days.get(),
+          now: hour.get(),
+          action: { label: 'New thread', icon: 'plus', run: () => newThread(parts) },
+          ...(ctx.threads.known() && { empty: 'No threads yet.' }),
+          archived: { limit: limit.get(), more },
+        }),
+      ),
+    )
+    ctx.watch(settings, found => found?.section({ page: 'projects', id: 'settle', order: 5, render: () => settleRow(ctx, days) }))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
     ctx.watch(markdownLinks, found => found?.scheme(threadLinks({ kit: ctx.kit, shell: ctx.shell, row, open: thread => openThread(ctx, ctx.shell, thread) })))
     ctx.watch(needs, found => {

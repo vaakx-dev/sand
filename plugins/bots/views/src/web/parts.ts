@@ -1,7 +1,8 @@
 import type { BotAutomation, BotAutomationSource, BotProfileSection } from '@sand/bots/contract'
 import type { ThreadView } from '@sand/chat/contract'
 import type { Toasts } from '@sand/toasts/contract'
-import type { ProjectGroup, ProjectShown } from '@sand/web-client/contract'
+import type { ThreadRows } from '@sand/threads-home/contract'
+import type { ProjectGroup, ProjectShown, Thread } from '@sand/web-client/contract'
 import type { Derive } from '@vaakx-dev/vrui'
 import type { BotsContext } from './context'
 import type { Registry } from './registry'
@@ -17,6 +18,8 @@ export interface Parts {
   shown(project: string): ProjectShown
   advanced: Derive<boolean>
   threadView: Derive<ThreadView | undefined>
+  threadRows: Derive<ThreadRows | undefined>
+  chat(bot: string): Thread | undefined
   sections: Registry<BotProfileSection>
   automationSources: Registry<BotAutomationSource>
   open(bot: string, view?: BotView): void

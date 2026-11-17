@@ -1,35 +1,58 @@
-import type { ShellGroup } from '@sand/ui-shell/contract'
-import type { Entry } from './items/items'
+import type { GroupAction, ShellGroup, ShellRow } from '@sand/ui-shell/contract'
+
+export interface ListEntry {
+  row: ShellRow
+  moved: number
+  talked: number
+  snoozed?: number
+  archived?: boolean
+  pinned?: boolean
+}
+
+export interface ListGroupsInput {
+  id: string
+  label: string
+  entries: ListEntry[]
+  settleDays: number | undefined
+  now: number
+  action?: GroupAction
+  empty?: string
+  archived?: { limit: number; more(): void }
+}
+
+const DAY_MS = 86_400_000
 
 export const pageSize = 50
 
-const newest = (entries: Entry[]) => entries.toSorted((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.moved - a.moved)
+const newest = (entries: ListEntry[]) => entries.toSorted((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.moved - a.moved)
 
-const group = (id: string, label: string, entries: Entry[], extra?: Partial<ShellGroup>): ShellGroup[] =>
+const group = (id: string, label: string, entries: ListEntry[], extra?: Partial<ShellGroup>): ShellGroup[] =>
   entries.length ? [{ id, label, rows: entries.map(entry => entry.row), ...extra }] : []
 
-interface GroupsInput {
-  entries: Entry[]
-  known: boolean
-  limit: number
-  more(): void
-  start(): void
+const settles = (entry: ListEntry, days: number | undefined, now: number) =>
+  days !== undefined && !entry.pinned && !entry.row.status && now - entry.talked > days * DAY_MS
+
+const archivedGroup = (entries: ListEntry[], { limit, more }: NonNullable<ListGroupsInput['archived']>) => {
+  const hidden = entries.length - limit
+  return group('archived', 'Archived', entries.slice(0, limit), {
+    folded: true,
+    ...(hidden > 0 && { action: { label: `Show ${Math.min(hidden, pageSize)} more`, icon: 'down', run: more } }),
+  })
 }
 
-export const threadGroups = ({ entries, known, limit, more, start }: GroupsInput): ShellGroup[] => {
-  const archived = newest(entries.filter(entry => entry.archived))
+export const listGroups = ({ id, label, entries, settleDays, now, action, empty, archived }: ListGroupsInput): ShellGroup[] => {
+  const gone = newest(entries.filter(entry => entry.archived))
   const snoozed = newest(entries.filter(entry => entry.snoozed && !entry.archived))
   const open = entries.filter(entry => !entry.snoozed && !entry.archived)
   const working = newest(open.filter(entry => entry.row.status === 'running'))
-  const active = newest(open.filter(entry => entry.row.status !== 'running'))
-  const hidden = archived.length - limit
+  const rest = open.filter(entry => entry.row.status !== 'running')
+  const settled = newest(rest.filter(entry => settles(entry, settleDays, now)))
+  const active = newest(rest.filter(entry => !settles(entry, settleDays, now)))
   return [
-    { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row), ...(known && !entries.length && { empty: 'No threads yet.' }) },
+    { id, label, rows: active.map(entry => entry.row), ...(action && { action }), ...(!entries.length && empty !== undefined && { empty }) },
     ...group('working', 'Working', working),
     ...group('snoozed', 'Snoozed', snoozed, { folded: true }),
-    ...group('archived', 'Archived', archived.slice(0, limit), {
-      folded: true,
-      ...(hidden > 0 && { action: { label: `Show ${Math.min(hidden, pageSize)} more`, icon: 'down', run: more } }),
-    }),
+    ...group('settled', 'Settled', settled.map(entry => ({ ...entry, row: { ...entry.row, quiet: true } })), { settled: true }),
+    ...(archived ? archivedGroup(gone, archived) : []),
   ]
 }

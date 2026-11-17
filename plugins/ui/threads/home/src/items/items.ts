@@ -1,11 +1,12 @@
 import type { ThreadChanges } from '@sand/changes/contract'
 import { draftRoute, threadRoute } from '@sand/chat/contract'
 import { drafts, type Drafts, type ThreadDraft } from '@sand/composer/contract'
-import type { ShellRow, Status } from '@sand/ui-shell/contract'
+import type { Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { ProjectShown, Thread } from '@sand/web-client/contract'
 import { changeStatus, type Changes } from '../changes'
 import type { RowPart } from '../contract'
+import type { ListEntry } from '../groups'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import { backLabel } from '../snooze/when'
@@ -13,13 +14,7 @@ import { runningJobs, type JobsOf } from './jobs'
 import type { RowLooks } from './looks'
 import { draftMenu, threadMenu, type MenuParts } from './menu'
 
-export interface Entry {
-  row: ShellRow
-  moved: number
-  snoozed?: number
-  archived?: boolean
-  pinned?: boolean
-}
+export type Entry = ListEntry
 
 const LISTED_KINDS = new Set<Thread['info']['kind']>(['thread', 'quick'])
 
@@ -51,7 +46,7 @@ const placeOf = (parts: MenuParts, looks: RowLooks, project: ProjectShown, devic
   return { ...place, label: [place.label, awayPcName(parts.ctx, device)].filter(Boolean).join(' · ') }
 }
 
-const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes, trail, looks }: RowSources): Entry => {
+const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes, trail, looks }: RowSources): ListEntry => {
   const change = changes.get(thread.id)
   const project = parts.projects.shown({ path: thread.info.cwd, device: thread.device, project: thread.info.project, quick: thread.info.kind === 'quick' })
   const { jobs, since } = jobsOf(thread.id)
@@ -69,6 +64,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes
       menu: () => threadMenu(parts, thread.id),
     },
     moved: isBack(thread) ? Math.max(thread.info.updated, thread.info.snoozed ?? 0) : thread.info.updated,
+    talked: thread.info.updated,
     snoozed,
     archived: Boolean(thread.info.archived),
     pinned: Boolean(thread.info.pinned),
@@ -77,7 +73,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, jobsOf: JobsOf, { changes
 
 const draftTitle = (draft: ThreadDraft) => draft.text.trim().split('\n', 1)[0]?.trim() || plural(draft.attachments, 'attachment')
 
-const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: ThreadDraft): Entry => ({
+const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: ThreadDraft): ListEntry => ({
   row: {
     id: `draft:${draft.id}`,
     label: draftTitle(draft),
@@ -88,11 +84,12 @@ const draftEntry = (parts: MenuParts, looks: RowLooks, saved: Drafts, draft: Thr
     menu: () => draftMenu(saved, draft.id),
   },
   moved: draft.updated,
+  talked: draft.updated,
 })
 
 export const threadRow = (parts: MenuParts, thread: Thread, sources: RowSources) => threadEntry(parts, thread, runningJobs(parts.ctx, parts.threads), sources).row
 
-export const threadEntries = (parts: MenuParts, sources: RowSources): Entry[] => {
+export const threadEntries = (parts: MenuParts, sources: RowSources): ListEntry[] => {
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, sources.looks, saved, draft)) : []
   const jobsOf = runningJobs(parts.ctx, parts.threads)

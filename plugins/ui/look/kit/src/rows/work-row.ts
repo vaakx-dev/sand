@@ -61,6 +61,7 @@ export interface WorkRowBody {
   detail?: Child
   place?: RowPlaceProps
   status?: Status
+  quiet?: boolean
   trail?: Child
   large?: boolean
   form?: RowForm
@@ -84,17 +85,19 @@ const secondLine = (large: boolean, { detail, place, trail }: Pick<WorkRowBody, 
 
 const metaOf = ({ end, status, at }: Pick<WorkRowBody, 'end' | 'status' | 'at'>) => end ?? statusTime(status, at)
 
-const titleOf = (title: Child, large: boolean) => span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title))
+const titleOf = (title: Child, large: boolean, quiet: boolean) => span({ class: ['flex min-w-0 flex-1', quiet && 'opacity-60'] }, large ? largeRowTitle(title) : rowTitle(title))
 
-const stackedBody = ({ title, lead, large = false, ...rest }: WorkRowBody) =>
+const leadOf = (lead: Child | undefined, quiet: boolean) => (lead && quiet ? span({ class: 'flex shrink-0 opacity-50 grayscale' }, lead) : (lead ?? null))
+
+const stackedBody = ({ title, lead, large = false, quiet = false, ...rest }: WorkRowBody) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col gap-px' },
-    div({ class: 'flex min-w-0 items-center gap-2' }, lead ?? null, titleOf(title, large), metaOf(rest)),
+    div({ class: 'flex min-w-0 items-center gap-2' }, leadOf(lead, quiet), titleOf(title, large, quiet), metaOf(rest)),
     secondLine(large, rest),
   )
 
-const lineBody = ({ title, lead, place, large = false, ...rest }: WorkRowBody) =>
-  div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, lead ?? null, place?.mark ?? null, titleOf(title, large), metaOf(rest))
+const lineBody = ({ title, lead, place, large = false, quiet = false, ...rest }: WorkRowBody) =>
+  div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, leadOf(lead, quiet), place?.mark ?? null, titleOf(title, large, quiet), metaOf(rest))
 
 export const workRowBody = (body: WorkRowBody) => (body.form === 'line' ? lineBody(body) : stackedBody(body))
 
@@ -108,6 +111,7 @@ const sameLook = (shown: Row, next: Row) =>
   shown.end === next.end &&
   shown.at === next.at &&
   shown.status === next.status &&
+  shown.quiet === next.quiet &&
   shown.lead === next.lead &&
   shown.detail === next.detail &&
   shown.trail === next.trail &&
@@ -134,6 +138,7 @@ const bodyOf = (row: Row, { large, form }: RowBodyLook) =>
     detail: row.detail?.(),
     place: row.place && { label: row.place.label, mark: row.place.mark?.() },
     status: row.status,
+    quiet: row.quiet,
     trail: row.trail?.(),
   })
 

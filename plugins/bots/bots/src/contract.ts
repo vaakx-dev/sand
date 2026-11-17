@@ -126,6 +126,8 @@ export interface Morning extends MorningEntry {
 
 export interface BotSummary extends Bot {
   folder: string
+  subagents: number[]
+  talked: number
   status: BotStatus
   waiting?: WaitReason['kind']
   spent: number
@@ -284,6 +286,7 @@ export const botChangeWire = wireEvent<BotSummary>('bot.change')
 export const botRemoveWire = wireEvent<string>('bot.remove')
 
 export const helloBots = helloField<BotSummary[]>('bots')
+
 
 const one = lazy(() => z.object({ bot: z.string() }))
 

@@ -202,6 +202,13 @@ const foldHeading = (model: Model, key: string, group: () => ShellGroup) => {
   )
 }
 
+const settledHeading = (label: () => string) =>
+  div(
+    { class: 'flex items-center gap-2 px-2 pt-4 pb-1 text-xs text-neutral-600' },
+    span({ class: 'shrink-0' }, label),
+    span({ class: 'h-px flex-1 bg-neutral-800' }),
+  )
+
 const foldAction = (model: Model, action: GroupAction) =>
   model.kit.navButton(
     { class: 'group w-full shrink-0', onClick: () => action.run() },
@@ -217,7 +224,9 @@ const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, lo
     { class: 'flex flex-col' },
     group.folded
       ? foldHeading(model, key, () => listed.get().group)
-      : model.kit.groupHeading(() => listed.get().group.label, action && { icon: action.icon, label: action.label, onClick: () => action.run() }),
+      : group.settled
+        ? settledHeading(() => listed.get().group.label)
+        : model.kit.groupHeading(() => listed.get().group.label, action && { icon: action.icon, label: action.label, onClick: () => action.run() }),
     list(
       derive(() => (shown() ? listed.get().group.rows : [])),
       row => row.id,

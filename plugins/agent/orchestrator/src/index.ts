@@ -12,6 +12,8 @@ import { openReceipts } from './receipts'
 import { schema } from './schema'
 import { archiveSubagents } from './archive'
 import { serveThreads } from './serve'
+import { serveSettle } from './settle'
+import { z } from 'zod'
 import { createStart } from './start'
 import { openStarters } from './starters'
 import { waitThread } from './state'
@@ -20,9 +22,10 @@ import { createWaits } from './waits'
 export default definePlugin({
   name: 'orchestrator',
   description:
-    "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A subagent tells whoever started it when it finishes and is archived with its parent; a thread stands on its own",
+    "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A subagent tells whoever started it when it finishes and is archived with its parent; a thread stands on its own. settle_days sets when threads and bots the user hasn't talked to settle",
   inject,
-  apply(ctx) {
+  config: z.object({ settle_days: z.number().int().min(1).max(365).default(3) }).default({ settle_days: 3 }),
+  apply(ctx, { settle_days }) {
     ctx.ledger.migrate('orchestrator', schema)
     const starters = openStarters(ctx.ledger)
     const waits = createWaits()
@@ -46,5 +49,6 @@ export default definePlugin({
     reportFinished(ctx, starters, waits, owners)
     archiveSubagents(ctx)
     serveThreads(ctx, threads, start, createPcs(ctx))
+    serveSettle(ctx, settle_days)
   },
 })

@@ -93,6 +93,22 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return { status: turn ? STATUSES[turn.status] : 'idle', ...(waiting && { waiting }) }
   }
 
+  const subagentStarts = (id: string): number[] =>
+    sessions.children(id).flatMap(child => {
+      const turn = turns.current(chatOf(child.id))
+      return [...(turn?.status === 'running' ? [turn.started] : []), ...subagentStarts(child.id)]
+    })
+
+  const TALK_SCAN = 50
+
+  const talkedOf = (bot: Bot, chat: Session) => turns.list(chat, undefined, TALK_SCAN).find(turn => turn.origin === 'user')?.started ?? bot.created
+
+  const botOf = (session: string): string | undefined => {
+    if (records.get(session)) return session
+    const parent = sessions.open(session)?.parent
+    return parent ? botOf(parent) : undefined
+  }
+
   const summary = (bot: Bot): BotSummary => {
     const chat = chatOf(bot.id)
     const last = lastLine(recentMessages(chat), chat.latest(gistEntry))
@@ -102,6 +118,8 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return {
       ...bot,
       folder: folderOf(bot.id),
+      subagents: subagentStarts(bot.id),
+      talked: talkedOf(bot, chat),
       ...statusOf(chat),
       spent,
       ...(hold && { hold }),
@@ -145,7 +163,8 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     if (session.owner === 'bot' && SUMMARY_TYPES.has(entry.type) && records.get(session.id)) entered(session.id, entry)
   })
   ctx.on(turnChange, info => {
-    if (records.get(info.session)) changed(info.session)
+    const bot = botOf(info.session)
+    if (bot) changed(bot)
   })
 
   return {

@@ -1,12 +1,11 @@
 import { botName, botRoute, type BotPatch, type BotSummary } from '@sand/bots/contract'
 import type { ChatAction } from '@sand/transcript/contract'
-import type { FaceState } from '@sand/ui-kit/contract'
 import type { Route, Screen } from '@sand/ui-shell/contract'
 import { div, dynamicChild, onRaf, show, span, untrack } from '@vaakx-dev/vrui'
 import { chatView } from '../chat/view'
 import { jobsView } from '../jobs/view'
 import type { BotView, Parts } from '../parts'
-import { botStatus } from '../work'
+import { faceStateOf } from '../work'
 
 const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 
@@ -14,8 +13,6 @@ const CHOICES: { value: BotView; label: string }[] = [
   { value: 'jobs', label: 'Jobs' },
   { value: 'chat', label: 'Chat' },
 ]
-
-const faceStateOf = (bot: BotSummary): FaceState | undefined => (botStatus(bot) === 'running' ? 'running' : undefined)
 
 const missing = ({ ctx: { kit } }: Parts) => kit.pageBody({}, kit.emptyState({ text: 'This bot is gone.' }))
 

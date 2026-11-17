@@ -15,6 +15,7 @@ import {
   type MorningEntry,
 } from '@sand/bots/contract'
 import { threadView } from '@sand/chat/contract'
+import { threadRows, wakeTimer } from '@sand/threads-home/contract'
 import { needs } from '@sand/needs-you/contract'
 import { palette, visitsOf, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -22,6 +23,7 @@ import { toastsOf } from '@sand/toasts/contract'
 import { transcript } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { projects, projectsChange } from '@sand/web-client/contract'
+import { clock, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changeNote } from './chat/change'
 import { botChats } from './chat/chats'
@@ -33,9 +35,11 @@ import { type BotView, projectNames, type Parts } from './parts'
 import { openProfile } from './profile/sheet'
 import { registry } from './registry'
 import { botScreen } from './screen/bot'
-import { botsGroup } from './sidebar'
+import { botsGroups } from './sidebar'
 import { botStore } from './store'
 import { botNeeds } from './needs'
+
+const HOUR_MS = 3_600_000
 
 const VIEWS: BotView[] = ['jobs', 'chat']
 
@@ -43,12 +47,13 @@ const viewOf = (tab: string | undefined) => VIEWS.find(view => view === tab)
 
 export default definePlugin({
   name: 'bot-views',
-  description: "Bots in the sidebar; each bot's screen with its jobs and its chat; its profile and New bot; bots waiting on you in Needs you",
+  description: "Bots in the sidebar grouped like threads: active, Working, Snoozed and Settled; each bot's screen with its jobs and its chat; its profile and New bot; bots waiting on you in Needs you",
   inject,
   apply(ctx) {
     const sections = registry<BotProfileSection>()
     const automationSources = registry<BotAutomationSource>()
     const known = pulse(ctx, [projectsChange], [projects])
+    const chats = botChats(ctx)
     const parts: Parts = {
       ctx,
       store: botStore(ctx),
@@ -60,6 +65,8 @@ export default definePlugin({
       },
       advanced: owned(ctx, () => pulse(ctx, [], [advanced]).read(() => ctx.get(advanced)?.on() ?? false)),
       threadView: owned(ctx, () => pulse(ctx, [], [threadView]).read(() => ctx.get(threadView))),
+      threadRows: owned(ctx, () => pulse(ctx, [], [threadRows]).read(() => ctx.get(threadRows))),
+      chat: bot => chats.thread(bot),
       sections,
       automationSources,
       open(bot, view) {
@@ -78,10 +85,21 @@ export default definePlugin({
     ctx.provide(botProfile, { section: sections.add })
     ctx.provide(botAutomations, { source: automationSources.add })
 
-    ctx.effect(() => ctx.shell.section({ id: 'bots', order: 10, groups: () => [botsGroup(parts)] }))
+    const hour = owned(ctx, () => clock(HOUR_MS))
+    const woke = sig(0)
+    wakeTimer(ctx, ctx.threads, () => woke.update(count => count + 1))
+    ctx.effect(() =>
+      ctx.shell.section({
+        id: 'bots',
+        order: 10,
+        groups: () => {
+          woke.get()
+          return botsGroups(parts, hour.get())
+        },
+      }),
+    )
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
     ctx.watch(needs, found => found?.source(botNeeds(parts)))
-    const chats = botChats(ctx)
     ctx.effect(() =>
       ctx.shell.subject(({ kind, id }) => {
         const bot = kind === botRoute && id ? parts.store.find(id) : undefined

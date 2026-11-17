@@ -84,6 +84,7 @@ export interface Row {
   lead?(): Child
   detail?(): Child
   status?: Status
+  quiet?: boolean
   place?: RowPlace
   trail?(): Child
 }
@@ -98,6 +99,7 @@ export interface ShellGroup {
   label: string
   action?: GroupAction
   folded?: boolean
+  settled?: boolean
   rows: ShellRow[]
   empty?: string
 }
