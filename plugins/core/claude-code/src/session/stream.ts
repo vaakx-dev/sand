@@ -1,5 +1,6 @@
 import { type AppOutput, cacheLifetimes, type Usage, UsageLimited, writtenTtl } from '@sand/accounts/contract'
 import type { StopReason } from '@sand/chats/contract'
+import { type Resets, resetsOf } from '../account/usage'
 import { fieldsOf, type Json } from '../cli/connection'
 
 interface Limit {
@@ -52,6 +53,7 @@ export const createReader = (output: AppOutput) => {
   let long = 0
   let stop: StopReason = 'end_turn'
   const limit = createLimit()
+  let resets: Resets = {}
 
   const streamEvent = (event: Json) => {
     if (event.type === 'message_start') {
@@ -87,8 +89,12 @@ export const createReader = (output: AppOutput) => {
     read(message: Json) {
       if (message.type === 'stream_event') streamEvent(fieldsOf(message.event))
       if (message.type === 'assistant') assistant(message)
-      if (message.type === 'rate_limit_event') limit.read(fieldsOf(message.rate_limit_info))
+      if (message.type !== 'rate_limit_event') return
+      const info = fieldsOf(message.rate_limit_info)
+      limit.read(info)
+      resets = { ...resets, ...resetsOf(info) }
     },
+    resets: () => resets,
     finish(result: Json) {
       const limited = limit.take()
       if (succeeded(result)) return output.finish(stop)

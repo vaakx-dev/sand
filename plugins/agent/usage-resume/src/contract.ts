@@ -1,4 +1,7 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import type { TurnResult } from '@sand/engine/contract'
+import type { Selection } from '@sand/model/contract'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export interface Resume {
@@ -21,3 +24,9 @@ export const resumeAlternative = request('resume.alternative', { input: () => z.
 export const resumeSwitch = request('resume.switch', { input: () => z.object({ turn: z.string(), model: z.string() }), output: type<void>() })
 
 export const resumeCancel = request('resume.cancel', { input: () => z.object({ turn: z.string() }), output: type<void>() })
+
+export interface Carrying {
+  continues(result: Pick<TurnResult, 'stopReason' | 'resetsAt'>, selection: Selection): boolean
+}
+
+export const carrying = service<Carrying>('usageResumeCarrying')

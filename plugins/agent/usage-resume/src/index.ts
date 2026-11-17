@@ -1,7 +1,7 @@
 import { llm, llmLimits } from '@sand/accounts/contract'
 import { noteBlock, type Session, sessions } from '@sand/chats/contract'
-import { type Conversation, type ConversationRef, engine, type HoldStep, turnClose, turnHold, turnOpen, type TurnInfo, type TurnOrigin } from '@sand/engine/contract'
-import { modelSettings } from '@sand/model/contract'
+import { type Conversation, type ConversationRef, engine, type HoldStep, turnClose, turnHold, turnOpen, type TurnInfo, type TurnOrigin, type TurnResult } from '@sand/engine/contract'
+import { modelSettings, type Selection } from '@sand/model/contract'
 import { scheduleChange, scheduleRemove, schedules, type Schedule } from '@sand/schedules/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
@@ -9,7 +9,7 @@ import { definePlugin } from 'drydock'
 import { turns } from '@sand/turns-contract/contract'
 import { accountPool } from '@sand/account-pool/contract'
 import { alternativeOf } from './alternative'
-import { type Alternative, helloResumes, resumeAlternative, resumeCancel, resumesChange, resumeSwitch } from './contract'
+import { type Alternative, carrying, helloResumes, resumeAlternative, resumeCancel, resumesChange, resumeSwitch } from './contract'
 import { createPlans } from './plans'
 
 const CONTINUE = 'Usage is back. Continue where you left off.'
@@ -17,6 +17,8 @@ const CONTINUE = 'Usage is back. Continue where you left off.'
 const switched = (account: string) => `Switched to ${account} because the plan ran out. Continue where you left off.`
 
 const PICK_UP = 'Continue where you left off.'
+
+type Next = { kind: 'carry'; note: string } | { kind: 'wait'; at: number }
 
 const MOVED = 'Moved to another account on this plan because this one ran out of usage. Continue where you left off.'
 
@@ -84,10 +86,18 @@ export default definePlugin({
       await move(found.session, offered, `switch:${turn}`)
     }
 
-    const carryOn = (conversation: Conversation, turn: TurnInfo, note: string) => {
-      if (!ctx.get(accountPool)?.spare(turn.selection)) return false
-      void resume({ owner: conversation.owner, id: conversation.id }, `carry-on:${turn.id}`, note)
-      return true
+    const nextOf = ({ stopReason, resetsAt }: Pick<TurnResult, 'stopReason' | 'resetsAt'>, selection: Selection): Next | undefined => {
+      if (stopReason !== 'moved' && stopReason !== 'limited') return undefined
+      if (ctx.get(accountPool)?.spare(selection)) return { kind: 'carry', note: stopReason === 'moved' ? PICK_UP : MOVED }
+      if (stopReason === 'moved') return undefined
+      const at = Math.min(resetsAt ?? Infinity, ctx.get(accountPool)?.backAt(selection) ?? Infinity)
+      return Number.isFinite(at) && at > Date.now() ? { kind: 'wait', at } : undefined
+    }
+
+    const carryOn = (conversation: Conversation, result: TurnResult, turn: TurnInfo) => {
+      const next = nextOf(result, turn.selection)
+      if (next?.kind === 'carry') void resume({ owner: conversation.owner, id: conversation.id }, `carry-on:${turn.id}`, next.note)
+      if (next?.kind === 'wait') plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: next.at })
     }
 
     ctx.effect(() =>
@@ -99,11 +109,8 @@ export default definePlugin({
     ctx.on(scheduleChange, announce)
     ctx.on(scheduleRemove, announce)
     ctx.on(turnOpen, conversation => plans.forget(conversation))
-    ctx.on(turnClose, (conversation, { stopReason, resetsAt }, turn) => {
-      if (stopReason === 'moved') return void carryOn(conversation, turn, PICK_UP)
-      if (stopReason !== 'limited' || carryOn(conversation, turn, MOVED)) return
-      if (resetsAt && resetsAt > Date.now()) plans.plan({ owner: conversation.owner, id: conversation.id, turn: turn.id, resume: true, at: resetsAt })
-    })
+    ctx.on(turnClose, carryOn)
+    ctx.provide(carrying, { continues: (result, selection) => nextOf(result, selection) !== undefined })
     ctx.on(turnHold, hold)
     ctx.on(llmLimits, release)
     ctx.watch(

@@ -1,4 +1,4 @@
-import { llm, type LLM, type ModelInfo, unavailable, windowsBySource } from '@sand/accounts/contract'
+import { type LimitWindow, llm, type LLM, type ModelInfo, unavailable, windowsBySource } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
 import { accountKey, type History, historyOf, historyQuery, usageReader } from '@sand/usage/contract'
@@ -8,7 +8,10 @@ import { planAccounts } from './plan'
 
 const HISTORY_TTL = 10 * 60_000
 
-const MOVED_OFF = new Set(['limited', 'moved'])
+const backOf = (windows: LimitWindow[]) => {
+  const spent = windows.filter(window => window.used >= 1)
+  return spent.length ? Math.max(...spent.map(window => window.resetsAt ?? Infinity)) : Infinity
+}
 
 export default definePlugin({
   name: 'account-pool',
@@ -49,7 +52,7 @@ export default definePlugin({
         const members = models?.members?.(model) ?? []
         if (!models || !members.length) return undefined
         const last = latest(session)
-        const left = last?.stopReason && MOVED_OFF.has(last.stopReason) ? last.selection.source : undefined
+        const left = last?.stopReason === 'moved' ? last.selection.source : undefined
         const open = usable(models, members, left)
         const staying = last && !left && open.find(member => member.source === last.selection.source)
         return staying ? staying.source : (best(models, open) ?? members[0]?.source)
@@ -57,6 +60,15 @@ export default definePlugin({
       spare({ model, source }: Placement) {
         const models = ctx.get(llm)
         return !!models && usable(models, models.members?.(model) ?? [], source).length > 0
+      },
+      backAt({ model, source }: Placement) {
+        const models = ctx.get(llm)
+        if (!models) return undefined
+        const windows = windowsBySource(models)
+        const online = new Set((models.accounts?.() ?? []).filter(account => account.online !== false).map(account => account.id))
+        const others = (models.members?.(model) ?? []).flatMap(member => (member.source && member.source !== source && online.has(member.source) ? [member.source] : []))
+        const earliest = Math.min(...others.map(other => backOf(windows.get(other) ?? [])))
+        return Number.isFinite(earliest) ? earliest : undefined
       },
     })
   },
