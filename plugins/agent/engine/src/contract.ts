@@ -182,6 +182,8 @@ export interface EntryViews {
 
 export const entryViews = service<EntryViews>('entryViews')
 
+export const conversationStop = event<(conversation: Conversation, interruption?: Interruption) => void>('conversation.stop')
+
 export const turnOpen = event<(conversation: Conversation, turn: TurnInfo) => void>('conversation.turn.open')
 
 export type HoldStep = 'send' | 'dispatch'

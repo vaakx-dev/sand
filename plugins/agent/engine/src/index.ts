@@ -1,7 +1,7 @@
 import { runtimeDrain, runtimeRelease } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { attachConversations } from './attach'
-import { type Conversation, engine, type Engine, entryViews, type Owner, type SendInput, type SendResult } from './contract'
+import { type Conversation, engine, type Engine, entryViews, type Interruption, type Owner, type SendInput, type SendResult } from './contract'
 import { inject } from './context'
 import { createLeases } from './lifecycle/lease'
 import { openStores } from './store'
@@ -12,6 +12,7 @@ const recoverEvery = 30_000
 const pruneEvery = 60 * 60 * 1000
 
 interface Attached {
+  stop(id: string, interruption: Interruption): boolean
   sweep(): void
   recover(released?: ReadonlySet<string>): void
   open(id: string): Conversation | undefined
@@ -55,11 +56,7 @@ export default definePlugin({
       turn: (owner, id) => stores.turns.get(owner, id),
       open: ({ owner, id }) => attached.get(owner)?.open(id),
       send: ({ owner, id }, input) => attached.get(owner)?.send(id, input),
-      stop(id, interruption) {
-        const turn = [...attached.keys()].map(owner => stores.turns.current({ owner, id })).find(found => found !== undefined)
-        if (turn) leases.interrupt(turn.id, interruption)
-        return turn !== undefined
-      },
+      stop: (id, interruption) => [...attached.values()].map(found => found.stop(id, interruption)).some(Boolean),
     }
 
     if (dispatches) {

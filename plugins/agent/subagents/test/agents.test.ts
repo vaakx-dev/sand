@@ -1,7 +1,7 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { levelSet, modelSettings } from '@sand/model/contract'
-import { threadSend, threadUpdate } from '@sand/orchestrator/contract'
+import { threadSend, threadStop, threadUpdate } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -77,23 +77,28 @@ test('a subagent is its own chat in the parent folder; its replies come back as 
   expect(sand.sessions.children(parent.id)).toHaveLength(1)
 })
 
-test("a subagent keeps working when its parent's turn is interrupted, and the user's own turns in it report back too", async () => {
-  await start([delegate(), [{ type: 'hold' }], said('Noted.'), said('Noted again.')], [[{ type: 'hold' }], said('Answered you.')])
+test('stopping an agent stops the subagents it started, all the way down, without waking it again', async () => {
+  sand = await startSand(
+    [
+      { id: 'parent', models: ['m'], replies: [delegate(), [{ type: 'hold' }]], api: 'anthropic' },
+      { id: 'child', models: ['m'], replies: [delegate({ model: 'grand/m' }), [{ type: 'hold' }]], api: 'anthropic' },
+      { id: 'grand', models: ['m'], replies: [[{ type: 'hold' }]], api: 'anthropic' },
+    ],
+    { plugins: ['core/watch', 'agent/subagents'] },
+  )
   const parent = sand.chat('parent/m')
   const turn = sand.turns.run(parent, 'Go')
-  const child = await until(() => sand.sessions.children(parent.id).find(found => running(found.id)))
-  await until(() => sand.requests('parent').length === 2)
+  const child = await childOf(parent)
+  const grandchild = await childOf(sand.sessions.require(child.id))
+  await until(() => running(grandchild.id) && sand.requests('child').length === 2 && sand.requests('parent').length === 2)
 
-  sand.turns.interrupt(parent)
+  await sand.ask(threadStop, { session: parent.id })
   await turn
-  expect(running(child.id)).toBeTruthy()
 
-  sand.turns.interrupt(sand.sessions.require(child.id))
-  await until(() => notices(parent).length === 1)
-  await until(() => !running(parent.id))
-  await sand.turns.run(sand.sessions.require(child.id), 'What did you find?', { origin: 'user' })
-  const [, answered] = await until(() => notices(parent).length === 2 && notices(parent))
-  expect(answered).toContain('Answered you.')
+  await until(() => !running(child.id) && !running(grandchild.id))
+  await Bun.sleep(200)
+  expect(running(parent.id)).toBeFalsy()
+  expect(sand.turns.list(parent)).toHaveLength(1)
 })
 
 test('a subagent can work in a project of its own, and is archived with its parent', async () => {
