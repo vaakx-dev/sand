@@ -1,4 +1,5 @@
-import { mkdir, open, readdir, rm, stat, statfs, type FileHandle } from 'node:fs/promises'
+import { freeBytes } from '@sand/util/fs'
+import { mkdir, open, readdir, rm, stat, type FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chunkBytes, chunkCount, chunkFits, TRANSFER_LIFETIME_MS, type ChunkedFile } from './chunks'
 
@@ -25,8 +26,7 @@ export const createTransfers = (folder: string) => {
 
   const openWithRoom = async (file: string) => {
     await mkdir(folder, { recursive: true })
-    const { bavail, bsize } = await statfs(folder)
-    if (promised() + keepFree > bavail * bsize) throw new Error('This PC does not have enough free disk space for that transfer')
+    if (promised() + keepFree > freeBytes(folder)) throw new Error('This PC does not have enough free disk space for that transfer')
     return open(file, 'w')
   }
 

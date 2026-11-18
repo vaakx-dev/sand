@@ -1,5 +1,5 @@
 const name = 'sand-cache'
-const version = 3
+const version = 4
 const stores = ['meta', 'threads', 'tails', 'entries', 'records'] as const
 
 export type PickStore = (store: (typeof stores)[number]) => IDBObjectStore
