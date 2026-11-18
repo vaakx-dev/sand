@@ -14,7 +14,7 @@ export const loginsField = z
   .refine(wanted => Object.keys(wanted).every(name => envName.test(name)), 'Variable names use only letters, digits and _, and don’t start with a digit')
   .optional()
   .describe(
-    'Saved logins as environment variables, by variable name: "<login id>" for a key or password, "<login id>/username" for a username. Use them as "$NAME" ($env:NAME in PowerShell); never echo or save them. Their values are hidden from you and the output.',
+    'Saved logins as environment variables: name to "<login id>", or "<login id>/username" for a username. Use them as "$NAME" ($env:NAME in PowerShell); never echo or save them.',
   )
 
 const refOf = (ref: string) =>

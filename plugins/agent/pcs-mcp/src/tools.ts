@@ -24,7 +24,7 @@ const pathOn = (pc: string | undefined, path: string, here: string | undefined) 
 
 const listTool: McpTool<typeof listInput> = {
   name: 'pc_list',
-  description: "List your other paired PCs by name, each one's platform and whether this PC can reach it now",
+  description: 'List your other paired PCs and whether this PC can reach each now',
   input: listInput,
   access: 'read',
   group: group.name,
@@ -33,7 +33,7 @@ const listTool: McpTool<typeof listInput> = {
 
 const copyTool: McpTool<typeof copyInput> = {
   name: 'pc_copy',
-  description: 'Copy a file or folder from one of your PCs to another, or within one PC. Returns whether it was a folder, its size in bytes and where it went',
+  description: 'Copy a file or folder between your PCs, or within one',
   input: copyInput,
   access: 'operate',
   group: group.name,

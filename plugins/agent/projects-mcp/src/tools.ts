@@ -16,18 +16,18 @@ const createInput = z.object({
     .string()
     .min(1)
     .optional()
-    .describe('The folder to add, created if it does not exist yet. Leave it out to create an empty project called name in the folder where new projects go'),
+    .describe('The folder to add, created if missing; leave it out for an empty project in the projects folder'),
   name: z.string().min(1).optional().describe("The project's name (default: the folder's name)"),
   git: z.boolean().optional().describe("Start a git repo in the folder unless it's in one already"),
-  copyOf: z.string().min(1).optional().describe('A project id: add the folder as another copy of that project, such as a clone of the same repo on another PC'),
+  copyOf: z.string().min(1).optional().describe('A project id this folder is another copy of, like a clone on another PC'),
   pc: pc.describe('Another of your PCs to add it on, by name; folder is then a full path on that PC (default: this PC)'),
 })
 
 const updateInput = z.object({
   project,
   name: z.string().min(1).optional().describe('Rename it'),
-  pinned: z.boolean().optional().describe('Pin it first in every list and picker of projects, or unpin it; pinning also unarchives it'),
-  archived: z.boolean().optional().describe("Archive it out of sand's lists and pickers of projects, or unarchive it; archiving also unpins it. Its folders and threads stay"),
+  pinned: z.boolean().optional().describe('Pin it first in project lists, or unpin it'),
+  archived: z.boolean().optional().describe('Archive it out of project lists, or unarchive it'),
   icon: z
     .object({
       shape: z.number().int().positive().optional().describe('A shape number from 1 up (default: the first shape)'),
@@ -35,7 +35,7 @@ const updateInput = z.object({
     })
     .nullable()
     .optional()
-    .describe("Its drawn icon, or null for the default; a project whose folder has its own icon shows that one instead"),
+    .describe('Its drawn icon, or null for the default'),
 })
 
 const removeInput = z.object({
@@ -48,17 +48,15 @@ const rootInput = z.object({
   pc: pc.describe('Another of your PCs, by name (default: this PC)'),
 })
 
-const removeRules = "Remove a project from sand. Folders and files stay where they are. Returns removed: true once it's gone."
-
 const folderOf = (folder: string | undefined, here: string | undefined) => (folder && here && !isAbsolute(folder) && !folder.startsWith('~') ? resolve(here, folder) : folder)
 
 export const projectTools: McpTool[] = [
   {
     name: 'project_list',
     description:
-      "List sand's projects by name: each one's folder on this PC, its git remote and whether it is pinned or archived. Start threads in one with thread_start's project.",
+      "List sand's projects with their folders and git remotes. Start threads in one with thread_start's project.",
     input: listInput,
-    parts: [{ feature: 'pcs', description: 'otherPcs lists its folders on your other PCs.' }],
+    parts: [{ feature: 'pcs', description: 'Includes folders on your other PCs.' }],
     access: 'read',
     group: group.name,
     run: (_, { call }) => call(projectRows, {}),
@@ -66,14 +64,14 @@ export const projectTools: McpTool[] = [
   {
     name: 'project_create',
     description:
-      'Add a folder as a project, or create an empty one. Returns the project as project_list shows it.',
+      'Add a folder as a project, or create an empty one.',
     input: createInput,
     parts: [
       { feature: 'git', fields: ['git'] },
       {
         feature: 'pcs',
         fields: ['copyOf', 'pc'],
-        description: 'sameRemote lists projects with the same git remote; if the folder is really a copy of one, remove this project and add the folder again with copyOf.',
+        description: 'If sameRemote shows the folder is a copy of another project, remove this one and add it again with copyOf.',
       },
     ],
     access: 'operate',
@@ -82,7 +80,7 @@ export const projectTools: McpTool[] = [
   } satisfies McpTool<typeof createInput>,
   {
     name: 'project_update',
-    description: 'Rename, pin or archive a project, or change its icon; returns the project as project_list shows it',
+    description: 'Rename, pin or archive a project, or change its icon',
     input: updateInput,
     access: 'operate',
     group: group.name,
@@ -90,16 +88,16 @@ export const projectTools: McpTool[] = [
   } satisfies McpTool<typeof updateInput>,
   {
     name: 'project_remove',
-    description: removeRules,
+    description: 'Remove a project from sand; its folders and files stay.',
     input: removeInput,
-    parts: [{ feature: 'pcs', fields: ['pc'], description: 'It removes it on every PC; with pc it only forgets its folder on that PC and returns the project as project_list shows it.' }],
+    parts: [{ feature: 'pcs', fields: ['pc'] }],
     access: 'operate',
     group: group.name,
     run: (input, { call }) => call(projectRemove, input),
   } satisfies McpTool<typeof removeInput>,
   {
     name: 'project_root',
-    description: 'Read or change the folder where new empty projects go; returns it.',
+    description: 'Read or change the folder where new empty projects go.',
     input: rootInput,
     parts: [{ feature: 'pcs', fields: ['pc'] }],
     access: 'operate',

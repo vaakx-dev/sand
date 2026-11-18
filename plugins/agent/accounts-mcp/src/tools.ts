@@ -9,9 +9,7 @@ const group: McpGroup = {
   summary: 'sign in and out of model accounts, add more plan accounts, save API keys and add local model servers',
 }
 
-const state = 'Returns every account (id, label, whether it is signed in, how, and any pending sign-in or error). Keys and tokens never come back.'
-
-const shared = { feature: 'pcs', description: 'It also says whether each is shared, and lists the accounts your other PCs share and the PCs using this one.' }
+const shared = { feature: 'pcs', description: 'Also shows which accounts are shared between your PCs.' }
 
 const account = z.string().min(1).describe('The account id, from account_list')
 
@@ -19,7 +17,7 @@ const listInput = z.object({})
 const accountInput = z.object({ account })
 const startInput = z.object({
   account,
-  anyway: z.boolean().optional().describe('Sign in here even though another PC already shares this account with this one'),
+  anyway: z.boolean().optional().describe('Sign in here though another PC already shares this account'),
 })
 const finishInput = z.object({ account, code: z.string().min(1).describe('The code the user copied from the sign-in page') })
 const keyInput = z.object({
@@ -39,7 +37,7 @@ const shareInput = z.object({ account, shared: z.boolean().describe('Whether you
 
 const listTool: McpTool<typeof listInput> = {
   name: 'account_list',
-  description: `List the model accounts on this PC: the API keys, sign-in plans and local servers sand uses for models. ${state}`,
+  description: 'List the API keys, sign-in plans and local servers sand uses for models on this PC.',
   parts: [shared],
   input: listInput,
   access: 'read',
@@ -49,13 +47,13 @@ const listTool: McpTool<typeof listInput> = {
 
 const signInTool: McpTool<typeof startInput> = {
   name: 'account_sign_in',
-  description: `Start signing in to a plan account. Then hand the user the account's pending sign-in: for "device", the URL and the code to enter there; for "paste", the URL, then ask for the code it shows and call account_finish_sign_in; for "browser", the URL. Check account_list to see it finish. ${state}`,
+  description: "Start signing in to a plan account, then hand the user the result's URL and code. For a \"paste\" sign-in, ask for the code it shows and call account_finish_sign_in.",
   input: startInput,
   parts: [
     {
       feature: 'pcs',
       fields: ['anyway'],
-      description: `When it reports a conflict with an account another PC shares, ask the user, then call again with anyway or call account_cancel_sign_in. ${shared.description}`,
+      description: 'On a conflict with an account another PC shares, ask the user, then call again with anyway or call account_cancel_sign_in.',
     },
   ],
   access: 'operate',
@@ -65,8 +63,7 @@ const signInTool: McpTool<typeof startInput> = {
 
 const finishTool: McpTool<typeof finishInput> = {
   name: 'account_finish_sign_in',
-  description: `Finish a "paste" sign-in with the code the user copied from the sign-in page. ${state}`,
-  parts: [shared],
+  description: 'Finish a "paste" sign-in with the code the user copied.',
   input: finishInput,
   secret: ['code'],
   access: 'operate',
@@ -77,7 +74,7 @@ const finishTool: McpTool<typeof finishInput> = {
 const addTool: McpTool<typeof accountInput> = {
   name: 'account_add',
   description:
-    'Add another account of a sign-in plan beside the one already signed in, like a second Claude account, kept in its own place so the first stays signed in. Pass the plan account whose "another" is true. Returns the new account id; then start its sign-in with account_sign_in.',
+    'Add a second account of a sign-in plan, like another Claude account, from the plan account whose "another" is true. Then sign it in with account_sign_in.',
   input: accountInput,
   access: 'operate',
   group: group.name,
@@ -86,8 +83,7 @@ const addTool: McpTool<typeof accountInput> = {
 
 const renameTool: McpTool<typeof renameInput> = {
   name: 'account_rename',
-  description: `Rename an account added with account_add. The name tells it apart in sand. ${state}`,
-  parts: [shared],
+  description: 'Rename an account added with account_add.',
   input: renameInput,
   access: 'operate',
   group: group.name,
@@ -96,8 +92,7 @@ const renameTool: McpTool<typeof renameInput> = {
 
 const cancelTool: McpTool<typeof accountInput> = {
   name: 'account_cancel_sign_in',
-  description: `Stop a sign-in that is still waiting, or clear its conflict or error. ${state}`,
-  parts: [shared],
+  description: 'Stop a waiting sign-in, or clear its conflict or error.',
   input: accountInput,
   access: 'operate',
   group: group.name,
@@ -106,8 +101,7 @@ const cancelTool: McpTool<typeof accountInput> = {
 
 const keyTool: McpTool<typeof keyInput> = {
   name: 'account_save_key',
-  description: `Save an Anthropic, OpenAI or OpenRouter API key the user gave you, replacing the one saved before. ${state}`,
-  parts: [shared],
+  description: 'Save an Anthropic, OpenAI or OpenRouter API key the user gave you.',
   input: keyInput,
   secret: ['key'],
   access: 'operate',
@@ -117,8 +111,7 @@ const keyTool: McpTool<typeof keyInput> = {
 
 const serverTool: McpTool<typeof serverInput> = {
   name: 'account_save_server',
-  description: `Add a local or self-hosted model server, like Ollama or LM Studio, or change one, and check that it answers. ${state}`,
-  parts: [shared],
+  description: 'Add or change a local or self-hosted model server, like Ollama or LM Studio, and check that it answers.',
   input: serverInput,
   secret: ['key'],
   access: 'operate',
@@ -128,7 +121,7 @@ const serverTool: McpTool<typeof serverInput> = {
 
 const findServersTool: McpTool<typeof listInput> = {
   name: 'account_find_servers',
-  description: 'Look for model servers running on this PC that are not added yet: name, address, what runs it and how many models it has. Add one with account_save_server',
+  description: 'Find model servers running on this PC that are not added yet. Add one with account_save_server',
   input: listInput,
   access: 'read',
   group: group.name,
@@ -137,8 +130,7 @@ const findServersTool: McpTool<typeof listInput> = {
 
 const signOutTool: McpTool<typeof accountInput> = {
   name: 'account_sign_out',
-  description: `Sign out of an account, forget its saved key, remove a model server, or remove an account added with account_add along with its sign-in. ${state}`,
-  parts: [shared],
+  description: 'Sign out of an account, forget its key, or remove a model server or an added account.',
   input: accountInput,
   access: 'operate',
   group: group.name,
@@ -147,9 +139,8 @@ const signOutTool: McpTool<typeof accountInput> = {
 
 const shareTool: McpTool<typeof shareInput> = {
   name: 'account_share',
-  description: `Let your other PCs use an account saved on this PC, or stop them. ${state}`,
+  description: 'Let your other PCs use an account saved on this PC, or stop them.',
   feature: 'pcs',
-  parts: [shared],
   input: shareInput,
   access: 'operate',
   group: group.name,

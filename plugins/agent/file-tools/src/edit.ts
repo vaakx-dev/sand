@@ -16,7 +16,7 @@ const input = z.object({
   edits: z
     .array(change)
     .min(1)
-    .describe('Every change to make, across any number of files. Changes to the same file apply in order, each to the result of the one before.'),
+    .describe('Every change, across any files; changes to one file apply in order'),
 })
 
 type Change = z.infer<typeof change> & { full: string }
@@ -99,9 +99,8 @@ const editAll = async (changes: Change[], paths: string[]) => {
 export const edit: Tool<typeof input> = {
   name: 'edit',
   description: [
-    'Replace exact text in files. One call carries every change you need: list them all in `edits`, across as many files as you like, instead of making one call per change.',
-    'Each old_string must match exactly once in its file, unless replace_all is set. Line endings follow the file.',
-    'All changes apply or none do: if any one fails, no file is changed. Read the files first.',
+    'Replace exact text in files. Put every change, across any files, in one call.',
+    'Each old_string must match exactly once unless replace_all is set; all changes apply or none do. Read the files first.',
   ].join(' '),
   input,
   needs: ['pc'],

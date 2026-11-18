@@ -39,7 +39,7 @@ const codeOf = ({ session, id, code, approved }: z.output<typeof codeInput>): Co
 const waitingTool: McpTool<typeof waitingInput> = {
   name: 'login_waiting',
   description:
-    'List the requests waiting for the user to answer in a private card: request_secret asking for a key or website login (kind secret) and login_code asking for a sign-in code (kind code), with the thread or bot each waits in',
+    'List the request_secret and login_code requests waiting for the user, with the thread or bot each waits in',
   input: waitingInput,
   access: 'read',
   group: group.name,
@@ -49,7 +49,7 @@ const waitingTool: McpTool<typeof waitingInput> = {
 const secretTool: McpTool<typeof secretInput> = {
   name: 'login_answer_secret',
   description:
-    'Answer a waiting request_secret for the user: a value for a key, or a username and password when it names a site. The asking thread or bot gets a login it may use, never the value',
+    'Answer a waiting request_secret for the user. The asking thread or bot gets a login it may use, never the value',
   input: secretInput,
   secret: ['value', 'username', 'password'],
   access: 'operate',
@@ -62,7 +62,7 @@ const secretTool: McpTool<typeof secretInput> = {
 
 const codeTool: McpTool<typeof codeInput> = {
   name: 'login_answer_code',
-  description: 'Answer a waiting login_code for the user: the code is filled into the sign-in page and never saved, or say the sign-in was approved on another device',
+  description: 'Answer a waiting login_code for the user with a code, or say the sign-in was approved on another device',
   input: codeInput,
   secret: ['code'],
   access: 'operate',
@@ -75,7 +75,7 @@ const codeTool: McpTool<typeof codeInput> = {
 
 const declineTool: McpTool<typeof targetInput> = {
   name: 'login_decline',
-  description: 'Decline a waiting request_secret or login_code for the user: the asking thread or bot is told the user said no',
+  description: 'Decline a waiting request_secret or login_code for the user',
   input: targetInput,
   access: 'operate',
   group: group.name,

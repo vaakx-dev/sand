@@ -18,12 +18,12 @@ const matchedTail = 2_000
 
 const input = z.object({
   jobs: z.array(z.string()).min(1).describe('Job ids to wait for'),
-  any: z.boolean().optional().describe('Return as soon as any one of them finishes instead of waiting for all, so you can review each result as it lands; then wait again on the rest'),
+  any: z.boolean().optional().describe('Return when the first one finishes, not all'),
   until: z
     .string()
     .optional()
-    .describe("A case-insensitive regex for their output, like 'listening on|ready'. Returns as soon as their output matches it or one of them exits"),
-  timeout_ms: z.number().int().positive().max(maxTimeout).optional().describe(`Give up waiting after this long (default ${defaultTimeout}, max ${maxTimeout})`),
+    .describe("Case-insensitive regex; return when their output matches, like 'listening on|ready'"),
+  timeout_ms: z.number().int().positive().max(maxTimeout).optional().describe(`Default ${defaultTimeout}, max ${maxTimeout}`),
 })
 
 interface Wait {
@@ -78,7 +78,7 @@ const settle = (ctx: JobsContext, wait: Wait, session: Session, timeout: number,
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    "Wait for background commands to finish and get their exit code and last output. Set any to return at the first finished one, then wait again on the rest. Set until to a regex to return the moment a background command's output matches it, like 'listening on|ready' right after starting a server with run_background, instead of sleeping and polling. Returns early on timeout or when the user sends a message; jobs keep running then. Jobs whose results it returns send no <task-notification>.",
+    'Wait for background commands to finish and get their exit code and last output. Use until to wait for a server to come up instead of sleeping or polling. Returns early on timeout or a user message; jobs keep running.',
   group,
   input,
   effect: 'read',

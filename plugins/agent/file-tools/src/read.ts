@@ -15,7 +15,7 @@ const input = z.object({
 export const readTool = (attachments: () => Attachments): Tool<typeof input> => ({
   name: 'read',
   description:
-    'Read a file. Text is returned with line numbers. Images and PDFs are returned as images and documents you can see. Use offset and limit for large text files.',
+    'Read a file, with line numbers. Images and PDFs come back as images and documents you can see.',
   parallel: true,
   input,
   act: ({ path }) => ({ effect: 'read', paths: [path], summary: `Read ${path}` }),

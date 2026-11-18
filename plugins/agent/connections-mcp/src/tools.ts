@@ -9,9 +9,6 @@ const group: McpGroup = {
   summary: 'connect and disconnect your accounts at other services, like Google, Outlook or iCloud calendars',
 }
 
-const state =
-  'Returns the kinds of account you can connect (id, label, OAuth or a form with its fields, whether its OAuth client is set and how to set one up), the connected accounts and whether the system keychain guards them. Tokens and passwords never come back'
-
 const kind = z.string().min(1).describe('The kind of account, from connection_list')
 
 const listInput = z.object({})
@@ -30,7 +27,7 @@ const removeInput = z.object({ account: z.string().min(1).describe('The connecte
 
 const listTool: McpTool<typeof listInput> = {
   name: 'connection_list',
-  description: `List your accounts at other services, like calendars, and the kinds you can connect. ${state}`,
+  description: 'List your accounts at other services, like calendars, and the kinds you can connect with their setup steps',
   input: listInput,
   access: 'read',
   group: group.name,
@@ -39,7 +36,7 @@ const listTool: McpTool<typeof listInput> = {
 
 const clientTool: McpTool<typeof clientInput> = {
   name: 'connection_set_client',
-  description: `Set the OAuth client an OAuth kind signs in with, from the client ID (and secret) the user made by following the kind's setup steps. ${state}`,
+  description: "Set the OAuth client a kind signs in with, from the client ID the user made by following the kind's setup steps",
   input: clientInput,
   secret: ['secret'],
   access: 'operate',
@@ -50,7 +47,7 @@ const clientTool: McpTool<typeof clientInput> = {
 const startTool: McpTool<typeof startInput> = {
   name: 'connection_start',
   description:
-    'Start connecting an account of an OAuth kind. Returns a flow id and the URL to hand the user; the user signs in there on this PC within 10 minutes, then the account shows in connection_list. Set the client with connection_set_client first when the kind has none',
+    'Start connecting an account of an OAuth kind, and hand the user the URL it returns. Set the client with connection_set_client first when the kind has none',
   input: startInput,
   access: 'operate',
   group: group.name,
@@ -59,7 +56,7 @@ const startTool: McpTool<typeof startInput> = {
 
 const cancelTool: McpTool<typeof cancelInput> = {
   name: 'connection_cancel',
-  description: 'Stop a connection_start sign-in that is still waiting. Returns whether one was waiting',
+  description: 'Stop a waiting connection_start sign-in',
   input: cancelInput,
   access: 'operate',
   group: group.name,
@@ -69,7 +66,7 @@ const cancelTool: McpTool<typeof cancelInput> = {
 const saveTool: McpTool<typeof saveInput> = {
   name: 'connection_save',
   description:
-    'Connect an account of a form kind, like an iCloud calendar with an app password, from the values the user gave you. sand checks them with the service first. Returns the connected account',
+    'Connect an account of a form kind, like an iCloud calendar with an app password, from the values the user gave you',
   input: saveInput,
   secret: ['values'],
   access: 'operate',
@@ -79,7 +76,7 @@ const saveTool: McpTool<typeof saveInput> = {
 
 const removeTool: McpTool<typeof removeInput> = {
   name: 'connection_remove',
-  description: `Disconnect an account and forget its sign-in. ${state}`,
+  description: 'Disconnect an account and forget its sign-in',
   input: removeInput,
   access: 'operate',
   group: group.name,

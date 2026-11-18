@@ -39,7 +39,7 @@ export default definePlugin({
       {
         spec: {
           name: 'shell',
-          description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
+          description: 'Run a shell command in the working directory, each call in a fresh process.',
           environment: `Shell: ${shell.name}`,
         },
         shell,
@@ -50,7 +50,7 @@ export default definePlugin({
               spec: {
                 name: 'powershell',
                 description:
-                  'Run PowerShell commands from the working directory. Use this for PowerShell instead of calling powershell through shell. Returns combined output and the exit code. Each call is a fresh process.',
+                  'Run PowerShell commands in the working directory, each call in a fresh process. Use it instead of calling powershell through shell.',
               },
               shell: powerShell,
             },

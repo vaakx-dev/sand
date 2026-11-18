@@ -6,7 +6,7 @@ import { devServerList, devServerOpen, devServerStop } from './contract'
 const group: McpGroup = { name: 'dev-servers', label: 'Dev servers', summary: 'list, open and stop the web servers your threads and bots started' }
 
 const listInput = z.object({
-  thread: z.string().optional().describe("Only this thread's or bot's servers (default: all of them on this PC; each one names its thread or bot)"),
+  thread: z.string().optional().describe("Only this thread's or bot's servers"),
 })
 
 const portInput = z.object({
@@ -16,7 +16,7 @@ const portInput = z.object({
 const listTool: McpTool<typeof listInput> = {
   name: 'dev_server_list',
   description:
-    "List the web servers a thread or bot started on this PC that are still running, including ones left running after the command or turn ended: each one's port, local URL, process, the command that started it and its thread or bot",
+    'List the running web servers threads and bots started on this PC, including ones left after their command or turn ended',
   input: listInput,
   access: 'read',
   group: group.name,
@@ -26,7 +26,7 @@ const listTool: McpTool<typeof listInput> = {
 const openTool: McpTool<typeof portInput> = {
   name: 'dev_server_open',
   description:
-    "Get links that open a web server a thread or bot started on this PC from the user's own devices, like their phone, one for each address sand listens on. Give the user the one their device reaches; the first open uses it up, and unused links expire after 10 minutes",
+    "Get one-time links that open a dev server on the user's other devices, like their phone. Give the user the one their device reaches",
   input: portInput,
   access: 'operate',
   group: group.name,
@@ -35,7 +35,7 @@ const openTool: McpTool<typeof portInput> = {
 
 const stopTool: McpTool<typeof portInput> = {
   name: 'dev_server_stop',
-  description: 'Stop a web server a thread or bot started on this PC, with the processes that run it. Returns false if no such server is running',
+  description: 'Stop a web server a thread or bot started on this PC, with its processes',
   input: portInput,
   access: 'operate',
   group: group.name,

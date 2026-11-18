@@ -12,7 +12,7 @@ const listInput = z.object({})
 const listTool: McpTool<typeof listInput> = {
   name: 'plugin_list',
   description:
-    "List sand's plugins and web extensions: name, folder, status (active, pending, failed or off), the problem when one failed or waits for a service, the turned-off plugins it needs when off, and its web extension's build and browser state. Load the sand-plugins skill before writing a plugin",
+    "List sand's plugins and web extensions with their status and problems. Load the sand-plugins skill before writing a plugin",
   input: listInput,
   access: 'read',
   group: group.name,
@@ -23,7 +23,7 @@ const showInput = z.object({ name: z.string().min(1).describe('Plugin name, fold
 
 const showTool: McpTool<typeof showInput> = {
   name: 'plugin_show',
-  description: "Show one of sand's plugins in detail: its status and problem, the error stack when it failed, the services it provides, the hooks it handles and its web extension's state",
+  description: "Show one of sand's plugins in detail, with its error stack when it failed",
   input: showInput,
   access: 'read',
   group: group.name,
@@ -35,7 +35,7 @@ const reloadInput = z.object({})
 const reloadTool: McpTool<typeof reloadInput> = {
   name: 'plugin_reload',
   description:
-    'Reload every sand plugin from disk into a fresh runtime, like the Reload button. Returns once the fresh runtime is up, naming any plugin that failed to load. After this batch of tool calls, your turn and every other running thread and bot move to the fresh runtime and carry on there with the new tools, so finish the job in this turn',
+    'Reload every sand plugin from disk into a fresh runtime. After this batch of tool calls, your turn carries on there with the new tools',
   input: reloadInput,
   access: 'operate',
   group: group.name,

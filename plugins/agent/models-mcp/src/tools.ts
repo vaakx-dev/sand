@@ -21,14 +21,14 @@ const priceInput = z.object({
 const levelsInput = z.object({})
 
 const levelSetInput = z.object({
-  level: z.enum(levels).describe("bot: a bot's own chat; main: threads and agents doing the main work; sub: routine edits and clear jobs; light: finding things and basic computer use; background: titles, summaries and other small jobs"),
-  model: z.string().min(1).nullable().optional().describe('A model id or name from model_list; null clears the level so it uses the next heavier one'),
-  effort: z.string().min(1).optional().describe('Its effort level, such as low, medium or high, if its model has effort levels'),
+  level: z.enum(levels).describe("bot: a bot's chat; main: the main work; sub: routine edits; light: finding things; background: titles and small jobs"),
+  model: z.string().min(1).nullable().optional().describe('A model id or name; null clears the level'),
+  effort: z.string().min(1).optional().describe('Effort, such as low, medium or high'),
 })
 
 const levelsTool: McpTool<typeof levelsInput> = {
   name: 'model_levels',
-  description: 'The model and effort the user set for each level. A level left out uses the next heavier one: background, light, sub, main; bot uses main',
+  description: 'The model and effort the user set for each level',
   input: levelsInput,
   access: 'read',
   group: group.name,
@@ -37,7 +37,7 @@ const levelsTool: McpTool<typeof levelsInput> = {
 
 const levelSetTool: McpTool<typeof levelSetInput> = {
   name: 'model_level_set',
-  description: "Set the model or effort of a level when the user asks; saved in sand.toml. Returns every level's choice",
+  description: 'Set the model or effort of a level when the user asks',
   input: levelSetInput,
   access: 'operate',
   group: group.name,
@@ -47,7 +47,7 @@ const levelSetTool: McpTool<typeof levelSetInput> = {
 const listTool: McpTool<typeof listInput> = {
   name: 'model_list',
   description:
-    'List the models you can use, for a new thread or agent or to change a thread: id, label, provider, effort levels, context size in tokens and fast mode. Marks the model the thread uses as current',
+    'List the models you can use, with their effort levels, context size and fast mode',
   input: listInput,
   access: 'read',
   group: group.name,
@@ -57,7 +57,7 @@ const listTool: McpTool<typeof listInput> = {
 const priceTool: McpTool<typeof priceInput> = {
   name: 'model_price_set',
   description:
-    "Set the price sand counts a model's usage at, for the Usage page and cost figures, when sand has no price for it or the user wants a different one. Look the price up on the provider's pricing page when the user doesn't give it. Saves it in sand.toml under [plugins.accounts.prices] and applies at once, also to past usage",
+    "Set the price sand counts a model's usage at, also for past usage. Look it up on the provider's pricing page when the user doesn't give it",
   input: priceInput,
   access: 'operate',
   group: group.name,

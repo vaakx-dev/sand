@@ -13,7 +13,7 @@ const searchInput = z.object({
   limit: z.number().int().min(1).max(mostHits).optional().describe('At most this many chats, or messages when you pick one chat (default 20)'),
 })
 
-const description = `Search the words said in every thread and bot chat on this PC, by you and the user, not tool output. Use it to find where something was discussed or decided, or a command, number or name from an earlier chat, when you don't know which thread it was in. Chats come best first: the words side by side, then all the words, then words that start with them; then chats with more different matching messages, whole words and newer matches. Each chat has its number of matching messages and its best one or two, with their time and an excerpt; pick one chat to get all its matching messages, newest first. Thread chats link to the thread as thread:<id>.`
+const description = "Search what you and the user said in every thread and bot chat on this PC, not tool output. Use it to find where something was discussed or decided when you don't know which chat. Pick one chat to get all its matches."
 
 const said = ({ role, at, excerpt }: MessageHit) => ({ role, at: new Date(at).toISOString(), excerpt: excerpt.text })
 

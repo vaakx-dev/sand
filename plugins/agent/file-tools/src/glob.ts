@@ -14,7 +14,7 @@ const input = z.object({
 
 export const glob: Tool<typeof input> = {
   name: 'glob',
-  description: 'Find files by glob pattern. Skips gitignored files, node_modules and .git unless include_ignored is set.',
+  description: 'Find files by glob pattern. Skips gitignored files, node_modules and .git.',
   parallel: true,
   input,
   act: ({ pattern, path = '.' }) => ({ effect: 'read', paths: [path], summary: `Find ${pattern} in ${path}` }),
