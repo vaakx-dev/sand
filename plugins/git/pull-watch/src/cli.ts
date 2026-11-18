@@ -4,7 +4,7 @@ import { definePlugin } from 'drydock'
 import { type FollowedPull, pullFollow, pullFollows, pullUnfollow } from './contract'
 
 const USAGE = [
-  'sand pr follow <thread> <pr>    wake the thread when the PR\'s CI finishes, a review or comment lands, or it merges, closes or conflicts',
+  'sand pr follow <thread> <pr>    wake the thread when the PR\'s CI finishes, a review or comment lands, or it closes or conflicts; archive it once it merges',
   'sand pr unfollow <thread> <pr>  stop waking the thread for that PR',
   'sand pr list <thread>           list the PRs the thread follows',
   '                                <pr> is a pull request URL or owner/name#number',

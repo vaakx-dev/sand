@@ -87,7 +87,7 @@ const loadedView = (parts: TalkParts, loaded: Loaded | undefined) => {
 
 const followRow = (parts: TalkParts, item: Sig<Item>) =>
   parts.kit.settingsRow(
-    { title: 'Keep up with it', detail: 'Wakes this thread when CI finishes, a review or comment lands, or it merges or conflicts' },
+    { title: 'Keep up with it', detail: 'Wakes this thread when CI finishes, a review or comment lands, or it conflicts, and archives it once it merges' },
     parts.kit.toggleSwitch({
       on: () => item.get().following,
       'aria-label': 'Follow this pull request',

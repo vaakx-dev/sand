@@ -3,6 +3,8 @@ import type { Turns } from '@sand/turns-contract/contract'
 import { timestamp } from '@sand/util'
 import type { Change, Handler, Watch } from '@sand/watches/contract'
 import { PULL_NOTICE } from '../contract'
+import type { Archive } from './archive'
+import { endingOf } from './changes'
 import { pullInput } from './kind'
 import type { Known } from './known'
 
@@ -10,6 +12,7 @@ export interface WakeDeps {
   sessions: Sessions
   turns: Turns
   known: Known
+  archive: Archive
 }
 
 const GUIDE = [
@@ -17,7 +20,7 @@ const GUIDE = [
   '- CI failed: find out why from the failing checks, fix it and push.',
   '- A review or comment asks for changes: make them and push; answer questions in your reply to the user.',
   '- Merge conflicts: bring the branch up to date with its base and push.',
-  '- Merged or closed: wrap up and tell the user.',
+  '- Closed: wrap up and tell the user.',
   "Don't comment on GitHub unless the user asked you to. If nothing needs doing, reply in one line.",
 ].join('\n')
 
@@ -37,8 +40,11 @@ const wakePrompt = (watch: Watch, changes: Change[]) =>
   })
 
 export const wakeThread =
-  ({ sessions, turns, known }: WakeDeps): Handler =>
+  ({ sessions, turns, known, archive }: WakeDeps): Handler =>
   async (watch, changes) => {
+    const ending = endingOf(changes)
+    if (ending) archive.end(watch.id)
+    if (ending === 'merged') return archive.settle(watch.subject)
     const session = sessions.open(watch.subject)
     const fresh = known.fresh(watch.subject, changes)
     if (!session || !fresh.length) return
