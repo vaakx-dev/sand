@@ -152,5 +152,5 @@ test('stopping sand stops its background commands, and the keeper leaves with th
 
   expect(await until(async () => !(await answers(site.port)))).toBe(true)
   expect(await until(async () => !(await keeperListens()))).toBe(true)
-  expect(existsSync(placeOf(home).tokenFile)).toBe(false)
+  expect(await until(() => !existsSync(placeOf(home).tokenFile))).toBe(true)
 })
