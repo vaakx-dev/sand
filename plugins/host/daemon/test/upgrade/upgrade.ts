@@ -4,7 +4,7 @@ import { appendFile, mkdtemp, readdir, rm } from 'node:fs/promises'
 import { realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { type Build, derivedBuild, previousBuild, thisBuild } from './builds'
+import { type Build, coreBuild, previousBuild, sourceBuild, thisBuild } from './builds'
 import { fakeGithub } from './github'
 import { ask, damagedCopies, install, makeSand, remove, type Sand, sand, start, update } from './sand'
 
@@ -18,9 +18,13 @@ let work: string
 let previous: Build
 let current: Build
 let later: Promise<Build> | undefined
+let laterCore: Promise<Build> | undefined
 
-const laterBuild = () =>
-  (later ??= derivedBuild(current, join(work, 'later'), root => appendFile(join(root, 'plugins', 'host', 'daemon', 'src', 'host', 'settings.ts'), `\nexport const upgradeVariant = ${Date.now()}\n`)))
+const variant = (root: string) => appendFile(join(root, 'plugins', 'host', 'daemon', 'src', 'host', 'settings.ts'), `\nexport const upgradeVariant = ${Date.now()}\n`)
+
+const laterBuild = () => (later ??= sourceBuild(join(work, 'later'), variant))
+
+const laterCoreBuild = () => (laterCore ??= coreBuild(current, join(work, 'later-core'), variant))
 
 beforeAll(async () => {
   work = await mkdtemp(join(realpathSync.native(tmpdir()), 'sand-upgrade-work-'))
@@ -113,7 +117,7 @@ describe('updating a real install', () => {
       const added = await sand(target, github, 'addons', 'install', 'git')
       expect(added.code, added.output).toBe(0)
       await breakAddon(join(target.home, 'plugins', 'git'))
-      const next = await laterBuild()
+      const next = await laterCoreBuild()
 
       github.point('dev', next.folder, { without: ['git'] })
       const result = await update(target, next)
@@ -134,7 +138,7 @@ describe('updating a real install', () => {
     withSand(async target => {
       github.point('dev', current.folder)
       await installed(target, 'dev', current)
-      const broken = await derivedBuild(current, join(work, 'broken'), breakCore)
+      const broken = await coreBuild(current, join(work, 'broken'), breakCore)
       recordUpgrade(target, broken)
 
       github.point('dev', broken.folder)
