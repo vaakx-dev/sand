@@ -41,6 +41,7 @@ const runtimesOf = (tell: Runtimes['tell']): Runtimes => ({
   live: () => [],
   wait: async () => undefined,
   swap: async () => false,
+  retire: async () => {},
   swapped: () => undefined,
   status: () => ({ pid: process.pid, runtime: 'ready', draining: 0 }),
   tell,

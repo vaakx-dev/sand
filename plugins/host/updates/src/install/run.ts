@@ -14,7 +14,6 @@ export interface InstallProgress {
   done(build: BuildInfo): void
 }
 
-const drainPoll = 2_000
 const restartDelay = 300
 
 export const cancelled = new Error('cancelled')
@@ -29,17 +28,7 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
     if (!progress.live(ticket)) throw cancelled
   }
 
-  let rushed = false
-
-  const drain = async (ticket: number) => {
-    rushed = false
-    const until = Date.now() + deps.drainTimeout
-    while (runningWork(deps) && !rushed && Date.now() < until) {
-      await Bun.sleep(Math.max(0, Math.min(drainPoll, until - Date.now())))
-      ensureLive(ticket)
-      progress.step('waiting', ticket)
-    }
-  }
+  const handOver = () => Promise.race([deps.runtimes.retire(), Bun.sleep(deps.drainTimeout)])
 
   const cleanup = (keep: string[]) =>
     deps.cleanup(keep).catch(failure => console.error(`sand could not remove old builds: ${errorMessage(failure)}`))
@@ -110,10 +99,9 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
       await switchBuild(prepared, release, ticket)
       if (!changed && (await swapRuntime(prepared, ticket, running))) return
       progress.step('waiting', ticket)
-      await drain(ticket)
+      await handOver()
       progress.step('restarting', ticket)
       await Bun.sleep(restartDelay)
-      ensureLive(ticket)
       deps.restart()
     } catch (failure) {
       if (failure === cancelled) return
@@ -121,9 +109,5 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
     }
   }
 
-  const hurry = () => {
-    rushed = true
-  }
-
-  return { install, cleanup, hurry }
+  return { install, cleanup }
 }

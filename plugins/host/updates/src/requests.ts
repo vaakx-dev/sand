@@ -1,7 +1,7 @@
 import { pcNamed, type Peers, reachablePeers } from '@sand/devices-contract'
 import type { Hub, Request } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
-import { updatesApply, updatesChannel, updatesDismiss, updatesCheck, updatesHeard, updatesLater, updatesRepair, updatesRestart, updatesState, type UpdateState } from './contract'
+import { updatesApply, updatesChannel, updatesDismiss, updatesCheck, updatesHeard, updatesLater, updatesRepair, updatesState, type UpdateState } from './contract'
 import type { Updater } from './types'
 
 type PcInput = { pc?: string }
@@ -16,7 +16,6 @@ export const updateRequests = (hub: Hub, updater: Updater, linked: () => Peers |
     () => onPc(updatesCheck, () => updater.check()),
     () => onPc(updatesLater, () => updater.later()),
     () => onPc(updatesApply, ({ build }) => updater.apply(build)),
-    () => onPc(updatesRestart, () => updater.restartNow()),
     () => hub.handle(updatesHeard, ({ channel, build }) => updater.heard(channel, build)),
     () => onPc(updatesChannel, ({ channel }) => updater.setChannel(channel)),
     () => hub.handle(updatesRepair, () => updater.repair()),

@@ -22,7 +22,7 @@ const phaseText = (phase: UpdatePhase, running = 0) => {
     case 'switching':
       return 'Switching over…'
     case 'waiting':
-      return running ? `Restarts when ${plural(running, 'running thread')} finish${running === 1 ? 'es' : ''}` : 'Restarting soon…'
+      return running ? `Restarts when ${plural(running, 'running thread')} finish${running === 1 ? 'es its' : ' their'} current step` : 'Restarting soon…'
     default:
       return 'Restarting…'
   }

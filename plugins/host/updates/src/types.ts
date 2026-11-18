@@ -23,7 +23,7 @@ export interface UpdaterDeps {
   home: string
   hostRoot: string
   app: HostApp
-  runtimes: Pick<Runtimes, 'swap' | 'live'>
+  runtimes: Pick<Runtimes, 'swap' | 'live' | 'retire'>
   drainTimeout: number
   current(): Promise<BuildInfo>
   find(channel: UpdateChannel): Promise<GithubRelease>
@@ -52,7 +52,6 @@ export interface Updater {
   setChannel(channel: UpdateChannel): Promise<UpdateState>
   apply(build: string): Promise<UpdateState>
   heard(channel: UpdateChannel, build: string): UpdateState
-  restartNow(): UpdateState
   repair(): Promise<UpdateState & { target: BuildInfo }>
   start(): void
   stop(): void

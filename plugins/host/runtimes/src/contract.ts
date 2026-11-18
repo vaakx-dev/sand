@@ -100,6 +100,7 @@ export interface Runtimes {
   live(): RuntimeView[]
   wait(timeout: number): Promise<RuntimeView | undefined>
   swap(reason: RuntimeReason): Promise<boolean>
+  retire(): Promise<void>
   swapped(): SwapResult | undefined
   status(): HostStatus
   tell<P>(runtime: string, event: WireEvent<P>, payload: P): boolean

@@ -1,4 +1,4 @@
-import { type UpdateChannel, updatesApply, updatesChannel, updatesCheck, updatesLater, updatesRestart, updatesState } from '@sand/host-updates/contract'
+import { type UpdateChannel, updatesApply, updatesChannel, updatesCheck, updatesLater, updatesState } from '@sand/host-updates/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
@@ -36,22 +36,13 @@ const tools = [
   } satisfies McpTool<typeof onPc>,
   {
     name: 'update_install',
-    description: 'Install a newer sand build and restart into it once running threads finish. Returns at once; follow it with update_status.',
+    description: 'Install a newer sand build. Running threads carry on through it: each finishes its current step, and the new build picks it up from there. Returns at once; follow it with update_status.',
     input: installInput,
     parts: [{ ...onOtherPcs, description: 'Update other PCs before this one, since this PC restarts.' }],
     access: 'operate',
     group: group.name,
     run: (input, { call }) => call(updatesApply, input),
   } satisfies McpTool<typeof installInput>,
-  {
-    name: 'update_restart',
-    description: 'Restart into an installed update now, stopping running threads, you too if you run on that PC.',
-    input: onPc,
-    parts: [onOtherPcs],
-    access: 'operate',
-    group: group.name,
-    run: (input, { call }) => call(updatesRestart, input),
-  } satisfies McpTool<typeof onPc>,
   {
     name: 'update_later',
     description: 'Skip the newest release until a newer one is out.',

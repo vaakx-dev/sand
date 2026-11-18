@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { type Build, coreBuild, previousBuild, sourceBuild, thisBuild } from './builds'
 import { fakeGithub } from './github'
-import { ask, damagedCopies, install, makeSand, remove, type Sand, sand, start, update } from './sand'
+import { ask, damagedCopies, health, install, makeSand, remove, type Sand, sand, script, start, update, type UpdateState } from './sand'
 
 const minute = 60_000
 const wantedAddons = ['git', 'file-viewer']
@@ -70,6 +70,46 @@ const useDatabase = async (target: Sand) => {
   return { thread: sent.thread, bot: bot.id }
 }
 
+const gateCommand = (gate: string) => `while [ ! -f '${gate.replaceAll('\\', '/')}' ]; do sleep 0.2; done; echo opened`
+
+const until = async <T>(found: () => Promise<T | undefined>, timeout = 5 * minute) => {
+  for (const end = Date.now() + timeout; Date.now() < end; await Bun.sleep(200)) {
+    const value = await found().catch(() => undefined)
+    if (value) return value
+  }
+  throw new Error('it never happened')
+}
+
+const handingOver = (target: Sand) =>
+  until(async () => {
+    const state = await ask<UpdateState & { running?: number }>(target, 'updates.state')
+    return state.phase === 'waiting' && state.running === 1 ? state : undefined
+  })
+
+const watchSilence = (target: Sand) => {
+  let longest = 0
+  let since: number | undefined
+  let watching = true
+  const watched = (async () => {
+    while (watching) {
+      const answered = await health(target).then(
+        () => true,
+        () => false,
+      )
+      const now = Date.now()
+      if (!answered) since ??= now
+      if (answered && since !== undefined) longest = Math.max(longest, now - since)
+      if (answered) since = undefined
+      await Bun.sleep(100)
+    }
+  })()
+  return async () => {
+    watching = false
+    await watched
+    return longest
+  }
+}
+
 const expectNoRollback = (log: string) => {
   for (const line of rollbackLines) expect(log).not.toContain(line)
 }
@@ -105,6 +145,35 @@ describe('updating a real install', () => {
       const bots = await ask<{ id: string }[]>(target, 'bot.list', {})
       expect(bots.map(bot => bot.id)).toContain(used.bot)
       for (const id of addons) expect((await addonStamp(target, id)).hash).toBe(next.addons[id]!)
+    }),
+    20 * minute,
+  )
+
+  test(
+    'a thread in the middle of a step when a host-code update applies finishes the step, then carries on as the same turn on the new build',
+    withSand(async target => {
+      const gate = join(target.home, 'gate-open')
+      await script(target, [[{ type: 'call', name: 'shell', input: { command: gateCommand(gate), silence_ms: 10 * minute } }]])
+      const next = await laterBuild()
+      github.point('dev', current.folder)
+      await installed(target, 'dev', current)
+      const sent = await ask<{ thread: string; turn: string }>(target, 'thread.start', { cwd: target.home, model: 'replay/m', prompt: 'Open the gate', origin: 'user', clientRequestId: crypto.randomUUID() })
+      expect(await ask(target, 'thread.wait', { session: sent.thread, until: 'attention', timeoutMs: 1_000 })).toMatchObject({ turn: sent.turn, status: 'running' })
+
+      github.point('dev', next.folder)
+      const updated = update(target, next)
+      await handingOver(target)
+      await script(target, [[{ type: 'text', text: 'Carried on.' }]])
+      const silence = watchSilence(target)
+      await Bun.write(gate, '')
+      const result = await updated
+      const silentMs = await silence()
+      console.log(`sand did not answer for ${(silentMs / 1000).toFixed(1)}s during the restart`)
+
+      expect(result.current).toStartWith(next.id)
+      expectNoRollback(await target.log())
+      const ended = await ask<{ turn?: string; status: string; reply?: string }>(target, 'thread.wait', { session: sent.thread, until: 'end', timeoutMs: 25_000 }, minute)
+      expect(ended).toMatchObject({ turn: sent.turn, status: 'completed', reply: 'Carried on.' })
     }),
     20 * minute,
   )

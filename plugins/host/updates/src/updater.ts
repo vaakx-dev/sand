@@ -184,11 +184,6 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     return snapshot()
   }
 
-  const restartNow = () => {
-    if (phase === 'waiting') installer.hurry()
-    return snapshot()
-  }
-
   const later = async () => {
     if (latest) await store.hide(latest.build.id)
     await deps.notices.clearUpdate()
@@ -206,7 +201,6 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     setChannel,
     apply,
     heard,
-    restartNow,
     repair,
     start() {
       if (stopSchedule) return
