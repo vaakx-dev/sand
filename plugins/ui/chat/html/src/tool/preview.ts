@@ -10,9 +10,9 @@ import type { RecentPages } from './recent'
 import { z } from 'zod'
 
 const input = z.object({
-  html: z.string().max(maxHtmlChars).optional().describe('A complete, self-contained HTML document.'),
-  path: z.string().optional().describe('A .html file or an image, instead of html'),
-  width: z.number().int().min(240).max(1600).optional().describe(`CSS pixels. Default ${columnWidth}. About 390 checks a phone.`),
+  html: z.string().max(maxHtmlChars).optional().describe('A full HTML document'),
+  path: z.string().optional().describe('A .html file or an image'),
+  width: z.number().int().min(240).max(1600).optional().describe(`CSS px, default ${columnWidth}`),
 })
 
 const screenshot = (media: Media, png: string): ImageBlock => ({
