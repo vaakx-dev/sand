@@ -12,7 +12,7 @@ export const fillTool = (deps: ToolDeps): Tool<typeof input> => ({
   name: 'login_fill',
   group: signInGroup,
   description:
-    "Fill a saved website login's username and password into the sign-in form open in the browser; you never see them. The page must be on the login's site. Submit the form yourself, then use login_code if it asks for a code.",
+    "Fill a saved login's username and password into the sign-in form open in the browser, on the login's site; you never see them. Submit it yourself, then use login_code if it asks for a code.",
   input,
   needs: ['computer'],
   act: () => ({ effect: 'read', uses: 'login', summary: 'Fill a saved login into the browser' }),

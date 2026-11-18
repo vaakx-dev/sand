@@ -13,7 +13,7 @@ const said = { accepted: 'Accepted', declined: 'Declined', tentative: 'Answered 
 
 export const respondTool = (service: Calendars): Tool<typeof input> => ({
   name: 'calendar_respond',
-  description: 'Answer an invitation: accept, decline or maybe. The organizer hears back when the calendar can tell them.',
+  description: 'Answer an invitation: accept, decline or maybe.',
   group: 'calendar',
   input,
   effect: 'send',

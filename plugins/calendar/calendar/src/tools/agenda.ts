@@ -14,8 +14,7 @@ const week = 7 * 86_400_000
 
 export const agendaTool = (service: Calendars): Tool<typeof input> => ({
   name: 'calendar_agenda',
-  description:
-    "List the user's events between two moments, across their calendars, with each event's id. Repeating events show one line per occurrence. Use it before changing events, and to answer what's coming up.",
+  description: "List the user's events between two moments, across their calendars, with their ids. Use it before changing events.",
   group: 'calendar',
   effect: 'read',
   input,

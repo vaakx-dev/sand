@@ -38,8 +38,7 @@ const patchOf = (found: Found, { title, location, notes, reminders, free, start,
 
 export const updateTool = (service: Calendars): Tool<typeof input> => ({
   name: 'calendar_update',
-  description:
-    'Change or move an event: give only what changes. Changing guests or details of an event with guests updates them when the calendar can.',
+  description: 'Change or move an event: give only what changes.',
   group: 'calendar',
   input,
   effect: 'write',

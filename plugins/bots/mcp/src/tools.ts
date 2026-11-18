@@ -39,14 +39,10 @@ const oneInput = z.object({ bot })
 
 const asBot = <T extends Sent | ThreadState>({ thread, ...rest }: T) => ({ bot: thread, ...rest })
 
-const updateRules = `Rename a bot, set the projects it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
-
-A paused bot starts no turns: its running turn stops, and its messages and everything it set to run wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; subscription usage doesn't count. Its work is set with job_create.`
-
 export const botTools: McpTool[] = [
   {
     name: 'bot_list',
-    description: "List the user's bots with each one's jobs, whether it is working or held (paused, or at its monthly limit), the projects it manages, its monthly spend limit in US dollars and what it spent this month",
+    description: "List the user's bots with their jobs, state, projects, monthly spend limit and spend this month",
     input: listInput,
     access: 'read',
     group: group.name,
@@ -54,7 +50,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
-    description: "Send one of the user's bots a message, task or question. From sand's own threads and bots it returns at once, and the bot's reply doesn't come back on its own: ask in the message for it to message you back, or read its reply later with history_read. From outside sand it returns the reply, or the turn as a handle once timeoutSeconds passes; then read the reply later with history_read",
+    description: "Send one of the user's bots a message or task. From sand's threads and bots it returns at once and the reply doesn't come back: ask it to message you, or read it later with history_read. From outside sand it waits for the reply",
     input: sendInput,
     access: 'operate',
     group: group.name,
@@ -67,7 +63,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'bot_create',
-    description: 'Make a new bot with a name, the projects it manages and a monthly spend limit; returns it as bot_list shows it. Give it work with job_create.',
+    description: 'Make a new bot. Give it work with job_create.',
     input: createInput,
     access: 'operate',
     group: group.name,
@@ -91,7 +87,8 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof oneInput>,
   {
     name: 'bot_update',
-    description: updateRules,
+    description:
+      "Rename a bot, set its projects or monthly spend limit, or pause it. A paused bot, or one at its API spend limit, starts no turns; subscription usage doesn't count. A bot leaves out bot to update itself.",
     input: updateInput,
     access: 'operate',
     group: group.name,

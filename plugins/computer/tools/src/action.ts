@@ -10,7 +10,7 @@ const target = z
 const held = z
   .string()
   .optional()
-  .describe('Modifier keys to keep down for the whole mouse action, like ctrl, shift or ctrl+shift: ctrl+click or shift+click to select several items.')
+  .describe('Modifier keys held during the action, like ctrl, shift or ctrl+shift')
 
 const holdTime = z.number().int().min(100).max(10_000)
 
@@ -24,7 +24,7 @@ export const actionInput = z.discriminatedUnion('type', [
     to: target,
     ms: holdTime
       .optional()
-      .describe('How long to keep the button down at to before releasing, in milliseconds, nudging the pointer so hover and dragover keep firing: lets a folder spring open or a list auto-scroll.'),
+      .describe('Milliseconds to rest at to before dropping, so a folder springs open or a list auto-scrolls'),
     keys: held,
   }),
   z.object({

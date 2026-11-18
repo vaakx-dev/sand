@@ -36,12 +36,8 @@ const commitOf = async ({ git, client }: ChecksDeps, cwd: string, repo: string, 
 
 export const checksTool = (deps: ChecksDeps): Tool<typeof input> => ({
   name: 'pr_checks',
-  description: [
-    "Wait for a pull request's CI checks (the check runs and commit statuses on its head commit) and get the result.",
-    'Returns as soon as one fails, with the failing checks and their links, and at once if they already finished.',
-    'Also returns on timeout or when the user sends a message.',
-    'Use this instead of sleep and gh pr checks.',
-  ].join(' '),
+  description:
+    "Wait for a pull request's CI checks and get the result. Returns at the first failure, on timeout or when the user sends a message. Use it instead of sleep and gh pr checks.",
   input,
   effect: 'read',
   needs: ['folder'],

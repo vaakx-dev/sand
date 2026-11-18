@@ -6,7 +6,7 @@ const input = z.object({
 })
 
 const DESCRIPTION =
-  "Open a file in the user's file viewer, beside the chat, the same way tapping it in a reply does. Text, code, Markdown, images, audio and video always open; other formats open when their add-on is on."
+  "Open a file in the user's file viewer beside the chat. Text, code, Markdown, images, audio and video always open; other formats need their add-on."
 
 const showTool = (show: (thread: string, cwd: string, path: string) => Promise<string>): Tool<typeof input> => ({
   name: 'file_show',
