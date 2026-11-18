@@ -1,6 +1,7 @@
 import { head } from '@sand/util'
 import { isFolder } from '@sand/util/fs'
 import { basename, dirname, resolve } from 'node:path'
+import { decode } from '../files'
 import { lines, ripgrep, scope } from './ripgrep'
 import { walk } from './walk'
 
@@ -45,7 +46,7 @@ async function* withScan({ pattern, root, glob, ignoreCase, includeIgnored, sign
     signal.throwIfAborted()
     const file = Bun.file(full)
     if (file.size > maxSize) continue
-    const text = await file.text()
+    const { content: text } = decode(await file.bytes())
     if (text.includes('\0')) continue
     for (const [index, line] of text.split(/\r?\n/).entries()) {
       if (regex.test(line)) yield matchLine(shown, index + 1, line)

@@ -61,6 +61,20 @@ test('changes no file when any change fails', async () => {
   expect(await text('a.ts')).toBe('one\ntwo\nthree\n')
 })
 
+test('keeps every byte outside the replaced text in any encoding, and refuses text the encoding cannot hold', async () => {
+  const latin1 = (text: string) => Buffer.from(text, 'latin1')
+  await writeFile(join(cwd, 'a.ts'), latin1('a \xB7 b\nold\n'))
+  await writeFile(join(cwd, 'b.ts'), '\uFEFFold ·')
+  await run([
+    { path: 'a.ts', old_string: 'old', new_string: 'new' },
+    { path: 'b.ts', old_string: 'old', new_string: 'new' },
+  ])
+  expect(await readFile(join(cwd, 'a.ts'))).toEqual(latin1('a \xB7 b\nnew\n'))
+  expect(await readFile(join(cwd, 'b.ts'))).toEqual(Buffer.from('\uFEFFnew ·'))
+  await expect(run([{ path: 'a.ts', old_string: 'new', new_string: '→' }])).rejects.toThrow('No files were changed')
+  expect(await readFile(join(cwd, 'a.ts'))).toEqual(latin1('a \xB7 b\nnew\n'))
+})
+
 test('needs replace_all for text found more than once', async () => {
   await writeFile(join(cwd, 'a.ts'), 'x x')
   await expect(run([{ path: 'a.ts', old_string: 'x', new_string: 'y' }])).rejects.toThrow('old_string matches 2 times in a.ts')

@@ -3,7 +3,7 @@ import { plural } from '@sand/util'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 import { atLine } from './at-line'
-import { exclusive, readText } from './files'
+import { decode, encode, exclusive, readBytes, type Text } from './files'
 
 const change = z.object({
   path: z.string().describe('File path, absolute or relative to the working directory'),
@@ -21,9 +21,8 @@ const input = z.object({
 
 type Change = z.infer<typeof change> & { full: string }
 
-interface File {
-  original: string
-  content: string
+interface File extends Text {
+  original: Uint8Array
 }
 
 const matchEndings = (text: string, content: string) =>
@@ -51,8 +50,8 @@ const replaceIn = (content: string, edit: Change) => {
 }
 
 const readAll = async (paths: string[]) => {
-  const contents = await Promise.all(paths.map(readText))
-  return new Map(paths.map((path, index): [string, File] => [path, { original: contents[index]!, content: contents[index]! }]))
+  const originals = await Promise.all(paths.map(readBytes))
+  return new Map(paths.map((path, index): [string, File] => [path, { original: originals[index]!, ...decode(originals[index]!) }]))
 }
 
 const applyAll = (changes: Change[], files: Map<string, File>) =>
@@ -67,15 +66,22 @@ const applyAll = (changes: Change[], files: Map<string, File>) =>
     throw new Error(`${which}${result.error}. No files were changed.`)
   })
 
+const encodeAll = (files: Map<string, File>) =>
+  [...files].map(([path, file]): [string, Uint8Array] => {
+    const encoded = encode(file)
+    if (encoded.error === undefined) return [path, encoded.bytes]
+    throw new Error(`Can't save ${path}: ${encoded.error}. No files were changed.`)
+  })
+
 const writeAll = async (files: Map<string, File>) => {
-  const written: [string, File][] = []
+  const written: string[] = []
   try {
-    for (const entry of files) {
-      await Bun.write(entry[0], entry[1].content)
-      written.push(entry)
+    for (const [path, bytes] of encodeAll(files)) {
+      await Bun.write(path, bytes)
+      written.push(path)
     }
   } catch (error) {
-    await Promise.all(written.map(([path, file]) => Bun.write(path, file.original)))
+    await Promise.all(written.map(path => Bun.write(path, files.get(path)!.original)))
     throw error
   }
 }
