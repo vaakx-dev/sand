@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from 'node:fs'
-import { copyFile, mkdir, mkdtemp, readdir, rm, utimes } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, rm, utimes } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -69,20 +69,25 @@ const backdateApp = async (root: string, seconds: number) => {
   for (const name of ['package.json', 'bun.lock', 'tsconfig.json']) if (existsSync(join(root, name))) await utimes(join(root, name), seconds, seconds)
 }
 
-const commitBuild = async (commit: string): Promise<Build | Error> => {
-  const out = join(cacheFolder, `${commit.slice(0, 12)}-${Bun.version}`)
-  if (existsSync(join(out, 'sand-build.json')) && existsSync(join(out, 'sand-addons.json'))) return readBuild(out)
+const treeBuild = async (commit: string, out: string, prepare: (tree: string) => Promise<void>): Promise<Build | Error> => {
   await mkdir(cacheFolder, { recursive: true })
   const tree = join(cacheFolder, `tree-${commit.slice(0, 12)}-${Date.now()}`)
   await git('worktree', 'add', '--detach', tree, commit)
   try {
     await run([process.execPath, 'install'], tree)
-    await backdateApp(tree, Number(await git('log', '-1', '--format=%ct', commit)))
+    await prepare(tree)
     return await releaseAssets(tree, out).catch((error: Error) => error)
   } finally {
     await git('worktree', 'remove', '--force', tree).catch(() => rm(tree, { recursive: true, force: true }))
     await git('worktree', 'prune').catch(() => {})
   }
+}
+
+const commitBuild = async (commit: string): Promise<Build | Error> => {
+  const out = join(cacheFolder, `${commit.slice(0, 12)}-${Bun.version}`)
+  if (existsSync(join(out, 'sand-build.json')) && existsSync(join(out, 'sand-addons.json'))) return readBuild(out)
+  const time = Number(await git('log', '-1', '--format=%ct', commit))
+  return treeBuild(commit, out, tree => backdateApp(tree, time))
 }
 
 export const previousBuild = async () => {
@@ -97,13 +102,13 @@ export const previousBuild = async () => {
 
 export const thisBuild = (out: string) => releaseAssets(repoRoot, out)
 
-const isAddonFile = (name: string) => name === 'sand-addons.json' || name.startsWith('sand-addon-')
-
-const copyAddons = async (from: string, to: string) => {
-  for (const name of (await readdir(from)).filter(isAddonFile)) await copyFile(join(from, name), join(to, name))
+export const sourceBuild = async (out: string, change: (root: string) => Promise<void>) => {
+  const build = await treeBuild(await git('rev-parse', 'HEAD'), out, change)
+  if (build instanceof Error) throw build
+  return build
 }
 
-export const derivedBuild = async (from: Build, out: string, change: (root: string) => Promise<void>) => {
+export const coreBuild = async (from: Build, out: string, change: (root: string) => Promise<void>) => {
   const root = `${out}-tree`
   await rm(root, { recursive: true, force: true })
   await new Bun.Archive(await Bun.file(join(from.folder, 'sand.tar.gz')).bytes()).extract(root)
@@ -111,9 +116,7 @@ export const derivedBuild = async (from: Build, out: string, change: (root: stri
     await run([process.execPath, join(root, 'packages', 'util', 'src', 'release', 'ready.ts'), root], root)
     await rm(join(root, 'sand-build.json'))
     await change(root)
-    await releaseAssets(root, out)
-    await copyAddons(from.folder, out)
-    return await readBuild(out)
+    return await releaseAssets(root, out)
   } finally {
     await rm(root, { recursive: true, force: true })
   }
