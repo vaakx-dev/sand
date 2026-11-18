@@ -33,17 +33,17 @@ const colorSet = () => z.record(colorKey(), hex())
 
 export const themeSchema = () =>
   z.object({
-    name: z.string().trim().min(1).max(60).describe('What the theme is called, like "Synthwave sunset"'),
-    base: hex().describe('The base colour: backgrounds and text in light and dark are made from its hue'),
-    accent: hex().describe('The accent colour: buttons, links and your messages'),
-    mode: z.enum(modes).optional().describe('Force light or dark, or follow the system (default)'),
+    name: z.string().trim().min(1).max(60).describe('Theme name'),
+    base: hex().describe('Base colour for backgrounds and text'),
+    accent: hex().describe('Accent for buttons, links and your messages'),
+    mode: z.enum(modes).optional().describe('Force light or dark; default follows the system'),
     colors: z
       .object({ light: colorSet().optional(), dark: colorSet().optional() })
       .optional()
-      .describe('Single colours to override after base and accent made the rest, per mode, by name like accent-500 or neutral-900'),
-    scene: z.enum(sceneIds).nullable().optional().describe('An animated background behind frosted panels, or null for none'),
-    motion: z.enum(['moving', 'still']).optional().describe('Whether the background moves (default) or stays still; it is always still when the device asks for reduced motion'),
-    css: z.string().max(cssLimit).optional().describe('Custom CSS for the whole page; target parts with [data-part="…"]. CSS that would load anything from the internet is stripped'),
+      .describe('Colour overrides per mode, by name like accent-500'),
+    scene: z.enum(sceneIds).nullable().optional().describe('Animated background, or null for none'),
+    motion: z.enum(['moving', 'still']).optional().describe('Whether the background moves (default) or stays still'),
+    css: z.string().max(cssLimit).optional().describe('Custom CSS; target [data-part="…"]. Internet loads are stripped'),
   })
 
 export type Theme = z.output<ReturnType<typeof themeSchema>>

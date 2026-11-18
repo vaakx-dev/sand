@@ -9,7 +9,7 @@ import { artifactSaved, htmlPage, htmlPages, type HtmlPages } from './contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { hostRoute } from './page/host'
-import { columnWidth, maxHeight } from './page/limits'
+import { columnWidth, maxHeight, maxHtmlChars } from './page/limits'
 import { load, prepare } from './page/load'
 import { hostPath } from './page/protocol'
 import { tokenTable } from './page/tokens'
@@ -38,6 +38,6 @@ export default definePlugin({
     ctx.watch(serverService, server =>
       server ? joinDisposers(server.handle(htmlPage, ({ render }) => store.read(render)), server.route(hostPath, hostRoute, { public: true })) : undefined,
     )
-    ctx.watch(skillsService, skills => skills?.register(skillDir, { tokens: tokenTable(), column: String(columnWidth) }))
+    ctx.watch(skillsService, skills => skills?.register(skillDir, { tokens: tokenTable(), column: String(columnWidth), limit: String(maxHtmlChars) }))
   },
 })

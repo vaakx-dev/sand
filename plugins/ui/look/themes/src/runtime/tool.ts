@@ -10,23 +10,25 @@ import { captureSand, type Shot } from './capture'
 import type { Themes } from './themes'
 
 const input = z.object({
-  action: z.enum(themeActions).describe("read the theme, set a new one, or reset to sand's own look"),
-  theme: themeSchema().optional().describe('The whole theme to set, for action set'),
+  action: z.enum(themeActions).describe('read, set or reset'),
+  theme: themeSchema().optional().describe('The whole theme, for set'),
 })
 
-const partList = Object.entries(pageParts)
-  .map(([name, about]) => `[data-part="${name}"] (${about})`)
-  .join('; ')
+const description = "Read, set or reset sand's one theme on every device. Read first for starters, scenes and CSS parts; set starts a trial the user keeps or undoes, with screenshots to check."
 
-const description = [
-  "Read, set or reset sand's one theme for every device: a base colour and accent, colour overrides, custom CSS and an animated background scene.",
-  `Starters: ${starters.map(starter => `${themeName(starter.theme)}${starter.theme ? ` (base ${starter.theme.base}, accent ${starter.theme.accent}${starter.theme.scene ? `, scene ${starter.theme.scene}` : ''}${starter.theme.mode ? `, ${starter.theme.mode}` : ''})` : ''}`).join(', ')}.`,
-  `Scenes: ${sceneIds.map(id => `${id} (${sceneNames[id]})`).join(', ')}.`,
-  `Custom CSS can target these stable parts: ${partList}. Colours are CSS variables like var(--vrui-color-accent-500). CSS that loads from the internet is stripped.`,
-  'set starts a trial the user keeps or undoes, and returns desktop and phone screenshots to check.',
-].join(' ')
+const startersGuide = starters.map(starter => ({ name: themeName(starter.theme), ...starter.theme }))
 
-const shown = ({ theme, trial }: ThemeState) => ({ theme: theme ?? "sand's own look", ...(trial && { trial: { goesBackTo: themeName(trial.previous), at: new Date(trial.until).toISOString() } }) })
+const scenesGuide = Object.fromEntries(sceneIds.map(id => [id, sceneNames[id]]))
+
+const cssGuide = { parts: Object.fromEntries(Object.entries(pageParts).map(([name, about]) => [`[data-part="${name}"]`, about])), colors: 'CSS variables like var(--vrui-color-accent-500)' }
+
+const shown = ({ theme, trial }: ThemeState) => ({
+  theme: theme ?? "sand's own look",
+  ...(trial && { trial: { goesBackTo: themeName(trial.previous), at: new Date(trial.until).toISOString() } }),
+  starters: startersGuide,
+  scenes: scenesGuide,
+  css: cssGuide,
+})
 
 const readability = (theme: Theme) =>
   (['dark', 'light'] as const)

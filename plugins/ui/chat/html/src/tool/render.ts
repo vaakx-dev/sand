@@ -3,7 +3,7 @@ import type { Tool } from '@sand/tools/contract'
 import type { Artifact, HtmlPages, HtmlRenderEntry } from '../contract'
 import { maxHeight, maxHtmlChars, maxTitleChars, minHeight } from '../page/limits'
 import type { RenderStore } from '../store'
-import { heightNote, renderDescription, shownNote } from './describe'
+import { renderDescription, shownNote } from './describe'
 import { missingNote, readPage } from './page'
 import type { RecentPages } from './recent'
 import { z } from 'zod'
@@ -11,10 +11,10 @@ import { z } from 'zod'
 const entryType = 'html-render'
 
 const input = z.object({
-  html: z.string().max(maxHtmlChars).optional().describe('A complete, self-contained HTML document'),
-  path: z.string().optional().describe('A .html file, or an image to show as the page'),
-  title: z.string().min(1).max(maxTitleChars).describe('Short name for the page, shown above it.'),
-  height: z.number().int().min(minHeight).max(maxHeight).optional().describe(heightNote),
+  html: z.string().max(maxHtmlChars).optional().describe('A full HTML document'),
+  path: z.string().optional().describe('A .html file or an image'),
+  title: z.string().min(1).max(maxTitleChars).describe('Name shown above the page'),
+  height: z.number().int().min(minHeight).max(maxHeight).optional().describe('Frame height in CSS px'),
 })
 
 const checkedOrPassed = async (pages: HtmlPages, recent: RecentPages, { html, path, height }: z.infer<typeof input>, session: string, cwd: string) => {

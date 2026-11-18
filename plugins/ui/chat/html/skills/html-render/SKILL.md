@@ -8,10 +8,10 @@ The page sits inside your reply on the chat's background: build it as part of th
 ## Workflow
 
 1. Write one self-contained page.
-2. Check it with `html_preview`. It returns a screenshot, the page's real height and its console output. Fix what the screenshot or the console shows, and check again.
+2. Check it with `html_preview`. It returns a screenshot, the page's real height and its console output. Fix what the screenshot or the console shows, and check again. Pass `width` 390 to check a phone.
 3. Publish it with `html_render` and only a `title`. That shows exactly the page you last checked, at the height preview measured.
 
-Pass the document itself as `html`, or write it to a file and pass `path`. A `path` to an image shows that image as the page.
+Pass the document itself as `html`, or write it to a file and pass `path`. A `path` to an image shows that image as the page. A page is at most {{limit}} characters.
 
 If no browser is installed, `html_preview` says so. Publish anyway, pass a height you estimate, and tell the reader it was not checked.
 
@@ -22,7 +22,7 @@ If no browser is installed, `html_preview` says so. Publish anyway, pass a heigh
 - Keep text 16px from the edge of any box with its own background, and round it with `var(--radius)`. Window chrome in a mockup (toolbars, sidebars) runs edge to edge.
 - Give charts fixed pixel heights.
 - **Never use `vh` or `height: 100%` on `html` or `body`.** The frame grows to fit the page, so a viewport size makes it grow forever. `vh` is rejected. Let content set the height.
-- Prefer inline SVG or HTML and CSS; use https CDN libraries only when needed. Local images (absolute paths, or relative to the page's file) are inlined, and remote URLs load as they are.
+- Prefer inline SVG or HTML and CSS, with inline `<style>` and `<script>`; use https CDN libraries only when needed. Local images (absolute paths, or relative to the page's file) are inlined, and remote URLs load as they are.
 - A page may run scripts and take keyboard input. Clicking a plain image in it opens that image in the reader's viewer, and app shortcuts like the command palette still work.
 
 ## Styles
