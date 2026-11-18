@@ -75,8 +75,14 @@ const reviewChanges = (before: Seen, snapshot: Snapshot) => {
   ]
 }
 
+const ENDINGS = ['merged', 'closed'] as const
+
+const statusKeyOf = (status: PullStatus) => `status:${status}`
+
+export const endingOf = (changes: Change[]) => ENDINGS.find(status => changes.some(change => change.key === statusKeyOf(status)))
+
 const stateChanges = (before: Seen, snapshot: Snapshot) => [
-  ...(snapshot.status !== before.status ? [{ summary: STATUS_SUMMARIES[snapshot.status], detail: `Base: ${snapshot.base}.` }] : []),
+  ...(snapshot.status !== before.status ? [{ summary: STATUS_SUMMARIES[snapshot.status], detail: `Base: ${snapshot.base}.`, key: statusKeyOf(snapshot.status) }] : []),
   ...(snapshot.status === 'open' && snapshot.conflict && !before.conflict ? [{ summary: 'Merge conflicts', detail: `With ${snapshot.base}.` }] : []),
 ]
 

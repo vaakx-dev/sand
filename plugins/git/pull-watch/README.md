@@ -1,4 +1,4 @@
-Follow pull requests keeps a thread up with the pull requests it opens. The thread wakes when CI finishes, a review or comment lands, or the PR merges, closes or conflicts, and deals with it, so you don't have to come back and tell it the tests failed.
+Follow pull requests keeps a thread up with the pull requests it opens. The thread wakes when CI finishes, a review or comment lands, or the PR closes or conflicts, and deals with it, so you don't have to come back and tell it the tests failed. Once its pull requests merge, the thread is archived.
 
 ## Good for
 

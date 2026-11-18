@@ -14,11 +14,11 @@ const said = (text: string) => ({ type: 'text', text }) as const
 const SHA = 'abc1234def5678'
 
 const fakeGitHub = () => {
-  const repo = { ci: { status: 'in_progress', conclusion: null as string | null }, comments: [] as object[] }
+  const repo = { ci: { status: 'in_progress', conclusion: null as string | null }, comments: [] as object[], merged: new Set<number>() }
   const pull = (number: number, created: string) => ({
     title: `Change ${number}`,
-    state: 'open',
-    merged: false,
+    state: repo.merged.has(number) ? 'closed' : 'open',
+    merged: repo.merged.has(number),
     mergeable: true,
     html_url: `https://github.com/acme/tiles/pull/${number}`,
     head: { sha: SHA },
@@ -28,6 +28,7 @@ const fakeGitHub = () => {
   const answers = (path: string): unknown => {
     if (path === '/repos/acme/tiles/pulls/7') return pull(7, new Date().toISOString())
     if (path === '/repos/acme/tiles/pulls/3') return pull(3, '2020-01-01T00:00:00Z')
+    if (path === '/repos/acme/tiles/pulls/8') return pull(8, new Date().toISOString())
     if (path.includes('/check-runs')) return { check_runs: [{ name: 'e2e', html_url: 'https://ci.example.com/e2e', details_url: null, ...repo.ci }] }
     if (path.includes('/status')) return { statuses: [] }
     if (path.includes('/issues/7/comments')) return repo.comments
@@ -115,4 +116,29 @@ test('a change that lands while the thread works reaches its running turn, and C
   await until(() => lastSaid(chat, 'Covered retries.'))
   expect(sand.turns.list(chat)).toHaveLength(2)
   expect(userTexts(chat.messages()).at(-1)).not.toContain('CI passed')
+})
+
+test('a thread is archived once the last PR it follows merges, after the turn it is working on', async () => {
+  const fake = await start([[{ type: 'call', name: 'land_stack', input: {} }], [said('Both landed.')]])
+  const chat = sand.chat('fake/m')
+  await sand.ask(pullFollow, { thread: chat.id, pull: 'acme/tiles#7' })
+  await sand.ask(pullFollow, { thread: chat.id, pull: 'acme/tiles#8' })
+  const followed = async () => (await sand.ask(pullFollows, { thread: chat.id })).length
+
+  fake.repo.merged.add(7)
+  await until(async () => (await followed()) === 1)
+  expect(chat.archived).toBeNull()
+
+  let archivedMidTurn: number | null = null
+  sand.tool('land_stack', async () => {
+    fake.repo.merged.add(8)
+    await until(async () => (await followed()) === 0)
+    archivedMidTurn = chat.archived
+    return 'Merged.'
+  })
+  await sand.turns.run(chat, 'Land the stack')
+
+  await until(() => chat.archived !== null)
+  expect(archivedMidTurn).toBeNull()
+  expect(sand.turns.list(chat)).toHaveLength(1)
 })
