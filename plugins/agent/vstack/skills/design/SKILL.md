@@ -7,6 +7,12 @@ description: Design or review a user interface, including layout, type, color an
 
 Keep each screen focused on its main task. Open on useful content and controls.
 
+Less is more:
+
+- Show only what matters now. Everything else goes behind a click or away.
+- Avoid information overload: fewer items, fewer words, fewer controls per screen.
+- No clutter: no badges, counters, tags, borders, icons or animation that don't change what the user does.
+
 ## Before you start
 
 - Read the existing interface and any references the user named.
@@ -41,7 +47,6 @@ Label alternatives A, B, C and change only what differs. Before you show a mocku
 
 - Take the look from the subject. Spend boldness in one place.
 - Skip stock looks like cream and terracotta, neon on black, or identical rounded cards, unless the user asks.
-- Every border, icon and animation should carry meaning.
 
 ## Before you finish
 
