@@ -11,16 +11,13 @@ const input = z.object({
   force: z
     .boolean()
     .optional()
-    .describe('Also remove it when it has uncommitted files or unpushed commits. Sand sets that work aside, and restoring the worktree brings it back. Only when the user said so'),
+    .describe('Remove it even with uncommitted or unpushed work, which sand sets aside; only when the user said so'),
 })
 
 export const removeTool = (deps: WorktreeDeps, survey: Survey): Tool<typeof input> => ({
   name: 'worktree_remove',
-  description: [
-    'Remove a worktree sand made, with its branch, to free disk space. It refuses when a thread is working there or when work would be lost, unless forced.',
-    'Threads in it move back to the main checkout, and the user can restore it later.',
-    'Use this instead of git worktree remove.',
-  ].join(' '),
+  description:
+    'Remove a worktree sand made and its branch to free disk space; the user can restore it. Refuses when a thread works there or work would be lost, unless forced. Use it instead of git worktree remove.',
   input,
   needs: ['pc'],
   async run({ path, force }, { cwd }) {

@@ -16,7 +16,7 @@ const listed = (follows: Follows, thread: string) => {
 const followTool = (follows: Follows): Tool<typeof input> => ({
   name: 'pr_follow',
   description:
-    "Follow a pull request yourself, from this chat: you get a turn when its CI finishes, a review or comment lands, or it merges, closes or conflicts. Notices go to this chat only, not to the agent or thread that started it. A chat already follows the PRs it opens itself; use this for one it didn't open, or after it was unfollowed.",
+    "Get a turn in this chat when a pull request's CI finishes, a review or comment lands, or it merges, closes or conflicts. A chat already follows the PRs it opens; use this for others.",
   input,
   effect: 'read',
   needs: ['thread'],
@@ -29,7 +29,7 @@ const followTool = (follows: Follows): Tool<typeof input> => ({
 
 const unfollowTool = (follows: Follows): Tool<typeof input> => ({
   name: 'pr_unfollow',
-  description: 'Stop following a pull request from this chat, so its changes no longer wake you. Other chats that follow it keep their own follows.',
+  description: 'Stop following a pull request from this chat.',
   input,
   effect: 'read',
   needs: ['thread'],

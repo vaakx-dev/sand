@@ -16,7 +16,7 @@ const input = z.object({
     .trim()
     .min(1)
     .max(300)
-    .describe("What the page asks for, such as 'Enter the code we texted to ••• 1234' or 'Approve the sign-in in your banking app'"),
+    .describe("What the page asks for, like 'Enter the code we texted to ••• 1234'"),
   ref: z.string().trim().min(1).optional().describe('The ref of the code field from computer_elements, when the page has more than one field'),
   computer: computerInput,
 })
@@ -51,7 +51,7 @@ export const codeTool = (deps: ToolDeps): Tool<typeof input> => ({
   name: 'login_code',
   group: signInGroup,
   description:
-    "Get past a sign-in's two-step check on the page open in the browser. With an authenticator saved for the login, fills its current code at once. Otherwise asks the user: they type the code they got into a private card, which fills it into the page, or say they approved the sign-in on their phone. You never see the code. Submit the form yourself after.",
+    "Get past a sign-in's two-step check in the browser: fills the login's saved authenticator code, or asks the user for it in a private card. You never see the code. Submit the form yourself after.",
   input,
   needs: ['computer'],
   timeoutMs: answerTimeout + settleGrace,

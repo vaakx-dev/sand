@@ -11,14 +11,9 @@ const writeInput = z.object({
   text: z.string().max(planLimit).describe(`The whole plan in Markdown, replacing the one there; at most ${planLimit.toLocaleString('en')} characters`),
 })
 
-const readRules = `Read a bot's plan: the Markdown file of what's happening in its work, what's next and what's blocked, which the user reads and can edit. It's empty until the bot writes one. Read it before you change it.`
+const readRules = `Read a bot's plan: the Markdown file of its work, what's next and what's blocked, which the user reads and edits. Read it before you change it.`
 
-const writeRules = `Write a bot's plan, replacing the whole file. A bot leaves out bot to write its own, and writes it whenever its work changes: when it starts or finishes something, or starts waiting on someone or something. When an item is done, take it out. Only work goes in it, not rules or preferences about how the bot works.
-
-One bullet per item. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note; each link shows its thread's live state, so don't add status headings. An item with no thread stays plain, with what it waits on:
-
-- [Fix the login bug](${threadScheme}:0b6c2e1a): tests running
-- Hotel quote: asked the hotel, reply due Friday`
+const writeRules = `Replace a bot's whole plan. A bot leaves out bot to write its own, whenever its work starts, finishes or starts waiting. Only work goes in, one bullet per item; take done items out. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note and no status; an item with no thread says what it waits on.`
 
 export const planTools: McpTool[] = [
   {

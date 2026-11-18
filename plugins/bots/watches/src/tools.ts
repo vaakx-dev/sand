@@ -12,12 +12,9 @@ const fields = z.object({
     .string()
     .trim()
     .min(1)
-    .describe('What to do when it changes, written to the bot\'s future self, like "Read the new release notes and tell the user if anything breaks their build"'),
+    .describe("What to do when it changes, written to the bot's future self"),
   job: z.string().optional().describe('The job it runs, from bot_list; leave out for a watch that is not part of a job'),
 })
-
-const createDescription =
-  "Wake a bot when something changes. A cheap watcher keeps an eye on it for free, and the bot gets a turn only when it changes, with what changed and these instructions. Use this instead of checking on a schedule. Get the kinds and their fields from watch_kinds. Returns the watch, with any info it needs, like a webhook's URL."
 
 const listInput = z.object({ bot: z.string().optional().describe("Only this bot's watches (default: yours, when you are a bot; else every bot's)") })
 const removeInput = z.object({ id: z.string().describe('The watch id from watch_list') })
@@ -31,7 +28,8 @@ const createInput = fields.extend({ watch: anyKind })
 
 const createTool: McpTool = {
   name: 'watch_create',
-  description: createDescription,
+  description:
+    'Wake a bot with these instructions when something changes, at no cost until then. Use it instead of checking on a schedule. Get the kinds and their fields from watch_kinds.',
   input: createInput,
   access: 'operate',
   group: group.name,
@@ -40,7 +38,7 @@ const createTool: McpTool = {
 
 const listTool: McpTool = {
   name: 'watch_list',
-  description: "List what a bot listens to: each watch's label, kind, target, info like a webhook's URL, when it last changed, and any error",
+  description: "List a bot's watches with their target, info like a webhook's URL, last change and any error",
   input: listInput,
   access: 'read',
   group: group.name,
@@ -49,7 +47,7 @@ const listTool: McpTool = {
 
 const removeTool: McpTool = {
   name: 'watch_remove',
-  description: 'Stop a watch for good, so its bot is no longer woken by it',
+  description: 'Stop a watch for good',
   input: removeInput,
   access: 'operate',
   group: group.name,
@@ -58,7 +56,7 @@ const removeTool: McpTool = {
 
 const kindsTool: McpTool = {
   name: 'watch_kinds',
-  description: 'List the kinds of things a watch can follow, with the fields watch_create takes for each',
+  description: 'List what a watch can follow, with the fields watch_create takes for each',
   input: kindsInput,
   access: 'read',
   group: group.name,

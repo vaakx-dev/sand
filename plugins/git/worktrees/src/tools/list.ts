@@ -27,10 +27,7 @@ const facts = (status: WorktreeStatus, size: number | undefined, cwd: string) =>
 
 export const listTool = (survey: Survey): Tool<typeof input> => ({
   name: 'worktree_list',
-  description: [
-    'List every worktree sand made on this PC, biggest first, with its size on disk, branch and whether it has unsaved work.',
-    'Use this instead of git worktree list.',
-  ].join(' '),
+  description: 'List the worktrees sand made on this PC, biggest first, with size, branch and unsaved work. Use it instead of git worktree list.',
   input,
   effect: 'read',
   needs: ['pc'],

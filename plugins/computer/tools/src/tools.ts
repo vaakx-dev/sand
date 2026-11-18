@@ -16,7 +16,7 @@ const screenshotFit = { width: 1568, height: 1568 }
 const nothing = z.object({})
 
 const which = z.object({
-  computer: z.string().optional().describe('The id of a computer from computer_list. As a bot, leave it out to use the computer chosen for you.'),
+  computer: z.string().optional().describe('A computer id from computer_list (default for a bot: the one chosen for it)'),
 })
 
 const round = (value: number) => value.toFixed(3)
@@ -68,7 +68,7 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
   const screenshot: Tool<typeof which> = {
     name: 'computer_screenshot',
     group,
-    description: 'Take a screenshot of a computer. Every position you pass to computer_act is a fraction 0..1 of this image: x from the left, y from the top.',
+    description: 'Take a screenshot of a computer. computer_act positions are fractions 0..1 of this image.',
     input: which,
     effect: 'read',
     needs: ['computer'],
@@ -83,15 +83,15 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
       .string()
       .min(1)
       .optional()
-      .describe('Text to find anywhere on the page, ignoring case, even off screen or inside a scrolling panel. The match is scrolled into view before the list is made.'),
-    match: z.number().int().min(1).default(1).describe('Which match of find to scroll into view: 1 is the first.'),
+      .describe('Text to find on the page, even off screen, scrolled into view before listing'),
+    match: z.number().int().min(1).default(1).describe('Which match of find: 1 is the first'),
   })
 
   const elements: Tool<typeof elementsInput> = {
     name: 'computer_elements',
     group,
     description:
-      'List the UI elements on a computer screen: ref, role, name and box [left, top, right, bottom] as fractions 0..1 of the screenshot. Only what is on screen is listed. To reach text in a long page, list, table or panel, pass find instead of scrolling: it scrolls the first match, or match n, into view and says how many there are. Only browsers can find. Pass a ref to computer_act to act on its center.',
+      'List the UI elements on screen with refs and boxes as fractions of the screenshot. To reach off-screen text, pass find instead of scrolling (browsers only). Pass a ref to computer_act to act on its center.',
     input: elementsInput,
     effect: 'read',
     needs: ['computer'],
@@ -109,14 +109,14 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
 
   const actInput = which.extend({
     action: actionInput,
-    screenshot: z.boolean().default(true).describe('Return a screenshot of the result. Pass false while you chain quick actions, then look once at the end.'),
+    screenshot: z.boolean().default(true).describe('Return a screenshot of the result; false while you chain quick actions'),
   })
 
   const act: Tool<typeof actInput> = {
     name: 'computer_act',
     group,
     description:
-      'Act on a computer: click, double_click, right_click, hold (press and keep the left button down for ms, for press-and-hold buttons and long-press), move, drag (with ms to rest at the end before dropping, for spring-loaded folders and auto-scrolling lists), scroll, type, key, wait or open a link. Clicks, hold and drag take keys like ctrl or shift to keep down meanwhile, for ctrl+click and shift+click multi-select. Positions are x and y fractions 0..1 of the screenshot, or an element ref. Returns a screenshot of the result once the screen settles, so there is no need to take one; pass screenshot: false to skip it while you chain quick actions.',
+      'Act on a computer: click, hold, move, drag, scroll, type, key, wait or open a link, at x and y fractions 0..1 of the screenshot or an element ref. Returns a screenshot once the screen settles, so there is no need to take one.',
     input: actInput,
     needs: ['computer'],
     async run({ computer, action, screenshot }, context) {

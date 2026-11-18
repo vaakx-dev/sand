@@ -166,13 +166,8 @@ export const summaryLimit = 300
 const jobFields = lazy(() =>
   z.object({
     title: z.string().trim().min(1).max(60).describe('A short name the user sees, like "Morning CI triage"'),
-    goal: z.string().trim().min(1).max(jobTextLimit).describe('What the job is for, in a sentence, like "Check failing CI on main every weekday morning."'),
-    done: z
-      .string()
-      .trim()
-      .min(1)
-      .max(jobTextLimit)
-      .describe('What done right looks like, in a sentence, like "Every red build has an owner or a fix PR."'),
+    goal: z.string().trim().min(1).max(jobTextLimit).describe('What the job is for, in a sentence'),
+    done: z.string().trim().min(1).max(jobTextLimit).describe('What done right looks like, in a sentence'),
   }),
 )
 

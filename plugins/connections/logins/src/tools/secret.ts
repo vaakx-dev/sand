@@ -13,16 +13,9 @@ const input = z.object({
   title: z.string().trim().min(1).max(100).describe("Card title, which also names the saved login, such as 'GitHub token' or 'Northbank'"),
   reason: z.string().trim().min(1).max(1000).describe('What it is for and where the user gets it'),
   placeholder: z.string().trim().min(1).max(100).optional().describe('Hint shown in the empty field, such as ghp_…'),
-  site: z.string().trim().min(1).max(253).optional().describe('For a website login, its domain, such as bank.com: the card then asks for a username and password'),
-  once: z
-    .boolean()
-    .describe(
-      'True for a one-use value, like an emailed or texted code: held for one use, not saved unless the user chooses. False for a password or API key: saved as a login.',
-    ),
+  site: z.string().trim().min(1).max(253).optional().describe('For a website login, its domain, like bank.com'),
+  once: z.boolean().describe('True for a one-use code, not saved; false for a password or API key, saved as a login'),
 })
-
-const description =
-  'Ask the user for a secret in a private card and wait for the answer: an API key or token, or with site a website login. Use this instead of asking for a secret in chat; you never see the value. It becomes a login: pass a key to shell with its logins parameter, or fill a website login with login_fill.'
 
 const unanswered: Record<Unanswered, string> = {
   declined: 'The user declined. Go on without it, or ask what to do instead.',
@@ -49,7 +42,8 @@ const newLogin = (name: string, site: string | undefined, answer: SecretAnswer) 
 export const secretTool = (deps: ToolDeps): Tool<typeof input> => ({
   name: 'request_secret',
   group: loginsToolGroup,
-  description,
+  description:
+    "Ask the user in a private card for an API key, token or, with site, a website login, instead of asking in chat; you never see it. It becomes a login for shell's logins parameter or login_fill.",
   input,
   effect: 'read',
   active: conversation => deps.sessions()?.open(conversation.id)?.kind !== 'agent',

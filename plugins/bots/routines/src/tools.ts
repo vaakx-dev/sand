@@ -33,8 +33,7 @@ const shown = ({ id, bot, name, instructions, job, when, paused, next, last }: R
 export const routineTools: McpTool[] = [
   {
     name: 'routine_create',
-    description:
-      "Set a bot a reminder or a routine: when it comes due, the bot acts on its instructions in its own chat, even while the user is away. Use at or in_minutes for one time, or repeat for a recurring schedule. A bot leaves out bot to set its own.",
+    description: 'Set a bot a reminder or routine: when due, it acts on the instructions in its own chat, even while the user is away. A bot leaves out bot to set its own.',
     input: createInput,
     access: 'operate',
     group: group.name,
@@ -43,7 +42,7 @@ export const routineTools: McpTool[] = [
   } satisfies McpTool<typeof createInput>,
   {
     name: 'routine_list',
-    description: "List a bot's reminders and routines with when they run next, and the time now. A bot leaves out bot to list its own.",
+    description: "List a bot's reminders and routines with when each runs next, and the time now.",
     input: listInput,
     access: 'read',
     group: group.name,
@@ -52,7 +51,7 @@ export const routineTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'routine_pause',
-    description: 'Pause a reminder or routine so it stops running, or resume it with paused false.',
+    description: 'Pause or resume a reminder or routine.',
     input: pauseInput,
     access: 'operate',
     group: group.name,
@@ -61,7 +60,7 @@ export const routineTools: McpTool[] = [
   } satisfies McpTool<typeof pauseInput>,
   {
     name: 'routine_retry',
-    description: 'Run a reminder that failed after its retries once more, now. If that fails it is tried again later, like any failed run.',
+    description: 'Run a reminder that failed after its retries once more, now.',
     input: retryInput,
     access: 'operate',
     group: group.name,

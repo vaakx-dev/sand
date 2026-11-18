@@ -19,11 +19,11 @@ const partList = Object.entries(pageParts)
   .join('; ')
 
 const description = [
-  "Read, set or reset the one theme sand uses on every device and PC: a base colour and an accent that make every colour for light and dark, single colour overrides, custom CSS and an animated background behind frosted panels, calm in the middle and moving at the edges.",
+  "Read, set or reset sand's one theme for every device: a base colour and accent, colour overrides, custom CSS and an animated background scene.",
   `Starters: ${starters.map(starter => `${themeName(starter.theme)}${starter.theme ? ` (base ${starter.theme.base}, accent ${starter.theme.accent}${starter.theme.scene ? `, scene ${starter.theme.scene}` : ''}${starter.theme.mode ? `, ${starter.theme.mode}` : ''})` : ''}`).join(', ')}.`,
   `Scenes: ${sceneIds.map(id => `${id} (${sceneNames[id]})`).join(', ')}.`,
-  `Custom CSS can target these parts, whose names stay the same across updates: ${partList}. Colours are CSS variables like var(--vrui-color-accent-500) and var(--vrui-color-neutral-900). CSS that would load anything from the internet is stripped.`,
-  'A theme you set is on at once on every device as a trial: the user sees it with Keep and Undo, and it goes back by itself about 30 seconds later unless they keep it. set returns a desktop and a phone screenshot of sand in the new theme: look at both before you reply, and set it again if text is hard to read, a panel hides the background badly or anything looks broken. Say what you checked in your reply.',
+  `Custom CSS can target these stable parts: ${partList}. Colours are CSS variables like var(--vrui-color-accent-500). CSS that loads from the internet is stripped.`,
+  'set starts a trial the user keeps or undoes, and returns desktop and phone screenshots to check.',
 ].join(' ')
 
 const shown = ({ theme, trial }: ThemeState) => ({ theme: theme ?? "sand's own look", ...(trial && { trial: { goesBackTo: themeName(trial.previous), at: new Date(trial.until).toISOString() } }) })

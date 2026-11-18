@@ -18,8 +18,7 @@ const reportInput = runReport()
 export const jobTools: McpTool[] = [
   {
     name: 'job_create',
-    description:
-      "Give a bot a job: standing work with a goal and what done right means, shown to the user as a card on the bot's screen. Then set when it runs with routine_create or watch_create, passing the job id. A bot leaves out bot to give itself one.",
+    description: "Give a bot a job: standing work with a goal and a done-right line, shown as a card on its screen. Set when it runs with routine_create or watch_create. A bot leaves out bot to give itself one.",
     input: createInput,
     access: 'operate',
     group: group.name,
@@ -28,7 +27,7 @@ export const jobTools: McpTool[] = [
   } satisfies McpTool<typeof createInput>,
   {
     name: 'job_update',
-    description: "Change a job's title, goal or done right line, or pause it with paused true so its schedules and watches don't run it, and resume it with false.",
+    description: "Change a job's title, goal or done-right line, or pause it so its schedules and watches don't run it.",
     input: updateInput,
     access: 'operate',
     group: group.name,
@@ -37,7 +36,7 @@ export const jobTools: McpTool[] = [
   } satisfies McpTool<typeof updateInput>,
   {
     name: 'job_delete',
-    description: 'Delete a job for good, with the schedules and watches that run it. Its past runs stay in the chat.',
+    description: 'Delete a job with the schedules and watches that run it. Its past runs stay in the chat.',
     input: deleteInput,
     access: 'operate',
     group: group.name,
@@ -46,8 +45,7 @@ export const jobTools: McpTool[] = [
   } satisfies McpTool<typeof deleteInput>,
   {
     name: 'job_report',
-    description:
-      "Record one run of a job, once at its end: what you did, that there was nothing to do, or the question the user has to decide. It shows on the job's card and in the morning summary; a question marks the job as needing the user until the next report.",
+    description: "Record one run of a job, once at its end. It shows on the job's card and in the morning summary.",
     input: reportInput,
     access: 'operate',
     group: group.name,
