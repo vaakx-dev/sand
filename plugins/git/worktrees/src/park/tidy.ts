@@ -1,3 +1,5 @@
+import type { SessionSummary } from '@sand/chats/contract'
+import { existsSync } from 'node:fs'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { parkedNote } from '../remove/notes'
@@ -6,16 +8,27 @@ import { threadsIn } from '../sessions/inside'
 
 export const dayMs = 24 * 60 * 60_000
 
-export const tidyWorktree = async (deps: WorktreeDeps, record: WorktreeRecord, now: number) => {
-  if (record.removed) return
-  const inside = threadsIn(deps.sessions, record.path)
-  const archived = inside.flatMap(thread => (thread.archived === null ? [] : [thread.archived]))
-  if (archived.length < inside.length) return
-  const since = inside.length ? Math.max(...archived) : record.created
-  const force = now - since >= deps.keepDays.archived * dayMs
-  if (!force && !inside.length) return
+const finishedAt = (deps: WorktreeDeps, chat: SessionSummary) => {
+  if (chat.archived !== null) return chat.archived
+  return chat.kind === 'agent' && !deps.busy(chat.id) ? chat.updated : undefined
+}
+
+const park = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean) => {
   const result = await removeWorktree(deps, { path: record.path, force }, parkedNote)
   if (!result.removed) return
   record.parked = true
   await deps.store.save()
+}
+
+export const tidyWorktree = async (deps: WorktreeDeps, record: WorktreeRecord, now: number) => {
+  if (record.removed) return
+  if (!existsSync(record.path)) return park(deps, record, true)
+  const inside = threadsIn(deps.sessions, record.path)
+  const finished = inside.flatMap(chat => finishedAt(deps, chat) ?? [])
+  if (finished.length < inside.length) return
+  const since = Math.max(record.created, ...finished)
+  const due = now - since >= deps.keepDays.archived * dayMs
+  const archived = inside.every(chat => chat.archived !== null)
+  if (!due && !(archived && inside.length)) return
+  await park(deps, record, due && archived)
 }

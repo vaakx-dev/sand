@@ -1,6 +1,15 @@
+import { errorCode } from '@sand/util/fs'
 import { existsSync } from 'node:fs'
 import { lstat, readdir, rmdir, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
+
+const HELD_CODES = new Set(['EBUSY', 'ENOTEMPTY'])
+
+const removeFolder = (path: string) =>
+  rmdir(path).catch(error => {
+    if (HELD_CODES.has(errorCode(error) ?? '')) return
+    throw error
+  })
 
 export const isWorktree = (path: string) => existsSync(join(path, '.git'))
 
@@ -10,7 +19,7 @@ export const clearFolder = async (path: string): Promise<void> => {
   if (info.isSymbolicLink()) return unlinkLink(path)
   if (!info.isDirectory()) return unlink(path)
   for (const name of await readdir(path)) await clearFolder(join(path, name))
-  await rmdir(path)
+  await removeFolder(path)
 }
 
 const unlinkLink = async (path: string) => {
