@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from 'node:fs'
-import { mkdir, mkdtemp, readdir, rm, utimes } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, readdir, rm, utimes } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -97,6 +97,12 @@ export const previousBuild = async () => {
 
 export const thisBuild = (out: string) => releaseAssets(repoRoot, out)
 
+const isAddonFile = (name: string) => name === 'sand-addons.json' || name.startsWith('sand-addon-')
+
+const copyAddons = async (from: string, to: string) => {
+  for (const name of (await readdir(from)).filter(isAddonFile)) await copyFile(join(from, name), join(to, name))
+}
+
 export const derivedBuild = async (from: Build, out: string, change: (root: string) => Promise<void>) => {
   const root = `${out}-tree`
   await rm(root, { recursive: true, force: true })
@@ -105,7 +111,9 @@ export const derivedBuild = async (from: Build, out: string, change: (root: stri
     await run([process.execPath, join(root, 'packages', 'util', 'src', 'release', 'ready.ts'), root], root)
     await rm(join(root, 'sand-build.json'))
     await change(root)
-    return await releaseAssets(root, out)
+    await releaseAssets(root, out)
+    await copyAddons(from.folder, out)
+    return await readBuild(out)
   } finally {
     await rm(root, { recursive: true, force: true })
   }
