@@ -7,7 +7,8 @@ import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionArchive, sessionUpdate } from './contract'
 import { migrateChats } from './schema'
-import { usedMedia } from './media'
+import { moveInlineMedia } from './media/backfill'
+import { usedMedia } from './media/used'
 import { createStore } from './store'
 
 export default definePlugin({
@@ -19,6 +20,14 @@ export default definePlugin({
     migrateChats(ctx.ledger)
     const { db } = ctx.ledger
     ctx.effect(() => ctx.media.inUse(usedMedia(db)))
+    ctx.effect(() => {
+      const stop = new AbortController()
+      void ctx
+        .settled()
+        .then(() => moveInlineMedia({ ledger: ctx.ledger, media: ctx.media, signal: stop.signal }))
+        .then(failure => failure && ctx.report(new Error(failure.error)), (error: unknown) => ctx.report(error))
+      return () => stop.abort()
+    })
     const store = createStore(db, {
       hooks: {
         entry: (session, entry) => ctx.emit(sessionEntry, session, entry),

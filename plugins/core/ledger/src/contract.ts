@@ -3,11 +3,15 @@ import { Database } from 'bun:sqlite'
 import { service } from 'drydock'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { compact, type CompactFailure } from './compact'
+
+export type { CompactFailure }
 
 export interface Ledger {
   db: Database
   tx<T>(fn: () => T): T
   migrate(owner: string, steps: string[][]): void
+  compact(): CompactFailure | undefined
 }
 
 export interface Upgrade {
@@ -70,5 +74,6 @@ export const createLedger = (db: Database, build?: BuildInfo): Ledger => {
         record.run({ owner, version: steps.length })
         if (build) upgraded.run({ build: build.id, time: build.time })
       }),
+    compact: () => compact(db),
   }
 }

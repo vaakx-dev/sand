@@ -3,6 +3,7 @@ import { v1 } from './v1'
 import { v2 } from './v2'
 import { v3 } from './v3'
 import { v4 } from './v4'
+import { v5 } from './v5'
 
 const exists = (ledger: Ledger, sql: string) => ledger.db.query(sql).get() !== null
 
@@ -15,5 +16,5 @@ const adoptUnversioned = (ledger: Ledger) => {
 export const migrateChats = (ledger: Ledger) =>
   ledger.tx(() => {
     adoptUnversioned(ledger)
-    ledger.migrate('chats', [v1, v2, v3, v4])
+    ledger.migrate('chats', [v1, v2, v3, v4, v5])
   })
