@@ -21,7 +21,7 @@ const inputSchema = (ctx: AgentsContext) => {
     agent: z.string().optional().describe('A named agent from the list (default: a plain agent with your tools)'),
     model: z.string().optional().describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
     effort: effortInput(ctx).optional().describe('Reasoning effort (default: inherited)'),
-    level: z.enum(levels).optional().describe('How heavy the job is, which picks the model and effort the user set for it (default: yours). A model you name wins over it'),
+    level: z.enum(levels).optional().describe('How heavy the job is, which picks the model the user set for it (default: yours)'),
     project: z.string().optional().describe('A project id to work in instead of your folder, from project_list'),
   })
   return (ctx.get(features)?.on('worktrees') ?? true) ? input.extend({ worktree: worktreeField }) : input

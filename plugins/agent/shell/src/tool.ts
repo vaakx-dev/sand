@@ -38,13 +38,13 @@ const inputOf = ({ silence_ms, limit_ms }: Limits, saved: boolean): z.ZodType<Sh
       .positive()
       .max(limit_ms)
       .optional()
-      .describe(`Stop the command after this many milliseconds without new output (default ${silence_ms}). Raise it for commands you know are quiet.`),
+      .describe(`Stop after this long without output (default ${silence_ms}); raise it for quiet commands`),
   })
   return saved ? input.extend({ logins: loginsField }) : input
 }
 
 const rules = ({ silence_ms, limit_ms }: Limits) =>
-  `A command is stopped after ${minutes(silence_ms)} without new output and after ${minutes(limit_ms)} in any case. Commands get no input and run with CI=1, so prompts fail instead of waiting.`
+  `Stopped after ${minutes(silence_ms)} without output or ${minutes(limit_ms)} in all. No input and CI=1, so prompts fail.`
 
 const stopReasons: Record<Stop, (timeouts: Timeouts) => string> = {
   silence: ({ silence }) => `no output for ${minutes(silence)}`,

@@ -15,7 +15,7 @@ const meanings: Record<Mode, string> = {
 export const modeTool = (permissions: () => Permissions): Tool<typeof input> => ({
   name: 'permission_mode',
   group: toolGroup.name,
-  description: `See or set this chat's permission mode. off: ${meanings.off}. ask: ${meanings.ask}. auto: ${meanings.auto}. Loosening it asks the user.`,
+  description: "See or set this chat's permission mode. Loosening it asks the user.",
   input,
   act: ({ mode }, conversation) =>
     mode && strictness[mode] < strictness[permissions().mode(conversation).mode]

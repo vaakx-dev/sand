@@ -39,7 +39,7 @@ const input = z.object({
 type Input = z.output<typeof input>
 
 const description =
-  'Your memory, for what you learn that no tool call can find again, so it carries over to later conversations: files in /memories. /memories/memory.md loads into every conversation, and the notes in /memories/notes are listed there by their first line. Write to it when the person asks, or when something is clearly worth remembering.'
+  'Your memory in /memories, for what you learn that no tool call can find again. /memories/memory.md loads into every conversation and lists the notes in /memories/notes by first line. Write to it when asked or when something is clearly worth remembering.'
 
 const notePath = (name: string) => `${NOTES_PATH}/${name}.md`
 

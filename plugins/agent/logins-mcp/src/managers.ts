@@ -12,7 +12,7 @@ const sourceInput = z.object({ source })
 
 const connectInput = z.object({
   source,
-  secret: secret.describe("What signs sand in: Bitwarden's master password, a Bitwarden Secrets Manager access token or a 1Password service account token"),
+  secret: secret.describe("Bitwarden's master password, a Bitwarden Secrets Manager access token or a 1Password service account token"),
 })
 
 const searchInput = z.object({ source, query: z.string().trim().max(200).describe('Words in the item name or site; empty lists everything') })
@@ -36,7 +36,7 @@ const pickedOf = ({ source, item, vault, account, ...chosen }: z.output<typeof p
 const connectTool: McpTool<typeof connectInput> = {
   name: 'login_manager_connect',
   description:
-    "Connect a password manager so its items can become saved logins: sand keeps what you give it encrypted and never shows it again. Returns the manager's status (signed-in account, locked or failed)",
+    'Connect a password manager so its items can become saved logins',
   input: connectInput,
   secret: ['secret'],
   access: 'operate',
@@ -46,7 +46,7 @@ const connectTool: McpTool<typeof connectInput> = {
 
 const disconnectTool: McpTool<typeof sourceInput> = {
   name: 'login_manager_disconnect',
-  description: "Disconnect a password manager: sand forgets how to sign in to it, and the logins that point at it stop working until it's connected again",
+  description: "Disconnect a password manager. Logins that point at it stop working until it's connected again",
   input: sourceInput,
   access: 'operate',
   group: group.name,
@@ -55,7 +55,7 @@ const disconnectTool: McpTool<typeof sourceInput> = {
 
 const searchTool: McpTool<typeof searchInput> = {
   name: 'login_manager_search',
-  description: "Search a connected password manager's items by name or site: their ids, names, kinds and sites, never their values",
+  description: "Search a connected password manager's items by name or site, without their values",
   input: searchInput,
   access: 'read',
   group: group.name,
@@ -65,7 +65,7 @@ const searchTool: McpTool<typeof searchInput> = {
 const pickTool: McpTool<typeof pickInput> = {
   name: 'login_manager_pick',
   description:
-    "Save a password manager's item as a login that points at it: sand reads the value from the manager each time it's used and never copies it. Picked by one of sand's own threads or bots, that thread or bot may use it at once. Returns the login",
+    "Save a password manager's item as a login that reads from the manager on each use. The thread or bot that picks it may use it at once",
   input: pickInput,
   access: 'operate',
   group: group.name,

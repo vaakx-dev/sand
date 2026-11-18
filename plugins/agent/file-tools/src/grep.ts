@@ -17,7 +17,7 @@ const input = z.object({
 export const grep: Tool<typeof input> = {
   name: 'grep',
   description:
-    'Search file contents with a regular expression. Returns file:line: text. Skips gitignored files, node_modules, .git and binary files unless include_ignored is set.',
+    'Search file contents with a regular expression. Skips gitignored files, node_modules, .git and binary files.',
   parallel: true,
   input,
   act: ({ pattern, path = '.' }) => ({ effect: 'read', paths: [path], summary: `Search ${path} for ${pattern}` }),

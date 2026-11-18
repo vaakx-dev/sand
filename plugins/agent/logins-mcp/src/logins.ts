@@ -45,7 +45,7 @@ const addedOf = ({ kind, name, site, username, password, totp, value }: z.output
 const listTool: McpTool<typeof listInput> = {
   name: 'login_list',
   description:
-    "List the user's saved logins (website logins and keys) with their ids, which bots and threads may use each, and, for sand's own threads and bots, your access to each (allowed, ask: the user only, or unshared); also which password managers are connected. You never see a value: fill a website login with login_fill and login_code, pass a key to a Shell command with its logins parameter, or ask the user for a new one with request_secret",
+    "List the user's saved logins and keys, who may use each, your access and the connected password managers. Values stay hidden: use login_fill, a shell command's logins parameter, or request_secret for a new one",
   input: listInput,
   access: 'read',
   group: loginsToolGroup,
@@ -58,7 +58,7 @@ const listTool: McpTool<typeof listInput> = {
 const addTool: McpTool<typeof addInput> = {
   name: 'login_add',
   description:
-    "Save a website login (site, username, password and an optional authenticator) or a key (value), kept encrypted. Saved by one of sand's own threads or bots, that thread or bot may use it at once; share it further with login_change. Returns the login without its values",
+    'Save a website login or a key, encrypted. The thread or bot that saves it may use it at once; share it further with login_change',
   input: addInput,
   secret: ['username', 'password', 'totp', 'value'],
   access: 'operate',
@@ -69,7 +69,7 @@ const addTool: McpTool<typeof addInput> = {
 const changeTool: McpTool<typeof changeInput> = {
   name: 'login_change',
   description:
-    'Change a saved login: rename it, move it to another site, replace its username, password, key value or authenticator, choose which bots and threads may use it, or keep it for the user only. Logins in a password manager change there, except for name, site and who may use them. Returns the login without its values',
+    'Change a saved login: its name, site, values, or who may use it. Values of password manager logins change in the manager',
   input: changeInput,
   secret: ['username', 'password', 'value', 'totp'],
   access: 'operate',
@@ -79,7 +79,7 @@ const changeTool: McpTool<typeof changeInput> = {
 
 const removeTool: McpTool<typeof idInput> = {
   name: 'login_remove',
-  description: 'Delete a saved login. A login from a password manager stays in the manager. Returns the logins left',
+  description: 'Delete a saved login. A password manager item stays in the manager',
   input: idInput,
   access: 'operate',
   group: group.name,
@@ -88,7 +88,7 @@ const removeTool: McpTool<typeof idInput> = {
 
 const usesTool: McpTool<typeof idInput> = {
   name: 'login_uses',
-  description: 'Show when a saved login was used, newest first: by which thread or bot, for what (fill, code or env), on which site and why it was allowed',
+  description: 'Show when, where and by whom a saved login was used, newest first',
   input: idInput,
   access: 'read',
   group: group.name,

@@ -14,7 +14,7 @@ const details = z
   .string()
   .trim()
   .max(detailsLimit)
-  .describe(`A few sentences: what changed and anything worth finding later, like numbers and decisions; at most ${detailsLimit.toLocaleString('en')} characters`)
+  .describe(`A few sentences on what changed, with numbers and decisions; at most ${detailsLimit.toLocaleString('en')} characters`)
 const links = z
   .array(z.string().trim().min(1))
   .max(linksMost)
@@ -22,11 +22,11 @@ const links = z
 const tags = z
   .array(z.string().trim().min(1).max(tagLimit))
   .max(tagsMost)
-  .describe('A few short lowercase topics; reuse the tags logbook_tags lists before making new ones')
+  .describe('A few short lowercase topics; reuse those logbook_tags lists')
 const day = z.iso.date()
 
 const addInput = z.object({
-  project: project.describe("A project id from project_list, or null for work with no project (default: your thread's project, or your one project as a bot)"),
+  project: project.describe('A project id, or null for none (default: your project)'),
   title,
   details: details.optional(),
   links: links.optional(),
@@ -46,18 +46,18 @@ const removeInput = z.object({ id })
 
 const searchInput = z.object({
   query: z.string().optional().describe('Words to find in titles, details, tags and links; each word matches as a prefix'),
-  project: project.describe('Only this project by id, or null for work with no project (default: every project)'),
+  project: project.describe('Only this project id, or null for none'),
   tag: z.string().optional().describe('Only entries with this tag'),
   from: day.optional().describe('Only work logged on or after this day, YYYY-MM-DD'),
   to: day.optional().describe('Only work logged before this day, YYYY-MM-DD'),
   limit: z.number().int().min(1).max(searchLimit).optional().describe('At most this many, newest first (default 50)'),
 })
 
-const tagsInput = z.object({ project: project.describe('Only tags used in this project by id, or null for work with no project (default: every project)') })
+const tagsInput = z.object({ project: project.describe('Only this project id, or null for none') })
 
-const addRules = `Log a piece of finished work in the Logbook, the dated record every thread and bot shares, which the user reads in the side panel. sand adds the date and you as its author. Log work once it's done, not plans or progress. A bot logs each item it takes out of its plan because it's done. Call logbook_tags first to reuse the tags already in use.`
+const addRules = "Log finished work in the Logbook, the dated record every thread and bot shares. Log work once it's done, not plans or progress; a bot logs each plan item it finishes."
 
-const searchRules = `Search the Logbook, newest first: what was done, when, by whom, with links to its PRs, commits and threads. Use it to answer what was done in a period, with from and to, or to find the details of past work.`
+const searchRules = 'Search the Logbook, newest first, to find what was done in a period or the details of past work.'
 
 const startOf = (date: string) => new Date(`${date}T00:00`).getTime()
 
@@ -96,7 +96,7 @@ const logbookTools: McpTool[] = [
   } satisfies McpTool<typeof searchInput>,
   {
     name: 'logbook_tags',
-    description: 'List the tags in use in the Logbook, most used first, with how many entries have each',
+    description: 'List the Logbook tags in use, most used first',
     input: tagsInput,
     access: 'read',
     group: group.name,
@@ -105,7 +105,7 @@ const logbookTools: McpTool[] = [
   } satisfies McpTool<typeof tagsInput>,
   {
     name: 'logbook_change',
-    description: 'Change a Logbook entry: its project, title, details, links or tags. What you leave out stays as it is; links and tags replace the old lists',
+    description: 'Change a Logbook entry. What you leave out stays; links and tags replace the old lists',
     input: changeInput,
     access: 'operate',
     group: group.name,

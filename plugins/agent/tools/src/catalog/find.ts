@@ -13,7 +13,7 @@ const describe = (groups: GroupState[]) =>
   `Load tools that aren't loaded yet. The tools you find stay available for the rest of this chat.\n\nGroups:\n${groups.map(groupLine).join('\n')}`
 
 const listing = (found: Candidate[]): ToolResultContent[] => [
-  { type: 'text', text: `Loaded:\n${found.map(({ tool }) => `- ${tool.name}: ${tool.description}`).join('\n')}` },
+  { type: 'text', text: `Loaded: ${found.map(({ tool }) => tool.name).join(', ')}` },
   ...found.map(({ tool }): ToolResultContent => ({ type: 'tool_reference', name: tool.name })),
 ]
 

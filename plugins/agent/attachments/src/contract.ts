@@ -35,7 +35,7 @@ export const filesInput = lazy(() =>
   z
     .array(z.string().min(1))
     .optional()
-    .describe('Files on this PC to attach, by full path or relative to your folder, like the paperclip in sand: images and documents the model reads, other files saved for it to open'),
+    .describe('Files on this PC to attach, by path'),
 )
 
 export const promptWithFiles = async (add: Add, text: string, files: string[] = [], cwd?: string) =>

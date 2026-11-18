@@ -16,7 +16,7 @@ const clientRequestId = z
   .string()
   .min(1)
   .optional()
-  .describe('Any unique string; calling again with the same id returns the first result instead of doing the work twice')
+  .describe('Any unique string; a repeat call with it returns the first result')
 const prompt = z.string().min(1).describe('The message')
 
 const listInput = z.object({
@@ -39,10 +39,10 @@ const historyInput = z.object({
 const startInput = z.object({
   prompt: z.string().min(1).describe('The first message: the task, with what the thread needs to know'),
   files: filesInput(),
-  pc: z.string().optional().describe('Another of your PCs to start it on, by name; cwd is then a folder on that PC (default: this PC)'),
-  cwd: z.string().optional().describe('The folder the thread works in, on the PC it starts on (default: yours; a bot with one project starts it there)'),
+  pc: z.string().optional().describe('Another PC to start it on, by name; cwd is then on that PC'),
+  cwd: z.string().optional().describe('Its working folder (default: yours)'),
   project: z.string().optional().describe('A project id to work in instead of a folder, from project_list'),
-  quick: z.literal(true).optional().describe('Start it with no project, in a scratch folder of its own, instead of cwd or project'),
+  quick: z.literal(true).optional().describe('Start it in a scratch folder, with no project'),
   title: z.string().optional(),
   model: z.string().optional().describe('A model id or name (default: sand’s default model)'),
   effort: z.string().optional().describe('Reasoning effort, such as low, medium or high'),
@@ -50,10 +50,10 @@ const startInput = z.object({
     .boolean()
     .optional()
     .describe(
-      "Give the thread its own checkout: a git worktree and branch that sand makes, sets up as its working folder, and removes once the thread is archived. Use this instead of git worktree add or telling the thread to make one",
+      'Give it its own git worktree and branch, removed once the thread is archived',
     ),
   branch: z.string().min(1).optional().describe('An existing local branch for its worktree, instead of a new one. Implies worktree'),
-  from: z.string().min(1).optional().describe("The branch or commit its worktree's new branch starts from (default: the default branch). Implies worktree"),
+  from: z.string().min(1).optional().describe('The branch or commit its new branch starts from. Implies worktree'),
   clientRequestId,
 })
 
@@ -77,14 +77,14 @@ const updateInput = z.object({
   title: z.string().min(1).optional().describe('Rename it'),
   pinned: z.boolean().optional().describe('Pin it to the top of the sidebar, or unpin it'),
   snoozeUntil: z.iso.datetime({ offset: true }).nullable().optional().describe('Hide it until this time (ISO 8601), or null to bring it back now'),
-  archived: z.boolean().optional().describe('Archive it once its work is done, which stops it and moves it out of the open list; false reopens it'),
+  archived: z.boolean().optional().describe('Archive it once its work is done, which stops it; false reopens it'),
   worktree: z
     .literal(true)
     .optional()
-    .describe('Move it into its own new git worktree and branch, taking its uncommitted changes. A thread in a turn, such as you, moves when the turn ends'),
+    .describe('Move it into its own new git worktree and branch, with its uncommitted changes, when its turn ends'),
   branch: z.string().min(1).optional().describe('A name for the new branch of its worktree (default: named from its work). Implies worktree'),
-  model: z.string().min(1).optional().describe('Switch it to this model, by id or name (see model_list). A thread in a turn, such as you, switches when the turn ends'),
-  effort: z.string().min(1).optional().describe("Its effort level, such as low, medium or high, if its model has effort levels"),
+  model: z.string().min(1).optional().describe('A model id or name to switch to when its turn ends'),
+  effort: z.string().min(1).optional().describe('Effort, such as low, medium or high'),
   fast: z.boolean().optional().describe('Turn fast mode on or off, if its model has it'),
 })
 
@@ -95,7 +95,7 @@ const compactInput = z.object({
 
 const waitInput = z.object({
   thread,
-  until: z.enum(['attention', 'end']).optional().describe('attention (default): also return when the thread waits on the user; end: only when it is done'),
+  until: z.enum(['attention', 'end']).optional().describe('attention (default): also when it waits on the user; end: only when done'),
   timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Give up after this long (default ${waitSeconds}); the thread keeps running`),
 })
 
@@ -113,14 +113,14 @@ const folderOf = ({ cwd, project, quick, pc }: Pick<z.output<typeof startInput>,
   return project || actor ? undefined : here
 }
 
-const replies = "Its reply doesn't come back to you on its own: read it with thread_wait or history_read, or, as a sand thread or bot, ask in the message for it to message you back"
+const replies = "Its reply doesn't come back on its own: use thread_wait or history_read, or ask it to message you back"
 
 export const threadTools: McpTool[] = [
   {
     name: 'thread_list',
     description: "List sand's threads, newest first, with each one's status.",
     input: listInput,
-    parts: [{ feature: 'pcs', description: "It lists the threads on all your reachable PCs; pc names the PC a thread is on when it isn't this one." }],
+    parts: [{ feature: 'pcs', description: 'Covers all your reachable PCs.' }],
     access: 'read',
     group: group.name,
     run: (input, { call }) => call(threadList, input),
@@ -128,8 +128,7 @@ export const threadTools: McpTool[] = [
   {
     name: 'thread_start',
     description: [
-      'Start a new sand thread with a first message: user-facing work that the user sees in their thread list and can join. It works on its own. Returns its id at once.',
-      'Start one when the user asks for a thread; to hand off work of your own, start a subagent with the agent tool instead.',
+      'Start a user-facing sand thread that works on its own; returns its id at once. Only when the user asks for one; hand off your own work to a subagent instead.',
       `${replies}.`,
     ].join(' '),
     input: startInput,
@@ -138,7 +137,7 @@ export const threadTools: McpTool[] = [
       {
         feature: 'worktrees',
         fields: ['worktree', 'branch', 'from'],
-        description: 'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
+        description: 'For parallel work, set worktree instead of having it run git worktree add.',
       },
     ],
     access: 'operate',
@@ -166,7 +165,7 @@ export const threadTools: McpTool[] = [
   {
     name: 'thread_wait',
     description:
-      "Wait until a thread is done or waits on the user, and get its status and reply. The status is running when it timed out, waiting when it needs the user's answer in sand",
+      'Wait until a thread is done or waits on the user, and get its status and reply',
     input: waitInput,
     access: 'read',
     group: group.name,
@@ -183,7 +182,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof stopInput>,
   {
     name: 'thread_pending',
-    description: 'Withdraw, hold or release a message that waits for a thread: one thread_send steered or queued',
+    description: 'Withdraw, hold or release a message thread_send left waiting for a thread',
     input: pendingInput,
     access: 'operate',
     group: group.name,
@@ -191,9 +190,9 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof pendingInput>,
   {
     name: 'thread_update',
-    description: 'Rename, pin, snooze or archive a thread, or change its model, effort or fast mode; returns the thread as thread_list shows it.',
+    description: 'Rename, pin, snooze or archive a thread, or change its model, effort or fast mode.',
     input: updateInput,
-    parts: [{ feature: 'worktrees', fields: ['worktree', 'branch'], description: 'With worktree, it moves the thread into its own git worktree and branch.' }],
+    parts: [{ feature: 'worktrees', fields: ['worktree', 'branch'] }],
     access: 'operate',
     group: group.name,
     run: ({ thread, snoozeUntil, fast, ...patch }, { call }) =>
@@ -207,7 +206,7 @@ export const threadTools: McpTool[] = [
   {
     name: 'chat_compact',
     description:
-      "Compact a thread's or bot's chat now instead of waiting for it to compact by itself: summarize its earlier conversation, so its next turn carries on from the summary. The chat must be idle. Returns its context size in tokens before and after",
+      "Compact an idle thread's or bot's chat now: summarize its earlier conversation so its next turn carries on from the summary",
     input: compactInput,
     feature: 'compaction',
     access: 'operate',
@@ -217,9 +216,7 @@ export const threadTools: McpTool[] = [
   {
     name: 'history_read',
     description: [
-      'Read or search the history of a thread, a bot, or with neither your own: messages, actions and notifications, including what compaction or a model switch dropped from your context.',
-      'Items have a seq, time and turn; more means there are items past the page (older, or newer when after is set).',
-      'Pass item to read one in full; a long one comes in parts, continued from nextOffset.',
+      'Read or search the history of a thread, a bot, or with neither your own, including what compaction or a model switch dropped from your context.',
     ].join(' '),
     input: historyInput,
     access: 'read',

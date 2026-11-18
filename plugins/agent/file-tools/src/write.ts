@@ -16,7 +16,7 @@ const writeKeepingEncoding = async (path: string, content: string) => {
 
 export const write: Tool<typeof input> = {
   name: 'write',
-  description: 'Create or overwrite a file with the given contents. Parent directories are created as needed.',
+  description: 'Create or overwrite a file, making parent folders as needed.',
   input,
   needs: ['pc'],
   act: ({ path }) => ({ effect: 'write', paths: [path], summary: `Write ${path}` }),

@@ -10,7 +10,7 @@ const before = "Some earlier jobs may be missing; find their results in this thr
 
 export const listTool = (sessions: Sessions, store: Store, started: number): Tool<typeof input> => ({
   name: 'jobs',
-  description: "List the background commands this thread started: id, status, label and latest note (the last output line).",
+  description: "List this thread's background commands with their status and last output line.",
   group,
   input,
   effect: 'read',

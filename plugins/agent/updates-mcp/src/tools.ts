@@ -13,14 +13,12 @@ const installInput = onPc.extend({ build: z.string().min(1).describe("The build 
 
 const channelInput = onPc.extend({ channel: z.enum(['release', 'nightly', 'dev'] satisfies UpdateChannel[]).describe('release: stable releases; nightly: daily builds; dev: every change') })
 
-const stateNote = 'Returns the update state: the running build, the newest release, whether it is available, and the install phase.'
-
 const onOtherPcs = { feature: 'pcs', fields: ['pc' as const] }
 
 const tools = [
   {
     name: 'update_status',
-    description: `See which sand build a PC runs and whether a newer one is out. ${stateNote}`,
+    description: 'See which sand build a PC runs and whether a newer one is out.',
     input: onPc,
     parts: [onOtherPcs],
     access: 'read',
@@ -29,7 +27,7 @@ const tools = [
   } satisfies McpTool<typeof onPc>,
   {
     name: 'update_check',
-    description: `Ask GitHub for the newest sand release now. ${stateNote}`,
+    description: 'Check GitHub for the newest sand release now.',
     input: onPc,
     parts: [onOtherPcs],
     access: 'read',
@@ -38,7 +36,7 @@ const tools = [
   } satisfies McpTool<typeof onPc>,
   {
     name: 'update_install',
-    description: `Download and install a newer sand build, then restart into it once running threads finish. It returns at once; follow the phase with update_status. ${stateNote}`,
+    description: 'Install a newer sand build and restart into it once running threads finish. Returns at once; follow it with update_status.',
     input: installInput,
     parts: [{ ...onOtherPcs, description: 'Update other PCs before this one, since this PC restarts.' }],
     access: 'operate',
@@ -47,7 +45,7 @@ const tools = [
   } satisfies McpTool<typeof installInput>,
   {
     name: 'update_restart',
-    description: `Restart into an installed update now instead of waiting for running threads to finish. Those threads stop, you too if you run on that PC. ${stateNote}`,
+    description: 'Restart into an installed update now, stopping running threads, you too if you run on that PC.',
     input: onPc,
     parts: [onOtherPcs],
     access: 'operate',
@@ -56,7 +54,7 @@ const tools = [
   } satisfies McpTool<typeof onPc>,
   {
     name: 'update_later',
-    description: `Skip the newest release: stop offering it until a newer one is out. ${stateNote}`,
+    description: 'Skip the newest release until a newer one is out.',
     input: onPc,
     parts: [onOtherPcs],
     access: 'operate',
@@ -65,7 +63,7 @@ const tools = [
   } satisfies McpTool<typeof onPc>,
   {
     name: 'update_channel',
-    description: `Choose which releases a PC follows, and check that channel. ${stateNote}`,
+    description: 'Choose which releases a PC follows.',
     input: channelInput,
     parts: [onOtherPcs],
     access: 'operate',

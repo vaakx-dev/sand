@@ -16,7 +16,7 @@ const STOP_GRACE_MS = 10_000
 const MAX_OUTPUT = 30_000
 const PROGRESS_CHARS = 120
 
-const DESCRIPTION = `Run JavaScript that calls your other tools. Their results stay inside the script; only what it prints or returns reaches you. Use it instead of several direct calls when you need only part of their output, like reading many files and printing just the lines that match. \`await tools.read({ path })\` returns the tool's text and throws if it fails. Plain tool names, no mcp__ prefix. It is not Node: no require, fs or fetch; tools are its only access to files, commands and the web.`
+const DESCRIPTION = "Run JavaScript that calls your other tools, like `await tools.read({ path })`, which returns the tool's text and throws on failure. Only what it prints or returns reaches you. Use it over several calls when you need only part of their output. Not Node: no require, fs or fetch."
 
 const ENVIRONMENT = `Before you look anything up, write the list of facts you need, then fetch them all in one ${NAME} call that prints only what matters. Follow up only on what it turns up.`
 

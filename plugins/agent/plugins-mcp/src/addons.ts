@@ -16,7 +16,7 @@ const groupOf = (ready: Addon[]): McpGroup => ({
 })
 
 const RELOADS =
-  'sand then reloads its plugins into a fresh runtime and returns once it is up, naming any plugin that failed to load. After this batch of tool calls your turn moves there and carries on with the new tools, so go on and use them in this turn'
+  'sand then reloads its plugins; after this batch of tool calls your turn carries on with the new tools'
 
 const featureOf = ({ id, label, summary, parent, needs, on }: Feature) => ({ id, label, summary, ...(parent && { parent }), ...(needs.length && { needs }), on })
 
@@ -40,7 +40,7 @@ const listInput = z.object({})
 const listTool: McpTool<typeof listInput> = {
   name: 'addon_list',
   description:
-    "List sand's add-ons, installed or available to install, and its other features with whether each is on. An add-on whose parent or needs are off stays off until they are on. When the user asks for something sand can't do yet, look here for an add-on that does it",
+    "List sand's add-ons, installed or not, and its other features with whether each is on. When the user asks for something sand can't do yet, look here for an add-on that does it",
   input: listInput,
   access: 'read',
   group: GROUP,
@@ -87,12 +87,12 @@ const setTool: McpTool<typeof setInput> = {
   run: async (input, { call }) => reloaded(call, await call(featuresSet, input)),
 }
 
-const sourceAddInput = z.object({ source: z.string().min(1).describe('A GitHub repository like owner/repo, or its github.com address, whose releases publish sand add-ons; or the address of a community add-on server, just the site like addons.example.org') })
+const sourceAddInput = z.object({ source: z.string().min(1).describe('A GitHub repository like owner/repo, or an add-on server like addons.example.org') })
 
 const sourceAddTool: McpTool<typeof sourceAddInput> = {
   name: 'addon_source_add',
   description:
-    "Add a source of add-ons besides sand's own, when the user asks: a GitHub repository whose releases publish add-ons the way sand's do, or a community add-on server. sand finds and checks its catalog before adding it, and its add-ons show in addon_list. Add-ons from other people run with full access to this PC, like any plugin, so add only sources the user named and tell them that",
+    "Add a source of add-ons besides sand's own. Its add-ons get full access to this PC, so add only sources the user named, and tell them that",
   input: sourceAddInput,
   access: 'operate',
   group: GROUP,
@@ -103,7 +103,7 @@ const sourceRemoveInput = z.object({ id: z.string().min(1).describe('A source id
 
 const sourceRemoveTool: McpTool<typeof sourceRemoveInput> = {
   name: 'addon_source_remove',
-  description: "Remove a source of add-ons the user added, as they asked. Add-ons already installed from it stay until removed, but get no updates. sand's own source can't be removed",
+  description: 'Remove an add-on source the user added. Add-ons installed from it stay, without updates',
   input: sourceRemoveInput,
   access: 'operate',
   group: GROUP,
