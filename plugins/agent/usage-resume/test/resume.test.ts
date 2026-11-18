@@ -60,7 +60,7 @@ test('a chat out of usage keeps what is sent meanwhile, continues at the reset, 
   expect(sent()).toEqual(['Start', continued, 'And this'])
 })
 
-test('cancelling a chat�s resume keeps what waits until the reset, then sends it without continuing', async () => {
+test('cancelling a chat’s resume keeps what waits until the reset, then sends it without continuing', async () => {
   sand = await start([[said('Half'), limit(2_500)], [said('Answered.')]])
   const chat = sand.chat('fake/m')
   await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })

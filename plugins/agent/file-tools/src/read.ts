@@ -24,7 +24,7 @@ export const readTool = (attachments: () => Attachments): Tool<typeof input> => 
     const full = resolve(cwd, path)
     if (await isFolder(full)) throw new Error(`${path} is a directory`)
     if (attachments().isMedia(full)) return [await attachments().fromFile(full)]
-    const text = await readText(full)
+    const { content: text } = await readText(full)
     if (text.slice(0, 8192).includes('\0')) throw new Error(`${path} is a binary file`)
     const lines = text.split(/\r?\n/)
     const shown = lines.slice(offset - 1, offset - 1 + limit)
