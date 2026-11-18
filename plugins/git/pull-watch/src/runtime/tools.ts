@@ -16,7 +16,7 @@ const listed = (follows: Follows, thread: string) => {
 const followTool = (follows: Follows): Tool<typeof input> => ({
   name: 'pr_follow',
   description:
-    "Get a turn in this chat when a pull request's CI finishes, a review or comment lands, or it merges, closes or conflicts. A chat already follows the PRs it opens; use this for others.",
+    "Get a turn in this chat when a pull request's CI finishes, a review or comment lands, or it closes or conflicts. The chat is archived once every PR it follows has merged. A chat already follows the PRs it opens; use this for others.",
   input,
   effect: 'read',
   needs: ['thread'],

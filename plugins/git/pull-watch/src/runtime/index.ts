@@ -19,7 +19,7 @@ import { wakeThread } from './wake'
 export default definePlugin({
   name: 'pull-watch',
   description:
-    "Lets a thread keep up with its pull requests: it follows the PRs it opens, a cheap watcher follows each one with no model, and the thread gets a turn when CI finishes, a review or comment lands, or the PR closes or conflicts. Once every PR a thread follows has merged or closed and one merged, the thread is archived, after its turn if it is working",
+    "Lets a thread keep up with its pull requests: it follows the PRs it opens, a cheap watcher follows each one with no model, and the thread gets a turn when CI finishes, a review or comment lands, or the PR closes or conflicts. Once the last PR it follows merges, the thread is archived, after its turn if it is working",
   inject: { watches, sessions, turns, github },
   config: z
     .object({
