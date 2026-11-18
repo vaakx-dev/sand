@@ -1,6 +1,7 @@
 import type { Sessions } from '@sand/chats/contract'
 import type { BackgroundJobs } from '@sand/jobs/contract'
-import { outputTail, type ShellRunner } from '@sand/shell/contract'
+import { outputTail } from '@sand/command-keeper/contract'
+import type { ShellRunner } from '@sand/shell/contract'
 import type { Context } from 'drydock'
 import { commandWork } from './work'
 
@@ -24,6 +25,7 @@ export const adoptCommands = (ctx: Context, { jobs, runner, sessions }: Adopting
       cwd: command.cwd,
       ...(command.origin && { origin: command.origin }),
       work: commandWork(ctx, output, (_, onText) => runner.attach(command, onText)),
+      outlives: runner.outlives,
       read: output.read,
       output: output.last,
     })

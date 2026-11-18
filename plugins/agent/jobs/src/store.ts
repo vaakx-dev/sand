@@ -44,7 +44,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
   })
   ctx.effect(() => () => {
     disposing = true
-    if (!handing) stopNoted(running(), restarted)
+    if (!handing) stopNoted(running().filter(({ spec }) => !spec.outlives()), restarted)
   })
 
   ctx.on(sessionRemove, id => {

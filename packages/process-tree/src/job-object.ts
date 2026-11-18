@@ -44,7 +44,7 @@ const processIdsIn = (api: Kernel32, job: Job): number[] => {
   }
 }
 
-export const jobObject = (pid: number, killOnClose: boolean) => {
+const jobObject = (pid: number, killOnClose: boolean) => {
   const api = (kernel32 ??= load())
   const job = api.CreateJobObjectW(null, null)
   if (!job) return undefined
@@ -65,3 +65,7 @@ export const jobObject = (pid: number, killOnClose: boolean) => {
     },
   }
 }
+
+type JobObject = NonNullable<ReturnType<typeof jobObject>>
+
+export { jobObject, type JobObject }

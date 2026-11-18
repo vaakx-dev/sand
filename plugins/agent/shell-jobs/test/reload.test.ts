@@ -27,7 +27,7 @@ let running: Sand[]
 
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-reload-'))
-  host = await startHost(['agent/shell'])
+  host = await startHost(home, ['agent/command-keeper'])
   running = []
 })
 

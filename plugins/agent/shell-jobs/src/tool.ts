@@ -1,6 +1,7 @@
 import type { Sessions } from '@sand/chats/contract'
 import type { BackgroundJobs, Job } from '@sand/jobs/contract'
-import { type CommandSpec, outputTail, type ShellRunner } from '@sand/shell/contract'
+import { type CommandSpec, outputTail } from '@sand/command-keeper/contract'
+import type { ShellRunner } from '@sand/shell/contract'
 import type { Tool } from '@sand/tools/contract'
 import { oneLine } from '@sand/util'
 import type { Context } from 'drydock'
@@ -33,6 +34,7 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
         ctx,
         commandWork(ctx, output, (started, onText) => runner.start(commandOf(started), onText)),
       ),
+      outlives: runner.outlives,
       read: output.read,
       output: output.last,
     })

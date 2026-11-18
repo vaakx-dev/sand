@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/command-keeper": "workspace:*",
     "@sand/jobs": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/shell": "workspace:*",

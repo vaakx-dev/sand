@@ -1,5 +1,6 @@
 import { type Job, jobNote, jobOutput, type JobWork } from '@sand/jobs/contract'
-import { type OutputTail, shellReady, type ShellProcess } from '@sand/shell/contract'
+import type { OutputTail } from '@sand/command-keeper/contract'
+import { shellReady, type ShellProcess } from '@sand/shell/contract'
 import type { Context } from 'drydock'
 
 type Launch = (job: Job, onText: (text: string) => void) => ShellProcess

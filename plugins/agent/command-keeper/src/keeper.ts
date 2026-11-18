@@ -1,16 +1,11 @@
-import type { CommandSpec, KeptCommand } from './contract'
+import { start } from '@sand/process-tree'
+import type { CommandSpec, KeptCommand, Launch } from './contract'
 import { outputTail, type OutputTail } from './output'
-import { start } from './start'
 
-export interface Launch extends CommandSpec {
-  argv: string[]
-  verbatim: boolean
-}
-
-export interface Hooks {
+interface KeeperHooks {
   started(command: KeptCommand): void
   output(id: string, text: string): void
-  exit(id: string, code: number): void
+  exit(last: KeptCommand, code: number): void
 }
 
 interface Held {
@@ -25,9 +20,9 @@ const keptOf = ({ spec, pid, started, output }: Held): KeptCommand => ({ ...spec
 
 export class Keeper {
   readonly #held = new Map<string, Held>()
-  readonly #hooks: Hooks
+  readonly #hooks: KeeperHooks
 
-  constructor(hooks: Hooks) {
+  constructor(hooks: KeeperHooks) {
     this.#hooks = hooks
   }
 
@@ -45,7 +40,7 @@ export class Keeper {
     this.#held.set(spec.id, held)
     void running.exited.then(code => {
       this.#held.delete(spec.id)
-      this.#hooks.exit(spec.id, code)
+      this.#hooks.exit(keptOf(held), code)
     })
     this.#hooks.started(keptOf(held))
     return running.pid
@@ -55,11 +50,15 @@ export class Keeper {
     return [...this.#held.values()].map(keptOf)
   }
 
+  holds() {
+    return this.#held.size > 0
+  }
+
   async stop(id: string) {
     await this.#held.get(id)?.kill()
   }
 
-  close() {
-    for (const held of this.#held.values()) void held.kill()
+  async close() {
+    await Promise.all([...this.#held.values()].map(held => held.kill()))
   }
 }
