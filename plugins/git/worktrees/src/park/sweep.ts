@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { dropKeptHead } from '../remove/kept-head'
+import { clearLeftover } from '../remove/leftover'
 import { emptyStaleTrash } from '../remove/trash'
 import { dayMs, tidyWorktree } from './tidy'
 
@@ -14,8 +15,11 @@ const forget = async (deps: WorktreeDeps, record: WorktreeRecord) => {
   await deps.store.delete(record.path)
 }
 
+const clearRemoved = (deps: WorktreeDeps, record: WorktreeRecord) => deps.queue(record.main, async () => (record.removed ? clearLeftover(record.path) : undefined))
+
 const sweepRecord = async (deps: WorktreeDeps, record: WorktreeRecord, now: number) => {
   if (!record.removed) return tidyWorktree(deps, record, now)
+  await clearRemoved(deps, record)
   if (now - record.removed >= deps.keepDays.removed * dayMs) await forget(deps, record)
 }
 
