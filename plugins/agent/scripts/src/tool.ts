@@ -18,7 +18,7 @@ const PROGRESS_CHARS = 120
 
 const DESCRIPTION = `Run JavaScript that calls your other tools. Their results stay inside the script; only what it prints or returns reaches you. Use it instead of several direct calls when you need only part of their output, like reading many files and printing just the lines that match. \`await tools.read({ path })\` returns the tool's text and throws if it fails. Plain tool names, no mcp__ prefix. It is not Node: no require, fs or fetch; tools are its only access to files, commands and the web.`
 
-const ENVIRONMENT = `Before reading or searching several files directly, consider one ${NAME} call that prints only the lines you need.`
+const ENVIRONMENT = `Before you look anything up, write the list of facts you need, then fetch them all in one ${NAME} call that prints only what matters. Follow up only on what it turns up.`
 
 const input = z.object({
   title: z.string().describe('Shown to the user'),
