@@ -154,6 +154,17 @@ test('only agents defined in the home folder can be named, and they run with the
   expect(bodies('child')[0]!.system[0]!.text).toContain('# Your role\n\nOnly look, never touch.')
 })
 
+test("a subagent's prompt opens with its own intro in place of the thread's and keeps the shared rules", async () => {
+  await start([delegate(), said('Started.'), said('Noted.')], [said('Done.')], [], ['agent/vstack'])
+  await sand.turns.run(sand.chat('parent/m'), 'Go')
+
+  await until(() => sand.requests('child').length > 0)
+  const system = bodies('child')[0]!.system[0]!.text
+  expect(system).toStartWith('You are a sand subagent')
+  expect(system).not.toContain('You are sand, an agent')
+  expect(system).toContain('## Be straight with the user')
+})
+
 test('a subagent started with a level runs on the model set for that level, and a light one is told to report rather than guess', async () => {
   await start([delegate({ model: undefined, level: 'light' }), said('Started.'), said('Noted.')], [said('Found nothing.')])
   await sand.ask(levelSet, { level: 'sub', model: 'child/m' })

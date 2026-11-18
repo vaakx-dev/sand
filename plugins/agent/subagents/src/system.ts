@@ -10,9 +10,9 @@ Finish the task. Your final reply goes back to the agent that started you. Put i
 const finder = `You were started to find things: files, docs, web pages, or what is on a screen. Gather what is relevant to the task and report it. When you can't find something, say so rather than guessing.`
 
 export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
-  ctx.on(promptBase, async (_, session) => {
+  ctx.on(promptBase, async ([, ...shared], session) => {
     const info = meta(session)
     if (!info || session.kind !== 'agent') return undefined
     const role = info.name && (await resolve(session.cwd, session.project)).get(info.name)?.prompt
-    return [preamble, ...(info.level === 'light' ? [finder] : []), ...(role ? [`# Your role\n\n${role}`] : [])]
+    return [preamble, ...(info.level === 'light' ? [finder] : []), ...(role ? [`# Your role\n\n${role}`] : []), ...shared]
   })
