@@ -1,34 +1,31 @@
 import { pathKey } from '@sand/git/contract'
 import type { WorktreeDeps } from '../deps'
-import { sizeOf } from './size'
+import { type SizeWalk, walkSizes } from './size'
 import { liveRecords, worktreeStatuses } from './status'
 
 export const createSurvey = (deps: WorktreeDeps) => {
   const known = new Map<string, number>()
-  const counting = new Map<string, Promise<number>>()
+  let walk: SizeWalk | undefined
+  let counting: Promise<Record<string, number>> | undefined
 
-  const count = (folder: string) => {
-    const key = pathKey(folder)
-    const pending = counting.get(key)
-    if (pending) return pending
-    const next = sizeOf(folder)
-      .then(size => {
-        known.set(key, size)
-        return size
-      })
-      .finally(() => counting.delete(key))
-    counting.set(key, next)
-    return next
+  const count = async () => {
+    const folders = (await liveRecords(deps)).map(record => record.path)
+    if (!folders.length) return {}
+    walk = walkSizes(folders, (folder, size) => known.set(pathKey(folder), size))
+    return walk.sizes
   }
 
   return {
     status: () => worktreeStatuses(deps),
     known: (folder: string) => known.get(pathKey(folder)),
-    async sizes() {
-      const sizes: Record<string, number> = {}
-      for (const record of await liveRecords(deps)) sizes[record.path] = await count(record.path)
-      return sizes
+    sizes() {
+      counting ??= count().finally(() => {
+        counting = undefined
+        walk = undefined
+      })
+      return counting
     },
+    close: () => walk?.stop(),
   }
 }
 

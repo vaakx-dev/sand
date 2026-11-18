@@ -8,6 +8,7 @@ import type { Plan, Served } from '../sandbox'
 import { interleave, repeated, type Row, type Run, type Runs, type Suite, type Tree } from './row'
 import { usage } from './process'
 import { allOrNone } from './together'
+import { listed, makeWorktrees, WORKTREES, writeRecords } from './worktrees'
 
 interface Prepared {
   tree: Tree
@@ -53,6 +54,8 @@ const rows: Row[] = [
   { name: 'CPU for one reply', unit: 'ms', rule: 'timing', read: run => run.marks.get('reply CPU') },
   { name: 'search time on 100k messages', unit: 'ms', rule: 'timing', read: run => run.marks.get('search') },
   { name: 'database size per 10k messages', unit: 'bytes', rule: 'exact', read: run => run.marks.get('database per 10k') },
+  { name: `worktree list with sizes on ${WORKTREES} worktrees`, unit: 'ms', rule: 'timing', read: run => run.marks.get('worktree list') },
+  { name: 'slowest other reply during a worktree list', unit: 'ms', rule: 'timing', read: run => run.marks.get('reply during worktree list') },
 ]
 
 const removeAll = (homes: string[]) => {
@@ -186,11 +189,33 @@ const search = async (prepared: Prepared[], runs: Runs, rounds: number) => {
   for (const { tree, bulk } of prepared) runs.add(tree).marks.set('database per 10k', (databaseBytes(bulk) * MESSAGES_PER_ROW) / messagesIn(bulk))
 }
 
+const worktreeList = async (prepared: Prepared[], runs: Runs, rounds: number) => {
+  const fixture = makeWorktrees()
+  const homes = prepared.map(each => copy(each, runs.add(each.tree)))
+  const browser = await startPhone({ cpuSlowdown: 1 })
+  try {
+    for (const { home } of homes) writeRecords(home, fixture.records)
+    const pages = await Promise.all(homes.map(async ({ tree, home }) => ({ tree, page: await pair(browser.context, await tree.sand.serve(home)) })))
+    await Promise.all(pages.map(({ page }) => listed(page)))
+    await interleave(repeated(pages, rounds), async ({ tree, page }) => {
+      const { listMs, slowestReplyMs } = await listed(page)
+      const run = runs.add(tree)
+      run.marks.set('worktree list', listMs)
+      run.marks.set('reply during worktree list', slowestReplyMs)
+    })
+  } finally {
+    await browser.close()
+    await Promise.all(homes.map(({ tree, home }) => tree.sand.stop(home)))
+    removeAll([...homes.map(({ home }) => home), fixture.root])
+  }
+}
+
 const measure = async (trees: Tree[], runs: Runs, rounds: number) => {
   const prepared = await allOrNone(trees.map(prepare), async ({ box, bulk }) => removeAll([box, bulk]))
   try {
     await serving(prepared, runs, rounds)
     await search(prepared, runs, rounds)
+    await worktreeList(prepared, runs, rounds)
   } finally {
     removeAll(prepared.flatMap(({ box, bulk }) => [box, bulk]))
   }
