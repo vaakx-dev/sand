@@ -79,6 +79,7 @@ export default definePlugin({
     }
 
     const survey = createSurvey(deps)
+    ctx.effect(() => survey.close)
     const moves = createMoves(deps, () => ctx.get(turns), () => ctx.busy())
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input), move: moves.move })

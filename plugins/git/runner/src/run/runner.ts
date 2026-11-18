@@ -2,6 +2,7 @@ import type { GitRunner } from '../contract'
 import { classify } from './classify'
 import { commits } from './commits'
 import { problem, problemOf } from './error'
+import { inBackground } from './limit'
 import { gitLines } from './lines'
 import { remoteUrl } from './remote'
 import { git, gitMaybe, gitOk, gitOutput } from './run'
@@ -18,4 +19,5 @@ export const runner: GitRunner = {
   problem,
   remoteUrl,
   withTempIndex,
+  background: inBackground,
 }

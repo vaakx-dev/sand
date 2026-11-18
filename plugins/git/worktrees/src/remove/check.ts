@@ -1,4 +1,4 @@
-import { pathKey } from '@sand/git/contract'
+import { type GitWorktree, pathKey } from '@sand/git/contract'
 import type { GitRunner } from '@sand/git-runner/contract'
 import { plural } from '@sand/util'
 import type { RemoveCheck } from '../contract'
@@ -20,9 +20,9 @@ export const unpushedCommits = async (git: GitRunner, dir: string, rev: string, 
   return Number(count) || 0
 }
 
-const checkedOut = async (deps: WorktreeDeps, record: WorktreeRecord): Promise<Tip> => {
+const checkedOut = (record: WorktreeRecord, trees: GitWorktree[]): Tip => {
   const key = pathKey(record.path)
-  const tree = (await deps.repos.worktrees(record.main)).find(found => pathKey(found.path) === key)
+  const tree = trees.find(found => pathKey(found.path) === key)
   return { exists: true, ...(tree?.head && { head: tree.head }), ...(tree?.branch && { branch: tree.branch }) }
 }
 
@@ -31,7 +31,9 @@ const branchTip = async (deps: WorktreeDeps, { main, branch }: WorktreeRecord): 
   return { exists: false, ...(head && { head }), ...(branch && { branch }) }
 }
 
-export const tipOf = (deps: WorktreeDeps, record: WorktreeRecord) => (isWorktree(record.path) ? checkedOut(deps, record) : branchTip(deps, record))
+export const tipIn = async (deps: WorktreeDeps, record: WorktreeRecord, trees: GitWorktree[]) => (isWorktree(record.path) ? checkedOut(record, trees) : branchTip(deps, record))
+
+export const tipOf = async (deps: WorktreeDeps, record: WorktreeRecord) => tipIn(deps, record, await deps.repos.worktrees(record.main))
 
 const lostCommits = (git: GitRunner, record: WorktreeRecord, { exists, head, branch }: Tip) => {
   if (exists) return unpushedCommits(git, record.path, 'HEAD', branch)

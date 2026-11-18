@@ -42,6 +42,7 @@ export interface GitRunner {
   problem(error: unknown): GitProblem | undefined
   remoteUrl(folder: string): Promise<string | undefined>
   withTempIndex<T>(cwd: string, run: (env: GitEnv) => Promise<T>): Promise<T>
+  background<T>(work: () => Promise<T>): Promise<T>
 }
 
 export const gitRunner = service<GitRunner>('git')
