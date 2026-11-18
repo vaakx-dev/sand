@@ -157,7 +157,7 @@ describe('updating a real install', () => {
       const next = await laterBuild()
       github.point('dev', current.folder)
       await installed(target, 'dev', current)
-      const sent = await ask<{ thread: string; turn: string }>(target, 'thread.start', { cwd: target.home, model: 'replay/m', prompt: 'Open the gate', origin: 'user', clientRequestId: crypto.randomUUID() })
+      const sent = await ask<{ thread: string; turn: string }>(target, 'thread.start', { cwd: target.home, model: 'replay/m', title: 'Gate', prompt: 'Open the gate', origin: 'user', clientRequestId: crypto.randomUUID() })
       expect(await ask(target, 'thread.wait', { session: sent.thread, until: 'attention', timeoutMs: 1_000 })).toMatchObject({ turn: sent.turn, status: 'running' })
 
       github.point('dev', next.folder)
