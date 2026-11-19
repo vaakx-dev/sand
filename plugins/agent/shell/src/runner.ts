@@ -12,4 +12,5 @@ export const shellRunnerOf = (shell: Shell, commands: Commands): ShellRunner => 
   start: (spec, onText) => commands.start({ ...spec, argv: shell.argv(spec.command), verbatim: shell.verbatim ?? false }, onText),
   attach: commands.attach,
   follow: commands.follow,
+  outlives: commands.outlives,
 })

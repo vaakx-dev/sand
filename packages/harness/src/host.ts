@@ -1,3 +1,4 @@
+import { cli } from '@sand/config/contract'
 import { createHandlers, hub, type Hub, type WireEvent } from '@sand/host-hub/contract'
 import { createHostChannel, type HostChannel, type HostMessage, type RuntimeMessage, runtimes, type Runtimes } from '@sand/host-runtimes/contract'
 import { errorMessage } from '@sand/util'
@@ -54,7 +55,7 @@ const answerOf = async (handlers: Handlers, runtime: string, message: RuntimeMes
   }
 }
 
-export const startHost = async (plugins: string[] = []) => {
+export const startHost = async (home: string, plugins: string[] = []) => {
   const app = createApp()
   const handlers = createHandlers()
   const linked = new Map<string, (message: HostMessage) => void>()
@@ -65,12 +66,14 @@ export const startHost = async (plugins: string[] = []) => {
     return receive !== undefined
   }
 
+  app.provide(cli, { place: 'host', home, cwd: home, builtins, safe: false, args: [], exit() {} })
   app.provide(hub, hubOf(handlers))
   app.provide(runtimes, runtimesOf(tell))
   for (const plugin of plugins) app.load(await hostEntry(plugin))
   await app.settled()
 
   return {
+    app,
     link(): HostLink {
       const runtime = Bun.randomUUIDv7()
       const host = createHostChannel(message => void answerOf(handlers, runtime, message).then(answer => answer && host.receive(answer)))

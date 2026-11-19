@@ -103,6 +103,10 @@
         "@sand/util": "workspace:*",
       },
     },
+    "packages/process-tree": {
+      "name": "@sand/process-tree",
+      "version": "0.0.0",
+    },
     "packages/reactive": {
       "name": "@sand/reactive",
       "version": "0.0.0",
@@ -200,6 +204,26 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/tools": "workspace:*",
+      },
+    },
+    "plugins/agent/command-keeper": {
+      "name": "@sand/command-keeper",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/config": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
+        "@sand/process-tree": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/harness": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/tools": "workspace:*",
       },
     },
@@ -780,10 +804,11 @@
       "name": "@sand/shell",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/command-keeper": "workspace:*",
         "@sand/engine": "workspace:*",
-        "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/logins": "workspace:*",
+        "@sand/process-tree": "workspace:*",
         "@sand/processes": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
@@ -796,6 +821,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/chats": "workspace:*",
+        "@sand/command-keeper": "workspace:*",
         "@sand/jobs": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/shell": "workspace:*",
@@ -3602,6 +3628,8 @@
 
     "@sand/codex": ["@sand/codex@workspace:plugins/core/codex"],
 
+    "@sand/command-keeper": ["@sand/command-keeper@workspace:plugins/agent/command-keeper"],
+
     "@sand/compaction": ["@sand/compaction@workspace:plugins/agent/compaction"],
 
     "@sand/composer": ["@sand/composer@workspace:plugins/ui/chat/composer"],
@@ -3821,6 +3849,8 @@
     "@sand/plugins-mcp": ["@sand/plugins-mcp@workspace:plugins/agent/plugins-mcp"],
 
     "@sand/print": ["@sand/print@workspace:plugins/core/print"],
+
+    "@sand/process-tree": ["@sand/process-tree@workspace:packages/process-tree"],
 
     "@sand/processes": ["@sand/processes@workspace:plugins/agent/processes"],
 

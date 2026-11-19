@@ -1,4 +1,4 @@
-import { drain, spawn, stream, unixNewlines, type SpawnOptions } from './process'
+import { drain, spawn, type SpawnOptions, stream, unixNewlines } from '@sand/process-tree'
 
 export type Stop = 'silence' | 'limit'
 

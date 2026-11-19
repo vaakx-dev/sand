@@ -7,7 +7,7 @@ import { shellReady } from './contract'
 import type { Shell } from './detect'
 import { liveTail } from './live'
 import { loginEnv, loginsAct, loginsField } from './logins'
-import { agentEnv, type Track } from './process'
+import type { Track } from '@sand/process-tree'
 import { run, type Stop, type Timeouts } from './run'
 
 export interface Limits {
@@ -21,6 +21,8 @@ interface ShellInput {
   silence_ms?: number | undefined
   logins?: Record<string, string> | undefined
 }
+
+const AGENT_ENV = { CI: '1' }
 
 const stopGrace = 30_000
 
@@ -76,7 +78,7 @@ export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor 
     async run({ command, silence_ms: silence = limits.silence_ms, logins: wanted }, context) {
       await ctx.waterfall(shellReady, context.cwd, context.signal, context.progress)
       context.signal.throwIfAborted()
-      const env = logins && wanted ? { ...agentEnv, ...(await loginEnv(logins, wanted, context.conversation)) } : agentEnv
+      const env = logins && wanted ? { ...AGENT_ENV, ...(await loginEnv(logins, wanted, context.conversation)) } : AGENT_ENV
       const timeouts = { silence, limit: limits.limit_ms }
       const tail = liveTail(context.progress, redact)
       const { code, stopped, stdout, stderr } = await run(shell.argv(command), {

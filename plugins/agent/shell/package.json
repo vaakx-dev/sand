@@ -8,17 +8,17 @@
   },
   "sand": {
     "feature": "shell",
-    "host": "./src/host/index.ts",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Shell tool",
     "summary": "Runs shell commands for the agent"
   },
   "dependencies": {
+    "@sand/command-keeper": "workspace:*",
     "@sand/engine": "workspace:*",
-    "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/logins": "workspace:*",
+    "@sand/process-tree": "workspace:*",
     "@sand/processes": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",

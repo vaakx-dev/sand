@@ -1,15 +1,11 @@
 import type { Subprocess } from 'bun'
-import type { TrackedJob } from '@sand/processes/contract'
-import type { Dispose } from 'drydock'
-import { jobObject } from './job-object'
+import { jobObject, type JobObject } from './job-object'
 
 const windows = process.platform === 'win32'
 const taskkillWait = 5000
 const drainGrace = 500
 
 const noPrompts = { GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', GIT_EDITOR: 'true', GIT_PAGER: 'cat', PAGER: 'cat' }
-
-export const agentEnv = { CI: '1' }
 
 export interface SpawnOptions {
   cwd: string
@@ -19,7 +15,7 @@ export interface SpawnOptions {
   track?: Track
 }
 
-export type Track = (pid: number, job?: TrackedJob) => Dispose | undefined
+export type Track = (pid: number, job?: JobObject) => (() => void) | undefined
 
 const taskkill = async (pid: number) => {
   const killer = Bun.spawn(['taskkill', '/pid', String(pid), '/T', '/F'], { stdio: ['ignore', 'ignore', 'ignore'], windowsHide: true })
@@ -27,7 +23,7 @@ const taskkill = async (pid: number) => {
   return code === 0
 }
 
-const windowsTree = (child: Subprocess, job: ReturnType<typeof jobObject>) => async () => {
+const windowsTree = (child: Subprocess, job: JobObject | undefined) => async () => {
   if (job) return void job.kill()
   if (!(await taskkill(child.pid))) child.kill('SIGKILL')
 }

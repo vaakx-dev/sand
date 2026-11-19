@@ -27,7 +27,7 @@ let running: Sand[]
 
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-reload-'))
-  host = await startHost(['agent/shell'])
+  host = await startHost(home, ['agent/command-keeper'])
   running = []
 })
 
@@ -95,8 +95,10 @@ test('background commands outlive a plugin reload: the fresh runtime lists, read
   await stopRuntime(old)
   const carried = fresh.sessions.require(thread.id)
 
+  const listed = () => fresh.app.get(backgroundJobs)!.list(thread.id).map(job => [job.id, job.status])
   expect(await answers(port)).toBe(true)
-  expect(fresh.app.get(backgroundJobs)!.list(thread.id).map(job => [job.id, job.status])).toEqual([
+  expect(await until(() => listed().length === 2)).toBe(true)
+  expect(listed()).toEqual([
     [site, 'running'],
     [build, 'running'],
   ])

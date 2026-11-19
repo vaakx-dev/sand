@@ -1,4 +1,4 @@
-import { drain, spawn, stream, unixNewlines, type SpawnOptions } from './process'
+import { drain, spawn, stream, unixNewlines, type SpawnOptions } from './tree'
 
 export const start = (argv: string[], onText: (text: string) => void, options: SpawnOptions) => {
   const { child, killTree } = spawn(argv, 'ignore', { ...options, killOnClose: true })

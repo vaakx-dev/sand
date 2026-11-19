@@ -30,6 +30,7 @@ export interface JobSpec {
   cwd: string
   origin?: string
   work: JobWork
+  outlives(): boolean
   read(cursor?: number): string | Promise<string>
   output(length: number): string
 }

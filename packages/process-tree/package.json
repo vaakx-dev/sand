@@ -1,0 +1,9 @@
+{
+  "name": "@sand/process-tree",
+  "version": "0.0.0",
+  "description": "Starts commands as process trees that stream their output and can be killed as a whole",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
