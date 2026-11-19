@@ -1,11 +1,49 @@
-import type { ViaReply } from '@sand/devices-contract'
+import { isPcUnavailable, type RelayChunk, viaClose } from '@sand/devices-contract'
+import { errorMessage } from '@sand/util'
 import { decodeBase64 } from './base64'
+import type { ViaRelay } from './relay'
 
-const bodyless = new Set([204, 205, 304])
-
-const bodyOf = (reply: ViaReply) => {
-  if (bodyless.has(reply.status)) return null
-  return reply.encoding === 'base64' ? decodeBase64(reply.body) : reply.body
+interface Fed {
+  relay: ViaRelay
+  stream: string
+  stop(): void
 }
 
-export const viaResponse = (reply: ViaReply) => new Response(bodyOf(reply), { status: reply.status, headers: reply.headers })
+export const fedBody = ({ relay, stream, stop }: Fed) => {
+  let controller: ReadableStreamDefaultController<Uint8Array> | undefined
+  let open = true
+
+  const finish = () => {
+    open = false
+    stop()
+  }
+
+  const close = () => {
+    if (!open) return
+    finish()
+    void relay.call(viaClose, { stream }).catch((error: unknown) => {
+      if (!isPcUnavailable(error)) console.error(`couldn't stop a reply through another PC: ${errorMessage(error)}`)
+    })
+  }
+
+  const readable = new ReadableStream<Uint8Array>({
+    start: started => void (controller = started),
+    cancel: close,
+  })
+
+  const take = (chunk: RelayChunk) => {
+    if (chunk.stream !== stream || !open) return
+    if ('data' in chunk) return controller?.enqueue(decodeBase64(chunk.data))
+    finish()
+    if ('done' in chunk) controller?.close()
+    else controller?.error(new Error(chunk.error))
+  }
+
+  const fail = (reason: unknown) => {
+    if (!open) return
+    controller?.error(reason)
+    close()
+  }
+
+  return { readable, take, fail }
+}

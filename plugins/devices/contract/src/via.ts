@@ -1,14 +1,14 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import { z } from 'zod'
+import type { RelayChunk } from './runtime/peers'
 
 export type ViaEncoding = 'utf8' | 'base64'
 
-export interface ViaReply {
+export interface ViaHead {
   status: number
   headers: Record<string, string>
-  body: string
-  encoding: ViaEncoding
+  stream?: string
 }
 
 export interface ViaBody {
@@ -31,7 +31,7 @@ export const viaFetch = request('via.fetch', {
     headers: z.record(z.string(), z.string()).optional(),
     body: z.object({ data: z.string(), encoding: z.enum(['utf8', 'base64']) }).optional(),
   }),
-  output: type<ViaReply>(),
+  output: type<ViaHead>(),
   callers: 'any',
 })
 export const viaOpen = request('via.open', { input: () => z.object({ pc: pc(), ticket: z.string().min(1) }), output: type<{ stream: string }>(), callers: 'any' })
@@ -39,3 +39,4 @@ export const viaSend = request('via.send', { input: () => z.object({ stream: str
 export const viaClose = request('via.close', { input: () => z.object({ stream: stream() }), output: type<void>(), callers: 'any' })
 
 export const viaFrame = wireEvent<ViaFrame>('via.frame')
+export const viaChunk = wireEvent<RelayChunk>('via.chunk')

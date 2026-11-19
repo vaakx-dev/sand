@@ -127,6 +127,14 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
     await commit([normalRecord({ ...record, removed: { at, by }, updated: stamp(record) })])
   }
 
+  const forget = async (ids: string[]) => {
+    const gone = ids.filter(id => records.delete(id))
+    if (!gone.length) return
+    index()
+    await file.save([...records.values()])
+    for (const listener of changes) listener([])
+  }
+
   const merge = async (incoming: DeviceRecord[]) => {
     const changed = new Map<string, DeviceRecord>()
     for (const record of incoming) {
@@ -155,6 +163,7 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
     setDetectedIcon,
     setPush,
     remove,
+    forget,
     merge,
     onChange: listener => listen(changes, listener),
     onRevoke: listener => listen(revokes, listener),

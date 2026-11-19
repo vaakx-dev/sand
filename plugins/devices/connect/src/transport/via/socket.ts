@@ -1,4 +1,4 @@
-import { deviceParams, type SocketHandlers, type SocketInit, type TransportSocket, type ViaFrame, viaClose, viaOpen, viaSend } from '@sand/devices-contract'
+import { deviceParams, type SocketHandlers, type SocketInit, type TransportSocket, type ViaFrame, viaClose, viaFrame, viaOpen, viaSend } from '@sand/devices-contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import { sendQueue } from './queue'
 import type { ViaRelay } from './relay'
@@ -46,7 +46,7 @@ export const openViaSocket = async ({ relay, pc, path, handlers, init }: ViaSock
     else if (!closed) handlers.message(frame.data)
   }
 
-  const stopFrames = relay.frames(frame => {
+  const stopFrames = relay.on(viaFrame, frame => {
     if (stream === undefined) early.push(frame)
     else if (frame.stream === stream) deliver(frame)
   })

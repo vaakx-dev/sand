@@ -22,6 +22,7 @@ import { peerRequests } from './requests'
 import { fileRouteStore } from './store/file'
 import { routeAnnouncer } from './sync/announce'
 import { registrySync } from './sync/registry'
+import { leaveWhenRemoved } from './sync/unpaired'
 
 export default definePlugin({
   name: 'devices-peers',
@@ -57,6 +58,7 @@ export default definePlugin({
     const target = forwardTarget(registry, thisPc, peers)
     const registrations = [
       ...registrySync(peers, registry),
+      leaveWhenRemoved(peers, registry, thisPc),
       ...peerRequests(hub, { set, announced }),
       ...viaForwarder(hub, target),
       () => ctx.hostHttp.route(devicePaths.via, viaHttpRoute(target)),
