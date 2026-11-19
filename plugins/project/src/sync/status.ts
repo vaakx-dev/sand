@@ -6,6 +6,7 @@ export const createStatus = () => {
   return (pc: PeerView, outcome: Outcome) => {
     const previous = states.get(pc.id)
     if (previous === outcome.state) return
+    if (!previous && outcome.state === 'offline') return
     states.set(pc.id, outcome.state)
     if (outcome.state === 'failed') console.error(`project sync: ${pc.name} could not sync projects: ${outcome.detail}`)
     else if (outcome.state !== 'ok') console.error(`project sync: ${outcome.detail}`)

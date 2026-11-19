@@ -13,6 +13,8 @@ import { createLiveTracker } from './stream/live'
 import { createStream } from './stream/stream'
 import { markSeen, serveThreads } from './threads'
 
+const idleTimeoutSecs = 120
+
 export default definePlugin({
   name: 'server',
   inject,
@@ -55,7 +57,7 @@ export default definePlugin({
       stream.flush()
       sockets.publish(() => eventFrame(event.id, trimForPage(payload)), to)
     }
-    const listener = Bun.serve({ hostname: '127.0.0.1', port: 0, websocket: sockets.websocket, fetch: routes.respond })
+    const listener = Bun.serve({ hostname: '127.0.0.1', port: 0, idleTimeout: idleTimeoutSecs, websocket: sockets.websocket, fetch: routes.respond })
     ctx.effect(() => () => void listener.stop(true))
 
     forwardEvents(ctx, send, stream.sees)

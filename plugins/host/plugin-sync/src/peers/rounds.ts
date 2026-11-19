@@ -31,6 +31,7 @@ const createStatus = () => {
     const state = stateOf(error)
     const previous = states.get(record.id)
     if (previous === state) return
+    if (!previous && state === 'offline') return
     states.set(record.id, state)
     if (state === 'offline') console.error(`plugin sync: ${record.name} isn't connected`)
     else if (error) console.error(`plugin sync: ${record.name} could not share plugins: ${errorMessage(error)}`)
