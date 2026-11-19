@@ -1,5 +1,5 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
-import { startSand, type Sand } from '@sand/harness'
+import { pairPcs, startSand, type Sand } from '@sand/harness'
 import { levelSet, modelSettings } from '@sand/model/contract'
 import { threadSend, threadStop, threadUpdate } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
@@ -8,8 +8,12 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 let sand: Sand
+let box: Sand | undefined
 
-afterEach(() => sand.stop())
+afterEach(async () => {
+  await Promise.all([sand.stop(), box?.stop()])
+  box = undefined
+})
 
 const said = (text: string): Reply => [{ type: 'text', text }]
 
@@ -97,6 +101,46 @@ test('stopping an agent stops the subagents it started, all the way down, withou
 
   await until(() => !running(child.id) && !running(grandchild.id))
   await Bun.sleep(200)
+  expect(running(parent.id)).toBeFalsy()
+  expect(sand.turns.list(parent)).toHaveLength(1)
+})
+
+const startPaired = async (parent: (boxHome: string) => Reply[], child: Reply[]) => {
+  box = await startSand([{ id: 'child', models: ['m'], replies: child, api: 'anthropic' }], { plugins: ['core/watch', 'agent/subagents'] })
+  await start(parent(box.home), [])
+  pairPcs(sand, box)
+  return box
+}
+
+const onBox = (pc: Sand, parent: Session) => until(() => pc.sessions.children(parent.id)[0])
+
+test('a subagent can run in a folder on another PC, and its reply comes back as a notice', async () => {
+  const there = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Got it.')], [said('Found it.')])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+
+  const child = await onBox(there, parent)
+  expect(child).toMatchObject({ kind: 'agent', cwd: there.home, parent: parent.id })
+  expect(there.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1 })
+  expect(sand.sessions.open(child.id)).toBeUndefined()
+  const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
+  expect(notice).toContain(`<thread>${child.id}</thread>`)
+  expect(notice).toContain('Found it.')
+})
+
+test('stopping an agent stops its subagent on another PC without waking it again', async () => {
+  const there = await startPaired(home => [delegate({ pc: 'box', folder: home }), [{ type: 'hold' }]], [[{ type: 'hold' }]])
+  const parent = sand.chat('parent/m')
+  const turn = sand.turns.run(parent, 'Go')
+  const child = await onBox(there, parent)
+  const busy = () => there.turns.current(there.sessions.require(child.id))
+  await until(() => busy() && sand.requests('parent').length === 2)
+
+  await sand.ask(threadStop, { session: parent.id })
+  await turn
+
+  await until(() => !busy())
+  await until(() => notices(parent).length === 1)
   expect(running(parent.id)).toBeFalsy()
   expect(sand.turns.list(parent)).toHaveLength(1)
 })

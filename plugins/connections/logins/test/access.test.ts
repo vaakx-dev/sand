@@ -59,7 +59,7 @@ test("a bot and its subagents use the bot's logins; any other thread, or anyone 
       origin: 'agent',
       clientRequestId: 'started',
       from: { owner: 'bot', id: ids.bot },
-      subagent: { call: 'deploy' },
+      subagent: { call: 'deploy', limits: { depth: 1 } },
     })
     if (started.disposition !== 'started') throw new Error('The subagent should run at once')
     expect(await sand.turns.wait(started.turn, 'end')).toMatchObject({ status: 'completed' })

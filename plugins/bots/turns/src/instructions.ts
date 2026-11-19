@@ -25,7 +25,7 @@ const projectsOf = ({ projects }: BotSummary, files: ProjectFiles | undefined) =
     return name ? `${name} (id ${project})` : project
   }
   const list = projects.map(project => `- ${labelOf(project)}: ${placeOf(project)}`).join('\n')
-  return [`## Your projects\n\nYou manage these projects. Plan the work in them and start threads to do it, passing the project id to thread_start:\n\n${list}`]
+  return [`## Your projects\n\nYou manage these projects. Plan the work in them and hand it to subagents, passing the project id; for a project with no folder on this PC, also pass the pc that has one, from project_list:\n\n${list}`]
 }
 
 const whoOf = (name: string) => (name ? `You are ${name}, one of the user's bots in sand.` : "You are one of the user's bots in sand, with no name yet.")

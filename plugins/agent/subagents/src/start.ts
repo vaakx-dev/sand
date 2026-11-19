@@ -4,6 +4,7 @@ import { type Level, modelSettings, type SessionSettings } from '@sand/model/con
 import type { AgentLimits } from '@sand/orchestrator/contract'
 import type { AgentsContext } from './context'
 import type { AgentDefinition } from './contract'
+import { resolve as resolvePath } from 'node:path'
 import type { Resolve } from './layers'
 import { agentTitle } from './title'
 
@@ -17,6 +18,8 @@ export interface SubagentRequest {
   effort?: Effort
   level?: Level
   project?: string
+  folder?: string
+  pc?: string
   worktree?: boolean
 }
 
@@ -36,7 +39,7 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
     level ? (ctx.get(modelSettings)?.level(level) ?? {}) : (definition ?? {})
 
   return async (request: SubagentRequest) => {
-    const { parent, call, task, label, project, worktree } = request
+    const { parent, call, task, label, project, folder, pc, worktree } = request
     const from = { owner: parent.owner, id: parent.id }
     const definition = await definitionOf(request.agent, parent.cwd, project ?? parent.project)
     const scope = limits.child(parent, definition?.name, definition?.tools)
@@ -44,22 +47,20 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
     const preset = presetOf(level, definition)
     const model = request.model ?? preset.model
     const effort = request.effort ?? preset.effort
-    return ctx.orchestrator.start(
-      {
-        prompt: task,
-        title: agentTitle(label, task),
-        ...(project && { project }),
-        ...(worktree && { worktree }),
-        ...(model && { model }),
-        ...(effort && { effort }),
-        ...(preset.speed && { speed: preset.speed }),
-        origin: 'agent',
-        clientRequestId: `${from.id}:${call}`,
-        from,
-        subagent: { call },
-      },
-      session => limits.give(session, { ...scope, ...(level && { level }) }),
-    )
+    return ctx.orchestrator.start({
+      prompt: task,
+      title: agentTitle(label, task),
+      ...(project && { project }),
+      ...(folder && { cwd: pc ? folder : resolvePath(parent.cwd, folder) }),
+      ...(worktree && { worktree }),
+      ...(model && { model }),
+      ...(effort && { effort }),
+      ...(preset.speed && { speed: preset.speed }),
+      origin: 'agent',
+      clientRequestId: `${from.id}:${call}`,
+      from,
+      subagent: { call, limits: { ...scope, ...(level && { level }) }, ...(pc && { pc }) },
+    })
   }
 }
 

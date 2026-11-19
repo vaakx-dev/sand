@@ -19,7 +19,7 @@ export const createPcs = (ctx: OrchestratorContext) => {
     }
   }
 
-  const named = (name: string) => {
+  const find = (name: string) => {
     const pcs = linked()?.list() ?? []
     const found = findPc(pcs, name)
     if (!found) throw failure('not_found', noSuchPc(pcs, name))
@@ -44,9 +44,9 @@ export const createPcs = (ctx: OrchestratorContext) => {
 
   return {
     call,
+    find,
     ownerOf: async (thread: string) => (ctx.sessions.open(thread) ? undefined : locate(thread)),
-    async start(name: string, input: Omit<InputOf<typeof threadStart>, 'pc'>) {
-      const pc = named(name)
+    async start(pc: string, input: Omit<InputOf<typeof threadStart>, 'pc'>) {
       const sent = await call(pc, threadStart, input)
       owners.set(sent.thread, pc)
       return sent

@@ -54,7 +54,7 @@ export const projectTools: McpTool[] = [
   {
     name: 'project_list',
     description:
-      "List sand's projects with their folders and git remotes. Start threads in one with thread_start's project.",
+      "List sand's projects with their folders and git remotes. Hand work in one to a subagent with its project.",
     input: listInput,
     parts: [{ feature: 'pcs', description: 'Includes folders on your other PCs.' }],
     access: 'read',
