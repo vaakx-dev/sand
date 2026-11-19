@@ -1,4 +1,5 @@
 import { type LLMEvent, ProviderTrouble, RequestRejected, ThreadLost, UsageLimited } from '../contract'
+import { duration } from '@sand/util'
 import { AccountError } from '../errors'
 import type { ShareLine } from '../share/info'
 
@@ -10,12 +11,25 @@ export interface Reading {
   dropped(text: string, cause?: unknown): Error
 }
 
+const SILENCE_MS = 30_000
+
+const silence = () => {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const broken = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`no heartbeat for ${duration(SILENCE_MS)}`)), SILENCE_MS)
+  })
+  return { broken, stop: () => clearTimeout(timer) }
+}
+
 const read = async (reader: ReadableStreamDefaultReader<Uint8Array>, { name, signal, dropped }: Reading) => {
+  const quiet = silence()
   try {
-    return await reader.read()
+    return await Promise.race([reader.read(), quiet.broken])
   } catch (error) {
     if (signal?.aborted) throw error
     throw dropped(`Lost the connection to ${name} during the reply`, error)
+  } finally {
+    quiet.stop()
   }
 }
 

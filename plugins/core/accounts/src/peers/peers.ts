@@ -1,15 +1,16 @@
 import { type Peers as PcLinks, reachablePeers } from '@sand/devices-contract'
 import type { Media } from '@sand/media/contract'
-import { AccountGone, type Limits, type LLMEvent, type LLMRequest, ThreadLost, UsageLimited } from '../contract'
+import { AccountGone, type Limits, type LLMEvent, type LLMRequest, ProviderTrouble, ThreadLost, UsageLimited } from '../contract'
 import { isKeyKind, keyLabels } from '../auth/kinds'
 import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
-import { failure } from './failure'
+import { gone, goneText, refused, transient, unreachableText } from './failure'
 import { fetchInfo } from './info'
 import { readEvents } from './lines'
 import { carriedMedia } from './media'
-import { openStream } from './open'
+import { openStream, type SharedRequest } from './open'
 import type { SharePc } from './pc'
+import { nextTry } from './reconnect'
 import { Refused } from './refused'
 import { tagged } from './tag'
 
@@ -37,6 +38,18 @@ interface PeersOptions {
   limitsChanged(limits: Limits): void
 }
 
+interface Opened {
+  peer: PeerState
+  body: ReadableStream<Uint8Array>
+}
+
+interface Missed {
+  peer: PeerState
+  error: unknown
+}
+
+const RECONNECT_GRACE_MS = 2 * 60_000
+
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 const ownedBy = (pc: SharePc, { windows, status, updated, source }: Limits): Limits => ({
@@ -49,8 +62,6 @@ const ownedBy = (pc: SharePc, { windows, status, updated, source }: Limits): Lim
 })
 
 const rank = (state: PeerState) => (state.refused ? 2 : state.online ? 0 : 1)
-
-const lostOn = (pin?: Pin) => (text: string, cause?: unknown) => (pin?.movable?.() ? new AccountGone(text, { cause }) : new ThreadLost(text, { cause }))
 
 export type Peers = ReturnType<typeof createPeers>
 
@@ -142,46 +153,77 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   const source = (id: string) => candidates(id).find(peer => !peer.refused)
   const nameOf = (id: string) => (isKeyKind(id) ? keyLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
 
-  const droppedBy = (peer: PeerState, pin?: Pin) => (text: string, cause?: unknown) => {
+  const labelOf = (peer: PeerState, id: string) => account(peer, id)?.label ?? nameOf(id)
+
+  const dropped = (peer: PeerState, pin?: Pin) => (text: string, cause?: unknown) => {
     peer.online = false
     changed()
-    return lostOn(pin)(text, cause)
+    return pin?.movable?.() ? new AccountGone(text, { cause }) : new ProviderTrouble(text, undefined, { cause })
+  }
+
+  const reached = (peer: PeerState) => {
+    if (peer.online) return
+    peer.online = true
+    changed()
+  }
+
+  const missed = (peer: PeerState, error: unknown) => {
+    if (!(error instanceof Refused) || error.status === 401 || error.status === 404) fail(peer.pc, error)
+    changed()
+  }
+
+  const tryEach = async (peers: PeerState[], sent: SharedRequest, signal?: AbortSignal): Promise<Opened | Missed[]> => {
+    const found = reachablePeers(links())
+    const misses: Missed[] = []
+    for (const peer of peers) {
+      try {
+        return { peer, body: await openStream(found, peer.pc, sent, signal) }
+      } catch (error) {
+        if (signal?.aborted) throw error
+        missed(peer, error)
+        misses.push({ peer, error })
+      }
+    }
+    return misses
+  }
+
+  const outOfReach = (id: string, { peer, error }: Missed, pin?: Pin) => {
+    const label = labelOf(peer, id)
+    if (pin?.movable?.()) return new AccountGone(unreachableText(peer.pc.name, label), { cause: error })
+    return gone(goneText(peer.pc.name, label, RECONNECT_GRACE_MS), error)
+  }
+
+  const given = (id: string, misses: Missed[], pin?: Pin) => {
+    void refresh()
+    const away = misses.find(miss => transient(miss.error))
+    if (away) return outOfReach(id, away, pin)
+    const refusal = misses.find((miss): miss is { peer: PeerState; error: Refused } => miss.error instanceof Refused)
+    if (refusal) return refused(refusal.peer.pc.name, labelOf(refusal.peer, id), refusal.error)
+    if (pin?.native) return new ThreadLost(`The PC that held this chat's ${nameOf(id)} session no longer shares it`)
+    return new Error(`No paired PC shares ${nameOf(id)}`)
+  }
+
+  const open = async (id: string, sent: SharedRequest, signal?: AbortSignal, pin?: Pin): Promise<Opened> => {
+    const giveUpAt = Date.now() + RECONNECT_GRACE_MS
+    for (;;) {
+      const tried = await tryEach(candidates(id).filter(candidate => !pin || candidate.pc.id === pin.pc), sent, signal)
+      if (!Array.isArray(tried)) return tried
+      const waiting = tried.filter(miss => transient(miss.error)).map(miss => miss.peer.pc.id)
+      if (!waiting.length || pin?.movable?.() || Date.now() >= giveUpAt) throw given(id, tried, pin)
+      await nextTry(links(), waiting, signal)
+    }
   }
 
   async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pin?: Pin): AsyncGenerator<LLMEvent> {
     await first
-    const found = reachablePeers(links())
-    let problem: Error | undefined
-    const sent = { ...request, media: carriedMedia(media, request.messages) }
-    for (const peer of candidates(id).filter(candidate => !pin || candidate.pc.id === pin.pc)) {
-      const name = account(peer, id)?.label ?? nameOf(id)
-      let body: ReadableStream<Uint8Array>
-      try {
-        body = await openStream(found, peer.pc, sent, signal)
-      } catch (error) {
-        if (signal?.aborted) throw error
-        const failed = failure(peer.pc.name, name, error)
-        if (!(error instanceof Refused) || error.status === 401 || error.status === 404) fail(peer.pc, error)
-        changed()
-        if ((pin?.native || pin?.movable?.()) && !(error instanceof Refused)) throw lostOn(pin)(failed.message, error)
-        problem ??= failed
-        continue
-      }
-      if (!peer.online) {
-        peer.online = true
-        changed()
-      }
-      try {
-        yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: droppedBy(peer, pin) }), peer.pc)
-      } catch (error) {
-        if (error instanceof UsageLimited) await check(found, peer.pc, false)
-        throw error
-      }
-      return
+    const { peer, body } = await open(id, { ...request, media: carriedMedia(media, request.messages) }, signal, pin)
+    reached(peer)
+    try {
+      yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: dropped(peer, pin) }), peer.pc)
+    } catch (error) {
+      if (error instanceof UsageLimited) await check(reachablePeers(links()), peer.pc, false)
+      throw error
     }
-    void refresh()
-    if (pin?.native && !problem) throw new ThreadLost(`The PC that held this chat's ${nameOf(id)} session no longer shares it`)
-    throw problem ?? new Error(`No paired PC shares ${nameOf(id)}`)
   }
 
   return {

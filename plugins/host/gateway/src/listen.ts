@@ -6,6 +6,7 @@ import type { Sessions } from './access/sessions'
 import type { Respond } from './http/respond'
 
 const maxPayloadLength = 64 * 1024 * 1024
+const idleTimeoutSecs = 120
 const refusedClose = 4401
 
 export type SocketData = { ok: true; caller: Caller; session: string; proof?: IdentityReply } | { ok: false; refusal: TicketRefusal }
@@ -32,6 +33,7 @@ export const createListen =
       port,
       hostname,
       ipv6Only: false,
+      idleTimeout: idleTimeoutSecs,
       websocket: {
         data: {} as SocketData,
         maxPayloadLength,

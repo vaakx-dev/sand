@@ -210,6 +210,23 @@ test('a PC from before caps lends a stateless source, and a reply cut off mid-wa
   expect(old.asked[1]).toEqual(old.asked[0]!)
 })
 
+test('a turn waits for a PC that dropped off and carries on there once it is back', async () => {
+  sand = await startSand([])
+  const pc = await accountPc(statelessCaps(), [reply('after the blip')])
+  const down = new Set<string>()
+  const calls: string[] = []
+  const links = linksTo({ pc: pc.answer }, down, calls)
+  await until(() => !!sand.app.get(llm)!.find!('remote/m'))
+
+  down.add('pc')
+  const running = sand.turns.run(sand.chat('remote/m'), 'go')
+  await until(() => calls.length === 1)
+  down.clear()
+  links.reopen('pc')
+  expect((await running).text).toBe('after the blip')
+  expect(calls).toEqual(['pc', 'pc'])
+})
+
 test('stopping a turn on a borrowed source stops the reply on the PC that runs it', async () => {
   sand = await startSand([])
   const pc = await accountPc(nativeCaps, ['hold'])
