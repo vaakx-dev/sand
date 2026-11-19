@@ -4,10 +4,17 @@ import { startSand, type Sand } from '@sand/harness'
 import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 let sand: Sand
+const homes: string[] = []
 
-afterEach(() => sand.stop())
+afterEach(async () => {
+  await sand.stop()
+  for (const home of homes.splice(0)) rmSync(home, { recursive: true, force: true })
+})
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
@@ -115,6 +122,28 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
   const strategies = chat.path().flatMap(entry => (entry.type === 'handoff' ? [(entry.data as { strategy: string }).strategy] : []))
   expect(strategies).toEqual(['full', 'delta', 'delta', 'full'])
   expect(query('select distinct delivery from handoffs')).toEqual([{ delivery: 'inline' }])
+})
+
+test('a chat left with one open thread per plan account of a model keeps its newest one after the update, and its next turn runs', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'sand-pool-'))
+  homes.push(home)
+  const pool = (replies: Source['replies']) => [api('n', replies), { ...api('n-2', []), of: 'n' }]
+  sand = await startSand(pool([[said('n1')]]), { home, plugins: ['agent/account-pool'] })
+  const chat = sand.chat('n/m')
+  await sand.turns.run(chat, 'one')
+  const db = sand.app.get(ledger)!.db
+  db.run('drop index provider_threads_open')
+  db.run("create unique index provider_threads_open on provider_threads (owner, conversation, source, model) where status != 'retired'")
+  db.run("update schema set version = 3 where owner = 'provider-threads'")
+  db.run(`insert into provider_threads (id, owner, conversation, source, model, generation, status, system, seen, speed, used, created)
+    select 'newest', owner, conversation, 'n-2', model, 2, 'idle', system, seen, speed, used + 1000, created + 1000 from provider_threads`)
+  await sand.stop()
+
+  sand = await startSand(pool([[said('n2')]]), { home, plugins: ['agent/account-pool'] })
+  const result = await sand.turns.run(sand.sessions.require(chat.id), 'two')
+
+  expect(result).toMatchObject({ text: 'n2' })
+  expect(query("select id from provider_threads where status != 'retired'")).toEqual([{ id: 'newest' }])
 })
 
 test('a model brought up to date can read the chat history itself', async () => {
