@@ -10,7 +10,7 @@ import {
   peersState,
   type PeerView,
 } from '@sand/devices-contract'
-import type { Request } from '@sand/host-hub/contract'
+import { parseInput, type Request } from '@sand/host-hub/contract'
 import type { HostChannel } from '@sand/host-runtimes/contract'
 import { callEachOf } from '../each'
 import { createEvents } from '../links/events'
@@ -40,8 +40,10 @@ export const createRemotePeers = (host: HostChannel, report: (error: unknown) =>
     host.on(peersEvent, ({ pc, name, payload }) => events.emit(name, payload, pc)),
   ]
 
-  const call = async <I, O>(pc: string, request: Request<I, O>, input: I, options?: CallOptions) =>
-    unwrap(await host.call(peersRelay, { pc, request: request.id, input, timeout: options?.timeout }, hostWait(options?.timeout))) as O
+  const call = async <I, O>(pc: string, request: Request<I, O>, input: I, options?: CallOptions) => {
+    await parseInput(request, input)
+    return unwrap(await host.call(peersRelay, { pc, request: request.id, input, timeout: options?.timeout }, hostWait(options?.timeout))) as O
+  }
 
   const connected = () => views.filter(view => view.status.phase === 'connected').map(view => view.id)
 
