@@ -1,4 +1,4 @@
-import type { Billing, Limits, Usage } from '@sand/accounts/contract'
+import type { Billing, Limits, ModelPrice, Usage } from '@sand/accounts/contract'
 import { request, type } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
@@ -105,4 +105,9 @@ export const usageSummary = request('usage.summary', {
 export const usageHistory = request('usage.history', {
   input: () => z.object({ since: z.number(), zone: z.string() }),
   output: type<UsageHistory>(),
+})
+
+export const usagePrices = request('usage.prices', {
+  input: () => z.object({ models: z.array(z.string()) }),
+  output: type<Record<string, ModelPrice>>(),
 })

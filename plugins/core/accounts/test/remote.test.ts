@@ -1,4 +1,5 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
+import { sandConfig } from '@sand/config/contract'
 import { type Peers as PcLinks, peers as pcLinks } from '@sand/devices-contract'
 import { startSand, type Sand } from '@sand/harness'
 import { media } from '@sand/media/contract'
@@ -10,8 +11,9 @@ import { join } from 'node:path'
 import { createAccounts } from '../src/auth/accounts'
 import { readPlaces } from '../src/auth/places'
 import { createPlans } from '../src/auth/plans'
+import { PriceList, type UserPrices } from '../src/catalog/prices'
 import { viewOf } from '../src/catalog/view'
-import { llm, type LLMEvent, type LLMRequest, type NativeRef, type Plan, type ProviderCapabilities, statelessCaps, ThreadLost } from '../src/contract'
+import { llm, type LLMEvent, type LLMRequest, type ModelPrice, modelsPrice, type NativeRef, type Plan, type ProviderCapabilities, statelessCaps, ThreadLost } from '../src/contract'
 import type { LocalLLM } from '../src/local'
 import { shareChange, sharePaths } from '../src/share/info'
 import { serveShare } from '../src/share/routes'
@@ -64,7 +66,7 @@ const reply = (text: string, native?: NativeRef): LLMEvent[] => [
   },
 ]
 
-const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<AccountPc> => {
+const accountPc = async (caps: ProviderCapabilities, replies: Reply[], userPrices: UserPrices = {}): Promise<AccountPc> => {
   const home = mkdtempSync(join(tmpdir(), 'sand-account-pc-'))
   homes.push(home)
   await Bun.write(join(home, 'auth.json'), JSON.stringify({ remote: { type: 'oauth', access: 'a', refresh: 'r', expires: 8e15 } }))
@@ -113,7 +115,8 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<
       return () => void routes.delete(path)
     },
   }
-  serveShare(server, { local, accounts, users: createUsers(new Map(), () => {}), media: sand.app.get(media)! })
+  const prices = new PriceList({ settings: userPrices, config: sand.app.get(sandConfig)!, borrowed: () => [], changed() {} })
+  serveShare(server, { local, accounts, prices, users: createUsers(new Map(), () => {}), media: sand.app.get(media)! })
   const answer: RouteHandler = (request, from) => routes.get(new URL(request.url).pathname)!(request, from)
   return { answer, asked, stopped: () => stopped }
 }
@@ -280,4 +283,35 @@ test('stopping a turn on a borrowed source stops the reply on the PC that runs i
   sand.turns.interrupt(chat)
   expect((await running).stopReason).toBe('interrupted')
   await until(pc.stopped)
+})
+
+const setAt = (input: number, updated: number) => ({ price: { input, output: input, cacheRead: 0, cacheWrite: 0 }, updated })
+
+const priceOf = (model: string) => sand.app.get(llm)!.price!(model)
+
+const rate = (input: number): ModelPrice => ({ input, output: input, cacheRead: 0, cacheWrite: 0 })
+
+test('a price set on another PC counts here, a newer price wins on whichever PC set it, and a PC from before shared prices adds none', async () => {
+  sand = await startSand([])
+  const soon = Date.now() + 60_000
+  const lender = await accountPc(statelessCaps(), [], { 'claude-sonnet-5-5': setAt(3, 1), opus: setAt(5, soon) })
+  const old = await accountPc(statelessCaps(), [])
+  const dropPrices =
+    (answer: RouteHandler): RouteHandler =>
+    async (request, from) => {
+      const response = await answer(request, from)
+      if (new URL(request.url).pathname !== sharePaths.info) return response
+      const { userPrices: _, ...info } = await response.json()
+      return Response.json(info)
+    }
+  linksTo({ lender: lender.answer, old: dropPrices(old.answer) }, new Set(), [])
+  await until(() => !!priceOf('claude/claude-sonnet-5-5'))
+
+  expect(priceOf('claude/claude-sonnet-5-5')).toEqual(rate(3))
+  expect(priceOf('unrelated')).toBeUndefined()
+
+  await sand.ask(modelsPrice, { model: 'claude-sonnet-5-5', price: rate(4) })
+  await sand.ask(modelsPrice, { model: 'opus', price: rate(6) })
+  expect(priceOf('claude/claude-sonnet-5-5')).toEqual(rate(4))
+  expect(priceOf('opus')).toEqual(rate(5))
 })

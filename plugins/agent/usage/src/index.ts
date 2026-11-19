@@ -3,7 +3,8 @@ import { sessions } from '@sand/chats/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { historyOf, usageHistory, usageReader, usageSummary } from './contract'
+import { historyOf, usageHistory, usagePrices, usageReader, usageSummary } from './contract'
+import { pricesHandler } from './summary/prices'
 import { summaryHandler } from './summary/serve'
 
 export default definePlugin({
@@ -19,7 +20,14 @@ export default definePlugin({
     ctx.provide(usageReader, { summary })
     const history = ({ since, zone }: { since: number; zone: string }) => historyOf(summary({ since, bucket: 'hour', zone }))
     ctx.watch(server, found =>
-      found ? joinDisposers(found.handle(usageSummary, summary), found.handle(usageHistory, history), found.handle(limitsRefresh, refreshLimits)) : undefined,
+      found
+        ? joinDisposers(
+            found.handle(usageSummary, summary),
+            found.handle(usageHistory, history),
+            found.handle(usagePrices, pricesHandler(() => ctx.get(llm))),
+            found.handle(limitsRefresh, refreshLimits),
+          )
+        : undefined,
     )
   },
 })
