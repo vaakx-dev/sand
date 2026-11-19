@@ -49,4 +49,12 @@ export const schema = [
     "alter table handoffs add column owner text not null default 'thread'",
     'create index handoffs_conversation on handoffs (owner, conversation)',
   ],
+  [
+    'drop index provider_threads_open',
+    `update provider_threads set status = 'retired'
+      where status != 'retired' and exists (select 1 from provider_threads newer
+        where newer.owner = provider_threads.owner and newer.conversation = provider_threads.conversation and newer.model = provider_threads.model
+          and newer.status != 'retired' and (newer.used, newer.id) > (provider_threads.used, provider_threads.id))`,
+    "create unique index provider_threads_open on provider_threads (owner, conversation, model) where status != 'retired'",
+  ],
 ]
