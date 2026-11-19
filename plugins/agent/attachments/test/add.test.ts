@@ -64,6 +64,31 @@ test('a file uploaded over a flaky network arrives whole, and an upload cut off 
   expect(readFileSync('path' in added ? added.path : '')).toEqual(Buffer.from(bytes))
 })
 
+test('an upload cut off by a runtime restart finishes on the new runtime without sending its chunks again', async () => {
+  const home = sand.home
+  const bytes = new Uint8Array(3 * 1024 ** 2 + 7).map((_, index) => (index * 11) % 256)
+  const resumable = { transfer: crypto.randomUUID(), arrived: new Set<number>() }
+  const stop = new AbortController()
+  const before = await startSand([], { home, plugins: ['core/transfers', 'agent/attachments'] })
+  await uploadBlob(before.fetch, new Blob([bytes]), { resumable, signal: stop.signal, progress: sent => sent > 0 && stop.abort() }).catch(() => {})
+  await before.stop()
+  const arrived = [...resumable.arrived]
+
+  const after = await startSand([], { home, plugins: ['core/transfers', 'agent/attachments'] })
+  const sent: number[] = []
+  const counted: PcFetch = (path, init) => {
+    sent.push(Number(new URL(path, 'http://sand').searchParams.get('index')))
+    return after.fetch(path, init)
+  }
+  const uploaded = await uploadBlob(counted, new Blob([bytes]), { resumable })
+  const added = await after.ask(attachmentsAdd, { ...uploaded, name: 'clip.bin' })
+  await after.stop()
+
+  expect(arrived.length).toBeGreaterThan(0)
+  expect(sent.filter(index => arrived.includes(index))).toEqual([])
+  expect(readFileSync('path' in added ? added.path : '')).toEqual(Buffer.from(bytes))
+})
+
 test('a file named .pdf that holds no PDF is kept as a file, so the model never gets a PDF it rejects', async () => {
   const fake = join(sand.home, 'scan.pdf')
   writeFileSync(fake, new Uint8Array(2048).fill(0))

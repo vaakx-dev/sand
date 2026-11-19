@@ -1,14 +1,20 @@
 import { freeBytes } from '@sand/util/fs'
-import { mkdir, open, readdir, rm, stat, type FileHandle } from 'node:fs/promises'
+import { appendFile, mkdir, open, readdir, readFile, rm, stat, type FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chunkBytes, chunkCount, chunkFits, TRANSFER_LIFETIME_MS, type ChunkedFile } from './chunks'
 
-
 const keepFree = 1024 ** 3
+
+const TRANSFER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 type Outgoing = { file: string; touched: number }
 
-type Incoming = Outgoing & { size: number; handle: Promise<FileHandle>; written: Set<number> }
+interface Opened {
+  handle: FileHandle
+  written: Set<number>
+}
+
+type Incoming = Outgoing & { size: number; opened: Promise<Opened> }
 
 type SizedTransfer = Pick<ChunkedFile, 'transfer' | 'size'>
 
@@ -17,34 +23,60 @@ const offsetOf = (index: number) => {
   return index * chunkBytes
 }
 
+const logOf = (part: string) => `${part}.chunks`
+
+const writtenIn = async (part: string) => {
+  const log = await readFile(logOf(part), 'utf8').catch(() => '')
+  return new Set(log.split('\n').filter(Boolean).map(Number))
+}
+
+const removePart = async (part: string) => {
+  await rm(part, { force: true })
+  await rm(logOf(part), { force: true })
+}
+
 export const createTransfers = (folder: string) => {
   const outgoing = new Map<string, Outgoing>()
   const incoming = new Map<string, Incoming>()
   const claimed = new Map<string, Incoming>()
 
+  const partOf = ({ transfer, size }: SizedTransfer) => {
+    if (!TRANSFER_ID.test(transfer)) throw new Error('That transfer id is not valid')
+    return join(folder, `${transfer}.${size}`)
+  }
+
   const promised = () => [...incoming.values()].reduce((total, entry) => total + entry.size, 0)
 
-  const openWithRoom = async (file: string) => {
+  const openWithRoom = async (part: string): Promise<Opened> => {
     await mkdir(folder, { recursive: true })
     if (promised() + keepFree > freeBytes(folder)) throw new Error('This PC does not have enough free disk space for that transfer')
-    return open(file, 'w')
+    return { handle: await open(part, 'w'), written: new Set() }
   }
 
-  const arrive = ({ transfer, size }: SizedTransfer) => {
-    const file = join(folder, Bun.randomUUIDv7())
-    const entry: Incoming = { file, size, touched: Date.now(), handle: openWithRoom(file), written: new Set() }
-    incoming.set(transfer, entry)
-    entry.handle.catch(() => incoming.get(transfer) === entry && incoming.delete(transfer))
+  const reopen = async (part: string): Promise<Opened> => {
+    const handle = await open(part, 'r+').catch(() => undefined)
+    return handle ? { handle, written: await writtenIn(part) } : openWithRoom(part)
+  }
+
+  const arrive = (file: SizedTransfer) => {
+    const part = partOf(file)
+    const entry: Incoming = { file: part, size: file.size, touched: Date.now(), opened: reopen(part) }
+    incoming.set(file.transfer, entry)
+    entry.opened.catch(() => incoming.get(file.transfer) === entry && incoming.delete(file.transfer))
     return entry
   }
+
+  const known = async (file: SizedTransfer) => incoming.get(file.transfer) ?? ((await Bun.file(partOf(file)).exists()) ? arrive(file) : undefined)
+
+  const close = (entry: Incoming) => entry.opened.then(({ handle }) => handle.close()).catch(() => undefined)
 
   const forget = async (held: Map<string, Outgoing | Incoming>, transfer: string) => {
     const entry = held.get(transfer)
     if (!entry) return
     held.delete(transfer)
-    if (!('handle' in entry)) return
-    await entry.handle.then(handle => handle.close()).catch(() => undefined)
-    await rm(entry.file, { force: true })
+    if (!('opened' in entry)) return
+    await close(entry)
+    await removePart(entry.file)
   }
 
   return {
@@ -73,18 +105,20 @@ export const createTransfers = (folder: string) => {
       const entry = incoming.get(file.transfer) ?? arrive(file)
       if (entry.size !== file.size) throw new Error('That chunk belongs to a transfer of another size')
       entry.touched = Date.now()
-      await (await entry.handle).write(bytes, 0, bytes.length, index * chunkBytes)
-      entry.written.add(index)
+      const { handle, written } = await entry.opened
+      await handle.write(bytes, 0, bytes.length, index * chunkBytes)
+      await appendFile(logOf(entry.file), `${index}\n`)
+      written.add(index)
     },
-
-    arrived: (transfer: string) => incoming.get(transfer)?.written.size ?? 0,
 
     async received(transfer: string, chunks: number, size: number) {
       if (chunks === 0) return undefined
-      const entry = incoming.get(transfer)
-      if (!entry || entry.size !== size || chunks !== chunkCount(size) || entry.written.size !== chunks)
-        throw new Error(`Only ${entry?.written.size ?? 0} of ${chunks} chunks arrived; try again`)
-      await (await entry.handle).close()
+      const entry = await known({ transfer, size })
+      const opened = await entry?.opened
+      if (!entry || !opened || entry.size !== size || chunks !== chunkCount(size) || opened.written.size !== chunks)
+        throw new Error(`Only ${opened?.written.size ?? 0} of ${chunks} chunks arrived; try again`)
+      await opened.handle.close()
+      await rm(logOf(entry.file), { force: true })
       incoming.delete(transfer)
       claimed.set(transfer, entry)
       return entry.file
@@ -95,10 +129,15 @@ export const createTransfers = (folder: string) => {
       await forget(claimed, transfer)
     },
 
+    async close() {
+      await Promise.all([...incoming.values()].map(close))
+    },
+
     async sweep() {
       const cutoff = Date.now() - TRANSFER_LIFETIME_MS
       for (const held of [outgoing, incoming]) for (const [transfer, entry] of held) if (entry.touched < cutoff) await forget(held, transfer)
-      const live = new Set([...outgoing.values(), ...incoming.values(), ...claimed.values()].map(entry => entry.file))
+      const parts = [...incoming.values(), ...claimed.values()].map(entry => entry.file)
+      const live = new Set([...[...outgoing.values()].map(entry => entry.file), ...parts, ...parts.map(logOf)])
       for (const name of await readdir(folder).catch((): string[] => [])) {
         const file = join(folder, name)
         const info = await stat(file).catch(() => undefined)

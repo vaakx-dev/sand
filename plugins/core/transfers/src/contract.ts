@@ -23,7 +23,6 @@ export const transfers = service<Transfers>('transfers')
 const chunked = lazy(() => z.object({ transfer: z.string(), size: z.number().int().nonnegative(), chunks: z.number().int().nonnegative() }))
 
 export const transfersPull = request('transfers.pull', { input: () => chunked().extend({ from: z.string().optional() }), output: type<void>() })
-export const transfersStatus = request('transfers.status', { input: () => z.object({ transfer: z.string() }), output: type<number>() })
 
 const offered = lazy(() => chunked().extend({ folder: z.boolean() }))
 
