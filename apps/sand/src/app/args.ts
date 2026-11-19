@@ -1,4 +1,4 @@
-import { safeFromEnv } from '@sand/boot'
+import { confineToSandbox, inSandbox, safeFromEnv } from '@sand/boot'
 import type { CliPlace } from '@sand/config/contract'
 import { defaultHome, expandHome } from '@sand/util/fs'
 import { parseArgs } from 'node:util'
@@ -51,10 +51,13 @@ export const readArgs = (argv: string[]) => {
   const home = homeOf(values.home)
   if (cwd) process.chdir(cwd)
   const place = placeOf(prompt, rest[0])
+  const sandbox = inSandbox(home)
+  if (sandbox) confineToSandbox(home)
   return {
     place,
     home,
     safe: values.safe === true || safeFromEnv(),
+    sandbox,
     args: place === 'host' || place === 'runtime' ? rest.slice(1) : rest,
     prompt,
   }

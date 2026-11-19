@@ -18,5 +18,6 @@ export {
   shimFile,
   switchTo,
 } from './layout'
+export { confineToSandbox, inSandbox, markSandbox } from './sandbox'
 export { safeEnv, safeFromEnv, withSafe } from './safe'
 export { readServerInfo, serverInfoFile } from './server-info'

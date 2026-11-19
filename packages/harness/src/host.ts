@@ -1,3 +1,4 @@
+import { inSandbox } from '@sand/boot'
 import { cli } from '@sand/config/contract'
 import { createHandlers, hub, type Hub, type WireEvent } from '@sand/host-hub/contract'
 import { createHostChannel, type HostChannel, type HostMessage, type RuntimeMessage, runtimes, type Runtimes } from '@sand/host-runtimes/contract'
@@ -67,7 +68,7 @@ export const startHost = async (home: string, plugins: string[] = []) => {
     return receive !== undefined
   }
 
-  app.provide(cli, { place: 'host', home, cwd: home, builtins, safe: false, args: [], exit() {} })
+  app.provide(cli, { place: 'host', home, cwd: home, builtins, safe: false, sandbox: inSandbox(home), args: [], exit() {} })
   app.provide(hub, hubOf(handlers))
   app.provide(runtimes, runtimesOf(tell))
   for (const plugin of plugins) app.load(await hostEntry(plugin))

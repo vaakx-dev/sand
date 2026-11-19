@@ -13,6 +13,7 @@ interface RunOptions {
   place: CliPlace
   home: string
   safe: boolean
+  sandbox: boolean
   args: string[]
   prompt?: string
 }

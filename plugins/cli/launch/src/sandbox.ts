@@ -1,3 +1,4 @@
+import { markSandbox } from '@sand/boot'
 import { pairLink } from '@sand/devices-contract'
 import type { Daemon } from '@sand/host-daemon/contract'
 import { tildeHome } from '@sand/util'
@@ -6,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pageUrl } from './page-url'
 
-const settings = '[host]\nport = 0\n\n[plugins.devices-network]\nenabled = false\n'
+const settings = '[host]\nport = 0\n'
 
 const borrowed = ['plugins']
 
@@ -24,6 +25,7 @@ const ownSettings = async (home: string) => {
 
 export const sandbox = async (daemon: Daemon, home: string) => {
   const box = mkdtempSync(join(tmpdir(), 'sand-sandbox-'))
+  await markSandbox(box)
   await Bun.write(join(box, 'sand.toml'), settings + (await ownSettings(home)))
   copyBorrowed(home, box)
   const sandboxed = daemon.at(box)

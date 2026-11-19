@@ -19,7 +19,7 @@ export default definePlugin({
   description: 'Finds the plugins that run in this place and loads them with their sand.toml settings, leaving out the plugins of features that are turned off',
   inject: { cli },
   async apply(ctx) {
-    const { home, safe, place, builtins } = ctx.cli
+    const { home, safe, sandbox, place, builtins } = ctx.cli
     const path = join(home, 'sand.toml')
     const table = await readConfig(path)
     const set = (table: string[], values: TomlValues) => setTomlValues(path, table, values)
@@ -39,7 +39,7 @@ export default definePlugin({
       return Promise.all(
         [...found].map(async ([id, { dir, addon }]) => {
           const sand = await sandOf(dir)
-          return { id, dir, addon, sand, own: mine.has(id), options: optionsOf(settings, id), entry: entryIn(dir, sand, place), feature: featureOf(sand) }
+          return { id, dir, addon, sand, own: mine.has(id), options: optionsOf(settings, id), entry: entryIn(dir, sand, place), feature: featureOf(sand), opensNetwork: sand.network === true }
         }),
       )
     }
@@ -48,7 +48,8 @@ export default definePlugin({
     let plugins = await discover()
     let catalog = createCatalog(definitionsIn(plugins.map(plugin => plugin.sand)), safe ? undefined : table.features)
     const faulted = new Set<string>()
-    const wanted = (plugin: (typeof plugins)[number]) => plugin.options !== undefined && catalog.on(plugin.feature) && !(plugin.addon && faulted.has(plugin.addon))
+    const wanted = (plugin: (typeof plugins)[number]) =>
+      plugin.options !== undefined && catalog.on(plugin.feature) && !(plugin.addon && faulted.has(plugin.addon)) && !(sandbox && plugin.opensNetwork)
     const fault = async (addon: string, error: string) => {
       if (faulted.has(addon)) return
       faulted.add(addon)
