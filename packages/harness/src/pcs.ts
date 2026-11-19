@@ -1,4 +1,5 @@
 import { PcUnavailable, peerError, type Peers, type PeerView, peers } from '@sand/devices-contract'
+import { parseInput } from '@sand/host-hub/contract'
 import type { Sand } from './index'
 
 interface Link {
@@ -41,6 +42,7 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
   const unavailable = () => new PcUnavailable({ pc: farId, name: farId, status: { phase: 'offline' }, reason: 'disconnected' })
   const call: Peers['call'] = async (_, request, input) => {
     if (!up) throw unavailable()
+    await parseInput(request, input)
     return asNear(request, input).catch((error: unknown) => {
       throw peerError(error, { pc: farId, name: farId, status: view.status })
     })

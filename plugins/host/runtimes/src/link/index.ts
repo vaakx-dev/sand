@@ -1,11 +1,10 @@
 import { accessOf, callerOf, runtimeEnv } from '@sand/boot'
-import { cli } from '@sand/config/contract'
+import { cli, coreProblems } from '@sand/config/contract'
 import { definePlugin } from 'drydock'
 import { hostChannel, runtime as runtimeService, runtimesReload, type HostMessage, type Runtime, type RuntimeMessage } from '../contract'
 import { createActivity } from './activity'
 import { createHostChannel } from './channel'
 import { createDrain } from './drain'
-import { createFailures } from './failures'
 import { exitOnSignals, guardCrashes } from './guard'
 import { createOwnership } from './ownership'
 
@@ -23,7 +22,6 @@ export default definePlugin({
 
     guardCrashes(ctx)
     const send = (message: RuntimeMessage) => void process.send?.(message)
-    const failures = createFailures(ctx)
     let ready = false
     let listened = false
 
@@ -31,8 +29,7 @@ export default definePlugin({
       const timer = setTimeout(async () => {
         await ctx.settled()
         if (listened) return
-        failures.stop()
-        send({ type: 'failed', failed: failures.list() })
+        send({ type: 'failed', failed: coreProblems(ctx) })
       })
       return () => clearTimeout(timer)
     })
@@ -78,8 +75,7 @@ export default definePlugin({
         setTimeout(async () => {
           await ctx.settled()
           ready = true
-          failures.stop()
-          send({ type: 'ready', url, failed: failures.list() })
+          send({ type: 'ready', url, failed: coreProblems(ctx) })
           activity.flush()
         })
       },

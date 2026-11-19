@@ -1,4 +1,4 @@
-import { unanswered } from '@sand/host-hub/contract'
+import { rejectedInput, unanswered } from '@sand/host-hub/contract'
 import type { ConnectionStatus } from './status'
 
 type Reason = 'disconnected' | 'unsupported'
@@ -12,7 +12,8 @@ export interface UnavailablePc {
 
 const messages: Record<Reason, (name: string) => string> = {
   disconnected: name => `${name} isn't connected`,
-  unsupported: name => `${name} can't do this on the sand version it runs`,
+  unsupported: name =>
+    `${name} runs a different sand build that can't do this. Update the older of the two PCs to the newest build (update_install, with pc "${name}" for that PC), then try again`,
 }
 
 export class PcUnavailable extends Error {
@@ -25,4 +26,4 @@ export class PcUnavailable extends Error {
 
 export const isPcUnavailable = (error: unknown): error is PcUnavailable => error instanceof PcUnavailable
 
-export const peerError = (error: unknown, pc: Omit<UnavailablePc, 'reason'>) => (unanswered(error) ? new PcUnavailable({ ...pc, reason: 'unsupported' }) : error)
+export const peerError = (error: unknown, pc: Omit<UnavailablePc, 'reason'>) => (unanswered(error) || rejectedInput(error) ? new PcUnavailable({ ...pc, reason: 'unsupported' }) : error)

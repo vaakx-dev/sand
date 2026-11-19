@@ -1,7 +1,7 @@
 import { directRoute, memoryResumeStore, type ViaRelay } from '@sand/devices-connect'
 import { pcWake } from '@sand/devices-connect/pc'
 import { type CallOptions, type DeviceRecord, PcUnavailable, peerError, type Route, type RouteStore, type Signer } from '@sand/devices-contract'
-import type { Request } from '@sand/host-hub/contract'
+import { parseInput, type Request } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 import type { Events } from './events'
 import { type LinkSetup, openPeerLink, type PeerLink } from './link'
@@ -40,6 +40,7 @@ export const createPeerLinks = ({ signer, store, events, opened, changed }: Link
   const call = async <I, O>(pc: string, request: Request<I, O>, input: I, options?: CallOptions): Promise<O> => {
     const link = links.get(pc)
     if (!link) throw notPaired(pc)
+    await parseInput(request, input)
     return link.connection.call(request, input, options).catch((error: unknown) => {
       throw peerError(error, unavailableOf(link))
     })
