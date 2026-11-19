@@ -18,6 +18,7 @@ export interface Cli {
   cwd: string
   builtins: string
   safe: boolean
+  sandbox: boolean
   args: string[]
   prompt?: string
   exit(code?: number, afterwards?: () => Promise<void>): void

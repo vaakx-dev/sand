@@ -9,6 +9,7 @@
     "summary": "Starts sand and opens it in the browser or prints its link"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",

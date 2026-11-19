@@ -35,7 +35,7 @@ test('an add-on that fails to load is turned off and recorded, and is no core pr
   await writePlugin(join(addon, 'fine'), 'fine', '')
 
   const app = createApp()
-  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: false, args: [], exit() {} })
+  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: false, sandbox: false, args: [], exit() {} })
   app.load(resolve(import.meta.dir, '..', 'src', 'index.ts'))
   await app.settled()
 
@@ -61,7 +61,7 @@ test('an add-on that finds sand.db busy while it loads is tried again, not turne
   )
 
   const app = createApp()
-  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: false, args: [], exit() {} })
+  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: false, sandbox: false, args: [], exit() {} })
   app.load(resolve(import.meta.dir, '..', 'src', 'index.ts'))
   await app.settled()
 

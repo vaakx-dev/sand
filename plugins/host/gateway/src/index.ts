@@ -1,3 +1,4 @@
+import { cli } from '@sand/config/contract'
 import { auth, helloProof, helloResume, helloSession, thisPc } from '@sand/devices-contract'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hub } from '@sand/host-hub/contract'
@@ -22,7 +23,7 @@ import { createProxy } from './proxy'
 
 export default definePlugin({
   name: 'host-gateway',
-  inject: { hostOptions, runtimes, hub, auth, thisPc },
+  inject: { cli, hostOptions, runtimes, hub, auth, thisPc },
   async apply(ctx) {
     const { home, port } = ctx.hostOptions
     const registry = createHttpRegistry()
@@ -44,8 +45,9 @@ export default definePlugin({
     ctx.effect(() => () => removeServerInfo(home))
 
     const save = () => writeServerInfo(home, listener.urls())
+    const reachable = (scope: ListenScope): ListenScope => (ctx.cli.sandbox ? 'local' : scope)
     const bind = async (scope: ListenScope) => {
-      if (await listener.bind(scope)) await save()
+      if (await listener.bind(reachable(scope))) await save()
     }
     ctx.provide(hostHttp, {
       route: registry.route,

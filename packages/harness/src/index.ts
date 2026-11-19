@@ -1,4 +1,5 @@
 import { llm, llmModels } from '@sand/accounts/contract'
+import { inSandbox } from '@sand/boot'
 import { sessions, type Session } from '@sand/chats/contract'
 import { cli, pluginProblems, sandConfig, setTomlValues } from '@sand/config/contract'
 import type { RouteCaller } from '@sand/host-gateway/contract'
@@ -114,7 +115,7 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
   if (places.length) await Bun.write(join(home, 'apps', 'accounts.json'), JSON.stringify(places))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
-  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, args: [], exit() {} })
+  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, sandbox: inSandbox(home), args: [], exit() {} })
   if (config === undefined) {
     app.provide(projectFiles, copiesStub(projects))
     const path = join(home, 'sand.toml')

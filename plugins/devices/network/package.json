@@ -6,6 +6,7 @@
   "sand": {
     "feature": "phone",
     "host": "./src/index.ts",
+    "network": true,
     "label": "Network",
     "summary": "Routes to this PC, Tailscale and finding your other PCs"
   },
