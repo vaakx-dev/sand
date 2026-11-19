@@ -1,4 +1,5 @@
-import { type RelayChunk, viaClose } from '@sand/devices-contract'
+import { isPcUnavailable, type RelayChunk, viaClose } from '@sand/devices-contract'
+import { errorMessage } from '@sand/util'
 import { decodeBase64 } from './base64'
 import type { ViaRelay } from './relay'
 
@@ -20,7 +21,9 @@ export const fedBody = ({ relay, stream, stop }: Fed) => {
   const close = () => {
     if (!open) return
     finish()
-    void relay.call(viaClose, { stream }).catch(() => {})
+    void relay.call(viaClose, { stream }).catch((error: unknown) => {
+      if (!isPcUnavailable(error)) console.error(`couldn't stop a reply through another PC: ${errorMessage(error)}`)
+    })
   }
 
   const readable = new ReadableStream<Uint8Array>({
