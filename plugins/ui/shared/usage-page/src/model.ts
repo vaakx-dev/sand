@@ -82,7 +82,7 @@ export const usageModel = (deps: UsageDeps) => {
 
   const reloads = sig(0)
   const unpriced = derive(() => unpricedModels(parts.get().map(({ summary }) => summary)))
-  const prices = priceLoader(deps.wire, () => unpriced.get(), () => reloads.get())
+  const { prices, failure: priceFailure } = priceLoader(deps.wire, () => unpriced.get(), () => reloads.get())
 
   const usage = derive(() => {
     const list = parts.get().map(({ pc, summary }) => ({ pc, summary: repricedSummary(summary, prices.get()) }))
@@ -106,8 +106,9 @@ export const usageModel = (deps: UsageDeps) => {
     const states = fleet.states.get()
     return selected.get().flatMap((machine): Notice[] => {
       const state = states.get(machine.id)
-      if (machine.online && !state?.failure) return []
-      return [{ pc: machine, at: state?.summary ? state.at : 0, failure: machine.online ? (state?.failure ?? '') : '' }]
+      const failure = state?.failure || (machine.home ? priceFailure.get() : '')
+      if (machine.online && !failure) return []
+      return [{ pc: machine, at: state?.summary ? state.at : 0, failure: machine.online ? failure : '' }]
     })
   })
 
