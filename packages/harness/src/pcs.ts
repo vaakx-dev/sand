@@ -56,7 +56,7 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
         const response = await fetchAsNear(path, init)
         return response.body ? new Response(severable(response.body, cuts), response) : response
       },
-      on: () => () => {},
+      on: (event, listener) => far.hear(event, payload => up && listener(payload, farId)),
       hello: () => undefined,
       directUrl: () => undefined,
       retry() {},

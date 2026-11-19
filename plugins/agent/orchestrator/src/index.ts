@@ -10,6 +10,8 @@ import { createPcs } from './pcs'
 import { openReceipts } from './receipts'
 import { schema } from './schema'
 import { archiveSubagents } from './archive'
+import { createAway } from './away'
+import { openOutbox } from './outbox'
 import { stopSubagents } from './stop'
 import { serveThreads } from './serve'
 import { serveSettle } from './settle'
@@ -46,9 +48,12 @@ export default definePlugin({
     }
     ctx.provide(orchestrator, threads)
     ctx.on(sessionRemove, starters.remove)
-    const tell = reportFinished(ctx, starters, waits, owners, stopSubagents(ctx, starters, pcs), pcs)
-    archiveSubagents(ctx)
-    serveThreads(ctx, { threads, start, pcs, waits, tell })
+    const outbox = openOutbox(ctx.ledger)
+    const stopped = new Set<string>()
+    const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, outbox }))
+    stopSubagents(ctx, starters, sendAway, stopped)
+    archiveSubagents(ctx, starters, sendAway)
+    serveThreads(ctx, { threads, start, pcs, waits, outbox })
     serveSettle(ctx, settle_days)
   },
 })

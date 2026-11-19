@@ -126,20 +126,28 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
     routes.set(path, handler)
     return () => void routes.delete(path)
   }
-  const listeners = new Map<string, ((payload: unknown) => void)[]>()
+  const listeners = new Map<string, Set<(payload: unknown) => void>>()
   const broadcast = <P>(event: WireEvent<P>, payload: P) => {
-    const waiting = listeners.get(event.id) ?? []
-    listeners.delete(event.id)
-    waiting.forEach(listener => listener(payload))
+    for (const listener of [...(listeners.get(event.id) ?? [])]) listener(payload)
+  }
+  const hear = <P>(event: WireEvent<P>, listener: (payload: P) => void) => {
+    const heard = (payload: unknown) => listener(payload as P)
+    listeners.set(event.id, (listeners.get(event.id) ?? new Set()).add(heard))
+    return () => void listeners.get(event.id)?.delete(heard)
   }
   const heard = <P>(event: WireEvent<P>) =>
-    new Promise<P>(resolve => listeners.set(event.id, [...(listeners.get(event.id) ?? []), payload => resolve(payload as P)]))
+    new Promise<P>(resolve => {
+      const stop = hear<P>(event, payload => {
+        stop()
+        resolve(payload)
+      })
+    })
   app.provide(server, { handle: wire.handle, broadcast, tell() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
   await (config === undefined ? loadPlugins(app, models, extra, options) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
   await modelsReady(app, models.ids)
-  return { wire, routes, heard }
+  return { wire, routes, hear, heard }
 }
 
 type PluginOptions = Record<string, Record<string, unknown>>
@@ -167,7 +175,7 @@ const start = async (models: Models, options: SandOptions) => {
     link?.close()
     if (!shared) await removeFolder(home)
   }
-  const { wire, routes, heard } = await boot(app, home, models, options).catch(async (error: unknown) => {
+  const { wire, routes, hear, heard } = await boot(app, home, models, options).catch(async (error: unknown) => {
     await stop()
     throw error
   })
@@ -205,6 +213,7 @@ const start = async (models: Models, options: SandOptions) => {
     requests: (source: string) => need(app, replayRequests).bodies(source),
     native: (source: string) => need(app, replayRequests).native(source),
     ask: askAs({ device: 'page', kind: 'browser' }),
+    hear,
     heard,
     askAs,
     fetch: fetchAs(),

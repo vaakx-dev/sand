@@ -13,7 +13,7 @@ import {
   originOf,
   threadList,
   threadPending,
-  threadReport,
+  threadReports,
   threadSend,
   threadStart,
   threadStop,
@@ -22,8 +22,8 @@ import {
   waitLimit,
 } from './contract'
 import { findThread } from './find'
-import type { Finish } from './finished'
-import { type ListFilter, listThreads } from './list'
+import { listThreads } from './list'
+import type { Outbox } from './outbox'
 import type { Pcs } from './pcs'
 import type { Start } from './start'
 import { changePending } from './pending'
@@ -36,12 +36,12 @@ interface Served {
   start: Start
   pcs: Pcs
   waits: Waits
-  tell: (finish: Finish) => Promise<void>
+  outbox: Outbox
 }
 
 const forwarded = (caller: Caller) => caller.kind === 'pc'
 
-export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, waits, tell }: Served) => {
+export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, waits, outbox }: Served) => {
   const thread = (id: string) => findThread(ctx, id)
 
   const startFor = ({ from, ...input }: InputOf<typeof threadStart>, { device }: Caller) =>
@@ -63,24 +63,36 @@ export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, wa
     return caller.actor ? waits.during(caller.actor, id, waiting) : waiting()
   }
 
-  const send = ({ session: id, ...input }: InputOf<typeof threadSend>, { actor }: Caller) => {
+  const send = async ({ session: id, prompt, ...input }: InputOf<typeof threadSend>, caller: Caller) => {
+    const { actor } = caller
+    const pc = forwarded(caller) ? undefined : await pcs.ownerOf(id)
+    const message = { ...input, prompt: threads.sign(prompt, actor), origin: originOf(actor, input.origin) }
+    if (pc) return pcs.call(pc, threadSend, { session: id, ...message })
     checkSend(ctx, actor, id)
-    return threads.send(id, { ...input, origin: originOf(actor, input.origin), ...(actor && { from: actor }) })
+    return threads.send(id, message)
   }
 
-  const startedBy = (actor: Actor | undefined) => {
-    if (!actor) throw failure('invalid_request', "Only sand's own threads and bots start subagents")
-    const started = threads.started(actor.owner)
-    return new Set(Object.keys(started).filter(id => started[id] === actor.id))
+  const starterAsked = ({ mine, bot, thread }: InputOf<typeof threadList>, actor: Actor | undefined): Actor | undefined => {
+    if (mine && !actor) throw failure('invalid_request', "Only sand's own threads and bots start subagents")
+    if (mine) return actor
+    if (bot) return { owner: 'bot', id: bot }
+    if (thread) return { owner: 'thread', id: thread }
+    return undefined
   }
 
-  const subagentsOf = (starter: Actor | undefined, filter: ListFilter) => listThreads(ctx, { ...filter, subagents: true, ids: startedBy(starter) })
+  const startedBy = ({ owner, id }: Actor) => {
+    const started = threads.started(owner)
+    return new Set(Object.keys(started).filter(subagent => started[subagent] === id))
+  }
 
-  const list = ({ mine, bot, thread, ...filter }: InputOf<typeof threadList>, caller: Caller) => {
-    if (mine) return subagentsOf(caller.actor, filter)
-    if (bot) return subagentsOf({ owner: 'bot', id: bot }, filter)
-    if (thread) return subagentsOf({ owner: 'thread', id: thread }, filter)
-    return forwarded(caller) ? listThreads(ctx, filter) : pcs.list(filter)
+  const askedOf = ({ owner, id }: Actor) => (owner === 'bot' ? { bot: id } : { thread: id })
+
+  const list = (input: InputOf<typeof threadList>, caller: Caller) => {
+    const { mine, bot, thread, ...filter } = input
+    const starter = starterAsked(input, caller.actor)
+    const here = listThreads(ctx, starter ? { ...filter, subagents: true, ids: startedBy(starter) } : filter)
+    if (forwarded(caller)) return here
+    return pcs.besides(here, starter ? { ...filter, ...askedOf(starter) } : filter)
   }
 
   const conversationOf = (session: string | undefined, bot: string | undefined, actor: Actor | undefined): ConversationRef => {
@@ -106,9 +118,9 @@ export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, wa
     return joinDisposers(
       found.handle(threadStart, begin),
       found.handle(threadList, list),
-      onOwner(found, threadSend, send),
+      found.handle(threadSend, send),
       found.handle(threadWait, wait),
-      found.handle(threadReport, tell),
+      found.handle(threadReports, ({ delivered }, { device }) => outbox.take(device, delivered)),
       onOwner(found, historyRead, ({ session, bot, ...reading }, { actor }) => threads.read(conversationOf(session, bot, actor), reading)),
       onOwner(found, itemRead, ({ session, bot, item, offset }, { actor }) => threads.item(conversationOf(session, bot, actor), item, offset)),
       onOwner(found, threadPending, ({ session: id, pending, action }) => changePending(ctx, thread(id), pending, action)),
