@@ -13,6 +13,7 @@ import {
   originOf,
   threadList,
   threadPending,
+  threadRemove,
   threadReports,
   threadSend,
   threadStart,
@@ -37,11 +38,12 @@ interface Served {
   pcs: Pcs
   waits: Waits
   outbox: Outbox
+  remove(thread: string, pc: string): Promise<boolean>
 }
 
 const forwarded = (caller: Caller) => caller.kind === 'pc'
 
-export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, waits, outbox }: Served) => {
+export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, waits, outbox, remove }: Served) => {
   const thread = (id: string) => findThread(ctx, id)
 
   const startFor = ({ from, ...input }: InputOf<typeof threadStart>, { device }: Caller) =>
@@ -121,6 +123,7 @@ export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, wa
       found.handle(threadSend, send),
       found.handle(threadWait, wait),
       found.handle(threadReports, ({ delivered }, { device }) => outbox.take(device, delivered)),
+      found.handle(threadRemove, ({ session }, { device }) => remove(session, device)),
       onOwner(found, historyRead, ({ session, bot, ...reading }, { actor }) => threads.read(conversationOf(session, bot, actor), reading)),
       onOwner(found, itemRead, ({ session, bot, item, offset }, { actor }) => threads.item(conversationOf(session, bot, actor), item, offset)),
       onOwner(found, threadPending, ({ session: id, pending, action }) => changePending(ctx, thread(id), pending, action)),

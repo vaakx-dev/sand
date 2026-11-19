@@ -47,6 +47,11 @@ export interface AgentMeta {
 
 export type Starter = ConversationRef & { pc?: string }
 
+export interface RemoteThread {
+  thread: string
+  pc: string
+}
+
 export interface SubagentStart {
   call: string
   limits: AgentMeta
@@ -111,6 +116,7 @@ export interface Orchestrator {
   read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
   item(conversation: ConversationRef, item: string, offset?: number): ItemRead
   starterOf(thread: string): ConversationRef | undefined
+  elsewhere(starter: string): RemoteThread[]
   started(owner: Owner): Record<string, string>
   sign(prompt: Prompt, from: ConversationRef | undefined): Prompt
   owner(owner: Owner, kind: OwnerKind): Dispose
@@ -255,6 +261,7 @@ export const threadList = request('thread.list', {
   callers,
 })
 export const threadStop = request('thread.stop', { input: session, output: type<boolean>(), callers, place })
+export const threadRemove = request('thread.remove', { input: session, output: type<boolean>(), callers: 'pc' })
 export const threadUpdate = request('thread.update', {
   input: () => session().extend({
     title: z.string().min(1).optional(),

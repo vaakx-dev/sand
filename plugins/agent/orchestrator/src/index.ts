@@ -1,4 +1,4 @@
-import { readHistory, readItem, sessionRemove } from '@sand/chats/contract'
+import { readHistory, readItem } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
@@ -12,6 +12,7 @@ import { schema } from './schema'
 import { archiveSubagents } from './archive'
 import { createAway } from './away'
 import { openOutbox } from './outbox'
+import { removeStarted, removeSubagents } from './remove'
 import { stopSubagents } from './stop'
 import { serveThreads } from './serve'
 import { serveSettle } from './settle'
@@ -42,18 +43,19 @@ export default definePlugin({
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
       starterOf: starters.starterOf,
+      elsewhere: starters.elsewhere,
       started: starters.owned,
       sign: owners.sign,
       owner: owners.register,
     }
     ctx.provide(orchestrator, threads)
-    ctx.on(sessionRemove, starters.remove)
     const outbox = openOutbox(ctx.ledger)
     const stopped = new Set<string>()
     const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, outbox }))
     stopSubagents(ctx, starters, sendAway, stopped)
     archiveSubagents(ctx, starters, sendAway)
-    serveThreads(ctx, { threads, start, pcs, waits, outbox })
+    removeSubagents(ctx, starters, sendAway)
+    serveThreads(ctx, { threads, start, pcs, waits, outbox, remove: (thread, pc) => removeStarted(ctx, starters, thread, pc) })
     serveSettle(ctx, settle_days)
   },
 })

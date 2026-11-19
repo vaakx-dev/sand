@@ -1,7 +1,7 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { pairPcs, startSand, type Sand } from '@sand/harness'
 import { levelSet, modelSettings } from '@sand/model/contract'
-import { threadList, threadSend, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
+import { threadList, threadRemove, threadSend, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -287,4 +287,22 @@ test('a subagent started with a level runs on the model set for that level, and 
   expect(sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model).toBe('child/m')
   await until(() => sand.requests('child').length > 0)
   expect(bodies('child')[0]!.system[0]!.text).toContain("say so rather than guessing")
+})
+
+test('deleting an agent deletes its subagent on another PC, once that PC can be reached again, and no other PC may', async () => {
+  const { box: there, link } = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.')], [[{ type: 'hold' }]])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+  const child = await onBox(there, parent)
+  await until(() => there.turns.current(there.sessions.require(child.id)))
+
+  await expect(there.askAs({ device: 'stranger', kind: 'pc' })(threadRemove, { session: child.id })).rejects.toThrow('denied')
+
+  link.drop()
+  await sand.sessions.remove(parent.id)
+  await Bun.sleep(100)
+  expect(there.sessions.open(child.id)).toBeDefined()
+
+  link.open()
+  await until(() => !there.sessions.open(child.id))
 })

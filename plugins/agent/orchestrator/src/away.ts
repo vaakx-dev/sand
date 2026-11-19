@@ -1,10 +1,10 @@
 import { peers } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
 import type { OrchestratorContext } from './context'
-import { type Finish, failureOf, threadReported, threadReports, threadStop, threadUpdate } from './contract'
+import { type Finish, failureOf, threadReported, threadRemove, threadReports, threadStop, threadUpdate } from './contract'
 import type { Pcs } from './pcs'
 
-type Errand = 'stop' | 'archive'
+type Errand = 'stop' | 'archive' | 'remove'
 
 export interface Away {
   thread: string
@@ -22,12 +22,21 @@ export const createAway = (ctx: OrchestratorContext, pcs: Pcs, tell: (finish: Fi
   const owing = {
     stop: db.query("insert or ignore into thread_owed (thread, pc, action) values ($thread, $pc, 'stop')"),
     archive: db.query("insert or replace into thread_owed (thread, pc, action) values ($thread, $pc, 'archive')"),
+    remove: db.query("insert or replace into thread_owed (thread, pc, action) values ($thread, $pc, 'remove')"),
   }
   const settled = db.query('delete from thread_owed where thread = $thread')
   const queues = new Map<string, Promise<unknown>>()
 
-  const run = ({ thread, pc, errand }: Away) =>
-    errand === 'stop' ? pcs.call(pc, threadStop, { session: thread }) : pcs.call(pc, threadUpdate, { session: thread, archived: true }).then(() => true)
+  const run = async ({ thread, pc, errand }: Away) => {
+    switch (errand) {
+      case 'stop':
+        return pcs.call(pc, threadStop, { session: thread })
+      case 'archive':
+        return Boolean(await pcs.call(pc, threadUpdate, { session: thread, archived: true }))
+      case 'remove':
+        return pcs.call(pc, threadRemove, { session: thread })
+    }
+  }
 
   const owe = ({ thread, pc, errand }: Away, error: unknown) => {
     if (!unavailable(error)) throw error

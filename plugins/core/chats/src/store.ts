@@ -95,7 +95,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
 
   const topLevel = (id: string) => {
     const session = sessions.require(id)
-    if (session.kind === 'agent') throw new Error(`Chat ${id} is a subagent`)
+    if (session.kind === 'agent' && session.parent && sessions.open(session.parent)) throw new Error(`Chat ${id} is a subagent`)
     return session
   }
 

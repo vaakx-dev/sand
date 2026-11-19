@@ -3075,6 +3075,7 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/inspector": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/ui-kit": "workspace:*",
