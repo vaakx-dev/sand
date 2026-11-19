@@ -4,6 +4,7 @@ import { processes } from '@sand/processes/contract'
 import { server as serverService, type Server } from '@sand/server/contract'
 import { apiKeys, helloLimits, llm, llmLimits, llmModels, llmPlans, loginChange, type Limits, type LoginSharePc } from './contract'
 import { peers as pcLinks } from '@sand/devices-contract'
+import { runtimeChanged } from '@sand/host-runtimes/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
@@ -26,6 +27,7 @@ import { createOpenAI } from './openai/client'
 import { createPeers } from './peers/peers'
 import { serveLogin } from './serve/login'
 import { serveModels } from './serve/models'
+import { shareChange, shareInfo } from './share/info'
 import { serveShare } from './share/routes'
 import { createUsers } from './share/users'
 import { loginState } from './state'
@@ -85,8 +87,17 @@ export default definePlugin({
     const merged = mergeLLM(local, peers, accounts, catalog, options.stream_idle_ms)
     const state = () => loginState(accounts, peers, users)
     const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
+    const lent = () => JSON.stringify(shareInfo(local, accounts))
     let offered = signature()
+    let lending = lent()
     let told = ''
+
+    const tellBorrowers = () => {
+      const now = lent()
+      if (now === lending) return
+      lending = now
+      server?.broadcast(shareChange, undefined)
+    }
 
     onChange = () => {
       local.view.reset()
@@ -97,6 +108,7 @@ export default definePlugin({
         offered = now
         ctx.emit(llmModels)
       }
+      tellBorrowers()
       const current = state()
       const shown = JSON.stringify(current)
       if (!server || shown === told) return
@@ -111,15 +123,20 @@ export default definePlugin({
       return peer && { device: peer.pc.id, pc: peer.pc.name }
     }
 
+    ctx.on(llmLimits, tellBorrowers)
     ctx.provide(llm, merged.llm)
     ctx.provide(apiKeys, { key: accounts.apiKey })
     ctx.provide(llmPlans, { register: plans.register, limits: limits.save })
     ctx.watch(pcLinks, found => {
       void peers.refresh()
-      return found && joinDisposers(found.onOpen(() => void peers.refresh()), found.onChange(peers.linksChanged))
+      const recheck = (_: unknown, pc: string) => peers.recheck(pc)
+      return (
+        found &&
+        joinDisposers(found.onOpen(peers.recheck), found.onChange(peers.linksChanged), found.on(shareChange, recheck), found.on(runtimeChanged, recheck))
+      )
     })
     ctx.effect(() => {
-      const peerTimer = setInterval(() => void Promise.all([peers.refresh(), plans.refresh()]), refreshEvery)
+      const peerTimer = setInterval(() => void plans.refresh(), refreshEvery)
       const discoverTimer = setInterval(() => void catalog.refresh(), discoverEvery)
       peerTimer.unref?.()
       discoverTimer.unref?.()

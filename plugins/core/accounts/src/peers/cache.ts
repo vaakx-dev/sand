@@ -9,7 +9,7 @@ export type CachedInfo = Omit<ShareInfo, 'limits'>
 export type PeerCache = Record<string, CachedInfo>
 
 const valid = (value: unknown): value is CachedInfo =>
-  isRecord(value) && Array.isArray(value.accounts) && Array.isArray(value.models) && Array.isArray(value.levels) && !!value.prices
+  isRecord(value) && Array.isArray(value.accounts) && Array.isArray(value.models) && !!value.prices
 
 export const peerCache = (home: string) => {
   const file = join(home, 'cache', 'shared-accounts.json')

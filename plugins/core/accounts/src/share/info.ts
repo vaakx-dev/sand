@@ -1,8 +1,11 @@
-import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice, ProviderCapabilities } from '../contract'
+import { wireEvent } from '@sand/host-hub/contract'
+import type { AccountKind, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice, ProviderCapabilities } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 
 export const sharePaths = { info: '/llm/share/info', stream: '/llm/share/stream' } as const
+
+export const shareChange = wireEvent<void>('share.change')
 
 export interface SharedAccount {
   id: string
@@ -18,7 +21,6 @@ export interface SharedAccount {
 export interface ShareInfo {
   accounts: SharedAccount[]
   models: ModelInfo[]
-  levels: EffortLevel[]
   prices: Record<string, ModelPrice>
   limits: Limits[]
 }
@@ -43,5 +45,5 @@ export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
   )
   const list = accounts.list().flatMap(found => (shared.has(found.id) ? shareable(found, local.view.entry(found.id)?.meta.caps) : []))
   const limits = local.allLimits().filter(found => shared.has(found.source))
-  return { accounts: list, models, levels: local.levels(), prices, limits }
+  return { accounts: list, models, prices, limits }
 }

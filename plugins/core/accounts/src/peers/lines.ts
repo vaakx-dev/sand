@@ -11,7 +11,7 @@ export interface Reading {
   dropped(text: string, cause?: unknown): Error
 }
 
-const SILENCE_MS = 30_000
+export const SILENCE_MS = 30_000
 
 const silence = () => {
   let timer: ReturnType<typeof setTimeout> | undefined
