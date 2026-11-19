@@ -8,6 +8,8 @@ import { mergeHistory } from './data/merge/groups'
 import { normaliseHistory } from './data/normalise'
 import { gaugesOf } from './data/gauges'
 import { plansOf } from './data/pool'
+import { priceLoader, unpricedModels } from './data/prices'
+import { repricedSummary } from './data/reprice'
 import type { Pc } from './data/types'
 import { allPcs, usagePrefs } from './prefs'
 
@@ -78,8 +80,12 @@ export const usageModel = (deps: UsageDeps) => {
     )
   })
 
+  const reloads = sig(0)
+  const unpriced = derive(() => unpricedModels(parts.get().map(({ summary }) => summary)))
+  const prices = priceLoader(deps.wire, () => unpriced.get(), () => reloads.get())
+
   const usage = derive(() => {
-    const list = parts.get()
+    const list = parts.get().map(({ pc, summary }) => ({ pc, summary: repricedSummary(summary, prices.get()) }))
     return list.length ? mergeSummaries(list) : undefined
   })
 
@@ -115,6 +121,7 @@ export const usageModel = (deps: UsageDeps) => {
   }
 
   const refresh = () => {
+    reloads.set(reloads.get() + 1)
     fleet.refresh()
     history.refresh()
   }

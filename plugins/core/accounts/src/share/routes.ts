@@ -4,6 +4,7 @@ import type { Media } from '@sand/media/contract'
 import type { Server } from '@sand/server/contract'
 import { type LLMRequest, type ModelInfo, type NativeRef, rankSources, type ThreadRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
+import type { PriceList } from '../catalog/prices'
 import type { LocalLLM } from '../local'
 import { shareInfo, sharedIds, sharePaths } from './info'
 import { keepCarried } from './media'
@@ -13,6 +14,7 @@ import type { ShareUsers } from './users'
 interface ShareOptions {
   local: LocalLLM
   accounts: Accounts
+  prices: PriceList
   users: ShareUsers
   media: Media
 }
@@ -48,12 +50,12 @@ const sharedModel = (local: LocalLLM, accounts: Accounts, wanted: string) => {
   )
 }
 
-export const serveShare = (server: Server, { local, accounts, users, media }: ShareOptions) => {
+export const serveShare = (server: Server, { local, accounts, prices, users, media }: ShareOptions) => {
   const info = async (request: Request, caller?: RouteCaller) => {
     if (caller?.kind !== 'pc') return unpaired()
     users.seen(caller)
     if (new URL(request.url).searchParams.has('refresh')) await local.refreshLimits().catch(() => undefined)
-    return Response.json(shareInfo(local, accounts))
+    return Response.json(shareInfo(local, accounts, prices))
   }
 
   const stream = async (request: Request, caller?: RouteCaller) => {

@@ -64,7 +64,13 @@ export default definePlugin({
     const plans = createPlans({ saved, places, save: statusFile.write, changed, dropped: bridges.forget })
     const accounts = createAccounts(options.auth_file ?? join(home, 'auth.json'), plans, changed)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
-    const prices = new PriceList(options.prices, ctx.sandConfig)
+    const peers = createPeers({ home, media: ctx.media, links: () => ctx.get(pcLinks), changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
+    const prices = new PriceList({
+      settings: options.prices,
+      config: ctx.sandConfig,
+      borrowed: () => peers.list().flatMap(peer => (peer.refused ? [] : [peer.info?.userPrices ?? {}])),
+      changed,
+    })
     const catalog = createCatalog({ home, accounts, plans, prices, changed, report: error => ctx.report(error) })
     const login = createLogin(accounts, plans, catalog.forget)
 
@@ -83,11 +89,10 @@ export default definePlugin({
 
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, plans, catalog, claude, openai, compat, bridges, limits })
-    const peers = createPeers({ home, media: ctx.media, links: () => ctx.get(pcLinks), changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
     const merged = mergeLLM(local, peers, accounts, catalog, options.stream_idle_ms)
     const state = () => loginState(accounts, peers, users)
     const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
-    const lent = () => JSON.stringify(shareInfo(local, accounts))
+    const lent = () => JSON.stringify(shareInfo(local, accounts, prices))
     let offered = signature()
     let lending = lent()
     let told = ''
@@ -100,6 +105,7 @@ export default definePlugin({
     }
 
     onChange = () => {
+      prices.reset()
       local.view.reset()
       merged.reset()
       catalog.sync()
@@ -160,7 +166,7 @@ export default definePlugin({
         found.hello(helloLimits, () => merged.llm.limits?.(), { fresh: true }),
         serveLogin(found, accounts, login, { plans, state, load: () => Promise.all([peers.refresh(), plans.refresh()]).then(() => {}), conflict }),
         serveModels(found, { view: merged.view, catalog, prices, refreshPeers: () => peers.refresh() }),
-        serveShare(found, { local, accounts, users, media: ctx.media }),
+        serveShare(found, { local, accounts, prices, users, media: ctx.media }),
       )
     })
   },
