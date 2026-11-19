@@ -42,7 +42,9 @@ export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEv
           stop()
         }
       }
-      beat = setInterval(() => line({ type: 'ping' }), heartbeat)
+      const ping = () => line({ type: 'ping' })
+      ping()
+      beat = setInterval(ping, heartbeat)
       try {
         for await (const event of events(upstream)) {
           if (upstream.aborted) break
