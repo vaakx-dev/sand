@@ -2,7 +2,8 @@ import type { FileBlock, UserContent } from '@sand/chats/contract'
 import type { InputOf } from '@sand/host-hub/contract'
 import type { Media } from '@sand/media/contract'
 import type { Transfers } from '@sand/transfers/contract'
-import type { attachmentsAdd } from '../contract'
+import { errorMessage } from '@sand/util'
+import type { attachmentsAdd, attachmentsUpload, Uploaded } from '../contract'
 import type { ImageLimits } from '../image'
 import { copyFile, mkdir, rename, stat } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
@@ -19,9 +20,7 @@ export interface UploadPlace {
   images: ImageLimits
 }
 
-type Added = InputOf<typeof attachmentsAdd>
-
-type Uploaded = Exclude<Added, { path: string }>
+type Upload = InputOf<typeof attachmentsUpload>
 
 type Place = (source: string, target: string) => Promise<void>
 
@@ -61,9 +60,10 @@ const fitFile = async ({ source, name, size }: Incoming, limits: ImageLimits) =>
   }
 }
 
-const checkSize = (place: UploadPlace, size: number) => {
-  if (size > place.uploadBytes) throw new Error(`Uploads are limited to ${Math.round(place.uploadBytes / 1024 ** 2)} MB`)
-  if (!size) throw new Error('That file is empty')
+const sizeProblem = (place: UploadPlace, size: number) => {
+  if (size > place.uploadBytes) return `Uploads are limited to ${Math.round(place.uploadBytes / 1024 ** 2)} MB`
+  if (!size) return 'That file is empty'
+  return undefined
 }
 
 const keep = async (place: UploadPlace, incoming: Incoming): Promise<UserContent> => {
@@ -71,12 +71,21 @@ const keep = async (place: UploadPlace, incoming: Incoming): Promise<UserContent
   return fitted ? stored(place.media, fitted) : await storeFile(place.uploads, incoming)
 }
 
-const finishUpload = async (place: UploadPlace, { transfer, name, chunks, size }: Uploaded) => {
-  checkSize(place, size)
+const kept = async (place: UploadPlace, incoming: Incoming): Promise<Uploaded> => {
   try {
+    return { added: await keep(place, incoming) }
+  } catch (error) {
+    return { refused: errorMessage(error) }
+  }
+}
+
+const finishUpload = async (place: UploadPlace, { transfer, name, chunks, size }: Upload): Promise<Uploaded> => {
+  try {
+    const problem = sizeProblem(place, size)
+    if (problem) return { refused: problem }
     const source = await place.transfers.received(transfer, chunks, size)
-    if (!source) throw new Error('That file is empty')
-    return await keep(place, { source, name, size, place: rename })
+    if (!source) return { refused: 'That file is empty' }
+    return await kept(place, { source, name, size, place: rename })
   } finally {
     await place.transfers.release(transfer)
   }
@@ -88,11 +97,12 @@ const sizeOf = async (path: string) => {
   return found.size
 }
 
-const attachFile = async (place: UploadPlace, { path: given, cwd }: Extract<Added, { path: string }>) => {
+const attachFile = async (place: UploadPlace, { path: given, cwd }: InputOf<typeof attachmentsAdd>) => {
   const path = cwd ? resolve(cwd, given) : given
   const size = await sizeOf(path)
-  checkSize(place, size)
+  const problem = sizeProblem(place, size)
+  if (problem) throw new Error(problem)
   return keep(place, { source: path, name: basename(path), size, place: copyFile })
 }
 
-export const addAttachment = (place: UploadPlace, added: Added) => ('path' in added ? attachFile(place, added) : finishUpload(place, added))
+export { attachFile, finishUpload }

@@ -7,12 +7,12 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { attachments, attachmentsAdd, helloAttachments, type AttachmentLimits } from './contract'
+import { attachments, attachmentsAdd, attachmentsUpload, helloAttachments, type AttachmentLimits } from './contract'
 import { fromBytes, fromFile, isMedia } from './file'
 import type { ImageLimits } from './image'
 import { labelImages } from './label'
 import { fitImages } from './refit'
-import { addAttachment, type UploadPlace } from './upload/store'
+import { attachFile, finishUpload, type UploadPlace } from './upload/store'
 
 export default definePlugin({
   name: 'attachments',
@@ -36,7 +36,8 @@ export default definePlugin({
       found
         ? joinDisposers(
             found.hello(helloAttachments, () => limits),
-            found.handle(attachmentsAdd, added => addAttachment(place, added)),
+            found.handle(attachmentsAdd, added => attachFile(place, added)),
+            found.handle(attachmentsUpload, upload => finishUpload(place, upload)),
           )
         : undefined,
     )

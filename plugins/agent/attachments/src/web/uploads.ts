@@ -1,10 +1,10 @@
 import type { UserContent } from '@sand/chats/contract'
 import { wireHello } from '@sand/devices-contract'
 import { mediaView } from '@sand/media/web/contract'
-import { uploadBlob, type Resumable } from '@sand/transfers/contract'
+import { Refused as ChunkRefused, uploadBlob, type Resumable } from '@sand/transfers/contract'
 import { errorMessage, uuid } from '@sand/util'
 import { listen, onTimeout, sig, type Sig } from '@vaakx-dev/vrui'
-import { attachmentsAdd } from '../contract'
+import { attachmentsUpload } from '../contract'
 import type { ShelfContext } from './context'
 import type { Held, Upload } from './contract'
 import { forgetUpload, keepUpload, resumeUpload } from './resume'
@@ -25,13 +25,15 @@ interface Job extends Running {
   result: Promise<UserContent>
 }
 
+class Refusal extends Error {}
+
 const FILES_AT_ONCE = 3
 
 const CHUNK_TIMEOUT_MS = 120_000
 
-const AUTOMATIC_RETRIES = 2
+const FIRST_RETRY_DELAY_MS = 1_000
 
-const RETRY_DELAY_MS = 2_000
+const MAX_RETRY_DELAY_MS = 5_000
 
 const delay = (ms: number) => new Promise<void>(resolve => onTimeout(resolve, ms))
 
@@ -41,6 +43,8 @@ const restart = (resumable: Resumable) => {
 }
 
 const keyOf = (device: string | undefined) => device ?? ''
+
+const final = (error: unknown) => error instanceof Refusal || error instanceof ChunkRefused
 
 export const createUploads = (ctx: ShelfContext) => {
   const jobs = new WeakMap<File, Map<string, Job>>()
@@ -92,30 +96,27 @@ export const createUploads = (ctx: ShelfContext) => {
       keepUpload(job.file, job.device, job.resumable)
     }
     const sent = await uploadBlob(fetchFrom, job.file, { progress, signal: job.signal, resumable: job.resumable })
-    try {
-      return await ctx.wire.call(attachmentsAdd, { ...sent, name: job.file.name }, job.device)
-    } catch (error) {
+    const uploaded = await ctx.wire.call(attachmentsUpload, { ...sent, name: job.file.name }, job.device).finally(() => {
       restart(job.resumable)
-      throw error
-    } finally {
       forgetUpload(job.file, job.device)
-    }
+    })
+    if ('refused' in uploaded) throw new Refusal(uploaded.refused)
+    return uploaded.added
   }
 
-  const attempt = async (job: Running, retries: number): Promise<UserContent> => {
+  const attempt = async (job: Running, retryDelayMs: number): Promise<UserContent> => {
     try {
       return await transfer(job)
     } catch (error) {
-      if (job.signal.aborted) throw error
+      if (job.signal.aborted || final(error)) throw error
       if (!reachable(job.device)) {
         job.state.set({ phase: 'offline', sent: job.state.get().sent })
         await reconnect(job)
-        return attempt(job, retries)
+        return attempt(job, FIRST_RETRY_DELAY_MS)
       }
-      if (retries <= 0) throw error
       job.state.set({ phase: 'retrying', sent: job.state.get().sent })
-      await delay(RETRY_DELAY_MS)
-      return attempt(job, retries - 1)
+      await delay(retryDelayMs)
+      return attempt(job, Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS))
     }
   }
 
@@ -130,7 +131,7 @@ export const createUploads = (ctx: ShelfContext) => {
     if (!job.resumable.arrived.size) await resumeUpload(job.file, job.device, job.resumable)
     await slot()
     try {
-      const content = await attempt(job, AUTOMATIC_RETRIES)
+      const content = await attempt(job, FIRST_RETRY_DELAY_MS)
       remember(job.file, content)
       job.state.set({ phase: 'done', sent: job.file.size, content })
       return content
