@@ -2,6 +2,9 @@ import type { Session } from '@sand/chats/contract'
 import { backgroundJobs } from '@sand/jobs/contract'
 import { conversationStop } from '@sand/engine/contract'
 import type { OrchestratorContext } from './context'
+import { failureOf, threadStop } from './contract'
+import type { Pcs } from './pcs'
+import type { Starters } from './starters'
 
 const STOP_WAIT_MS = 10_000
 
@@ -20,10 +23,17 @@ export const stopThread = async (ctx: OrchestratorContext, session: Session) => 
   return turnStopped || jobsStopped
 }
 
-export const stopSubagents = (ctx: OrchestratorContext) => {
+export const stopSubagents = (ctx: OrchestratorContext, starters: Starters, pcs: Pcs) => {
   const stopped = new Set<string>()
+
+  const stopElsewhere = async (thread: string, pc: string) => {
+    stopped.add(thread)
+    if (!(await pcs.call(pc, threadStop, { session: thread }))) stopped.delete(thread)
+  }
+
   ctx.on(conversationStop, parent => {
     for (const child of ctx.sessions.children(parent.id)) if (ctx.turns.interrupt(ctx.sessions.require(child.id))) stopped.add(child.id)
+    for (const { thread, pc } of starters.elsewhere(parent.id)) stopElsewhere(thread, pc).catch(error => failureOf(error).code === 'unavailable' || ctx.report(error))
   })
   return stopped
 }

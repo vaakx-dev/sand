@@ -4,8 +4,9 @@ import type { SessionSettings } from '@sand/model/contract'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
-import { failure, type Sent, type StartInput, subagentStarted } from './contract'
+import { type AgentMeta, agentLimits, failure, type Sent, type StartInput, type SubagentStart, subagentStarted } from './contract'
 import type { Owners } from './owners'
+import type { Pcs } from './pcs'
 import type { Receipts } from './receipts'
 import { matchSettings } from './settings'
 import type { Starters } from './starters'
@@ -41,13 +42,23 @@ const inheritedSettings = (ctx: OrchestratorContext, parent: Session | undefined
   return { ...(model && { model }), ...(effort && { effort }), speed }
 }
 
-export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starters: Starters, owners: Owners) => {
+const starterOf = ({ from }: StartInput) => {
+  if (!from) throw failure('invalid_request', 'A subagent needs the thread or bot that starts it')
+  return from
+}
+
+export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starters: Starters, owners: Owners, pcs: Pcs) => {
   const opening = new Map<string, Promise<Session>>()
 
+  const giveLimits =
+    (limits: AgentMeta): Adopt =>
+    session =>
+      ctx.get(agentLimits)?.give(session, limits)
+
   const opener = (input: StartInput): Open => {
-    const { subagent, from, title } = input
+    const { subagent, title } = input
     if (!subagent) return (cwd, project) => ctx.sessions.thread(cwd, project === undefined ? undefined : { project })
-    if (!from) throw failure('invalid_request', 'A subagent needs the thread or bot that starts it')
+    const from = starterOf(input)
     return (cwd, project) => ctx.sessions.agent({ parent: from.id, cwd, project, title: title ?? '', origin: subagent.call })
   }
 
@@ -90,11 +101,40 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     return pending
   }
 
+  const startOn = async (name: string, input: StartInput, { call, limits }: SubagentStart, inherited: SessionSettings): Promise<Sent> => {
+    const pc = pcs.find(name)
+    const from = starterOf(input)
+    const { cwd, project, title, label, worktree, branch, base, clientRequestId } = input
+    const sent = await pcs.start(pc, {
+      cwd,
+      project,
+      title,
+      label,
+      worktree,
+      branch,
+      base,
+      clientRequestId,
+      prompt: owners.sign(input.prompt, from),
+      model: input.model ?? inherited.model,
+      effort: input.effort ?? inherited.effort,
+      speed: input.speed ?? inherited.speed,
+      origin: 'agent',
+      from: { owner: from.owner, id: from.id },
+      subagent: { call, limits },
+    })
+    starters.put(sent.thread, { ...from, pc }, 'subagent')
+    return sent
+  }
+
+  const signedHere = ({ prompt, from }: StartInput) => (from?.pc ? prompt : owners.sign(prompt, from))
+
   return async (input: StartInput, adopt?: Adopt): Promise<Sent> => {
-    const inherited = input.subagent ? inheritedSettings(ctx, parentOf(ctx, input)) : {}
+    const { subagent } = input
+    const inherited = subagent ? inheritedSettings(ctx, parentOf(ctx, input)) : {}
+    if (subagent?.pc) return startOn(subagent.pc, input, subagent, inherited)
     const settings = { ...inherited, ...matchSettings(ctx, input, inherited.model) }
-    const prompt = owners.sign(input.prompt, input.from)
-    const session = await threadFor(input, adopt)
+    const prompt = signedHere(input)
+    const session = await threadFor(input, subagent ? giveLimits(subagent.limits) : adopt)
     const starter = input.from
     const first = starter !== undefined && starters.put(session.id, starter, input.subagent ? 'subagent' : 'thread')
     if (first && input.subagent) ctx.emit(subagentStarted, session.id, starter)

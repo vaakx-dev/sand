@@ -14,6 +14,10 @@ const effortInput = (ctx: AgentsContext) => {
 
 const worktreeField = z.boolean().optional().describe('Give it its own git worktree and branch, so its edits stay apart from yours and from other agents')
 
+const pcField = z.string().optional().describe('Another of your PCs to run it on, by name from pc_list; give it a project or folder there')
+
+const featureOn = (ctx: AgentsContext, feature: string) => ctx.get(features)?.on(feature) ?? true
+
 const inputSchema = (ctx: AgentsContext) => {
   const input = z.object({
     label: z.string().describe('A short title, 3 to 6 words'),
@@ -23,8 +27,10 @@ const inputSchema = (ctx: AgentsContext) => {
     effort: effortInput(ctx).optional().describe('Reasoning effort (default: inherited)'),
     level: z.enum(levels).optional().describe('How heavy the job is, which picks the model the user set for it (default: yours)'),
     project: z.string().optional().describe('A project id to work in instead of your folder, from project_list'),
+    folder: z.string().optional().describe('A folder to work in instead of yours; a full path when it runs on another PC'),
   })
-  return (ctx.get(features)?.on('worktrees') ?? true) ? input.extend({ worktree: worktreeField }) : input
+  const inWorktrees = featureOn(ctx, 'worktrees') ? input.extend({ worktree: worktreeField }) : input
+  return featureOn(ctx, 'pcs') ? inWorktrees.extend({ pc: pcField }) : inWorktrees
 }
 
 const started = (thread: string) =>

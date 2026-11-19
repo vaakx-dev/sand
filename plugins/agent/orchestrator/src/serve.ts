@@ -13,6 +13,7 @@ import {
   originOf,
   threadList,
   threadPending,
+  threadReport,
   threadSend,
   threadStart,
   threadStop,
@@ -21,22 +22,45 @@ import {
   waitLimit,
 } from './contract'
 import { findThread } from './find'
+import type { Finish } from './finished'
 import { type ListFilter, listThreads } from './list'
 import type { Pcs } from './pcs'
 import type { Start } from './start'
 import { changePending } from './pending'
 import { stopTurn } from './stop'
 import { updateThread } from './update'
+import type { Waits } from './waits'
+
+interface Served {
+  threads: Orchestrator
+  start: Start
+  pcs: Pcs
+  waits: Waits
+  tell: (finish: Finish) => Promise<void>
+}
 
 const forwarded = (caller: Caller) => caller.kind === 'pc'
 
-export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, start: Start, pcs: Pcs) => {
+export const serveThreads = (ctx: OrchestratorContext, { threads, start, pcs, waits, tell }: Served) => {
   const thread = (id: string) => findThread(ctx, id)
 
+  const startFor = ({ from, ...input }: InputOf<typeof threadStart>, { device }: Caller) =>
+    start({ ...input, ...(from && { from: { ...from, pc: device } }) })
+
   const begin = ({ pc, ...input }: InputOf<typeof threadStart>, caller: Caller) => {
-    if (pc && !forwarded(caller)) return pcs.start(pc, input)
+    if (forwarded(caller)) return startFor(input, caller)
+    if (input.from || input.subagent) throw failure('invalid_request', 'Only another PC starts a subagent through thread.start')
+    if (pc) return pcs.start(pcs.find(pc), input)
     const { actor } = caller
     return start({ ...input, origin: originOf(actor, input.origin), ...(actor && { from: actor }) }, adoptBy(ctx, actor))
+  }
+
+  const wait = async ({ session: id, until = 'attention', timeoutMs = waitLimit }: InputOf<typeof threadWait>, caller: Caller) => {
+    checkWait(caller.actor, id)
+    const pc = forwarded(caller) ? undefined : await pcs.ownerOf(id)
+    const input = { session: id, until, timeoutMs }
+    const waiting = () => (pc ? pcs.call(pc, threadWait, input, timeoutMs + answerGrace) : threads.wait(id, until, AbortSignal.timeout(timeoutMs)))
+    return caller.actor ? waits.during(caller.actor, id, waiting) : waiting()
   }
 
   const send = ({ session: id, ...input }: InputOf<typeof threadSend>, { actor }: Caller) => {
@@ -71,11 +95,10 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
     found: Server,
     request: Request<I, O>,
     here: (input: I, caller: Caller) => O | Promise<O>,
-    timeout?: (input: I) => number,
   ) =>
     found.handle(request, async (input, caller) => {
       const pc = forwarded(caller) || !input.session ? undefined : await pcs.ownerOf(input.session)
-      return pc ? pcs.call(pc, request, input, timeout?.(input)) : here(input, caller)
+      return pc ? pcs.call(pc, request, input) : here(input, caller)
     })
 
   ctx.watch(server, found => {
@@ -84,15 +107,8 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
       found.handle(threadStart, begin),
       found.handle(threadList, list),
       onOwner(found, threadSend, send),
-      onOwner(
-        found,
-        threadWait,
-        ({ session: id, until = 'attention', timeoutMs = waitLimit }, { actor }) => {
-          checkWait(actor, id)
-          return threads.wait(id, until, AbortSignal.timeout(timeoutMs), actor)
-        },
-        ({ timeoutMs = waitLimit }) => timeoutMs + answerGrace,
-      ),
+      found.handle(threadWait, wait),
+      found.handle(threadReport, tell),
       onOwner(found, historyRead, ({ session, bot, ...reading }, { actor }) => threads.read(conversationOf(session, bot, actor), reading)),
       onOwner(found, itemRead, ({ session, bot, item, offset }, { actor }) => threads.item(conversationOf(session, bot, actor), item, offset)),
       onOwner(found, threadPending, ({ session: id, pending, action }) => changePending(ctx, thread(id), pending, action)),

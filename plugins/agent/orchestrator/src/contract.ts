@@ -2,7 +2,7 @@ import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryR
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, helloField, request, type Request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SendResult, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
-import { type Level, type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
+import { type Level, levels, type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
@@ -38,6 +38,21 @@ export type HistoryRead = Named & HistoryPage
 
 export type ItemRead = Named & HistoryItemPage
 
+export interface AgentMeta {
+  name?: string
+  depth: number
+  tools?: string[]
+  level?: Level
+}
+
+export type Starter = ConversationRef & { pc?: string }
+
+export interface SubagentStart {
+  call: string
+  limits: AgentMeta
+  pc?: string
+}
+
 export interface StartInput {
   cwd?: string
   project?: string
@@ -53,8 +68,8 @@ export interface StartInput {
   base?: string
   origin: TurnOrigin
   clientRequestId: string
-  from?: ConversationRef
-  subagent?: { call: string }
+  from?: Starter
+  subagent?: SubagentStart
 }
 
 export interface Notice {
@@ -92,7 +107,7 @@ export interface OwnerKind {
 export interface Orchestrator {
   start(input: StartInput, adopt?: (session: Session) => void): Promise<Sent>
   send(thread: string, input: SendInput): Promise<Sent>
-  wait(thread: string, until: WaitUntil, signal: AbortSignal, by?: ConversationRef): Promise<ThreadState>
+  wait(thread: string, until: WaitUntil, signal: AbortSignal): Promise<ThreadState>
   read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
   item(conversation: ConversationRef, item: string, offset?: number): ItemRead
   starterOf(thread: string): ConversationRef | undefined
@@ -102,13 +117,6 @@ export interface Orchestrator {
 }
 
 export const orchestrator = service<Orchestrator>('orchestrator')
-
-export interface AgentMeta {
-  name?: string
-  depth: number
-  tools?: string[]
-  level?: Level
-}
 
 export interface AgentLimits {
   child(parent: Session | undefined, name?: string, tools?: string[]): AgentMeta
@@ -159,6 +167,10 @@ const session = lazy(() => z.object({ session: z.string() }))
 const prompt = lazy(() => promptInput().refine(given => given.length > 0, 'Write a message'))
 const origin = lazy(() => z.enum(['user', ...outsideOrigins]))
 const clientRequestId = lazy(() => z.string().min(1))
+const conversationRef = lazy(() => z.object({ owner: z.enum(['thread', 'bot']), id: z.string().min(1) }))
+const agentMeta = lazy(() =>
+  z.object({ name: z.string().optional(), depth: z.number().int().min(0), tools: z.array(z.string()).optional(), level: z.enum(levels).optional() }),
+)
 
 export const threadStart = request('thread.start', {
   input: () => z.object({
@@ -175,12 +187,19 @@ export const threadStart = request('thread.start', {
     branch: z.string().min(1).optional(),
     base: z.string().min(1).optional(),
     pc: z.string().min(1).optional(),
-    origin: origin(),
+    origin: z.enum(['user', ...outsideOrigins, 'agent']),
     clientRequestId: clientRequestId(),
+    from: conversationRef().optional(),
+    subagent: z.object({ call: z.string().min(1), limits: agentMeta() }).optional(),
   }),
   output: type<Sent>(),
   callers,
   place,
+})
+export const threadReport = request('thread.report', {
+  input: () => z.object({ to: conversationRef(), thread: z.string().min(1), text: z.string(), clientRequestId: clientRequestId() }),
+  output: type<void>(),
+  callers: 'pc',
 })
 export const threadSend = request('thread.send', {
   input: () => session().extend({
