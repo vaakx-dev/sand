@@ -69,8 +69,9 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   const cache = peerCache(home)
   const states = new Map<string, PeerState>()
   let saved: PeerCache = {}
+  const wanted = new Map<string, boolean>()
+  const running = new Map<string, Promise<void>>()
   let pcs: SharePc[] = []
-  let checking: Promise<void> | undefined
 
   const state = (pc: SharePc) => {
     const found = states.get(pc.id)
@@ -115,28 +116,55 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   }
 
   const sync = (found: PcLinks) => {
+    const before = JSON.stringify(pcs)
     pcs = found.list().map(({ id, name }) => ({ id, name }))
     const ids = new Set(pcs.map(pc => pc.id))
     for (const id of [...states.keys()]) if (!ids.has(id)) states.delete(id)
     if (Object.keys(saved).some(id => !ids.has(id))) save(Object.fromEntries(Object.entries(saved).filter(([id]) => ids.has(id))))
     pcs.forEach(state)
+    return JSON.stringify(pcs) !== before
   }
 
-  const run = async (limits: boolean) => {
+  const checkWhileWanted = (found: PcLinks, pc: SharePc) => {
+    const run = (async () => {
+      for (let limits = wanted.get(pc.id); limits !== undefined; limits = wanted.get(pc.id)) {
+        wanted.delete(pc.id)
+        await check(found, pc, limits)
+      }
+      running.delete(pc.id)
+      changed()
+    })()
+    running.set(pc.id, run)
+    return run
+  }
+
+  const recheck = (found: PcLinks, pc: SharePc, limits: boolean) => {
+    wanted.set(pc.id, limits || (wanted.get(pc.id) ?? false))
+    return running.get(pc.id) ?? checkWhileWanted(found, pc)
+  }
+
+  const refresh = async (limits = false) => {
     const found = links()
     if (!found) return
     sync(found)
-    await Promise.all(pcs.map(pc => check(found, pc, limits)))
-    changed()
+    await Promise.all(pcs.map(pc => recheck(found, pc, limits)))
   }
 
-  const refresh = (limits = false) => (checking ??= run(limits).finally(() => (checking = undefined)))
+  const recheckPc = (id: string) => {
+    const found = links()
+    if (!found) return
+    if (sync(found)) changed()
+    const pc = pcs.find(known => known.id === id)
+    if (pc) void recheck(found, pc, false)
+  }
 
   const linksChanged = () => {
-    const connected = new Set(links()?.connected() ?? [])
+    const found = links()
+    const listed = !!found && sync(found)
+    const connected = new Set(found?.connected() ?? [])
     const lost = [...states.values()].filter(peer => peer.online && !connected.has(peer.pc.id))
     for (const peer of lost) Object.assign(peer, { online: false, error: undefined })
-    if (lost.length) changed()
+    if (listed || lost.length) changed()
   }
 
   const ready = cache.read().then(found => {
@@ -221,7 +249,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
     try {
       yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: dropped(peer, pin) }), peer.pc)
     } catch (error) {
-      if (error instanceof UsageLimited) await check(reachablePeers(links()), peer.pc, false)
+      if (error instanceof UsageLimited) await recheck(reachablePeers(links()), peer.pc, false)
       throw error
     }
   }
@@ -229,6 +257,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   return {
     ready,
     refresh,
+    recheck: recheckPc,
     linksChanged,
     list,
     account,

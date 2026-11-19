@@ -13,7 +13,7 @@ import { createPlans } from '../src/auth/plans'
 import { viewOf } from '../src/catalog/view'
 import { llm, type LLMEvent, type LLMRequest, type NativeRef, type Plan, type ProviderCapabilities, statelessCaps, ThreadLost } from '../src/contract'
 import type { LocalLLM } from '../src/local'
-import { sharePaths } from '../src/share/info'
+import { shareChange, sharePaths } from '../src/share/info'
 import { serveShare } from '../src/share/routes'
 import { createUsers } from '../src/share/users'
 
@@ -127,8 +127,16 @@ const withoutCaps =
     return Response.json({ ...info, accounts: info.accounts.map(({ caps: _, ...account }: { caps: unknown }) => account) })
   }
 
+const lentOnly = (answer: RouteHandler, lent: () => boolean): RouteHandler => async (request, from) => {
+  const response = await answer(request, from)
+  if (new URL(request.url).pathname !== sharePaths.info || lent()) return response
+  return Response.json({ ...(await response.json()), accounts: [], models: [] })
+}
+
 const linksTo = (pcs: Record<string, RouteHandler>, down: Set<string>, calls: string[]) => {
   const opened = new Set<(pc: string) => void>()
+  const changed = new Set<() => void>()
+  const shareChanged = new Set<(payload: unknown, pc: string) => void>()
   const links: PcLinks = {
     list: () => Object.keys(pcs).map(id => ({ id, name: id, status: { phase: 'connecting', attempt: 0 }, routes: [], attempts: [] })),
     get: () => undefined,
@@ -140,7 +148,12 @@ const linksTo = (pcs: Record<string, RouteHandler>, down: Set<string>, calls: st
       if (down.has(pc)) throw new Error('connection refused')
       return pcs[pc]!(new Request(`http://${pc}${path}`, init), caller)
     },
-    on: () => () => {},
+    on(event, listener) {
+      if (event.id !== shareChange.id) return () => {}
+      const heard = (payload: unknown, pc: string) => listener(payload as never, pc)
+      shareChanged.add(heard)
+      return () => void shareChanged.delete(heard)
+    },
     hello: () => undefined,
     directUrl: () => undefined,
     retry() {},
@@ -148,10 +161,20 @@ const linksTo = (pcs: Record<string, RouteHandler>, down: Set<string>, calls: st
       opened.add(listener)
       return () => void opened.delete(listener)
     },
-    onChange: () => () => {},
+    onChange(listener) {
+      changed.add(listener)
+      return () => void changed.delete(listener)
+    },
   }
   sand.app.provide(pcLinks, links)
-  return { reopen: (pc: string) => opened.forEach(listener => listener(pc)) }
+  return {
+    reopen: (pc: string) => opened.forEach(listener => listener(pc)),
+    shareChanged: (pc: string) => shareChanged.forEach(listener => listener(undefined, pc)),
+    unpair(pc: string) {
+      delete pcs[pc]
+      changed.forEach(listener => listener())
+    },
+  }
 }
 
 const until = async (ready: () => boolean) => {
@@ -195,6 +218,24 @@ test('a borrowed native session gets its thread, delta and handoff, stays on the
   expect(restarted!.thread).toMatchObject({ generation: 2, fresh: true })
   expect(restarted!.thread!.native).toBeUndefined()
   expect(restarted!.handoff).toBeDefined()
+})
+
+test('models a PC starts sharing show up when it says so, and go when it is unpaired', async () => {
+  sand = await startSand([])
+  const pc = await accountPc(statelessCaps(), [reply('lent')])
+  let lent = false
+  let looked = 0
+  const links = linksTo({ pc: lentOnly(pc.answer, () => (looked++, lent)) }, new Set(), [])
+  await until(() => looked > 0)
+  expect(sand.app.get(llm)!.find!('remote/m')).toBeUndefined()
+
+  lent = true
+  links.shareChanged('pc')
+  await until(() => !!sand.app.get(llm)!.find!('remote/m'))
+  expect((await sand.turns.run(sand.chat('remote/m'), 'go')).text).toBe('lent')
+
+  links.unpair('pc')
+  await until(() => !sand.app.get(llm)!.find!('remote/m'))
 })
 
 test('a PC from before caps lends a stateless source, and a reply cut off mid-way is sent again unchanged', async () => {
