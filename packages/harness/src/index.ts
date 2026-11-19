@@ -2,13 +2,13 @@ import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
 import { cli, pluginProblems, sandConfig, setTomlValues } from '@sand/config/contract'
 import type { RouteCaller } from '@sand/host-gateway/contract'
-import { type Caller, createHandlers, type Request, type WireEvent } from '@sand/host-hub/contract'
+import { type Caller, createHandlers, type HelloField, type Request, type WireEvent } from '@sand/host-hub/contract'
 import { hostChannel, runtime } from '@sand/host-runtimes/contract'
 import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
 import { type LocalCopy, type ProjectFiles, projectFiles } from '@sand/project/contract'
 import { replayRequests, type Source } from '@sand/replay/contract'
-import { type RouteHandler, server } from '@sand/server/contract'
+import { type HelloValue, type RouteHandler, server } from '@sand/server/contract'
 import { type ToolContext, tools } from '@sand/tools/contract'
 import { turns } from '@sand/turns-contract/contract'
 import { type Context, createApp, scopeError, type ContextCore, type Service } from 'drydock'
@@ -142,12 +142,18 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
         resolve(payload)
       })
     })
-  app.provide(server, { handle: wire.handle, broadcast, tell() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
+  const hellos = new Map<string, HelloValue<unknown>>()
+  const greet = <T>(field: HelloField<T>, value: HelloValue<T>) => {
+    hellos.set(field.id, value)
+    return () => void hellos.delete(field.id)
+  }
+  const hello = <T>(field: HelloField<T>) => hellos.get(field.id)?.() as T | undefined
+  app.provide(server, { handle: wire.handle, broadcast, tell() {}, hello: greet, route, pages: () => 0, ask: wire.ask })
   await (config === undefined ? loadPlugins(app, models, extra, options) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
   await modelsReady(app, models.ids)
-  return { wire, routes, hear, heard }
+  return { wire, routes, hear, heard, hello }
 }
 
 type PluginOptions = Record<string, Record<string, unknown>>
@@ -175,7 +181,7 @@ const start = async (models: Models, options: SandOptions) => {
     link?.close()
     if (!shared) await removeFolder(home)
   }
-  const { wire, routes, hear, heard } = await boot(app, home, models, options).catch(async (error: unknown) => {
+  const { wire, routes, hear, heard, hello } = await boot(app, home, models, options).catch(async (error: unknown) => {
     await stop()
     throw error
   })
@@ -215,6 +221,7 @@ const start = async (models: Models, options: SandOptions) => {
     ask: askAs({ device: 'page', kind: 'browser' }),
     hear,
     heard,
+    hello,
     askAs,
     fetch: fetchAs(),
     fetchAs,

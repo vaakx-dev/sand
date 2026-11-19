@@ -120,6 +120,7 @@ export interface Orchestrator {
   started(owner: Owner): Record<string, string>
   sign(prompt: Prompt, from: ConversationRef | undefined): Prompt
   owner(owner: Owner, kind: OwnerKind): Dispose
+  working(starter: string): number[]
 }
 
 export const orchestrator = service<Orchestrator>('orchestrator')
@@ -133,6 +134,8 @@ export interface AgentLimits {
 export const agentLimits = service<AgentLimits>('agentLimits')
 
 export const subagentStarted = event<(subagent: string, starter: ConversationRef) => void>('subagent.started')
+
+export const subagentsChange = event<(starter: string) => void>('subagents.change')
 
 export interface ThreadRow {
   thread: string

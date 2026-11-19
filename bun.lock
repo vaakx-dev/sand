@@ -885,6 +885,7 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
+        "@sand/bots": "workspace:*",
         "@sand/harness": "workspace:*",
         "@sand/replay": "workspace:*",
       },
@@ -1097,6 +1098,7 @@
         "@sand/devices-notify": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/ledger": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/turns-contract": "workspace:*",

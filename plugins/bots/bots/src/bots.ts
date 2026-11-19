@@ -2,6 +2,7 @@ import type { LLM, UsageRecord } from '@sand/accounts/contract'
 import { type Entry, type Session, sessionEntry, type Sessions } from '@sand/chats/contract'
 import { notify } from '@sand/devices-notify/contract'
 import type { Ledger } from '@sand/ledger/contract'
+import { type Orchestrator, subagentsChange } from '@sand/orchestrator/contract'
 import { turnChange, type Turns, type TurnStatus } from '@sand/turns-contract/contract'
 import { billedCost } from '@sand/usage/contract'
 import { dollars, uuid } from '@sand/util'
@@ -38,6 +39,7 @@ export interface BotsOptions {
   llm: LLM
   sessions: Sessions
   turns: Turns
+  working: Orchestrator['working']
 }
 
 const SUMMARY_TYPES = new Set(['message', 'usage', gistEntry, runEntry, morningEntry])
@@ -74,7 +76,7 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
   return undefined
 }
 
-export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessions, turns }: BotsOptions): Bots => {
+export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessions, turns, working }: BotsOptions): Bots => {
   const records = createRecords(db)
   const chatOf = (bot: string) => sessions.require(bot)
   const append = (bot: string, type: string, data: unknown) => chatOf(known(bot).id).append(type, data)
@@ -93,18 +95,6 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return { status: turn ? STATUSES[turn.status] : 'idle', ...(waiting && { waiting }) }
   }
 
-  const subagentStarts = (id: string): number[] =>
-    sessions.children(id).flatMap(child => {
-      const turn = turns.current(chatOf(child.id))
-      return [...(turn?.status === 'running' ? [turn.started] : []), ...subagentStarts(child.id)]
-    })
-
-  const botOf = (session: string): string | undefined => {
-    if (records.get(session)) return session
-    const parent = sessions.open(session)?.parent
-    return parent ? botOf(parent) : undefined
-  }
-
   const summary = (bot: Bot): BotSummary => {
     const chat = chatOf(bot.id)
     const last = lastLine(recentMessages(chat), chat.latest(gistEntry))
@@ -114,7 +104,7 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return {
       ...bot,
       folder: folderOf(bot.id),
-      subagents: subagentStarts(bot.id),
+      subagents: working(bot.id),
       talked: chat.talked,
       ...statusOf(chat),
       spent,
@@ -158,10 +148,10 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
   ctx.on(sessionEntry, (session, entry) => {
     if (session.owner === 'bot' && SUMMARY_TYPES.has(entry.type) && records.get(session.id)) entered(session.id, entry)
   })
-  ctx.on(turnChange, info => {
-    const bot = botOf(info.session)
-    if (bot) changed(bot)
-  })
+  const changedIfBot = (id: string) => void (records.get(id) && changed(id))
+
+  ctx.on(turnChange, info => changedIfBot(info.session))
+  ctx.on(subagentsChange, changedIfBot)
 
   return {
     list: () => records.list().map(summary),

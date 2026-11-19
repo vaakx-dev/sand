@@ -21,6 +21,7 @@ import { createStart } from './start'
 import { openStarters } from './starters'
 import { waitThread } from './state'
 import { createWaits } from './waits'
+import { createWorking } from './working'
 
 export default definePlugin({
   name: 'orchestrator',
@@ -47,6 +48,7 @@ export default definePlugin({
       started: starters.owned,
       sign: owners.sign,
       owner: owners.register,
+      working: createWorking(ctx, starters),
     }
     ctx.provide(orchestrator, threads)
     const outbox = openOutbox(ctx.ledger)
