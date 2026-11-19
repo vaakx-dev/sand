@@ -3,7 +3,7 @@ import { errorMessage } from '@sand/util'
 import { TimedOut } from '../../errors/timed-out'
 import { Unreachable } from '../../errors/unreachable'
 import { seconds } from '../../time/seconds'
-import { quietLimit, watchedBody } from './quiet'
+import { quietLimit, watchedBody } from '../quiet'
 
 type StreamingInit = RequestInit & { duplex?: 'half' }
 

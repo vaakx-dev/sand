@@ -1,4 +1,4 @@
-import { TimedOut } from '../../errors/timed-out'
+import { TimedOut } from '../errors/timed-out'
 
 export type Quiet = ReturnType<typeof quietLimit>
 

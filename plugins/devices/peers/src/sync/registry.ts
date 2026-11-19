@@ -15,6 +15,7 @@ export const registrySync = (peers: Peers, registry: Registry): (() => Dispose)[
     () => peers.onOpen(pc => exchange(pc, registry.all())),
     () =>
       registry.onChange(changed => {
+        if (!changed.length) return
         for (const pc of peers.connected()) exchange(pc, changed)
       }),
   ]

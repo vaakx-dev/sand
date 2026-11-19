@@ -1,5 +1,5 @@
 import { directRoute, type ViaRelay, viaRoute } from '@sand/devices-connect'
-import { type DeviceRecord, helloPc, PcUnavailable, type PcView, type Signer, viaFrame } from '@sand/devices-contract'
+import { type DeviceRecord, helloPc, PcUnavailable, type PcView, type Signer } from '@sand/devices-contract'
 import type { HelloField } from '@sand/host-hub/contract'
 import { servedFromThisPc } from '../page/home'
 import { knownPcs } from './known'
@@ -29,7 +29,7 @@ export const createFleet = (options: FleetOptions) => {
 
   const relay = (through: string): ViaRelay => ({
     call: (request, input, call) => links.get(through)?.connection.call(request, input, call) ?? Promise.reject(unavailable(through)),
-    frames: listener => listeners.on(viaFrame, (frame, pc) => pc === through && listener(frame), { from: 'all' }),
+    on: (event, listener) => listeners.on(event, (payload, pc) => pc === through && listener(payload), { from: 'all' }),
   })
 
   const connected = new Set<string>()

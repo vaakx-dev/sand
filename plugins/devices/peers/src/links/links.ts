@@ -1,6 +1,6 @@
 import { directRoute, memoryResumeStore, type ViaRelay } from '@sand/devices-connect'
 import { pcWake } from '@sand/devices-connect/pc'
-import { type CallOptions, type DeviceRecord, PcUnavailable, type Route, type RouteStore, type Signer, viaFrame } from '@sand/devices-contract'
+import { type CallOptions, type DeviceRecord, PcUnavailable, type Route, type RouteStore, type Signer } from '@sand/devices-contract'
 import type { Request } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 import type { Events } from './events'
@@ -42,9 +42,9 @@ export const createPeerLinks = ({ signer, store, events, opened, changed }: Link
 
   const relay = (through: string): ViaRelay => ({
     call: (request, input, options) => call(through, request, input, options),
-    frames: listener =>
-      events.on(viaFrame, (frame, pc) => {
-        if (pc === through) listener(frame)
+    on: (event, listener) =>
+      events.on(event, (payload, pc) => {
+        if (pc === through) listener(payload)
       }),
   })
 

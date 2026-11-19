@@ -30,6 +30,7 @@ export interface Registry {
   setDetectedIcon(id: string, icon: PcIcon): Promise<DeviceRecord>
   setPush(id: string, push: DevicePush | undefined): Promise<DeviceRecord>
   remove(id: string, by: string): Promise<void>
+  forget(ids: string[]): Promise<void>
   merge(records: DeviceRecord[]): Promise<DeviceRecord[]>
   onChange(listener: (changed: DeviceRecord[]) => void): Dispose
 }
