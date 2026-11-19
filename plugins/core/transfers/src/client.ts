@@ -12,7 +12,7 @@ export interface UploadOptions {
   resumable?: Resumable
 }
 
-class Refused extends Error {}
+export class Refused extends Error {}
 
 const ATTEMPTS = 4
 

@@ -2,6 +2,8 @@ import { TimedOut } from '../errors/timed-out'
 
 export type Quiet = ReturnType<typeof quietLimit>
 
+const NULL_BODY_STATUSES = new Set([101, 103, 204, 205, 304])
+
 export const quietLimit = (timeoutMs: number, error: () => TimedOut) => {
   const controller = new AbortController()
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -17,7 +19,7 @@ export const quietLimit = (timeoutMs: number, error: () => TimedOut) => {
 
 export const watchedBody = (response: Response, quiet: Quiet) => {
   const source = response.body
-  if (!source) {
+  if (!source || NULL_BODY_STATUSES.has(response.status)) {
     quiet.stop()
     return response
   }

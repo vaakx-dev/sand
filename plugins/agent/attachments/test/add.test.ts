@@ -3,7 +3,7 @@ import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { uploadBlob, type PcFetch } from '@sand/transfers/contract'
-import { attachmentsAdd } from '../src/contract'
+import { attachmentsAdd, attachmentsUpload, type Uploaded } from '../src/contract'
 
 let sand: Sand
 
@@ -12,6 +12,8 @@ beforeAll(async () => {
 })
 
 afterAll(() => sand.stop())
+
+const pathOf = (reply: Uploaded) => ('added' in reply && 'path' in reply.added ? reply.added.path : '')
 
 const asBot = () => sand.askAs({ device: 'sand', kind: 'agent', actor: { owner: 'bot', id: 'b1' } })
 
@@ -58,10 +60,35 @@ test('a file uploaded over a flaky network arrives whole, and an upload cut off 
   const before = [...resumable.arrived]
 
   const uploaded = await uploadBlob(flaky, new Blob([bytes]), { resumable })
-  const added = await sand.ask(attachmentsAdd, { ...uploaded, name: 'clip.bin' })
+  const added = await sand.ask(attachmentsUpload, { ...uploaded, name: 'clip.bin' })
 
   expect(sent.filter(index => before.includes(index))).toHaveLength(before.length)
-  expect(readFileSync('path' in added ? added.path : '')).toEqual(Buffer.from(bytes))
+  expect(readFileSync(pathOf(added))).toEqual(Buffer.from(bytes))
+})
+
+test('an upload cut off by a runtime restart finishes on the new runtime without sending its chunks again', async () => {
+  const home = sand.home
+  const bytes = new Uint8Array(3 * 1024 ** 2 + 7).map((_, index) => (index * 11) % 256)
+  const resumable = { transfer: crypto.randomUUID(), arrived: new Set<number>() }
+  const stop = new AbortController()
+  const before = await startSand([], { home, plugins: ['core/transfers', 'agent/attachments'] })
+  await uploadBlob(before.fetch, new Blob([bytes]), { resumable, signal: stop.signal, progress: sent => sent > 0 && stop.abort() }).catch(() => {})
+  await before.stop()
+  const arrived = [...resumable.arrived]
+
+  const after = await startSand([], { home, plugins: ['core/transfers', 'agent/attachments'] })
+  const sent: number[] = []
+  const counted: PcFetch = (path, init) => {
+    sent.push(Number(new URL(path, 'http://sand').searchParams.get('index')))
+    return after.fetch(path, init)
+  }
+  const uploaded = await uploadBlob(counted, new Blob([bytes]), { resumable })
+  const added = await after.ask(attachmentsUpload, { ...uploaded, name: 'clip.bin' })
+  await after.stop()
+
+  expect(arrived.length).toBeGreaterThan(0)
+  expect(sent.filter(index => arrived.includes(index))).toEqual([])
+  expect(readFileSync(pathOf(added))).toEqual(Buffer.from(bytes))
 })
 
 test('a file named .pdf that holds no PDF is kept as a file, so the model never gets a PDF it rejects', async () => {

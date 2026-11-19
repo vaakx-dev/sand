@@ -18,9 +18,17 @@ export const attachments = service<Attachments>('attachments')
 
 export const helloAttachments = helloField<AttachmentLimits>('attachments')
 
+export type Uploaded = { added: UserContent } | { refused: string }
+
 export const attachmentsAdd = request('attachments.add', {
-  input: () => z.union([z.object({ transfer: z.string(), name: z.string(), chunks: z.number().int(), size: z.number().int() }), z.object({ path: z.string().min(1), cwd: z.string().optional() })]),
+  input: () => z.object({ path: z.string().min(1), cwd: z.string().optional() }),
   output: type<UserContent>(),
+  callers: 'any',
+})
+
+export const attachmentsUpload = request('attachments.upload', {
+  input: () => z.object({ transfer: z.string(), name: z.string(), chunks: z.number().int(), size: z.number().int() }),
+  output: type<Uploaded>(),
   callers: 'any',
 })
 

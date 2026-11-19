@@ -5,7 +5,7 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { transferPath } from './chunks'
-import { transfersCopy, transfers as transfersService, transfersOffer, transfersPull, transfersSave, transfersStatus } from './contract'
+import { transfersCopy, transfers as transfersService, transfersOffer, transfersPull, transfersSave } from './contract'
 import { copyBetween } from './copy/copy'
 import { offerPath } from './copy/offer'
 import { saveFrom } from './copy/save'
@@ -31,14 +31,16 @@ export default definePlugin({
       const sweep = () => void transfers.sweep().catch(error => ctx.report(error))
       sweep()
       const timer = setInterval(sweep, sweepEvery)
-      return () => clearInterval(timer)
+      return () => {
+        clearInterval(timer)
+        void transfers.close()
+      }
     })
     ctx.watch(server, found =>
       found
         ? joinDisposers(
             found.route(transferPath, transferRoute(transfers)),
             found.handle(transfersPull, pullFrom(transfers, linked)),
-            found.handle(transfersStatus, ({ transfer }) => transfers.arrived(transfer)),
             found.handle(transfersOffer, offer),
             found.handle(transfersSave, save),
             found.handle(transfersCopy, copy),
