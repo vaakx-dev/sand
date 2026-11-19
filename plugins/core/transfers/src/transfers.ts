@@ -1,4 +1,4 @@
-import { freeBytes } from '@sand/util/fs'
+import { freeBytes, isMissing } from '@sand/util/fs'
 import { appendFile, mkdir, open, readdir, readFile, rm, stat, type FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chunkBytes, chunkCount, chunkFits, TRANSFER_LIFETIME_MS, type ChunkedFile } from './chunks'
@@ -25,8 +25,15 @@ const offsetOf = (index: number) => {
 
 const logOf = (part: string) => `${part}.chunks`
 
+const unlessMissing =
+  <T>(fallback: T) =>
+  (error: unknown) => {
+    if (isMissing(error)) return fallback
+    throw error
+  }
+
 const writtenIn = async (part: string) => {
-  const log = await readFile(logOf(part), 'utf8').catch(() => '')
+  const log = await readFile(logOf(part), 'utf8').catch(unlessMissing(''))
   return new Set(log.split('\n').filter(Boolean).map(Number))
 }
 
@@ -54,7 +61,7 @@ export const createTransfers = (folder: string) => {
   }
 
   const reopen = async (part: string): Promise<Opened> => {
-    const handle = await open(part, 'r+').catch(() => undefined)
+    const handle = await open(part, 'r+').catch(unlessMissing(undefined))
     return handle ? { handle, written: await writtenIn(part) } : openWithRoom(part)
   }
 
@@ -68,7 +75,7 @@ export const createTransfers = (folder: string) => {
 
   const known = async (file: SizedTransfer) => incoming.get(file.transfer) ?? ((await Bun.file(partOf(file)).exists()) ? arrive(file) : undefined)
 
-  const close = (entry: Incoming) => entry.opened.then(({ handle }) => handle.close()).catch(() => undefined)
+  const close = async (entry: Incoming) => (await entry.opened).handle.close()
 
   const forget = async (held: Map<string, Outgoing | Incoming>, transfer: string) => {
     const entry = held.get(transfer)
