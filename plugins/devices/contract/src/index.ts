@@ -1,7 +1,7 @@
 export type * from './connection/engine'
 export type * from './connection/routes'
 export type * from './connection/status'
-export { isPcUnavailable, PcUnavailable } from './connection/unavailable'
+export { isPcUnavailable, PcUnavailable, peerError, type UnavailablePc } from './connection/unavailable'
 export * from './devices'
 export * from './host/auth'
 export * from './host/registry'

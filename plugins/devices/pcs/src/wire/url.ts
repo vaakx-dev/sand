@@ -3,7 +3,7 @@ import type { Fleet } from '../fleet/fleet'
 
 const routeTo = (fleet: Fleet, pc: string) => {
   const status = fleet.connection(pc).status()
-  if (status.phase !== 'connected') throw new PcUnavailable(pc, fleet.nameOf(pc), status)
+  if (status.phase !== 'connected') throw new PcUnavailable({ pc, name: fleet.nameOf(pc), status, reason: 'disconnected' })
   return status.route
 }
 

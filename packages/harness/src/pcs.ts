@@ -1,4 +1,4 @@
-import { PcUnavailable, type Peers, type PeerView, peers } from '@sand/devices-contract'
+import { PcUnavailable, peerError, type Peers, type PeerView, peers } from '@sand/devices-contract'
 import type { Sand } from './index'
 
 interface Link {
@@ -38,8 +38,13 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
   const asNear = far.askAs({ device: nearId, kind: 'pc' })
   const fetchAsNear = far.fetchAs({ device: nearId, name: nearId, kind: 'pc' })
   let up = true
-  const unavailable = () => new PcUnavailable(farId, farId, { phase: 'offline' })
-  const call: Peers['call'] = (_, request, input) => (up ? asNear(request, input) : Promise.reject(unavailable()))
+  const unavailable = () => new PcUnavailable({ pc: farId, name: farId, status: { phase: 'offline' }, reason: 'disconnected' })
+  const call: Peers['call'] = async (_, request, input) => {
+    if (!up) throw unavailable()
+    return asNear(request, input).catch((error: unknown) => {
+      throw peerError(error, { pc: farId, name: farId, status: view.status })
+    })
+  }
   return {
     peers: {
       list: () => [view],

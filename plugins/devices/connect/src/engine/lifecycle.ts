@@ -39,7 +39,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   let closed = false
 
   const name = () => identity?.name ?? target.name ?? target.id
-  const unavailable = () => new PcUnavailable(target.id, name(), status)
+  const unavailable = () => new PcUnavailable({ pc: target.id, name: name(), status, reason: 'disconnected' })
 
   const setStatus = (next: ConnectionStatus) => {
     status = next

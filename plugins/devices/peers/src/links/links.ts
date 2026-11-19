@@ -1,6 +1,6 @@
 import { directRoute, memoryResumeStore, type ViaRelay } from '@sand/devices-connect'
 import { pcWake } from '@sand/devices-connect/pc'
-import { type CallOptions, type DeviceRecord, PcUnavailable, type Route, type RouteStore, type Signer } from '@sand/devices-contract'
+import { type CallOptions, type DeviceRecord, PcUnavailable, peerError, type Route, type RouteStore, type Signer } from '@sand/devices-contract'
 import type { Request } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 import type { Events } from './events'
@@ -21,7 +21,9 @@ interface Wanted {
   key: string
 }
 
-export const notPaired = (pc: string) => new PcUnavailable(pc, pc, { phase: 'blocked', reason: 'not-paired' })
+export const notPaired = (pc: string) => new PcUnavailable({ pc, name: pc, status: { phase: 'blocked', reason: 'not-paired' }, reason: 'disconnected' })
+
+const unavailableOf = ({ record, connection }: PeerLink) => ({ pc: record.id, name: connection.identity()?.name ?? record.name, status: connection.status() })
 
 const wantedOf = (record: DeviceRecord, pcs: DeviceRecord[], added: Route[]): Wanted => {
   const seeds = [...added, ...seedsFor(record, pcs)]
@@ -35,9 +37,12 @@ export const createPeerLinks = ({ signer, store, events, opened, changed }: Link
   let records: DeviceRecord[] = []
   let closed = false
 
-  const call = <I, O>(pc: string, request: Request<I, O>, input: I, options?: CallOptions): Promise<O> => {
+  const call = async <I, O>(pc: string, request: Request<I, O>, input: I, options?: CallOptions): Promise<O> => {
     const link = links.get(pc)
-    return link ? link.connection.call(request, input, options) : Promise.reject(notPaired(pc))
+    if (!link) throw notPaired(pc)
+    return link.connection.call(request, input, options).catch((error: unknown) => {
+      throw peerError(error, unavailableOf(link))
+    })
   }
 
   const relay = (through: string): ViaRelay => ({
