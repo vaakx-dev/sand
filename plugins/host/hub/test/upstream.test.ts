@@ -29,6 +29,7 @@ test('a runtime link that drops and comes back tells the page to resync, and onl
     live: () => [runtime],
     wait: async () => runtime,
     swap: async () => false,
+    retire: async () => {},
     swapped: () => undefined,
     status: () => {
       throw new Error('not used')

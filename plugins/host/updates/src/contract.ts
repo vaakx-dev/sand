@@ -70,7 +70,6 @@ export const updatesState = request('updates.state', { input: onPc, output: type
 export const updatesCheck = request('updates.check', { input: onPc, output: type<UpdateState>(), callers: 'any' })
 export const updatesLater = request('updates.later', { input: onPc, output: type<UpdateState>(), callers: 'any' })
 export const updatesApply = request('updates.apply', { input: () => onPc().extend({ build: build() }), output: type<UpdateState>(), callers: 'any' })
-export const updatesRestart = request('updates.restart', { input: onPc, output: type<UpdateState>(), callers: 'any' })
 export const updatesHeard = request('updates.heard', { input: () => z.object({ channel: channel(), build: build() }), output: type<UpdateState>(), callers: 'pc' })
 export const updatesChannel = request('updates.channel', { input: () => onPc().extend({ channel: channel() }), output: type<UpdateState>(), callers: 'any' })
 export const updatesRepair = request('updates.repair', { input: () => z.object({}), output: type<UpdateState & { target: BuildInfo }>(), callers: 'pc' })

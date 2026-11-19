@@ -1,6 +1,7 @@
 import { type Session, textOf } from '@sand/chats/contract'
 import { type Sand, startHost, startSand, type TestHost } from '@sand/harness'
 import { hostRestart } from '@sand/host-daemon/contract'
+import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { backgroundJobs, jobEnd } from '@sand/jobs/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, beforeEach, expect, test } from 'bun:test'
@@ -49,6 +50,7 @@ const stop = async ({ host, sand }: { host: TestHost; sand: Sand }) => {
 }
 
 const restart = async (old: { host: TestHost; sand: Sand }) => {
+  old.sand.app.emit(runtimeDrain)
   old.host.app.emit(hostRestart)
   await stop(old)
 }

@@ -6,7 +6,6 @@ import {
   updatesCheck,
   updatesDismiss,
   updatesLater,
-  updatesRestart,
   updatesState,
   type ReleaseInfo,
   type UpdateChannel,
@@ -155,12 +154,6 @@ export const createFleet = (ctx: Context<{ wire: typeof wire; pcs: typeof pcs }>
     void applyOn(key, build)
   }
 
-  const restartNow = (key: string) =>
-    call(key, updatesRestart, {}).then(
-      state => store(key, state),
-      () => {},
-    )
-
   const dismiss = (key: string, id: string) =>
     call(key, updatesDismiss, { id }).then(
       state => store(key, state),
@@ -183,7 +176,6 @@ export const createFleet = (ctx: Context<{ wire: typeof wire; pcs: typeof pcs }>
     busy,
     update,
     retry,
-    restartNow,
     dismiss,
     finish,
     check: () => guarded(() => everyOnline(updatesCheck, {})),

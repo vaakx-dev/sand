@@ -38,7 +38,7 @@ export interface WaitReason {
 }
 
 export interface TurnResult {
-  stopReason: StopReason | 'interrupted' | 'error' | 'limited' | 'moved'
+  stopReason: StopReason | 'interrupted' | 'error' | 'limited' | 'moved' | 'reloaded'
   usage: Usage
   text: string
   steps: number

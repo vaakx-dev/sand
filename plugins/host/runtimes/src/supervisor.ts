@@ -2,7 +2,7 @@ import type { HostOptions } from '@sand/host-daemon/contract'
 import { errorMessage } from '@sand/util'
 import { createBackoff } from './backoff'
 import { type FailedPlugin, type HostAnswer, type HostCall, listFailed, type RuntimeChange, type RuntimeMessage, type RuntimeReason, type Runtimes, type SwapResult } from './contract'
-import { stopAll, terminate } from './kill'
+import { running, stopAll, terminate } from './kill'
 import { createLauncher, type Launched } from './launch'
 import { restoredText } from './notices'
 import { createSafeMode } from './safe'
@@ -38,6 +38,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
   })
 
   const handover = new Set<string>()
+  let retired: PromiseWithResolvers<void> | undefined
 
   const held = () => new Set([...draining].flatMap(child => child.activity.sessions))
 
@@ -66,9 +67,28 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     const before = child.activity.sessions
     child.activity = message.activity
     if (child.state === 'draining') release(before.filter(id => !message.activity.sessions.includes(id)))
+    settleRetired()
   }
 
   const launcher = createLauncher(main, receive)
+
+  const live = () => (current ? [current, ...draining] : [...draining])
+
+  const working = () => live().some(child => running(child.proc) && child.activity.sessions.length > 0)
+
+  const settleRetired = () => {
+    if (retired && !working()) retired.resolve()
+  }
+
+  const retire = () => {
+    if (retired) return retired.promise
+    retired = Promise.withResolvers<void>()
+    stopping = true
+    backoff.clear()
+    if (current) sendTo(current, { type: 'drain' })
+    settleRetired()
+    return retired.promise
+  }
 
   const drain = (old: Child) => {
     old.state = 'draining'
@@ -90,6 +110,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
   const exited = (child: Child, code: number) => {
     clearTimeout(drainTimers.get(child))
     drainTimers.delete(child)
+    settleRetired()
     if (stopping) return
     if (draining.delete(child)) return drainerExited(child, code)
     if (child !== current) return
@@ -196,9 +217,10 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
 
   const runtimes: Runtimes = {
     current: () => current,
-    live: () => (current ? [current, ...draining] : [...draining]),
+    live,
     wait: timeout => (current ? Promise.resolve(current) : waiters.wait(timeout)),
     swap,
+    retire,
     swapped: () => lastSwap,
     status: () => ({
       pid: process.pid,

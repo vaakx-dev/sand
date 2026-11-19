@@ -1,6 +1,7 @@
 import { botCreate } from '@sand/bots/contract'
 import type { Session } from '@sand/chats/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
+import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { modelSettings } from '@sand/model/contract'
 import type { Reply } from '@sand/replay/contract'
 import { removeFolder } from '@sand/util/fs'
@@ -110,6 +111,33 @@ test('a resume planned before sand restarts still happens at the reset', async (
 
   sand = await start([[said('Picked up.')]], { home })
   await ended(sand.sessions.open(chat.id)!, 2)
+  expect(sent()).toEqual([continued])
+})
+
+test('a Claude Code or Codex chat running when sand restarts finishes its step, then carries on by itself in the sand that takes over', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'sand-resume-'))
+  homes.push(home)
+  sand = await start([[{ type: 'call', name: 'gate', input: {} }]], { home })
+  const opened = Promise.withResolvers<void>()
+  const answered = Promise.withResolvers<string>()
+  sand.tool('gate', () => {
+    opened.resolve()
+    return answered.promise
+  })
+  const chat = sand.chat('fake/m')
+  await sand.turns.send(chat, { prompt: 'Start', clientRequestId: 'one' })
+  await opened
+
+  sand.app.emit(runtimeDrain)
+  answered.resolve('open')
+  const [stopped] = await ended(chat, 1)
+  expect(stopped).toMatchObject({ stopReason: 'reloaded' })
+  expect(chat.messages().at(-1)).toMatchObject({ role: 'user', content: [{ type: 'tool_result', content: [said('open')] }] })
+  await sand.stop()
+
+  sand = await start([[said('Carried on.')]], { home })
+  const [carried] = await ended(sand.sessions.open(chat.id)!, 2)
+  expect(carried).toMatchObject({ status: 'completed', origin: 'resume' })
   expect(sent()).toEqual([continued])
 })
 

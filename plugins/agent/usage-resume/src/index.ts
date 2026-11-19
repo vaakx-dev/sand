@@ -87,6 +87,7 @@ export default definePlugin({
     }
 
     const nextOf = ({ stopReason, resetsAt }: Pick<TurnResult, 'stopReason' | 'resetsAt'>, selection: Selection): Next | undefined => {
+      if (stopReason === 'reloaded') return { kind: 'carry', note: PICK_UP }
       if (stopReason !== 'moved' && stopReason !== 'limited') return undefined
       if (ctx.get(accountPool)?.spare(selection)) return { kind: 'carry', note: stopReason === 'moved' ? PICK_UP : MOVED }
       if (stopReason === 'moved') return undefined

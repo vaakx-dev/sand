@@ -15,6 +15,7 @@ const endings: Record<string, { text: string; tone: NoticeTone }> = {
   error: { text: 'The turn failed', tone: 'error' },
   lost: { text: 'Sand stopped during this turn', tone: 'error' },
   limited: { text: 'Out of usage', tone: 'error' },
+  reloaded: { text: 'Paused for a sand update · carries on by itself', tone: 'dim' },
 }
 
 const endingNotice = ({ stopReason, error }: TurnEnding): { text: string; tone: NoticeTone } | undefined => {

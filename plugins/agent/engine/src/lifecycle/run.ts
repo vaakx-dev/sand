@@ -2,7 +2,7 @@ import { AccountGone, UsageLimited } from '@sand/accounts/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import { runtime } from '@sand/host-runtimes/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
-import { type Conversation, Interruption, turnClose, type TurnEnding, turnOpen, type TurnResult, type TurnStatus } from '../contract'
+import { type Conversation, Interruption, turnClose, type TurnEnding, type TurnInfo, turnOpen, type TurnResult, type TurnStatus } from '../contract'
 import type { EngineContext } from '../context'
 import { createPartial } from '../loop/partial'
 import { runReact } from '../loop/react'
@@ -17,6 +17,7 @@ const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = {
   error: 'failed',
   limited: 'failed',
   moved: 'failed',
+  reloaded: 'interrupted',
   refusal: 'failed',
   max_tokens: 'failed',
 }
@@ -136,8 +137,11 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     return { result, ...(outcome.failure && { failure: outcome.failure }) }
   }
 
+  const resumesMidTurn = ({ selection }: TurnInfo) => !ctx.llm.caps?.(selection.model).native
+
   const handOff = (opened: Opened<C>) => {
     const { conversation, info } = opened.run
+    if (!resumesMidTurn(info)) return void finish(opened, { stopReason: 'reloaded' })
     if (!stores.turns.handOver(info.id, leases.holder)) return void finish(opened, { stopReason: 'interrupted' })
     opened.release()
     announce.turn(info.id)
