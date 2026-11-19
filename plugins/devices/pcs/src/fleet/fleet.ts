@@ -25,7 +25,8 @@ export const createFleet = (options: FleetOptions) => {
 
   const nameOf = (pc: string) => links.get(pc)?.connection.identity()?.name ?? known.get(pc)?.name ?? fallbackName(pc === home)
 
-  const unavailable = (pc: string) => new PcUnavailable(pc, nameOf(pc), links.get(pc)?.connection.status() ?? { phase: 'offline' })
+  const unavailable = (pc: string) =>
+    new PcUnavailable({ pc, name: nameOf(pc), status: links.get(pc)?.connection.status() ?? { phase: 'offline' }, reason: 'disconnected' })
 
   const relay = (through: string): ViaRelay => ({
     call: (request, input, call) => links.get(through)?.connection.call(request, input, call) ?? Promise.reject(unavailable(through)),

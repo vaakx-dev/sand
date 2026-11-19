@@ -17,7 +17,7 @@ export const exchange = async (peers: Peers, pc: PeerView, projects: Project[]):
   try {
     return answer(await peers.call(pc.id, projectsSync, { projects }))
   } catch (error) {
-    if (isPcUnavailable(error)) return { state: 'offline', detail: `${pc.name} isn't connected` }
+    if (isPcUnavailable(error)) return { state: 'offline', detail: error.message }
     return { state: 'failed', detail: errorMessage(error) }
   }
 }

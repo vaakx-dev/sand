@@ -5,8 +5,7 @@ const hostMargin = 5_000
 
 export const unwrap = <T>(outcome: RelayOutcome<T>): T => {
   if (outcome.ok) return outcome.value
-  const { pc, name, status } = outcome.unavailable
-  throw new PcUnavailable(pc, name, status)
+  throw new PcUnavailable(outcome.unavailable)
 }
 
 export const hostWait = (timeout?: number) => (timeout ?? callTimeout) + hostMargin

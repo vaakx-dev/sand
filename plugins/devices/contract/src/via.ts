@@ -23,7 +23,7 @@ export const viaMethods = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPT
 const pc = lazy(() => z.string().min(1))
 const stream = lazy(() => z.string().min(1))
 
-export const viaFetch = request('via.fetch', {
+export const viaFetch = request('via.fetchHead', {
   input: () => z.object({
     pc: pc(),
     path: z.string().startsWith('/'),

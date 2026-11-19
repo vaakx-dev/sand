@@ -1,15 +1,9 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { lazy } from '@sand/util'
 import { z } from 'zod'
-import type { ConnectionStatus } from '../connection/status'
+import type { UnavailablePc } from '../connection/unavailable'
 import type { PeerView } from '../peers'
 import { viaMethods } from '../via'
-
-export interface UnavailablePc {
-  pc: string
-  name: string
-  status: ConnectionStatus
-}
 
 export type RelayOutcome<T> = { ok: true; value: T } | { ok: false; unavailable: UnavailablePc }
 
