@@ -64,7 +64,7 @@ const link = (far: Sand, farId: string, nearId: string): Link => {
         return response.body ? new Response(severable(response.body, cuts), response) : response
       },
       on: (event, listener) => far.hear(event, payload => up && listener(payload, farId)),
-      hello: () => undefined,
+      hello: field => (up ? far.hello(field) : undefined),
       directUrl: () => undefined,
       retry() {},
       onOpen(listener) {

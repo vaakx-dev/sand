@@ -1,3 +1,4 @@
+import { botChangeWire, botCreate, botList } from '@sand/bots/contract'
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { pairPcs, startSand, type Sand } from '@sand/harness'
 import { levelSet, modelSettings } from '@sand/model/contract'
@@ -105,9 +106,9 @@ test('stopping an agent stops the subagents it started, all the way down, withou
   expect(sand.turns.list(parent)).toHaveLength(1)
 })
 
-const startPaired = async (parent: (boxHome: string) => Reply[], child: Reply[]) => {
+const startPaired = async (parent: (boxHome: string) => Reply[], child: Reply[], plugins: string[] = []) => {
   box = await startSand([{ id: 'child', models: ['m'], replies: child, api: 'anthropic' }], { plugins: ['core/watch', 'agent/subagents'] })
-  await start(parent(box.home), [])
+  await start(parent(box.home), [], [], plugins)
   return { box, link: pairPcs(sand, box).toBox }
 }
 
@@ -132,6 +133,30 @@ test('a subagent can run in a folder on another PC, and its reply comes back as 
   const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
   expect(notice).toContain(`<thread>${child.id}</thread>`)
   expect(notice).toContain('Found it.')
+})
+
+test('a bot shows its subagent on another PC working, live, through a blip, until that subagent stops', async () => {
+  const { box: there, link } = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Noted.')], [[{ type: 'hold' }]], ['bots/bots', 'bots/turns'])
+  const bot = await sand.ask(botCreate, { name: 'Scout' })
+  const chat = sand.sessions.require(bot.id)
+  sand.app.get(modelSettings)!.change(chat, { model: 'parent/m' })
+  let shown = 0
+  sand.hear(botChangeWire, summary => void (summary.id === bot.id && (shown = summary.subagents.length)))
+  const listed = async () => (await sand.ask(botList, {})).find(found => found.id === bot.id)?.subagents.length
+
+  await sand.turns.run(chat, 'Go')
+  const child = await onBox(there, chat)
+  await until(() => shown === 1)
+  expect(await listed()).toBe(1)
+
+  link.drop()
+  await there.ask(threadStop, { session: child.id })
+  await until(() => !there.turns.current(there.sessions.require(child.id)))
+  expect(await listed()).toBe(1)
+
+  link.open()
+  await until(() => shown === 0)
+  expect(await listed()).toBe(0)
 })
 
 test('stopping an agent stops its subagent on another PC without waking it again', async () => {
