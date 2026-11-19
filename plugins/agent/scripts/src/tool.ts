@@ -18,7 +18,7 @@ const PROGRESS_CHARS = 120
 
 const DESCRIPTION = "Run JavaScript that calls your other tools, like `await tools.read({ path })`, which returns the tool's text and throws on failure. Only what it prints or returns reaches you. Use it over several calls when you need only part of their output. Not Node: no require, fs or fetch."
 
-const ENVIRONMENT = `Before you look anything up, write the list of facts you need, then fetch them all in one ${NAME} call that prints only what matters. Follow up only on what it turns up.`
+const ENVIRONMENT = `Put quick lookups together in one ${NAME} call that prints only what matters.`
 
 const input = z.object({
   title: z.string().describe('Shown to the user'),
