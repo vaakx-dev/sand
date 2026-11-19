@@ -14,6 +14,8 @@ export const transient = (error: unknown) => !(error instanceof Refused) || REST
 
 export const refused = (pc: string, provider: string, error: Refused) => new AccountError(refusedText(error, pc, provider), `HTTP ${error.status} · ${error.message}`)
 
+export const unreachableText = (pc: string, provider: string) => `${pc} is out of reach, so ${provider} isn't available`
+
 export const goneText = (pc: string, provider: string, waitedMs: number) => `${pc} has been out of reach for ${duration(waitedMs)}, so ${provider} isn't available`
 
 export const gone = (text: string, error: unknown) => new AccountError(text, rawMessage(error), { cause: error })

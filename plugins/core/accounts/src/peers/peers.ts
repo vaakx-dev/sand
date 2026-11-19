@@ -4,7 +4,7 @@ import { AccountGone, type Limits, type LLMEvent, type LLMRequest, ProviderTroub
 import { isKeyKind, keyLabels } from '../auth/kinds'
 import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
-import { gone, goneText, refused, transient } from './failure'
+import { gone, goneText, refused, transient, unreachableText } from './failure'
 import { fetchInfo } from './info'
 import { readEvents } from './lines'
 import { carriedMedia } from './media'
@@ -155,10 +155,10 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
 
   const labelOf = (peer: PeerState, id: string) => account(peer, id)?.label ?? nameOf(id)
 
-  const dropped = (peer: PeerState) => (text: string, cause?: unknown) => {
+  const dropped = (peer: PeerState, pin?: Pin) => (text: string, cause?: unknown) => {
     peer.online = false
     changed()
-    return new ProviderTrouble(text, undefined, { cause })
+    return pin?.movable?.() ? new AccountGone(text, { cause }) : new ProviderTrouble(text, undefined, { cause })
   }
 
   const reached = (peer: PeerState) => {
@@ -188,8 +188,9 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   }
 
   const outOfReach = (id: string, { peer, error }: Missed, pin?: Pin) => {
-    const text = goneText(peer.pc.name, labelOf(peer, id), RECONNECT_GRACE_MS)
-    return pin?.movable?.() ? new AccountGone(text, { cause: error }) : gone(text, error)
+    const label = labelOf(peer, id)
+    if (pin?.movable?.()) return new AccountGone(unreachableText(peer.pc.name, label), { cause: error })
+    return gone(goneText(peer.pc.name, label, RECONNECT_GRACE_MS), error)
   }
 
   const given = (id: string, misses: Missed[], pin?: Pin) => {
@@ -208,7 +209,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
       const tried = await tryEach(candidates(id).filter(candidate => !pin || candidate.pc.id === pin.pc), sent, signal)
       if (!Array.isArray(tried)) return tried
       const waiting = tried.filter(miss => transient(miss.error)).map(miss => miss.peer.pc.id)
-      if (!waiting.length || Date.now() >= giveUpAt) throw given(id, tried, pin)
+      if (!waiting.length || pin?.movable?.() || Date.now() >= giveUpAt) throw given(id, tried, pin)
       await nextTry(links(), waiting, signal)
     }
   }
@@ -218,9 +219,9 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
     const { peer, body } = await open(id, { ...request, media: carriedMedia(media, request.messages) }, signal, pin)
     reached(peer)
     try {
-      yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: dropped(peer) }), peer.pc)
+      yield* tagged(readEvents(body, { name: peer.pc.name, signal, dropped: dropped(peer, pin) }), peer.pc)
     } catch (error) {
-      if (error instanceof UsageLimited) await check(reachablePeers(links()), peer.pc, true)
+      if (error instanceof UsageLimited) await check(reachablePeers(links()), peer.pc, false)
       throw error
     }
   }
