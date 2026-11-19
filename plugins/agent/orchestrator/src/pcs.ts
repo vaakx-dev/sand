@@ -2,7 +2,7 @@ import { findPc, isPcUnavailable, noSuchPc, type PeerOutcome, peers, unreachable
 import type { InputOf, Request } from '@sand/host-hub/contract'
 import type { OrchestratorContext } from './context'
 import { failure, historyRead, threadList, type ThreadRow, threadStart } from './contract'
-import { type ListFilter, listThreads, newestFirst } from './list'
+import { newestFirst } from './list'
 
 export const createPcs = (ctx: OrchestratorContext) => {
   const owners = new Map<string, string>()
@@ -51,13 +51,12 @@ export const createPcs = (ctx: OrchestratorContext) => {
       owners.set(sent.thread, pc)
       return sent
     },
-    async list(filter: ListFilter) {
-      const here = listThreads(ctx, filter)
+    async besides(here: ThreadRow[], input: InputOf<typeof threadList>) {
       const found = linked()
       if (!found) return here
       const names = new Map(found.list().map(pc => [pc.id, pc.name]))
-      const there = (await found.callEach(threadList, filter)).flatMap(outcome => rowsOf(outcome, names))
-      return newestFirst([...here, ...there], filter.limit)
+      const there = (await found.callEach(threadList, input)).flatMap(outcome => rowsOf(outcome, names))
+      return newestFirst([...here, ...there], input.limit)
     },
   }
 }

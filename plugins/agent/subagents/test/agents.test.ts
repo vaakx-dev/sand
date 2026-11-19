@@ -1,7 +1,7 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { pairPcs, startSand, type Sand } from '@sand/harness'
 import { levelSet, modelSettings } from '@sand/model/contract'
-import { threadSend, threadStop, threadUpdate } from '@sand/orchestrator/contract'
+import { threadList, threadSend, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -108,14 +108,20 @@ test('stopping an agent stops the subagents it started, all the way down, withou
 const startPaired = async (parent: (boxHome: string) => Reply[], child: Reply[]) => {
   box = await startSand([{ id: 'child', models: ['m'], replies: child, api: 'anthropic' }], { plugins: ['core/watch', 'agent/subagents'] })
   await start(parent(box.home), [])
-  pairPcs(sand, box)
-  return box
+  return { box, link: pairPcs(sand, box).toBox }
 }
 
 const onBox = (pc: Sand, parent: Session) => until(() => pc.sessions.children(parent.id)[0])
 
+const actingAs = (parent: Session) => sand.askAs({ device: 'sand', kind: 'agent', actor: { owner: 'thread', id: parent.id } })
+
+const sentFrom = (session: Session) => {
+  const message = session.latest('message')?.data as Message
+  return message.content.flatMap(block => (block.type === 'context' ? block.records.map(record => record.data.id) : []))
+}
+
 test('a subagent can run in a folder on another PC, and its reply comes back as a notice', async () => {
-  const there = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Got it.')], [said('Found it.')])
+  const { box: there } = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Got it.')], [said('Found it.')])
   const parent = sand.chat('parent/m')
   await sand.turns.run(parent, 'Go')
 
@@ -129,7 +135,7 @@ test('a subagent can run in a folder on another PC, and its reply comes back as 
 })
 
 test('stopping an agent stops its subagent on another PC without waking it again', async () => {
-  const there = await startPaired(home => [delegate({ pc: 'box', folder: home }), [{ type: 'hold' }]], [[{ type: 'hold' }]])
+  const { box: there } = await startPaired(home => [delegate({ pc: 'box', folder: home }), [{ type: 'hold' }]], [[{ type: 'hold' }]])
   const parent = sand.chat('parent/m')
   const turn = sand.turns.run(parent, 'Go')
   const child = await onBox(there, parent)
@@ -143,6 +149,67 @@ test('stopping an agent stops its subagent on another PC without waking it again
   await until(() => notices(parent).length === 1)
   expect(running(parent.id)).toBeFalsy()
   expect(sand.turns.list(parent)).toHaveLength(1)
+})
+
+test('an agent lists, messages, stops and waits for its subagent on another PC as it would one beside it', async () => {
+  const digging: Reply = [{ type: 'text', text: 'Digging.' }, { type: 'hold' }]
+  const { box: there } = await startPaired(
+    home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Got it.'), said('Noted.')],
+    [said('Found it.'), digging, said('Found more.')],
+  )
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+  const child = await onBox(there, parent)
+  await until(() => notices(parent).length === 1)
+  const asParent = actingAs(parent)
+
+  expect((await asParent(threadList, { mine: true })).map(row => [row.thread, row.pc])).toEqual([[child.id, 'box']])
+
+  const session = there.sessions.require(child.id)
+  await asParent(threadSend, { session: child.id, prompt: 'Dig deeper', origin: 'mcp', clientRequestId: 'deeper' })
+  await until(() => there.turns.current(session))
+  expect(sentFrom(session)).toEqual([parent.id])
+
+  expect(await asParent(threadStop, { session: child.id })).toBe(true)
+  await until(() => !there.turns.current(session))
+
+  await asParent(threadSend, { session: child.id, prompt: 'Once more', origin: 'mcp', clientRequestId: 'more' })
+  expect(await waitThread(asParent, child.id, 'attention')).toMatchObject({ status: 'completed', reply: 'Found more.' })
+})
+
+test("a subagent's report reaches its parent once the parent's PC can reach the other PC again", async () => {
+  const { box: there, link } = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Got it.')], [[{ type: 'hold' }]])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+  const child = await onBox(there, parent)
+  await until(() => there.turns.current(there.sessions.require(child.id)))
+
+  link.drop()
+  await there.ask(threadStop, { session: child.id })
+  await Bun.sleep(100)
+  expect(notices(parent)).toEqual([])
+
+  link.open()
+  const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
+  expect(notice).toContain(`<thread>${child.id}</thread>`)
+})
+
+test('archiving an agent archives its subagent on another PC, once that PC can be reached again', async () => {
+  const { box: there, link } = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.')], [[{ type: 'hold' }]])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+  const child = await onBox(there, parent)
+  const session = there.sessions.require(child.id)
+  await until(() => there.turns.current(session))
+
+  link.drop()
+  await sand.ask(threadUpdate, { session: parent.id, archived: true })
+  await Bun.sleep(100)
+  expect(session.archived).toBeNull()
+
+  link.open()
+  await until(() => session.archived !== null)
+  expect(there.turns.current(session)).toBeUndefined()
 })
 
 test('a subagent can work in a project of its own, and is archived with its parent', async () => {

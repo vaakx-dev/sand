@@ -165,7 +165,7 @@ const place = 'thread'
 const callers = 'any'
 const session = lazy(() => z.object({ session: z.string() }))
 const prompt = lazy(() => promptInput().refine(given => given.length > 0, 'Write a message'))
-const origin = lazy(() => z.enum(['user', ...outsideOrigins]))
+const origin = lazy(() => z.enum(['user', ...outsideOrigins, 'agent', 'bot']))
 const clientRequestId = lazy(() => z.string().min(1))
 const conversationRef = lazy(() => z.object({ owner: z.enum(['thread', 'bot']), id: z.string().min(1) }))
 const agentMeta = lazy(() =>
@@ -196,11 +196,18 @@ export const threadStart = request('thread.start', {
   callers,
   place,
 })
-export const threadReport = request('thread.report', {
-  input: () => z.object({ to: conversationRef(), thread: z.string().min(1), text: z.string(), clientRequestId: clientRequestId() }),
-  output: type<void>(),
+export interface Finish {
+  to: ConversationRef
+  thread: string
+  text: string
+  clientRequestId: string
+}
+export const threadReports = request('thread.reports', {
+  input: () => z.object({ delivered: z.array(z.string()) }),
+  output: type<Finish[]>(),
   callers: 'pc',
 })
+export const threadReported = wireEvent<string>('thread.reported')
 export const threadSend = request('thread.send', {
   input: () => session().extend({
     prompt: prompt(),
