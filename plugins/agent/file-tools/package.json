@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@sand/attachments": "workspace:*",
+    "@sand/config": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",

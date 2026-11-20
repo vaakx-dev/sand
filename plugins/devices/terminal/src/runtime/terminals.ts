@@ -18,7 +18,6 @@ export interface PtyEvents {
 
 export interface Pc {
   platform: NodeJS.Platform
-  isFolder(path: string): Promise<boolean>
   spawn(cwd: string, size: Size, events: PtyEvents): Pty
 }
 
@@ -150,7 +149,6 @@ export const createTerminals = (pc: Pc, outbox: Outbox, later: Later) => {
 
     async open({ session, cwd, viewer, cols, rows }: { session: string; cwd: string; viewer: string } & Size, caller: Caller) {
       if (!fullPath(cwd, pc.platform)) throw new Error(`${cwd} isn't a full folder path`)
-      if (!(await pc.isFolder(cwd))) throw new Error(`There's no folder at ${cwd} on this PC`)
       if (ofSession(session).filter(terminal => terminal.pty).length >= perSession) throw new Error(`A thread can run at most ${perSession} terminals`)
       const terminal = start(session, cwd, { cols, rows })
       attach(terminal, viewer, null, { cols, rows }, caller)

@@ -2,6 +2,7 @@ import type { Tool } from '@sand/tools/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 import { timedOut, timeoutNote, withDeadline } from './search/deadline'
+import type { Ripgrep } from './search/ripgrep'
 import { walk } from './search/walk'
 
 const limit = 1000
@@ -12,7 +13,7 @@ const input = z.object({
   include_ignored: z.boolean().optional().describe('Also find gitignored files and node_modules'),
 })
 
-export const glob: Tool<typeof input> = {
+export const globTool = (ripgrep: Ripgrep): Tool<typeof input> => ({
   name: 'glob',
   description: 'Find files by glob pattern. Skips gitignored files, node_modules and .git.',
   parallel: true,
@@ -21,8 +22,9 @@ export const glob: Tool<typeof input> = {
   needs: ['pc'],
   async run({ pattern, path = '.', include_ignored }, { cwd, signal }) {
     const files: string[] = []
+    const query = { binary: await ripgrep(), pattern, cwd: resolve(cwd, path), includeIgnored: include_ignored, signal: withDeadline(signal) }
     try {
-      for await (const file of walk(pattern, resolve(cwd, path), include_ignored, withDeadline(signal))) {
+      for await (const file of walk(query)) {
         files.push(file)
         if (files.length >= limit) break
       }
@@ -33,4 +35,4 @@ export const glob: Tool<typeof input> = {
     if (!files.length) return 'No files found'
     return files.sort().join('\n') + (files.length >= limit ? `\n… stopped at ${limit} files` : '')
   },
-}
+})

@@ -1,4 +1,5 @@
-export const ripgrep = Bun.which('rg')
+import { spawnIn } from '@sand/util/host'
+import { ripgrepBinary } from '@sand/util/release'
 
 const nothingSearched = /No files were searched/
 
@@ -8,10 +9,20 @@ const everything = ['--no-messages', '--no-ignore', '--hidden', '--glob', '!.git
 
 const tracked = ['--hidden', '--no-require-git', '--glob', '!.git', '--glob', '!node_modules']
 
-export const scope = (includeIgnored = false) => [...(includeIgnored ? everything : tracked), ...separator]
+type Ripgrep = () => Promise<string>
 
-export async function* lines(binary: string, args: string[], cwd: string, signal?: AbortSignal) {
-  const child = Bun.spawn([binary, ...args], { cwd, signal, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
+const ownRipgrep =
+  (root: string): Ripgrep =>
+  async () => {
+    const binary = ripgrepBinary(root)
+    if (await Bun.file(binary).exists()) return binary
+    throw new Error(`Sand's ripgrep is missing from ${binary}. Update or reinstall sand to get it back.`)
+  }
+
+const scope = (includeIgnored = false) => [...(includeIgnored ? everything : tracked), ...separator]
+
+async function* lines(binary: string, args: string[], cwd: string, signal?: AbortSignal) {
+  const child = spawnIn(cwd, () => Bun.spawn([binary, ...args], { cwd, signal, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', windowsHide: true }))
   const decoder = new TextDecoder()
   let rest = ''
   try {
@@ -29,3 +40,5 @@ export async function* lines(binary: string, args: string[], cwd: string, signal
     child.kill()
   }
 }
+
+export { lines, ownRipgrep, type Ripgrep, scope }

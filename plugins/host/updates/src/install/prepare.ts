@@ -1,5 +1,5 @@
 import { appsFolder, buildFolder, inAppsFolder, readPointer } from '@sand/boot'
-import { extractBundle, fetchOfficialBun } from '@sand/boot/build'
+import { ensureRipgrep, extractBundle, fetchOfficialBun } from '@sand/boot/build'
 import { moveFresh } from '@sand/util/fs'
 import { type BuildInfo, defaultTarget, readBuildBun, readStamp, readTarget, readyRelease } from '@sand/util/release'
 import { mkdir, rm } from 'node:fs/promises'
@@ -45,6 +45,7 @@ export const prepareBuild = async (home: string, bytes: Uint8Array, force: boole
     if (!inAppsFolder(home, root)) throw new Error(`build ${build.id} is not a valid sand build`)
     if (chosen.bun) {
       await rm(temp, { recursive: true, force: true })
+      await ensureRipgrep(root)
       return { root, build, bun: chosen.bun, bunPath: await sandBun(home, chosen.bun) }
     }
     await rm(root, { recursive: true, force: true })
@@ -52,6 +53,7 @@ export const prepareBuild = async (home: string, bytes: Uint8Array, force: boole
     placed = root
     const { bun } = await readyRelease(root)
     const bunPath = await sandBun(home, bun)
+    await ensureRipgrep(root)
     await Bun.write(join(root, readyFile), `${build.id}\n`)
     return { root, build, bun, bunPath }
   } catch (error) {

@@ -4,6 +4,7 @@ import { join } from 'node:path'
 const repo = 'vaakx-dev/sand'
 const releasesPath = `/api/repos/${repo}/releases`
 const downloadPath = `/gh/${repo}/releases/download/`
+const ripgrepPath = '/gh/BurntSushi/ripgrep/releases/download/'
 
 interface Published {
   folder: string
@@ -24,6 +25,13 @@ const sha256 = (content: Uint8Array) => new Bun.CryptoHasher('sha256').update(co
 export const fakeGithub = () => {
   const releases = new Map<string, Published>()
   const missed: string[] = []
+  const ripgrep = new Map<string, Promise<ArrayBuffer>>()
+
+  const realRipgrep = (path: string) => {
+    const bytes = ripgrep.get(path) ?? fetch(`https://github.com/${path.slice('/gh/'.length)}`).then(response => response.arrayBuffer())
+    ripgrep.set(path, bytes)
+    return bytes.then(body => new Response(body))
+  }
 
   const files = (published: Published) => readdirSync(published.folder).filter(name => !published.without.some(id => ofAddon(name, id)))
 
@@ -67,6 +75,7 @@ export const fakeGithub = () => {
     }
     if (path === releasesPath) return Response.json([...releases].filter(([tag]) => tag.startsWith('v')).map(([tag, published]) => releaseJson(tag, published)))
     if (path.startsWith(downloadPath)) return download(path.slice(downloadPath.length))
+    if (path.startsWith(ripgrepPath)) return realRipgrep(path)
   }
 
   const server = Bun.serve({

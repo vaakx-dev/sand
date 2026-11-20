@@ -20,13 +20,12 @@ export interface Told {
 
 export const page = (kind: CallerKind = 'browser'): Caller => ({ device: 'page', kind })
 
-export const setup = (folders = ['/work']) => {
+export const setup = () => {
   const shells: Shell[] = []
   const told: Told[] = []
   const timers: (() => void)[] = []
   const pc: Pc = {
     platform: 'linux',
-    isFolder: async path => folders.includes(path),
     spawn(cwd, size, events) {
       const shell: Shell = { cwd, size, typed: [], killed: false, running: false, events }
       shells.push(shell)

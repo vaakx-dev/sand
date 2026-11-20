@@ -1,5 +1,6 @@
 import { isRecord } from '@sand/util'
 import { exists } from '@sand/util/fs'
+import { spawnIn } from '@sand/util/host'
 import { join } from 'node:path'
 
 const ENGINE = ['transcribe-cpp@0.4.1', 'koffi@3.3.8']
@@ -45,7 +46,9 @@ const lastLine = (text: string) => text.trim().split('\n').at(-1)?.trim() || 'bu
 const installEngine = async (folder: string) => {
   if (await installed(folder)) return
   await Bun.write(join(folder, 'package.json'), '{ "private": true }\n')
-  const proc = Bun.spawn([process.execPath, 'add', '--exact', '--ignore-scripts', ...ENGINE], { cwd: folder, stdin: 'ignore', stdout: 'ignore', stderr: 'pipe', windowsHide: true })
+  const proc = spawnIn(folder, () =>
+    Bun.spawn([process.execPath, 'add', '--exact', '--ignore-scripts', ...ENGINE], { cwd: folder, stdin: 'ignore', stdout: 'ignore', stderr: 'pipe', windowsHide: true }),
+  )
   const [code, errors] = await Promise.all([proc.exited, new Response(proc.stderr).text()])
   if (code !== 0) throw new Error(`Couldn't install the speech engine: ${lastLine(errors)}`)
 }

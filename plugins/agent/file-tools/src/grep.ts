@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import { z } from 'zod'
 import { timedOut, timeoutNote, withDeadline } from './search/deadline'
 import { matches } from './search/matches'
+import type { Ripgrep } from './search/ripgrep'
 
 const limit = 200
 
@@ -14,7 +15,7 @@ const input = z.object({
   include_ignored: z.boolean().optional().describe('Also search gitignored files and node_modules'),
 })
 
-export const grep: Tool<typeof input> = {
+export const grepTool = (ripgrep: Ripgrep): Tool<typeof input> => ({
   name: 'grep',
   description:
     'Search file contents with a regular expression. Skips gitignored files, node_modules, .git and binary files.',
@@ -24,7 +25,7 @@ export const grep: Tool<typeof input> = {
   needs: ['pc'],
   async run({ pattern, path = '.', glob = '**/*', ignore_case, include_ignored }, { cwd, signal }) {
     const found: string[] = []
-    const query = { pattern, root: resolve(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal: withDeadline(signal) }
+    const query = { binary: await ripgrep(), pattern, root: resolve(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal: withDeadline(signal) }
     try {
       for await (const match of matches(query)) {
         found.push(match)
@@ -36,4 +37,4 @@ export const grep: Tool<typeof input> = {
     }
     return found.length ? found.join('\n') : 'No matches'
   },
-}
+})

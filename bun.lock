@@ -5,6 +5,7 @@
     "": {
       "name": "sand-workspace",
       "devDependencies": {
+        "@sand/boot": "workspace:*",
         "@types/bun": "^1.4.2",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
         "typescript": "^7.0.2",
@@ -110,6 +111,9 @@
     "packages/process-tree": {
       "name": "@sand/process-tree",
       "version": "0.0.0",
+      "dependencies": {
+        "@sand/util": "workspace:*",
+      },
     },
     "packages/reactive": {
       "name": "@sand/reactive",
@@ -342,6 +346,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/attachments": "workspace:*",
+        "@sand/config": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",

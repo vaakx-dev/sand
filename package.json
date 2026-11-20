@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "check": "tsc && bun --bun vrui-check && bun scripts/deps.ts && bun scripts/comments.ts && bun run test",
+    "postinstall": "bun scripts/ripgrep.ts",
     "sand": "bun apps/sand/src/main.ts",
     "bench:computer": "bun plugins/computer/tools/bench/main.ts",
     "bench:finders": "bun plugins/computer/finders/bench/main.ts",
@@ -34,6 +35,7 @@
     "test:phone": "bun test --parallel --timeout 30000 ./plugins/ui/look/kit/test/gallery/gallery.ts ./plugins/ui/shell/shell/test/phone/window.ts ./plugins/ui/shell/shell/test/phone/drawers.ts ./plugins/ui/shell/shell/test/phone/keyboard.ts ./plugins/core/features/test/web/matrix.ts ./plugins/ui/chat/chat/test/web/follow.ts ./plugins/ui/chat/chat/test/web/catch-up.ts ./plugins/ui/chat/chat/test/web/draft.ts ./plugins/ui/chat/chat/test/web/early.ts ./plugins/ui/chat/chat/test/web/reply.ts ./plugins/ui/chat/chat/test/web/upload.ts ./plugins/bots/views/test/web/history.ts ./plugins/core/server/test/web/hello.ts ./plugins/ui/shell/shell/test/web/parts.ts"
   },
   "devDependencies": {
+    "@sand/boot": "workspace:*",
     "@types/bun": "^1.4.2",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
     "typescript": "^7.0.2"
