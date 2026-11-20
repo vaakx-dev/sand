@@ -80,7 +80,8 @@ const snap: Tool<z.ZodObject<{}>> = {
 
 test('images a script’s tools return and the tools it finds reach the agent, even when the script prints neither', async () => {
   sand = await start()
-  sand.app.get(tools)!.register(snap)
+  sand.app.get(tools)!.group({ name: 'camera', label: 'Camera', summary: 'Pictures', load: 'on-demand' })
+  sand.app.get(tools)!.register({ ...snap, group: 'camera' })
   const thread = sand.chat('parent/m')
 
   const call = { type: 'tool_call', id: 'script-media', name: 'script', input: { title: 'Test', code: `await tools.snap(); await tools.find_tools({ query: 'snap' }); console.log('done')` } } as const
@@ -89,7 +90,8 @@ test('images a script’s tools return and the tools it finds reach the agent, e
   expect(result.content).toEqual([
     { type: 'text', text: 'done' },
     { type: 'image', mediaType: 'image/png', hash: 'picture', size: 1 },
-    { type: 'text', text: expect.stringContaining('## snap\nTakes a picture') },
+    { type: 'text', text: 'Loaded: snap' },
+    { type: 'tool_reference', name: 'snap' },
   ])
 })
 
@@ -127,4 +129,19 @@ test('a script passes a saved login to a tool by its id, and its value is in nei
   expect(seen).toEqual([`Bearer ${value}`])
   expect(text).not.toContain(value)
   expect(JSON.stringify(saved)).not.toContain(value)
+})
+
+test('the model calls tools directly, next to script, and a script calls the same tools', async () => {
+  const call = (id: string, name: string, input: Record<string, unknown>) => ({ type: 'call', id, name, input }) as const
+  sand = await startSand(
+    [{ id: 'parent', models: ['m'], api: 'anthropic', replies: [[call('direct', 'words', { page: 1 }), call('nested', 'script', { title: 'Count', code: 'return (await tools.words({ page: 2 })).length' })], [{ type: 'text', text: 'done' }]] }],
+    { plugins: ['agent/scripts'] },
+  )
+  sand.app.get(tools)!.register(words)
+  await sand.turns.run(sand.chat('parent/m'), 'go')
+
+  const [first, second] = sand.requests('parent').map(body => JSON.parse(body))
+  expect(first.tools.map((tool: { name: string }) => tool.name)).toEqual(['script', 'words'])
+  const results = second.messages.at(-1).content.filter((block: { type: string }) => block.type === 'tool_result')
+  expect(results.map((result: { is_error?: boolean }) => result.is_error ?? false)).toEqual([false, false])
 })

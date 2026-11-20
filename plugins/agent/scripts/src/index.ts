@@ -8,8 +8,6 @@ import { helloScripts, scriptUpdate, scriptUpdateWire } from './contract'
 import { createRuns } from './runs'
 import { scriptTool } from './tool'
 
-const BASICS = ['read', 'write', 'edit', 'shell', 'agent']
-
 export default definePlugin({
   name: 'scripts',
   description: 'The script tool: one program makes many tool calls',
@@ -22,7 +20,7 @@ export default definePlugin({
       content: (content, conversation) => ctx.waterfall(toolContent, content, conversation),
       logins: () => ctx.get(logins),
     })
-    ctx.effect(() => joinDisposers(ctx.tools.register(tool), ctx.tools.funnel({ tool: tool.name, basics: BASICS })))
+    ctx.effect(() => ctx.tools.register(tool))
     ctx.watch(server, found =>
       found
         ? joinDisposers(

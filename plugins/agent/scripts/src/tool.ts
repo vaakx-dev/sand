@@ -38,7 +38,7 @@ const MAX_OUTPUT = 30_000
 const PROGRESS_CHARS = 120
 
 const DESCRIPTION =
-  'Run JavaScript that calls your tools, like `await tools.read({ path })`. This is the only way to call them. Each call returns the tool\'s text and throws on failure. Only what the script prints or returns reaches you, plus the images its tools return and the tools find_tools loads. To pass a saved login\'s value in a tool\'s input, write `login("<login id>")` or `login("<login id>/username")` where the value goes; sand puts it in when the tool runs. Not Node: no require, fs or fetch.'
+  'Run JavaScript that calls your other tools, like `await tools.read({ path })`, to do many things in one step. Use it over several separate calls when you need only part of their output. Each call returns the tool\'s text and throws on failure. Only what the script prints or returns reaches you, plus the images its tools return and the tools find_tools loads. To pass a saved login\'s value in a tool\'s input, write `login("<login id>")` or `login("<login id>/username")` where the value goes; sand puts it in when the tool runs. Not Node: no require, fs or fetch.'
 
 const ENVIRONMENT = `Put quick lookups together in one ${NAME} call that prints only what matters.`
 
@@ -98,7 +98,7 @@ const scriptTool = ({ tools, runs, content, logins }: Parts): Tool<typeof input>
       const given = await withLogins(call.input, logins(), context.conversation)
       const ran = await tools.run(
         { ...call, input: given },
-        { cwd: context.cwd, signal, conversation: context.conversation, within: context.call.id, turn: context.turn, progress: context.progress, wait: context.wait },
+        { cwd: context.cwd, signal, conversation: context.conversation, turn: context.turn, progress: context.progress, wait: context.wait },
       )
       return { ...ran, content: await content(ran.content, context.conversation) }
     } catch (error) {
@@ -154,6 +154,7 @@ const scriptTool = ({ tools, runs, content, logins }: Parts): Tool<typeof input>
     input,
     act: ({ title }) => ({ effect: 'run', summary: title }),
     timeoutMs: Number.POSITIVE_INFINITY,
+    relay: true,
     run,
   }
 }
