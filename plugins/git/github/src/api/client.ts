@@ -17,6 +17,7 @@ export interface Rest {
 }
 
 export interface Client extends Rest {
+  text(path: string): Promise<string>
   stream(url: string, signal: AbortSignal): Promise<Response>
 }
 
@@ -76,6 +77,12 @@ export const createClient = (deps: ClientDeps): Client => {
         const etag = verb === 'GET' ? response.headers.get('etag') : null
         if (etag) etags.set(path, etag, data)
         return data as T
+      })
+    },
+    text(path) {
+      return exchange(`${apiUrl}${path}`, { method: 'GET' }, {}, async response => {
+        if (!response.ok) throw restError(response.status, undefined)
+        return response.text()
       })
     },
     async stream(url, signal) {

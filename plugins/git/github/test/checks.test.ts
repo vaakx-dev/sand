@@ -1,8 +1,8 @@
 import type { ToolContext } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
-import type { Rest } from '../src/api/client'
 import { restError } from '../src/api/errors'
 import { checksTool, type ChecksGit } from '../src/checks/tool'
+import type { Logs } from '../src/checks/why'
 
 const sha = 'abc1234def5678'
 
@@ -12,6 +12,8 @@ const git: ChecksGit = {
 }
 
 const run = (name: string, status: string, conclusion: string | null = null) => ({
+  id: 0,
+  app: null as { slug: string } | null,
   name,
   status,
   conclusion,
@@ -19,18 +21,28 @@ const run = (name: string, status: string, conclusion: string | null = null) => 
   details_url: null,
 })
 
+const actionsRun = (name: string, id: number, conclusion: string) => ({ ...run(name, 'completed', conclusion), id, app: { slug: 'github-actions' } })
+
 const status = (context: string, state: string) => ({ context, state, target_url: `https://ci.example.com/${context}` })
 
 type Poll = { runs: ReturnType<typeof run>[]; statuses: ReturnType<typeof status>[] } | Error
 
+interface Job {
+  steps: { name: string; conclusion: string }[]
+  log: string
+}
+
 const github = (first: Poll, ...later: Poll[]) => {
   const paths: string[] = []
+  const jobs = new Map<string, Job>()
   let poll = first
   let at = 0
-  const client: Rest = {
+  const client: Logs = {
     rest: async <T>(_method: string, path: string) => {
       paths.push(path)
       if (path.endsWith('/pulls/7')) return { head: { sha } } as T
+      const job = jobs.get(path)
+      if (job) return { steps: job.steps } as T
       const answer = poll
       if (path.includes('/check-runs')) {
         if (answer instanceof Error) throw answer
@@ -40,11 +52,24 @@ const github = (first: Poll, ...later: Poll[]) => {
       if (answer instanceof Error) throw answer
       return { statuses: answer.statuses } as T
     },
+    text: async path => {
+      const job = jobs.get(path.replace(/\/logs$/, ''))
+      if (!job) throw restError(404, undefined)
+      return job.log
+    },
   }
-  return { client, paths, polls: () => at }
+  const failedJob = (id: number, step: string, log: string[]) =>
+    jobs.set(`/repos/acme/tiles/actions/jobs/${id}`, {
+      steps: [
+        { name: 'Set up job', conclusion: 'success' },
+        { name: step, conclusion: 'failure' },
+      ],
+      log: log.map((line, index) => `2026-01-02T03:04:${String(index).padStart(2, '0')}.0000000Z ${line}`).join('\n'),
+    })
+  return { client, paths, polls: () => at, failedJob }
 }
 
-const waitFor = async (client: Rest, input: { pr?: number | string }, folder: ChecksGit = git) => {
+const waitFor = async (client: Logs, input: { pr?: number | string }, folder: ChecksGit = git) => {
   const progress: string[] = []
   const settled: string[] = []
   const tool = checksTool({
@@ -82,6 +107,83 @@ test('returns the failed check with its link as soon as one fails, while others 
   expect(progress).toEqual(['0 of 3 done, running: check, browser, deploy'])
   expect(result).toBe(`Checks on abc1234: 1 failed (2 of 3 done, running: browser):\n- check: https://github.com/acme/tiles/runs/check`)
   expect(settled).toEqual([`t1 ${sha} failed`])
+})
+
+test('a failed job reports its failing tests with their errors, leaving out passing tests, test output, source lines and repeats', async () => {
+  const { client, failedJob } = github({ runs: [actionsRun('check', 41, 'failure'), run('lint', 'completed', 'success')], statuses: [] })
+  failedJob(41, 'Run bun run check', [
+    '##[group]Run bun run check',
+    'bun run check',
+    'shell: /usr/bin/bash -e {0}',
+    '##[endgroup]',
+    '##[group]src/tiles.test.ts:',
+    '\u001b[32m(pass)\u001b[0m lays out a row [0.20ms]',
+    'measuring 3 tiles',
+    '12 |   const row = layout(tiles)',
+    '13 |   expect(row.width).toBe(40)',
+    '                          ^',
+    'error: expect(received).toBe(expected)',
+    '',
+    'Expected: 40',
+    'Received: 38',
+    '',
+    '      at <anonymous> (/home/runner/work/tiles/tiles/src/tiles.test.ts:13:21)',
+    '      at async <anonymous> (/home/runner/work/tiles/tiles/src/run.ts:4:3)',
+    '##[error]Expected: 40\nReceived: 38\n\n      at <anonymous> (/home/runner/work/tiles/tiles/src/tiles.test.ts:13:21)',
+    '\u001b[31m(fail)\u001b[0m a row keeps its gaps [1.52ms]',
+    '(pass) wraps a long row [0.31ms]',
+    '##[endgroup]',
+    '1 tests failed:',
+    '(fail) a row keeps its gaps [1.52ms]',
+    ' 2 pass',
+    ' 1 fail',
+    'error: script "check" exited with code 1',
+    '##[error]Process completed with exit code 1.',
+  ])
+
+  const { result } = await waitFor(client, { pr: 7 })
+
+  expect(result).toBe(
+    [
+      'Checks on abc1234: 1 failed (2 of 2 done):',
+      '- check: https://github.com/acme/tiles/runs/check',
+      '  Run bun run check: 1 test failed',
+      '  ✗ a row keeps its gaps',
+      '    error: expect(received).toBe(expected)',
+      '    Expected: 40',
+      '    Received: 38',
+      '    at src/tiles.test.ts:13:21',
+    ].join('\n'),
+  )
+})
+
+test('a job that fails outside its tests reports the failed step and its last lines', async () => {
+  const { client, failedJob } = github({ runs: [actionsRun('check', 42, 'failure')], statuses: [] })
+  failedJob(42, 'Install', [
+    '##[group]Run actions/checkout@v4',
+    '##[endgroup]',
+    'Checked out abc1234',
+    '##[group]Run bun install --frozen-lockfile',
+    'bun install --frozen-lockfile',
+    '##[endgroup]',
+    'Resolving dependencies',
+    'error: lockfile had changes, but lockfile is frozen',
+    '##[error]Process completed with exit code 1.',
+    'Post job cleanup.',
+  ])
+
+  const { result } = await waitFor(client, { pr: 7 })
+
+  expect(result).toBe(
+    [
+      'Checks on abc1234: 1 failed (1 of 1 done):',
+      '- check: https://github.com/acme/tiles/runs/check',
+      '  Install failed:',
+      '    Resolving dependencies',
+      '    error: lockfile had changes, but lockfile is frozen',
+      '    Process completed with exit code 1.',
+    ].join('\n'),
+  )
 })
 
 const notARepo: ChecksGit = { remoteUrl: async () => undefined, maybe: async () => undefined }

@@ -54,7 +54,7 @@ const onApi = (url: string) => URL.canParse(url) && new URL(url).origin === apiU
 
 const timings: EventTimings = { silenceMs: SILENCE_MS, backoffMs }
 
-export const createEvents = (client: Client, { silenceMs, backoffMs: waitMs }: EventTimings = timings) => {
+export const createEvents = (client: Pick<Client, 'rest' | 'stream'>, { silenceMs, backoffMs: waitMs }: EventTimings = timings) => {
   const pausedUntil = new Map<string, number>()
 
   const paused = (resource: string) => Math.max(pausedUntil.get(githubHost) ?? 0, pausedUntil.get(resource) ?? 0) > Date.now()
