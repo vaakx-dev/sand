@@ -1,5 +1,5 @@
 import { ask } from '@sand/ask/contract'
-import { botChange, bots, gistEntry, type GistEntry } from '@sand/bots/contract'
+import { botChange, bots, type BotSummary, gistEntry, type GistEntry } from '@sand/bots/contract'
 import { type Message, sessions } from '@sand/chats/contract'
 import { errorMessage } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -16,11 +16,11 @@ export default definePlugin({
     ctx.effect(() => () => unloaded.abort())
     const asked = new Set<string>()
 
-    const sum = async (bot: string, entry: string, signal: AbortSignal) => {
+    const sum = async ({ id: bot, subagents }: BotSummary, entry: string, signal: AbortSignal) => {
       const chat = ctx.sessions.require(bot)
       const reply = chat.entry(entry)?.data as Message | undefined
       if (!reply) return
-      const text = await askGist(ctx.ask, { bot, reply, signal })
+      const text = await askGist(ctx.ask, { bot, reply, agents: subagents.length, signal })
       chat.append(gistEntry, { entry, text } satisfies GistEntry)
     }
 
@@ -30,7 +30,7 @@ export default definePlugin({
       const entry = last.entry
       asked.add(entry)
       const signal = AbortSignal.any([unloaded.signal, AbortSignal.timeout(deadline)])
-      sum(bot.id, entry, signal).catch(error => {
+      sum(bot, entry, signal).catch(error => {
         if (!unloaded.signal.aborted) ctx.report(new Error(`Kept the cut reply line of bot ${bot.id}: ${errorMessage(error)}`))
       })
     })
