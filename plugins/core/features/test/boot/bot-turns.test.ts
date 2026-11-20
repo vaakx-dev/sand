@@ -1,8 +1,23 @@
 import { botCreate } from '@sand/bots/contract'
 import type { Message } from '@sand/chats/contract'
 import { modelSettings } from '@sand/model/contract'
+import { tools } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
 import { boot, type Booted, model } from './boot'
+
+const agentResults = async (sand: Booted, bot: string) => {
+  const [child] = sand.sessions.children(bot)
+  const agent = sand.sessions.require(child!.id)
+  const [turn] = sand.turns.list(agent)
+  await sand.turns.wait(turn!.id, 'end')
+  return {
+    model: sand.app.get(modelSettings)!.effective(agent).model,
+    transcript: agent
+      .path()
+      .flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content : []))
+      .filter(block => block.type === 'tool_call' || block.type === 'tool_result' || (block.type === 'text' && block.typed === undefined)),
+  }
+}
 
 const botChat = async (sand: Booted) => {
   const bot = await sand.ask(botCreate, { name: 'Helper' })
@@ -20,19 +35,32 @@ test('with Threads and Bots on, a bot answers', async () => {
   }
 })
 
-test("with Threads and Bots on, a bot's shell call runs without asking", async () => {
-  const replies = [[{ type: 'call' as const, name: 'shell', input: { command: 'echo ran' } }], [{ type: 'text' as const, text: 'Done' }]]
-  const sand = await boot(['threads', 'bots'], [], [{ ...model, replies }])
+test("with Threads and Bots on, a bot's agent runs a shell call without asking and the bot can't", async () => {
+  const botReplies = [
+    [{ type: 'call' as const, name: 'agent', input: { label: 'Run it', task: 'Run echo ran', does: 'build', background: true } }],
+    [{ type: 'text' as const, text: 'Started' }],
+    [{ type: 'text' as const, text: 'Done' }],
+  ]
+  const agentReplies = [[{ type: 'call' as const, name: 'shell', input: { command: 'echo ran' } }], [{ type: 'text' as const, text: 'Ran it' }]]
+  const sand = await boot(['threads', 'bots'], [], [
+    { ...model, id: 'aide', replies: agentReplies },
+    { ...model, replies: botReplies },
+  ], ['bot-gist'])
   try {
     expect(sand.problems()).toEqual([])
     const chat = await botChat(sand)
-    expect(await sand.turns.run(chat, 'run it')).toMatchObject({ text: 'Done' })
-    const results = chat
-      .path()
-      .flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content : []))
-      .filter(block => block.type === 'tool_result')
-    expect(results).toMatchObject([{ content: [{ type: 'text', text: expect.stringContaining('ran') }] }])
-    expect(results[0]).not.toHaveProperty('isError')
+    expect(sand.app.get(tools)!.names(chat)).not.toContain('shell')
+    await sand.turns.run(chat, 'run it')
+    const { model: used, transcript } = await agentResults(sand, chat.id)
+    expect({ used, transcript }).toMatchObject({
+      used: 'aide/m',
+      transcript: [
+        { type: 'tool_call', name: 'shell' },
+        { type: 'tool_result', content: [{ type: 'text', text: expect.stringContaining('ran') }] },
+        { type: 'text', text: 'Ran it' },
+      ],
+    })
+    expect(transcript[1]).not.toHaveProperty('isError')
   } finally {
     await sand.stop()
   }

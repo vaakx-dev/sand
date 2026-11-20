@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { codeAnswer, codeEntry, loginAdd, loginChange, secretEntry, secretSave } from '../src/contract'
 import { totpCode } from '../src/totp'
-import { answer, browser, call, chatEntries, idle, leaksIn, leaksInText, newBot, plugins, resultText, said, type Sand, start, tellBot } from './fixture'
+import { agentOf, answer, browser, call, chatEntries, delegate, heardBack, leaksIn, leaksInText, newBot, plugins, resultText, said, type Sand, start, tellBot } from './fixture'
 
 let folders: string[] = []
 
@@ -36,8 +36,7 @@ const values = {
   shopPassword: `Shop-${tag}-Pass99`,
   threadSecret: `rs_thread_${tag}_Fresh`,
   threadCode: `TC${tag.toUpperCase()}`,
-  botSecret: `rs_bot_${tag}_Fresh`,
-  botCode: `BC${tag.toUpperCase()}`,
+  agentCode: `AC${tag.toUpperCase()}`,
 }
 
 const sha = (text: string) => new Bun.CryptoHasher('sha256').update(text).digest('hex')
@@ -79,11 +78,12 @@ const setUp = async (home: string) => {
 
 const overflow = { type: 'error', message: 'prompt is too long' } as const
 
+const askSecret = [call('request_secret', { title: 'thread deploy token', reason: 'To deploy', once: false })]
+
 const signIn = (ids: Ids, work: string, who: string): Reply[] => [
-  [call('request_secret', { title: `${who} deploy token`, reason: 'To deploy', once: false })],
   [call('login_list')],
   [call('shell', { command: `bun ${join(work, 'print.ts').replaceAll('\\', '/')} ${who}`, logins: { TOKEN: ids.key, USER: `${ids.bank}/username`, PASS: ids.bank } })],
-  [call('fails', { who })],
+  [call('fails')],
   [call('login_fill', { login: ids.bank })],
   [call('login_code', { login: ids.bank, prompt: 'Enter the code from your app' })],
   [call('login_fill', { login: ids.shop })],
@@ -97,10 +97,9 @@ const failing = (sand: Sand) =>
     name: 'fails',
     description: 'Fails',
     effect: 'read',
-    input: z.object({ who: z.string() }),
-    run({ who }) {
-      const typed = who === 'thread' ? values.threadSecret : values.botSecret
-      throw new Error(`Rejected ${values.key} for ${values.username}:${values.password}, then ${typed}`)
+    input: z.object({}),
+    run() {
+      throw new Error(`Rejected ${values.key} for ${values.username}:${values.password}, then ${values.threadSecret}`)
     },
   })
 
@@ -118,16 +117,20 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
   const ids = await setUp(home)
   const sand = await start(
     [
+      askSecret,
       ...signIn(ids, work, 'thread'),
       [overflow],
       [said('Thread summary.')],
       [said('Thread carried on.')],
-      ...signIn(ids, work, 'bot'),
+      [delegate('Sign in to the bank and the shop')],
+      [said('Started it.')],
+      [said('Agent signed in.')],
       [overflow],
       [said('<summary>Bot summary.</summary>\n<memory>\n## The user\n- Banks at Northbank\n</memory>')],
       [said('Bot carried on.')],
     ],
     { home, plugins: [...plugins, 'agent/usage', 'agent/mcp-server', 'agent/logins-mcp'] },
+    signIn(ids, work, 'agent'),
   )
   let stopped = false
   try {
@@ -145,24 +148,26 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     expect(chat.latest('compaction')?.data).toMatchObject({ summary: 'Thread summary.' })
 
     const bot = chatEntries(sand, ids.bot)
+    expect(sand.app.get(tools)!.names(sand.sessions.require(ids.bot))).not.toContain('shell')
     await tellBot(sand, ids.bot, 'Sign in to the bank and the shop')
-    await answer(sand, ids.bot, bot, secretEntry, secretSave, id => ({ session: ids.bot, id, save: true, value: values.botSecret }))
-    await answer(sand, ids.bot, bot, codeEntry, codeAnswer, id => ({ session: ids.bot, id, code: values.botCode }))
-    await idle(sand, ids.bot)
+    const agentId = await agentOf(sand, ids.bot)
+    const agent = chatEntries(sand, agentId)
+    await answer(sand, agentId, agent, codeEntry, codeAnswer, id => ({ session: agentId, id, code: values.agentCode }))
+    await heardBack(sand, ids.bot, 'Agent signed in.')
     await tellBot(sand, ids.bot, 'Carry on')
-    await idle(sand, ids.bot)
+    await heardBack(sand, ids.bot, 'Bot carried on.')
     codes.push(totpCode(values.totp))
 
-    const [threadTotp, botTotp] = [fills[1]?.code, fills[5]?.code]
+    const [threadTotp, agentTotp] = [fills[1]?.code, fills[5]?.code]
     expect(codes).toContain(threadTotp!)
-    expect(codes).toContain(botTotp!)
-    expect(fills).toEqual([...expectedFills(values.threadCode, threadTotp!), ...expectedFills(values.botCode, botTotp!)])
+    expect(codes).toContain(agentTotp!)
+    expect(fills).toEqual([...expectedFills(values.threadCode, threadTotp!), ...expectedFills(values.agentCode, agentTotp!)])
     const hashes = { TOKEN: sha(values.key), USER: sha(values.username), PASS: sha(values.password) }
     expect(await Bun.file(join(work, 'env-thread.json')).json()).toEqual(hashes)
-    expect(await Bun.file(join(work, 'env-bot.json')).json()).toEqual(hashes)
+    expect(await Bun.file(join(work, 'env-agent.json')).json()).toEqual(hashes)
 
-    const transcripts = { thread: thread(), bot: bot() }
-    for (const entries of Object.values(transcripts)) {
+    const transcripts = { thread: thread(), agent: agent(), bot: bot() }
+    for (const entries of [transcripts.thread, transcripts.agent]) {
       expect(resultText(entries, 'shell')).toContain('token=[secret: Deploy key] user=[secret: Northbank] pass=[secret: Northbank]')
       expect(resultText(entries, 'shell')).toContain('TOKEN=[secret: Deploy key]')
       expect(resultText(entries, 'shell')).toContain('stderr [secret: Deploy key]')
@@ -170,8 +175,8 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
       expect(resultText(entries, 'page')).toContain('"code":"[secret: Shop]"')
       expect(resultText(entries, 'page')).toContain('"code":"[secret: Northbank]"')
       expect(resultText(entries, 'login_list')).toContain(`"id":"${ids.bank}"`)
-      expect(leaksInText(JSON.stringify(entries), codes, values)).toEqual([])
     }
+    for (const entries of Object.values(transcripts)) expect(leaksInText(JSON.stringify(entries), codes, values)).toEqual([])
     expect(transcripts.bot.some(entry => entry.type === 'compaction')).toBe(true)
 
     const sent = sand.requests('fake')

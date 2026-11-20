@@ -45,6 +45,8 @@ test('a message to a bot runs a turn in its chat with its name, jobs, projects a
   expect(system).toContain('## Questions are read-only')
   expect(system).toContain('## Avoid dumb moves')
   expect(system).toContain('Update the user as each piece of work finishes')
+  expect(system).toContain('## How you work')
+  expect(system).toContain('Reply to the user first, in a line or two')
   expect(system).toContain('Keep my calendar.')
   expect(system).toContain('No two events clash.')
   expect(system).toContain('<memory>\nGym on Mondays.\n</memory>')
@@ -82,9 +84,9 @@ test('a failed turn marks the bot failed, and deleting a bot removes its chat', 
 })
 
 test('a bot whose tool waits on the user is waiting until it answers', async () => {
-  const { ask } = await start([[{ type: 'call', name: 'ask' }], [said('Thanks.')]])
+  const { ask } = await start([[{ type: 'call', name: 'skill' }], [said('Thanks.')]])
   const answered = Promise.withResolvers<string>()
-  sand.tool('ask', async (_, context) => {
+  sand.tool('skill', async (_, context) => {
     const done = context.wait({ kind: 'question', call: context.call.id, title: 'Which day?' })
     return answered.promise.finally(done)
   })

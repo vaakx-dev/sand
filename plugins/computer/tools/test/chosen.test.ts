@@ -28,7 +28,7 @@ const conversation = (owner: 'thread' | 'bot', id: string): ToolContext['convers
   entries: () => [],
 })
 
-test("a bot's computer_* calls act on its chosen computer unless it names one, and with none chosen it is told how to choose", async () => {
+test("an agent of a bot acts on the bot's chosen computer unless it names one, and with none chosen it is told how to choose", async () => {
   sand = await startSand([], { plugins: ['bots/bots', 'bots/turns', 'computer/computers', 'computer/tools'] })
   const acted: string[] = []
   for (const id of ['browser', 'desktop']) sand.app.get(computers)!.register(fake(id, acted))
@@ -39,14 +39,20 @@ test("a bot's computer_* calls act on its chosen computer unless it names one, a
     const result = await registry.run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: on, turn: 't', progress() {}, wait: () => () => {} })
     return textOf(result.content)
   }
-  const bot = async (computer: Choice) => conversation('bot', (await sand.ask(botCreate, { name: computer, computer })).id)
+  const agentOf = (parent: string) => sand.sessions.agent({ parent, cwd: sand.home, title: 'Agent' }).id
+  const botAgent = async (computer: Choice) => conversation('thread', agentOf((await sand.ask(botCreate, { name: computer, computer })).id))
 
-  expect(await act(await bot('this-pc'))).toBe('Done: wait.')
-  expect(await act(await bot('own'))).toBe('Done: wait.')
-  expect(await act(await bot('own'), 'desktop')).toBe('Done: wait.')
+  expect(await act(await botAgent('this-pc'))).toBe('Done: wait.')
+  expect(await act(await botAgent('own'))).toBe('Done: wait.')
+  expect(await act(await botAgent('own'), 'desktop')).toBe('Done: wait.')
   expect(acted).toEqual(['desktop', 'browser', 'desktop'])
 
-  expect(await act(await bot('none'))).toContain('You have no computer chosen. The user picks one under Computer in your profile')
-  expect(await act(await bot('none'), 'browser')).toBe('Done: wait.')
+  const lead = (await sand.ask(botCreate, { name: 'Lead', computer: 'this-pc' })).id
+  expect(await act(conversation('thread', agentOf(agentOf(lead))))).toBe('Done: wait.')
+  expect(acted.at(-1)).toBe('desktop')
+
+  expect(await act(await botAgent('none'))).toContain('You have no computer chosen. The user picks one under Computer in your profile')
+  expect(await act(await botAgent('none'), 'browser')).toBe('Done: wait.')
+  expect(await act(conversation('thread', agentOf(sand.sessions.thread(sand.home).id)))).toContain('Name a computer')
   expect(await act(conversation('thread', 'chat'))).toContain('Name a computer')
 })

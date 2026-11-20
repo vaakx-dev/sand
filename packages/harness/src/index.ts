@@ -77,6 +77,12 @@ const settings = (sources: Source[], config: string) =>
   `[plugins.server]
 enabled = false
 
+[plugins.codex]
+enabled = false
+
+[plugins.claude-code]
+enabled = false
+
 [plugins.replay]
 sources = ${tomlValue(sources)}
 
