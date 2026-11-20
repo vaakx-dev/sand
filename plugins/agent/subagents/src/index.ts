@@ -3,6 +3,7 @@ import { agentLimits } from '@sand/orchestrator/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { inject } from './context'
+import { answerTool, askTool } from './ask'
 import { agentLayers } from './layers'
 import { createLimits } from './limits'
 import { createMeta } from './meta'
@@ -25,6 +26,8 @@ export default definePlugin({
     const limits = createLimits(meta, config.max_depth)
     ctx.provide(agentLimits, limits)
     ctx.effect(() => ctx.tools.register(agentTool(ctx, createStart(ctx, resolve, limits))))
+    ctx.effect(() => ctx.tools.register(askTool(ctx)))
+    ctx.effect(() => ctx.tools.register(answerTool(ctx)))
     restrictContext(ctx, resolve, meta, config.max_depth)
     agentPrompt(ctx, resolve, meta)
   },

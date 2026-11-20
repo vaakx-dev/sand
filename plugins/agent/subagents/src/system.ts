@@ -3,7 +3,7 @@ import type { Context } from 'drydock'
 import type { Resolve } from './layers'
 import type { Meta } from './meta'
 
-const preamble = `You are a sand subagent doing a task for another agent. You have full access to the machine. Decide for yourself rather than asking; the user may open your chat and write to you, and then you answer them.
+const preamble = `You are a sand subagent doing a task for another agent. You have full access to the machine. Decide for yourself and keep working. Only when you can't go on without an answer that your caller or the user has, ask with ask_caller and wait for it. The user may open your chat and write to you, and then you answer them.
 
 Finish the task. Your final reply goes back to the agent that started you. Put in what you found or did, with sources, such as file paths or links, and results.`
 

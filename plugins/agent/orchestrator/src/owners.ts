@@ -30,6 +30,7 @@ export const createOwners = (ctx: OrchestratorContext) => {
     async deliver(to: ConversationRef, { text, clientRequestId }: Notice) {
       const session = chatOf(to)
       if (session) await ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId })
+      return Boolean(session)
     },
     async record(to: ConversationRef, text: string) {
       const session = chatOf(to)
