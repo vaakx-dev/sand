@@ -10,7 +10,6 @@ export interface ToolContext {
   signal: AbortSignal
   conversation: Conversation
   call: ToolCallBlock
-  within?: string
   turn: string
   progress(text: string): void
   wait(reason: WaitReason): Dispose
@@ -54,15 +53,11 @@ export interface Tool<S extends ZodType = ZodType> {
   act?(input: output<S>, conversation: Conversation): Act
   active?(conversation: Conversation): boolean
   replaces?: string[]
+  relay?: boolean
   run(input: output<S>, context: ToolContext): ToolOutput | Promise<ToolOutput>
 }
 
 export type Gate = (act: Act, tool: Tool, context: ToolContext) => Promise<string | undefined>
-
-export interface Funnel {
-  tool: string
-  basics: readonly string[]
-}
 
 export type Allow = (tool: string, conversation: Conversation) => boolean
 
@@ -106,7 +101,6 @@ export interface Tools {
   group(group: ToolGroup): Dispose
   offer(owner: Owner, offer: Offer): Dispose
   gate(gate: Gate): Dispose
-  funnel(funnel: Funnel): Dispose
   restrict(allow: Allow): Dispose
   groups(): GroupState[]
   choose(group: string, load: ToolLoad): Promise<void>
