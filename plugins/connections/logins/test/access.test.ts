@@ -1,10 +1,10 @@
-import { orchestrator } from '@sand/orchestrator/contract'
+import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { loginAdd, loginChange, loginUses } from '../src/contract'
-import { browser, call, chatEntries, idle, newBot, plugins, resultText, said, start, tellBot } from './fixture'
+import { browser, call, chatEntries, delegate, heardBack, newBot, resultText, said, start, tellBot } from './fixture'
 
 let home: string
 
@@ -24,47 +24,34 @@ const setUp = async () => {
 const asksEveryTime = (name: string) =>
   `Not used: the login ${name} is set to "Ask me every time", so agents can't use it. Tell the user: they can turn that off in the login's settings (Settings → Logins), or use it themselves.`
 
-test("a bot and its subagents use the bot's logins; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
+test("a bot's subagents use the bot's logins and the bot itself can't; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-logins-access-'))
   const ids = await setUp()
   const useKey = call('shell', { command: 'echo used', logins: { TOKEN: ids.key } })
   const fillSite = call('login_fill', { login: ids.site })
   const sand = await start(
     [
-      [useKey],
-      [fillSite],
-      [said('Bot used both.')],
-      [useKey],
-      [said('Subagent used it.')],
-      [said('Bot heard back.')],
+      [delegate('Deploy')],
+      [said('Started it.')],
+      [said('Subagent used both.')],
       [useKey],
       [said('User thread was refused.')],
-      [useKey],
-      [fillSite],
-      [said('Bot was refused.')],
+      [delegate('Deploy again')],
+      [said('Started again.')],
+      [said('Subagent was refused.')],
     ],
-    { home, plugins: [...plugins, 'bots/bridge'] },
+    { home },
+    [[useKey], [fillSite], [said('Used both.')], [useKey], [fillSite], [said('Was refused.')]],
   )
   try {
     const fills = browser(sand)
+    const bot = sand.sessions.require(ids.bot)
+    expect(sand.app.get(tools)!.names(bot)).not.toContain('shell')
+    expect(sand.app.get(tools)!.names(bot)).not.toContain('login_fill')
 
     await tellBot(sand, ids.bot, 'Deploy')
-    await idle(sand, ids.bot)
+    await heardBack(sand, ids.bot, 'Subagent used both.')
     expect(fills).toEqual([{ site: 'northbank.example', username: 'ana', password: 'bank-password' }])
-
-    const started = await sand.app.get(orchestrator)!.start({
-      cwd: home,
-      prompt: 'Deploy from a subagent',
-      model: 'fake/m',
-      origin: 'agent',
-      clientRequestId: 'started',
-      from: { owner: 'bot', id: ids.bot },
-      subagent: { call: 'deploy', limits: { depth: 1 } },
-    })
-    if (started.disposition !== 'started') throw new Error('The subagent should run at once')
-    expect(await sand.turns.wait(started.turn, 'end')).toMatchObject({ status: 'completed' })
-    for (let tries = 0; tries < 500 && sand.requests('fake').length < 6; tries++) await Bun.sleep(10)
-    await idle(sand, ids.bot)
 
     const chat = sand.sessions.require(ids.chat)
     expect(await sand.turns.run(chat, 'Deploy')).toMatchObject({ text: 'User thread was refused.' })
@@ -74,19 +61,18 @@ test("a bot and its subagents use the bot's logins; any other thread, or anyone 
 
     for (const id of [ids.key, ids.site]) await sand.ask(loginChange, { id, ask: true })
     await tellBot(sand, ids.bot, 'Deploy again')
-    await idle(sand, ids.bot)
-    const asked = chatEntries(sand, ids.bot)()
+    await heardBack(sand, ids.bot, 'Subagent was refused.')
+    const [first, second] = sand.sessions.children(ids.bot)
+    const asked = chatEntries(sand, second!.id)()
     expect(resultText(asked, 'shell')).toEndWith(asksEveryTime('Deploy key'))
     expect(resultText(asked, 'login_fill')).toEndWith(asksEveryTime('Northbank'))
     expect(fills).toHaveLength(1)
 
-    const uses = await sand.ask(loginUses, { id: ids.key })
-    expect(uses).toEqual([
-      { login: ids.key, at: expect.any(Number), action: 'env', owner: 'thread', conversation: started.thread, title: expect.any(String), bot: ids.bot, grant: 'bot' },
-      { login: ids.key, at: expect.any(Number), action: 'env', owner: 'bot', conversation: ids.bot, title: 'Deployer', bot: ids.bot, grant: 'bot' },
+    expect(await sand.ask(loginUses, { id: ids.key })).toEqual([
+      { login: ids.key, at: expect.any(Number), action: 'env', owner: 'thread', conversation: first!.id, title: expect.any(String), bot: ids.bot, grant: 'bot' },
     ])
     expect(await sand.ask(loginUses, { id: ids.site })).toEqual([
-      { login: ids.site, at: expect.any(Number), action: 'fill', owner: 'bot', conversation: ids.bot, title: 'Deployer', bot: ids.bot, site: 'northbank.example', grant: 'bot' },
+      { login: ids.site, at: expect.any(Number), action: 'fill', owner: 'thread', conversation: first!.id, title: expect.any(String), bot: ids.bot, site: 'northbank.example', grant: 'bot' },
     ])
   } finally {
     await sand.stop()

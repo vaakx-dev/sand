@@ -1,8 +1,8 @@
 import { botCreate } from '@sand/bots/contract'
 import { calendarAgenda, calendarCreate } from '@sand/calendar/contract'
-import { type Entry, textOf, type Message } from '@sand/chats/contract'
+import { type Entry, type Session, textOf, type Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { modelSettings } from '@sand/model/contract'
+import { levelSet, modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -13,11 +13,24 @@ afterEach(() => sand.stop())
 
 const zone = 'Europe/Berlin'
 
-const start = async (replies: Source['replies'] = []) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], {
-    plugins: ['calendar/calendar', 'calendar/local', 'bots/bots', 'bots/turns'],
-  })
+const start = async (replies: Source['replies'] = [], agentReplies: Source['replies'] = []) => {
+  sand = await startSand(
+    [
+      { id: 'fake', models: ['m'], replies, api: 'anthropic' },
+      { id: 'kid', models: ['m'], replies: agentReplies, api: 'anthropic' },
+    ],
+    { plugins: ['calendar/calendar', 'calendar/local', 'bots/bots', 'bots/turns', 'core/watch', 'agent/subagents'] },
+  )
+  await sand.ask(levelSet, { level: 'main', model: 'kid/m' })
   return sand
+}
+
+const heardBack = async (bot: Session, text: string) => {
+  for (let tries = 0; tries < 500; tries++) {
+    if (bot.path().some(entry => entry.type === 'message' && (entry.data as Message).role === 'assistant' && textOf((entry.data as Message).content) === text)) return
+    await Bun.sleep(10)
+  }
+  throw new Error(`The bot never said ${text}`)
 }
 
 const results = (entries: Entry[]) =>
@@ -32,22 +45,32 @@ const use = async (name: string, input: Record<string, unknown>) => {
   return { isError: Boolean(result.isError), text: textOf(result.content) }
 }
 
-test('a bot adds an event to the calendar and reads its agenda back', async () => {
-  const { ask } = await start([
+test("a bot's agent adds an event to the calendar and reads its agenda back", async () => {
+  const { ask } = await start(
     [
-      { type: 'call', name: 'calendar_create', input: { title: 'Lunch with Ana', start: '2026-11-13T13:00', zone, location: 'Café Luna' } },
-      { type: 'call', name: 'calendar_agenda', input: { from: '2026-11-13', to: '2026-11-14' } },
+      [{ type: 'call', name: 'agent', input: { label: 'Book lunch', task: 'Put lunch with Ana on the calendar and read the day back', background: true } }],
+      [{ type: 'text', text: 'Started it.' }],
+      [{ type: 'text', text: 'Booked lunch with Ana.' }],
     ],
-    [{ type: 'text', text: 'Booked lunch with Ana.' }],
-  ])
+    [
+      [
+        { type: 'call', name: 'calendar_create', input: { title: 'Lunch with Ana', start: '2026-11-13T13:00', zone, location: 'Café Luna' } },
+        { type: 'call', name: 'calendar_agenda', input: { from: '2026-11-13', to: '2026-11-14' } },
+      ],
+      [{ type: 'text', text: 'Lunch is booked.' }],
+    ],
+  )
   const bot = await ask(botCreate, { name: 'Planner' })
   const chat = sand.sessions.require(bot.id)
   sand.app.get(modelSettings)!.change(chat, { model: 'fake/m' })
+  expect(sand.app.get(tools)!.names(chat)).not.toContain('calendar_create')
   await sand.turns.run(chat, 'Lunch with Ana next Friday at 1')
+  await heardBack(chat, 'Booked lunch with Ana.')
 
   const [lunch] = await ask(calendarAgenda, { from: Date.parse('2026-11-13T00:00Z'), to: Date.parse('2026-11-14T00:00Z'), zone })
   expect(lunch).toMatchObject({ title: 'Lunch with Ana', location: 'Café Luna', start: { time: '2026-11-13T13:00:00', zone }, end: { time: '2026-11-13T14:00:00', zone } })
-  const [added, agenda] = results(chat.path())
+  const [agent] = sand.sessions.children(bot.id)
+  const [added, agenda] = results(sand.sessions.require(agent!.id).path())
   expect(added).toMatch(/^Added "Lunch with Ana", Fri, 13 Nov 2026 \d\d:00–\d\d:00 \[id [\w-]+\]$/)
   expect(agenda).toContain(`Lunch with Ana (Café Luna) [id ${lunch!.id}]`)
 })

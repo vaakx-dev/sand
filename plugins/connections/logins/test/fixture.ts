@@ -4,7 +4,7 @@ import type { Computer, Fill, Filled } from '@sand/computers/contract'
 import { computers } from '@sand/computers/contract'
 import { type SandOptions, startSand } from '@sand/harness'
 import type { Request } from '@sand/host-hub/contract'
-import { modelSettings } from '@sand/model/contract'
+import { levelSet, modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { readdir } from 'node:fs/promises'
@@ -18,10 +18,21 @@ export const said = (text: string) => ({ type: 'text', text }) as const
 
 export const call = (name: string, input: Record<string, unknown> = {}) => ({ type: 'call', name, input }) as const
 
-export const plugins = ['connections/logins', 'agent/shell', 'computer/computers', 'bots/bots', 'bots/turns']
+export const plugins = ['connections/logins', 'agent/shell', 'computer/computers', 'bots/bots', 'bots/turns', 'core/watch', 'agent/subagents']
 
-export const start = (replies: Source['replies'], options: SandOptions = {}) =>
-  startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins, ...options })
+export const start = async (replies: Source['replies'], options: SandOptions = {}, agentReplies: Source['replies'] = []) => {
+  const sand = await startSand(
+    [
+      { id: 'fake', models: ['m'], replies, api: 'anthropic' },
+      { id: 'kid', models: ['m'], replies: agentReplies, api: 'anthropic' },
+    ],
+    { plugins, ...options },
+  )
+  await sand.ask(levelSet, { level: 'main', model: 'kid/m' })
+  return sand
+}
+
+export const delegate = (task: string) => call('agent', { label: 'Do it', task, background: true })
 
 export type Sand = Awaited<ReturnType<typeof start>>
 
@@ -114,3 +125,15 @@ export const idle = (sand: Sand, bot: string) =>
     const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
     return found?.status === 'idle' && found.last?.role === 'assistant' ? found : undefined
   }, `bot ${bot} to finish`)
+
+export const heardBack = async (sand: Sand, bot: string, text: string) => {
+  const spoke = () =>
+    sand.sessions
+      .require(bot)
+      .path()
+      .some(entry => entry.type === 'message' && (entry.data as Message).role === 'assistant' && textOf((entry.data as Message).content) === text) || undefined
+  await until(spoke, `bot ${bot} to say ${text}`)
+  await idle(sand, bot)
+}
+
+export const agentOf = (sand: Sand, bot: string) => until(() => sand.sessions.children(bot)[0]?.id, `an agent of bot ${bot}`)
