@@ -449,3 +449,78 @@ test('deleting an agent deletes its subagent on another PC, once that PC can be 
   link.open()
   await until(() => !there.sessions.open(child.id))
 })
+
+const asking = (question: string): Reply => [{ type: 'call', name: 'ask_caller', input: { question } }]
+
+const answering = (answer: string, input: Record<string, unknown> = {}): Reply => [{ type: 'call', name: 'answer_child', input: { answer, ...input } }]
+
+const answersFirstChild = () =>
+  sand.tool('answer_child', async (input, context) => {
+    const [row] = await sand.askAs({ device: 'sand', kind: 'agent', actor: { owner: 'thread', id: context.conversation.id } })(threadList, { mine: true })
+    const call = { type: 'tool_call' as const, id: context.call.id, name: 'answer_agent', input: { thread: row!.thread, ...input } }
+    const { content } = await sand.app.get(tools)!.run(call, context)
+    return textOf(content)
+  })
+
+const askNotice = (session: Session) => notices(session).find(text => text.includes('<status>asks</status>'))
+
+test('a subagent that asks its caller waits for the answer, and the answer comes back as the reply to the call that answered it', async () => {
+  await start([ask(), answering('Use blue.'), said('Thanks.')], [asking('Which colour?'), said('Painted it blue.')])
+  answersFirstChild()
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Paint it')
+
+  const child = sand.sessions.require((await childOf(parent)).id)
+  await until(() => results(parent).length === 2)
+  expect(results(parent)[0]).toStartWith('A new message came in, so this call stopped waiting.')
+  expect(askNotice(parent)).toContain('Which colour?')
+  expect(results(child)).toEqual(['Your caller answered. Its answer is the next message.'])
+  expect(prompts(child).at(-1)).toEndWith(') Use blue.')
+  expect(results(parent)[1]).toStartWith('Painted it blue.')
+})
+
+test('a subagent that is waiting for an answer shows its turn as waiting', async () => {
+  await start([delegate(), said('Started.'), said('Noted.')], [asking('Which colour?')])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Paint it')
+
+  const child = (await childOf(parent)).id
+  await until(() => running(child)?.status === 'waiting')
+  await until(() => askNotice(parent))
+  expect(running(child)?.waiting).toMatchObject({ kind: 'question', title: 'Which colour?' })
+})
+
+test('a question nobody below can answer goes up the chain, and the answer goes back down to the one who asked', async () => {
+  sand = await startSand(
+    [
+      { id: 'child', models: ['m'], replies: [ask({ agent: 'grand' }), asking('Grandchild wants a colour. Which one?'), answering('Use blue.'), said('Passed it on.')], api: 'anthropic' },
+      { id: 'parent', models: ['m'], replies: [ask(), answering('Use blue.'), said('Thanks.')], api: 'anthropic' },
+      { id: 'grand', models: ['m'], replies: [asking('Which colour?'), said('Painted it blue.')], api: 'anthropic' },
+    ],
+    { plugins: ['core/watch', 'agent/subagents'] },
+  )
+  await Bun.write(join(sand.home, 'agents', 'grand.md'), '---\ndescription: Goes deeper.\nmodel: grand/m\n---\nGo deeper.')
+  answersFirstChild()
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Paint it')
+
+  const child = sand.sessions.require((await childOf(parent)).id)
+  await until(() => results(parent).length === 2)
+  expect(askNotice(parent)).toContain('Grandchild wants a colour')
+  expect(askNotice(child)).toContain('Which colour?')
+  expect(results(child).some(text => text.startsWith('Painted it blue.'))).toBe(true)
+  expect(results(parent)[1]).toStartWith('Passed it on.')
+})
+
+test('a subagent on another PC asks the agent on this PC, and hears the answer', async () => {
+  const { box: there } = await startPaired(home => [ask({ pc: 'box', folder: home }), answering('Use blue.'), said('Thanks.')], [asking('Which colour?'), said('Painted it blue.')])
+  answersFirstChild()
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Paint it')
+
+  const child = there.sessions.require((await onBox(there, parent)).id)
+  await until(() => results(parent).length === 2)
+  expect(askNotice(parent)).toContain('Which colour?')
+  expect(prompts(child).at(-1)).toEndWith(') Use blue.')
+  expect(results(parent)[1]).toStartWith('Painted it blue.')
+})

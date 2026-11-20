@@ -13,12 +13,13 @@ const fake = (name: string) => ({ name, description: name, always: ['bot', 'thre
 test('a bot may only use the tools of a project lead, while threads keep all of theirs', async () => {
   sand = await startSand([], { plugins: ['bots/bots', 'bots/turns'] })
   const registry = sand.app.get(tools)!
-  for (const name of ['memory', 'agent', 'shell', 'file', 'thread_wait', 'job_wait', 'thread_start']) registry.register(fake(name))
+  for (const name of ['memory', 'agent', 'answer_agent', 'shell', 'file', 'thread_wait', 'job_wait', 'thread_start']) registry.register(fake(name))
   const bot = sand.sessions.require((await sand.ask(botCreate, { name: 'Lead' })).id)
 
   const forBot = registry.names(bot)
   expect(forBot).toContain('memory')
   expect(forBot).toContain('agent')
+  expect(forBot).toContain('answer_agent')
   for (const name of ['shell', 'file', 'thread_wait', 'job_wait', 'thread_start']) expect(forBot).not.toContain(name)
   expect(registry.names(sand.chat('fake/m'))).toEqual(expect.arrayContaining(['memory', 'agent', 'shell', 'file', 'thread_wait']))
 })

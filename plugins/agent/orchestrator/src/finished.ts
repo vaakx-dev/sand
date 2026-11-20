@@ -33,7 +33,8 @@ export const reportFinished = (ctx: OrchestratorContext, { starters, waits, owne
 
   const carriedOn = (result: TurnResult, info: TurnInfo) => !!ctx.get(carrying)?.continues(result, info.selection)
 
-  const tell = async ({ to, thread, text, clientRequestId }: Finish) => {
+  const tell = async ({ to, thread, text, clientRequestId, asks }: Finish) => {
+    if (asks) return void (await owners.deliver(to, { text, clientRequestId }))
     const quiet = stopped.delete(thread)
     if (answered.delete(clientRequestId) || archived(to) || waits.has(to, thread)) return
     await (quiet ? owners.record(to, text) : owners.deliver(to, { text, clientRequestId }))

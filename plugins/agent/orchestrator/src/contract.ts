@@ -114,6 +114,8 @@ export interface Orchestrator {
   send(thread: string, input: SendInput): Promise<Sent>
   wait(thread: string, until: WaitUntil, signal: AbortSignal): Promise<ThreadState>
   answer(thread: string, by: ConversationRef, signal: AbortSignal): Promise<ThreadState>
+  ask(thread: string, question: string, id: string): Promise<void>
+  reply(thread: string, input: SendInput): Promise<Sent>
   read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
   item(conversation: ConversationRef, item: string, offset?: number): ItemRead
   starterOf(thread: string): ConversationRef | undefined
@@ -211,6 +213,7 @@ export interface Finish {
   thread: string
   text: string
   clientRequestId: string
+  asks?: true
 }
 export const threadReports = request('thread.reports', {
   input: () => z.object({ delivered: z.array(z.string()) }),

@@ -42,10 +42,10 @@ const stillWorking = (thread: string) =>
 
 const followUp = (thread: string) => `(Subagent ${thread}; thread_send asks it more.)`
 
-const answered = ({ thread, status, reply, error }: ThreadState) => {
+export const answered = ({ thread, status, reply, error }: ThreadState) => {
   if (status === 'completed') return `${reply || '(no reply)'}\n\n${followUp(thread)}`
   if (status === 'interrupted') return `The subagent was stopped before it answered. ${followUp(thread)}`
-  if (status === 'running') return stillWorking(thread)
+  if (status === 'running' || status === 'waiting') return stillWorking(thread)
   return `The subagent failed${error ? `: ${error}` : ''}. ${followUp(thread)}`
 }
 

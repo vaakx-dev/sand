@@ -3,7 +3,8 @@ import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { createAnswer } from './answer'
-import { type Orchestrator, orchestrator } from './contract'
+import { createAsk } from './ask'
+import { type Orchestrator, orchestrator, threadSend } from './contract'
 import { findThread } from './find'
 import { reportFinished } from './finished'
 import { createOwners } from './owners'
@@ -38,12 +39,20 @@ export default definePlugin({
     const owners = createOwners(ctx)
     const pcs = createPcs(ctx)
     const start = createStart(ctx, openReceipts(ctx.ledger), starters, owners, pcs)
+    const outbox = openOutbox(ctx.ledger)
     const named = ({ owner, id }: ConversationRef): Partial<Record<Owner, string>> => ({ [owner]: id })
     const threads: Orchestrator = {
       start,
       send: async (thread, { prompt, from, ...input }) => ({ ...(await ctx.turns.send(findThread(ctx, thread), { ...input, prompt: owners.sign(prompt, from) })), thread }),
       wait: (thread, until, signal) => waitThread(ctx, findThread(ctx, thread), until, signal),
       answer: createAnswer(ctx, waits, pcs, answered),
+      ask: createAsk(ctx, { starters, owners, outbox }),
+      async reply(thread, { prompt, from, ...input }) {
+        const pc = await pcs.ownerOf(thread)
+        const message = { ...input, prompt: owners.sign(prompt, from) }
+        if (pc) return pcs.call(pc, threadSend, { session: thread, ...message })
+        return { ...(await ctx.turns.send(findThread(ctx, thread), message)), thread }
+      },
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
       starterOf: starters.starterOf,
@@ -54,7 +63,6 @@ export default definePlugin({
       working: createWorking(ctx, starters),
     }
     ctx.provide(orchestrator, threads)
-    const outbox = openOutbox(ctx.ledger)
     const stopped = new Set<string>()
     const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, answered, outbox }))
     stopSubagents(ctx, starters, sendAway, stopped)
