@@ -1,7 +1,7 @@
 import type { Entry, UserPart } from '@sand/chats/contract'
 import type { Item } from '../contract'
 
-const tagOf = (text: string) => /^<([a-z][\w-]*)>[\s\S]*<\/\1>$/.exec(text.trim())?.[1]
+const tagOf = (text: string) => /^<([a-z][\w-]*)>[\s\S]*<\/\1>/.exec(text.trimStart())?.[1]
 
 const claimed = (part: UserPart, custom: (type: string) => boolean) => {
   const tag = part.kind === 'text' ? tagOf(part.text) : undefined
