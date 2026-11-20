@@ -142,7 +142,7 @@ export const createTurnStore = (db: Database) => {
   const outputted = db.query('update turns set outputs = $outputs where id = $id')
   const finished = db.query(finishSql)
   const renewed = db.query<{ id: string; cancel: number }, { holder: string; lease: number }>(
-    'update turns set lease = $lease where holder = $holder and ended is null returning id, cancel',
+    'update turns set lease = $lease where holder = $holder and ended is null and handed = 0 returning id, cancel',
   )
   const cancelled = db.query('update turns set cancel = 1 where id = $id and ended is null')
   const expired = db.query<StaleRow, { owner: Owner; holder: string; now: number }>(

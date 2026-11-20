@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { SendResult } from '../src/contract'
 
 let home: string
 let running: Sand[]
@@ -34,6 +35,15 @@ const crashedBefore = (turn: string) => {
   db.close()
 }
 
+const lease = (turn: string) => {
+  const db = new Database(join(home, 'sand.db'), { readonly: true })
+  const row = db.query<{ lease: number; handed: number }, [string]>('select lease, handed from turns where id = ?').get(turn)!
+  db.close()
+  return row
+}
+
+const startedTurn = (sent: SendResult) => (sent.disposition === 'started' ? sent.turn : '')
+
 test('a turn running when its runtime drains finishes its tool calls, then a fresh runtime carries it on as the same turn without counting it as a crash', async () => {
   const old = await start([[{ type: 'call', name: 'gate' }]])
   const opened = Promise.withResolvers<void>()
@@ -43,9 +53,8 @@ test('a turn running when its runtime drains finishes its tool calls, then a fre
     return answered.promise
   })
   const chat = old.chat('fake/m')
-  const sent = await old.turns.send(chat, { prompt: 'go', clientRequestId: 'go' })
-  const turn = sent.disposition === 'started' ? sent.turn : ''
-  await opened
+  const turn = startedTurn(await old.turns.send(chat, { prompt: 'go', clientRequestId: 'go' }))
+  await opened.promise
 
   old.app.emit(runtimeDrain)
   answered.resolve('open')
@@ -66,3 +75,37 @@ test('a turn running when its runtime drains finishes its tool calls, then a fre
     { role: 'assistant', content: [said('Done.')] },
   ])
 })
+
+test('turns handed over while the old runtime still runs a parent waiting on its child carry on in the new runtime at once, child first, then the parent', async () => {
+  const old = await start([[{ type: 'call', name: 'delegate' }], [{ type: 'call', name: 'gate' }]])
+  const parent = old.chat('fake/m')
+  const child = old.chat('fake/m')
+  const opened = Promise.withResolvers<void>()
+  const answered = Promise.withResolvers<string>()
+  old.tool('gate', () => {
+    opened.resolve()
+    return answered.promise
+  })
+  old.tool('delegate', async () => {
+    const turn = startedTurn(await old.turns.send(child, { prompt: 'help', clientRequestId: 'help' }))
+    return (await old.turns.wait(turn, 'end')).status
+  })
+  const parentTurn = startedTurn(await old.turns.send(parent, { prompt: 'go', clientRequestId: 'go' }))
+  await opened.promise
+  const childTurn = old.turns.current(child)!.id
+
+  old.app.emit(runtimeDrain)
+  answered.resolve('open')
+  while (!lease(childTurn).handed) await Bun.sleep(10)
+  const heldUntil = lease(parentTurn).lease
+  while (lease(parentTurn).lease === heldUntil) await Bun.sleep(50)
+
+  const fresh = await start([[said('Helped.')], [said('Done.')]])
+  fresh.app.emit(runtimeRelease, [child.id])
+  expect(await fresh.turns.wait(childTurn, 'end')).toMatchObject({ status: 'completed' })
+  while (!lease(parentTurn).handed) await Bun.sleep(10)
+  fresh.app.emit(runtimeRelease, [parent.id])
+
+  expect(await fresh.turns.wait(parentTurn, 'end')).toMatchObject({ status: 'completed' })
+  expect(fresh.sessions.require(parent.id).messages().at(-1)).toEqual({ role: 'assistant', content: [said('Done.')] })
+}, 30_000)
