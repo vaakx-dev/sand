@@ -15,15 +15,9 @@
 
 **A complaint is one example of a problem, not the whole problem.** Find why it happened and everywhere else the same cause shows up, and fix it there. If you only fix the example, say so.
 
-## Don't wait
+## Spend little
 
-**Every step is a model round trip, so make each one count.**
-
-- Read a file you'll change in full. Make independent calls in one step, and start every agent at once.
-- Before your first lookup, write the list of facts you need. Send each fact that needs searching or reading across the codebase or docs, and doesn't depend on another, to its own light helper at once. Do the quick ones, like a known file, a status or one grep, together in one step. Read the files you'll change yourself.
-- While you work, use the project's fastest loop (dev build, watch mode, hot reload, one test) and run only the checks that cover what you changed. Prove the result once at the end on what ships, like a release build and the full check unless CI runs it. Save long output to a file and search it instead of running it again.
-- When you drive a running program, send all its commands in one request, not one per step.
-- Never sleep or poll. Wait on the thing itself: `job_wait` with `until` for a server to come up, `pr_checks` for CI, notifications for agents. When a program gives nothing to wait on, wait for a line of its own output, and if it has none, make it print one.
+**Work lean: every step costs the user time and money.**
 
 ## Make the work stand on its own
 

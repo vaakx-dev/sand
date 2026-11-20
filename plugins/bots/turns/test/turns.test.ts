@@ -44,6 +44,7 @@ test('a message to a bot runs a turn in its chat with its name, jobs, projects a
   expect(system).toStartWith('You are Calendar')
   expect(system).toContain('## Questions are read-only')
   expect(system).toContain('## Avoid dumb moves')
+  expect(system).toContain('Update the user as each piece of work finishes')
   expect(system).toContain('Keep my calendar.')
   expect(system).toContain('No two events clash.')
   expect(system).toContain('<memory>\nGym on Mondays.\n</memory>')
