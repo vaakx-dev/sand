@@ -1,7 +1,6 @@
 import type { ModelInfo } from '@sand/accounts/contract'
 import { errorMessage } from '@sand/util'
 import { effect, sig, untrack } from '@vaakx-dev/vrui'
-import { settingsMenu } from '../menu'
 import type { Page } from '../page'
 
 const starred = Number.MAX_SAFE_INTEGER
@@ -89,7 +88,8 @@ export const createCatalog = (page: Page, source: string) => {
   }
 
   const menu = (model: ModelInfo, keep: (id: string) => void) =>
-    settingsMenu(page, model, {
+    page.ctx.modelPicker.menu({
+      model,
       toggleFavourite: () => void setFavourite(model, model.favourite === undefined),
       toggleHidden: () => {
         keep(model.id)

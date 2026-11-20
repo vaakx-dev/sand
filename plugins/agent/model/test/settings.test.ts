@@ -1,4 +1,4 @@
-import { levelSet, modelSettings } from '@sand/model/contract'
+import { modelSettings } from '@sand/model/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, beforeEach, expect, test } from 'bun:test'
 
@@ -20,8 +20,6 @@ afterEach(() => sand.stop())
 const opus = 'fake-a/opus'
 const deepseek = 'fake-b/deepseek'
 
-const setDefault = (model: string) => sand.ask(levelSet, { level: 'main', model })
-
 const effective = (id: string) => sand.app.get(modelSettings)?.effective(sand.sessions.require(id)).model
 
 const duringGate = (run: () => unknown) =>
@@ -30,24 +28,13 @@ const duringGate = (run: () => unknown) =>
     return 'open'
   })
 
-test('a chat that ran keeps its model when the default changes', async () => {
-  await setDefault(opus)
+test('a chat with no chosen model runs on the first model and keeps it', async () => {
   sand.tool('gate', () => 'open')
-  const chat = sand.sessions.thread(sand.home)
-  await sand.turns.run(chat, 'one')
-
-  await setDefault(deepseek)
-
-  expect(effective(chat.id)).toBe(opus)
-  expect((await sand.turns.run(chat, 'two')).text).toBe('A two')
-})
-
-test('a default change in the middle of a turn leaves the turn on its model', async () => {
-  await setDefault(opus)
-  duringGate(() => setDefault(deepseek))
   const chat = sand.sessions.thread(sand.home)
 
   expect((await sand.turns.run(chat, 'one')).text).toBe('A one')
+  expect(effective(chat.id)).toBe(opus)
+  expect(sand.app.get(modelSettings)?.select(chat)?.model).toBe(opus)
 })
 
 test('a model picked during a turn applies from the next turn', async () => {

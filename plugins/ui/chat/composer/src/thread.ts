@@ -1,6 +1,6 @@
 import { ownerOf } from '@sand/chats/contract'
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
-import { type EffectiveSettings, levelSettings, type SessionSettings, type SettingsPatch } from '@sand/model/contract'
+import { type EffectiveSettings, type SessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { modelButton } from '@sand/model-panel/contract'
 import { threadUpdate } from '@sand/orchestrator/contract'
 import { pulse } from '@sand/reactive'
@@ -22,7 +22,7 @@ const deliveryOf = (ctx: ComposerContext): Delivery => {
 export const threadSettings = (ctx: ComposerContext, picked: SessionSettings): SessionSettings => {
   const known = ctx.get(models)
   const usable = Boolean(picked.model && known?.info(picked.model))
-  return { ...(known && levelSettings(known.levels(), 'main')), ...(usable && picked) }
+  return { ...(known && known.roles().lead), ...(usable && picked) }
 }
 
 const plain = ({ model, effort, speed }: EffectiveSettings): SessionSettings => ({ ...(model && { model }), ...(effort && { effort }), speed })

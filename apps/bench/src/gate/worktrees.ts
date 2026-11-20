@@ -58,7 +58,7 @@ const listed = (page: Page) =>
     let slowestReplyMs = 0
     while (!done) {
       const sent = performance.now()
-      await window.bench.ask('levels.get', {})
+      await window.bench.ask('models.list', {})
       slowestReplyMs = Math.max(slowestReplyMs, performance.now() - sent)
     }
     return { listMs: await listing, slowestReplyMs }

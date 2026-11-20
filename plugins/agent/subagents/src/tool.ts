@@ -1,11 +1,11 @@
 import { llm, type Effort } from '@sand/accounts/contract'
 import { features } from '@sand/config/contract'
-import { levels } from '@sand/model/contract'
 import type { ThreadState } from '@sand/orchestrator/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { describeAgents } from './catalog'
 import type { AgentsContext } from './context'
+import { doings } from './does'
 import type { StartSubagent } from './start'
 
 const effortInput = (ctx: AgentsContext) => {
@@ -24,9 +24,8 @@ const inputSchema = (ctx: AgentsContext) => {
     label: z.string().describe('A short title, 3 to 6 words'),
     task: z.string().describe('What to ask or do, in plain words. It works in your folder and is told what you are working on, but not the rest of this chat.'),
     agent: z.string().optional().describe('A named agent from the list (default: a plain agent with your tools)'),
-    model: z.string().optional().describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
-    effort: effortInput(ctx).optional().describe('Reasoning effort (default: inherited)'),
-    level: z.enum(levels).optional().describe('How heavy the job is, which picks the model the user set for it (default: yours)'),
+    does: z.enum(doings).describe('find = only finds and reads things (files, docs, web pages, screens) and changes nothing; build = edits files, runs commands and tests'),
+    effort: effortInput(ctx).optional().describe("Reasoning effort (default: the model's)"),
     project: z.string().optional().describe('A project id to work in instead of your folder, from project_list'),
     folder: z.string().optional().describe('A folder to work in instead of yours; a full path when it runs on another PC'),
     background: z.boolean().optional().describe('Return at once and get its answer later as a <task-notification>, so you can carry on while it does long work'),
@@ -53,7 +52,7 @@ const answered = ({ thread, status, reply, error }: ThreadState) => {
 export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<ReturnType<typeof inputSchema>> => ({
   name: 'agent',
   get description() {
-    return describeAgents([], ctx.get(llm))
+    return describeAgents([])
   },
   parallel: true,
   timeoutMs: Infinity,

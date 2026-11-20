@@ -14,5 +14,5 @@ export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
     const info = meta(session)
     if (!info || session.kind !== 'agent') return undefined
     const role = info.name && (await resolve(session.cwd, session.project)).get(info.name)?.prompt
-    return [preamble, ...(info.level === 'light' ? [finder] : []), ...(role ? [`# Your role\n\n${role}`] : []), ...shared]
+    return [preamble, ...(info.role === 'finder' ? [finder] : []), ...(role ? [`# Your role\n\n${role}`] : []), ...shared]
   })

@@ -1,4 +1,3 @@
-import { levelSettings } from '@sand/model/contract'
 import type { Picked, PickerTarget } from '@sand/model-picker/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Pulse } from '@sand/reactive'
@@ -24,7 +23,7 @@ export const pickerTarget = (ctx: PanelContext, changes: Pulse, target: ModelTar
     key: () => String(changes.version.get()),
     extra: () => [
       target.running?.() && runningNote(kit),
-      !usesDefaults(shown.get(), ctx.modelPicker.resolve(levelSettings(ctx.models.levels(), 'main'))) && footer(kit, reset),
+      !usesDefaults(shown.get(), ctx.modelPicker.resolve(ctx.models.roles().lead ?? {})) && footer(kit, reset),
     ],
   }
 }

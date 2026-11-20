@@ -1,5 +1,5 @@
 import type { ModelInfo, SourceInfo } from '@sand/accounts/contract'
-import { levelSettings, type SessionSettings } from '@sand/model/contract'
+import type { SessionSettings } from '@sand/model/contract'
 import { settings as settingsPages } from '@sand/settings/contract'
 import { pcMarks, wire } from '@sand/devices-contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
@@ -42,7 +42,7 @@ export const readScene = ({ ctx, pcs, catalog }: Picker, target: PickerTarget, v
   return {
     kit: ctx.kit,
     shown,
-    defaults: levelSettings(ctx.models.levels(), 'main'),
+    defaults: ctx.models.roles().lead ?? {},
     target,
     models: ctx.models.list(),
     sources,

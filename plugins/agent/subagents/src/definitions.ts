@@ -1,9 +1,9 @@
 import type { Effort } from '@sand/accounts/contract'
-import { levels } from '@sand/model/contract'
 import { errorMessage, parseFrontmatter } from '@sand/util'
 import { scanFolder } from '@sand/util/fs'
 import { basename, join } from 'node:path'
 import type { AgentDefinition } from './contract'
+import { doings } from './does'
 
 const list = (value: unknown) => {
   if (Array.isArray(value)) return value.map(String)
@@ -21,17 +21,17 @@ const parseEffort = (value: unknown, efforts: Effort[]) => {
   return effort
 }
 
-const parseLevel = (value: unknown) => {
+const parseDoes = (value: unknown) => {
   if (value === undefined || value === null) return undefined
-  const level = levels.find(known => known === value)
-  if (!level) throw new Error(`level must be one of ${levels.join(', ')}`)
-  return level
+  const does = doings.find(known => known === value)
+  if (!does) throw new Error(`does must be one of ${doings.join(', ')}`)
+  return does
 }
 
 const parse = async (path: string, efforts: Effort[]): Promise<AgentDefinition> => {
   const { meta, body: prompt } = parseFrontmatter(await Bun.file(path).text())
   const effort = parseEffort(meta.effort, efforts)
-  const level = parseLevel(meta.level)
+  const does = parseDoes(meta.does)
   const tools = list(meta.tools)
   return {
     name: String(meta.name ?? basename(path, '.md')),
@@ -40,7 +40,7 @@ const parse = async (path: string, efforts: Effort[]): Promise<AgentDefinition> 
     ...(tools && { tools }),
     ...(meta.model != null && { model: String(meta.model) }),
     ...(effort && { effort }),
-    ...(level && { level }),
+    ...(does && { does }),
   }
 }
 

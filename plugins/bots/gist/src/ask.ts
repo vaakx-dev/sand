@@ -14,7 +14,7 @@ const cleaned = (gist: string) => oneLine(gist.replace(/^[\s"'`]+|[\s"'`.]+$/g, 
 
 export const askGist = async (ask: Ask, { bot, reply, signal }: { bot: string; reply: Message; signal: AbortSignal }) => {
   const prompt = textOf(reply.content, '\n').slice(0, mostReplyChars)
-  const answer = await ask.json({ level: 'background', system, prompt, session: bot, signal }, summed)
+  const answer = await ask.json({ role: 'finder', system, prompt, session: bot, signal }, summed)
   const gist = cleaned(answer.gist)
   if (!gist) throw new Error('the model sent an empty gist')
   return gist

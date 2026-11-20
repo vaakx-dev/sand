@@ -1,5 +1,5 @@
 import type { Effort } from '@sand/accounts/contract'
-import type { Level } from '@sand/model/contract'
+import type { Does } from './does'
 
 export interface AgentDefinition {
   name: string
@@ -8,5 +8,5 @@ export interface AgentDefinition {
   tools?: string[]
   model?: string
   effort?: Effort
-  level?: Level
+  does?: Does
 }

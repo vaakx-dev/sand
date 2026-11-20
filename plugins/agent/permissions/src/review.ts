@@ -56,4 +56,4 @@ const promptOf = ({ conversation, call, act }: ReviewRequest) => {
 }
 
 export const reviewCall = async (ask: Ask, request: ReviewRequest): Promise<Review> =>
-  ask.json({ level: 'sub', system, prompt: promptOf(request), signal: request.signal }, verdict)
+  ask.json({ role: 'builder', system, prompt: promptOf(request), signal: request.signal }, verdict)

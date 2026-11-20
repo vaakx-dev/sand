@@ -1,5 +1,4 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import { llm } from '@sand/accounts/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { stepTools } from '@sand/turns-contract/contract'
 import { describeAgents } from './catalog'
@@ -27,7 +26,7 @@ export const restrictContext = (ctx: AgentsContext, resolve: Resolve, meta: Meta
     async (tools, session) => {
       const definitions = await resolve(session.cwd, session.project)
       const info = meta(session)
-      const description = describeAgents([...definitions.values()], ctx.get(llm))
+      const description = describeAgents([...definitions.values()])
       return tools.map(tool => (tool.name === 'agent' ? { ...tool, description } : tool)).map(tool => (info?.tools && tool.deferred ? loaded(tool) : tool))
     },
     { priority: 50 },

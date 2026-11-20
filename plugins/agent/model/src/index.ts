@@ -1,34 +1,31 @@
 import { llm } from '@sand/accounts/contract'
-import { sandConfig } from '@sand/config/contract'
 import { turnEnd } from '@sand/turns-contract/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
-import { z } from 'zod'
 import { createChoices } from './choices'
-import { levels, modelSettings, sessionSettings } from './contract'
+import { type ModelSettings, modelSettings, roleOfLevel } from './contract'
 import { canonical } from './effective'
-import { createLevels } from './levels'
 import { matchSettings } from './match'
+import { pick } from './roles'
 import { serveSettings } from './serve'
 
 export default definePlugin({
   name: 'model',
-  inject: { sandConfig },
-  config: z.object({ levels: z.partialRecord(z.enum(levels), sessionSettings()).default({}) }),
-  apply(ctx, config) {
+  apply(ctx) {
     const current = () => ctx.get(llm)
-    const picks = createLevels(ctx.sandConfig, config.levels, () => current()?.models?.().find(model => !model.hidden)?.id)
-    const choices = createChoices(ctx, picks)
+    const choices = createChoices(ctx)
+    const role: ModelSettings['role'] = role => canonical(current(), pick(current(), role))
     ctx.provide(modelSettings, {
       effective: choices.effective,
       resolve: choices.resolved,
       select: choices.select,
       state: choices.state,
-      level: level => canonical(current(), picks.settings(level)),
+      role,
+      level: level => role(roleOfLevel(level)),
       change: choices.change,
       match: (asked, near) => matchSettings(asked, current(), near),
     })
     ctx.on(turnEnd, session => choices.settle(session))
-    ctx.watch(server, found => (found ? serveSettings(ctx, found, choices, picks) : undefined))
+    ctx.watch(server, found => (found ? serveSettings(ctx, found, choices) : undefined))
   },
 })

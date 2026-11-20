@@ -1,7 +1,7 @@
 {
   "name": "@sand/models-mcp",
   "version": "0.0.0",
-  "description": "sand's model tools, defined once for its own threads and bots and for outside agents over MCP: list the models they can use, set the model of each level and set the price of a model",
+  "description": "sand's model tools, defined once for its own threads and bots and for outside agents over MCP: list the models they can use, and set the price of a model",
   "type": "module",
   "sand": {
     "feature": "threads-mcp",

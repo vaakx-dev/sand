@@ -2,7 +2,7 @@ import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryR
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, helloField, request, type Request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SendResult, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
-import { type Level, levels, type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
+import { type Role, roles, type SessionSettings, sessionSettings, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage, lazy } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
@@ -42,7 +42,7 @@ export interface AgentMeta {
   name?: string
   depth: number
   tools?: string[]
-  level?: Level
+  role?: Role
 }
 
 export type Starter = ConversationRef & { pc?: string }
@@ -179,7 +179,7 @@ const origin = lazy(() => z.enum(['user', ...outsideOrigins, 'agent', 'bot']))
 const clientRequestId = lazy(() => z.string().min(1))
 const conversationRef = lazy(() => z.object({ owner: z.enum(['thread', 'bot']), id: z.string().min(1) }))
 const agentMeta = lazy(() =>
-  z.object({ name: z.string().optional(), depth: z.number().int().min(0), tools: z.array(z.string()).optional(), level: z.enum(levels).optional() }),
+  z.object({ name: z.string().optional(), depth: z.number().int().min(0), tools: z.array(z.string()).optional(), role: z.enum(roles).optional() }),
 )
 
 export const threadStart = request('thread.start', {

@@ -9,7 +9,7 @@ const deadline = 15_000
 
 export default definePlugin({
   name: 'thread-titles',
-  description: 'Titles a new thread with the background model while its first turn runs, keeping any name the user gave it meanwhile',
+  description: 'Titles a new thread with a small fast model while its first turn runs, keeping any name the user gave it meanwhile',
   inject: { ask, sessions },
   apply(ctx) {
     const unloaded = new AbortController()

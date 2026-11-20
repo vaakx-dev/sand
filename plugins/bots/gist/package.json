@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-gist",
   "version": "0.0.0",
-  "description": "Sums up each bot reply in one short line with the background model, for the bot's sidebar row",
+  "description": "Sums up each bot reply in one short line with a small fast model, for the bot's sidebar row",
   "type": "module",
   "sand": {
     "feature": "bots",
