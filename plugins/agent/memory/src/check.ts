@@ -14,7 +14,7 @@ const MAX_STEPS = 12
 const TIMEOUT_MS = 5 * 60_000
 const CHECK_TURN = 'memory-check'
 
-const ASK = 'Your memory and notes should hold only what is still true. Check them against the code, files and past chats, and fix or drop what is wrong.'
+const ASK = 'Your memory and notes should hold only rules that are still true as they hold now. Check them against the code, files and past chats, and fix or drop what is wrong. Rewrite dates, PR and issue numbers and stories as plain rules, and drop what is only history.'
 
 const said = (text: string): Message => ({ role: 'user', content: [{ type: 'text', text }] })
 

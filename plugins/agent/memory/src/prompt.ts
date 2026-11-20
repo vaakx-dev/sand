@@ -1,6 +1,7 @@
 import { sectionLength } from '@sand/compaction/contract'
 import { oneLine } from '@sand/util'
 import { type MemoryRef, type MemorySpace, type MemoryStore, type Note, noteAbout } from './contract'
+import { memoryRules } from './rules'
 
 const ABOUT_LENGTH = 160
 
@@ -12,7 +13,7 @@ const notesOf = (notes: Note[]) =>
   notes.length ? `Notes:\n${notes.map(note => `- /memories/notes/${note.name}.md: ${oneLine(noteAbout(note), ABOUT_LENGTH)}`).join('\n')}` : 'No notes yet.'
 
 const headingOf = (space: MemorySpace) =>
-  `## ${space.title}\n\n${space.about} It carries what you learn that no tool call can find again over to later conversations.\n\n`
+  `## ${space.title}\n\n${space.about} ${memoryRules}\n\n`
 
 const memorySection = async (store: MemoryStore, space: MemorySpace, ref: MemoryRef) => {
   const [text, notes] = await Promise.all([store.read(ref), store.notes(ref)])
