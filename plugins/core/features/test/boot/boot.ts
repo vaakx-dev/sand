@@ -26,9 +26,10 @@ const watched = { sessions, bots, calendars, computers, engine, llm, tools, sche
 
 type Name = keyof typeof watched
 
-export const boot = (on: string[], off: string[] = [], sources: Parameters<typeof startSand>[0] = on.some(id => ['threads', 'computers'].includes(id)) ? [model] : []) => {
+export const boot = (on: string[], off: string[] = [], sources: Parameters<typeof startSand>[0] = on.some(id => ['threads', 'computers'].includes(id)) ? [model] : [], plugins: string[] = []) => {
   const lines = [...topLevel.map(id => `${id} = ${on.includes(id) && !off.includes(id)}`), ...off.filter(id => !topLevel.includes(id)).map(id => `${id} = false`)]
-  return startSand(sources, { config: `[features]\n${lines.join('\n')}` })
+  const unloaded = plugins.map(name => `\n[plugins.${name}]\nenabled = false\n`)
+  return startSand(sources, { config: `[features]\n${lines.join('\n')}\n${unloaded.join('')}` })
 }
 
 export type Booted = Awaited<ReturnType<typeof boot>>
