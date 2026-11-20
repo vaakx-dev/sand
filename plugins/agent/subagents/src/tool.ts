@@ -68,7 +68,7 @@ export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<Return
       parent,
       call: call.id,
     })
-    if (background) return started(thread)
+    if (background || parent.owner === 'bot') return started(thread)
     return answered(await ctx.orchestrator.answer(thread, { owner: parent.owner, id: parent.id }, signal))
   },
 })

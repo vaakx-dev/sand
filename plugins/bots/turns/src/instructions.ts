@@ -5,11 +5,18 @@ const UPDATES = `## Telling the user
 
 Update the user as each piece of work finishes, in a short, plain message. Don't wait until the end to tell them.`
 
+const LEADING = `## How you work
+
+Reply to the user first, in a line or two. Then hand the task to an agent with the agent tool, with a plain brief: the goal, what done looks like, and the user's decisions.
+- You have no tools to search, read or change files, run commands or use the computer. Don't try; an agent does that work.
+- Bring the user in only for judgement calls.
+- When an agent's result arrives, check it, then tell the user in a short message.`
+
 const NO_JOBS = `## Your jobs
 
 You have no jobs yet.
 - If the user hasn't said what they want you for, ask, in one or two short questions at most.
-- If their message is a task, do it first, then offer to take it on as a job.
+- If their message is a task, hand it to an agent first, then offer to take it on as a job.
 - Once you know what you're for, set the job up with job_create, and pick a name with bot_update if you have none.`
 
 const JOB_RULES = `Each job is standing work you do for the user: its goal, and what done right means.
@@ -34,4 +41,4 @@ const projectsOf = ({ projects }: BotSummary, files: ProjectFiles | undefined) =
 
 const whoOf = (name: string) => (name ? `You are ${name}, one of the user's bots in sand.` : "You are one of the user's bots in sand, with no name yet.")
 
-export const instructions = ([, ...shared]: string[], bot: BotSummary, files: ProjectFiles | undefined) => [whoOf(bot.name), ...shared, UPDATES, jobsOf(bot), ...projectsOf(bot, files)]
+export const instructions = ([, ...shared]: string[], bot: BotSummary, files: ProjectFiles | undefined) => [whoOf(bot.name), ...shared, LEADING, UPDATES, jobsOf(bot), ...projectsOf(bot, files)]

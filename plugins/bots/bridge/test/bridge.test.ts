@@ -159,37 +159,22 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
   expect(await replied(bot.id, second.turn!)).toBe('Booked.')
 })
 
-test("a bot starts a thread in its own folder, or in its only project, which says the bot sent it and stands on its own: no report back, not listed as the bot's", async () => {
-  await start([said('Tidied.'), said('README fixed.'), said('Hi back.')], [])
+test("a bot can message and list threads, but not start them or wait on them", async () => {
+  await start([said('Hi back.')], [])
   const bot = await createBot('Builder')
 
-  const tidy = await use(asBot(bot.id), 'thread_start', { prompt: 'Tidy your folder' })
-  expect(sand.sessions.require(tidy.thread).cwd).toBe(bot.folder)
-  await sand.turns.wait(tidy.turn, 'end')
-  expect(await use(asBot(bot.id), 'bot_update', { projects: ['p1'] })).toMatchObject({ bot: bot.id, projects: ['p1'] })
-  const started = await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })
-  const thread = sand.sessions.require(started.thread)
-  expect(thread.project).toBe('p1')
-  expect(sand.turns.get(started.turn)?.origin).toBe('bot')
-  expect(recordsOf(userMessages(thread.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', label: 'Builder', data: { id: bot.id, sent: true } })])
-  await sand.turns.wait(started.turn, 'end')
-  expect(seenIn(sand.requests('fake')[1]!)).toContain('Your reply stays in this chat; if it asks to hear back, message it with bot_send.')
-  await Bun.sleep(100)
-  expect(botTexts(bot.id)).toEqual([])
-  expect(await sand.ask(botSubagents, {})).toEqual({})
-  expect(await use(asBot(bot.id), 'thread_list', { mine: true })).toEqual([])
-  expect(await use(asBot(bot.id), 'thread_list', { project: 'p1' })).toEqual([expect.objectContaining({ thread: thread.id, status: 'completed' })])
-
+  expect(await use(asBot(bot.id), 'thread_start', { prompt: 'Tidy your folder' })).toEqual({ error: expect.stringContaining('Unknown tool') })
+  expect(await use(asBot(bot.id), 'thread_wait', { thread: 'any' })).toEqual({ error: expect.stringContaining('Unknown tool') })
   const other = sand.chat('fake/t')
   const sent = await use(asBot(bot.id), 'thread_send', { thread: other.id, prompt: 'Hi' })
   await sand.turns.wait(sent.turn, 'end')
   expect(lastReply(other)).toBe('Hi back.')
-  expect(await use(asBot(bot.id), 'thread_update', { thread: thread.id, archived: true })).toMatchObject({ thread: thread.id, archived: true })
-  expect(await use(asBot(bot.id), 'thread_wait', { thread: thread.id })).toMatchObject({ thread: thread.id, status: 'completed', reply: 'README fixed.' })
+  expect(await use(asBot(bot.id), 'thread_list', { project: 'p1' })).toEqual([])
 })
 
 test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent", async () => {
   await start([said('Found three.')], [])
+  await sand.ask(levelSet, { level: 'main', model: 'fake/t' })
   const bot = await createBot('Scout')
   const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', does: 'find', background: true } } as const
   const result = await registry().run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: asBot(bot.id), turn: 'test', progress() {}, wait: () => () => {} })

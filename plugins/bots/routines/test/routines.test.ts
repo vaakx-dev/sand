@@ -115,9 +115,9 @@ test('routines can be paused, resumed and deleted, by any bot, and go when their
 
 test('a routine that fires while its bot is busy joins the running turn, and when that turn fails it is tried again a minute later', async () => {
   setSystemTime(at('2026-11-04T17:59:58Z'))
-  const { ask } = await start([[said('Working.'), { type: 'call', name: 'gate', input: {} }], [{ type: 'error', message: 'overloaded' }], [said('Time to call Ana.')]])
+  const { ask } = await start([[said('Working.'), { type: 'call', name: 'skill', input: {} }], [{ type: 'error', message: 'overloaded' }], [said('Time to call Ana.')]])
   const gate = Promise.withResolvers<string>()
-  sand.tool('gate', () => gate.promise)
+  sand.tool('skill', () => gate.promise)
   const bot = await ask(botCreate, { name: 'Errands' })
   await runTool('routine_create', { name: 'Call Ana', instructions: 'Remind the user to call Ana', at: '2026-11-04 18:00', zone: 'UTC' }, bot.id)
   await sand.turns.send(sand.sessions.require(bot.id), { prompt: 'Do the long thing', clientRequestId: 'one' })
