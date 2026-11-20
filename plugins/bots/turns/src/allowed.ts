@@ -38,6 +38,7 @@ const ALLOWED_TOOLS = new Set([
   'project_list',
   'pc_list',
   'skill',
+  'request_secret',
   findName,
 ])
 
