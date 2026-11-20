@@ -113,6 +113,7 @@ export interface Orchestrator {
   start(input: StartInput, adopt?: (session: Session) => void): Promise<Sent>
   send(thread: string, input: SendInput): Promise<Sent>
   wait(thread: string, until: WaitUntil, signal: AbortSignal): Promise<ThreadState>
+  answer(thread: string, by: ConversationRef, signal: AbortSignal): Promise<ThreadState>
   read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
   item(conversation: ConversationRef, item: string, offset?: number): ItemRead
   starterOf(thread: string): ConversationRef | undefined

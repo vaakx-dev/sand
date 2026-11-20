@@ -16,6 +16,7 @@ interface Reporting {
   waits: Waits
   owners: Owners
   stopped: Set<string>
+  answered: Set<string>
   outbox: Outbox
 }
 
@@ -25,7 +26,7 @@ const noticeOf = (session: Session, result: TurnResult, info: TurnInfo) =>
 export const runningSubagents = (ctx: OrchestratorContext, session: Session) =>
   ctx.sessions.children(session.id).some(child => threadStatus(ctx, ctx.sessions.require(child.id)) === 'running')
 
-export const reportFinished = (ctx: OrchestratorContext, { starters, waits, owners, stopped, outbox }: Reporting) => {
+export const reportFinished = (ctx: OrchestratorContext, { starters, waits, owners, stopped, answered, outbox }: Reporting) => {
   const busy = (session: Session) => ctx.turns.pending(session).some(item => !item.held) || runningSubagents(ctx, session)
 
   const archived = ({ id }: ConversationRef) => Boolean(ctx.sessions.open(id)?.archived)
@@ -34,7 +35,7 @@ export const reportFinished = (ctx: OrchestratorContext, { starters, waits, owne
 
   const tell = async ({ to, thread, text, clientRequestId }: Finish) => {
     const quiet = stopped.delete(thread)
-    if (archived(to) || waits.has(to, thread)) return
+    if (answered.delete(clientRequestId) || archived(to) || waits.has(to, thread)) return
     await (quiet ? owners.record(to, text) : owners.deliver(to, { text, clientRequestId }))
   }
 

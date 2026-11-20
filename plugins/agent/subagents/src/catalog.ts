@@ -13,4 +13,4 @@ const modelList = (llm: LLM | undefined) => {
 }
 
 export const describeAgents = (definitions: AgentDefinition[], llm: LLM | undefined) =>
-  `Hand off a task to a subagent that works in its own chat in the background and reports back. Suits broad searches, parallel work, or anything that would flood your context; calls in one response run in parallel. Give easy work a lighter level: sub for routine edits, light for finding things.${agentList(definitions)}${modelList(llm)}`
+  `Ask a subagent a question or hand it a task, in plain words like "where do we load settings?"; the call returns its answer. It works in your folder and knows what you are working on. Calls in one response run in parallel and return together. Set background for long work you don't need to wait for. Suits broad searches, parallel work, or anything that would flood your context. Give easy work a lighter level: sub for routine edits, light for finding things.${agentList(definitions)}${modelList(llm)}`

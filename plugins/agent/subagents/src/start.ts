@@ -1,7 +1,8 @@
 import type { Effort } from '@sand/accounts/contract'
-import type { Session } from '@sand/chats/contract'
+import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { type Level, modelSettings, type SessionSettings } from '@sand/model/contract'
 import type { AgentLimits } from '@sand/orchestrator/contract'
+import { oneLine } from '@sand/util'
 import type { AgentsContext } from './context'
 import type { AgentDefinition } from './contract'
 import { resolve as resolvePath } from 'node:path'
@@ -23,6 +24,15 @@ export interface SubagentRequest {
   worktree?: boolean
 }
 
+const asking = new Set(['user', 'agent', 'bot', 'routine', 'cli', 'mcp', 'print'])
+
+const requestLength = 600
+
+const contextLinks = /\[[^\]]*\]\(sand-context:[^)]*\)/g
+
+const withBackground = (task: string, request: string | undefined) =>
+  request ? `${task}\n\n<background>\nThe agent asking is working on this request:\n${oneLine(request, requestLength)}\n</background>` : task
+
 export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentLimits) => {
   const definitionOf = async (name: string | undefined, cwd: string | undefined, project: string | null | undefined) => {
     if (name === undefined) return undefined
@@ -38,6 +48,16 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
   const presetOf = (level: Level | undefined, definition: AgentDefinition | undefined): SessionSettings =>
     level ? (ctx.get(modelSettings)?.level(level) ?? {}) : (definition ?? {})
 
+  const promptOf = (parent: Session, turn: string) => {
+    const entry = parent.path().find(entry => entry.type === 'message' && entry.turn === turn && (entry.data as Message).role === 'user')
+    return entry && textOf((entry.data as Message).content).replace(contextLinks, '').trim()
+  }
+
+  const workingOn = (parent: Session) => {
+    const turn = ctx.turns.list(parent, undefined, 20).find(turn => asking.has(turn.origin))
+    return turn && promptOf(parent, turn.id)
+  }
+
   return async (request: SubagentRequest) => {
     const { parent, call, task, label, project, folder, pc, worktree } = request
     const from = { owner: parent.owner, id: parent.id }
@@ -48,7 +68,7 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
     const model = request.model ?? preset.model
     const effort = request.effort ?? preset.effort
     return ctx.orchestrator.start({
-      prompt: task,
+      prompt: withBackground(task, workingOn(parent)),
       title: agentTitle(label, task),
       ...(project && { project }),
       ...(folder && { cwd: pc ? folder : resolvePath(parent.cwd, folder) }),

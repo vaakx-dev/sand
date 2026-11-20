@@ -18,7 +18,11 @@ afterEach(async () => {
 
 const said = (text: string): Reply => [{ type: 'text', text }]
 
-const delegate = (input: Record<string, unknown> = {}): Reply => [{ type: 'call', name: 'agent', input: { label: 'Dig', task: 'Dig into it', model: 'child/m', ...input } }]
+const asked = (input: Record<string, unknown> = {}) => ({ type: 'call' as const, name: 'agent', input: { label: 'Dig', task: 'Dig into it', model: 'child/m', ...input } })
+
+const ask = (input: Record<string, unknown> = {}): Reply => [asked(input)]
+
+const delegate = (input: Record<string, unknown> = {}): Reply => ask({ background: true, ...input })
 
 const start = async (parent: Reply[], child: Reply[], projects: { project: string; path: string }[] = [], plugins: string[] = []) => {
   sand = await startSand(
@@ -82,6 +86,33 @@ test('a subagent is its own chat in the parent folder; its replies come back as 
   expect(sand.sessions.children(parent.id)).toHaveLength(1)
 })
 
+test("a subagent's answer is the result of the call that asked it, with no notice after, and it hears what the caller is working on", async () => {
+  await start([ask(), said('Fixed.')], [said('Found it.')])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Fix the login bug')
+
+  const child = await childOf(parent)
+  expect(results(parent)).toEqual([`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`])
+  const [task] = prompts(sand.sessions.require(child.id))
+  expect(task).toContain('Dig into it\n\n<background>\nThe agent asking is working on this request:\nFix the login bug\n</background>')
+  await Bun.sleep(200)
+  expect(notices(parent)).toEqual([])
+  expect(sand.turns.list(parent)).toHaveLength(1)
+})
+
+test('subagents asked in one step all answer in that step', async () => {
+  await start([[asked({ label: 'One' }), asked({ label: 'Two' })], said('Both in.')], [said('Answer A.'), said('Answer B.')])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+
+  expect(sand.sessions.children(parent.id)).toHaveLength(2)
+  expect(sand.requests('parent')).toHaveLength(2)
+  const answers = results(parent).map(text => text.split('\n')[0])
+  expect(answers.toSorted()).toEqual(['Answer A.', 'Answer B.'])
+  await Bun.sleep(200)
+  expect(notices(parent)).toEqual([])
+})
+
 test('stopping an agent stops the subagents it started, all the way down, without waking it again', async () => {
   sand = await startSand(
     [
@@ -120,6 +151,17 @@ const sentFrom = (session: Session) => {
   const message = session.latest('message')?.data as Message
   return message.content.flatMap(block => (block.type === 'context' ? block.records.map(record => record.data.id) : []))
 }
+
+test('a subagent on another PC answers in the call that asked it', async () => {
+  const { box: there } = await startPaired(home => [ask({ pc: 'box', folder: home }), said('Got it.')], [said('Found it.')])
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+
+  const child = await onBox(there, parent)
+  expect(results(parent)).toEqual([`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`])
+  await Bun.sleep(200)
+  expect(notices(parent)).toEqual([])
+})
 
 test('a subagent can run in a folder on another PC, and its reply comes back as a notice', async () => {
   const { box: there } = await startPaired(home => [delegate({ pc: 'box', folder: home }), said('Started it.'), said('Got it.')], [said('Found it.')])

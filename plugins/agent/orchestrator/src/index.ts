@@ -2,7 +2,7 @@ import { readHistory, readItem } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
-import { type Orchestrator, orchestrator } from './contract'
+import { type Orchestrator, orchestrator, waitThread as waitAway } from './contract'
 import { findThread } from './find'
 import { reportFinished } from './finished'
 import { createOwners } from './owners'
@@ -33,6 +33,7 @@ export default definePlugin({
     ctx.ledger.migrate('orchestrator', schema)
     const starters = openStarters(ctx.ledger)
     const waits = createWaits()
+    const answered = new Set<string>()
     const owners = createOwners(ctx)
     const pcs = createPcs(ctx)
     const start = createStart(ctx, openReceipts(ctx.ledger), starters, owners, pcs)
@@ -41,6 +42,14 @@ export default definePlugin({
       start,
       send: async (thread, { prompt, from, ...input }) => ({ ...(await ctx.turns.send(findThread(ctx, thread), { ...input, prompt: owners.sign(prompt, from) })), thread }),
       wait: (thread, until, signal) => waitThread(ctx, findThread(ctx, thread), until, signal),
+      answer: (thread, by, signal) =>
+        waits.during(by, thread, async () => {
+          const pc = await pcs.ownerOf(thread)
+          if (!pc) return waitThread(ctx, findThread(ctx, thread), 'end', signal)
+          const state = await waitAway((request, input, options) => pcs.call(pc, request, input, options?.timeout), thread, 'end', Infinity, signal)
+          if (state.turn && !signal.aborted) answered.add(`${thread}@${state.turn}`)
+          return state
+        }),
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
       starterOf: starters.starterOf,
@@ -53,7 +62,7 @@ export default definePlugin({
     ctx.provide(orchestrator, threads)
     const outbox = openOutbox(ctx.ledger)
     const stopped = new Set<string>()
-    const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, outbox }))
+    const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, answered, outbox }))
     stopSubagents(ctx, starters, sendAway, stopped)
     archiveSubagents(ctx, starters, sendAway)
     removeSubagents(ctx, starters, sendAway)
