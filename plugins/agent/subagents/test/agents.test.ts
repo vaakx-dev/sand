@@ -100,6 +100,25 @@ test("a subagent's answer is the result of the call that asked it, with no notic
   expect(sand.turns.list(parent)).toHaveLength(1)
 })
 
+for (const caller of ['thread', 'bot'] as const) {
+  test(`a ${caller} waiting on a subagent stops waiting when a message comes in, and hears the answer later as a notice`, async () => {
+    await start([ask(), said('Still on it.'), said('Heard you.'), said('Got the answer.')], [[{ type: 'wait', ms: 1500 }, { type: 'text', text: 'Found it.' }]], [], caller === 'bot' ? ['bots/bots', 'bots/turns'] : [])
+    const chat = caller === 'bot' ? sand.sessions.require((await sand.ask(botCreate, { name: 'Scout' })).id) : sand.chat('parent/m')
+    if (caller === 'bot') sand.app.get(modelSettings)!.change(chat, { model: 'parent/m' })
+    const turn = sand.turns.run(chat, 'Go')
+    const child = await childOf(chat)
+    await until(() => running(child.id))
+
+    await sand.turns.send(chat, { prompt: 'Are you there?', origin: 'user', clientRequestId: 'ping' })
+    await turn
+    expect(running(child.id)).toBeTruthy()
+    expect(results(chat)[0]).toStartWith(`A new message came in, so this call stopped waiting. Subagent ${child.id} keeps working`)
+    await until(() => prompts(chat).includes('Are you there?'))
+    const [notice] = await until(() => notices(chat).length === 1 && notices(chat), 1000)
+    expect(notice).toContain('Found it.')
+  })
+}
+
 test('subagents asked in one step all answer in that step', async () => {
   await start([[asked({ label: 'One' }), asked({ label: 'Two' })], said('Both in.')], [said('Answer A.'), said('Answer B.')])
   const parent = sand.chat('parent/m')

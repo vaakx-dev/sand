@@ -38,12 +38,15 @@ const inputSchema = (ctx: AgentsContext) => {
 const started = (thread: string) =>
   `Started subagent ${thread}. Its final reply arrives as a <task-notification>. Meanwhile keep working or end your turn. To message or stop it, use thread_send or thread_stop with thread ${thread}; thread_wait waits for it.`
 
+const stillWorking = (thread: string) =>
+  `A new message came in, so this call stopped waiting. Subagent ${thread} keeps working and its final reply arrives as a <task-notification>. To message or stop it, use thread_send or thread_stop with thread ${thread}.`
+
 const followUp = (thread: string) => `(Subagent ${thread}; thread_send asks it more.)`
 
 const answered = ({ thread, status, reply, error }: ThreadState) => {
   if (status === 'completed') return `${reply || '(no reply)'}\n\n${followUp(thread)}`
   if (status === 'interrupted') return `The subagent was stopped before it answered. ${followUp(thread)}`
-  if (status === 'running') return started(thread)
+  if (status === 'running') return stillWorking(thread)
   return `The subagent failed${error ? `: ${error}` : ''}. ${followUp(thread)}`
 }
 

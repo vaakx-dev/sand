@@ -2,7 +2,8 @@ import { readHistory, readItem } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
-import { type Orchestrator, orchestrator, waitThread as waitAway } from './contract'
+import { createAnswer } from './answer'
+import { type Orchestrator, orchestrator } from './contract'
 import { findThread } from './find'
 import { reportFinished } from './finished'
 import { createOwners } from './owners'
@@ -42,14 +43,7 @@ export default definePlugin({
       start,
       send: async (thread, { prompt, from, ...input }) => ({ ...(await ctx.turns.send(findThread(ctx, thread), { ...input, prompt: owners.sign(prompt, from) })), thread }),
       wait: (thread, until, signal) => waitThread(ctx, findThread(ctx, thread), until, signal),
-      answer: (thread, by, signal) =>
-        waits.during(by, thread, async () => {
-          const pc = await pcs.ownerOf(thread)
-          if (!pc) return waitThread(ctx, findThread(ctx, thread), 'end', signal)
-          const state = await waitAway((request, input, options) => pcs.call(pc, request, input, options?.timeout), thread, 'end', Infinity, signal)
-          if (state.turn && !signal.aborted) answered.add(`${thread}@${state.turn}`)
-          return state
-        }),
+      answer: createAnswer(ctx, waits, pcs, answered),
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
       starterOf: starters.starterOf,
