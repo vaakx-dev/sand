@@ -44,11 +44,11 @@ const github = (first: Poll, ...later: Poll[]) => {
   return { client, paths, polls: () => at }
 }
 
-const waitFor = async (client: Rest, input: { pr?: number }) => {
+const waitFor = async (client: Rest, input: { pr?: number | string }, folder: ChecksGit = git) => {
   const progress: string[] = []
   const settled: string[] = []
   const tool = checksTool({
-    git,
+    git: folder,
     client,
     listen: () => ({ signal: new AbortController().signal, stop() {} }),
     timing: { intervalMs: 1, graceMs: 200 },
@@ -82,6 +82,32 @@ test('returns the failed check with its link as soon as one fails, while others 
   expect(progress).toEqual(['0 of 3 done, running: check, browser, deploy'])
   expect(result).toBe(`Checks on abc1234: 1 failed (2 of 3 done, running: browser):\n- check: https://github.com/acme/tiles/runs/check`)
   expect(settled).toEqual([`t1 ${sha} failed`])
+})
+
+const notARepo: ChecksGit = { remoteUrl: async () => undefined, maybe: async () => undefined }
+
+test.each(['acme/tiles#7', 'https://github.com/acme/tiles/pull/7', 'https://github.com/acme/tiles/pull/7/checks?check_run_id=1'])(
+  'waits on %s from a folder outside any repo',
+  async reference => {
+    const { client, paths } = github({ runs: [run('check', 'completed', 'success')], statuses: [] })
+
+    const { result } = await waitFor(client, { pr: reference }, notARepo)
+
+    expect(paths[0]).toBe('/repos/acme/tiles/pulls/7')
+    expect(result).toBe('Checks on abc1234: all 1 passed: check.')
+  },
+)
+
+test('asks for a URL or owner/name#number when a bare number has no repo to belong to', async () => {
+  const { client } = github({ runs: [], statuses: [] })
+
+  await expect(waitFor(client, { pr: 7 }, notARepo)).rejects.toThrow("This folder isn't in a GitHub repo; pass the pull request as a URL or owner/name#number.")
+})
+
+test('rejects text that is not a pull request', async () => {
+  const { client } = github({ runs: [], statuses: [] })
+
+  await expect(waitFor(client, { pr: 'tiles' }, notARepo)).rejects.toThrow('pass a GitHub pull request URL or owner/name#number')
 })
 
 test('keeps waiting while no checks are reported right after a push, then reports them passed', async () => {
