@@ -6,15 +6,14 @@ import { expect, test } from 'bun:test'
 import { boot, type Booted, model } from './boot'
 
 const agentResults = async (sand: Booted, bot: string) => {
-  for (let tries = 0; tries < 3000; tries++) {
-    const [agent] = sand.sessions.children(bot)
-    const results = (agent ? sand.sessions.require(agent.id).path() : [])
-      .flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content : []))
-      .filter(block => block.type === 'tool_result')
-    if (results.length) return results
-    await Bun.sleep(10)
-  }
-  throw new Error("The bot's agent never got a tool result")
+  const [child] = sand.sessions.children(bot)
+  const agent = sand.sessions.require(child!.id)
+  const [turn] = sand.turns.list(agent)
+  await sand.turns.wait(turn!.id, 'end')
+  return agent
+    .path()
+    .flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content : []))
+    .filter(block => block.type === 'tool_result')
 }
 
 const botChat = async (sand: Booted) => {
@@ -41,8 +40,8 @@ test("with Threads and Bots on, a bot's agent runs a shell call without asking a
   ]
   const agentReplies = [[{ type: 'call' as const, name: 'shell', input: { command: 'echo ran' } }], [{ type: 'text' as const, text: 'Ran it' }]]
   const sand = await boot(['threads', 'bots'], [], [
-    { ...model, replies: botReplies },
     { ...model, id: 'aide', replies: agentReplies },
+    { ...model, replies: botReplies },
   ])
   try {
     expect(sand.problems()).toEqual([])
