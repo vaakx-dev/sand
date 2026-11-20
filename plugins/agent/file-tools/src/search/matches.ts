@@ -1,13 +1,9 @@
 import { head } from '@sand/util'
-import { isFolder } from '@sand/util/fs'
-import { basename, dirname, resolve } from 'node:path'
-import { decode } from '../files'
-import { lines, ripgrep, scope } from './ripgrep'
-import { walk } from './walk'
-
-const maxSize = 1_000_000
+import { basename, dirname } from 'node:path'
+import { lines, scope } from './ripgrep'
 
 interface Query {
+  binary: string
   pattern: string
   root: string
   glob: string
@@ -16,42 +12,28 @@ interface Query {
   signal: AbortSignal
 }
 
-const matchLine = (file: string, line: number | string, text: string) => `${file}:${line}: ${head(text.trim(), 300)}`
+const matchLine = (file: string, line: string, text: string) => `${file}:${line}: ${head(text.trim(), 300)}`
 
-async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
-  const directory = await isFolder(root)
+const isFile = (path: string) =>
+  Bun.file(path)
+    .stat()
+    .then(
+      info => info.isFile(),
+      () => false,
+    )
+
+async function* matches({ binary, pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
+  const single = await isFile(root)
   const args = ['--line-number', '--no-heading', '--with-filename', '--null', '--color', 'never', '--max-filesize', '1M', '--engine', 'auto']
   if (ignoreCase) args.push('--ignore-case')
-  if (directory && glob !== '**/*') args.push('--glob', glob)
+  if (!single && glob !== '**/*') args.push('--glob', glob)
   args.push(...scope(includeIgnored), '--regexp', pattern)
-  if (!directory) args.push('--', basename(root))
-  for await (const line of lines(binary, args, directory ? root : dirname(root), signal)) {
+  if (single) args.push('--', basename(root))
+  for await (const line of lines(binary, args, single ? dirname(root) : root, signal)) {
     const [file = '', rest = ''] = line.split('\0')
     const colon = rest.indexOf(':')
     yield matchLine(file, rest.slice(0, colon), rest.slice(colon + 1))
   }
 }
 
-async function* files(root: string, glob: string, includeIgnored?: boolean, signal?: AbortSignal) {
-  if (await isFolder(root)) {
-    for await (const file of walk(glob, root, includeIgnored, signal)) yield { full: resolve(root, file), shown: file }
-  } else {
-    yield { full: root, shown: basename(root) }
-  }
-}
-
-async function* withScan({ pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
-  const regex = new RegExp(pattern, ignoreCase ? 'i' : '')
-  for await (const { full, shown } of files(root, glob, includeIgnored, signal)) {
-    signal.throwIfAborted()
-    const file = Bun.file(full)
-    if (file.size > maxSize) continue
-    const { content: text } = decode(await file.bytes())
-    if (text.includes('\0')) continue
-    for (const [index, line] of text.split(/\r?\n/).entries()) {
-      if (regex.test(line)) yield matchLine(shown, index + 1, line)
-    }
-  }
-}
-
-export const matches = (query: Query) => (ripgrep ? withRipgrep(ripgrep, query) : withScan(query))
+export { matches }

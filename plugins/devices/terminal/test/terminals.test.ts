@@ -7,7 +7,7 @@ const size = { cols: 80, rows: 24 }
 const opened = async (fixture: ReturnType<typeof setup>, caller = page(), viewer = 'v1') =>
   (await fixture.terminals.open({ session: 's1', cwd: '/work', viewer, ...size }, caller)).id
 
-test('only people on their devices may open or type into terminals, and only in an existing full folder', async () => {
+test('only people on their devices may open or type into terminals, and only in a full folder path', async () => {
   const { handlers, shells } = setup()
   const open = { session: 's1', cwd: '/work', viewer: 'v1', ...size }
 
@@ -15,7 +15,6 @@ test('only people on their devices may open or type into terminals, and only in 
     await expect(handlers.ask(terminalOpen, open, page(kind))).rejects.toThrow(`A ${kind} can't ask for terminal.open`)
   }
   await expect(handlers.ask(terminalOpen, { ...open, cwd: 'work' }, page())).rejects.toThrow("isn't a full folder path")
-  await expect(handlers.ask(terminalOpen, { ...open, cwd: '/missing' }, page())).rejects.toThrow('no folder at /missing')
   await expect(handlers.ask(terminalOpen, { ...open, cols: 0 }, page())).rejects.toThrow()
   expect(shells).toEqual([])
 

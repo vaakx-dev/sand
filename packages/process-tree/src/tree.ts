@@ -1,3 +1,4 @@
+import { spawnIn } from '@sand/util/host'
 import type { Subprocess } from 'bun'
 import { jobObject, type JobObject } from './job-object'
 
@@ -47,16 +48,18 @@ const groupTree = (child: Subprocess, killOnClose: boolean) => {
 }
 
 export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, { cwd, verbatim = false, env = {}, killOnClose = false, track }: SpawnOptions) => {
-  const child = Bun.spawn(argv, {
-    cwd,
-    env: { ...process.env, ...noPrompts, ...env },
-    stdin,
-    stdout: 'pipe',
-    stderr: 'pipe',
-    detached: !windows,
-    windowsHide: true,
-    windowsVerbatimArguments: verbatim,
-  })
+  const child = spawnIn(cwd, () =>
+    Bun.spawn(argv, {
+      cwd,
+      env: { ...process.env, ...noPrompts, ...env },
+      stdin,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      detached: !windows,
+      windowsHide: true,
+      windowsVerbatimArguments: verbatim,
+    }),
+  )
   const job = windows ? jobObject(child.pid, killOnClose) : undefined
   const untrack = track?.(child.pid, job)
   void child.exited.then(() => (untrack ? untrack() : job?.close()))

@@ -1,3 +1,5 @@
+import { spawnIn } from './folder'
+
 export interface JsonLinesOptions {
   cwd?: string
   env?: Record<string, string | undefined>
@@ -36,7 +38,7 @@ const parsed = (line: string): unknown => {
 }
 
 export const spawnJsonLines = (command: string[], { cwd, env, onMessage, onExit }: JsonLinesOptions): JsonLines => {
-  const child = Bun.spawn(command, { cwd, env, stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
+  const child = spawnIn(cwd, () => Bun.spawn(command, { cwd, env, stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', windowsHide: true }))
   let stderr = ''
   const reading = (async () => {
     for await (const line of linesOf(child.stdout)) {

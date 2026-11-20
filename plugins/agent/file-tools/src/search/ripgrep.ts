@@ -1,4 +1,5 @@
-export const ripgrep = Bun.which('rg')
+import { spawnIn } from '@sand/util/host'
+import { install, ripgrepBinary } from './install'
 
 const nothingSearched = /No files were searched/
 
@@ -8,10 +9,31 @@ const everything = ['--no-messages', '--no-ignore', '--hidden', '--glob', '!.git
 
 const tracked = ['--hidden', '--no-require-git', '--glob', '!.git', '--glob', '!node_modules']
 
-export const scope = (includeIgnored = false) => [...(includeIgnored ? everything : tracked), ...separator]
+class Ripgrep {
+  readonly #binary: string
+  #ready: Promise<string> | undefined
 
-export async function* lines(binary: string, args: string[], cwd: string, signal?: AbortSignal) {
-  const child = Bun.spawn([binary, ...args], { cwd, signal, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
+  constructor(folder: string) {
+    this.#binary = ripgrepBinary(folder)
+  }
+
+  binary() {
+    this.#ready ??= this.#find().catch(error => {
+      this.#ready = undefined
+      throw error
+    })
+    return this.#ready
+  }
+
+  async #find() {
+    return (await Bun.file(this.#binary).exists()) ? this.#binary : install(this.#binary)
+  }
+}
+
+const scope = (includeIgnored = false) => [...(includeIgnored ? everything : tracked), ...separator]
+
+async function* lines(binary: string, args: string[], cwd: string, signal?: AbortSignal) {
+  const child = spawnIn(cwd, () => Bun.spawn([binary, ...args], { cwd, signal, stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', windowsHide: true }))
   const decoder = new TextDecoder()
   let rest = ''
   try {
@@ -29,3 +51,5 @@ export async function* lines(binary: string, args: string[], cwd: string, signal
     child.kill()
   }
 }
+
+export { lines, Ripgrep, scope }
