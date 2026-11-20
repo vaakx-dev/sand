@@ -1,4 +1,4 @@
-import type { Message } from '@sand/chats/contract'
+import type { Message, ToolCallBlock } from '@sand/chats/contract'
 import { isRecord } from '@sand/util'
 import type { CompactedFiles } from '../contract'
 
@@ -9,11 +9,12 @@ const pathOf = (input: unknown) => (isRecord(input) && typeof input.path === 'st
 
 const pathsOf = (input: unknown) => (isRecord(input) && Array.isArray(input.edits) ? input.edits.flatMap(pathOf) : pathOf(input))
 
-export const filesOf = (messages: Message[], previous?: CompactedFiles): CompactedFiles => {
+const callsIn = (messages: Message[]) => messages.flatMap(message => message.content.filter((block): block is ToolCallBlock => block.type === 'tool_call'))
+
+export const filesOf = (messages: Message[], nested: ToolCallBlock[], previous?: CompactedFiles): CompactedFiles => {
   const read = new Set(previous?.read)
   const modified = new Set(previous?.modified)
-  for (const block of messages.flatMap(message => message.content)) {
-    if (block.type !== 'tool_call') continue
+  for (const block of [...callsIn(messages), ...nested]) {
     const paths = pathsOf(block.input)
     if (readers.has(block.name)) paths.forEach(path => read.add(path))
     if (writers.has(block.name)) paths.forEach(path => modified.add(path))

@@ -1,5 +1,6 @@
 import { type Session, textOf } from '@sand/chats/contract'
 import { startSand } from '@sand/harness'
+import { loginAdd, loginChange } from '@sand/logins/contract'
 import { type Tool, tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { z } from 'zod'
@@ -68,4 +69,62 @@ test('a script that throws reports the error with its line', async () => {
   expect(text).toContain('TypeError')
   expect(text).toContain('script.js:2')
   expect(saved?.status).toBe('failed')
+})
+
+const snap: Tool<z.ZodObject<{}>> = {
+  name: 'snap',
+  description: 'Takes a picture',
+  input: z.object({}),
+  run: () => [{ type: 'text', text: 'one picture' }, { type: 'image', mediaType: 'image/png', hash: 'picture', size: 1 }],
+}
+
+test('images a script’s tools return and the tools it finds reach the agent, even when the script prints neither', async () => {
+  sand = await start()
+  sand.app.get(tools)!.register(snap)
+  const thread = sand.chat('parent/m')
+
+  const call = { type: 'tool_call', id: 'script-media', name: 'script', input: { title: 'Test', code: `await tools.snap(); await tools.find_tools({ query: 'snap' }); console.log('done')` } } as const
+  const result = await sand.app.get(tools)!.run(call, { cwd: thread.cwd, signal: new AbortController().signal, conversation: thread, turn: 'test', progress: () => {}, wait: () => () => {} })
+
+  expect(result.content).toEqual([
+    { type: 'text', text: 'done' },
+    { type: 'image', mediaType: 'image/png', hash: 'picture', size: 1 },
+    { type: 'text', text: expect.stringContaining('## snap\nTakes a picture') },
+  ])
+})
+
+test('a script’s time limit leaves out the time its tool calls take', async () => {
+  sand = await start()
+  sand.app.get(tools)!.register({ name: 'slow', description: 'Takes a while', input: z.object({}), run: () => Bun.sleep(1500).then(() => 'finally') })
+  const thread = sand.chat('parent/m')
+
+  const { text, failed } = await script(thread, `return await tools.slow()`, 1)
+
+  expect(failed).toBe(false)
+  expect(text).toBe('finally')
+})
+
+test('a script passes a saved login to a tool by its id, and its value is in neither the code, the saved calls nor what comes back', async () => {
+  sand = await startSand([{ id: 'parent', models: ['m'], replies: [], api: 'anthropic' }], { plugins: ['agent/scripts', 'connections/logins'] })
+  const value = `sk_live_${Bun.randomUUIDv7()}`
+  const { id } = await sand.ask(loginAdd, { kind: 'key', name: 'Deploy key', value })
+  const seen: string[] = []
+  sand.app.get(tools)!.register({
+    name: 'deploy',
+    description: 'Deploys',
+    input: z.object({ key: z.string() }),
+    run: ({ key }) => {
+      seen.push(key)
+      return `deployed with ${key}`
+    },
+  })
+  const thread = sand.chat('parent/m')
+  await sand.ask(loginChange, { id, threads: [thread.id] })
+
+  const { text, failed, saved } = await script(thread, `return await tools.deploy({ key: 'Bearer ' + login('${id}') })`)
+
+  expect(failed).toBe(false)
+  expect(seen).toEqual([`Bearer ${value}`])
+  expect(text).not.toContain(value)
+  expect(JSON.stringify(saved)).not.toContain(value)
 })

@@ -23,6 +23,7 @@
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/provider-threads": "workspace:*",
+    "@sand/scripts": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",

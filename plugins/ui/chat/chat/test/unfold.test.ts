@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { Item } from '@sand/transcript/contract'
 import { unfolding, type FoldOptions } from '../src/turns/fold'
 
-const options: FoldOptions = { older: false, running: false, waiting: false, streaming: false, started: undefined, open: () => false }
+const options: FoldOptions = { older: false, running: false, waiting: false, streaming: false, started: undefined, nested: [], open: () => false }
 
 const user = (key: string): Item => ({ kind: 'user', key, parts: [{ kind: 'text', text: key }], steer: false, at: 1, opens: key })
 const text = (key: string): Item => ({ kind: 'text', key, text: key, streaming: false, at: 2 })

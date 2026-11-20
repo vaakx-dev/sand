@@ -1,5 +1,4 @@
-import type { Tool } from '../contract'
-import { findName } from './find'
+import { findName, type Tool } from '../contract'
 
 const locationOf = (frame: string) => /\(?([^()]+:\d+:\d+)\)?$/.exec(frame.trim().replace(/^at /, ''))?.[1]
 

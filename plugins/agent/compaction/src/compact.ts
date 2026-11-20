@@ -85,7 +85,7 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
       keep: cut.keep,
       ...(cut.pinned && { pinned: cut.pinned }),
       reason,
-      files: filesOf(cut.dropped, cut.previous?.files),
+      files: filesOf(cut.dropped, cut.nested, cut.previous?.files),
       ...(request.thread && { thread: request.thread.id }),
     }
     return { record, base: path.at(-1)?.id, previous: latestCompaction(path) }

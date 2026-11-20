@@ -1,4 +1,5 @@
-import type { Item, ToolView } from '@sand/transcript/contract'
+import type { ToolCallBlock } from '@sand/chats/contract'
+import type { Item } from '@sand/transcript/contract'
 import { isRecord, plural } from '@sand/util'
 
 type Kind = 'read' | 'edit' | 'write' | 'search' | 'shell' | 'test' | 'build' | 'web' | 'helper' | 'skill' | 'page'
@@ -50,14 +51,17 @@ const fileKinds = new Set<Kind>(['read', 'edit', 'write'])
 
 const commandOf = (input: unknown) => (typeof input === 'object' && input && 'command' in input && typeof input.command === 'string' ? input.command : '')
 
-const kindOf = ({ call }: ToolView): Kind | undefined => {
+const kindOf = (call: ToolCallBlock): Kind | undefined => {
   const plain = call.name.replace(/^mcp_/, '').toLowerCase()
   const kind = kinds[plain] ?? kinds[plain.split(/[_\-.]/)[0] ?? plain]
   return kind === 'shell' && /\btest\b/.test(commandOf(call.input)) ? 'test' : kind
 }
 
-const toolsIn = (work: Item[]): ToolView[] =>
-  work.flatMap(item => (item.kind === 'tools' ? item.steps.flatMap(step => (step.kind === 'tool' ? [step.tool] : [])) : []))
+const callsIn = (work: Item[]): ToolCallBlock[] =>
+  work.flatMap(item => (item.kind === 'tools' ? item.steps.flatMap(step => (step.kind === 'tool' ? [step.tool.call] : [])) : []))
+
+const withNested = (calls: ToolCallBlock[], nested: ToolCallBlock[]) =>
+  calls.flatMap(call => [call, ...nested.filter(inner => inner.id.startsWith(`${call.id}.`))])
 
 const pathsOf = (input: unknown): string[] => {
   if (!isRecord(input)) return []
@@ -66,18 +70,18 @@ const pathsOf = (input: unknown): string[] => {
   return [...own, ...changed]
 }
 
-const keysOf = ({ call }: ToolView, kind: Kind) => {
+const keysOf = (call: ToolCallBlock, kind: Kind) => {
   const paths = fileKinds.has(kind) ? pathsOf(call.input) : []
   return paths.length ? paths : [call.id]
 }
 
-export const summaryOf = (work: Item[]) => {
+export const summaryOf = (work: Item[], nested: ToolCallBlock[]) => {
   const done = new Map<Kind, Set<string>>()
-  for (const tool of toolsIn(work)) {
-    const kind = kindOf(tool)
+  for (const call of withNested(callsIn(work), nested)) {
+    const kind = kindOf(call)
     if (!kind) continue
     const keys = done.get(kind) ?? new Set()
-    keysOf(tool, kind).forEach(key => keys.add(key))
+    keysOf(call, kind).forEach(key => keys.add(key))
     done.set(kind, keys)
   }
   return [...done]

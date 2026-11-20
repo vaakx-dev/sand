@@ -17,9 +17,11 @@ const start = async (replies = [said('child done'), said('Noted.'), said('Noted 
   })
 }
 
+const LIMITED = ['alpha', 'agent', 'thread_send', 'thread_start', 'thread_wait']
+
 const agent = (depth: number) => {
   const chat = sand.chat('fake/m')
-  chat.append('agent', { depth, tools: ['alpha', 'beta'] })
+  chat.append('agent', { depth, tools: LIMITED })
   return chat
 }
 
@@ -38,7 +40,7 @@ test("a thread an agent starts runs with the agent's tool limits one level deepe
   const started = await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })
   expect(started.isError).toBe(false)
   const sent = JSON.parse(started.text)
-  expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: ['alpha', 'beta'] })
+  expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: LIMITED })
   expect(sand.turns.get(sent.turn)?.origin).toBe('agent')
 
   const waited = await use(parent, 'thread_wait', { thread: sent.thread })

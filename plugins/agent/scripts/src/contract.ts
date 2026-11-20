@@ -30,6 +30,8 @@ export interface ScriptUpdate {
 
 export const scriptEntry = 'script'
 
+export const scriptCalls = (entry: { type: string; data: unknown }): ScriptCall[] => (entry.type === scriptEntry ? (entry.data as ScriptRun).calls : [])
+
 export const scriptUpdate = event<(update: ScriptUpdate) => void>('script.update')
 
 export const scriptUpdateWire = wireEvent<ScriptUpdate>('script.update')

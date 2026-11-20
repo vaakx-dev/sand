@@ -1,3 +1,4 @@
+import type { ToolCallBlock } from '@sand/chats/contract'
 import type { Item } from '@sand/transcript/contract'
 import { summaryOf } from './summary'
 
@@ -30,6 +31,7 @@ export interface FoldOptions {
   waiting: boolean
   streaming: boolean
   started: number | undefined
+  nested: ToolCallBlock[]
   open(key: string): boolean
 }
 
@@ -94,7 +96,7 @@ const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions
     phase: phaseOf(turn.body, running, options),
     start: running ? (options.started ?? first) : first,
     end: Math.max(0, ...times),
-    summary: summaryOf(work),
+    summary: summaryOf(work, options.nested),
   }
 }
 

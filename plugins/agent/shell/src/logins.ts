@@ -1,11 +1,9 @@
 import type { Conversation } from '@sand/engine/contract'
-import type { Logins, LoginValues } from '@sand/logins/contract'
+import { loginValues, type Logins } from '@sand/logins/contract'
 import type { Act } from '@sand/tools/contract'
 import { z } from 'zod'
 
 type Wanted = Record<string, string>
-
-const usernameSuffix = '/username'
 
 const envName = /^[A-Za-z_][A-Za-z0-9_]*$/
 
@@ -17,32 +15,12 @@ export const loginsField = z
     'Saved logins as environment variables: name to "<login id>", or "<login id>/username" for a username. Use them as "$NAME" ($env:NAME in PowerShell); never echo or save them.',
   )
 
-const refOf = (ref: string) =>
-  ref.endsWith(usernameSuffix) ? { id: ref.slice(0, -usernameSuffix.length), username: true } : { id: ref, username: false }
-
 export const loginsAct = (wanted: Wanted, command: string): Act => {
   const used = Object.keys(wanted).length > 0
   return { effect: 'run', summary: command, ...(used && { uses: 'login' }) }
 }
 
-const valueOf = (values: LoginValues, id: string, username: boolean) => {
-  if (values.kind === 'website') return username ? values.username : values.password
-  if (username) throw new Error(`The login ${id} is a key and has no username`)
-  return values.value
-}
-
 export const loginEnv = async (service: Logins, wanted: Wanted, conversation: Conversation) => {
-  const used = new Map<string, Promise<LoginValues>>()
-  const use = (id: string) => {
-    const values = used.get(id) ?? service.use(id, { conversation, action: 'env' })
-    used.set(id, values)
-    return values
-  }
-  const entries = await Promise.all(
-    Object.entries(wanted).map(async ([name, ref]) => {
-      const { id, username } = refOf(ref)
-      return [name, valueOf(await use(id), id, username)] as const
-    }),
-  )
-  return Object.fromEntries(entries)
+  const values = await loginValues(service, Object.values(wanted), { conversation, action: 'env' })
+  return Object.fromEntries(Object.entries(wanted).map(([name, ref]) => [name, values.get(ref)]))
 }
