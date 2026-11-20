@@ -19,7 +19,7 @@ const streamOf = (...frames: string[]) =>
 
 const fakeClient = (answer: () => unknown, streams: (() => Response)[]) => {
   const calls: string[] = []
-  const client: Client = {
+  const client: Pick<Client, 'rest' | 'stream'> = {
     rest: async <T>(method: string, path: string) => {
       calls.push(`${method} ${path}`)
       return (method === 'POST' ? answer() : undefined) as T

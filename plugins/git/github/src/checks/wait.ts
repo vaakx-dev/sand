@@ -12,6 +12,7 @@ export const timing: Timing = { intervalMs: 10_000, graceMs: 60_000 }
 
 export interface Watch {
   read(): Promise<Check[]>
+  explain(failed: Check): Promise<string[]>
   settled(outcome: CheckOutcome): void
   progress(text: string): void
   signal: AbortSignal
@@ -29,8 +30,12 @@ const summary = (checks: Check[]) => {
   return running.length ? `${done}, running: ${names(running)}` : done
 }
 
-const failure = (failed: Check[], checks: Check[]) =>
-  [`${failed.length} failed (${summary(checks)}):`, ...failed.map(check => `- ${check.name}: ${check.url}`)].join('\n')
+const report = async (check: Check, explain: Watch['explain']) => [`- ${check.name}: ${check.url}`, ...(await explain(check)).map(line => `  ${line}`)]
+
+const failure = async (failed: Check[], checks: Check[], explain: Watch['explain']) => {
+  const reports = await Promise.all(failed.map(check => report(check, explain)))
+  return [`${failed.length} failed (${summary(checks)}):`, ...reports.flat()].join('\n')
+}
 
 export const outcomeOf = (checks: Check[]): CheckOutcome | undefined => {
   if (checks.some(check => check.state === 'failed')) return 'failed'
@@ -38,15 +43,16 @@ export const outcomeOf = (checks: Check[]): CheckOutcome | undefined => {
   return undefined
 }
 
-const verdict = (checks: Check[], waited: number, timing: Timing) => {
+const verdict = async (checks: Check[], waited: number, { timing, explain }: Watch) => {
   const outcome = outcomeOf(checks)
-  if (outcome === 'failed') return failure(checks.filter(check => check.state === 'failed'), checks)
+  if (outcome === 'failed') return failure(checks.filter(check => check.state === 'failed'), checks, explain)
   if (outcome === 'passed') return `all ${checks.length} passed: ${names(checks)}.`
   if (!checks.length && waited >= timing.graceMs) return `no checks reported within ${duration(timing.graceMs)}; the repo may run none for it.`
   return undefined
 }
 
-export const waitChecks = async ({ read, settled, progress, signal, spoke, timeoutMs, timing }: Watch) => {
+export const waitChecks = async (watch: Watch) => {
+  const { read, settled, progress, signal, spoke, timeoutMs, timing } = watch
   const started = Date.now()
   const stop = AbortSignal.any([signal, spoke])
   let checks: Check[] = []
@@ -61,7 +67,7 @@ export const waitChecks = async ({ read, settled, progress, signal, spoke, timeo
     const waited = Date.now() - started
     const last = failures.at(-1)
     if (failures.length >= mostFailures) throw new Error(`Reading the checks failed ${failures.length} times in a row, last with: ${last} Last seen: ${summary(checks)}.`)
-    const done = last === undefined ? verdict(checks, waited, timing) : undefined
+    const done = last === undefined ? await verdict(checks, waited, watch) : undefined
     const outcome = outcomeOf(checks)
     if (done && outcome) settled(outcome)
     if (done) return done

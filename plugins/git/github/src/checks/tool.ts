@@ -2,11 +2,11 @@ import type { GitRunner } from '@sand/git-runner/contract'
 import type { Tool } from '@sand/tools/contract'
 import { shortSha } from '@sand/util'
 import { z } from 'zod'
-import type { Rest } from '../api/client'
 import { pullReference, repoOf } from '../repo'
-import { type CheckOutcome, readChecks } from './read'
+import { type Check, type CheckOutcome, readChecks } from './read'
 import type { Listen } from './user'
 import { type Timing, waitChecks } from './wait'
+import { type Logs, whyFailed } from './why'
 
 const defaultTimeout = 1_200_000
 const maxTimeout = 3_600_000
@@ -24,7 +24,7 @@ export type ChecksGit = Pick<GitRunner, 'remoteUrl' | 'maybe'>
 
 export interface ChecksDeps {
   git: ChecksGit
-  client: Rest
+  client: Logs
   listen: Listen
   timing: Timing
   settled(conversation: string, sha: string, outcome: CheckOutcome): void
@@ -51,7 +51,7 @@ const commitOf = async ({ git, client }: ChecksDeps, cwd: string, { path, number
 export const checksTool = (deps: ChecksDeps): Tool<typeof input> => ({
   name: 'pr_checks',
   description:
-    "Wait for a pull request's CI checks and get the result, from any folder when given a PR URL or owner/name#number. Returns at the first failure, on timeout or when the user sends a message. Use it instead of sleep and gh pr checks.",
+    "Wait for a pull request's CI checks and get the result, from any folder when given a PR URL or owner/name#number. Returns at the first failure, with each failed job's failing tests or step and their error lines, on timeout or when the user sends a message. Use it instead of sleep and gh pr checks.",
   input,
   effect: 'read',
   needs: ['folder'],
@@ -62,7 +62,8 @@ export const checksTool = (deps: ChecksDeps): Tool<typeof input> => ({
     const spoke = deps.listen(conversation.id)
     try {
       const read = () => readChecks(deps.client, pull.path, sha)
-      return `Checks on ${shortSha(sha)}: ${await waitChecks({ read, settled: outcome => deps.settled(conversation.id, sha, outcome), progress, signal, spoke: spoke.signal, timeoutMs: timeout_ms, timing: deps.timing })}`
+      const explain = (failed: Check) => whyFailed(deps.client, pull.path, failed)
+      return `Checks on ${shortSha(sha)}: ${await waitChecks({ read, explain, settled: outcome => deps.settled(conversation.id, sha, outcome), progress, signal, spoke: spoke.signal, timeoutMs: timeout_ms, timing: deps.timing })}`
     } finally {
       spoke.stop()
     }

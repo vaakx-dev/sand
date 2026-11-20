@@ -8,9 +8,12 @@ export interface Check {
   name: string
   url: string
   state: CheckState
+  job?: number
 }
 
 interface Run {
+  id: number
+  app: { slug: string } | null
   name: string
   status: string
   conclusion: string | null
@@ -24,14 +27,18 @@ interface Status {
   target_url: string | null
 }
 
+const actionsApp = 'github-actions'
+
 const passing = new Set(['success', 'neutral', 'skipped'])
 
 const statusStates: Record<string, CheckState> = { pending: 'running', success: 'passed', failure: 'failed', error: 'failed' }
 
 const runState = (run: Run): CheckState => {
   if (run.status !== 'completed') return 'running'
-  return passing.has(run.conclusion ?? '') ? 'passed' : 'failed'
+  return passed(run.conclusion) ? 'passed' : 'failed'
 }
+
+export const passed = (conclusion: string | null) => passing.has(conclusion ?? '')
 
 export const readChecks = async (client: Rest, repo: string, sha: string): Promise<Check[]> => {
   const [runs, combined] = await Promise.all([
@@ -39,7 +46,12 @@ export const readChecks = async (client: Rest, repo: string, sha: string): Promi
     client.rest<{ statuses: Status[] }>('GET', `${repo}/commits/${sha}/status?per_page=100`),
   ])
   return [
-    ...runs.check_runs.map(run => ({ name: run.name, url: run.html_url ?? run.details_url ?? '', state: runState(run) })),
+    ...runs.check_runs.map(run => ({
+      name: run.name,
+      url: run.html_url ?? run.details_url ?? '',
+      state: runState(run),
+      ...(run.app?.slug === actionsApp ? { job: run.id } : {}),
+    })),
     ...combined.statuses.map(status => ({ name: status.context, url: status.target_url ?? '', state: statusStates[status.state] ?? 'running' })),
   ]
 }
