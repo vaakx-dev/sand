@@ -8,7 +8,7 @@ import { foundIn } from './found'
 import { callerSite, checkName } from './names'
 import { inScope } from './scope'
 import type { Candidate } from './search'
-import { spec } from './spec'
+import { signature, spec } from './spec'
 
 const secretNote = `Some tools take secrets, like passwords, keys and one-time codes. Once such a call runs, sand replaces those inputs in the chat with ${secretMark}. The tool got the real values you passed, so a call that shows ${secretMark} was not a mistake.`
 
@@ -63,12 +63,22 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     )
   }
 
-  const findHidden = (hidden: Tool[]) => {
+  const hiddenCandidates = (hidden: Tool[]): Candidate[] => {
     const known = new Map(states().map(group => [group.name, group]))
     const rest = general(hidden.filter(tool => !known.has(tool.group ?? '')))
-    const candidates: Candidate[] = hidden.map(tool => ({ tool, group: known.get(tool.group ?? '') ?? rest }))
-    const used = [...new Map(candidates.map(({ group }) => [group.name, group])).values()]
-    return findTool(described, used, candidates)
+    return hidden.map(tool => ({ tool, group: known.get(tool.group ?? '') ?? rest }))
+  }
+
+  const groupsOf = (candidates: Candidate[]) => [...new Map(candidates.map(({ group }) => [group.name, group])).values()]
+
+  const findHidden = (hidden: Tool[]) => {
+    const candidates = hiddenCandidates(hidden)
+    return findTool(described, groupsOf(candidates), candidates)
+  }
+
+  const findLines = (hidden: Tool[]) => {
+    const candidates = hiddenCandidates(hidden)
+    return [signature(findTool(described, [], candidates)), ...groupsOf(candidates).map(described.line)]
   }
 
   const changes = (apply: () => void) => {
@@ -103,13 +113,14 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const funnelIn = (scoped: Tool[]) => (scoped.some(tool => tool.name === funneled?.tool) ? funneled : undefined)
 
-  const shownBy = ({ tool, basics }: Funnel) => (candidate: Tool) => candidate.name === tool || basics.includes(candidate.name)
-
-  const hiddenBy = (funnel: Funnel, scoped: Tool[]) => scoped.filter(tool => !shownBy(funnel)(tool))
+  const hiddenBy = ({ tool, basics }: Funnel, scoped: Tool[]) => scoped.filter(candidate => candidate.name !== tool && !basics.includes(candidate.name))
 
   const funneledSpecs = (scoped: Tool[], funnel: Funnel) => {
+    const conduit = scoped.find(tool => tool.name === funnel.tool)!
     const hidden = hiddenBy(funnel, scoped)
-    return [...scoped.filter(shownBy(funnel)).sort(byName).map(spec), ...(hidden.length ? [spec(findHidden(hidden))] : [])]
+    const basics = scoped.filter(tool => funnel.basics.includes(tool.name)).sort(byName).map(signature)
+    const lines = [...basics, ...(hidden.length ? findLines(hidden) : [])]
+    return [{ ...spec(conduit), description: `${conduit.description}\n\nTools:\n${lines.join('\n')}` }]
   }
 
   const listedSpecs = (scoped: Tool[], messages: Message[], conversation: Conversation) => {

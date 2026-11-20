@@ -104,18 +104,26 @@ test('a tool can stay loaded for some owners while others find it in its group',
 const funneled = () => {
   const catalog = createCatalog(memoryChoices(), () => {})
   catalog.group({ name: 'mail', label: 'Mail', summary: 'Send and read mail', load: 'always' })
-  for (const name of ['conduit', 'look', 'other']) catalog.register(named(name))
+  for (const name of ['conduit', 'other']) catalog.register(named(name))
+  catalog.register({ ...named('look'), description: 'Look at a page. Then more.', input: z.object({ page: z.number().int().optional(), tags: z.array(z.string()) }) })
   catalog.register({ ...named('mail_send'), group: 'mail', description: 'Send a mail', input: z.object({ to: z.string() }) })
   catalog.funnel({ tool: 'conduit', basics: ['look'] })
   return catalog
 }
 
-test('when calls go through one tool, the model sees it, the basics and a search that describes what it finds, and every other tool runs only inside it', async () => {
+test('when calls go through one tool, the model sees only it, with the basics and a search for the rest typed in its description, and every other tool runs only inside it', async () => {
   const catalog = funneled()
   const specs = catalog.specs([], conversation)
-  expect(specs.map(spec => spec.name)).toEqual(['conduit', 'look', findName])
-  expect(specs.at(-1)?.description).toContain('- mail: Send and read mail')
-  expect(specs.at(-1)?.description).toContain('- general: other')
+  expect(specs.map(spec => spec.name)).toEqual(['conduit'])
+  expect(specs[0]?.description).toBe(
+    `conduit
+
+Tools:
+tools.look({ page?: number, tags: string[] }): Look at a page.
+tools.${findName}({ query: string }): Load tools that aren't loaded yet.
+- general: other
+- mail: Send and read mail`,
+  )
 
   expect(await catalog.run(call('look'), context)).toMatchObject({ isError: true, content: [{ text: expect.stringContaining('runs only inside conduit') }] })
   expect(await catalog.run(call('conduit'), context)).toMatchObject({ content: [{ text: 'conduit' }] })
@@ -128,7 +136,7 @@ test('when calls go through one tool, the model sees it, the basics and a search
 test('a restriction keeps a tool from being listed or run, but never blocks the tool calls go through', async () => {
   const catalog = funneled()
   catalog.restrict(tool => tool === 'look')
-  expect(catalog.specs([], conversation).map(spec => spec.name)).toEqual(['conduit', 'look'])
+  expect(catalog.specs([], conversation)[0]?.description).not.toContain(findName)
   expect(await catalog.run(call('other'), { ...context, within: 'conduit-1' })).toMatchObject({ isError: true, content: [{ text: 'Unknown tool: other' }] })
-  expect(await catalog.run(call('look'), { ...context, within: 'conduit-1' })).toMatchObject({ content: [{ text: 'look' }] })
+  expect(await catalog.run({ ...call('look'), input: { tags: [] } }, { ...context, within: 'conduit-1' })).toMatchObject({ content: [{ text: 'look' }] })
 })

@@ -12,4 +12,43 @@ const spec = (tool: Tool): ToolSpec => {
   return { name: tool.name, description: tool.description, inputSchema, ...(tool.secret?.length && { secret: tool.secret }) }
 }
 
-export { spec }
+type Schema = z.core.JSONSchema._JSONSchema
+
+const grouped = (type: string) => (type.includes(' | ') ? `(${type})` : type)
+
+const objectType = (schema: z.core.JSONSchema.JSONSchema): string => {
+  const properties = Object.entries(schema.properties ?? {})
+  if (!properties.length && schema.additionalProperties) return `Record<string, ${typeOf(schema.additionalProperties)}>`
+  const required = new Set(schema.required)
+  return `{ ${properties.map(([name, value]) => `${name}${required.has(name) ? '' : '?'}: ${typeOf(value)}`).join(', ')} }`
+}
+
+const typeOf = (schema: Schema): string => {
+  if (typeof schema === 'boolean') return 'unknown'
+  if (schema.enum) return schema.enum.map(value => JSON.stringify(value)).join(' | ')
+  if (schema.const !== undefined) return JSON.stringify(schema.const)
+  if (schema.anyOf) return schema.anyOf.map(typeOf).join(' | ')
+  switch (schema.type) {
+    case 'string':
+    case 'boolean':
+    case 'null':
+      return schema.type
+    case 'integer':
+    case 'number':
+      return 'number'
+    case 'array':
+      return `${grouped(schema.items && !Array.isArray(schema.items) ? typeOf(schema.items) : 'unknown')}[]`
+    case 'object':
+      return objectType(schema)
+  }
+  return 'unknown'
+}
+
+const brief = (description: string) => description.split('\n')[0]!.split(/(?<=\.)\s/)[0]!
+
+const signature = (tool: Tool) => {
+  const { description, inputSchema } = spec(tool)
+  return `tools.${tool.name}(${typeOf(inputSchema as Schema)}): ${brief(description)}`
+}
+
+export { signature, spec }

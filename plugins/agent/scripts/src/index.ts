@@ -8,7 +8,7 @@ import { helloScripts, scriptUpdate, scriptUpdateWire } from './contract'
 import { createRuns } from './runs'
 import { scriptTool } from './tool'
 
-const BASICS = ['read', 'edit', 'shell', 'agent']
+const BASICS = ['read', 'write', 'edit', 'shell', 'agent']
 
 export default definePlugin({
   name: 'scripts',
