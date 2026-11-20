@@ -493,12 +493,13 @@ test('a subagent that is waiting for an answer shows its turn as waiting', async
 test('a question nobody below can answer goes up the chain, and the answer goes back down to the one who asked', async () => {
   sand = await startSand(
     [
+      { id: 'child', models: ['m'], replies: [ask({ agent: 'grand' }), asking('Grandchild wants a colour. Which one?'), answering('Use blue.'), said('Passed it on.')], api: 'anthropic' },
       { id: 'parent', models: ['m'], replies: [ask(), answering('Use blue.'), said('Thanks.')], api: 'anthropic' },
-      { id: 'child', models: ['m'], replies: [ask({ model: 'grand/m' }), asking('Grandchild wants a colour. Which one?'), answering('Use blue.'), said('Passed it on.')], api: 'anthropic' },
       { id: 'grand', models: ['m'], replies: [asking('Which colour?'), said('Painted it blue.')], api: 'anthropic' },
     ],
     { plugins: ['core/watch', 'agent/subagents'] },
   )
+  await Bun.write(join(sand.home, 'agents', 'grand.md'), '---\ndescription: Goes deeper.\nmodel: grand/m\n---\nGo deeper.')
   answersFirstChild()
   const parent = sand.chat('parent/m')
   await sand.turns.run(parent, 'Paint it')

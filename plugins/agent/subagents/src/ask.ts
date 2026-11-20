@@ -64,7 +64,7 @@ export const answerTool = (ctx: AgentsContext): Tool<typeof answerInput> => ({
     const parent = ctx.sessions.require(conversation.id)
     const by = { owner: parent.owner, id: parent.id }
     await ctx.orchestrator.reply(thread, { prompt: answer, origin: 'agent', clientRequestId: `${parent.id}:${call.id}`, from: by })
-    if (background) return `Sent. Subagent ${thread} keeps working and its reply arrives as a <task-notification>.`
+    if (background || parent.owner === 'bot') return `Sent. Subagent ${thread} keeps working and its reply arrives as a <task-notification>.`
     return answered(await ctx.orchestrator.answer(thread, by, signal))
   },
 })

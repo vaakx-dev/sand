@@ -30,6 +30,7 @@ const ALLOWED_TOOLS = new Set([
   'memory',
   'message_search',
   'agent',
+  'answer_agent',
   'thread_list',
   'thread_send',
   'thread_stop',
