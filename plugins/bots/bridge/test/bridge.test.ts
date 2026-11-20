@@ -174,7 +174,6 @@ test("a bot can message and list threads, but not start them or wait on them", a
 
 test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent", async () => {
   await start([said('Found three.')], [])
-  await sand.ask(levelSet, { level: 'main', model: 'fake/t' })
   const bot = await createBot('Scout')
   const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', does: 'find', background: true } } as const
   const result = await registry().run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: asBot(bot.id), turn: 'test', progress() {}, wait: () => () => {} })

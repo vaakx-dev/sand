@@ -4,7 +4,7 @@ import type { Computer, Fill, Filled } from '@sand/computers/contract'
 import { computers } from '@sand/computers/contract'
 import { type SandOptions, startSand } from '@sand/harness'
 import type { Request } from '@sand/host-hub/contract'
-import { levelSet, modelSettings } from '@sand/model/contract'
+import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { readdir } from 'node:fs/promises'
@@ -24,15 +24,14 @@ export const start = async (replies: Source['replies'], options: SandOptions = {
   const sand = await startSand(
     [
       { id: 'fake', models: ['m'], replies, api: 'anthropic' },
-      { id: 'kid', models: ['m'], replies: agentReplies, api: 'anthropic' },
+      { id: 'aide', models: ['m'], replies: agentReplies, api: 'anthropic' },
     ],
     { plugins, ...options },
   )
-  await sand.ask(levelSet, { level: 'main', model: 'kid/m' })
   return sand
 }
 
-export const delegate = (task: string) => call('agent', { label: 'Do it', task, background: true })
+export const delegate = (task: string) => call('agent', { label: 'Do it', task, does: 'build', background: true })
 
 export type Sand = Awaited<ReturnType<typeof start>>
 

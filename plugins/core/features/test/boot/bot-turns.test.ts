@@ -1,6 +1,6 @@
 import { botCreate } from '@sand/bots/contract'
 import type { Message } from '@sand/chats/contract'
-import { levelSet, modelSettings } from '@sand/model/contract'
+import { modelSettings } from '@sand/model/contract'
 import { tools } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
 import { boot, type Booted, model } from './boot'
@@ -35,18 +35,17 @@ test('with Threads and Bots on, a bot answers', async () => {
 
 test("with Threads and Bots on, a bot's agent runs a shell call without asking and the bot can't", async () => {
   const botReplies = [
-    [{ type: 'call' as const, name: 'agent', input: { label: 'Run it', task: 'Run echo ran', background: true } }],
+    [{ type: 'call' as const, name: 'agent', input: { label: 'Run it', task: 'Run echo ran', does: 'build', background: true } }],
     [{ type: 'text' as const, text: 'Started' }],
     [{ type: 'text' as const, text: 'Done' }],
   ]
   const agentReplies = [[{ type: 'call' as const, name: 'shell', input: { command: 'echo ran' } }], [{ type: 'text' as const, text: 'Ran it' }]]
   const sand = await boot(['threads', 'bots'], [], [
     { ...model, replies: botReplies },
-    { ...model, id: 'kid', replies: agentReplies },
+    { ...model, id: 'aide', replies: agentReplies },
   ])
   try {
     expect(sand.problems()).toEqual([])
-    await sand.ask(levelSet, { level: 'main', model: 'kid/m' })
     const chat = await botChat(sand)
     expect(sand.app.get(tools)!.names(chat)).not.toContain('shell')
     await sand.turns.run(chat, 'run it')

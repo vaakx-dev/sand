@@ -2,7 +2,7 @@ import { botCreate } from '@sand/bots/contract'
 import { calendarAgenda, calendarCreate } from '@sand/calendar/contract'
 import { type Entry, type Session, textOf, type Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { levelSet, modelSettings } from '@sand/model/contract'
+import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -17,11 +17,10 @@ const start = async (replies: Source['replies'] = [], agentReplies: Source['repl
   sand = await startSand(
     [
       { id: 'fake', models: ['m'], replies, api: 'anthropic' },
-      { id: 'kid', models: ['m'], replies: agentReplies, api: 'anthropic' },
+      { id: 'aide', models: ['m'], replies: agentReplies, api: 'anthropic' },
     ],
     { plugins: ['calendar/calendar', 'calendar/local', 'bots/bots', 'bots/turns', 'core/watch', 'agent/subagents'] },
   )
-  await sand.ask(levelSet, { level: 'main', model: 'kid/m' })
   return sand
 }
 
@@ -48,7 +47,7 @@ const use = async (name: string, input: Record<string, unknown>) => {
 test("a bot's agent adds an event to the calendar and reads its agenda back", async () => {
   const { ask } = await start(
     [
-      [{ type: 'call', name: 'agent', input: { label: 'Book lunch', task: 'Put lunch with Ana on the calendar and read the day back', background: true } }],
+      [{ type: 'call', name: 'agent', input: { label: 'Book lunch', task: 'Put lunch with Ana on the calendar and read the day back', does: 'build', background: true } }],
       [{ type: 'text', text: 'Started it.' }],
       [{ type: 'text', text: 'Booked lunch with Ana.' }],
     ],

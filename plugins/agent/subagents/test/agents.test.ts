@@ -118,9 +118,8 @@ test('a thread waiting on a subagent stops waiting when a message comes in, and 
   expect(notice).toContain('Found it.')
 })
 
-test('a bot never waits on a subagent, and its subagent runs on the main level whatever model or level it asked for', async () => {
-  await start([ask({ level: 'light', model: 'parent/m' }), said('On it.'), said('Heard.')], [[{ type: 'wait', ms: 1500 }, { type: 'text', text: 'Found it.' }]], [], ['bots/bots', 'bots/turns'])
-  await sand.ask(levelSet, { level: 'main', model: 'child/m' })
+test("a bot never waits on a subagent, and its subagent runs on the lead role's model whatever it asked for", async () => {
+  await start([ask({ does: 'find' }), said('On it.'), said('Heard.')], [[{ type: 'wait', ms: 1500 }, { type: 'text', text: 'Found it.' }]], [], ['bots/bots', 'bots/turns'])
   const chat = sand.sessions.require((await sand.ask(botCreate, { name: 'Scout' })).id)
   sand.app.get(modelSettings)!.change(chat, { model: 'parent/m' })
 
