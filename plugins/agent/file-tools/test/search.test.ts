@@ -6,10 +6,10 @@ import { join } from 'node:path'
 import type { z } from 'zod'
 import { globTool } from '../src/glob'
 import { grepTool } from '../src/grep'
-import { Ripgrep } from '../src/search/ripgrep'
+import { ownRipgrep } from '../src/search/ripgrep'
 
-const ripgrepFolder = join(tmpdir(), 'sand-test-ripgrep')
-const ripgrep = new Ripgrep(ripgrepFolder)
+const appRoot = join(import.meta.dir, '..', '..', '..', '..')
+const ripgrep = ownRipgrep(appRoot)
 const grep = grepTool(ripgrep)
 const glob = globTool(ripgrep)
 
@@ -45,11 +45,17 @@ beforeAll(async () => {
 
 afterAll(() => rm(cwd, { recursive: true, force: true }))
 
-test('search and glob run the ripgrep sand downloads, not one on PATH', async () => {
-  expect(await ripgrep.binary()).toStartWith(ripgrepFolder)
+test('search and glob run the ripgrep that comes with sand, not one on PATH', async () => {
+  expect(await ripgrep()).toStartWith(join(appRoot, 'ripgrep'))
   expect(await run(grep, { pattern: 'greet' })).toBe('src/main.ts:1: const greeting = "hello"')
   expect(await run(grep, { pattern: 'hello', path: 'src/main.ts' })).toBe('main.ts:1: const greeting = "hello"')
   expect(await run(glob, { pattern: '**/*.ts' })).toBe('src/main.ts')
+})
+
+test('without sand\'s ripgrep, search and glob say it is missing', async () => {
+  const missing = ownRipgrep(cwd)
+  await expect(run(grepTool(missing), { pattern: 'x' })).rejects.toThrow("Sand's ripgrep is missing")
+  await expect(run(globTool(missing), { pattern: '**/*' })).rejects.toThrow("Sand's ripgrep is missing")
 })
 
 test('search and glob in a missing folder name the folder', async () => {

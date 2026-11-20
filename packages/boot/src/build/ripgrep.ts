@@ -1,7 +1,8 @@
 import { fileHash, moveFresh } from '@sand/util/fs'
+import { ripgrepBinary, ripgrepVersion } from '@sand/util/release'
 import { Zip } from '@sand/zip'
 import { chmod, mkdir, rm } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { basename, dirname } from 'node:path'
 
 interface Build {
   target: string
@@ -9,11 +10,9 @@ interface Build {
   archive: 'zip' | 'tar.gz'
 }
 
-const VERSION = '15.2.0'
-const RELEASES = `https://github.com/BurntSushi/ripgrep/releases/download/${VERSION}`
+const RELEASES = `https://github.com/BurntSushi/ripgrep/releases/download/${ripgrepVersion}`
 const DOWNLOAD_TIMEOUT_MS = 120_000
 const MAX_BINARY_BYTES = 64 * 1024 * 1024
-const BINARY = process.platform === 'win32' ? 'rg.exe' : 'rg'
 
 const BUILDS: Record<string, Build> = {
   'win32-x64': { target: 'x86_64-pc-windows-msvc', sha256: '71b2fef860abe467217a538ff31de02f5258807c0129f771846f87bd029aafc5', archive: 'zip' },
@@ -31,19 +30,19 @@ const buildHere = () => {
 }
 
 const download = async ({ target, sha256, archive }: Build) => {
-  const url = `${RELEASES}/ripgrep-${VERSION}-${target}.${archive}`
+  const url = `${RELEASES}/ripgrep-${ripgrepVersion}-${target}.${archive}`
   const response = await fetch(url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) })
   if (!response.ok) throw new Error(`GitHub answered ${response.status} for ${url}`)
   const bytes = new Uint8Array(await response.arrayBuffer())
-  if (fileHash(bytes) !== sha256) throw new Error(`The ripgrep ${VERSION} download failed its checksum`)
+  if (fileHash(bytes) !== sha256) throw new Error(`the ripgrep ${ripgrepVersion} download failed its checksum`)
   return bytes
 }
 
-const unpack = async (bytes: Uint8Array<ArrayBuffer>, { target, archive }: Build) => {
-  const inside = `ripgrep-${VERSION}-${target}/${BINARY}`
+const unpack = async (bytes: Uint8Array<ArrayBuffer>, { target, archive }: Build, binary: string) => {
+  const inside = `ripgrep-${ripgrepVersion}-${target}/${binary}`
   if (archive === 'zip') return new Zip(bytes, { entryBytes: MAX_BINARY_BYTES, totalBytes: MAX_BINARY_BYTES }).bytes(inside)
   const file = (await new Bun.Archive(bytes).files()).get(inside)
-  if (!file) throw new Error(`The ripgrep ${VERSION} download has no ${inside}`)
+  if (!file) throw new Error(`the ripgrep ${ripgrepVersion} download has no ${inside}`)
   return file.bytes()
 }
 
@@ -59,12 +58,12 @@ const place = async (path: string, binary: Uint8Array) => {
   }
 }
 
-const install = async (path: string) => {
+const ensureRipgrep = async (root: string) => {
+  const path = ripgrepBinary(root)
+  if (await Bun.file(path).exists()) return path
   const build = buildHere()
-  await place(path, await unpack(await download(build), build))
+  await place(path, await unpack(await download(build), build, basename(path)))
   return path
 }
 
-const ripgrepBinary = (folder: string) => join(folder, VERSION, BINARY)
-
-export { install, ripgrepBinary }
+export { ensureRipgrep }

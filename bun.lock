@@ -5,6 +5,7 @@
     "": {
       "name": "sand-workspace",
       "devDependencies": {
+        "@sand/boot": "workspace:*",
         "@types/bun": "^1.4.2",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
         "typescript": "^7.0.2",
@@ -350,7 +351,6 @@
         "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
-        "@sand/zip": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",

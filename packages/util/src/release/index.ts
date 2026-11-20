@@ -20,6 +20,7 @@ export { buildBunFile, bunBinary, bunFolder, defaultTarget, readBuildBun, readTa
 export { buildStamp, bundleAsset, isAppPath, moduleFiles, scanApp, stampAsset } from './files'
 export { hashModules, isLinkEntry, isModulePath, moduleHash, modulesFolder, releaseDamaged } from './manifest'
 export { readyRelease } from './ready'
+export { ripgrepBinary, ripgrepVersion } from './ripgrep'
 export { hashApp, hashFiles, isStamp, readStamp, type AppFile, type BuildChange, type BuildInfo, type BuildStamp } from './stamp'
 export { appVersion } from './version'
 export { readManifest, workspaceLinks, workspacePackages, type Manifest } from './workspaces'

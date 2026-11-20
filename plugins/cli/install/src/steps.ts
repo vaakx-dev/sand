@@ -1,4 +1,5 @@
 import { appRoot, setCurrentApp } from '@sand/boot'
+import { ensureRipgrep } from '@sand/boot/build'
 import { allowThroughFirewall, dim, done, notice, putSandOnPath } from '@sand/boot/setup'
 import { isChannel, loadUpdateStore } from '@sand/boot/updates'
 import type { Daemon } from '@sand/host-daemon/contract'
@@ -37,6 +38,7 @@ const saveChannel = async (home: string) => {
 }
 
 export const placeApp = async (root: string, home: string) => {
+  await ensureRipgrep(root)
   await setCurrentApp(home, root)
   await saveChannel(home)
   await addToPath(home)

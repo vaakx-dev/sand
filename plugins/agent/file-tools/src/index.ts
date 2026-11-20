@@ -3,11 +3,11 @@ import { cli } from '@sand/config/contract'
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
 import { edit } from './edit'
-import { join } from 'node:path'
+import { dirname } from 'node:path'
 import { globTool } from './glob'
 import { grepTool } from './grep'
 import { readTool } from './read'
-import { Ripgrep } from './search/ripgrep'
+import { ownRipgrep } from './search/ripgrep'
 import { write } from './write'
 
 export default definePlugin({
@@ -15,7 +15,7 @@ export default definePlugin({
   inject: { tools, attachments, cli },
   apply(ctx) {
     const read = readTool(() => ctx.attachments)
-    const ripgrep = new Ripgrep(join(ctx.cli.home, 'ripgrep'))
+    const ripgrep = ownRipgrep(dirname(ctx.cli.builtins))
     for (const tool of [read, write, edit, globTool(ripgrep), grepTool(ripgrep)]) ctx.effect(() => ctx.tools.register(tool))
   },
 })

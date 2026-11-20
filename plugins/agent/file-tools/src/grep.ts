@@ -25,7 +25,7 @@ export const grepTool = (ripgrep: Ripgrep): Tool<typeof input> => ({
   needs: ['pc'],
   async run({ pattern, path = '.', glob = '**/*', ignore_case, include_ignored }, { cwd, signal }) {
     const found: string[] = []
-    const query = { binary: await ripgrep.binary(), pattern, root: resolve(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal: withDeadline(signal) }
+    const query = { binary: await ripgrep(), pattern, root: resolve(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal: withDeadline(signal) }
     try {
       for await (const match of matches(query)) {
         found.push(match)

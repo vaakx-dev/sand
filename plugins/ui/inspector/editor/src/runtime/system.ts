@@ -1,3 +1,4 @@
+import { spawnIn } from '@sand/util/host'
 import type { Where } from './editors'
 import type { Launch } from './open'
 
@@ -18,5 +19,5 @@ export const system: Where = {
 }
 
 export const launch: Launch = (command, folder) => {
-  Bun.spawn(command, { cwd: folder, stdio: ['ignore', 'ignore', 'ignore'], detached: !windows, windowsHide: true }).unref()
+  spawnIn(folder, () => Bun.spawn(command, { cwd: folder, stdio: ['ignore', 'ignore', 'ignore'], detached: !windows, windowsHide: true })).unref()
 }

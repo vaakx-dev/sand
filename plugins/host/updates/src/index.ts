@@ -1,5 +1,6 @@
 import { appRoot, switchTo, waitHealthy } from '@sand/boot'
-import { buildInfo } from '@sand/boot/build'
+import { buildInfo, ensureRipgrep } from '@sand/boot/build'
+import { errorMessage } from '@sand/util'
 import { writeShim } from '@sand/boot/setup'
 import { clearUpdateNotice } from '@sand/boot/notice'
 import { loadUpdateStore } from '@sand/boot/updates'
@@ -35,6 +36,7 @@ export default definePlugin({
       if (!health) throw new Error('the host health check is not loaded')
       return health.check()
     }
+    void ensureRipgrep(hostApp.root()).catch(error => console.warn(`sand could not get its ripgrep: ${errorMessage(error)}`))
     const store = await loadUpdateStore(home)
     const updater = createUpdater(
       {

@@ -22,7 +22,7 @@ export const globTool = (ripgrep: Ripgrep): Tool<typeof input> => ({
   needs: ['pc'],
   async run({ pattern, path = '.', include_ignored }, { cwd, signal }) {
     const files: string[] = []
-    const query = { binary: await ripgrep.binary(), pattern, cwd: resolve(cwd, path), includeIgnored: include_ignored, signal: withDeadline(signal) }
+    const query = { binary: await ripgrep(), pattern, cwd: resolve(cwd, path), includeIgnored: include_ignored, signal: withDeadline(signal) }
     try {
       for await (const file of walk(query)) {
         files.push(file)

@@ -1,5 +1,5 @@
 import { spawnIn } from '@sand/util/host'
-import { install, ripgrepBinary } from './install'
+import { ripgrepBinary } from '@sand/util/release'
 
 const nothingSearched = /No files were searched/
 
@@ -9,26 +9,15 @@ const everything = ['--no-messages', '--no-ignore', '--hidden', '--glob', '!.git
 
 const tracked = ['--hidden', '--no-require-git', '--glob', '!.git', '--glob', '!node_modules']
 
-class Ripgrep {
-  readonly #binary: string
-  #ready: Promise<string> | undefined
+type Ripgrep = () => Promise<string>
 
-  constructor(folder: string) {
-    this.#binary = ripgrepBinary(folder)
+const ownRipgrep =
+  (root: string): Ripgrep =>
+  async () => {
+    const binary = ripgrepBinary(root)
+    if (await Bun.file(binary).exists()) return binary
+    throw new Error(`Sand's ripgrep is missing from ${binary}. Update or reinstall sand to get it back.`)
   }
-
-  binary() {
-    this.#ready ??= this.#find().catch(error => {
-      this.#ready = undefined
-      throw error
-    })
-    return this.#ready
-  }
-
-  async #find() {
-    return (await Bun.file(this.#binary).exists()) ? this.#binary : install(this.#binary)
-  }
-}
 
 const scope = (includeIgnored = false) => [...(includeIgnored ? everything : tracked), ...separator]
 
@@ -52,4 +41,4 @@ async function* lines(binary: string, args: string[], cwd: string, signal?: Abor
   }
 }
 
-export { lines, Ripgrep, scope }
+export { lines, ownRipgrep, type Ripgrep, scope }
