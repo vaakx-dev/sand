@@ -83,7 +83,7 @@ const addTool: McpTool<typeof accountInput> = {
 
 const renameTool: McpTool<typeof renameInput> = {
   name: 'account_rename',
-  description: 'Rename an account added with account_add.',
+  description: 'Rename a plan account, like a Claude account, so the accounts of one plan are easy to tell apart.',
   input: renameInput,
   access: 'operate',
   group: group.name,
