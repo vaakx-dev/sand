@@ -78,7 +78,7 @@ const settle = (ctx: JobsContext, wait: Wait, session: Session, timeout: number,
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    'Wait for background commands to finish and get their exit code and last output. Use until to wait for a server to come up instead of sleeping or polling. Returns early on timeout or a user message; jobs keep running.',
+    'Wait for background commands to finish and get their exit code and last output. Returns early on timeout or a user message; jobs keep running.',
   group,
   input,
   effect: 'read',

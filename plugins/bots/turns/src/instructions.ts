@@ -1,6 +1,10 @@
 import type { BotSummary, Job } from '@sand/bots/contract'
 import type { ProjectFiles } from '@sand/project/contract'
 
+const UPDATES = `## Telling the user
+
+Update the user as each piece of work finishes, in a short, plain message. Don't wait until the end to tell them.`
+
 const NO_JOBS = `## Your jobs
 
 You have no jobs yet.
@@ -30,4 +34,4 @@ const projectsOf = ({ projects }: BotSummary, files: ProjectFiles | undefined) =
 
 const whoOf = (name: string) => (name ? `You are ${name}, one of the user's bots in sand.` : "You are one of the user's bots in sand, with no name yet.")
 
-export const instructions = ([, ...shared]: string[], bot: BotSummary, files: ProjectFiles | undefined) => [whoOf(bot.name), ...shared, jobsOf(bot), ...projectsOf(bot, files)]
+export const instructions = ([, ...shared]: string[], bot: BotSummary, files: ProjectFiles | undefined) => [whoOf(bot.name), ...shared, UPDATES, jobsOf(bot), ...projectsOf(bot, files)]

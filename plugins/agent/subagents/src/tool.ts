@@ -34,7 +34,7 @@ const inputSchema = (ctx: AgentsContext) => {
 }
 
 const started = (thread: string) =>
-  `Started subagent ${thread}. Its final reply arrives as a <task-notification>. Meanwhile keep working or end your turn; don't sleep or poll for it. To message or stop it, use thread_send or thread_stop with thread ${thread}; thread_wait waits for it.`
+  `Started subagent ${thread}. Its final reply arrives as a <task-notification>. Meanwhile keep working or end your turn. To message or stop it, use thread_send or thread_stop with thread ${thread}; thread_wait waits for it.`
 
 export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<ReturnType<typeof inputSchema>> => ({
   name: 'agent',
