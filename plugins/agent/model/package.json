@@ -1,7 +1,7 @@
 {
   "name": "@sand/model",
   "version": "0.0.0",
-  "description": "Model, effort and fast mode for each chat and for each level",
+  "description": "Model, effort and fast mode for each chat and for each role, picked from a ranking",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,7 +10,6 @@
     "feature": "models",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
-    "cli": "./src/cli.ts",
     "label": "Model settings",
     "summary": "Model, effort and fast mode for the chat"
   },
@@ -18,9 +17,6 @@
     "@sand/account-pool": "workspace:*",
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/cli-commands": "workspace:*",
-    "@sand/config": "workspace:*",
-    "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/turns-contract": "workspace:*",

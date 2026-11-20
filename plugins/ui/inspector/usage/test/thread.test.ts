@@ -47,9 +47,9 @@ test("a thread's usage adds up its own turns and its subagents' turns, per model
 test("a thread's usage counts its subagents on other PCs, and pages hear when they spend", async () => {
   const plugins = ['ui/inspector/usage', 'agent/subagents', 'core/watch']
   box = await startSand([{ id: 'fake', models: ['small'], price, api: 'anthropic', replies: [[...reply(500, 50)]] }], { plugins })
-  const delegate = { type: 'call', name: 'agent', input: { label: 'Dig', task: 'Dig into it', model: 'fake/small', pc: 'box', folder: box.home } } as const
+  const delegate = { type: 'call', name: 'agent', input: { label: 'Dig', task: 'Dig into it', does: 'find', pc: 'box', folder: box.home } } as const
   const parentReplies = [[delegate, { type: 'usage', input: 1_000, output: 100 } as const], [...reply(2_000, 200)], [...reply(0, 0)], [...reply(0, 0)]]
-  sand = await startSand([{ id: 'fake', models: ['big', 'small'], price, api: 'anthropic', replies: parentReplies }], { plugins })
+  sand = await startSand([{ id: 'fake', models: ['small', 'big'], price, api: 'anthropic', replies: parentReplies }], { plugins })
   pairPcs(sand, box)
   const thread = sand.chat('fake/big')
   const withSubagent = (usage: ThreadUsage) => usage.session === thread.id && usage.models.some(model => model.name === 'small')

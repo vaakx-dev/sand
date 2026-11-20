@@ -97,7 +97,7 @@ const toolSteps = (topic: string, index: number, image: StoredMedia | undefined,
     const id = agent
     steps.push({
       role: 'assistant',
-      content: [text('I will hand the proof check to a subagent.'), { type: 'tool_call', id, name: 'agent', input: { label: `Check ${topic}`, task: paragraph(3) } }],
+      content: [text('I will hand the proof check to a subagent.'), { type: 'tool_call', id, name: 'agent', input: { label: `Check ${topic}`, task: paragraph(3), does: 'find' } }],
     })
     steps.push({ role: 'user', content: [{ type: 'tool_result', callId: id, content: [text(`Started subagent for ${topic}.`)] }] })
   }

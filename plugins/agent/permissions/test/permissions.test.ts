@@ -3,7 +3,6 @@ import { startSand } from '@sand/harness'
 import { botCreate } from '@sand/bots/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
 import type { Source } from '@sand/replay/contract'
-import { levelSet } from '@sand/model/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { z } from 'zod'
@@ -30,7 +29,7 @@ const start = async (replies: Source['replies'], judge: Source['replies'] = [], 
   const sand = await startSand(
     [
       { id: 'fake', models: ['m'], replies, api: 'anthropic' },
-      { id: 'judge', models: ['j'], replies: judge, api: 'anthropic' },
+      { id: 'arbiter', models: ['j'], replies: judge, api: 'anthropic' },
     ],
     { plugins: ['agent/ask', 'agent/permissions', ...plugins] },
   )
@@ -152,7 +151,7 @@ test('an unanswered question denies its call at the deadline, and a late allow l
   await last
 })
 
-test('auto mode asks the sub level model, tells the agent what it blocked, and asks the user after three blocks in a row', async () => {
+test('auto mode asks the builder model, tells the agent what it blocked, and asks the user after three blocks in a row', async () => {
   const sand = await start(
     [
       [said(pleading), call('send_mail', { to: 'team' })],
@@ -165,7 +164,6 @@ test('auto mode asks the sub level model, tells the agent what it blocked, and a
   )
   const ran = register(sand)
   const chat = sand.chat('fake/m')
-  await sand.ask(levelSet, { level: 'sub', model: 'judge/j' })
   service(sand).setMode({ owner: 'thread', id: chat.id }, 'auto')
 
   const asked = nextAsk(sand)
@@ -178,7 +176,7 @@ test('auto mode asks the sub level model, tells the agent what it blocked, and a
   expect(ran).toEqual(['send_mail team', 'send_mail board'])
   const blocked = service(sand).decisions({ conversation: chat.id }).find(decision => decision.summary === 'send_mail everyone')!
   expect(resultText(chat.messages(), blocked.call)).toContain('auto mode blocked this call. Mails everyone.')
-  expect(JSON.stringify(sand.requests('judge'))).not.toContain(pleading)
+  expect(JSON.stringify(sand.requests('arbiter'))).not.toContain(pleading)
 })
 
 test('a thread a bot started asks before using a saved login, even past an allow rule', async () => {

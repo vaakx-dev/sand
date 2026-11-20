@@ -2,7 +2,6 @@ import type { Pulse } from '@sand/reactive'
 import { div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import { favouritesPage } from './favourites'
-import { levelsSection } from './levels'
 import { createPage, type Page, type View } from './page'
 import { sourcePage } from './source/page'
 import { sourcesKey, sourcesSection } from './sources'
@@ -10,7 +9,6 @@ import { sourcesKey, sourcesSection } from './sources'
 const topPage = (page: Page) =>
   div(
     { class: 'flex flex-col gap-6' },
-    show(page.changes.read(() => page.ctx.models.list().length > 0), () => levelsSection(page)),
     dynamicChild(page.changes.read(() => sourcesKey(page)), () => sourcesSection(page)),
   )
 

@@ -39,26 +39,26 @@ export interface SettingsState {
   next?: EffectiveSettings
 }
 
+export const roles = ['lead', 'builder', 'finder'] as const
+
+export type Role = (typeof roles)[number]
+
+export type RolePicks = Partial<Record<Role, SessionSettings>>
+
 export const levels = ['bot', 'main', 'sub', 'light', 'background'] as const
 
 export type Level = (typeof levels)[number]
 
-export type LevelPicks = Partial<Record<Level, SessionSettings>>
+const LEVEL_ROLES: Record<Level, Role> = { bot: 'lead', main: 'lead', sub: 'builder', light: 'finder', background: 'finder' }
 
-const HEAVIER: Record<Level, Level | undefined> = { bot: 'main', main: undefined, sub: 'main', light: 'sub', background: 'light' }
-
-export const levelSource = (picks: LevelPicks, level: Level): Level => {
-  const heavier = HEAVIER[level]
-  return picks[level]?.model || !heavier ? level : levelSource(picks, heavier)
-}
-
-export const levelSettings = (picks: LevelPicks, level: Level): SessionSettings => picks[levelSource(picks, level)] ?? {}
+export const roleOfLevel = (level: Level): Role => LEVEL_ROLES[level]
 
 export interface ModelSettings {
   effective(session?: Session): EffectiveSettings
-  resolve(settings: SessionSettings, level: Level): EffectiveSettings
+  resolve(settings: SessionSettings, role: Role): EffectiveSettings
   select(session: Session): Selection | undefined
   state(session?: Session): SettingsState
+  role(role: Role): SessionSettings
   level(level: Level): SessionSettings
   change(session: Session, patch: SettingsPatch): void
   match(asked: Asked, near?: string): SettingsPatch
@@ -72,7 +72,7 @@ export interface ModelsUpdate {
   models: ModelInfo[]
   sources: SourceInfo[]
   efforts: EffortLevel[]
-  levels: LevelPicks
+  roles: RolePicks
 }
 
 export const modelSettings = service<ModelSettings>('modelSettings')
@@ -84,7 +84,7 @@ export const modelsChange = wireEvent<ModelsUpdate>('models.change')
 
 export const helloModels = helloField<ModelInfo[]>('models')
 export const helloSources = helloField<SourceInfo[]>('sources')
-export const helloLevels = helloField<LevelPicks>('levels')
+export const helloRoles = helloField<RolePicks>('roles')
 export const helloEfforts = helloField<EffortLevel[]>('efforts')
 
 const effort = lazy(() => z.enum(efforts))
@@ -94,13 +94,6 @@ export const sessionSettings = lazy(() => z.object({ model: z.string().optional(
 export const settingsGet = request('settings.get', {
   input: () => z.object({ session: z.string().optional(), settings: sessionSettings().optional() }),
   output: type<SettingsState>(),
-  place: 'thread',
-})
-export const levelsGet = request('levels.get', { input: () => z.object({}), output: type<LevelPicks>(), callers: 'any', place: 'thread' })
-export const levelSet = request('level.set', {
-  input: () => z.object({ level: z.enum(levels), model: z.string().min(1).nullish(), effort: z.string().min(1).nullish(), speed: speed().nullish() }),
-  output: type<LevelPicks>(),
-  callers: 'any',
   place: 'thread',
 })
 export const modelsList = request('models.list', {

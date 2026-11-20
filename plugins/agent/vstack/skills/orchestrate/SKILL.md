@@ -12,7 +12,7 @@ You plan, brief and review. Agents do the work.
 - One agent, one focused job. Split until each brief fits in a paragraph.
 - Run agents in parallel when they touch different code. Tell each one what the others own.
 - Do small jobs yourself; an agent costs more than a one-line edit.
-- Use a smaller model for search, bulk reading and mechanical edits. Keep the default for design and judgement.
+- Start finders (`does: find`) for search and bulk reading, and builders (`does: build`) for mechanical edits. Keep design and judgement for yourself.
 
 ## Brief
 

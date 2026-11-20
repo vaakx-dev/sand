@@ -83,7 +83,7 @@ const heard = async (session: Session, count: number) => {
 }
 
 const startSubagent = async (parent: Session) => {
-  const { text } = await use(parent, 'agent', { label: 'Child work', task: 'child work', background: true })
+  const { text } = await use(parent, 'agent', { label: 'Child work', task: 'child work', does: 'build', background: true })
   const subagent = /Started subagent (\S+?)\./.exec(text)?.[1]
   if (!subagent) throw new Error(`No subagent started: ${text}`)
   return subagent

@@ -53,7 +53,6 @@ export interface ModelMenuInput {
   model: ModelInfo
   subtitle?: string
   use?: () => void
-  makeDefault?: () => void
   toggleFavourite?: () => void
   toggleHidden?: () => void
   remove?: () => Promise<unknown>

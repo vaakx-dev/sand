@@ -9,7 +9,7 @@ const deadline = 20_000
 
 export default definePlugin({
   name: 'bot-gist',
-  description: "Sums up each finished bot reply in one line with the background model and keeps it in the bot's chat",
+  description: "Sums up each finished bot reply in one line with a small fast model and keeps it in the bot's chat",
   inject: { ask, bots, sessions },
   apply(ctx) {
     const unloaded = new AbortController()

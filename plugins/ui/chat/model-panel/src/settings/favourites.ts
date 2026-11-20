@@ -1,7 +1,6 @@
 import type { ModelInfo } from '@sand/accounts/contract'
 import { favouritesOf } from '@sand/model-picker/contract'
 import { derive, div, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
-import { settingsMenu } from './menu'
 import type { Page } from './page'
 import { crumb, logo } from './parts'
 import { starButton } from './star'
@@ -9,7 +8,8 @@ import { starButton } from './star'
 const whereText = (model: ModelInfo) => (model.via ? `On ${model.via}` : '')
 
 const menuOf = (page: Page, model: ModelInfo, unstar: (model: ModelInfo) => void) =>
-  settingsMenu(page, model, {
+  page.ctx.modelPicker.menu({
+    model,
     toggleFavourite: () => unstar(model),
     toggleHidden: () => void page.run(() => page.catalog.hide(model.id, !model.hidden)),
     ...(model.added && { remove: () => page.call(() => page.catalog.remove(model.id)) }),

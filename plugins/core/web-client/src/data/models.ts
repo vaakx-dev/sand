@@ -1,9 +1,8 @@
 import {
   helloEfforts,
-  helloLevels,
+  helloRoles,
   helloModels,
   helloSources,
-  levelSettings,
   type ModelsUpdate,
   modelsChange as modelsUpdate,
   type SessionSettings,
@@ -18,13 +17,13 @@ import { type Models, modelsChange, type Threads } from '../contract'
 import { type HelloRead, helloOf, onPcHello } from '../greeted'
 import type { Store } from '../threads/store'
 
-const empty: ModelsUpdate = { models: [], sources: [], efforts: [], levels: {} }
+const empty: ModelsUpdate = { models: [], sources: [], efforts: [], roles: {} }
 
 const fromHello = (read: HelloRead): ModelsUpdate => ({
   models: read(helloModels) ?? [],
   sources: read(helloSources) ?? [],
   efforts: read(helloEfforts) ?? [],
-  levels: read(helloLevels) ?? {},
+  roles: read(helloRoles) ?? {},
 })
 
 const everyPc: WireListen = { from: 'all' }
@@ -64,7 +63,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   const useCatalog = (device: string, next: ModelsUpdate) => {
     catalogs.set(device, next)
     for (const thread of [...store.settings.keys()]) if (store.deviceOf(thread) === device) store.settings.delete(thread)
-    if (device === store.device() && wire.hello(helloLevels, device) !== undefined) refreshDefaults()
+    if (device === store.device() && wire.hello(helloRoles, device) !== undefined) refreshDefaults()
     changed()
   }
 
@@ -105,7 +104,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   }
 
   const summary = (settings: SessionSettings) => {
-    const model = settings.model ?? levelSettings(catalogOf().levels, 'main').model
+    const model = settings.model ?? catalogOf().roles.lead?.model
     if (!model) return 'no model chosen'
     const known = infoOn(store.device(), model)
     const effort = settings.effort && known?.efforts.includes(settings.effort) ? settings.effort : undefined
@@ -118,7 +117,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
     known: () => knownCatalog() !== undefined,
     sources: () => catalogOf().sources,
     efforts: () => catalogOf().efforts,
-    levels: () => catalogOf().levels,
+    roles: () => catalogOf().roles,
     info: id => infoOn(store.device(), id),
     state,
     settings: thread => state(thread)?.current,

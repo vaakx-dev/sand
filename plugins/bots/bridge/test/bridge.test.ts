@@ -4,7 +4,7 @@ import { threadList } from '@sand/orchestrator/contract'
 import { type Entry, type Message, promptText, type Session, textOf, type UserContent } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { levelSet, modelSettings } from '@sand/model/contract'
+import { modelSettings } from '@sand/model/contract'
 import type { Reply } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -27,7 +27,7 @@ const start = async (thread: Reply[], bot: Reply[]) => {
   sand = await startSand(
     [
       { id: 'fake', models: ['t'], replies: thread, api: 'anthropic' },
-      { id: 'botsrc', models: ['b'], replies: bot, api: 'anthropic' },
+      { id: 'zbot', models: ['b'], replies: bot, api: 'anthropic' },
     ],
     {
       plugins: ['core/watch', 'agent/subagents', 'agent/context', 'agent/mcp-server', 'agent/threads-mcp', 'bots/bots', 'bots/turns', 'bots/mcp', 'bots/bridge'],
@@ -39,7 +39,7 @@ const start = async (thread: Reply[], bot: Reply[]) => {
 
 const createBot = async (name: string) => {
   const bot = await sand.ask(botCreate, { name })
-  sand.app.get(modelSettings)!.change(sand.sessions.require(bot.id), { model: 'botsrc/b' })
+  sand.app.get(modelSettings)!.change(sand.sessions.require(bot.id), { model: 'zbot/b' })
   return bot
 }
 
@@ -134,7 +134,7 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
   expect(promptText(asked!)).toBe(`[thread](sand-context://v1/thread/${recordsOf(asked!)[0]!.id}) What's on tomorrow? Message me the answer.`)
   expect(recordsOf(asked!)).toEqual([expect.objectContaining({ kind: 'thread', data: { id: thread.id, sent: true } })])
   expect(await replied(bot.id, sent.turn)).toBe('Tomorrow: dentist at 9.')
-  const botSaw = seenIn(sand.requests('botsrc')[0]!)
+  const botSaw = seenIn(sand.requests('zbot')[0]!)
   expect(botSaw).toContain(`from the agent working in the user's thread "" (id ${thread.id})`)
   expect(botSaw).toContain('if it asks to hear back, message it with thread_send')
   await Bun.sleep(100)
@@ -161,7 +161,6 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
 
 test("a bot starts a thread in its own folder, or in its only project, which says the bot sent it and stands on its own: no report back, not listed as the bot's", async () => {
   await start([said('Tidied.'), said('README fixed.'), said('Hi back.')], [])
-  await sand.ask(levelSet, { level: 'main', model: 'fake/t' })
   const bot = await createBot('Builder')
 
   const tidy = await use(asBot(bot.id), 'thread_start', { prompt: 'Tidy your folder' })
@@ -192,7 +191,7 @@ test("a bot starts a thread in its own folder, or in its only project, which say
 test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent", async () => {
   await start([said('Found three.')], [])
   const bot = await createBot('Scout')
-  const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', model: 'fake/t', background: true } } as const
+  const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', does: 'find', background: true } } as const
   const result = await registry().run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: asBot(bot.id), turn: 'test', progress() {}, wait: () => () => {} })
   const [, id] = /^Started subagent (\S+)\./.exec(textOf(result.content)) ?? []
 

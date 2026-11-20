@@ -1,12 +1,14 @@
 import { botChangeWire, botCreate, botList } from '@sand/bots/contract'
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { pairPcs, startSand, type Sand } from '@sand/harness'
-import { levelSet, modelSettings } from '@sand/model/contract'
+import { modelSettings } from '@sand/model/contract'
 import { threadList, threadRemove, threadSend, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
+import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 let sand: Sand
 let box: Sand | undefined
@@ -18,7 +20,7 @@ afterEach(async () => {
 
 const said = (text: string): Reply => [{ type: 'text', text }]
 
-const asked = (input: Record<string, unknown> = {}) => ({ type: 'call' as const, name: 'agent', input: { label: 'Dig', task: 'Dig into it', model: 'child/m', ...input } })
+const asked = (input: Record<string, unknown> = {}) => ({ type: 'call' as const, name: 'agent', input: { label: 'Dig', task: 'Dig into it', does: 'build', ...input } })
 
 const ask = (input: Record<string, unknown> = {}): Reply => [asked(input)]
 
@@ -27,8 +29,8 @@ const delegate = (input: Record<string, unknown> = {}): Reply => ask({ backgroun
 const start = async (parent: Reply[], child: Reply[], projects: { project: string; path: string }[] = [], plugins: string[] = []) => {
   sand = await startSand(
     [
-      { id: 'parent', models: ['m'], replies: parent, api: 'anthropic' },
       { id: 'child', models: ['m'], replies: child, api: 'anthropic' },
+      { id: 'parent', models: ['m'], replies: parent, api: 'anthropic' },
     ],
     { plugins: ['core/watch', 'agent/subagents', ...plugins], projects },
   )
@@ -72,7 +74,7 @@ test('a subagent is its own chat in the parent folder; its replies come back as 
 
   const child = await childOf(parent)
   expect(child).toMatchObject({ kind: 'agent', title: 'Dig', cwd: parent.cwd, parent: parent.id, origin: expect.any(String) })
-  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1 })
+  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1, role: 'builder' })
   expect(results(parent)[0]).toStartWith(`Started subagent ${child.id}.`)
   const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
   expect(notice).toContain(`<thread>${child.id}</thread>`)
@@ -135,12 +137,13 @@ test('subagents asked in one step all answer in that step', async () => {
 test('stopping an agent stops the subagents it started, all the way down, without waking it again', async () => {
   sand = await startSand(
     [
-      { id: 'parent', models: ['m'], replies: [delegate(), [{ type: 'hold' }]], api: 'anthropic' },
-      { id: 'child', models: ['m'], replies: [delegate({ model: 'grand/m' }), [{ type: 'hold' }]], api: 'anthropic' },
+      { id: 'child', models: ['m'], replies: [delegate({ agent: 'grand' }), [{ type: 'hold' }]], api: 'anthropic' },
       { id: 'grand', models: ['m'], replies: [[{ type: 'hold' }]], api: 'anthropic' },
+      { id: 'parent', models: ['m'], replies: [delegate(), [{ type: 'hold' }]], api: 'anthropic' },
     ],
     { plugins: ['core/watch', 'agent/subagents'] },
   )
+  await Bun.write(join(sand.home, 'agents', 'grand.md'), '---\ndescription: Goes deeper.\nmodel: grand/m\n---\nGo deeper.')
   const parent = sand.chat('parent/m')
   const turn = sand.turns.run(parent, 'Go')
   const child = await childOf(parent)
@@ -189,7 +192,7 @@ test('a subagent can run in a folder on another PC, and its reply comes back as 
 
   const child = await onBox(there, parent)
   expect(child).toMatchObject({ kind: 'agent', cwd: there.home, parent: parent.id })
-  expect(there.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1 })
+  expect(there.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1, role: 'builder' })
   expect(sand.sessions.open(child.id)).toBeUndefined()
   const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
   expect(notice).toContain(`<thread>${child.id}</thread>`)
@@ -346,7 +349,7 @@ test('only agents defined in the home folder can be named, and they run with the
 
   await sand.turns.run(parent, 'Scout')
   const child = await childOf(parent)
-  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ name: 'scout', depth: 1, tools: ['read', 'grep'] })
+  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ name: 'scout', depth: 1, role: 'builder', tools: ['read', 'grep'] })
   await until(() => sand.requests('child').length > 0)
   expect(bodies('child')[0]!.system[0]!.text).toContain('# Your role\n\nOnly look, never touch.')
 })
@@ -362,17 +365,59 @@ test("a subagent's prompt opens with its own intro in place of the thread's and 
   expect(system).toContain('## Be straight with the user')
 })
 
-test('a subagent started with a level runs on the model set for that level, and a light one is told to report rather than guess', async () => {
-  await start([delegate({ model: undefined, level: 'light' }), said('Started.'), said('Noted.')], [said('Found nothing.')])
-  await sand.ask(levelSet, { level: 'sub', model: 'child/m' })
+test('a subagent that only finds things runs as a finder and is told to report rather than guess', async () => {
+  await start([delegate({ does: 'find' }), said('Started.'), said('Noted.')], [said('Found nothing.')])
   const parent = sand.chat('parent/m')
 
   await sand.turns.run(parent, 'Look it up')
   const child = await childOf(parent)
 
+  expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1, role: 'finder' })
   expect(sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model).toBe('child/m')
   await until(() => sand.requests('child').length > 0)
   expect(bodies('child')[0]!.system[0]!.text).toContain("say so rather than guessing")
+})
+
+const probeCalls = (): Reply => [
+  { type: 'call', name: 'probe_read', input: {} },
+  { type: 'call', name: 'probe_write', input: {} },
+  { type: 'call', name: 'probe_mixed', input: { changes: false } },
+  { type: 'call', name: 'probe_mixed', input: { changes: true } },
+]
+
+const probesFor = async (does: 'find' | 'build') => {
+  const touched: string[] = []
+  await start([delegate({ does }), said('Started.'), said('Noted.')], [probeCalls(), said('Done.')])
+  const register = sand.app.get(tools)!.register
+  register({ name: 'probe_read', description: 'reads', input: z.object({}), effect: 'read', run: () => (touched.push('read'), 'read done') })
+  register({ name: 'probe_write', description: 'writes', input: z.object({}), effect: 'write', run: () => (touched.push('write'), 'write done') })
+  register({
+    name: 'probe_mixed',
+    description: 'reads or writes',
+    input: z.object({ changes: z.boolean() }),
+    act: ({ changes }) => ({ effect: changes ? 'write' : 'read' }),
+    run: ({ changes }) => (touched.push(changes ? 'mixed write' : 'mixed read'), 'mixed done'),
+  })
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Look it up')
+  const child = sand.sessions.require((await childOf(parent)).id)
+  await until(() => results(child).length === 4)
+  return { touched, results: results(child), offered: bodies('child')[0]!.tools.map(tool => tool.name) }
+}
+
+test('a finder is offered only tools that read and cannot make a call that changes things', async () => {
+  const { touched, results, offered } = await probesFor('find')
+  expect(offered).toContain('probe_read')
+  expect(offered).toContain('probe_mixed')
+  expect(offered).not.toContain('probe_write')
+  expect(results).toEqual(['read done', 'Unknown tool: probe_write', 'mixed done', expect.stringContaining('probe_mixed isn\'t available to this agent for this call')])
+  expect(touched).toEqual(['read', 'mixed read'])
+})
+
+test('a builder can use tools that change things', async () => {
+  const { touched, results } = await probesFor('build')
+  expect(results).toEqual(['read done', 'write done', 'mixed done', 'mixed done'])
+  expect(touched).toEqual(['read', 'write', 'mixed read', 'mixed write'])
 })
 
 test('deleting an agent deletes its subagent on another PC, once that PC can be reached again, and no other PC may', async () => {

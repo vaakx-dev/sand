@@ -2,9 +2,9 @@ import { modelsPrice } from '@sand/accounts/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { levels, levelSet, levelsGet, modelsList } from '@sand/model/contract'
+import { modelsList } from '@sand/model/contract'
 
-const group: McpGroup = { name: 'models', label: 'Models', summary: 'list the models you can use, set the model of each level and set the price of a model' }
+const group: McpGroup = { name: 'models', label: 'Models', summary: 'list the models you can use and set the price of a model' }
 
 const listInput = z.object({ thread: z.string().optional().describe('Mark the model this thread uses (default: you, when you are a thread)') })
 
@@ -17,32 +17,6 @@ const priceInput = z.object({
   cache_read: dollars('cached input tokens read (default: the input price)').optional(),
   cache_write: dollars('input tokens written to the cache (default: the input price)').optional(),
 })
-
-const levelsInput = z.object({})
-
-const levelSetInput = z.object({
-  level: z.enum(levels).describe("bot: a bot's chat; main: the main work; sub: routine edits; light: finding things; background: titles and small jobs"),
-  model: z.string().min(1).nullable().optional().describe('A model id or name; null clears the level'),
-  effort: z.string().min(1).optional().describe('Effort, such as low, medium or high'),
-})
-
-const levelsTool: McpTool<typeof levelsInput> = {
-  name: 'model_levels',
-  description: 'The model and effort the user set for each level',
-  input: levelsInput,
-  access: 'read',
-  group: group.name,
-  run: (input, { call }) => call(levelsGet, input),
-}
-
-const levelSetTool: McpTool<typeof levelSetInput> = {
-  name: 'model_level_set',
-  description: 'Set the model or effort of a level when the user asks',
-  input: levelSetInput,
-  access: 'operate',
-  group: group.name,
-  run: (input, { call }) => call(levelSet, input),
-}
 
 const listTool: McpTool<typeof listInput> = {
   name: 'model_list',
@@ -68,6 +42,6 @@ const priceTool: McpTool<typeof priceInput> = {
 }
 
 const offerModelTools = (tools: McpTools) =>
-  joinDisposers(tools.group(group), tools.register(listTool), tools.register(levelsTool), tools.register(levelSetTool), tools.register(priceTool))
+  joinDisposers(tools.group(group), tools.register(listTool), tools.register(priceTool))
 
-export { levelSetTool, levelsTool, listTool, offerModelTools, priceTool }
+export { listTool, offerModelTools, priceTool }

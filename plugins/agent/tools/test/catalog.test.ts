@@ -110,6 +110,22 @@ test('a restriction keeps a tool from being listed or run', async () => {
   expect(await catalog.run(call('look'), context)).toMatchObject({ content: [{ text: 'look' }] })
 })
 
+test('a restriction sees the effect of a tool that has one, and refuses a call whose effect it does not allow', async () => {
+  const catalog = createCatalog(memoryChoices(), () => {})
+  catalog.register({ ...named('fixed'), effect: 'write' })
+  catalog.register({ ...named('either'), input: z.object({ changes: z.boolean() }), act: ({ changes }) => ({ effect: changes ? 'write' : 'read' }) })
+  const seen: unknown[] = []
+  catalog.restrict((tool, _, act) => (seen.push([tool, act]), !act || act.effect === 'read'))
+  expect(catalog.specs([], conversation).map(spec => spec.name)).toEqual(['either'])
+  expect(seen).toEqual([
+    ['fixed', { effect: 'write' }],
+    ['either', undefined],
+  ])
+  const either = (changes: boolean) => ({ type: 'tool_call' as const, id: 'e', name: 'either', input: { changes } })
+  expect(await catalog.run(either(false), context)).toMatchObject({ content: [{ text: 'either' }] })
+  expect(await catalog.run(either(true), context)).toMatchObject({ isError: true, content: [{ text: expect.stringContaining("either isn't available to this agent for this call") }] })
+})
+
 test('a relay skips the gate, since each call it makes is checked on its own', async () => {
   const catalog = createCatalog(memoryChoices(), () => {})
   catalog.register({ ...named('relay'), relay: true })

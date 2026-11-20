@@ -17,7 +17,7 @@ const describe = ({ files, commands }: Facts) =>
   ].join('\n')
 
 export const askSetup = async (ask: Ask, facts: Facts, session: string | undefined): Promise<SetupLines> => {
-  const request: AskRequest = { level: 'background', system, prompt: describe(facts), ...(session ? { session } : {}) }
+  const request: AskRequest = { role: 'finder', system, prompt: describe(facts), ...(session ? { session } : {}) }
   const answer = await ask.json(request, chosen)
   return {
     copy: facts.files.filter(file => answer.copy.includes(file)),
