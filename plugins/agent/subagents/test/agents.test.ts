@@ -4,9 +4,11 @@ import { pairPcs, startSand, type Sand } from '@sand/harness'
 import { modelSettings } from '@sand/model/contract'
 import { threadList, threadRemove, threadSend, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
+import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 
 let sand: Sand
 let box: Sand | undefined
@@ -374,6 +376,48 @@ test('a subagent that only finds things runs as a finder and is told to report r
   expect(sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model).toBe('child/m')
   await until(() => sand.requests('child').length > 0)
   expect(bodies('child')[0]!.system[0]!.text).toContain("say so rather than guessing")
+})
+
+const probeCalls = (): Reply => [
+  { type: 'call', name: 'probe_read', input: {} },
+  { type: 'call', name: 'probe_write', input: {} },
+  { type: 'call', name: 'probe_mixed', input: { changes: false } },
+  { type: 'call', name: 'probe_mixed', input: { changes: true } },
+]
+
+const probesFor = async (does: 'find' | 'build') => {
+  const touched: string[] = []
+  await start([delegate({ does }), said('Started.'), said('Noted.')], [probeCalls(), said('Done.')])
+  const register = sand.app.get(tools)!.register
+  register({ name: 'probe_read', description: 'reads', input: z.object({}), effect: 'read', run: () => (touched.push('read'), 'read done') })
+  register({ name: 'probe_write', description: 'writes', input: z.object({}), effect: 'write', run: () => (touched.push('write'), 'write done') })
+  register({
+    name: 'probe_mixed',
+    description: 'reads or writes',
+    input: z.object({ changes: z.boolean() }),
+    act: ({ changes }) => ({ effect: changes ? 'write' : 'read' }),
+    run: ({ changes }) => (touched.push(changes ? 'mixed write' : 'mixed read'), 'mixed done'),
+  })
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Look it up')
+  const child = sand.sessions.require((await childOf(parent)).id)
+  await until(() => results(child).length === 4)
+  return { touched, results: results(child), offered: bodies('child')[0]!.tools.map(tool => tool.name) }
+}
+
+test('a finder is offered only tools that read and cannot make a call that changes things', async () => {
+  const { touched, results, offered } = await probesFor('find')
+  expect(offered).toContain('probe_read')
+  expect(offered).toContain('probe_mixed')
+  expect(offered).not.toContain('probe_write')
+  expect(results).toEqual(['read done', 'Unknown tool: probe_write', 'mixed done', expect.stringContaining('probe_mixed isn\'t available to this agent for this call')])
+  expect(touched).toEqual(['read', 'mixed read'])
+})
+
+test('a builder can use tools that change things', async () => {
+  const { touched, results } = await probesFor('build')
+  expect(results).toEqual(['read done', 'write done', 'mixed done', 'mixed done'])
+  expect(touched).toEqual(['read', 'write', 'mixed read', 'mixed write'])
 })
 
 test('deleting an agent deletes its subagent on another PC, once that PC can be reached again, and no other PC may', async () => {

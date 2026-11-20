@@ -59,7 +59,7 @@ export interface Tool<S extends ZodType = ZodType> {
 
 export type Gate = (act: Act, tool: Tool, context: ToolContext) => Promise<string | undefined>
 
-export type Allow = (tool: string, conversation: Conversation) => boolean
+export type Allow = (tool: string, conversation: Conversation, act?: Act) => boolean
 
 export const findName = 'find_tools'
 

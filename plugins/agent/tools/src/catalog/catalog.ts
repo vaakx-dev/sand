@@ -1,7 +1,7 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import { type Message, secretMark, type ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
-import { findName, type Allow, type Gate, type GroupState, type Offer, type Secrets, type Tool, type ToolGroup, type ToolLoad, type Tools } from '../contract'
+import { findName, type Act, type Allow, type Gate, type GroupState, type Offer, type Secrets, type Tool, type ToolGroup, type ToolLoad, type Tools } from '../contract'
 import { actOf, run } from '../run'
 import type { Choices } from './choices'
 import { findTool } from './find'
@@ -74,7 +74,11 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const offered = (conversation: Conversation) => offers.get(conversation.owner)?.(conversation) ?? []
 
-  const allowed = (conversation: Conversation) => (tool: Tool) => [...allows].every(allow => allow(tool.name, conversation))
+  const fixedAct = (tool: Tool): Act | undefined => (tool.act ? undefined : { effect: tool.effect ?? 'run' })
+
+  const allowed = (conversation: Conversation) => (tool: Tool) => [...allows].every(allow => allow(tool.name, conversation, fixedAct(tool)))
+
+  const allowedAct = (tool: Tool, conversation: Conversation) => (act: Act) => [...allows].every(allow => allow(tool.name, conversation, act))
 
   const usable = (conversation: Conversation) =>
     inScope(
@@ -150,7 +154,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     effect,
     run: (call, context) => {
       const tool = resolve(call.name, context.conversation)
-      return run(tool, call, context, tool?.relay ? undefined : gated)
+      return run(tool, call, context, tool?.relay ? undefined : gated, tool ? allowedAct(tool, context.conversation) : () => true)
     },
   }
   return service

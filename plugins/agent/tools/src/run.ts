@@ -25,12 +25,15 @@ export const run = async (
   call: ToolCallBlock,
   context: Omit<ToolContext, 'call'>,
   gate: Gate | undefined,
+  allowed: (act: Act) => boolean,
 ): Promise<ToolResultBlock> => {
   if (!tool) return result(call, `Unknown tool: ${call.name}`, true)
   if (call.malformed !== undefined) return result(call, JSON.stringify({ INVALID_JSON: tool.secret?.length ? secretMark : call.malformed }), true)
   const parsed = tool.input.safeParse(call.input)
   if (!parsed.success) return result(call, `Invalid input:\n${z.prettifyError(parsed.error)}`, true)
-  const refusal = await gate?.(actOf(tool, parsed.data, context.conversation), tool, { ...context, call })
+  const act = actOf(tool, parsed.data, context.conversation)
+  if (!allowed(act)) return result(call, `${tool.name} isn't available to this agent for this call: the call would ${act.effect}, and this agent only reads.`, true)
+  const refusal = await gate?.(act, tool, { ...context, call })
   if (refusal) return result(call, refusal, true)
   const timeoutMs = tool.timeoutMs ?? defaultTimeoutMs
   const deadline = new AbortController()
