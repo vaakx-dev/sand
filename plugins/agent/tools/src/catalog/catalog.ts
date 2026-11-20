@@ -1,3 +1,4 @@
+import type { ToolSpec } from '@sand/accounts/contract'
 import { type Message, secretMark, type ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
 import { findName, type Allow, type Funnel, type Gate, type GroupState, type Offer, type Secrets, type Tool, type ToolContext, type ToolGroup, type ToolLoad, type Tools } from '../contract'
@@ -8,7 +9,8 @@ import { foundIn } from './found'
 import { callerSite, checkName } from './names'
 import { inScope } from './scope'
 import type { Candidate } from './search'
-import { signature, spec } from './spec'
+import { line, lines } from './signature'
+import { spec } from './spec'
 
 const secretNote = `Some tools take secrets, like passwords, keys and one-time codes. Once such a call runs, sand replaces those inputs in the chat with ${secretMark}. The tool got the real values you passed, so a call that shows ${secretMark} was not a mistake.`
 
@@ -76,10 +78,6 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return findTool(described, groupsOf(candidates), candidates)
   }
 
-  const findLines = (hidden: Tool[]) => {
-    const candidates = hiddenCandidates(hidden)
-    return [signature(findTool(described, [], candidates)), ...groupsOf(candidates).map(described.line)]
-  }
 
   const changes = (apply: () => void) => {
     apply()
@@ -118,9 +116,17 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const funneledSpecs = (scoped: Tool[], funnel: Funnel) => {
     const conduit = scoped.find(tool => tool.name === funnel.tool)!
     const hidden = hiddenBy(funnel, scoped)
-    const basics = scoped.filter(tool => funnel.basics.includes(tool.name)).sort(byName).map(signature)
-    const lines = [...basics, ...(hidden.length ? findLines(hidden) : [])]
-    return [{ ...spec(conduit), description: `${conduit.description}\n\nTools:\n${lines.join('\n')}` }]
+    const basics = scoped.filter(tool => funnel.basics.includes(tool.name)).sort(byName)
+    return [spec(conduit), ...basics.map(spec), ...(hidden.length ? [spec(findHidden(hidden))] : [])]
+  }
+
+  const linesOf = (inner: ToolSpec) => (inner.name === findName ? lines(inner) : [line(inner)])
+
+  const fold = (specs: ToolSpec[]) => {
+    const conduit = specs.find(found => found.name === funneled?.tool)
+    if (!conduit) return specs
+    const inner = specs.filter(found => found !== conduit).flatMap(linesOf)
+    return [{ ...conduit, description: `${conduit.description}\n\nTools:\n${inner.join('\n')}` }]
   }
 
   const listedSpecs = (scoped: Tool[], messages: Message[], conversation: Conversation) => {
@@ -213,5 +219,5 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     effect,
     run: runCall,
   }
-  return service
+  return { ...service, fold }
 }
