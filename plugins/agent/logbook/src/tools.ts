@@ -14,7 +14,7 @@ const details = z
   .string()
   .trim()
   .max(detailsLimit)
-  .describe(`A few sentences on what changed, with numbers and decisions; at most ${detailsLimit.toLocaleString('en')} characters`)
+  .describe(`A few sentences on what changed and why, with numbers and decisions; at most ${detailsLimit.toLocaleString('en')} characters`)
 const links = z
   .array(z.string().trim().min(1))
   .max(linksMost)
@@ -55,9 +55,10 @@ const searchInput = z.object({
 
 const tagsInput = z.object({ project: project.describe('Only this project id, or null for none') })
 
-const addRules = "Log finished work in the Logbook, the dated record every thread and bot shares. Log work once it's done, not plans or progress; a bot logs each plan item it finishes."
+const addRules =
+  "Log finished work and decisions in the Logbook, the dated record every thread and bot shares: what was done or decided, and why. History belongs here, not in memory. Log work once it's done, not plans or progress; a bot logs each plan item it finishes."
 
-const searchRules = 'Search the Logbook, newest first, to find what was done in a period or the details of past work.'
+const searchRules = 'Search the Logbook, newest first, to find what was done or decided in a period, why, and the details of past work.'
 
 const startOf = (date: string) => new Date(`${date}T00:00`).getTime()
 

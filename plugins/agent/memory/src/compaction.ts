@@ -1,6 +1,7 @@
 import type { LLMRequest, Usage } from '@sand/accounts/contract'
 import { type CompactionBrief, summaryFormat } from '@sand/compaction/contract'
 import { type MemoryRef, type MemoryStore, memoryLimit, type Note, noteAbout, noteLimit, noteName } from './contract'
+import { memoryRules } from './rules'
 
 const currentMemory = (text: string) =>
   text ? `Your memory now, ${text.length} of ${memoryLimit} characters:\n\n<current-memory>\n${text}\n</current-memory>` : 'Your memory is empty so far.'
@@ -18,7 +19,7 @@ First the summary. ${summaryFormat}
 [The summary]
 </summary>
 
-Then your memory, which carries what you learn that no tool call can find again over to later conversations and loads into each of them. Write to it what the person asked you to remember, or what is clearly worth remembering. Rewrite it whole, in up to ${memoryLimit} characters; if nothing changed, repeat it exactly.
+Then your memory, which loads into every conversation. ${memoryRules} Rewrite it whole, in up to ${memoryLimit} characters; if nothing changed, repeat it exactly.
 
 <memory>
 [The whole memory]
