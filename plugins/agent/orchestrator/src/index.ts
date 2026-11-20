@@ -2,6 +2,7 @@ import { readHistory, readItem } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
+import { createAnswer } from './answer'
 import { type Orchestrator, orchestrator } from './contract'
 import { findThread } from './find'
 import { reportFinished } from './finished'
@@ -33,6 +34,7 @@ export default definePlugin({
     ctx.ledger.migrate('orchestrator', schema)
     const starters = openStarters(ctx.ledger)
     const waits = createWaits()
+    const answered = new Set<string>()
     const owners = createOwners(ctx)
     const pcs = createPcs(ctx)
     const start = createStart(ctx, openReceipts(ctx.ledger), starters, owners, pcs)
@@ -41,6 +43,7 @@ export default definePlugin({
       start,
       send: async (thread, { prompt, from, ...input }) => ({ ...(await ctx.turns.send(findThread(ctx, thread), { ...input, prompt: owners.sign(prompt, from) })), thread }),
       wait: (thread, until, signal) => waitThread(ctx, findThread(ctx, thread), until, signal),
+      answer: createAnswer(ctx, waits, pcs, answered),
       read: (conversation, reading) => ({ ...named(conversation), ...readHistory(owners.history(conversation), reading) }),
       item: (conversation, item, offset) => ({ ...named(conversation), ...readItem(owners.history(conversation), item, offset) }),
       starterOf: starters.starterOf,
@@ -53,7 +56,7 @@ export default definePlugin({
     ctx.provide(orchestrator, threads)
     const outbox = openOutbox(ctx.ledger)
     const stopped = new Set<string>()
-    const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, outbox }))
+    const sendAway = createAway(ctx, pcs, reportFinished(ctx, { starters, waits, owners, stopped, answered, outbox }))
     stopSubagents(ctx, starters, sendAway, stopped)
     archiveSubagents(ctx, starters, sendAway)
     removeSubagents(ctx, starters, sendAway)

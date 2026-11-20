@@ -192,7 +192,7 @@ test("a bot starts a thread in its own folder, or in its only project, which say
 test("a bot's subagent works in the bot's folder, reports back to the bot, and lists as the bot's subagent", async () => {
   await start([said('Found three.')], [])
   const bot = await createBot('Scout')
-  const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', model: 'fake/t' } } as const
+  const call = { type: 'tool_call', id: 'agent-call', name: 'agent', input: { label: 'Count files', task: 'Count the files', model: 'fake/t', background: true } } as const
   const result = await registry().run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: asBot(bot.id), turn: 'test', progress() {}, wait: () => () => {} })
   const [, id] = /^Started subagent (\S+)\./.exec(textOf(result.content)) ?? []
 
