@@ -30,6 +30,7 @@
     "@sand/host-hub": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/panel": "workspace:*",
+    "@sand/scripts": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/ui-kit": "workspace:*",

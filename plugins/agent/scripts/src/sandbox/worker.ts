@@ -10,6 +10,7 @@ const PRELUDE = `(call, log, names) => {
   const print = (...values) => log(values.map(show).join(' '))
   globalThis.require = name => { throw new Error('This is not Node, so there is no ' + name + '. Reach files and commands through tools, like tools.read({ path }) or tools.shell({ command }).') }
   globalThis.console = { log: print, info: print, warn: print, error: print, debug: print }
+  globalThis.login = ref => '⟦login:' + ref + '⟧'
   const caller = name => input => call(name, JSON.stringify(input ?? {}))
   const listed = Object.fromEntries(JSON.parse(names).map(name => [name, caller(name)]))
   globalThis.tools = new Proxy(listed, { get: (target, name) => target[name] ?? (typeof name === 'string' && name !== 'then' ? caller(name) : undefined) })

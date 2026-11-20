@@ -1,4 +1,5 @@
-import type { Entry, Message } from '@sand/chats/contract'
+import type { Entry, Message, ToolCallBlock } from '@sand/chats/contract'
+import { scriptCalls } from '@sand/scripts/contract'
 import type { CompactionRecord } from '../contract'
 import { messageTokens } from '../measure/estimate'
 import { pinnedMessage } from './summary'
@@ -8,6 +9,7 @@ const pinLimit = 10_000
 
 export interface Plan {
   dropped: Message[]
+  nested: ToolCallBlock[]
   keep: string
   pinned?: string
   previous?: CompactionRecord
@@ -35,11 +37,18 @@ const pinnedOf = (path: Entry[], entries: Entry[], cut: number, previous?: Compa
   return message && messageTokens(message) <= pinLimit ? id : undefined
 }
 
+const nestedBefore = (path: Entry[], keep: string) =>
+  path
+    .slice(0, path.findIndex(entry => entry.id === keep))
+    .flatMap(scriptCalls)
+    .map(({ call }) => call)
+
 export const plan = (path: Entry[], keep: number): Plan | undefined => {
   const { record, entries } = view(path)
   const messages = entries.map(messageOf)
   const cut = cutIndex(messages, keep)
   if (cut <= 0) return undefined
   const pinned = pinnedOf(path, entries, cut, record)
-  return { dropped: messages.slice(0, cut), keep: entries[cut]!.id, ...(pinned && { pinned }), ...(record && { previous: record }) }
+  const kept = entries[cut]!.id
+  return { dropped: messages.slice(0, cut), nested: nestedBefore(path, kept), keep: kept, ...(pinned && { pinned }), ...(record && { previous: record }) }
 }

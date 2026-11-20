@@ -1,4 +1,5 @@
-import type { Message, ToolCallBlock } from '@sand/chats/contract'
+import type { Entry, Message, ToolCallBlock } from '@sand/chats/contract'
+import { scriptCalls } from '@sand/scripts/contract'
 import { isRecord } from '@sand/util'
 import { expandHome, fromMsys } from '@sand/util/fs'
 import { dirname } from 'node:path'
@@ -34,13 +35,14 @@ const callTrail = (call: ToolCallBlock, cwd: string): Trail => {
   return { folders, files }
 }
 
-const toolCalls = (messages: Message[]) =>
-  messages.flatMap(message => (message.role === 'assistant' ? message.content.filter((block): block is ToolCallBlock => block.type === 'tool_call') : []))
+const messageCalls = (message: Message) => (message.role === 'assistant' ? message.content.filter((block): block is ToolCallBlock => block.type === 'tool_call') : [])
+
+const entryCalls = (entry: Entry) => (entry.type === 'message' ? messageCalls(entry.data as Message) : scriptCalls(entry).map(({ call }) => call))
 
 const latestFirst = (paths: string[]) => [...new Set(paths.toReversed())]
 
-const trailOf = (messages: Message[], cwd: string): Trail => {
-  const trails = toolCalls(messages).map(call => callTrail(call, cwd))
+const trailOf = (path: Entry[], cwd: string): Trail => {
+  const trails = path.flatMap(entryCalls).map(call => callTrail(call, cwd))
   return { folders: latestFirst(trails.flatMap(trail => trail.folders)), files: latestFirst(trails.flatMap(trail => trail.files)) }
 }
 

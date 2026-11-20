@@ -16,6 +16,10 @@ const result = (call: ToolCallBlock, text: string, isError?: boolean): ToolResul
 const stoppedText = (tool: Tool, timeoutMs: number) =>
   `${tool.name} was stopped after ${plural(timeoutMs / 60_000, 'minute')}, its time limit. Its work may be half done: check what it changed before retrying, and split slow work into smaller steps.`
 
+export const refused = (call: ToolCallBlock, text: string) => result(call, text, true)
+
+const timerFor = (timeoutMs: number, deadline: AbortController) => (Number.isFinite(timeoutMs) ? setTimeout(() => deadline.abort(), timeoutMs) : undefined)
+
 export const actOf = (tool: Tool, input: unknown, conversation: Conversation): Act => tool.act?.(input, conversation) ?? { effect: tool.effect ?? 'run' }
 
 export const run = async (
@@ -32,7 +36,7 @@ export const run = async (
   if (refusal) return result(call, refusal, true)
   const timeoutMs = tool.timeoutMs ?? defaultTimeoutMs
   const deadline = new AbortController()
-  const timer = setTimeout(() => deadline.abort(), timeoutMs)
+  const timer = timerFor(timeoutMs, deadline)
   const signal = AbortSignal.any([context.signal, deadline.signal])
   try {
     const output = await untilAborted(

@@ -5,7 +5,7 @@ import { derive, resource, span, type Sig } from '@vaakx-dev/vrui'
 import { loginUses, type Grant, type Use, type UseAction } from '../../contract'
 import { loadedRows } from './parts'
 
-const actions: Record<UseAction, string> = { fill: 'Signed in', code: 'Made a sign-in code', env: 'Used in a command' }
+const actions: Record<UseAction, string> = { fill: 'Signed in', code: 'Made a sign-in code', env: 'Used in a command', input: 'Passed to a tool' }
 
 const grants: Record<Grant, string> = { bot: 'the bot may use it', thread: 'given to the thread', user: 'you allowed it' }
 

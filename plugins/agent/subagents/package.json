@@ -18,6 +18,7 @@
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/paths": "workspace:*",

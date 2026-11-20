@@ -1,35 +1,37 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import { type Message, secretMark, type ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
-import type { Gate, GroupState, Offer, Secrets, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
-import { z } from 'zod'
-import { actOf, run } from '../run'
+import { findName, type Allow, type Funnel, type Gate, type GroupState, type Offer, type Secrets, type Tool, type ToolContext, type ToolGroup, type ToolLoad, type Tools } from '../contract'
+import { actOf, refused, run } from '../run'
 import type { Choices } from './choices'
-import { findName, findTool } from './find'
+import { described, findTool, referenced } from './find'
 import { foundIn } from './found'
 import { callerSite, checkName } from './names'
 import { inScope } from './scope'
 import type { Candidate } from './search'
-
-const withoutSafeIntegerBounds = ({ jsonSchema }: { jsonSchema: z.core.JSONSchema.BaseSchema }) => {
-  if (jsonSchema.maximum === Number.MAX_SAFE_INTEGER) delete jsonSchema.maximum
-  if (jsonSchema.minimum === Number.MIN_SAFE_INTEGER) delete jsonSchema.minimum
-}
-
-const spec = (tool: Tool): ToolSpec => {
-  const { $schema, ...inputSchema } = z.toJSONSchema(tool.input, { io: 'input', override: withoutSafeIntegerBounds })
-  return { name: tool.name, description: tool.description, inputSchema, ...(tool.secret?.length && { secret: tool.secret }) }
-}
+import { line, lines } from './signature'
+import { spec } from './spec'
 
 const secretNote = `Some tools take secrets, like passwords, keys and one-time codes. Once such a call runs, sand replaces those inputs in the chat with ${secretMark}. The tool got the real values you passed, so a call that shows ${secretMark} was not a mistake.`
 
+const GENERAL_GROUP = 'general'
+
 const byName = (a: Tool, b: Tool) => a.name.localeCompare(b.name)
+
+const general = (tools: Tool[]): GroupState => {
+  const names = tools.map(tool => tool.name).sort()
+  return { name: GENERAL_GROUP, label: 'General', summary: names.join(', '), load: 'on-demand', chosen: 'on-demand', tools: names }
+}
+
+const refusedDirect = (call: ToolCallBlock, { tool }: Funnel) => refused(call, `Not run: ${call.name} runs only inside ${tool}, as \`await tools.${call.name}(input)\`.`)
 
 export const createCatalog = (choices: Choices, changed: () => void) => {
   const registered = new Map<Tool, string>()
   const groups = new Map<string, ToolGroup>()
   const offers = new Map<Owner, Offer>()
+  const allows = new Set<Allow>()
   let gated: Gate | undefined
+  let funneled: Funnel | undefined
 
   const chosen = (group: ToolGroup) => choices.get(group.name) ?? group.load
 
@@ -57,10 +59,25 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     const candidates: Candidate[] = open.flatMap(group => deferred.filter(tool => tool.group === group.name).map(tool => ({ tool, group })))
     const used = new Set(candidates.map(({ group }) => group.name))
     return findTool(
+      referenced,
       open.filter(group => used.has(group.name)),
       candidates,
     )
   }
+
+  const hiddenCandidates = (hidden: Tool[]): Candidate[] => {
+    const known = new Map(states().map(group => [group.name, group]))
+    const rest = general(hidden.filter(tool => !known.has(tool.group ?? '')))
+    return hidden.map(tool => ({ tool, group: known.get(tool.group ?? '') ?? rest }))
+  }
+
+  const groupsOf = (candidates: Candidate[]) => [...new Map(candidates.map(({ group }) => [group.name, group])).values()]
+
+  const findHidden = (hidden: Tool[]) => {
+    const candidates = hiddenCandidates(hidden)
+    return findTool(described, groupsOf(candidates), candidates)
+  }
+
 
   const changes = (apply: () => void) => {
     apply()
@@ -83,10 +100,36 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const offered = (conversation: Conversation) => offers.get(conversation.owner)?.(conversation) ?? []
 
-  const usable = (conversation: Conversation) => inScope(tools().filter(tool => loadOf(tool, conversation) !== 'off'), conversation, offered(conversation))
+  const allowed = (conversation: Conversation) => (tool: Tool) => tool.name === funneled?.tool || [...allows].every(allow => allow(tool.name, conversation))
 
-  const specs = (messages: Message[], conversation: Conversation) => {
-    const scoped = usable(conversation)
+  const usable = (conversation: Conversation) =>
+    inScope(
+      tools().filter(tool => loadOf(tool, conversation) !== 'off').filter(allowed(conversation)),
+      conversation,
+      offered(conversation),
+    )
+
+  const funnelIn = (scoped: Tool[]) => (scoped.some(tool => tool.name === funneled?.tool) ? funneled : undefined)
+
+  const hiddenBy = ({ tool, basics }: Funnel, scoped: Tool[]) => scoped.filter(candidate => candidate.name !== tool && !basics.includes(candidate.name))
+
+  const funneledSpecs = (scoped: Tool[], funnel: Funnel) => {
+    const conduit = scoped.find(tool => tool.name === funnel.tool)!
+    const hidden = hiddenBy(funnel, scoped)
+    const basics = scoped.filter(tool => funnel.basics.includes(tool.name)).sort(byName)
+    return [spec(conduit), ...basics.map(spec), ...(hidden.length ? [spec(findHidden(hidden))] : [])]
+  }
+
+  const linesOf = (inner: ToolSpec) => (inner.name === findName ? lines(inner) : [line(inner)])
+
+  const fold = (specs: ToolSpec[]) => {
+    const conduit = specs.find(found => found.name === funneled?.tool)
+    if (!conduit) return specs
+    const inner = specs.filter(found => found !== conduit).flatMap(linesOf)
+    return [{ ...conduit, description: `${conduit.description}\n\nTools:\n${inner.join('\n')}` }]
+  }
+
+  const listedSpecs = (scoped: Tool[], messages: Message[], conversation: Conversation) => {
     const deferred = listed(scoped, 'on-demand', conversation)
     const found = foundIn(messages)
     return [
@@ -96,10 +139,21 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     ]
   }
 
-  const resolve = (name: string, conversation: Conversation) => {
+  const specs = (messages: Message[], conversation: Conversation) => {
     const scoped = usable(conversation)
-    return name === findName ? find(listed(scoped, 'on-demand', conversation)) : scoped.find(tool => tool.name === name)
+    const funnel = funnelIn(scoped)
+    return funnel ? funneledSpecs(scoped, funnel) : listedSpecs(scoped, messages, conversation)
   }
+
+  const finderIn = (scoped: Tool[], conversation: Conversation) => {
+    const funnel = funnelIn(scoped)
+    return funnel ? findHidden(hiddenBy(funnel, scoped)) : find(listed(scoped, 'on-demand', conversation))
+  }
+
+  const resolveIn = (scoped: Tool[], name: string, conversation: Conversation) =>
+    name === findName ? finderIn(scoped, conversation) : scoped.find(tool => tool.name === name)
+
+  const resolve = (name: string, conversation: Conversation) => resolveIn(usable(conversation), name, conversation)
 
   const secrets = (): Secrets =>
     tools().reduce((found, { name, secret }) => (secret?.length ? found.set(name, [...new Set([...(found.get(name) ?? []), ...secret])]) : found), new Map<string, string[]>())
@@ -110,11 +164,21 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return scoped.some(tool => tool.secret?.length) ? [...environments, secretNote] : environments
   }
 
+  const names = (conversation: Conversation) => [...usable(conversation).map(tool => tool.name), findName]
+
   const effect = (call: ToolCallBlock, conversation: Conversation) => {
     const tool = resolve(call.name, conversation)
     if (!tool || call.malformed !== undefined) return undefined
     const parsed = tool.input.safeParse(call.input)
     return parsed.success ? actOf(tool, parsed.data, conversation).effect : undefined
+  }
+
+  const runCall = (call: ToolCallBlock, context: Omit<ToolContext, 'call'>) => {
+    const scoped = usable(context.conversation)
+    const funnel = funnelIn(scoped)
+    if (funnel && call.name !== funnel.tool && !context.within) return Promise.resolve(refusedDirect(call, funnel))
+    const tool = resolveIn(scoped, call.name, context.conversation)
+    return run(tool, call, context, funnel && tool?.name === funnel.tool ? undefined : gated)
   }
 
   const service: Tools = {
@@ -133,6 +197,15 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
         if (gated === gate) gated = undefined
       }
     },
+    funnel(funnel) {
+      if (funneled) throw new Error(`Tool calls already go through ${funneled.tool}`)
+      changes(() => (funneled = funnel))
+      return () => changes(() => funneled === funnel && (funneled = undefined))
+    },
+    restrict(allow) {
+      changes(() => allows.add(allow))
+      return () => changes(() => allows.delete(allow))
+    },
     groups: states,
     async choose(name, load) {
       if (!groups.has(name)) throw new Error(`No tool group named "${name}"`)
@@ -141,9 +214,10 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     },
     specs,
     notes,
+    names,
     parallel: (call, conversation) => resolve(call.name, conversation)?.parallel === true,
     effect,
-    run: (call, context) => run(resolve(call.name, context.conversation), call, context, gated),
+    run: runCall,
   }
-  return service
+  return { ...service, fold }
 }

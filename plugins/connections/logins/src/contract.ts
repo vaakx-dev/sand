@@ -45,7 +45,7 @@ export type SourceItem = Pointer & {
 
 export type LoginValues = { kind: 'website'; username: string; password: string } | { kind: 'key'; value: string }
 
-export const useActions = ['fill', 'code', 'env'] as const
+export const useActions = ['fill', 'code', 'env', 'input'] as const
 
 export type UseAction = (typeof useActions)[number]
 
@@ -77,6 +77,31 @@ export interface Logins {
 }
 
 export const logins = service<Logins>('logins')
+
+const USERNAME_SUFFIX = '/username'
+
+const refOf = (ref: string) =>
+  ref.endsWith(USERNAME_SUFFIX) ? { id: ref.slice(0, -USERNAME_SUFFIX.length), username: true } : { id: ref, username: false }
+
+const valueOf = (values: LoginValues, id: string, username: boolean) => {
+  if (values.kind === 'website') return username ? values.username : values.password
+  if (username) throw new Error(`The login ${id} is a key and has no username`)
+  return values.value
+}
+
+export const loginValues = async (service: Logins, refs: readonly string[], request: UseRequest) => {
+  const used = new Map<string, Promise<LoginValues>>()
+  const use = (id: string) => {
+    const values = used.get(id) ?? service.use(id, request)
+    used.set(id, values)
+    return values
+  }
+  const value = async (ref: string) => {
+    const { id, username } = refOf(ref)
+    return [ref, valueOf(await use(id), id, username)] as const
+  }
+  return new Map(await Promise.all([...new Set(refs)].map(value)))
+}
 
 export type Listed = Login & { access?: Access }
 

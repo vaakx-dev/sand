@@ -10,6 +10,7 @@ export interface ToolContext {
   signal: AbortSignal
   conversation: Conversation
   call: ToolCallBlock
+  within?: string
   turn: string
   progress(text: string): void
   wait(reason: WaitReason): Dispose
@@ -58,6 +59,15 @@ export interface Tool<S extends ZodType = ZodType> {
 
 export type Gate = (act: Act, tool: Tool, context: ToolContext) => Promise<string | undefined>
 
+export interface Funnel {
+  tool: string
+  basics: readonly string[]
+}
+
+export type Allow = (tool: string, conversation: Conversation) => boolean
+
+export const findName = 'find_tools'
+
 export type ToolLoad = 'always' | 'on-demand' | 'off'
 
 export interface ToolGroup {
@@ -96,10 +106,13 @@ export interface Tools {
   group(group: ToolGroup): Dispose
   offer(owner: Owner, offer: Offer): Dispose
   gate(gate: Gate): Dispose
+  funnel(funnel: Funnel): Dispose
+  restrict(allow: Allow): Dispose
   groups(): GroupState[]
   choose(group: string, load: ToolLoad): Promise<void>
   specs(messages: Message[], conversation: Conversation): ToolSpec[]
   notes(conversation: Conversation): string[]
+  names(conversation: Conversation): string[]
   parallel(call: ToolCallBlock, conversation: Conversation): boolean
   effect(call: ToolCallBlock, conversation: Conversation): Effect | undefined
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>

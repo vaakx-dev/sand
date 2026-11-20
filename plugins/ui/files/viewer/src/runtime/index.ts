@@ -16,7 +16,7 @@ import { showTool } from './tool'
 const finder = (sessions: () => Sessions | undefined) => async (thread: string, mention: string, cwd?: string) => {
   const session = sessions()?.open(thread)
   const folder = cwd ?? session?.cwd ?? homedir()
-  const path = await locate({ mention, cwd: folder, trail: trailOf(session?.messages() ?? [], folder) })
+  const path = await locate({ mention, cwd: folder, trail: trailOf(session?.path() ?? [], folder) })
   return path ? describe(path) : undefined
 }
 

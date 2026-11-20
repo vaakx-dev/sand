@@ -1,5 +1,6 @@
 import { ownerOf } from '@sand/chats/contract'
 import { composer } from '@sand/composer/contract'
+import { scriptCalls } from '@sand/scripts/contract'
 import { itemNode, itemSpot, type ItemSpot, type ShownChat } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/web-client/contract'
@@ -91,6 +92,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     waiting: thread.waiting !== undefined,
     streaming: thread.live.length > 0,
     started: thread.started,
+    nested: ctx.threads.path(thread.id).flatMap(scriptCalls).map(({ call }) => call),
     open: key => untrack(() => states.get(key).open.get()),
   })
 

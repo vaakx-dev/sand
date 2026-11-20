@@ -2,9 +2,8 @@ import type { Conversation } from '@sand/engine/contract'
 import { expect, test } from 'bun:test'
 import { z } from 'zod'
 import { createCatalog } from '../src/catalog/catalog'
-import { findName } from '../src/catalog/find'
 import type { Choices } from '../src/catalog/choices'
-import type { ToolLoad } from '../src/contract'
+import { findName, type ToolLoad } from '../src/contract'
 
 const conversation: Conversation = {
   id: 'c',
@@ -100,4 +99,48 @@ test('a tool can stay loaded for some owners while others find it in its group',
   catalog.register({ ...named('note_edit'), group: 'notes', always: ['bot'] })
   expect(catalog.specs([], { ...conversation, owner: 'bot' }).map(spec => spec.name)).toEqual(['note_edit'])
   expect(catalog.specs([], conversation)).toEqual([])
+})
+
+const funneled = () => {
+  const catalog = createCatalog(memoryChoices(), () => {})
+  catalog.group({ name: 'mail', label: 'Mail', summary: 'Send and read mail', load: 'always' })
+  for (const name of ['conduit', 'other']) catalog.register(named(name))
+  catalog.register({
+    ...named('look'),
+    description: 'Look at a page. Then more.\n\nPages you can name:\n- home: the start\n- help: answers',
+    input: z.object({ page: z.number().int().optional(), tags: z.array(z.string()), notes: z.record(z.string(), z.string()).optional().describe('Note name to text') }),
+  })
+  catalog.register({ ...named('mail_send'), group: 'mail', description: 'Send a mail', input: z.object({ to: z.string() }) })
+  catalog.funnel({ tool: 'conduit', basics: ['look'] })
+  return catalog
+}
+
+test('when calls go through one tool, the model sees only it, with the basics and a search for the rest typed in its description, and every other tool runs only inside it', async () => {
+  const catalog = funneled()
+  const specs = catalog.fold(catalog.specs([], conversation))
+  expect(specs.map(spec => spec.name)).toEqual(['conduit'])
+  expect(specs[0]?.description).toBe(
+    `conduit
+
+Tools:
+tools.look({ page?: number, tags: string[], notes?: Record<string, string> /* Note name to text */ }): Look at a page. Pages you can name: home: the start; help: answers
+tools.${findName}({ query: string }): Load tools that aren't loaded yet.
+- general: other
+- mail: Send and read mail`,
+  )
+
+  expect(await catalog.run(call('look'), context)).toMatchObject({ isError: true, content: [{ text: expect.stringContaining('runs only inside conduit') }] })
+  expect(await catalog.run(call('conduit'), context)).toMatchObject({ content: [{ text: 'conduit' }] })
+  expect(await catalog.run(call('other'), { ...context, within: 'conduit-1' })).toMatchObject({ content: [{ text: 'other' }] })
+
+  const found = await catalog.run({ ...call(findName), input: { query: 'mail' } }, { ...context, within: 'conduit-1' })
+  expect(found.content).toEqual([{ type: 'text', text: expect.stringContaining('## mail_send\nSend a mail\nInput: {"type":"object","properties":{"to":{"type":"string"}}') }])
+})
+
+test('a restriction keeps a tool from being listed or run, but never blocks the tool calls go through', async () => {
+  const catalog = funneled()
+  catalog.restrict(tool => tool === 'look')
+  expect(catalog.fold(catalog.specs([], conversation))[0]?.description).not.toContain(findName)
+  expect(await catalog.run(call('other'), { ...context, within: 'conduit-1' })).toMatchObject({ isError: true, content: [{ text: 'Unknown tool: other' }] })
+  expect(await catalog.run({ ...call('look'), input: { tags: [] } }, { ...context, within: 'conduit-1' })).toMatchObject({ content: [{ text: 'look' }] })
 })
