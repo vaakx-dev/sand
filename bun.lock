@@ -1688,6 +1688,16 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/core/agy": {
+      "name": "@sand/agy",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/media": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/core/chats": {
       "name": "@sand/chats",
       "version": "0.0.0",
@@ -3579,6 +3589,8 @@
     "@sand/accounts-mcp": ["@sand/accounts-mcp@workspace:plugins/agent/accounts-mcp"],
 
     "@sand/advanced": ["@sand/advanced@workspace:plugins/ui/shared/advanced"],
+
+    "@sand/agy": ["@sand/agy@workspace:plugins/core/agy"],
 
     "@sand/ask": ["@sand/ask@workspace:plugins/agent/ask"],
 
