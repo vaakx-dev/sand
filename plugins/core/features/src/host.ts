@@ -48,6 +48,7 @@ export default definePlugin({
           return fetchShelf(catalog)
         }),
     })
+    void addons.dropBuiltIn().catch(error => console.error(`sand could not remove the add-ons it now builds in: ${errorMessage(error)}`))
     void stamp()
       .then(found => found?.addons && addons.match(found.addons))
       .catch(error => console.error(`sand could not bring its add-ons up to this build: ${errorMessage(error)}`))

@@ -12,17 +12,7 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Scripts",
-    "summary": "Many tool calls in one program",
-    "features": {
-      "scripts": {
-        "label": "Scripts",
-        "summary": "The agent makes many tool calls in one short program, using fewer tokens",
-        "needs": [
-          "threads"
-        ],
-        "addon": true
-      }
-    }
+    "summary": "Many tool calls in one program"
   },
   "dependencies": {
     "@jitl/quickjs-singlefile-mjs-release-sync": "^0.32.0",

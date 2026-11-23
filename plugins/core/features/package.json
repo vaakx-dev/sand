@@ -33,6 +33,7 @@
           "attachments",
           "file-tools",
           "shell",
+          "scripts",
           "web-tools",
           "usage",
           "usage-resume",
@@ -212,6 +213,15 @@
         "label": "Shell",
         "summary": "Agents run commands",
         "stops": "Agents can't run commands.",
+        "needs": [
+          "engine"
+        ]
+      },
+      "scripts": {
+        "kind": "capability",
+        "label": "Scripts",
+        "summary": "Agents make many tool calls in one short program, using fewer tokens",
+        "stops": "Agents make every tool call on its own.",
         "needs": [
           "engine"
         ]

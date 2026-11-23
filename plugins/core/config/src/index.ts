@@ -4,7 +4,7 @@ import { definePlugin, evict, type Scope } from 'drydock'
 import { join } from 'node:path'
 import { cli, definitionsIn, featureOf, features, pluginStates, pluginSwitches, sandConfig } from './contract'
 import { createCatalog } from './features/catalog'
-import { addonPlugins, builtinPlugins, entryIn, runsNowhere, sandOf, userPlugins } from './find'
+import { addonPlugins, builtinPlugins, entryIn, type Found, runsNowhere, sandOf, userPlugins } from './find'
 import { serviceOwners } from './off/owners'
 import { createSwitches } from './off/switches'
 import { startOrder } from './order'
@@ -32,16 +32,25 @@ export default definePlugin({
       if (safe) return []
       return place === 'host' ? addonPlugins(userRoot, build) : userPlugins(userRoot, settings, build)
     }
+    const described = (found: Found[]) => Promise.all(found.map(async ([id, dir, addon]) => ({ id, dir, addon, sand: await sandOf(dir) })))
     const discover = async () => {
-      const own = await ownFolders()
-      const mine = new Set(own.map(([id]) => id))
-      const found = new Map([...(await builtinPlugins(builtins)), ...own].map(([id, dir, addon]) => [id, { dir, addon }]))
-      return Promise.all(
-        [...found].map(async ([id, { dir, addon }]) => {
-          const sand = await sandOf(dir)
-          return { id, dir, addon, sand, own: mine.has(id), options: optionsOf(settings, id), entry: entryIn(dir, sand, place), feature: featureOf(sand), opensNetwork: sand.network === true }
-        }),
-      )
+      const [core, own] = await Promise.all([builtinPlugins(builtins).then(described), ownFolders().then(described)])
+      const coreFeatures = definitionsIn(core.map(plugin => plugin.sand)).filter(definition => !definition.addon)
+      const shipped = new Set(coreFeatures.map(definition => definition.id))
+      const kept = own.filter(plugin => !(plugin.addon && shipped.has(plugin.addon)))
+      const mine = new Set(kept.map(plugin => plugin.id))
+      const found = new Map([...core, ...kept].map(plugin => [plugin.id, plugin]))
+      return [...found.values()].map(({ id, dir, addon, sand }) => ({
+        id,
+        dir,
+        addon,
+        sand,
+        own: mine.has(id),
+        options: optionsOf(settings, id),
+        entry: entryIn(dir, sand, place),
+        feature: featureOf(sand),
+        opensNetwork: sand.network === true,
+      }))
     }
     const chosenFeatures = async () => (safe ? undefined : (await readConfig(path)).features)
 
