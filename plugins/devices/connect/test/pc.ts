@@ -4,6 +4,7 @@ import {
   devicePaths,
   helloProof,
   helloResume,
+  type Freshness,
   type PcConnection,
   type SocketHandlers,
   socketRefused,
@@ -143,7 +144,8 @@ export const aDevice = () => ({ signer: signerOf(generateKeyPair()), resume: mem
 
 export const connectTo = (pc: ReturnType<typeof fakePc>, urls = ['http://127.0.0.1:4999'], onPc = true, device = aDevice()) => {
   let wake: (cause: string) => void = () => {}
-  const connection = connect({
+  let shown: Freshness['state'] | undefined
+  const connection: PcConnection = connect({
     target: { id: pcId, publicKey: pcKeys.publicKey },
     seeds: urls.map(url => directRoute(url, 'seed')!),
     signer: device.signer,
@@ -163,10 +165,13 @@ export const connectTo = (pc: ReturnType<typeof fakePc>, urls = ['http://127.0.0
     greeting: () => ({ since: null }),
     greeted: () => {},
     event: () => {},
-    changed: () => {},
+    changed: () =>
+      queueMicrotask(() => {
+        shown = connection.freshness().state
+      }),
   })
   opened.push(connection)
-  return { connection, wake: () => wake('visible') }
+  return { connection, wake: () => wake('visible'), shown: () => shown }
 }
 
 export const waitFor = async (done: () => boolean, within: number) => {

@@ -3,16 +3,16 @@ import { connected, connectTo, fakePc, waitFor } from './pc'
 
 const tailnet = 'https://desk.example.ts.net'
 
-test('waking keeps a socket that still answers', async () => {
+test('waking keeps a socket that still answers, and tells listeners once it does', async () => {
   const pc = fakePc()
-  const { connection, wake } = connectTo(pc)
+  const { connection, wake, shown } = connectTo(pc)
   expect(await waitFor(() => connected(connection), 2000)).toBe(true)
 
   wake()
   expect(connection.freshness().state).toBe('checking')
-  expect(await waitFor(() => connection.freshness().state === 'live', 200)).toBe(true)
   await Bun.sleep(800)
 
+  expect(shown()).toBe('live')
   expect(pc.sockets).toHaveLength(1)
   expect(connected(connection)).toBe(true)
 })

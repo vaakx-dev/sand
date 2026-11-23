@@ -90,7 +90,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
       if (active?.opened.link !== link) return
       abandonDial()
       active.latency = latency
-      if (status.phase !== 'connected') setStatus(connectedStatus(active))
+      setStatus(connectedStatus(active))
     },
     silent(link) {
       if (active?.opened.link === link) void dialNow()
