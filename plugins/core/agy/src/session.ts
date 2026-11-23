@@ -17,8 +17,6 @@ interface SessionConfigIds {
   legacyModels: boolean
 }
 
-const SAND_TOOL_PREFIX = new RegExp(`^(?:mcp__)?${SERVER_NAME}(?:__|/)`)
-
 function isRateLimitError(error: unknown): boolean {
   return /rate limit|quota|resource_exhausted|429/i.test(errorMessage(error))
 }
@@ -55,12 +53,8 @@ function systemPromptParams(init: Json, system: string): Json {
   return {}
 }
 
-function isSandTool(toolCall: Json, toolNames: Set<string>): boolean {
-  const name = typeof toolCall.name === 'string' ? toolCall.name : ''
-  if (SAND_TOOL_PREFIX.test(name)) return true
-  if (toolNames.has(name)) return true
-  const title = typeof toolCall.title === 'string' ? toolCall.title : ''
-  return SAND_TOOL_PREFIX.test(title)
+function agyToolName(name: string): string {
+  return `mcp_${SERVER_NAME}_${name}`
 }
 
 function pickPermissionOption(options: unknown, allow: boolean): string | undefined {
@@ -86,7 +80,7 @@ function reportUsage(raw: Json, output: AppOutput) {
 
 async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNeeds, resume?: string): Promise<AppSession> {
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
-  const toolNames = new Set(setup.tools.map(tool => tool.name))
+  const sandTools = new Set(setup.tools.map(tool => agyToolName(tool.name)))
   let running = false
   let stopped: PromiseWithResolvers<void> | undefined
   let currentEffort = setup.effort
@@ -138,7 +132,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
 
   async function onRequest(method: string, params: Json): Promise<unknown> {
     if (method !== 'session/request_permission') return {}
-    const allow = setup.tools.length > 0 && isSandTool(fieldsOf(params.toolCall), toolNames)
+    const allow = sandTools.has(String(fieldsOf(params.toolCall).name))
     const optionId = pickPermissionOption(params.options, allow)
     if (!optionId) return { outcome: { outcome: 'cancelled' } }
     return { outcome: { outcome: 'selected', optionId } }
