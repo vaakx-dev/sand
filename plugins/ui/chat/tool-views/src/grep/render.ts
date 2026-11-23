@@ -4,7 +4,9 @@ import { grouped, plural, tildeHome } from '@sand/util'
 import { div, el, span, type Child } from '@vaakx-dev/vrui'
 
 const shownRows = 200
-const match = /^(.*?):(\d+): (.*)$/
+const match = /^(.*?):(\d+)([:-]) (.*)$/
+const contextMark = '-'
+const contextGap = '--'
 
 const marked = (text: string, pattern: RegExp | undefined): Child[] => {
   if (!pattern) return [text]
@@ -28,8 +30,12 @@ const regex = (tool: ToolView, { field }: ToolViews) => {
 
 const output = (tool: ToolView, { resultText }: ToolViews) => {
   const all = resultText(tool.result).split('\n').filter(Boolean)
-  return { rows: all.filter(row => !row.startsWith('…')), stop: all.find(row => row.startsWith('…')) }
+  return { rows: all.filter(row => !row.startsWith('…') && row !== contextGap), stop: all.find(row => row.startsWith('…')) }
 }
+
+const listsFiles = (tool: ToolView, { field }: ToolViews) => ['files', 'count'].includes(field(tool.call.input, 'output'))
+
+const isMatch = (row: string) => match.exec(row)?.[3] === ':'
 
 const pathView = (file: string) => {
   const path = tildeHome(file)
@@ -37,8 +43,11 @@ const pathView = (file: string) => {
   return div({ class: 'font-sans wrap-anywhere text-neutral-100' }, span({ class: 'text-neutral-500' }, path.slice(0, cut)), path.slice(cut))
 }
 
-const hitRow = (line: string, text: string, pattern: RegExp | undefined) =>
-  div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-600 select-none' }, line), span({ class: 'text-neutral-400 wrap-anywhere' }, marked(text, pattern)))
+const hitText = (text: string, pattern: RegExp | undefined) => span({ class: 'text-neutral-400 wrap-anywhere' }, marked(text, pattern))
+
+const contextText = (text: string) => span({ class: 'text-neutral-500 wrap-anywhere' }, text)
+
+const hitRow = (line: string, text: HTMLElement) => div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-600 select-none' }, line), text)
 
 const matches = (tool: ToolView, views: ToolViews) => {
   const pattern = regex(tool, views)
@@ -50,11 +59,13 @@ const matches = (tool: ToolView, views: ToolViews) => {
       loose.push(div({ class: 'mt-2 text-neutral-500 wrap-anywhere' }, row))
       continue
     }
-    const [, file = '', line = '', text = ''] = found
-    grouped(files, file, () => []).push(hitRow(line, text, pattern))
+    const [, file = '', line = '', mark = '', text = ''] = found
+    grouped(files, file, () => []).push(hitRow(line, mark === contextMark ? contextText(text) : hitText(text, pattern)))
   }
   return [...[...files].map(([file, hits]) => div({ class: 'mt-3 first:mt-0' }, div({ class: 'mb-1 font-medium' }, pathView(file)), hits)), ...loose]
 }
+
+const fileRows = (tool: ToolView, views: ToolViews) => output(tool, views).rows.slice(0, shownRows).join('\n')
 
 const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
 
@@ -87,11 +98,13 @@ export const grepRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({
   meta(tool) {
     if (!tool.result || tool.result.isError) return ''
     if (empty(tool, views)) return 'no matches'
-    const count = output(tool, views).rows.filter(row => match.test(row)).length
+    const { rows } = output(tool, views)
+    if (listsFiles(tool, views)) return plural(rows.length, 'file')
+    const count = rows.filter(isMatch).length
     return count === 1 ? '1 match' : `${count} matches`
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(kit, tool, () => matches(tool, views), 'No matches', views),
+  body: tool => body(kit, tool, () => (listsFiles(tool, views) ? fileRows(tool, views) : matches(tool, views)), 'No matches', views),
 })
 
 export const globRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({
@@ -105,5 +118,5 @@ export const globRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({
     return plural(output(tool, views).rows.length, 'file')
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(kit, tool, () => output(tool, views).rows.slice(0, shownRows).join('\n'), 'No files', views),
+  body: tool => body(kit, tool, () => fileRows(tool, views), 'No files', views),
 })

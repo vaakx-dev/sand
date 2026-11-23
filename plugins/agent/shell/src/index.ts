@@ -13,6 +13,9 @@ import { shellTool } from './tool'
 
 const LABEL_CHARS = 80
 
+const FILE_TOOLS_FIRST =
+  'To find files use glob, to search file contents use grep, to read a file or list a folder use read, and to change files use edit or write: they are faster, skip gitignored files and keep output short.'
+
 export default definePlugin({
   name: 'shell',
   inject: { tools },
@@ -39,7 +42,7 @@ export default definePlugin({
       {
         spec: {
           name: 'shell',
-          description: 'Run a shell command in the working directory, each call in a fresh process.',
+          description: `Run a shell command in the working directory, each call in a fresh process. ${FILE_TOOLS_FIRST}`,
           environment: `Shell: ${shell.name}`,
         },
         shell,
@@ -50,7 +53,7 @@ export default definePlugin({
               spec: {
                 name: 'powershell',
                 description:
-                  'Run PowerShell commands in the working directory, each call in a fresh process. Use it instead of calling powershell through shell.',
+                  `Run PowerShell commands in the working directory, each call in a fresh process. Use it instead of calling powershell through shell. ${FILE_TOOLS_FIRST}`,
               },
               shell: powerShell,
             },

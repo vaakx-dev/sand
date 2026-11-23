@@ -6,6 +6,7 @@ import { div, span } from '@vaakx-dev/vrui'
 
 const shownLines = 120
 const numbered = /^\s*(\d+)\t(.*)$/
+const EMPTY_FOLDER = 'Empty folder'
 
 const parse = (tool: ToolView, { resultText }: ToolViews) => {
   const rows = resultText(tool.result).split('\n')
@@ -14,7 +15,9 @@ const parse = (tool: ToolView, { resultText }: ToolViews) => {
     return number === undefined ? [] : [{ number, text: text ?? '' }]
   })
   const last = rows.at(-1)
-  return { lines, tail: last?.startsWith('…') ? last : undefined }
+  const tail = last?.startsWith('…') ? last : undefined
+  const items = lines.length ? [] : rows.filter(row => row && row !== tail)
+  return { lines, items, tail }
 }
 
 const hiddenNote = ({ metaLine }: Kit, capped: number, tail: string | undefined, views: ToolViews) => {
@@ -28,8 +31,16 @@ const language = (path: string) => /\.(\w+)$/.exec(path)?.[1] ?? ''
 
 const media = (tool: ToolView) => tool.result?.content.find(block => block.type !== 'text')
 
+const emptyFolder = (tool: ToolView, { resultText }: ToolViews) => resultText(tool.result) === EMPTY_FOLDER
+
+const folder = (kit: Kit, items: string[], tail: string | undefined, views: ToolViews) => {
+  const shown = items.slice(0, shownLines)
+  return div(kit.fold({ lines: shown.length }, kit.codeBlock({}, shown.join('\n'))), hiddenNote(kit, items.length - shownLines, tail, views))
+}
+
 const code = (kit: Kit, tool: ToolView, views: ToolViews, highlight: Markdown['highlight'] | undefined) => {
-  const { lines, tail } = parse(tool, views)
+  const { lines, items, tail } = parse(tool, views)
+  if (items.length) return folder(kit, items, tail, views)
   const shown = lines.slice(0, shownLines)
   const text = shown.map(line => line.text).join('\n')
   return div(
@@ -58,12 +69,15 @@ export const readRenderer = (kit: Kit, views: ToolViews, highlight: Markdown['hi
     if (!tool.result || tool.result.isError) return ''
     const found = media(tool)
     if (found) return found.type === 'image' ? 'image' : 'document'
-    return plural(parse(tool, views).lines.length, 'line')
+    if (emptyFolder(tool, views)) return 'empty folder'
+    const { lines, items } = parse(tool, views)
+    return items.length ? plural(items.length, 'item') : plural(lines.length, 'line')
   },
   copy: tool => views.field(tool.call.input, 'path'),
   body(tool) {
     if (!tool.result) return undefined
     if (tool.result.isError) return views.errorBody(tool)
+    if (emptyFolder(tool, views)) return undefined
     const found = media(tool)
     if (found?.type === 'image') return div(views.image(found, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: 320 }))
     if (found) return div({ class: 'flex' }, kit.metaLine(found.name ?? 'document'))
