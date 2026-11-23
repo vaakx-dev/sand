@@ -108,7 +108,12 @@ export default definePlugin({
         return { session: bot.id, owner: 'bot', device: chat?.device ?? ctx.threads.device(), cwd: chat?.info.cwd ?? bot.folder }
       }),
     )
-    ctx.watch(threadView, found => found?.place(thread => (parts.store.find(thread) ? { kind: botRoute, id: thread, tab: 'chat' } : undefined)))
+    ctx.watch(threadView, found =>
+      found?.place(thread => {
+        const bot = parts.store.find(thread)
+        return bot && { route: { kind: botRoute, id: bot.id, tab: 'chat' }, title: botName(bot) }
+      }),
+    )
 
     ctx.watch(
       transcript,

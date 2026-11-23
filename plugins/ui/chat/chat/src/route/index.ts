@@ -25,7 +25,7 @@ export const threadRoutes = (ctx: ChatContext, shell: Shell, { screens, view, ch
     const shown = view.route(id)
     if (shown.kind !== threadRoute) return movedScreen(shell, shown)
     return {
-      head: () => breadcrumb(ctx, shell, changes, id),
+      head: () => breadcrumb(ctx, { shell, view, changes }, id),
       main: () => screens.thread(id),
     }
   }

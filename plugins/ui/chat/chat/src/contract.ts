@@ -14,11 +14,17 @@ export interface ChatLook {
   empty?(): Child
 }
 
-export type ThreadPlace = (thread: string) => Route | undefined
+export interface PlacedThread {
+  route: Route
+  title: string
+}
+
+export type ThreadPlace = (thread: string) => PlacedThread | undefined
 
 export interface ThreadView {
   render(thread: string, look?: ChatLook): HTMLElement
   route(thread: string): Route
+  title(thread: string): string
   open(thread: string): void
   place(place: ThreadPlace): Dispose
 }
