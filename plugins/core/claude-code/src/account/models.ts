@@ -1,6 +1,6 @@
 import { efforts, type PlanModel } from '@sand/accounts/contract'
 import { fieldsOf, type Json } from '../cli/connection'
-import { probe } from './probe'
+import { probeCatalog } from './probe'
 
 const variant = /\[[^\]]*\]$/
 
@@ -22,7 +22,7 @@ const offeredOf = (entry: Json): Offered[] => {
 const byVariantLast = (a: Offered, b: Offered) => Number(variant.test(a.cli)) - Number(variant.test(b.cli))
 
 const offered = (config?: string) =>
-  probe(config, async connection => {
+  probeCatalog(config, async connection => {
     const { models } = await connection.request('initialize', {})
     const found = (Array.isArray(models) ? models : []).map(fieldsOf).flatMap(offeredOf).sort(byVariantLast)
     return [...new Map(found.map(item => [item.model.name, item])).values()]
