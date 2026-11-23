@@ -100,7 +100,7 @@ export const rolloutHistory = (home: string) => {
     const listed = await listRollouts(home)
     const paths = new Set(listed.map(({ path }) => path))
     for (const path of rollouts.keys()) if (!paths.has(path)) rollouts.delete(path)
-    await Promise.all(listed.filter(({ mtimeMs }) => mtimeMs >= since).map(refresh))
+    for (const rollout of listed.filter(({ mtimeMs }) => mtimeMs >= since)) await refresh(rollout)
   }
 
   const scanned = (since: number) => {
