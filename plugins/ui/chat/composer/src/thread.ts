@@ -22,7 +22,7 @@ const deliveryOf = (ctx: ComposerContext): Delivery => {
 export const threadSettings = (ctx: ComposerContext, picked: SessionSettings): SessionSettings => {
   const known = ctx.get(models)
   const usable = Boolean(picked.model && known?.info(picked.model))
-  return { ...(known && known.roles().lead), ...(usable && picked) }
+  return { ...(known && known.picks().shown.default), ...(usable && picked) }
 }
 
 const plain = ({ model, effort, speed }: EffectiveSettings): SessionSettings => ({ ...(model && { model }), ...(effort && { effort }), speed })

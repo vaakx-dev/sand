@@ -26,13 +26,13 @@ const ask = (input: Record<string, unknown> = {}): Reply => [asked(input)]
 
 const delegate = (input: Record<string, unknown> = {}): Reply => ask({ background: true, ...input })
 
-const start = async (parent: Reply[], child: Reply[], projects: { project: string; path: string }[] = [], plugins: string[] = []) => {
+const start = async (parent: Reply[], child: Reply[], projects: { project: string; path: string }[] = [], plugins: string[] = [], model: Record<string, unknown> = {}) => {
   sand = await startSand(
     [
       { id: 'child', models: ['m'], replies: child, api: 'anthropic' },
       { id: 'parent', models: ['m'], replies: parent, api: 'anthropic' },
     ],
-    { plugins: ['core/watch', 'agent/subagents', ...plugins], projects },
+    { plugins: ['core/watch', 'agent/subagents', ...plugins], projects, options: { model } },
   )
 }
 
@@ -118,8 +118,11 @@ test('a thread waiting on a subagent stops waiting when a message comes in, and 
   expect(notice).toContain('Found it.')
 })
 
-test("a bot never waits on a subagent, and its subagent runs on the lead role's model whatever it asked for", async () => {
-  await start([ask({ does: 'find' }), said('On it.'), said('Heard.')], [[{ type: 'wait', ms: 1500 }, { type: 'text', text: 'Found it.' }]], [], ['bots/bots', 'bots/turns'])
+test('a bot never waits on a subagent, and its subagent runs on the subagent model', async () => {
+  await start([ask({ does: 'find' }), said('On it.'), said('Heard.')], [[{ type: 'wait', ms: 1500 }, { type: 'text', text: 'Found it.' }]], [], ['bots/bots', 'bots/turns'], {
+    default: { model: 'parent/m' },
+    subagent: { model: 'child/m' },
+  })
   const chat = sand.sessions.require((await sand.ask(botCreate, { name: 'Scout' })).id)
   sand.app.get(modelSettings)!.change(chat, { model: 'parent/m' })
 
@@ -144,6 +147,23 @@ test('subagents asked in one step all answer in that step', async () => {
   expect(answers.toSorted()).toEqual(['Answer A.', 'Answer B.'])
   await Bun.sleep(200)
   expect(notices(parent)).toEqual([])
+})
+
+test('a subagent runs on the subagent model from settings unless its caller names a model, and an unknown model is refused', async () => {
+  sand = await startSand(
+    [
+      { id: 'parent', models: ['m'], replies: [[asked({ label: 'One' }), asked({ label: 'Two', model: 'other/m' }), asked({ label: 'Three', model: 'nope/x' })], said('Done.')], api: 'anthropic' },
+      { id: 'other', models: ['m'], replies: [said('From other.')], api: 'anthropic' },
+      { id: 'child', models: ['m'], replies: [said('From child.')], api: 'anthropic' },
+    ],
+    { plugins: ['core/watch', 'agent/subagents'], options: { model: { default: { model: 'parent/m' }, subagent: { model: 'child/m' } } } },
+  )
+  const parent = sand.chat('parent/m')
+  await sand.turns.run(parent, 'Go')
+
+  const childModels = sand.sessions.children(parent.id).map(child => sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model)
+  expect(childModels.toSorted()).toEqual(['child/m', 'other/m'])
+  expect(results(parent).find(text => text.includes('nope/x'))).toContain('No model matches')
 })
 
 test('stopping an agent stops the subagents it started, all the way down, without waking it again', async () => {

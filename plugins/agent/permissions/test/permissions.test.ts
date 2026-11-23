@@ -31,7 +31,7 @@ const start = async (replies: Source['replies'], judge: Source['replies'] = [], 
       { id: 'fake', models: ['m'], replies, api: 'anthropic' },
       { id: 'arbiter', models: ['j'], replies: judge, api: 'anthropic' },
     ],
-    { plugins: ['agent/ask', 'agent/permissions', ...plugins] },
+    { plugins: ['agent/ask', 'agent/permissions', ...plugins], options: { model: { default: { model: 'fake/m' }, text: { model: 'arbiter/j' } } } },
   )
   running.push(sand)
   return sand
@@ -151,7 +151,7 @@ test('an unanswered question denies its call at the deadline, and a late allow l
   await last
 })
 
-test('auto mode asks the builder model, tells the agent what it blocked, and asks the user after three blocks in a row', async () => {
+test('auto mode asks the text model, tells the agent what it blocked, and asks the user after three blocks in a row', async () => {
   const sand = await start(
     [
       [said(pleading), call('send_mail', { to: 'team' })],

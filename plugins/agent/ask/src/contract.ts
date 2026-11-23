@@ -1,15 +1,14 @@
-import type { Level, Role } from '@sand/model/contract'
+import type { Use } from '@sand/model/contract'
 import { service } from 'drydock'
 import type { z } from 'zod'
 
-interface AskBase {
+export interface AskRequest {
   system: string
   prompt: string
   session?: string
+  use: Use
   signal?: AbortSignal
 }
-
-export type AskRequest = AskBase & ({ role: Role } | { level: Level })
 
 export interface Ask {
   text(request: AskRequest): Promise<string>

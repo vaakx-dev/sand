@@ -2,10 +2,10 @@ import { accountPool } from '@sand/account-pool/contract'
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
-import { type EffectiveSettings, modelSettingsChange, type Role, modelSource, type Selection, type SessionSettings, type SettingsPatch, type SettingsState } from './contract'
+import { type EffectiveSettings, modelSettingsChange, modelSource, type Selection, type SessionSettings, type SettingsPatch, type SettingsState, type Use } from './contract'
 import type { Context } from 'drydock'
 import { resolve } from './effective'
-import { pick } from './roles'
+import type { UsePicks } from './picks'
 import { clean, same, settingsOf, writeSettings } from './settings'
 
 const frozen = ({ effort: _, ...settings }: EffectiveSettings, { model, effort, speed }: Selection): EffectiveSettings => ({
@@ -15,10 +15,10 @@ const frozen = ({ effort: _, ...settings }: EffectiveSettings, { model, effort, 
   speed,
 })
 
-export const createChoices = (ctx: Context) => {
+export const createChoices = (ctx: Context, picks: UsePicks) => {
   const pending = new Map<string, SessionSettings>()
 
-  const resolved = (settings: SessionSettings, role: Role = 'lead') => resolve(settings, pick(ctx.get(llm), role), ctx.get(llm))
+  const resolved = (settings: SessionSettings, use: Use = 'default') => resolve(settings, picks.pick(use), ctx.get(llm))
 
   const running = (session: Session) => ctx.get(turns)?.current(session)?.selection
 

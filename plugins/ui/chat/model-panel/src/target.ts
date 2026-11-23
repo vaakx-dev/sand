@@ -23,7 +23,7 @@ export const pickerTarget = (ctx: PanelContext, changes: Pulse, target: ModelTar
     key: () => String(changes.version.get()),
     extra: () => [
       target.running?.() && runningNote(kit),
-      !usesDefaults(shown.get(), ctx.modelPicker.resolve(ctx.models.roles().lead ?? {})) && footer(kit, reset),
+      !usesDefaults(shown.get(), ctx.modelPicker.resolve(ctx.models.picks().shown.default ?? {})) && footer(kit, reset),
     ],
   }
 }

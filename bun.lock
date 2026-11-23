@@ -582,6 +582,7 @@
         "@sand/account-pool": "workspace:*",
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/config": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/turns-contract": "workspace:*",

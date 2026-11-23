@@ -10,7 +10,7 @@
     "feature": "models",
     "web": "./src/index.ts",
     "label": "Model button",
-    "summary": "The model row that opens the model picker, plus the Models settings page"
+    "summary": "The model row that opens the model picker, plus the Models settings page with the default, subagent and text models"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
