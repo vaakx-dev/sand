@@ -19,9 +19,10 @@ const run = (name: string, input: Record<string, unknown>) => {
 
 test('an outside agent starts a thread where it is once per request id, waits for its reply, reads its history and lists it', async () => {
   const started = await run('thread_start', { prompt: 'ping', model: 'fake/m', clientRequestId: 'once' })
-  expect(started).toEqual({ thread: expect.any(String), disposition: 'started', turn: expect.any(String) })
+  expect(started).toEqual({ thread: expect.any(String), disposition: 'started', turn: expect.any(String), link: expect.any(String) })
   expect(await run('thread_start', { prompt: 'ping', model: 'fake/m', clientRequestId: 'once' })).toEqual(started)
-  const { thread, turn } = z.object({ thread: z.string(), turn: z.string() }).parse(started)
+  const { thread, turn, link } = z.object({ thread: z.string(), turn: z.string(), link: z.string() }).parse(started)
+  expect(link).toContain(`[ping](thread:${thread})`)
   expect(sand.turns.get(turn)?.origin).toBe('mcp')
 
   expect(await run('thread_wait', { thread })).toEqual({ thread, turn, status: 'completed', reply: 'pong' })

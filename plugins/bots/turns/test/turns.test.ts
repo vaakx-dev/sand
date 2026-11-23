@@ -13,7 +13,7 @@ afterEach(() => sand.stop())
 const said = (text: string) => ({ type: 'text', text }) as const
 
 const start = async (replies: Source['replies'], projects: SandOptions['projects'] = []) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins: ['agent/memory', 'bots/bots', 'bots/memory', 'bots/turns', 'agent/vstack'], projects })
+  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins: ['agent/memory', 'bots/bots', 'bots/memory', 'bots/turns'], projects })
   return sand
 }
 
@@ -42,11 +42,8 @@ test('a message to a bot runs a turn in its chat with its name, jobs, projects a
   const [first] = requests('fake').map(body => JSON.parse(body))
   const system = first.system[0].text
   expect(system).toStartWith('You are Calendar')
-  expect(system).toContain('## Questions are read-only')
-  expect(system).toContain('## Avoid dumb moves')
-  expect(system).toContain('Update the user as each piece of work finishes')
+  expect(system).toContain('## Your job')
   expect(system).toContain('## How you work')
-  expect(system).toContain('Reply to the user first, in a line or two')
   expect(system).toContain('Keep my calendar.')
   expect(system).toContain('No two events clash.')
   expect(system).toContain('<memory>\nGym on Mondays.\n</memory>')

@@ -1,4 +1,5 @@
 import { llm, type Effort } from '@sand/accounts/contract'
+import { threadLinkNote } from '@sand/chats/contract'
 import { features } from '@sand/config/contract'
 import type { ThreadState } from '@sand/orchestrator/contract'
 import type { Tool } from '@sand/tools/contract'
@@ -7,6 +8,7 @@ import { describeAgents } from './catalog'
 import type { AgentsContext } from './context'
 import { doings } from './does'
 import type { StartSubagent } from './start'
+import { agentTitle } from './title'
 
 const effortInput = (ctx: AgentsContext) => {
   const [first, ...rest] = ctx.get(llm)?.levels?.().map(level => level.id) ?? []
@@ -15,7 +17,7 @@ const effortInput = (ctx: AgentsContext) => {
 
 const worktreeField = z.boolean().optional().describe('Give it its own git worktree and branch, so its edits stay apart from yours and from other agents')
 
-const pcField = z.string().optional().describe('Another of your PCs to run it on, by name from pc_list; give it a project or folder there')
+const pcField = z.string().optional().describe('Another of your PCs to run it on, by name from pc_list; give it a project or folder there. A project with no folder on this PC needs the pc that has one, from project_list')
 
 const featureOn = (ctx: AgentsContext, feature: string) => ctx.get(features)?.on(feature) ?? true
 
@@ -69,7 +71,7 @@ export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<Return
       parent,
       call: call.id,
     })
-    if (background || parent.owner === 'bot') return started(thread)
-    return answered(await ctx.orchestrator.answer(thread, { owner: parent.owner, id: parent.id }, signal))
+    const result = background || parent.owner === 'bot' ? started(thread) : answered(await ctx.orchestrator.answer(thread, { owner: parent.owner, id: parent.id }, signal))
+    return `${result}\n\n${threadLinkNote(thread, agentTitle(input.label, input.task))}`
   },
 })

@@ -27,7 +27,7 @@ export const jobTools: McpTool[] = [
   } satisfies McpTool<typeof createInput>,
   {
     name: 'job_update',
-    description: "Change a job's title, goal or done-right line, or pause it so its schedules and watches don't run it.",
+    description: "Change a job's title, goal or done-right line, or pause it so its schedules and watches don't run it. Only when the user asks.",
     input: updateInput,
     access: 'operate',
     group: group.name,
@@ -36,7 +36,7 @@ export const jobTools: McpTool[] = [
   } satisfies McpTool<typeof updateInput>,
   {
     name: 'job_delete',
-    description: 'Delete a job with the schedules and watches that run it. Its past runs stay in the chat.',
+    description: 'Delete a job with the schedules and watches that run it. Its past runs stay in the chat. Only when the user asks.',
     input: deleteInput,
     access: 'operate',
     group: group.name,
@@ -45,7 +45,8 @@ export const jobTools: McpTool[] = [
   } satisfies McpTool<typeof deleteInput>,
   {
     name: 'job_report',
-    description: "Record one run of a job, once at its end. It shows on the job's card and in the morning summary.",
+    description:
+      "Record one run of a job: call it once at the end of every run. It shows on the job's card and in the morning summary. When the user answers a needs question, finish the work and report again.",
     input: reportInput,
     access: 'operate',
     group: group.name,

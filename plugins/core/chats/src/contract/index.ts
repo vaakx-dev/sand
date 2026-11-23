@@ -9,6 +9,7 @@ import type { Session, SessionInfo, Sessions } from './session'
 
 export type * from './entry'
 export * from './history'
+export * from './link'
 export type * from './message'
 export * from './notification'
 export type * from './parts'

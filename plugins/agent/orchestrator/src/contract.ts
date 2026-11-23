@@ -1,4 +1,4 @@
-import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session } from '@sand/chats/contract'
+import { type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt, promptInput, type Session, threadLinkNote } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, helloField, request, type Request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SendResult, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
@@ -83,7 +83,7 @@ export interface Notice {
 }
 
 export interface Report {
-  from: ConversationRef
+  thread: string
   label: string
   status: TurnStatus
   at: number
@@ -92,8 +92,8 @@ export interface Report {
 
 const outcomes: Partial<Record<TurnStatus, string>> = { completed: 'done', interrupted: 'cancelled' }
 
-export const reportOf = ({ from: { owner, id }, label, status, at, result }: Report) =>
-  notificationText({ from: owner, id, kind: owner, label, status: outcomes[status] ?? 'failed', at, result })
+export const reportOf = ({ thread, label, status, at, result }: Report) =>
+  notificationText({ from: 'thread', id: thread, kind: 'thread', label, status: outcomes[status] ?? 'failed', at, result, link: threadLinkNote(thread, label) })
 
 export interface SendInput {
   prompt: Prompt

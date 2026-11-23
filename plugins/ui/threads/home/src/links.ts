@@ -1,4 +1,5 @@
-import { threadRoute, threadScheme } from '@sand/chat/contract'
+import { threadRoute } from '@sand/chat/contract'
+import { threadScheme } from '@sand/chats/contract'
 import type { LinkScheme } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Shell, ShellRow } from '@sand/ui-shell/contract'

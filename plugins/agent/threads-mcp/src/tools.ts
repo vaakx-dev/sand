@@ -1,14 +1,16 @@
 import { filesInput, promptWithFiles } from '@sand/attachments/contract'
-import { historyItem, historyReading } from '@sand/chats/contract'
+import { historyItem, historyReading, threadLinkNote } from '@sand/chats/contract'
 import { compactTimeoutMs, contextCompact } from '@sand/compaction/contract'
 import type { McpGroup, McpTool, McpToolContext } from '@sand/mcp-server/contract'
 import { historyRead, itemRead, pendingActions, readLimit, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
+import { oneLine } from '@sand/util'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 
 export const group: McpGroup = { name: 'threads', label: 'Threads', summary: 'list, start, message, wait for, stop and manage threads, the user-facing work in sand' }
 
 const waitSeconds = 600
+const LINK_TITLE_LENGTH = 60
 const mostWaitSeconds = 3600
 
 const thread = z.string().describe('The thread id')
@@ -143,15 +145,17 @@ export const threadTools: McpTool[] = [
     access: 'operate',
     act: ({ title, prompt }) => ({ effect: 'run', uses: 'agents', summary: title ? `Start the thread “${title}”: ${prompt}` : `Start a thread: ${prompt}` }),
     group: group.name,
-    run: async ({ clientRequestId, from, prompt, files, ...input }, context) =>
-      context.call(threadStart, {
+    run: async ({ clientRequestId, from, prompt, files, ...input }, context) => {
+      const started = await context.call(threadStart, {
         ...input,
         prompt: await promptWithFiles(context.call, prompt, files, context.here),
         ...(from && { base: from }),
         cwd: folderOf(input, context),
         origin: 'mcp',
         clientRequestId: requestId(clientRequestId),
-      }),
+      })
+      return { ...started, link: threadLinkNote(started.thread, input.title ?? oneLine(prompt, LINK_TITLE_LENGTH)) }
+    },
   } satisfies McpTool<typeof startInput>,
   {
     name: 'thread_send',

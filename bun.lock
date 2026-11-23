@@ -411,7 +411,6 @@
       "name": "@sand/logbook",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/bot-plan": "workspace:*",
         "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
@@ -1049,7 +1048,6 @@
       "name": "@sand/vstack",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/prompt": "workspace:*",
         "@sand/skills": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1141,7 +1139,6 @@
         "@sand/host-hub": "workspace:*",
         "@sand/markdown": "workspace:*",
         "@sand/orchestrator": "workspace:*",
-        "@sand/prompt": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/transcript": "workspace:*",
         "@sand/turns-contract": "workspace:*",
@@ -1229,7 +1226,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/bots": "workspace:*",
-        "@sand/chat": "workspace:*",
+        "@sand/chats": "workspace:*",
         "@sand/compaction": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/mcp-server": "workspace:*",
@@ -3471,6 +3468,7 @@
       "dependencies": {
         "@sand/changes": "workspace:*",
         "@sand/chat": "workspace:*",
+        "@sand/chats": "workspace:*",
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/jobs": "workspace:*",

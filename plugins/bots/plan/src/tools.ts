@@ -1,4 +1,4 @@
-import { threadScheme } from '@sand/chat/contract'
+import { threadScheme } from '@sand/chats/contract'
 import type { McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
@@ -13,7 +13,7 @@ const writeInput = z.object({
 
 const readRules = `Read a bot's plan: the Markdown file of its work, what's next and what's blocked, which the user reads and edits. Read it before you change it.`
 
-const writeRules = `Replace a bot's whole plan. A bot leaves out bot to write its own, whenever its work starts, finishes or starts waiting. Only work goes in, one bullet per item; take done items out. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note and no status; an item with no thread says what it waits on.`
+const writeRules = `Replace a bot's whole plan; the latest write is the plan. A bot leaves out bot to write its own, whenever its work starts, finishes or starts waiting. Only work goes in, one bullet per item, never rules or preferences about how it works; take done items out. What it can look up, like PRs, commits and chats, gets a link, not a copy. Link an item that has a thread as [title](${threadScheme}:<thread id>) with a short note and no status; an item with no thread says what it waits on.`
 
 export const planTools: McpTool[] = [
   {
