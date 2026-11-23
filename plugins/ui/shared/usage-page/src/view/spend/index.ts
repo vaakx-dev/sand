@@ -52,6 +52,7 @@ const spendBody = (kit: Kit, usage: Merged | undefined) => {
 
 export const spendSection = (kit: Kit, model: UsageModel) =>
   kit.pageSection(
-    { title: 'Spend', action: div({ class: 'flex flex-wrap items-center justify-end gap-2' }, pcFilter(kit, model), originPicker(kit, model), periodPicker(kit, model)) },
+    { title: 'Spend', action: div({ class: 'flex items-center gap-2' }, pcFilter(kit, model), periodPicker(kit, model)) },
+    div({ class: 'mb-4 flex' }, originPicker(kit, model)),
     dynamicChild(model.usage, usage => spendBody(kit, usage)),
   )
