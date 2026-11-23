@@ -239,6 +239,15 @@ const createAddons = ({ root, version, build, features, runtimes, main, saved }:
 
   const stage = (hashes: Record<string, string>, shelf: () => Promise<Found>) => queue(() => stageMatch({ root, source: main.id, hashes, shelf }))
 
+  const builtIn = (id: string) => features.list().some(feature => feature.id === id && !feature.addon)
+
+  const dropBuiltIn = () =>
+    queue(async () => {
+      const stale = [...(await installedStamps(root)).keys()].filter(builtIn)
+      for (const id of stale) await removeAddonFolder(root, id)
+      if (stale.length) console.log(`removed the add-ons ${listed(stale)}, which sand now builds in`)
+    })
+
   const match = (hashes: Record<string, string>) =>
     queue(async () => {
       await removeLeftovers(root)
@@ -249,7 +258,7 @@ const createAddons = ({ root, version, build, features, runtimes, main, saved }:
       await reload({})
     })
 
-  return { choice, ready, picture, install, update, remove, set, addSource, removeSource, stage, match }
+  return { choice, ready, picture, install, update, remove, set, addSource, removeSource, stage, match, dropBuiltIn }
 }
 
 export { createAddons }

@@ -38,7 +38,7 @@ const MAX_OUTPUT = 30_000
 const PROGRESS_CHARS = 120
 
 const DESCRIPTION =
-  'Run JavaScript that calls your other tools, like `await tools.read({ path })`, to do many things in one step. Use it over several separate calls when you need only part of their output. Each call returns the tool\'s text and throws on failure. Only what the script prints or returns reaches you, plus the images its tools return and the tools find_tools loads. To pass a saved login\'s value in a tool\'s input, write `login("<login id>")` or `login("<login id>/username")` where the value goes; sand puts it in when the tool runs. Not Node: no require, fs or fetch.'
+  'Run JavaScript that calls your other tools, like `await tools.read({ path })`, in one step. Use it instead of separate calls when you chain 3 or more lookups, or when a tool\'s output is large and you need only part of it: filter in the script and print only what matters. Each call returns the tool\'s text and throws on failure. Only what the script prints or returns reaches you, plus the images its tools return and the tools find_tools loads. To pass a saved login\'s value in a tool\'s input, write `login("<login id>")` or `login("<login id>/username")` where the value goes; sand puts it in when the tool runs. Not Node: no require, fs or fetch.'
 
 const ENVIRONMENT = `Put quick lookups together in one ${NAME} call that prints only what matters.`
 
