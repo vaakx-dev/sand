@@ -4,7 +4,7 @@ Logbook is a dated record of finished work that threads and bots add to and sear
 
 ## Good for
 
-- A lab notebook that fills itself in as agents finish tasks
+- A lab notebook you fill in by asking a thread to log its work
 - Weekly progress notes for a thesis or a group project
 - Finding the day you measured that damping rate
 

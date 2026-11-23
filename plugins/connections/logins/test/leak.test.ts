@@ -110,7 +110,7 @@ const expectedFills = (code: string, totp: string): Fill[] => [
   { site: 'shop.example', code },
 ]
 
-test('no saved value, typed secret or code reaches the model, a transcript, compaction, bot memory or any file in the home', async () => {
+test('no saved value, typed secret or code reaches the model, a transcript, compaction or any file in the home', async () => {
   const home = folder()
   const work = folder()
   await Bun.write(join(work, 'print.ts'), script)
@@ -179,7 +179,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     expect(transcripts.bot.some(entry => entry.type === 'compaction')).toBe(true)
 
     const sent = sand.requests('fake')
-    expect(sent.some(body => body.includes('Banks at Northbank') || body.includes('Bot summary.'))).toBe(true)
+    expect(sent.some(body => body.includes('Bot summary.'))).toBe(true)
     expect(sent.flatMap(body => leaksInText(body, codes, values))).toEqual([])
     expect((await leaksIn(home, values)).found).toEqual([])
     await sand.stop()

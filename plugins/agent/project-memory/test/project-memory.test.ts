@@ -15,8 +15,6 @@ afterEach(async () => {
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
-const overflow = { type: 'error', message: 'prompt is too long' } as const
-
 const start = (replies: Source['replies'] = []) =>
   startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies }], {
     plugins: ['agent/memory', 'agent/project-memory'],
@@ -58,16 +56,17 @@ test('threads in a project share its memory; a write mid-chat leaves that chatâ€
   expect(toolsOf(noProject)).not.toContain('memory')
 })
 
-test("a thread tidies its project's memory when it compacts", async () => {
-  const compacted = said(`<summary>\n## Working on\n- Shipping\n</summary>\n<memory>\n${learned}\n</memory>\n<notes>\n</notes>`)
-  sand = await start([[said('Noted.')], [overflow], [compacted], [said('Shipped.')]])
-  const thread = threadIn('tiles')
+test("a subagent can't write its project's memory, even when it calls the memory tool", async () => {
+  const save = { type: 'call', name: 'memory', input: { command: 'create', path: '/memories/memory.md', file_text: learned } } as const
+  sand = await start([[save], [said('Done.')]])
+  const parent = threadIn('tiles')
+  const subagent = sand.sessions.agent({ parent: parent.id, cwd: sand.home, title: 'Helper', project: 'tiles' })
+  sand.app.get(modelSettings)!.change(subagent, { model: 'fake/m' })
 
-  await sand.turns.run(thread, 'Deploys go through staging first')
-  await sand.turns.run(thread, 'Ship it')
+  await sand.turns.run(subagent, 'Remember how deploys go')
 
-  expect(await Bun.file(join(sand.home, 'project-memory', 'tiles', 'memory.md')).text()).toBe(`${learned}\n`)
-  expect(systemOf(bodies()[3])).toContain(`<memory>\n${learned}\n</memory>`)
+  expect(toolsOf(bodies()[0])).not.toContain('memory')
+  expect((await sand.ask(memoryRead, tiles)).text).toBe('')
 })
 
 const tiles = { space: 'project', id: 'tiles' }
