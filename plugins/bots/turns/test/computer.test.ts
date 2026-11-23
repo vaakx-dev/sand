@@ -10,7 +10,7 @@ afterEach(() => sand.stop())
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
-const needing: Record<string, Need[]> = { memory: [], logbook_add: ['folder'], pc_list: ['pc'], skill: ['computer'], thread_list: ['thread'] }
+const needing: Record<string, Need[]> = { memory: [], read: ['folder'], logbook_add: ['folder'], pc_list: ['pc'], skill: ['computer'], shell: ['computer'], thread_list: ['thread'] }
 
 const offeredWith = async (computers: Computer[]) => {
   sand = await startSand([{ id: 'fake', api: 'anthropic', models: ['m'], replies: computers.map(() => [said('ok')]) }], {
@@ -31,5 +31,5 @@ test('a bot gets the tools a thread gets, whatever its computer', async () => {
   const offered = await offeredWith(['none', 'own', 'this-pc', 'pc:laptop'])
 
   const ours = (names: string[]) => names.filter(name => name in needing).sort()
-  for (const names of offered) expect(ours(names)).toEqual(['logbook_add', 'memory', 'pc_list', 'skill', 'thread_list'])
+  for (const names of offered) expect(ours(names)).toEqual(['logbook_add', 'memory', 'pc_list', 'read', 'shell', 'skill', 'thread_list'])
 })
