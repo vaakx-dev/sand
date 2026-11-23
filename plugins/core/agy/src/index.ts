@@ -3,6 +3,8 @@ import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { listModels, readStatus, signInAgy, signOutAgy } from './account'
 import { INSTALL_URL } from './binary'
+import { agyHistory } from './history'
+import { readLimits } from './limits'
 import { openSession } from './session'
 
 const CAPS: ProviderCapabilities = {
@@ -31,6 +33,8 @@ function agyAccount(mediaService: Media, { id, folder }: { id: string; folder?: 
     signOut: () => signOutAgy(folder),
     models: () => listModels(folder),
     open: (setup, output, resume) => openSession(setup, output, needs, resume),
+    history: agyHistory(folder),
+    usage: () => readLimits(folder),
   }
 }
 

@@ -1,6 +1,6 @@
 import type { Limits, SourceInfo } from '@sand/accounts/contract'
 import type { Wire } from '@sand/devices-contract'
-import type { UsageHistory } from '@sand/usage/contract'
+import { usageChanged, type UsageHistory } from '@sand/usage/contract'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader, historyView, summaryView } from './data/fleet'
 import { mergeSummaries } from './data/merge'
@@ -32,19 +32,20 @@ const stale = 60_000
 const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export const usageModel = (deps: UsageDeps) => {
-  const { range, pc, forecast } = usagePrefs()
+  const { range, origin, pc, forecast } = usagePrefs()
   const signature = derive(() => JSON.stringify(deps.pcs()))
   const pcs = derive(() => {
     signature.get()
     return untrack(deps.pcs)
   })
-  const fleet = fleetLoader(deps.wire, () => pcs.get(), () => summaryView(range.get()))
+  const fleet = fleetLoader(deps.wire, () => pcs.get(), () => summaryView(range.get(), origin.get()))
   const history = fleetLoader(deps.wire, () => pcs.get(), () => historyView)
   const checking = sig(false)
   const now = clock(30_000)
 
   effect(() => {
     range.get()
+    origin.get()
     untrack(fleet.load)
   })
   effect(() => {
@@ -52,6 +53,16 @@ export const usageModel = (deps: UsageDeps) => {
     untrack(fleet.sync)
     untrack(history.sync)
   })
+  effect(() =>
+    deps.wire.on(
+      usageChanged,
+      (_, machine) => {
+        fleet.reload(machine)
+        history.reload(machine)
+      },
+      { from: 'all' },
+    ),
+  )
 
   const nameOf = (id: string) => pcs.get().find(machine => machine.id === id)?.name
   const home = derive(() => pcs.get().find(machine => machine.home))
@@ -134,6 +145,7 @@ export const usageModel = (deps: UsageDeps) => {
 
   return {
     range,
+    origin,
     pc,
     forecast,
     checking,

@@ -108,6 +108,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     },
     caps: model => metaOf(model)?.caps ?? statelessCaps(),
     release: local.release,
+    pastTurns: local.pastTurns,
   }
 
   const reset = () => {

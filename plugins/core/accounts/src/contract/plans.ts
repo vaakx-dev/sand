@@ -116,6 +116,14 @@ export interface AppSession {
   close(): Promise<void>
 }
 
+export interface AppTurn {
+  session: string
+  at: number
+  model: string
+  usage: Usage
+  cwd?: string
+}
+
 export interface AppPlace {
   id: string
   folder: string
@@ -134,6 +142,7 @@ export interface AppPlan extends PlanInfo {
   usage?(): Promise<PlanLimits | undefined>
   open(setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession>
   sessionFiles?(id: string): Promise<string[]>
+  history?(since: number): Promise<AppTurn[]>
   another?(place: AppPlace): AppPlan
   close?(): void
 }

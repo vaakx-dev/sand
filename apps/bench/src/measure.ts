@@ -95,12 +95,20 @@ export const costOf = async (page: Page, traffic: Traffic, since: Seen, start: n
   }
 }
 
+const neverShown = async (page: Page, text: string) => {
+  const shown = await page.evaluate(() => document.body.innerText).catch(() => '')
+  return new Error(`"${text}" never showed in view. The page showed:\n${shown}`)
+}
+
 export const shownAt = async (page: Page, text: string, composer = false) => {
-  const handle = await page.waitForFunction(
-    ([wanted, needsComposer]) => (window.bench.visible(wanted) && (!needsComposer || window.bench.composer()) ? performance.now() : 0),
-    [text, composer] as const,
-    { polling: 'raf', timeout },
-  )
+  const handle = await page
+    .waitForFunction(([wanted, needsComposer]) => (window.bench.visible(wanted) && (!needsComposer || window.bench.composer()) ? performance.now() : 0), [text, composer] as const, {
+      polling: 'raf',
+      timeout,
+    })
+    .catch(async () => {
+      throw await neverShown(page, text)
+    })
   return (await handle.jsonValue()) as number
 }
 

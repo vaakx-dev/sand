@@ -1,4 +1,5 @@
-import { dollars, percent } from '@sand/util'
+import { tokensOf } from '@sand/usage/contract'
+import { dollars, percent, tokens } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import { swatch } from '../../look'
@@ -10,7 +11,7 @@ export const headline = ({ total }: Merged) =>
   div(
     { class: 'flex flex-col gap-1' },
     span({ class: 'text-3xl font-semibold tracking-tight text-neutral-100 tabular-nums' }, dollars(total.cost)),
-    span({ class: 'text-xs text-neutral-500' }, `At API prices · ${count.format(total.turns)} turns`),
+    span({ class: 'text-xs text-neutral-500' }, `At API prices · ${count.format(total.turns)} turns · ${tokens(tokensOf(total.usage))} tokens`),
   )
 
 export const modelList = (series: Series[]) => {

@@ -4,6 +4,7 @@ import { unanswered } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
+import type { PageOrigin } from '../prefs'
 import type { Pc } from './types'
 import { isHistory, isSummary } from './valid'
 
@@ -20,9 +21,11 @@ interface PcState<T> {
   busy: boolean
 }
 
-export const summaryView = (range: UsageRange): FleetView<UsageSummary> => ({
-  key: range,
-  load: (wire, pc) => wire.call(usageSummary, usageQuery(range), pc),
+const queryOf = (range: UsageRange, origin: PageOrigin) => ({ ...usageQuery(range), ...(origin !== 'all' && { origin }) })
+
+export const summaryView = (range: UsageRange, origin: PageOrigin): FleetView<UsageSummary> => ({
+  key: `${range}|${origin}`,
+  load: (wire, pc) => wire.call(usageSummary, queryOf(range, origin), pc),
   valid: isSummary,
 })
 
@@ -78,6 +81,11 @@ export const fleetLoader = <T>(wire: Wire, pcs: () => Pc[], view: () => FleetVie
     }
   }
 
+  const reload = (id: string) => {
+    const found = pcs().find(pc => pc.id === id && pc.online)
+    if (found) ask(found)
+  }
+
   const refresh = () => {
     generation++
     asked.clear()
@@ -92,6 +100,7 @@ export const fleetLoader = <T>(wire: Wire, pcs: () => Pc[], view: () => FleetVie
       refresh()
     },
     refresh,
+    reload,
     sync,
   }
 }

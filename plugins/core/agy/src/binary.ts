@@ -32,4 +32,8 @@ function loginArgs(folder?: string): string[] {
   return ['acp', '--login', ...(folder ? ['--gemini_dir', folder] : [])]
 }
 
-export { acpArgs, findBinary, INSTALL_URL, loginArgs, requireBinary }
+function usageArgs(folder?: string): string[] {
+  return [...(folder ? ['--gemini_dir', folder] : []), '--print', '/usage']
+}
+
+export { acpArgs, findBinary, INSTALL_URL, loginArgs, requireBinary, usageArgs }

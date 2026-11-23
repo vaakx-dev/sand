@@ -62,7 +62,7 @@ export const plansOf = ({ accounts, live, sources, home }: PoolSources): Plan[] 
     const label = sources.find(source => source.id === kind)?.label ?? account.label
     grouped(byKind, kind, (): Plan => ({ kind, label, provider: account.provider, accounts: [], windows: [] })).accounts.push(poolAccount(account, newest(account.limits, fresh.get(account.key))))
   }
-  return [...byKind.values()].map(plan => ({ ...plan, windows: windowsOf(plan.accounts) })).filter(plan => plan.windows.length)
+  return [...byKind.values()].map(plan => ({ ...plan, windows: windowsOf(plan.accounts) }))
 }
 
 export const lastChecked = (plans: Plan[]) => Math.max(0, ...plans.flatMap(plan => plan.accounts.map(account => account.updated)))

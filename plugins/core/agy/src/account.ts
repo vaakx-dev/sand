@@ -130,15 +130,21 @@ async function modelsFromSession(client: AcpClient, sessionId: string, session: 
   return modelOption?.options.length ? configuredModels(client, sessionId, modelOption) : legacyModels(session)
 }
 
+function tierNameOf(created: Json): string | undefined {
+  const name = fieldsOf(fieldsOf(fieldsOf(created._meta).antigravity).tier).name
+  return typeof name === 'string' && name ? name : undefined
+}
+
 async function readStatus(folder?: string): Promise<AppStatus> {
   if (!(await findBinary())) return { installed: false, signedIn: false }
   try {
-    await withAcp(folder, async client => {
+    const plan = await withAcp(folder, async client => {
       const created = await client.request('session/new', { cwd: folder ?? homedir(), mcpServers: [] })
       const sessionId = typeof created.sessionId === 'string' ? created.sessionId : undefined
       if (sessionId) await client.request('session/close', { sessionId }).catch(() => {})
+      return tierNameOf(created)
     })
-    return { installed: true, signedIn: true }
+    return { installed: true, signedIn: true, plan }
   } catch (error) {
     if (isAuthError(error)) return { installed: true, signedIn: false }
     return { installed: true, signedIn: false, problem: errorMessage(error) }

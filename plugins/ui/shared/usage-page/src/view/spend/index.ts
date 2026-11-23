@@ -3,7 +3,7 @@ import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import type { UsageModel } from '../../model'
 import { listText } from '../../names'
-import { pageRanges } from '../../prefs'
+import { type PageOrigin, pageOrigins, pageRanges } from '../../prefs'
 import { rangeLabel } from '../../range'
 import { plot } from '../chart/plot'
 import { seriesOf } from '../chart/series'
@@ -16,6 +16,16 @@ const periodPicker = ({ segmented }: Kit, model: UsageModel) =>
     model.range,
     value => model.range.set(value),
     { label: 'Period' },
+  )
+
+const ORIGIN_LABELS: Record<PageOrigin, string> = { all: 'All', sand: 'In sand', outside: 'Outside sand' }
+
+const originPicker = ({ segmented }: Kit, model: UsageModel) =>
+  segmented(
+    pageOrigins.map(value => ({ value, label: ORIGIN_LABELS[value] })),
+    model.origin,
+    value => model.origin.set(value),
+    { label: 'Where' },
   )
 
 const unpricedText = (models: string[]) =>
@@ -43,5 +53,6 @@ const spendBody = (kit: Kit, usage: Merged | undefined) => {
 export const spendSection = (kit: Kit, model: UsageModel) =>
   kit.pageSection(
     { title: 'Spend', action: div({ class: 'flex items-center gap-2' }, pcFilter(kit, model), periodPicker(kit, model)) },
+    div({ class: 'mb-4 flex' }, originPicker(kit, model)),
     dynamicChild(model.usage, usage => spendBody(kit, usage)),
   )

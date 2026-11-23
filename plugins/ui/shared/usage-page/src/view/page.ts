@@ -15,7 +15,7 @@ const stateOf = (model: UsageModel): BodyState => {
 }
 
 const poolSections = (kit: Kit, model: UsageModel) =>
-  div({ class: 'flex flex-col gap-10' }, forecastSection({ kit, gauges: model.gauges, chosen: model.forecast }), plansSection(kit, { gauges: model.gauges, now: model.now }))
+  div({ class: 'flex flex-col gap-10' }, forecastSection({ kit, gauges: model.gauges, chosen: model.forecast }), plansSection(kit, { plans: model.plans, gauges: model.gauges, now: model.now }))
 
 const sections = (kit: Kit, model: UsageModel) => div({ class: 'flex flex-col gap-10' }, poolSections(kit, model), spendSection(kit, model))
 
