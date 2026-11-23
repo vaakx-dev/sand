@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, media, onMount, show, sig, SPACE, span, type Child } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, onMount, show, sig, SPACE, span, type Child } from '@vaakx-dev/vrui'
 import { whenAddressSettled } from '@sand/web-client/contract'
 import type { ButtonOptions, PickerTarget } from './contract'
 import type { Picker } from './deps'
@@ -45,13 +45,7 @@ export const pickerButton = (picker: Picker, target: PickerTarget, { label, look
       show(open, () => div({ class: 'flex min-w-0 flex-col px-1 pb-1' }, panel())),
     )
 
-  const node =
-    look === 'row'
-      ? div(
-          { class: 'relative flex min-w-0 flex-col' },
-          dynamicChild(media('(max-width: 37.5rem)'), phone => (phone ? inline(row) : popup(row))),
-        )
-      : popup(field)
+  const node = look === 'row' ? inline(row) : popup(field)
   if (opened) reveal()
   if (opener) onMount(node, () => opener(reveal))
   return node

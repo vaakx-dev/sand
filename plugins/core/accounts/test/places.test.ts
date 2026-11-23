@@ -14,6 +14,12 @@ const until = async <T>(found: () => T | undefined, wait = 10_000) => {
   throw new Error('It never happened')
 }
 
+test('a plan that runs over its own API keeps a name the user gives it', async () => {
+  sand = await startSand([{ id: 'keyed', label: 'Keyed Plan', api: 'anthropic', models: ['m'], replies: [] }])
+  const renamed = (await sand.ask(loginRename, { account: 'keyed', name: 'Main' })).accounts.map(({ id, label }) => ({ id, label }))
+  expect(renamed).toContainEqual({ id: 'keyed', label: 'Main' })
+})
+
 test('an added account joins its plan under its own name without a model of its own, and leaves it once removed', async () => {
   sand = await startSand([{ id: 'fake', label: 'Fake Plan', models: ['m'], replies: [] }])
   const added = await sand.ask(loginAdd, { account: 'fake' })

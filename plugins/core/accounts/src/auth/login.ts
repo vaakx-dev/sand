@@ -127,7 +127,7 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry, forget: (ac
   const add = async (base: string) => (await plans.add(base)).id
 
   const rename = (account: string, name: string) => {
-    if (!plans.app(account) && !plans.placeOf(account)) throw new Error(`${accounts.label(account)} keeps its name`)
+    if (!plans.get(account)) throw new Error(`${accounts.label(account)} keeps its name`)
     return plans.rename(account, name)
   }
 
