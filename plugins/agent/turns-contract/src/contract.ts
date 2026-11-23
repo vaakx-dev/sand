@@ -66,7 +66,7 @@ export const turnChange = event<(info: TurnInfo) => void>('turn.change')
 export const turnPending = event<(session: Session) => void>('turn.pending')
 export const turnPrompt = event<(content: UserContent[], session: Session) => UserContent[]>('turn.prompt')
 export const stepTools = event<(tools: ToolSpec[], session: Session) => ToolSpec[] | Promise<ToolSpec[]>>('step.tools')
-export const toolStart = event<(call: ToolCallBlock, session: Session) => void>('tool.start')
+export const toolStart = event<(call: ToolCallBlock, session: Session, started: number) => void>('tool.start')
 export const toolProgress = event<(call: ToolCallBlock, text: string, session: Session) => void>('tool.progress')
 export const toolResult = event<(result: ToolResultBlock, call: ToolCallBlock, session: Session) => ToolResultBlock>('tool.result')
 
@@ -74,7 +74,7 @@ export const turnStartWire = wireEvent<[session: WireSession, prompt: Message]>(
 export const turnEndWire = wireEvent<[session: WireSession, result: TurnResult]>('turn.end')
 export const turnChangeWire = wireEvent<[session: WireSessionRef, info: TurnInfo]>('turn.change')
 export const turnPendingWire = wireEvent<[session: string, pending: PendingItem[]]>('turn.pending')
-export const toolStartWire = wireEvent<[call: ToolCallBlock, session: WireSessionRef]>('tool.start')
+export const toolStartWire = wireEvent<[call: ToolCallBlock, session: WireSessionRef, started: number]>('tool.start')
 export const toolProgressWire = wireEvent<[call: ToolCallBlock, text: string, session: WireSessionRef]>('tool.progress')
 export const toolResultWire = wireEvent<[result: ToolResultBlock, call: ToolCallBlock, session: WireSessionRef]>('tool.result')
 

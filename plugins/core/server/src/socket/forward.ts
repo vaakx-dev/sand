@@ -57,7 +57,7 @@ export const forwardEvents = (ctx: ServerContext, send: Send, sees: Sees) => {
   ctx.on(artifactSaved, (conversation, artifact) => {
     if (isSession(conversation)) send(artifactSavedWire, [conversation, artifact])
   })
-  ctx.on(toolStart, (call, session) => send(toolStartWire, [call, sessionRef(session)], watchingFamily(session)))
+  ctx.on(toolStart, (call, session, started) => send(toolStartWire, [call, sessionRef(session), started], watchingFamily(session)))
   ctx.on(toolProgress, (call, text, session) => send(toolProgressWire, [call, text, sessionRef(session)], watching(session)))
   ctx.on(toolResult, (result, call, session) => {
     send(toolResultWire, [result, call, sessionRef(session)], watchingFamily(session))

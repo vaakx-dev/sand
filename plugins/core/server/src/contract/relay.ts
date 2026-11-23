@@ -10,7 +10,7 @@ export interface Mark {
 
 export interface LiveSnapshot {
   live: LiveBlock[]
-  tools: string[]
+  tools: Record<string, number>
   mark?: Mark
 }
 

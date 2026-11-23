@@ -155,10 +155,10 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
     ),
     wire.on(
       toolStartWire,
-      ([call, session]) => {
+      ([call, session, started]) => {
         const found = known(session.$session.id)
         if (!found) return
-        found.tools.running.add(call.id)
+        found.tools.running.set(call.id, started)
         found.step = call
         store.changed(found.id)
       },

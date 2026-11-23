@@ -4,7 +4,7 @@ import type { Thread } from '../contract'
 
 const tailLines = 4
 
-const runningCall = (thread: Thread, running: Set<string>) => {
+const runningCall = (thread: Thread, running: Map<string, number>) => {
   if (thread.step && running.has(thread.step.id)) return thread.step
   let found: ToolCallBlock | undefined
   for (const entry of thread.entries.values()) {
@@ -17,7 +17,7 @@ const runningCall = (thread: Thread, running: Set<string>) => {
 export const catchUp = (thread: Thread, { live, tools, mark }: LiveSnapshot) => {
   thread.live = live
   thread.mark = mark
-  thread.tools = { ...thread.tools, running: new Set(tools) }
+  thread.tools = { ...thread.tools, running: new Map(Object.entries(tools)) }
   thread.step = runningCall(thread, thread.tools.running)
 }
 
@@ -26,7 +26,7 @@ export const clearTurn = (thread: Thread) => {
   thread.waiting = undefined
   thread.live = []
   thread.mark = undefined
-  thread.tools = { running: new Set(), results: new Map(), logs: new Map() }
+  thread.tools = { running: new Map(), results: new Map(), logs: new Map() }
 }
 
 export const addLog = (thread: Thread, id: string, text: string) => {

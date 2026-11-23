@@ -57,7 +57,7 @@ export const sessionConversations = (ctx: TurnsContext, owner: Owner, queues: ()
     queued: session => ctx.emit(turnPending, session),
     queues,
     streamed: (event, session) => ctx.emit(llmEvent, event, session),
-    toolStarted: (call, session) => ctx.emit(toolStart, call, session),
+    toolStarted: (call, session) => ctx.emit(toolStart, call, session, Date.now()),
     toolProgress: (call, text, session) => ctx.emit(toolProgress, call, text, session),
     toolDone: (result, call, session) => ctx.waterfall(toolResult, result, call, session),
   }

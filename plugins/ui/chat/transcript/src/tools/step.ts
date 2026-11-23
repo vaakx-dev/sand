@@ -1,11 +1,17 @@
 import type { ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { clock, derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { stepBody, stepLine, stepMark, type StepState } from '../rows/line'
 import { isRecord, tildeHome } from '@sand/util'
 import { relativeTo } from './relative'
+import { ranText } from './time'
 
 const states: Record<ToolStatus, StepState> = { pending: 'running', running: 'running', done: 'done', failed: 'failed' }
+
+const runningTime = (started: number) => {
+  const now = clock()
+  return span({ class: 'shrink-0' }, () => ranText(started, now.get()))
+}
 
 const countTone = (part: string) => {
   if (/^[+]\d+$/.test(part)) return 'text-success-400'
@@ -116,6 +122,10 @@ export const toolStep = (
         dynamicChild(
           shown.map(value => value.meta),
           metaView,
+        ),
+        dynamicChild(
+          derive(() => (running.get() ? tool.get().started : undefined)),
+          started => (started ? runningTime(started) : undefined),
         ),
       ),
       expanded: open,
