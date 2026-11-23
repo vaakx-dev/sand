@@ -26,7 +26,7 @@ interface GistInput {
 
 export const askGist = async (ask: Ask, { bot, reply, agents, signal }: GistInput) => {
   const prompt = agentsNote(agents) + textOf(reply.content, '\n').slice(0, mostReplyChars)
-  const answer = await ask.json({ role: 'finder', system, prompt, session: bot, signal }, summed)
+  const answer = await ask.json({ use: 'text', system, prompt, session: bot, signal }, summed)
   const gist = cleaned(answer.gist)
   if (!gist) throw new Error('the model sent an empty gist')
   return gist

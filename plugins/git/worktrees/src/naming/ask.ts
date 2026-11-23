@@ -11,7 +11,7 @@ const named = z.object({ branch: z.string().min(1) })
 
 export const askBranchName = async (ask: Ask, session: Session, prompt: string) => {
   const task = [session.title && `Thread title: ${session.title}`, `Task:\n${prompt.slice(0, mostPromptChars)}`].filter(Boolean).join('\n\n')
-  const { branch } = await ask.json({ role: 'finder', system, prompt: task, session: session.id }, named)
+  const { branch } = await ask.json({ use: 'text', system, prompt: task, session: session.id }, named)
   const slug = slugOf(branch)
   if (!slug) throw new Error(`the suggested name "${branch}" has no letters or digits`)
   return slug

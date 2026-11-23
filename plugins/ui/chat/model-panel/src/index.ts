@@ -13,7 +13,7 @@ import { modelTargets } from './targets'
 
 export default definePlugin({
   name: 'model-panel',
-  description: 'The model row that opens the model picker. Also adds palette rows and the Models settings page, where the user adds model accounts and picks which models show.',
+  description: 'The model row that opens the model picker. Also adds palette rows and the Models settings page, where the user sets the default, subagent and text models, adds model accounts and picks which models show.',
   inject,
   apply(ctx) {
     const changes = modelChanges(ctx)

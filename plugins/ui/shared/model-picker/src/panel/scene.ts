@@ -42,7 +42,7 @@ export const readScene = ({ ctx, pcs, catalog }: Picker, target: PickerTarget, v
   return {
     kit: ctx.kit,
     shown,
-    defaults: ctx.models.roles().lead ?? {},
+    defaults: ctx.models.picks().shown.default ?? {},
     target,
     models: ctx.models.list(),
     sources,

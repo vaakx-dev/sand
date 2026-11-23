@@ -26,7 +26,7 @@ const messageText = (message: Message) =>
 const cleaned = (title: string) => oneLine(title.replace(/^[\s"'`]+|[\s"'`.]+$/g, ''), mostTitleChars)
 
 export const askTitle = async (ask: Ask, session: Session, message: Message, signal: AbortSignal) => {
-  const reply = await ask.json({ role: 'finder', system, prompt: messageText(message), session: session.id, signal }, titled)
+  const reply = await ask.json({ use: 'text', system, prompt: messageText(message), session: session.id, signal }, titled)
   const title = cleaned(reply.title)
   if (!title) throw new Error('the model sent an empty title')
   return title

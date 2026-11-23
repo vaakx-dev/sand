@@ -1,5 +1,5 @@
 import type { llm } from '@sand/accounts/contract'
-import { roleOfLevel, type modelSettings } from '@sand/model/contract'
+import type { modelSettings } from '@sand/model/contract'
 import { sessions } from '@sand/chats/contract'
 import { usageRecord } from '@sand/usage/contract'
 import type { Context } from 'drydock'
@@ -10,8 +10,6 @@ export type AskContext = Context<{ llm: typeof llm; modelSettings: typeof modelS
 
 const noModel = 'No model available. Sign in to a model provider in Settings › Accounts.'
 
-const roleOf = (request: AskRequest) => ('role' in request ? request.role : roleOfLevel(request.level))
-
 const charsPerToken = 4
 const promptShare = 0.6
 
@@ -20,8 +18,8 @@ const capped = (prompt: string, context: number | undefined) => (context ? promp
 export const createText =
   (ctx: AskContext) =>
   async (request: AskRequest) => {
-    const { system, prompt, session: id, signal } = request
-    const { model, effort, speed } = ctx.modelSettings.role(roleOf(request))
+    const { system, prompt, session: id, signal, use } = request
+    const { model, effort, speed } = ctx.modelSettings.pick(use)
     if (!model) throw new Error(noModel)
     const session = id ? ctx.get(sessions)?.open(id) : undefined
     const text = capped(prompt, ctx.llm.find?.(model)?.context)

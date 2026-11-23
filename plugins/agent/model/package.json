@@ -1,7 +1,7 @@
 {
   "name": "@sand/model",
   "version": "0.0.0",
-  "description": "Model, effort and fast mode for each chat and for each role, picked from a ranking",
+  "description": "Model, effort and fast mode for each chat, plus the default, subagent and text models set in sand.toml",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -17,6 +17,7 @@
     "@sand/account-pool": "workspace:*",
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/turns-contract": "workspace:*",

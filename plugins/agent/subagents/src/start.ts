@@ -17,6 +17,7 @@ export interface SubagentRequest {
   label?: string
   agent?: string
   does?: Does
+  model?: string
   effort?: Effort
   project?: string
   folder?: string
@@ -44,8 +45,8 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
 
   const roleOf = (parent: Session, does: Does | undefined): Role => (parent.kind === 'bot' ? 'lead' : DOES_ROLES[does ?? 'build'])
 
-  const presetOf = (role: Role, definition: AgentDefinition | undefined): SessionSettings =>
-    definition?.model ? definition : (ctx.get(modelSettings)?.role(role) ?? {})
+  const presetOf = (definition: AgentDefinition | undefined): SessionSettings =>
+    definition?.model ? definition : (ctx.get(modelSettings)?.pick('subagent') ?? {})
 
   const promptOf = (parent: Session, turn: string) => {
     const entry = parent.path().find(entry => entry.type === 'message' && entry.turn === turn && (entry.data as Message).role === 'user')
@@ -63,7 +64,8 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
     const definition = await definitionOf(request.agent, parent.cwd, project ?? parent.project)
     const scope = limits.child(parent, definition?.name, definition?.tools)
     const role = roleOf(parent, request.does ?? definition?.does)
-    const preset = presetOf(role, definition)
+    const preset = presetOf(definition)
+    const model = request.model ?? preset.model
     const effort = request.effort ?? definition?.effort ?? preset.effort
     return ctx.orchestrator.start({
       prompt: withBackground(task, workingOn(parent)),
@@ -71,7 +73,7 @@ export const createStart = (ctx: AgentsContext, resolve: Resolve, limits: AgentL
       ...(project && { project }),
       ...(folder && { cwd: pc ? folder : resolvePath(parent.cwd, folder) }),
       ...(worktree && { worktree }),
-      ...(preset.model && { model: preset.model }),
+      ...(model && { model }),
       ...(effort && { effort }),
       ...(preset.speed && { speed: preset.speed }),
       origin: 'agent',

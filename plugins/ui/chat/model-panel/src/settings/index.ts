@@ -3,12 +3,14 @@ import { div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import { favouritesPage } from './favourites'
 import { createPage, type Page, type View } from './page'
+import { picksSection } from './picks'
 import { sourcePage } from './source/page'
 import { sourcesKey, sourcesSection } from './sources'
 
 const topPage = (page: Page) =>
   div(
     { class: 'flex flex-col gap-6' },
+    show(page.changes.read(() => page.ctx.models.list().length > 0), () => picksSection(page)),
     dynamicChild(page.changes.read(() => sourcesKey(page)), () => sourcesSection(page)),
   )
 

@@ -1,6 +1,5 @@
 import type { Session } from '@sand/chats/contract'
 import type { ConversationRef } from '@sand/engine/contract'
-import type { SessionSettings } from '@sand/model/contract'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
@@ -35,12 +34,6 @@ type Open = (cwd: string, project?: string | null) => Session
 export type Adopt = (session: Session) => void
 
 const parentOf = (ctx: OrchestratorContext, { from }: Pick<StartInput, 'from'>) => from && ctx.sessions.open(from.id)
-
-const inheritedSettings = (ctx: OrchestratorContext, parent: Session | undefined): SessionSettings => {
-  if (!parent) return {}
-  const { model, effort, speed } = ctx.modelSettings.effective(parent)
-  return { ...(model && { model }), ...(effort && { effort }), speed }
-}
 
 const starterOf = ({ from }: StartInput) => {
   if (!from) throw failure('invalid_request', 'A subagent needs the thread or bot that starts it')
@@ -101,7 +94,7 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
     return pending
   }
 
-  const startOn = async (name: string, input: StartInput, { call, limits }: SubagentStart, inherited: SessionSettings): Promise<Sent> => {
+  const startOn = async (name: string, input: StartInput, { call, limits }: SubagentStart): Promise<Sent> => {
     const pc = pcs.find(name)
     const from = starterOf(input)
     const { cwd, project, title, label, worktree, branch, base, clientRequestId } = input
@@ -115,9 +108,9 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
       base,
       clientRequestId,
       prompt: owners.sign(input.prompt, from),
-      model: input.model ?? inherited.model,
-      effort: input.effort ?? inherited.effort,
-      speed: input.speed ?? inherited.speed,
+      model: input.model,
+      effort: input.effort,
+      speed: input.speed,
       origin: 'agent',
       from: { owner: from.owner, id: from.id },
       subagent: { call, limits },
@@ -130,9 +123,8 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
 
   return async (input: StartInput, adopt?: Adopt): Promise<Sent> => {
     const { subagent } = input
-    const inherited = subagent ? inheritedSettings(ctx, parentOf(ctx, input)) : {}
-    if (subagent?.pc) return startOn(subagent.pc, input, subagent, inherited)
-    const settings = { ...inherited, ...matchSettings(ctx, input, inherited.model) }
+    if (subagent?.pc) return startOn(subagent.pc, input, subagent)
+    const settings = matchSettings(ctx, input)
     const prompt = signedHere(input)
     const session = await threadFor(input, subagent ? giveLimits(subagent.limits) : adopt)
     const starter = input.from
