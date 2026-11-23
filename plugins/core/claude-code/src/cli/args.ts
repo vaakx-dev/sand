@@ -56,6 +56,11 @@ export const claudeEnv = (config?: string): Record<string, string> => {
   return { ...env, ...locked, ...(config && { CLAUDE_CONFIG_DIR: config }) }
 }
 
+export const claudeCatalogEnv = (config?: string): Record<string, string> => {
+  const { DISABLE_TELEMETRY: _dropped, ...env } = claudeEnv(config)
+  return env
+}
+
 export const claudeArgs = ({ model, effort, saved }: RunOptions) => [
   '-p',
   '--input-format',
