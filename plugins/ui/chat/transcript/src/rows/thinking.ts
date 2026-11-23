@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { oneLine } from '@sand/util'
 import { div, dynamicChild, show, span, type Derive, type Sig } from '@vaakx-dev/vrui'
 import { stepLine, stepMark } from './line'
+import { thought } from '../thought'
 
 export interface ThinkingProps {
   item: string
@@ -9,16 +9,6 @@ export interface ThinkingProps {
   text: Sig<string> | Derive<string>
   open: Sig<boolean>
   toggle: () => void
-}
-
-const titled = /^\s*\*\*(.+?)\*\*[ \t]*(?:\n|$)/
-
-const unmarked = (text: string) => text.replace(/\*\*|__/g, '')
-
-const thought = (text: string) => {
-  const found = titled.exec(text)
-  if (found) return { title: oneLine(unmarked(found[1] ?? '')), body: unmarked(text.slice(found[0].length)).trim() }
-  return { title: oneLine(unmarked(text)), body: unmarked(text).trim() }
 }
 
 export const thinkingStep = (kit: Kit, { item, streaming, text, open, toggle }: ThinkingProps) => {
@@ -33,7 +23,7 @@ export const thinkingStep = (kit: Kit, { item, streaming, text, open, toggle }: 
     kit,
     {
       mark: dynamicChild(streaming, live => stepMark(kit, live ? 'running' : 'done')),
-      label: dynamicChild(streaming, live => (live ? kit.shine(label) : span(label))),
+      label: dynamicChild(streaming, live => span({ class: 'min-w-0 truncate' }, live ? kit.shine(label) : label)),
       title: label,
       expanded,
       onToggle: toggle,

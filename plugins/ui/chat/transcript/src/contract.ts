@@ -214,6 +214,7 @@ export interface ShownChats {
 
 export { blockKey, itemNode, itemSpot, type ItemSpot } from './items/spot'
 export { ranText } from './tools/time'
+export { thought, type Thought } from './thought'
 
 export const transcript = service<Transcript>('transcript')
 export const shownChats = service<ShownChats>('shownChats')

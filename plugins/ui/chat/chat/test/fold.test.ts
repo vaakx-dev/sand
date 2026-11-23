@@ -17,6 +17,15 @@ describe('foldTurns', () => {
     expect(head).toMatchObject({ start: 1_000, end: 7_000 })
   })
 
+  test('a running turn shows its newest thought that has a body, and a finished one shows none', () => {
+    const titled = (key: string, text: string): Item => ({ kind: 'thinking', key, text, streaming: false, at: 2_000 })
+    const group: Item = { kind: 'tools', key: 'g', start: 2_000, end: 3_000, running: false, steps: [{ kind: 'thinking', key: 'g:0', text: '**Reading the parser**\nThe last line has no newline.', streaming: false }] }
+    const items = [user('u1', 1_000), titled('u1:0', 'Check the parser first.'), group, titled('u1:2', '**Fixing it**')]
+    const headOf = (running: boolean) => foldTurns(items, { ...options, running }).find(shown => shown.kind === 'turn')
+    expect(headOf(true)).toMatchObject({ thought: { key: 'g:0', body: 'The last line has no newline.' } })
+    expect(headOf(false)).toMatchObject({ thought: undefined })
+  })
+
   test('calls made inside a script count like top-level ones', () => {
     const nested = (id: string, name: string, path: string): ToolCallBlock => ({ type: 'tool_call', id, name, input: { path } })
     const script: ToolCallBlock = { type: 'tool_call', id: 's1', name: 'script', input: {} }

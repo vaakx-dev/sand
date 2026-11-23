@@ -1,5 +1,5 @@
 import type { ToolCallBlock } from '@sand/chats/contract'
-import type { Item } from '@sand/transcript/contract'
+import { thought, type Item } from '@sand/transcript/contract'
 import { summaryOf } from './summary'
 
 export type TurnPhase = 'thinking' | 'working' | 'waiting' | 'done'
@@ -12,6 +12,12 @@ export interface TurnHead {
   end: number
   summary: string
   stepStarted: number | undefined
+  thought: LiveThought | undefined
+}
+
+export interface LiveThought {
+  key: string
+  body: string
 }
 
 export interface ShownItem {
@@ -95,6 +101,14 @@ const stepStartedOf = (work: Item[]) => {
   return starts.length ? Math.min(...starts) : undefined
 }
 
+const thoughtsOf = (item: Item): LiveThought[] => {
+  if (item.kind === 'thinking') return [{ key: item.key, body: thought(item.text).body }]
+  if (item.kind === 'tools') return item.steps.flatMap(step => (step.kind === 'thinking' ? [{ key: step.key, body: thought(step.text).body }] : []))
+  return []
+}
+
+const newestThought = (work: Item[]) => work.flatMap(thoughtsOf).findLast(({ body }) => body)
+
 const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions): TurnHead => {
   const items = turn.head ? [turn.head, ...turn.body] : turn.body
   const times = timedOf(turn).flatMap(item => timeOf(item) ?? [])
@@ -108,6 +122,7 @@ const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions
     end: Math.max(0, ...times),
     summary: summaryOf(work, options.nested),
     stepStarted: phase === 'working' ? stepStartedOf(work) : undefined,
+    thought: running ? newestThought(work) : undefined,
   }
 }
 
