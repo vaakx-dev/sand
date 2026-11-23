@@ -1,5 +1,4 @@
 import { summaryFormat } from './format'
-import type { CompactionBrief } from '../contract'
 
 const noReply = "Don't continue the conversation, answer it or call tools."
 
@@ -11,11 +10,6 @@ ${noReply}`
 
 const format = `Output only the summary. ${summaryFormat}`
 
-export const summaryBrief: CompactionBrief = {
-  format: async () => format,
-  accept: async reply => reply,
-}
-
 const fresh = 'Summarize the transcript in <conversation> tags above.'
 
 const update = 'The transcript in <conversation> tags above continues the conversation summarized in <previous-summary>. Update that summary with it.'
@@ -26,9 +20,9 @@ ${noReply}`
 
 const focus = (instructions?: string) => instructions && `Additional focus: ${instructions}`
 
-export const inContextText = (format: string, instructions?: string) => [inContext, format, focus(instructions)].filter(Boolean).join('\n\n')
+export const inContextText = (instructions?: string) => [inContext, format, focus(instructions)].filter(Boolean).join('\n\n')
 
-export const promptText = (format: string, conversation: string, previous?: string, instructions?: string) =>
+export const promptText = (conversation: string, previous?: string, instructions?: string) =>
   [
     `<conversation>\n${conversation}\n</conversation>`,
     previous && `<previous-summary>\n${previous}\n</previous-summary>`,

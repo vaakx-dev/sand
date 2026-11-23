@@ -1,7 +1,7 @@
 {
   "name": "@sand/memory",
   "version": "0.0.0",
-  "description": "Memory that lasts across conversations: a memory that loads into every conversation and notes listed there, in Markdown files; the memory tool, a prompt section and the compaction step that tidies it, for whatever memory space a conversation belongs to",
+  "description": "Memory that lasts across conversations: a memory that loads into every conversation and notes listed there, in Markdown files; the memory tool and a prompt section, for whatever memory space a conversation belongs to",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -11,10 +11,9 @@
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Memory",
-    "summary": "Lets threads and bots remember what they learn, in files you can read and edit"
+    "summary": "Lets threads and bots remember what you ask them to, in files you can read and edit"
   },
   "dependencies": {
-    "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/engine": "workspace:*",
@@ -22,7 +21,6 @@
     "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
-    "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

@@ -55,8 +55,7 @@ const searchInput = z.object({
 
 const tagsInput = z.object({ project: project.describe('Only this project id, or null for none') })
 
-const addRules =
-  "Log finished work and decisions in the Logbook, the dated record every thread and bot shares: what was done or decided, and why. History belongs here, not in memory. Log work once it's done, not plans or progress; a bot logs each plan item it finishes."
+const addRules = 'Add to the Logbook, the dated record every thread and bot shares, only when the user asks: what was done or decided, and why.'
 
 const searchRules = 'Search the Logbook, newest first, to find what was done or decided in a period, why, and the details of past work.'
 

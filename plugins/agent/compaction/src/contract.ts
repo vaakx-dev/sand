@@ -1,4 +1,3 @@
-import type { LLMRequest, Usage } from '@sand/accounts/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service, type Dispose } from 'drydock'
@@ -48,15 +47,6 @@ export interface CompactionRecord {
   thread?: string
 }
 
-export interface CompactionBrief {
-  prepare?(request: LLMRequest): Promise<Usage | undefined>
-  format(): Promise<string>
-  check?(reply: string): string | undefined
-  accept(reply: string): Promise<string>
-}
-
-export const compactionBrief = event<(conversation: Conversation) => CompactionBrief | undefined>('compaction.brief')
-
 export interface ContextLimits {
   limit(model: string): number
 }
@@ -87,5 +77,3 @@ export const contextGet = request('context.get', { input: chat, output: type<Con
 export const compactTimeoutMs = 600_000
 
 export const contextCompact = request('context.compact', { input: chat, output: type<Compacted>(), callers: 'any', place: 'thread' })
-
-export { summaryFormat } from './summarize/format'

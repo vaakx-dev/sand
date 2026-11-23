@@ -2,7 +2,7 @@ import type { llm, LLMRequest } from '@sand/accounts/contract'
 import type { Entry } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import type { media } from '@sand/media/contract'
-import { compactionBrief, contextUsage, type Compacted, type CompactionReason, type CompactionRecord } from './contract'
+import { contextUsage, type Compacted, type CompactionReason, type CompactionRecord } from './contract'
 import { usageRecord } from '@sand/usage/contract'
 import { untilAborted } from '@sand/util'
 import type { Context } from 'drydock'
@@ -15,7 +15,6 @@ import type { Tracker } from './measure/tracker'
 import { filesOf } from './summarize/files'
 import { summarize } from './summarize'
 import { summarizeInContext } from './summarize/in-context'
-import { summaryBrief } from './summarize/prompt'
 
 export type CompactionContext = Context<{ llm: typeof llm; media: typeof media }>
 
@@ -67,18 +66,16 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
     const { keep, limit } = budget(request)
     const cut = plan(path, keep) ?? (overflow || reason === 'manual' ? plan(path, 0) : undefined)
     if (!cut) throw new Error('Nothing to compact yet')
-    const brief = (await ctx.bail(compactionBrief, conversation)) ?? summaryBrief
     const { summary, usage, source } =
       overflow || native(request.model)
         ? await summarize(ctx.llm, ctx.media, {
             model: request.model,
-            brief,
             messages: cut.dropped,
             previous: cut.previous?.summary,
             instructions: config.instructions,
             limit,
           })
-        : await summarizeInContext(ctx.llm, brief, request, config.instructions)
+        : await summarizeInContext(ctx.llm, request, config.instructions)
     if (usage) conversation.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, usage, source))
     const record: CompactionRecord = {
       summary,

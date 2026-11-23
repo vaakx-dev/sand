@@ -2,7 +2,6 @@ import type { Conversation } from '@sand/engine/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { type MemoryRef, type MemoryStore, type Note, noteName } from './contract'
-import { memoryRules } from './rules'
 
 type Place = { kind: 'root' } | { kind: 'notes' } | { kind: 'memory' } | { kind: 'note'; name: string }
 
@@ -39,7 +38,7 @@ const input = z.object({
 
 type Input = z.output<typeof input>
 
-const description = `Your memory in /memories. /memories/memory.md loads into every conversation and lists the notes in /memories/notes by first line. ${memoryRules}`
+const description = `Your memory in /memories. /memories/memory.md loads into every conversation and lists the notes in /memories/notes by first line. Save only what the user asks you to remember, as short rules: no paths, dates or history.`
 
 const notePath = (name: string) => `${NOTES_PATH}/${name}.md`
 
