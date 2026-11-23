@@ -7,6 +7,7 @@ import { signInClaude } from './account/sign-in'
 import { readStatus, signOutClaude } from './account/status'
 import { installUrl } from './cli/binary'
 import { sessionFiles } from './session/files'
+import { readHistory } from './session/history'
 import { openSession } from './session/session'
 
 interface Needs {
@@ -42,6 +43,7 @@ const claudeAccount = ({ media, report }: Needs, { id, folder }: { id: string; f
     signOut: () => signOutClaude(folder),
     models: models.list,
     usage: () => readUsage(folder),
+    history: since => readHistory(since, folder),
     open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume ? { id: resume, start: 'resume' } : undefined),
     sessionFiles: session => sessionFiles(session, folder),
   }

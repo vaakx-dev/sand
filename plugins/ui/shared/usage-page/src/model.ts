@@ -32,19 +32,20 @@ const stale = 60_000
 const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export const usageModel = (deps: UsageDeps) => {
-  const { range, pc, forecast } = usagePrefs()
+  const { range, origin, pc, forecast } = usagePrefs()
   const signature = derive(() => JSON.stringify(deps.pcs()))
   const pcs = derive(() => {
     signature.get()
     return untrack(deps.pcs)
   })
-  const fleet = fleetLoader(deps.wire, () => pcs.get(), () => summaryView(range.get()))
+  const fleet = fleetLoader(deps.wire, () => pcs.get(), () => summaryView(range.get(), origin.get()))
   const history = fleetLoader(deps.wire, () => pcs.get(), () => historyView)
   const checking = sig(false)
   const now = clock(30_000)
 
   effect(() => {
     range.get()
+    origin.get()
     untrack(fleet.load)
   })
   effect(() => {
@@ -134,6 +135,7 @@ export const usageModel = (deps: UsageDeps) => {
 
   return {
     range,
+    origin,
     pc,
     forecast,
     checking,

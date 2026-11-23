@@ -1,3 +1,4 @@
+import { nativeSessions } from '@sand/usage/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { inject } from './context'
@@ -23,5 +24,6 @@ export default definePlugin({
     ctx.ledger.migrate('provider-threads', schema)
     const stores = { threads: createThreadStore(ctx.ledger.db), handoffs: createHandoffStore(ctx.ledger.db) }
     ctx.provide(providerThreads, createThreads(ctx, stores, config.handoff_tokens))
+    ctx.provide(nativeSessions, { natives: stores.threads.natives })
   },
 })

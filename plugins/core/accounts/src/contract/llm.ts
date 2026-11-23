@@ -2,7 +2,7 @@ import type { Block, ChatKind, Message, StopReason } from '@sand/chats/contract'
 import type { LiveEvent } from './live'
 import type { AccountKind } from './login'
 import type { Billing, Effort, LimitWindow, ModelInfo, ModelPrice, ProviderInfo, SourceRef } from './models'
-import type { Usage } from './usage'
+import type { PastTurn, Usage } from './usage'
 
 export interface ToolSpec {
   name: string
@@ -130,6 +130,7 @@ export interface LLM {
   limits?(): Limits | undefined
   sourceLimits?(): Limits[]
   refreshLimits?(): Promise<Limits | undefined>
+  pastTurns?(since: number): Promise<PastTurn[]>
   price?(model: string): ModelPrice | undefined
   caps?(model: string): ProviderCapabilities
   release?(thread: string): void

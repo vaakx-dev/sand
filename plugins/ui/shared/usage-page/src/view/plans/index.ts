@@ -9,6 +9,7 @@ import { whenText } from './pace'
 import { framed, windowRow } from './row'
 
 export interface PlansProps {
+  plans: Derive<Plan[]>
   gauges: Derive<Gauge[]>
   now: Sig<number>
 }
@@ -47,22 +48,27 @@ const gaugeRow = (gauge: Gauge, first: boolean) => {
   return windowRow({ label: gauge.window.label, state: gauge.state, tone, when: resetText(gauge, tone) }, first)
 }
 
+const unreported = (plan: Plan) =>
+  framed(span({ class: 'px-3 py-2 text-sm text-neutral-500' }, `${plan.label} doesn’t report its usage limits, so sand can’t show them.`))
+
+const limitRows = (plan: Plan, gauges: Gauge[]) => (gauges.length ? framed(gauges.map((gauge, index) => gaugeRow(gauge, index === 0))) : unreported(plan))
+
 const planBlock = (kit: Kit, plan: Sig<Plan>, { gauges, now }: PlansProps) => {
   const open = sig(false)
   const rows = derive(() => gauges.get().filter(gauge => gauge.plan.kind === plan.get().kind))
   return div(
     { class: 'flex flex-col gap-2' },
     planHead(kit, plan, open),
-    dynamicChild(rows, shown => framed(shown.map((gauge, index) => gaugeRow(gauge, index === 0)))),
+    dynamicChild(rows, shown => limitRows(plan.get(), shown)),
     show(open, () => dynamicChild(derive(() => ({ shown: plan.get(), at: now.get() })), ({ shown, at }) => accountList(kit, shown, at))),
   )
 }
 
 export const plansSection = (kit: Kit, props: PlansProps) => {
-  const plans = derive(() => [...new Set(props.gauges.get().map(gauge => gauge.plan))])
+  const { plans } = props
   return kit.pageSection(
     { title: 'Plans' },
-    show(() => !plans.get().length, () => kit.emptyState({ text: 'No plan limits reported.' })),
+    show(() => !plans.get().length, () => kit.emptyState({ text: 'No plans signed in.' })),
     list(plans, plan => plan.kind, plan => planBlock(kit, plan, props), div({ class: 'flex flex-col gap-6' })),
   )
 }

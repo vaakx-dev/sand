@@ -9,6 +9,7 @@ import { limitsOf } from './account/limits'
 import { codexHome, installUrl } from './server/binary'
 import { type CodexPlace, createPool, type Pool } from './server/pool'
 import { sessionFiles } from './session/files'
+import { rolloutHistory } from './session/history'
 import { openSession } from './session/session'
 import pkg from '../package.json'
 
@@ -52,6 +53,7 @@ const codexAccountPlan = ({ media, report }: Needs, id: string, place: CodexPlac
     ...codexAccount(pool),
     open: (setup, output, resume) => openSession({ pool, media, report: reported }, setup, output, resume),
     sessionFiles: sessionFiles(place.home),
+    history: rolloutHistory(place.home),
     close: () => pool.close(),
   }
 }

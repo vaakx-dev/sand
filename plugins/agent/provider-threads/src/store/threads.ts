@@ -76,6 +76,7 @@ export const createThreadStore = (db: Database) => {
   const retired = db.query("update provider_threads set status = 'retired' where id = $id")
   const doubted = db.query("update provider_threads set status = 'uncertain' where id = $id and native is not null and status != 'retired'")
   const removed = db.query('delete from provider_threads where owner = $owner and conversation = $conversation')
+  const nativeRows = db.query<{ native: string }, []>('select distinct native from provider_threads where native is not null')
 
   return {
     open: (conversation: ConversationRef) => open.all(keyOf(conversation)).map(infoOf),
@@ -104,6 +105,7 @@ export const createThreadStore = (db: Database) => {
     retire: (id: string) => void retired.run({ id }),
     doubt: (id: string) => void doubted.run({ id }),
     remove: (conversation: ConversationRef) => void removed.run(keyOf(conversation)),
+    natives: () => new Set(nativeRows.all().map(row => (JSON.parse(row.native) as NativeRef).id)),
   }
 }
 

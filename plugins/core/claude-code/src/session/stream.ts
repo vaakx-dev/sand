@@ -20,6 +20,8 @@ const usageOf = (raw: Json, long: number): Usage => ({
 
 const longWrites = (raw: Json) => Number(fieldsOf(raw.cache_creation).ephemeral_1h_input_tokens ?? 0)
 
+export const usageFrom = (raw: Json) => usageOf(raw, longWrites(raw))
+
 const resultText = (result: Json) => (typeof result.result === 'string' && result.result ? result.result : `Claude Code stopped: ${String(result.subtype)}`)
 
 const resetOf = (info: Json) => {

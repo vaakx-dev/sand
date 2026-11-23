@@ -1,14 +1,19 @@
-import type { UsageRecord } from '@sand/accounts/contract'
+import type { PastTurn, UsageRecord } from '@sand/accounts/contract'
 import type { Entry } from '@sand/chats/contract'
 import { sumUsage } from '../records'
 
 export interface Turn extends Omit<UsageRecord, 'id' | 'model'> {
   at: number
-  session: string
   model: string
+  session?: string
+  cwd?: string
 }
 
-const turnOf = (entry: Entry, { id: _, model, ...tags }: UsageRecord): Turn => ({
+interface SandTurn extends Turn {
+  session: string
+}
+
+const turnOf = (entry: Entry, { id: _, model, ...tags }: UsageRecord): SandTurn => ({
   ...tags,
   at: entry.at,
   session: entry.session,
@@ -17,9 +22,9 @@ const turnOf = (entry: Entry, { id: _, model, ...tags }: UsageRecord): Turn => (
 
 const keyOf = (entry: Entry, { id, model, source, pc }: UsageRecord) => [entry.turn ?? id, model, source, pc].join('\n')
 
-export const turnsOf = (entries: Entry[]): Turn[] => {
+export const turnsOf = (entries: Entry[]): SandTurn[] => {
   const seen = new Set<string>()
-  const turns = new Map<string, Turn>()
+  const turns = new Map<string, SandTurn>()
   for (const entry of entries) {
     const record = entry.data as UsageRecord
     if (seen.has(record.id)) continue
@@ -31,3 +36,5 @@ export const turnsOf = (entries: Entry[]): Turn[] => {
   }
   return [...turns.values()]
 }
+
+export const outsideTurnOf = ({ native: _, ...turn }: PastTurn): Turn => turn

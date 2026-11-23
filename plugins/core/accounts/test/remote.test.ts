@@ -91,6 +91,7 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[], userPrice
     allLimits: () => [],
     price: () => undefined,
     refreshLimits: async () => undefined,
+    pastTurns: async () => [],
     release() {},
     async *stream(request, signal) {
       asked.push(request)

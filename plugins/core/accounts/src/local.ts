@@ -1,11 +1,12 @@
 import { wellFormed } from '@sand/util'
-import type { EffortLevel, LLMEvent, LLMRequest, ModelInfo, ModelPrice } from './contract'
+import type { AppTurn, EffortLevel, LLMEvent, LLMRequest, ModelInfo, ModelPrice, PastTurn } from './contract'
 import type { Bridges } from './apps/bridges'
 import type { Accounts } from './auth/accounts'
 import { signInError } from './auth/kinds'
 import type { PlanRegistry } from './auth/plans'
 import type { Catalog } from './catalog'
-import { sourceRef } from './catalog/sources'
+import { qualify } from './catalog/build'
+import { localMeta, sourceRef } from './catalog/sources'
 import type { SourceMeta } from './catalog/types'
 import { viewOf } from './catalog/view'
 import type { Claude } from './claude/client'
@@ -76,6 +77,21 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
     return credential.type === 'oauth' ? plan.usage(credential) : undefined
   }
 
+  const pastTurnsOf = async (id: string, since: number): Promise<PastTurn[]> => {
+    const meta = localMeta(accounts, id)
+    const app = plans.app(id)
+    if (!meta || !app?.history) return []
+    const turns = await app.history(since).catch((): AppTurn[] => [])
+    const tags = sourceRef(meta)
+    return turns.map(({ session, model, ...turn }: AppTurn) => ({ ...tags, ...turn, model: qualify(meta.kind, model), native: session }))
+  }
+
+  const pastTurns = async (since: number) => {
+    await accounts.ready
+    const found = await Promise.all(signedInPlans().map(plan => pastTurnsOf(plan.id, since)))
+    return found.flat()
+  }
+
   const checkUsage = async () => {
     for (const plan of signedInPlans()) {
       const found = await planUsage(plan.id)
@@ -105,6 +121,7 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
     release: bridges.release,
     limits: firstLimits,
     allLimits,
+    pastTurns,
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),
     async refreshLimits() {
       await accounts.ready

@@ -22,6 +22,13 @@ export interface UsageRecord {
   usage: Usage
 }
 
+export interface PastTurn extends Omit<UsageRecord, 'id' | 'model'> {
+  model: string
+  at: number
+  native: string
+  cwd?: string
+}
+
 export interface CacheLifetimes {
   short: number
   long: number

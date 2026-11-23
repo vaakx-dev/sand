@@ -17,10 +17,15 @@ export { hourKey, keyOf } from '../forecast/keys'
 
 export type UsageBucket = 'hour' | 'day'
 
+export const usageOrigins = ['sand', 'outside'] as const
+
+export type UsageOrigin = (typeof usageOrigins)[number]
+
 export interface UsageQuery {
   since: number
   bucket: UsageBucket
   zone: string
+  origin?: UsageOrigin
 }
 
 export interface UsageTotals {
@@ -97,8 +102,14 @@ export interface UsageReader {
 
 export const usageReader = service<UsageReader>('usageReader')
 
+export interface NativeSessions {
+  natives(): Set<string>
+}
+
+export const nativeSessions = service<NativeSessions>('nativeSessions')
+
 export const usageSummary = request('usage.summary', {
-  input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string() }),
+  input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string(), origin: z.enum(usageOrigins).optional() }),
   output: type<UsageSummary>(),
 })
 
