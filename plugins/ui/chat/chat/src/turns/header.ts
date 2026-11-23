@@ -1,5 +1,5 @@
 import { duration } from '@sand/util'
-import { clock, div, dynamicChild, span } from '@vaakx-dev/vrui'
+import { clock, div, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import { ranText, type Row } from '@sand/transcript/contract'
 import type { TurnHead, TurnPhase } from './fold'
 import type { ShownWait } from '../wait'
@@ -27,6 +27,12 @@ const stepTime = (started: number) => {
   })
 }
 
+const liveThought = (data: Sig<TurnHead>, open: Sig<boolean>) =>
+  dynamicChild(
+    () => (open.get() ? undefined : data.get().thought?.key),
+    key => (key === undefined ? undefined : span({ class: 'line-clamp-2 animate-fade wrap-anywhere sm:line-clamp-1' }, () => data.get().thought?.body)),
+  )
+
 export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => ({
   key: head.key,
   data: head,
@@ -41,23 +47,30 @@ export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => 
           'aria-expanded': () => String(open.get()),
           title: label,
           class:
-            'flex min-h-6 min-w-0 max-w-full items-center gap-1.5 rounded-sm text-xs text-neutral-500 transition-colors hover:text-neutral-400 aria-expanded:text-neutral-400 touch:min-h-8',
+            'flex min-w-0 max-w-full items-start gap-1.5 rounded-sm text-left text-xs text-neutral-500 transition-colors hover:text-neutral-400 aria-expanded:text-neutral-400',
           onClick: () => {
             toggle()
             context.repaint()
           },
         },
-        dynamicChild(
-          () => busy(data.get().phase),
-          live => (live ? spinner('xs') : chevron(() => open.get(), 'xs')),
+        span(
+          { class: 'flex h-6 shrink-0 items-center touch:h-8' },
+          dynamicChild(
+            () => busy(data.get().phase),
+            live => (live ? spinner('xs') : chevron(() => open.get(), 'xs')),
+          ),
         ),
         span(
-          { class: 'flex min-w-0' },
-          span({ class: 'min-w-0 truncate' }, label),
-          dynamicChild(
-            () => data.get().stepStarted,
-            started => (started ? stepTime(started) : undefined),
+          { class: 'flex min-w-0 flex-col' },
+          span(
+            { class: 'flex min-w-0 leading-6 touch:leading-8' },
+            span({ class: 'min-w-0 truncate' }, label),
+            dynamicChild(
+              () => data.get().stepStarted,
+              started => (started ? stepTime(started) : undefined),
+            ),
           ),
+          liveThought(data, open),
         ),
       ),
     )
