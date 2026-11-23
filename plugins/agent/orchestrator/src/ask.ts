@@ -1,4 +1,4 @@
-import { notificationText } from '@sand/chats/contract'
+import { notificationText, threadLinkNote } from '@sand/chats/contract'
 import { server } from '@sand/server/contract'
 import type { OrchestratorContext } from './context'
 import { failure, threadReported } from './contract'
@@ -23,7 +23,7 @@ export const createAsk =
     const starter = starters.of(session)
     if (!starter) throw failure('invalid_request', 'Only a subagent asks the agent that started it')
     const label = session.title || 'Untitled thread'
-    const notice = notificationText({ from: 'thread', id: session.id, kind: 'thread', label, status: 'asks', at: Date.now(), result: question })
+    const notice = notificationText({ from: 'thread', id: session.id, kind: 'thread', label, status: 'asks', at: Date.now(), result: question, link: threadLinkNote(session.id, label) })
     const finish = { to: { owner: starter.owner, id: starter.id }, thread: session.id, text: `${notice}\n${howToAnswer}`, clientRequestId: `${session.id}?${id}` }
     if (starter.pc) {
       outbox.put(starter.pc, { ...finish, asks: true })

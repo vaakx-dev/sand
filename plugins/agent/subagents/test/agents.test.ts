@@ -76,8 +76,10 @@ test('a subagent is its own chat in the parent folder; its replies come back as 
   expect(child).toMatchObject({ kind: 'agent', title: 'Dig', cwd: parent.cwd, parent: parent.id, origin: expect.any(String) })
   expect(sand.sessions.require(child.id).latest('agent')?.data).toEqual({ depth: 1, role: 'builder' })
   expect(results(parent)[0]).toStartWith(`Started subagent ${child.id}.`)
+  expect(results(parent)[0]).toContain(`[Dig](thread:${child.id})`)
   const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
   expect(notice).toContain(`<thread>${child.id}</thread>`)
+  expect(notice).toContain(`[Dig](thread:${child.id})`)
   expect(notice).toContain('<status>done</status>')
   expect(notice).toContain('Found it.')
 
@@ -94,7 +96,8 @@ test("a subagent's answer is the result of the call that asked it, with no notic
   await sand.turns.run(parent, 'Fix the login bug')
 
   const child = await childOf(parent)
-  expect(results(parent)).toEqual([`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`])
+  expect(results(parent)).toHaveLength(1)
+  expect(results(parent)[0]).toStartWith(`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`)
   const [task] = prompts(sand.sessions.require(child.id))
   expect(task).toContain('Dig into it\n\n<background>\nThe agent asking is working on this request:\nFix the login bug\n</background>')
   await Bun.sleep(200)
@@ -212,7 +215,8 @@ test('a subagent on another PC answers in the call that asked it', async () => {
   await sand.turns.run(parent, 'Go')
 
   const child = await onBox(there, parent)
-  expect(results(parent)).toEqual([`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`])
+  expect(results(parent)).toHaveLength(1)
+  expect(results(parent)[0]).toStartWith(`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`)
   await Bun.sleep(200)
   expect(notices(parent)).toEqual([])
 })
@@ -387,14 +391,14 @@ test('only agents defined in the home folder can be named, and they run with the
 })
 
 test("a subagent's prompt opens with its own intro in place of the thread's and keeps the shared rules", async () => {
-  await start([delegate(), said('Started.'), said('Noted.')], [said('Done.')], [], ['agent/vstack'])
+  await start([delegate(), said('Started.'), said('Noted.')], [said('Done.')])
   await sand.turns.run(sand.chat('parent/m'), 'Go')
 
   await until(() => sand.requests('child').length > 0)
   const system = bodies('child')[0]!.system[0]!.text
   expect(system).toStartWith('You are a sand subagent')
   expect(system).not.toContain('You are sand, an agent')
-  expect(system).toContain('## Be straight with the user')
+  expect(system).toContain('## How you work')
 })
 
 test('a subagent that only finds things runs as a finder and is told to report rather than guess', async () => {

@@ -1,5 +1,5 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import { type Message, secretMark, type ToolCallBlock } from '@sand/chats/contract'
+import type { Message, ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
 import { findName, type Act, type Allow, type Gate, type GroupState, type Offer, type Secrets, type Tool, type ToolGroup, type ToolLoad, type Tools } from '../contract'
 import { actOf, run } from '../run'
@@ -9,8 +9,6 @@ import { foundIn } from './found'
 import { callerSite, checkName } from './names'
 import { inScope } from './scope'
 import { spec } from './spec'
-
-const secretNote = `Some tools take secrets, like passwords, keys and one-time codes. Once such a call runs, sand replaces those inputs in the chat with ${secretMark}. The tool got the real values you passed, so a call that shows ${secretMark} was not a mistake.`
 
 const byName = (a: Tool, b: Tool) => a.name.localeCompare(b.name)
 
@@ -113,11 +111,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const secrets = (): Secrets =>
     tools().reduce((found, { name, secret }) => (secret?.length ? found.set(name, [...new Set([...(found.get(name) ?? []), ...secret])]) : found), new Map<string, string[]>())
 
-  const notes = (conversation: Conversation) => {
-    const scoped = usable(conversation)
-    const environments = scoped.flatMap(tool => (tool.environment ? [tool.environment] : []))
-    return scoped.some(tool => tool.secret?.length) ? [...environments, secretNote] : environments
-  }
+  const notes = (conversation: Conversation) => usable(conversation).flatMap(tool => (tool.environment ? [tool.environment] : []))
 
   const names = (conversation: Conversation) => [...usable(conversation).map(tool => tool.name), findName]
 

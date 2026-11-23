@@ -1,6 +1,7 @@
+import { threadScheme } from '@sand/chats/contract'
 import type { LinkScheme } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { threadScheme, type ThreadView } from './contract'
+import type { ThreadView } from './contract'
 
 export const threadLinks = (kit: Kit, view: ThreadView): LinkScheme => ({
   scheme: threadScheme,

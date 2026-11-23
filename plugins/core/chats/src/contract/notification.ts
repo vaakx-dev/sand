@@ -10,13 +10,14 @@ export interface Notification {
   status: string
   at: number
   result: string
+  link?: string
 }
 
 const resultLimit = 30_000
 
 export const clipResult = (text: string) => (text.length > resultLimit ? `${head(text, resultLimit)}\n… ${text.length - resultLimit} characters truncated` : text)
 
-export const notificationText = ({ from, id, kind, label, status, at, result }: Notification) =>
+export const notificationText = ({ from, id, kind, label, status, at, result, link }: Notification) =>
   [
     `<${notificationTag}>`,
     `<${from}>${id}</${from}>`,
@@ -24,6 +25,7 @@ export const notificationText = ({ from, id, kind, label, status, at, result }: 
     `<label>${label}</label>`,
     `<status>${status}</status>`,
     `<at>${timestamp(at)}</at>`,
+    ...(link ? [`<link>${link}</link>`] : []),
     '<result>',
     clipResult(result),
     '</result>',

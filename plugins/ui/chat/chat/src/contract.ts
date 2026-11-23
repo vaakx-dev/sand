@@ -8,8 +8,6 @@ export const threadRoute = threadRouteKind
 
 export const draftRoute = draftRouteKind
 
-export const threadScheme = 'thread'
-
 export interface ChatLook {
   empty?(): Child
 }
