@@ -1,6 +1,6 @@
 import { efforts, type AppStatus, type Effort, type PlanModel, type SignInFlow } from '@sand/accounts/contract'
 import { homedir } from 'node:os'
-import { errorMessage, fieldsOf, RpcError, withAcp, type Json } from './acp'
+import { errorMessage, fieldsOf, RpcError, withAcp, type AcpClient, type Json } from './acp'
 import { findBinary, loginArgs, requireBinary } from './binary'
 
 const AUTHORIZE_URL = /https:\/\/accounts\.google\.com\/o\/oauth2\/auth[^\s\x07\x1b]*/
@@ -18,6 +18,17 @@ interface ParsedConfigOption {
   category?: string
   currentValue?: string
   options: ConfigOptionChoice[]
+}
+
+interface EffortLevels {
+  supported: Effort[]
+  defaultEffort?: Effort
+}
+
+interface ModelChoice {
+  sessionId: string
+  configId: string
+  model: string
 }
 
 function isAuthError(error: unknown): boolean {
@@ -67,7 +78,8 @@ function findEffortOption(options: ParsedConfigOption[]): ParsedConfigOption | u
   )
 }
 
-function effortLevelsFrom(option?: ParsedConfigOption): { supported: Effort[]; defaultEffort?: Effort } {
+function effortLevelsFrom(configOptions: unknown): EffortLevels {
+  const option = findEffortOption(parseConfigOptions(configOptions))
   if (!option) return { supported: [] }
   const values = new Set(option.options.map(choice => choice.value.toLowerCase()))
   const supported = efforts.filter(level => values.has(level))
@@ -76,36 +88,46 @@ function effortLevelsFrom(option?: ParsedConfigOption): { supported: Effort[]; d
   return { supported, defaultEffort }
 }
 
-function modelsFromSession(session: Json): PlanModel[] {
-  const configOptions = parseConfigOptions(session.configOptions)
-  const effort = effortLevelsFrom(findEffortOption(configOptions))
-  const modelOption = findModelOption(configOptions)
-  if (modelOption && modelOption.options.length > 0) {
-    return modelOption.options.map(choice => ({
-      name: choice.value,
-      label: choice.name,
-      ...(effort.supported.length > 0 && { efforts: effort.supported }),
-      ...(effort.defaultEffort && { defaultEffort: effort.defaultEffort }),
-      images: true,
-    }))
+function planModel({ value, name }: ConfigOptionChoice, { supported, defaultEffort }: EffortLevels): PlanModel {
+  return {
+    name: value,
+    label: name,
+    ...(supported.length > 0 && { efforts: supported }),
+    ...(defaultEffort && { defaultEffort }),
+    images: true,
   }
-  const modelsField = fieldsOf(session.models)
-  const available = Array.isArray(modelsField.availableModels) ? modelsField.availableModels : []
+}
+
+async function effortLevelsOf(client: AcpClient, { sessionId, configId, model }: ModelChoice): Promise<EffortLevels> {
+  const chosen = await client.request('session/set_config_option', { sessionId, configId, value: model })
+  return effortLevelsFrom(chosen.configOptions)
+}
+
+async function configuredModels(client: AcpClient, sessionId: string, modelOption: ParsedConfigOption): Promise<PlanModel[]> {
+  const models: PlanModel[] = []
+  for (const choice of modelOption.options) {
+    const levels = await effortLevelsOf(client, { sessionId, configId: modelOption.id, model: choice.value })
+    models.push(planModel(choice, levels))
+  }
+  return models
+}
+
+function legacyModels(session: Json): PlanModel[] {
+  const levels = effortLevelsFrom(session.configOptions)
+  const available = fieldsOf(session.models).availableModels
+  if (!Array.isArray(available)) return []
   return available.flatMap(item => {
     const entry = fieldsOf(item)
     const id = typeof entry.modelId === 'string' ? entry.modelId : typeof entry.id === 'string' ? entry.id : ''
     if (!id) return []
     const label = typeof entry.name === 'string' && entry.name ? entry.name : id
-    return [
-      {
-        name: id,
-        label,
-        ...(effort.supported.length > 0 && { efforts: effort.supported }),
-        ...(effort.defaultEffort && { defaultEffort: effort.defaultEffort }),
-        images: true,
-      },
-    ]
+    return [planModel({ value: id, name: label }, levels)]
   })
+}
+
+async function modelsFromSession(client: AcpClient, sessionId: string, session: Json): Promise<PlanModel[]> {
+  const modelOption = findModelOption(parseConfigOptions(session.configOptions))
+  return modelOption?.options.length ? configuredModels(client, sessionId, modelOption) : legacyModels(session)
 }
 
 async function readStatus(folder?: string): Promise<AppStatus> {
@@ -187,9 +209,11 @@ async function signOutAgy(folder?: string): Promise<void> {
 async function listModels(folder?: string): Promise<PlanModel[]> {
   return withAcp(folder, async client => {
     const created = await client.request('session/new', { cwd: folder ?? homedir(), mcpServers: [] })
-    const sessionId = typeof created.sessionId === 'string' ? created.sessionId : undefined
-    if (sessionId) await client.request('session/close', { sessionId }).catch(() => {})
-    return modelsFromSession(created)
+    const sessionId = typeof created.sessionId === 'string' ? created.sessionId : ''
+    if (!sessionId) throw new Error('Antigravity did not return a session ID')
+    const models = await modelsFromSession(client, sessionId, created)
+    await client.request('session/close', { sessionId }).catch(() => {})
+    return models
   })
 }
 
