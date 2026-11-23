@@ -1,5 +1,5 @@
 import type { Billing, Limits, ModelPrice, Usage } from '@sand/accounts/contract'
-import { request, type } from '@sand/host-hub/contract'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 import type { UsageHistory } from '../forecast/history'
@@ -112,6 +112,8 @@ export const usageSummary = request('usage.summary', {
   input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string(), origin: z.enum(usageOrigins).optional() }),
   output: type<UsageSummary>(),
 })
+
+export const usageChanged = wireEvent<void>('usage.changed')
 
 export const usageHistory = request('usage.history', {
   input: () => z.object({ since: z.number(), zone: z.string() }),

@@ -1,6 +1,6 @@
 import type { Limits, SourceInfo } from '@sand/accounts/contract'
 import type { Wire } from '@sand/devices-contract'
-import type { UsageHistory } from '@sand/usage/contract'
+import { usageChanged, type UsageHistory } from '@sand/usage/contract'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader, historyView, summaryView } from './data/fleet'
 import { mergeSummaries } from './data/merge'
@@ -53,6 +53,16 @@ export const usageModel = (deps: UsageDeps) => {
     untrack(fleet.sync)
     untrack(history.sync)
   })
+  effect(() =>
+    deps.wire.on(
+      usageChanged,
+      (_, machine) => {
+        fleet.reload(machine)
+        history.reload(machine)
+      },
+      { from: 'all' },
+    ),
+  )
 
   const nameOf = (id: string) => pcs.get().find(machine => machine.id === id)?.name
   const home = derive(() => pcs.get().find(machine => machine.home))

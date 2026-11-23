@@ -81,6 +81,11 @@ export const fleetLoader = <T>(wire: Wire, pcs: () => Pc[], view: () => FleetVie
     }
   }
 
+  const reload = (id: string) => {
+    const found = pcs().find(pc => pc.id === id && pc.online)
+    if (found) ask(found)
+  }
+
   const refresh = () => {
     generation++
     asked.clear()
@@ -95,6 +100,7 @@ export const fleetLoader = <T>(wire: Wire, pcs: () => Pc[], view: () => FleetVie
       refresh()
     },
     refresh,
+    reload,
     sync,
   }
 }

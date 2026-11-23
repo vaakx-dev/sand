@@ -3,7 +3,8 @@ import { sessions } from '@sand/chats/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { historyOf, nativeSessions, usageHistory, usagePrices, usageReader, usageSummary } from './contract'
+import { historyOf, nativeSessions, usageChanged, usageHistory, usagePrices, usageReader, usageSummary } from './contract'
+import { OutsideTurns } from './summary/outside'
 import { pricesHandler } from './summary/prices'
 import { summaryHandler } from './summary/serve'
 import { summarize } from './summary/summarize'
@@ -17,9 +18,14 @@ export default definePlugin({
       const current = ctx.get(llm)
       return current?.refreshLimits?.() ?? current?.limits?.()
     }
-    const summary = summaryHandler({ sessions: ctx.sessions, llm: () => ctx.get(llm), native: () => ctx.get(nativeSessions) })
+    const outside = new OutsideTurns({
+      llm: () => ctx.get(llm),
+      native: () => ctx.get(nativeSessions),
+      read: () => ctx.get(server)?.broadcast(usageChanged, undefined),
+    })
+    const summary = summaryHandler({ sessions: ctx.sessions, llm: () => ctx.get(llm), outside })
     ctx.provide(usageReader, { summary: query => summarize({ sessions: ctx.sessions, llm: ctx.get(llm) }, { ...query, origin: 'sand' }) })
-    const history = async ({ since, zone }: { since: number; zone: string }) => historyOf(await summary({ since, bucket: 'hour', zone }))
+    const history = ({ since, zone }: { since: number; zone: string }) => historyOf(summary({ since, bucket: 'hour', zone }))
     ctx.watch(server, found =>
       found
         ? joinDisposers(
