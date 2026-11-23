@@ -9,7 +9,7 @@ import type { Mark } from '@sand/server/contract'
 import type { Dispose } from 'drydock'
 
 export interface ToolProgress {
-  running: Set<string>
+  running: Map<string, number>
   results: Map<string, ToolResultBlock>
   logs: Map<string, string[]>
 }

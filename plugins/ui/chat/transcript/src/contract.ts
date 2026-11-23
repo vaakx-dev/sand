@@ -15,6 +15,7 @@ export interface ToolView {
   result?: ToolResultBlock
   status: ToolStatus
   thread: string
+  started?: number
   progress?: string[]
 }
 
@@ -212,6 +213,7 @@ export interface ShownChats {
 }
 
 export { blockKey, itemNode, itemSpot, type ItemSpot } from './items/spot'
+export { ranText } from './tools/time'
 
 export const transcript = service<Transcript>('transcript')
 export const shownChats = service<ShownChats>('shownChats')

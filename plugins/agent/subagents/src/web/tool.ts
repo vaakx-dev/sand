@@ -41,7 +41,7 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: ChildWatch, act
       watch.tick()
       const child = childOf(tool)
       if (!child) return plainMeta(tool)
-      if (!child.running) return ''
+      if (!child.running || tool.status === 'running') return ''
       return `Running · ${duration(Date.now() - (child.started ?? child.info.created))}`
     },
     badge(tool) {

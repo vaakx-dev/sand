@@ -11,6 +11,7 @@ export interface TurnHead {
   start: number | undefined
   end: number
   summary: string
+  stepStarted: number | undefined
 }
 
 export interface ShownItem {
@@ -86,17 +87,27 @@ const timedOf = (turn: Turn) => {
   return turn.head ? [turn.head, ...worked] : worked
 }
 
+const runningStarts = (item: Item) =>
+  item.kind === 'tools' ? item.steps.flatMap(step => (step.kind === 'tool' && step.tool.status === 'running' && step.tool.started ? [step.tool.started] : [])) : []
+
+const stepStartedOf = (work: Item[]) => {
+  const starts = work.flatMap(runningStarts)
+  return starts.length ? Math.min(...starts) : undefined
+}
+
 const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions): TurnHead => {
   const items = turn.head ? [turn.head, ...turn.body] : turn.body
   const times = timedOf(turn).flatMap(item => timeOf(item) ?? [])
   const first = turn.head ? timeOf(turn.head) : times[0]
+  const phase = phaseOf(turn.body, running, options)
   return {
     kind: 'turn',
     key: `turn:${items[0]!.key}`,
-    phase: phaseOf(turn.body, running, options),
+    phase,
     start: running ? (options.started ?? first) : first,
     end: Math.max(0, ...times),
     summary: summaryOf(work, options.nested),
+    stepStarted: phase === 'working' ? stepStartedOf(work) : undefined,
   }
 }
 

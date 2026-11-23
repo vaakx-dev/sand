@@ -55,7 +55,15 @@ export const settledItems = (owner: Owner, path: Entry[], custom: (type: string)
   let previousTurn: string | undefined
 
   const tool = (call: ToolCallBlock, at: number) =>
-    list.step({ kind: 'tool', key: call.id, tool: { call, result: results.get(call.id), status: toolStatus(call, owner, results), thread: owner.id } }, last, at)
+    list.step(
+      {
+        kind: 'tool',
+        key: call.id,
+        tool: { call, result: results.get(call.id), status: toolStatus(call, owner, results), thread: owner.id, started: owner.tools?.running.get(call.id) },
+      },
+      last,
+      at,
+    )
 
   const user = (entry: Entry, message: Message) => {
     list.extend(entry.at)

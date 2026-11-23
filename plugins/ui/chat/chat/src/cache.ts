@@ -8,7 +8,7 @@ const keyOf = (thread: Thread): unknown[] => [
   thread.entries.size,
   thread.info.head,
   thread.tools,
-  [...thread.tools.running].join('\n'),
+  [...thread.tools.running.keys()].join('\n'),
   thread.tools.results.size,
 ]
 

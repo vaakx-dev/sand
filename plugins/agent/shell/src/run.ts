@@ -1,6 +1,7 @@
 import { drain, spawn, type SpawnOptions, stream, unixNewlines } from '@sand/process-tree'
+import { Repeats } from './repeats'
 
-export type Stop = 'silence' | 'limit'
+export type Stop = 'silence' | 'repeats' | 'limit'
 
 export interface Timeouts {
   silence: number
@@ -12,7 +13,7 @@ interface RunOptions extends SpawnOptions, Timeouts {
   onText?: (text: string) => void
 }
 
-const watchdog = ({ silence, limit }: Timeouts, stop: (reason: Stop) => void) => {
+const watchdog = ({ silence, limit }: Timeouts, stop: (reason: Exclude<Stop, 'repeats'>) => void) => {
   const started = performance.now()
   let heard = started
   const check = () => {
@@ -33,25 +34,41 @@ const watchdog = ({ silence, limit }: Timeouts, stop: (reason: Stop) => void) =>
 export const run = async (argv: string[], { signal, silence, limit, onText, ...options }: RunOptions) => {
   const { child, killTree } = spawn(argv, 'ignore', options)
   let stopped: Stop | undefined
+  let repeating: string | undefined
+  let repeated: string | undefined
   const watch = watchdog({ silence, limit }, reason => {
-    stopped = reason
+    repeated = reason === 'silence' ? repeating : undefined
+    stopped = repeated ? 'repeats' : reason
     void killTree()
   })
-  const hear = (text: string) => {
-    watch.hear()
-    onText?.(text)
+  const listen = (keep: (text: string) => void) => {
+    const repeats = new Repeats()
+    return (text: string) => {
+      keep(text)
+      onText?.(text)
+      if (repeats.hear(text) === 'repeat') {
+        repeating = repeats.sample ?? repeating
+        return
+      }
+      repeating = undefined
+      watch.hear()
+    }
   }
   let stdout = ''
   let stderr = ''
   const streams = [
-    stream(child.stdout, text => {
-      stdout += text
-      hear(text)
-    }),
-    stream(child.stderr, text => {
-      stderr += text
-      hear(text)
-    }),
+    stream(
+      child.stdout,
+      listen(text => {
+        stdout += text
+      }),
+    ),
+    stream(
+      child.stderr,
+      listen(text => {
+        stderr += text
+      }),
+    ),
   ]
   const abort = () => void killTree()
   signal.addEventListener('abort', abort, { once: true })
@@ -62,5 +79,5 @@ export const run = async (argv: string[], { signal, silence, limit, onText, ...o
   signal.removeEventListener('abort', abort)
 
   await drain(streams)
-  return { code, stopped, stdout: unixNewlines(stdout), stderr: unixNewlines(stderr) }
+  return { code, stopped, repeated, stdout: unixNewlines(stdout), stderr: unixNewlines(stderr) }
 }

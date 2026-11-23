@@ -1,6 +1,6 @@
 import type { Logins } from '@sand/logins/contract'
 import type { Tool } from '@sand/tools/contract'
-import { head, tail } from '@sand/util'
+import { duration, head, oneLine, tail } from '@sand/util'
 import type { Context } from 'drydock'
 import { z } from 'zod'
 import { shellReady } from './contract'
@@ -26,6 +26,8 @@ const AGENT_ENV = { CI: '1' }
 
 const stopGrace = 30_000
 
+const TIMED_AFTER_MS = 1000
+
 const minutes = (ms: number) => {
   const count = Math.round(ms / 6_000) / 10
   return `${count} minute${count === 1 ? '' : 's'}`
@@ -48,15 +50,25 @@ const inputOf = ({ silence_ms, limit_ms }: Limits, saved: boolean): z.ZodType<Sh
 const rules = ({ silence_ms, limit_ms }: Limits) =>
   `Stopped after ${minutes(silence_ms)} without output or ${minutes(limit_ms)} in all. No input and CI=1, so prompts fail.`
 
-const stopReasons: Record<Stop, (timeouts: Timeouts) => string> = {
-  silence: ({ silence }) => `no output for ${minutes(silence)}`,
-  limit: ({ limit }) => `still running after ${minutes(limit)}`,
+const SAMPLE_CHARS = 200
+
+interface Stopped {
+  timeouts: Timeouts
+  repeated: string | undefined
+}
+
+const stopReasons: Record<Stop, (stopped: Stopped) => string> = {
+  silence: ({ timeouts }) => `no output for ${minutes(timeouts.silence)}`,
+  repeats: ({ timeouts, repeated = '' }) => `only repeated output for ${minutes(timeouts.silence)}, like: ${oneLine(repeated, SAMPLE_CHARS)}`,
+  limit: ({ timeouts }) => `still running after ${minutes(timeouts.limit)}`,
 }
 
 const truncate = (text: string, max: number) =>
   text.length <= max ? text : `${head(text, max / 2)}\n… ${text.length - max} characters omitted; filter with grep, head or tail …\n${tail(text, max / 2)}`
 
 const unchanged = (text: string) => text
+
+const tookText = (ms: number) => (ms >= TIMED_AFTER_MS ? `, took ${duration(ms)}` : '')
 
 interface ShellToolOptions {
   spec: Pick<Tool, 'name' | 'description' | 'environment'>
@@ -81,7 +93,8 @@ export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor 
       const env = logins && wanted ? { ...AGENT_ENV, ...(await loginEnv(logins, wanted, context.conversation)) } : AGENT_ENV
       const timeouts = { silence, limit: limits.limit_ms }
       const tail = liveTail(context.progress, redact)
-      const { code, stopped, stdout, stderr } = await run(shell.argv(command), {
+      const started = performance.now()
+      const { code, stopped, repeated, stdout, stderr } = await run(shell.argv(command), {
         ...timeouts,
         cwd: context.cwd,
         verbatim: shell.verbatim,
@@ -91,9 +104,10 @@ export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor 
         onText: tail.add,
       })
       tail.stop()
+      const took = tookText(performance.now() - started)
       const output = truncate(redact([stdout, stderr].filter(Boolean).join('\n').trimEnd()), limits.max_output)
-      const reason = stopped ? `, stopped: ${stopReasons[stopped](timeouts)}` : ''
-      return `${output || '(no output)'}\n[exit code ${code}${reason}]`
+      const reason = stopped ? `, stopped: ${stopReasons[stopped]({ timeouts, repeated: repeated && redact(repeated) })}` : ''
+      return `${output || '(no output)'}\n[exit code ${code}${took}${reason}]`
     },
   }
 }

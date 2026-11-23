@@ -64,7 +64,7 @@ test('a gap in the live stream is not applied; the page asks for a fresh snapsho
   store.current = 'chat'
   listenThreads(wire, store, () => {})
   const text = (text: string, mark: Mark) => emit(llmEventWire, [{ type: 'text', index: 0, text }, { $session: { id: 'chat' } }, mark])
-  const snapshot = (live: string, mark: Mark): LiveSnapshot => ({ live: [{ type: 'text', index: 0, text: live }], tools: [], mark })
+  const snapshot = (live: string, mark: Mark): LiveSnapshot => ({ live: [{ type: 'text', index: 0, text: live }], tools: {}, mark })
 
   text('a', { turn: 't1', n: 1 })
   text('b', { turn: 't1', n: 2 })

@@ -4,11 +4,11 @@ import { tildeHome } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 
 const shownLines = 400
-const trailer = /\n?\[exit code (-?\d+)(?:, stopped: ([^\]]+))?\]\s*$/
+const trailer = /\n?\[exit code (-?\d+)(?:, took ([^,\]]+))?(?:, stopped: ([^\]]+))?\]\s*$/
 
 const parse = (text: string) => {
   const found = trailer.exec(text)
-  return { output: found ? text.slice(0, found.index) : text, code: found ? Number(found[1]) : undefined, stopped: found?.[2] }
+  return { output: found ? text.slice(0, found.index) : text, code: found ? Number(found[1]) : undefined, took: found?.[2], stopped: found?.[3] }
 }
 
 export const shellRenderer = ({ codeBlock, fold, metaLine, statusLabel }: Kit, { errorBody, field, resultText, truncatedNote }: ToolViews): ToolRenderer => {
@@ -23,7 +23,7 @@ export const shellRenderer = ({ codeBlock, fold, metaLine, statusLabel }: Kit, {
       const first = value.split('\n')[0] ?? ''
       return value.includes('\n') ? `${first} …` : first
     },
-    meta: () => '',
+    meta: tool => (tool.result ? (parse(resultText(tool.result)).took ?? '') : ''),
     badge(tool): ToolBadge | undefined {
       if (!tool.result) return undefined
       if (tool.result.isError) return { text: statusLabel('failed'), tone: 'danger' }

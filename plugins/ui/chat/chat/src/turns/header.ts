@@ -1,6 +1,6 @@
 import { duration } from '@sand/util'
-import { div, dynamicChild, span } from '@vaakx-dev/vrui'
-import type { Row } from '@sand/transcript/contract'
+import { clock, div, dynamicChild, span } from '@vaakx-dev/vrui'
+import { ranText, type Row } from '@sand/transcript/contract'
 import type { TurnHead, TurnPhase } from './fold'
 import type { ShownWait } from '../wait'
 import type { TurnContext } from './rows'
@@ -18,6 +18,14 @@ const labels: Record<TurnPhase, (head: TurnHead) => string> = {
 }
 
 const busy = (phase: TurnPhase) => phase === 'thinking' || phase === 'working'
+
+const stepTime = (started: number) => {
+  const now = clock()
+  return span({ class: 'shrink-0 whitespace-pre' }, () => {
+    const ran = ranText(started, now.get())
+    return ran && ` · running ${ran}`
+  })
+}
 
 export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => ({
   key: head.key,
@@ -43,7 +51,14 @@ export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => 
           () => busy(data.get().phase),
           live => (live ? spinner('xs') : chevron(() => open.get(), 'xs')),
         ),
-        span({ class: 'min-w-0 truncate' }, label),
+        span(
+          { class: 'flex min-w-0' },
+          span({ class: 'min-w-0 truncate' }, label),
+          dynamicChild(
+            () => data.get().stepStarted,
+            started => (started ? stepTime(started) : undefined),
+          ),
+        ),
       ),
     )
   },
