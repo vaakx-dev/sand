@@ -19,6 +19,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
 import type { TestHost } from './host'
+import { Plugins, type PluginOptions } from './plugins'
 import { userAuthFile, userPlugins } from './user'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
@@ -28,12 +29,6 @@ const plugins = ['core/paths', 'core/media', 'core/ledger', 'core/chats', 'core/
 const liveSources = ['core/claude-code', 'core/codex']
 
 const readyMs = 60_000
-
-const builtin = async (folder: string) => {
-  const dir = join(builtins, folder)
-  const { name, sand } = await Bun.file(join(dir, 'package.json')).json()
-  return [name.replace(/^@sand\//, ''), resolve(dir, sand.runtime)] as const
-}
 
 const need = <T>(app: ContextCore, token: Service<T>) => {
   const found = app.get(token)
@@ -97,10 +92,11 @@ const hostStubs = (app: Context) => {
 }
 
 const loadPlugins = async (app: Context, { replay }: Models, extra: string[], options: PluginOptions) => {
-  const own = await Promise.all([...plugins, ...(replay ? [] : liveSources), ...extra].map(builtin))
-  const found = new Map([...own, ...(replay ? [] : await userPlugins(builtins))])
-  for (const [id, entry] of found) app.load(entry, options[id] ?? {})
-  if (replay) app.load((await builtin('core/replay'))[1], { sources: replay })
+  const own = new Plugins({ app, builtins, place: 'runtime', options: replay ? { ...options, replay: { sources: replay } } : options })
+  const users = replay ? [] : await userPlugins(builtins)
+  for (const [id, entry] of users) own.mount(id, entry)
+  await own.load([...plugins, ...(replay ? [] : liveSources), ...extra, ...(replay ? ['core/replay'] : [])])
+  await own.start()
 }
 
 const loadConfig = async (app: Context, home: string, sources: Source[], config: string) => {
@@ -162,8 +158,6 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
   await modelsReady(app, models.ids)
   return { wire, routes, hear, heard, hello }
 }
-
-type PluginOptions = Record<string, Record<string, unknown>>
 
 type TestProject = LocalCopy & { name?: string }
 

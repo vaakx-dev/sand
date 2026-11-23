@@ -13,9 +13,7 @@ let host: TestHost
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-gateway-'))
   await markSandbox(home)
-  host = await startHost(home, ['devices/registry', 'host/gateway'])
-  host.app.provide(hostOptions, { home, main: '', port: 0, watch: false, drainTimeout: 0 })
-  await host.app.settled()
+  host = await startHost(home, ['devices/registry', 'host/gateway'], app => app.provide(hostOptions, { home, main: '', port: 0, watch: false, drainTimeout: 0 }))
 })
 
 afterEach(async () => {

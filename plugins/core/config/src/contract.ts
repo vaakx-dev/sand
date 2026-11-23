@@ -88,6 +88,7 @@ export interface Features {
 }
 
 export { definitionsIn, featureOf } from './features/definitions'
+export { providersIn, type Provider } from './providers'
 export { setTomlValues, type TomlValue, type TomlValues } from './toml'
 
 export const cli = service<Cli>('cli')
