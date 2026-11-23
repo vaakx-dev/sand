@@ -1,0 +1,19 @@
+{
+  "name": "@sand/agy",
+  "version": "0.0.0",
+  "description": "Use the Antigravity CLI's own sign-in: sand runs agy acp on this PC and gives it sand's tools",
+  "type": "module",
+  "sand": {
+    "feature": "models",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Antigravity",
+    "summary": "Use Gemini models through the Antigravity CLI (agy) on this PC"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/media": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
