@@ -3,8 +3,9 @@ import { cli } from '@sand/config/contract'
 import { createHandlers, hub, type Hub, type WireEvent } from '@sand/host-hub/contract'
 import { createHostChannel, type HostChannel, type HostMessage, type RuntimeMessage, runtimes, type Runtimes } from '@sand/host-runtimes/contract'
 import { errorMessage } from '@sand/util'
-import { createApp, type Dispose } from 'drydock'
-import { join, resolve } from 'node:path'
+import { type Context, createApp, type Dispose } from 'drydock'
+import { resolve } from 'node:path'
+import { Plugins } from './plugins'
 
 export interface HostLink {
   channel: HostChannel
@@ -14,12 +15,6 @@ export interface HostLink {
 type Handlers = ReturnType<typeof createHandlers>
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
-
-const hostEntry = async (folder: string) => {
-  const dir = join(builtins, folder)
-  const { sand } = await Bun.file(join(dir, 'package.json')).json()
-  return resolve(dir, sand.host)
-}
 
 const unsubscribed = () => () => {}
 
@@ -57,7 +52,7 @@ const answerOf = async (handlers: Handlers, runtime: string, message: RuntimeMes
   }
 }
 
-export const startHost = async (home: string, plugins: string[] = []) => {
+export const startHost = async (home: string, plugins: string[] = [], prepare: (app: Context) => void = () => {}) => {
   const app = createApp()
   const handlers = createHandlers()
   const linked = new Map<string, (message: HostMessage) => void>()
@@ -71,8 +66,10 @@ export const startHost = async (home: string, plugins: string[] = []) => {
   app.provide(cli, { place: 'host', home, cwd: home, builtins, safe: false, sandbox: inSandbox(home), args: [], exit() {} })
   app.provide(hub, hubOf(handlers))
   app.provide(runtimes, runtimesOf(tell))
-  for (const plugin of plugins) app.load(await hostEntry(plugin))
-  await app.settled()
+  prepare(app)
+  const own = new Plugins({ app, builtins, place: 'host' })
+  await own.load(plugins)
+  await own.start()
 
   return {
     app,
