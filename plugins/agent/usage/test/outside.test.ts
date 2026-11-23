@@ -17,9 +17,9 @@ const past = (native: string, input: number, at = 2_000): PastTurn => ({ ...tags
 
 const llm = () => ({ stream: async function* () {}, pastTurns: async (since: number) => [past('ran-in-sand', 100), past('ran-in-cli', 40), past('old', 7, 10)].filter(turn => turn.at >= since) })
 
-const read = Promise.withResolvers<void>()
+const changed = Promise.withResolvers<void>()
 
-const outside = new OutsideTurns({ llm, native: () => ({ natives: () => new Set(['ran-in-sand']) }), read: read.resolve })
+const outside = new OutsideTurns({ llm, native: () => ({ natives: () => new Set(['ran-in-sand']) }), changed: changed.resolve })
 
 const summary = summaryHandler({ sessions: { list: () => [], entriesOfType: () => [sandEntry] }, llm, outside })
 
@@ -27,8 +27,17 @@ const inputFor = (origin?: UsageOrigin) => summary({ since: 1_000, bucket: 'day'
 
 test('usage from apps run outside sand arrives after sand own, without counting the sessions sand ran twice', async () => {
   expect(inputFor()).toBe(100)
-  await read.promise
+  await changed.promise
   expect(inputFor()).toBe(140)
   expect(inputFor('sand')).toBe(100)
   expect(inputFor('outside')).toBe(40)
+})
+
+test('reading outside history that holds nothing new tells no one, so pages do not load twice', async () => {
+  let announced = 0
+  const quiet = new OutsideTurns({ llm: () => ({ stream: async function* () {}, pastTurns: async () => [] }), native: () => undefined, changed: () => announced++ })
+  quiet.turns(1_000)
+  await Bun.sleep(0)
+  expect(quiet.turns(1_000)).toEqual([])
+  expect(announced).toBe(0)
 })

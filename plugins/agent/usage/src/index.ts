@@ -21,7 +21,7 @@ export default definePlugin({
     const outside = new OutsideTurns({
       llm: () => ctx.get(llm),
       native: () => ctx.get(nativeSessions),
-      read: () => ctx.get(server)?.broadcast(usageChanged, undefined),
+      changed: () => ctx.get(server)?.broadcast(usageChanged, undefined),
     })
     const summary = summaryHandler({ sessions: ctx.sessions, llm: () => ctx.get(llm), outside })
     ctx.provide(usageReader, { summary: query => summarize({ sessions: ctx.sessions, llm: ctx.get(llm) }, { ...query, origin: 'sand' }) })

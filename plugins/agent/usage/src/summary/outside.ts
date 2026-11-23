@@ -5,10 +5,12 @@ import { outsideTurnOf, type Turn } from './turns'
 interface OutsideSources {
   llm(): LLM | undefined
   native(): NativeSessions | undefined
-  read(): void
+  changed(): void
 }
 
 const FRESH_MS = 60_000
+
+const fingerprint = (turns: PastTurn[]) => `${turns.length}:${turns.reduce((sum, turn) => sum + turn.at, 0)}`
 
 class OutsideTurns {
   private past: PastTurn[] = []
@@ -37,10 +39,12 @@ class OutsideTurns {
   }
 
   private async read(since: number) {
-    this.past = (await this.sources.llm()?.pastTurns?.(since)) ?? []
+    const found = (await this.sources.llm()?.pastTurns?.(since)) ?? []
+    const changed = fingerprint(found) !== fingerprint(this.past)
+    this.past = found
     this.since = since
     this.readAt = Date.now()
-    this.sources.read()
+    if (changed) this.sources.changed()
   }
 }
 
