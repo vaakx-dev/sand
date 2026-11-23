@@ -22,7 +22,7 @@ function agyAccount(mediaService: Media, { id, folder }: { id: string; folder?: 
     label: 'Antigravity',
     name: 'Gemini',
     detail: 'Uses your sign-in from the Antigravity CLI (agy) on this PC',
-    logo: 'gemini',
+    logo: 'antigravity',
     app: 'Antigravity',
     install: INSTALL_URL,
     caps: CAPS,
