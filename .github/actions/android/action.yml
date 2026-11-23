@@ -1,0 +1,42 @@
+name: Build the Android app
+description: Build sand.apk into the release assets, signed with the repository's Android key when its secrets are set
+
+inputs:
+  keystore:
+    description: The signing keystore, base64 encoded
+    required: false
+  keystore-password:
+    required: false
+  key-alias:
+    required: false
+  key-password:
+    required: false
+  assets:
+    description: The folder the APK goes into
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: 21
+        cache: gradle
+    - name: Build and sign the APK
+      shell: bash
+      working-directory: apps/android
+      env:
+        KEYSTORE: ${{ inputs.keystore }}
+        SAND_ANDROID_KEYSTORE_PASSWORD: ${{ inputs.keystore-password }}
+        SAND_ANDROID_KEY_ALIAS: ${{ inputs.key-alias }}
+        SAND_ANDROID_KEY_PASSWORD: ${{ inputs.key-password }}
+      run: |
+        if [ -n "$KEYSTORE" ]; then
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/sand.jks"
+          export SAND_ANDROID_KEYSTORE="$RUNNER_TEMP/sand.jks"
+        fi
+        export SAND_ANDROID_VERSION_CODE="$(git log -1 --format=%ct HEAD)"
+        ./gradlew assembleRelease --no-daemon
+        mkdir -p "${{ inputs.assets }}"
+        cp app/build/outputs/apk/release/app-release.apk "${{ inputs.assets }}/sand.apk"

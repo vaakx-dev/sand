@@ -1,4 +1,5 @@
 import {
+  androidApp,
   type DeviceRecord,
   devicesChange,
   devicesList,
@@ -17,6 +18,7 @@ import { definePlugin } from 'drydock'
 import { coalesced } from './changes'
 import { createFleet } from './fleet/fleet'
 import { browserKeys } from './keys'
+import { appRouteReporter, thisApp } from './page/app'
 import { homePcId } from './page/home'
 import { createPairing } from './pairing/pairing'
 import { createPcs } from './pcs'
@@ -54,6 +56,7 @@ export default definePlugin({
     }
 
     let pageCurrent = Promise.resolve(true)
+    const reportRoutes = appRouteReporter()
 
     const fleet = createFleet({
       home,
@@ -64,7 +67,9 @@ export default definePlugin({
         void pageCurrent.then(current => current && announce(pc, retagged))
       },
       changed() {
-        pairing.homeChanged(fleet.connection(home).status())
+        const connection = fleet.connection(home)
+        pairing.homeChanged(connection.status())
+        reportRoutes(connection)
         changed()
       },
     })
@@ -78,5 +83,7 @@ export default definePlugin({
 
     ctx.provide(wire, createWire(fleet, () => threads))
     ctx.provide(pcs, createPcs(fleet, pairing))
+    const app = thisApp()
+    if (app) ctx.provide(androidApp, app)
   },
 })

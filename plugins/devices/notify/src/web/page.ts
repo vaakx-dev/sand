@@ -3,7 +3,7 @@ import type { Toasts } from '@sand/toasts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, type Sig, sig } from '@vaakx-dev/vrui'
 import { type MomentKind, momentKinds, moments, notifyMoment, notifySubscribe, notifyUnsubscribe } from '../contract'
-import { permission, type Support, subscribe, support, unsubscribe } from './browser'
+import type { PushChannel, Support } from './channel'
 
 export interface PageDeps {
   kit: Kit
@@ -12,6 +12,7 @@ export interface PageDeps {
   on: Sig<boolean>
   key: Sig<string | undefined>
   off: Sig<MomentKind[]>
+  channel: PushChannel
   device(): string
 }
 
@@ -21,24 +22,25 @@ const unavailable: Record<Exclude<Support, 'ready'>, string> = {
   insecure: 'Needs a secure address. Open sand over HTTPS, such as Tailscale HTTPS from the Devices page.',
   install: 'On iPhone and iPad, add sand to your Home Screen with Share, then Add to Home Screen, and turn this on there.',
   missing: 'This browser can’t show notifications.',
+  distributor: 'Needs a push app such as ntfy. Install one, then turn this on.',
 }
 
-const blocked = 'Blocked for this site. Allow notifications in the browser’s site settings, then turn this on.'
+const blockedText = 'Blocked for this site. Allow notifications in the browser’s site settings, then turn this on.'
 const ready = 'For threads on any of your PCs, even when sand is closed.'
 
-export const notificationsPage = ({ kit, wire, toasts, on, key, off, device }: PageDeps): HTMLElement => {
+export const notificationsPage = ({ kit, wire, toasts, on, key, off, channel, device }: PageDeps): HTMLElement => {
   const { settingsRow, settingsSection, toggleSwitch } = kit
-  const supported = support()
-  const allowed = sig(permission())
+  const supported = channel.support()
+  const blocked = sig(channel.blocked())
   const busy = sig(false)
 
   const enable = async (pushKey: string) => {
-    const target = await subscribe(pushKey)
+    const target = await channel.subscribe(pushKey)
     if (target) await wire.call(notifySubscribe, target)
   }
 
   const disable = async () => {
-    await unsubscribe()
+    await channel.unsubscribe()
     await wire.call(notifyUnsubscribe, {})
   }
 
@@ -48,15 +50,15 @@ export const notificationsPage = ({ kit, wire, toasts, on, key, off, device }: P
     busy.set(true)
     const turningOn = !on.get()
     await toasts.attempt(turningOn ? 'Couldn’t turn notifications on' : 'Couldn’t turn notifications off', () => (turningOn ? enable(pushKey) : disable()), { id: toastId })
-    allowed.set(permission())
+    blocked.set(channel.blocked())
     busy.set(false)
   }
 
   const detail = derive(() => {
     if (supported !== 'ready') return unavailable[supported]
-    return allowed.get() === 'denied' ? blocked : ready
+    return blocked.get() ? blockedText : ready
   })
-  const disabled = derive(() => supported !== 'ready' || !key.get() || busy.get() || (allowed.get() === 'denied' && !on.get()))
+  const disabled = derive(() => supported !== 'ready' || !key.get() || busy.get() || (blocked.get() && !on.get()))
 
   const momentRow = (kind: MomentKind) => {
     const { label, detail } = moments[kind]

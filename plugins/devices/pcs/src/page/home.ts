@@ -1,5 +1,6 @@
 import { kindOfUrl } from '@sand/devices-connect'
 import { homePcMeta } from '@sand/devices-contract'
+import { thisApp } from './app'
 
 export const homePcId = () => {
   const id = document.querySelector<HTMLMetaElement>(`meta[name="${homePcMeta}"]`)?.content
@@ -7,8 +8,10 @@ export const homePcId = () => {
   return id
 }
 
-export const pageUrl = (path: string) => `${location.origin}${path}`
+export const pageRoutes = () => thisApp()?.routes ?? [location.origin]
 
-export const securePage = () => location.protocol === 'https:'
+export const pageUrl = (path: string) => `${pageRoutes()[0]}${path}`
 
-export const servedFromThisPc = () => kindOfUrl(location.origin) === 'local'
+export const securePage = () => !thisApp() && location.protocol === 'https:'
+
+export const servedFromThisPc = () => !thisApp() && kindOfUrl(location.origin) === 'local'

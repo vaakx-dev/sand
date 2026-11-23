@@ -3,6 +3,7 @@ import { browserResumeStore, browserRouteStore, browserWake, pageVisible } from 
 import type { PcConnection, PcIdentity, Route, Signer } from '@sand/devices-contract'
 import { hello, hubResync } from '@sand/host-hub/contract'
 import { runtimeChanged } from '@sand/host-runtimes/contract'
+import { withAppNetwork } from '../page/app'
 import { securePage } from '../page/home'
 import { type HelloMemory, helloMemory } from './hellos'
 
@@ -28,7 +29,7 @@ export interface LinkOptions {
 
 const routes = browserRouteStore()
 const resumes = browserResumeStore()
-const wake = browserWake()
+const wake = withAppNetwork(browserWake())
 
 export const openPcLink = (options: LinkOptions): PcLink => {
   const hellos = helloMemory(options.pc)

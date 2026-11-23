@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>sand</title>
+  <style>
+    :root { --page: #ffffff; --text: #18181b; --muted: #52525b; --raised: #eeeef0; --accent: #262626; --on-accent: #ffffff; --error: #b42318 }
+    @media (prefers-color-scheme: dark) {
+      :root { --page: #0b0b0c; --text: #ededef; --muted: #a1a1a8; --raised: #1a1a1d; --accent: #e5e5e5; --on-accent: #0b0b0c; --error: #f97066 }
+    }
+    * { box-sizing: border-box }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; background: var(--page); color: var(--text); font: 16px/1.5 system-ui, sans-serif }
+    main { width: 100%; max-width: 420px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 16px }
+    h1 { margin: 0; font-size: 24px; font-weight: 600 }
+    p { margin: 0; color: var(--muted) }
+    button, input { font: inherit; border-radius: 10px; min-height: 48px; padding: 0 16px }
+    button { border: 0; background: var(--accent); color: var(--on-accent); font-weight: 600 }
+    button.quiet { background: var(--raised); color: var(--text) }
+    input { width: 100%; border: 1px solid var(--raised); background: var(--page); color: var(--text) }
+    form { display: flex; flex-direction: column; gap: 8px }
+    .error { color: var(--error) }
+    [hidden] { display: none }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="title">Pair this phone</h1>
+    <p id="intro">On your PC, open sand and go to Devices, then Add a phone or browser. Scan the code it shows.</p>
+    <button id="retry" hidden>Try again</button>
+    <button id="scan">Scan the code</button>
+    <form id="paste">
+      <input id="link" type="url" placeholder="Or paste the pairing link" aria-label="Pairing link" autocomplete="off">
+      <p id="wrong" class="error" hidden>That isn’t a pairing link. It ends in #pair=…</p>
+      <button class="quiet">Pair</button>
+    </form>
+  </main>
+  <script>
+    const send = message => window.sandApp.postMessage(JSON.stringify(message))
+    const pairingLink = text => {
+      try {
+        const url = new URL(text.trim())
+        return /^https?:$/.test(url.protocol) && new URLSearchParams(url.hash.slice(1)).has('pair') ? url.href : undefined
+      } catch {
+        return undefined
+      }
+    }
+
+    if (location.pathname !== '/~app/setup.html') {
+      document.getElementById('title').textContent = 'Can’t reach your PC'
+      document.getElementById('intro').textContent = 'Check that sand is running on your PC, and that this phone is on your home wifi or Tailscale. Or pair it again.'
+      document.getElementById('retry').hidden = false
+      document.getElementById('scan').className = 'quiet'
+    }
+
+    document.getElementById('retry').onclick = () => location.reload()
+    document.getElementById('scan').onclick = () => send({ kind: 'scan' })
+    document.getElementById('link').oninput = () => { document.getElementById('wrong').hidden = true }
+    document.getElementById('paste').onsubmit = event => {
+      event.preventDefault()
+      const link = pairingLink(document.getElementById('link').value)
+      document.getElementById('wrong').hidden = Boolean(link)
+      if (link) send({ kind: 'pair', link })
+    }
+  </script>
+</body>
+</html>

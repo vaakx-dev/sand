@@ -3,12 +3,11 @@ import { decodeBase64url } from '@sand/devices-identity'
 import { isRecord } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
 import type { Notice } from '../contract'
-
-export type Support = 'ready' | 'insecure' | 'install' | 'missing'
+import type { PushChannel, Support } from './channel'
 
 const icon = '/icons/192x192.png'
 
-export const support = (): Support => {
+const support = (): Support => {
   if (!window.isSecureContext) return 'insecure'
   if ('PushManager' in window && 'serviceWorker' in navigator && 'Notification' in window) return 'ready'
   return /iPhone|iPad/.test(navigator.userAgent) ? 'install' : 'missing'
@@ -16,7 +15,7 @@ export const support = (): Support => {
 
 export const permission = () => (support() === 'ready' ? Notification.permission : 'default')
 
-export const subscribe = async (key: string) => {
+const subscribe = async (key: string) => {
   if ((await Notification.requestPermission()) !== 'granted') return undefined
   const { pushManager } = await navigator.serviceWorker.ready
   await (await pushManager.getSubscription())?.unsubscribe()
@@ -24,10 +23,12 @@ export const subscribe = async (key: string) => {
   return pushTargetSchema().parse(subscription.toJSON())
 }
 
-export const unsubscribe = async () => {
+const unsubscribe = async () => {
   const { pushManager } = await navigator.serviceWorker.ready
   await (await pushManager.getSubscription())?.unsubscribe()
 }
+
+export const webPush: PushChannel = { support, blocked: () => permission() === 'denied', subscribe, unsubscribe }
 
 export const showNotice = async (notice: Notice) => {
   const registration = await navigator.serviceWorker.ready
