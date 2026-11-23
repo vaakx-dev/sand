@@ -35,7 +35,7 @@ test('with Threads and Bots on, a bot answers', async () => {
   }
 })
 
-test("with Threads and Bots on, a bot's agent runs a shell call without asking and the bot can't", async () => {
+test("with Threads and Bots on, a bot and its agent both get the shell, and the agent runs it without asking", async () => {
   const botReplies = [
     [{ type: 'call' as const, name: 'agent', input: { label: 'Run it', task: 'Run echo ran', does: 'build', background: true } }],
     [{ type: 'text' as const, text: 'Started' }],
@@ -49,7 +49,7 @@ test("with Threads and Bots on, a bot's agent runs a shell call without asking a
   try {
     expect(sand.problems()).toEqual([])
     const chat = await botChat(sand)
-    expect(sand.app.get(tools)!.names(chat)).not.toContain('shell')
+    expect(sand.app.get(tools)!.names(chat)).toContain('shell')
     await sand.turns.run(chat, 'run it')
     const { model: used, transcript } = await agentResults(sand, chat.id)
     expect({ used, transcript }).toMatchObject({

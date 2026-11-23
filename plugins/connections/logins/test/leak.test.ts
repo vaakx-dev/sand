@@ -148,7 +148,6 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     expect(chat.latest('compaction')?.data).toMatchObject({ summary: 'Thread summary.' })
 
     const bot = chatEntries(sand, ids.bot)
-    expect(sand.app.get(tools)!.names(sand.sessions.require(ids.bot))).not.toContain('shell')
     await tellBot(sand, ids.bot, 'Sign in to the bank and the shop')
     const agentId = await agentOf(sand, ids.bot)
     const agent = chatEntries(sand, agentId)

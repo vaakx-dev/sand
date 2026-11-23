@@ -1,8 +1,8 @@
-import type { GroupState, Tool } from '../contract'
+import type { Tool, ToolGroup } from '../contract'
 
-export interface Candidate {
+interface Candidate {
   tool: Tool
-  group: GroupState
+  group: ToolGroup
 }
 
 const limit = 5
@@ -16,10 +16,9 @@ const score = ({ tool, group }: Candidate, terms: string[]) => {
   return terms.reduce((sum, term) => sum + (name.includes(term) ? 3 : 0) + (about.includes(term) ? 2 : 0) + (description.includes(term) ? 1 : 0), 0)
 }
 
-export const search = (candidates: Candidate[], query: string) => {
-  const wanted = query.trim().toLowerCase()
-  const whole = candidates.filter(candidate => candidate.group.name === wanted || candidate.tool.name === wanted)
-  if (whole.length) return whole
+const named = (candidates: Candidate[], name: string) => candidates.filter(candidate => candidate.group.name === name || candidate.tool.name === name)
+
+const matching = (candidates: Candidate[], query: string) => {
   const terms = words(query)
   return candidates
     .map(candidate => ({ candidate, score: score(candidate, terms) }))
@@ -28,3 +27,5 @@ export const search = (candidates: Candidate[], query: string) => {
     .slice(0, limit)
     .map(scored => scored.candidate)
 }
+
+export { matching, named, type Candidate }

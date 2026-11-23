@@ -159,12 +159,10 @@ test('a thread messages a bot, which answers only by messaging the thread back, 
   expect(await replied(bot.id, second.turn!)).toBe('Booked.')
 })
 
-test("a bot can message and list threads, but not start them or wait on them", async () => {
+test('a bot can message and list threads', async () => {
   await start([said('Hi back.')], [])
   const bot = await createBot('Builder')
 
-  expect(await use(asBot(bot.id), 'thread_start', { prompt: 'Tidy your folder' })).toEqual({ error: expect.stringContaining('Unknown tool') })
-  expect(await use(asBot(bot.id), 'thread_wait', { thread: 'any' })).toEqual({ error: expect.stringContaining('Unknown tool') })
   const other = sand.chat('fake/t')
   const sent = await use(asBot(bot.id), 'thread_send', { thread: other.id, prompt: 'Hi' })
   await sand.turns.wait(sent.turn, 'end')

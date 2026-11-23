@@ -126,6 +126,22 @@ test('a restriction sees the effect of a tool that has one, and refuses a call w
   expect(await catalog.run(either(true), context)).toMatchObject({ isError: true, content: [{ text: expect.stringContaining("either isn't available to this agent for this call") }] })
 })
 
+test('the tool search offers only what the chat may use, says when a named tool is not, and tells loaded tools apart', async () => {
+  const catalog = createCatalog(memoryChoices(), () => {})
+  catalog.group({ name: 'notes', label: 'Notes', summary: 'note tools', load: 'on-demand' })
+  for (const name of ['note_read', 'note_write']) catalog.register({ ...named(name), group: 'notes' })
+  catalog.restrict(tool => tool !== 'note_write')
+  const find = (query: string) => ({ type: 'tool_call' as const, id: query, name: findName, input: { query } })
+  const texts = async (query: string) => (await catalog.run(find(query), context)).content.flatMap(item => (item.type === 'text' ? [item.text] : []))
+  const loadedBefore = { role: 'user' as const, content: [{ type: 'tool_result' as const, callId: 'x', content: [{ type: 'tool_reference' as const, name: 'note_read' }] }] }
+
+  expect(catalog.specs([], conversation).find(spec => spec.name === findName)?.description).toEndWith('- notes: note tools (note_read)')
+  expect(await texts('note_write')).toEqual(["note_write isn't available in this chat."])
+  expect(await texts('notes')).toEqual(['Loaded: note_read'])
+  catalog.specs([loadedBefore], conversation)
+  expect(await texts('notes')).toEqual(['Already loaded: note_read'])
+})
+
 test('a relay skips the gate, since each call it makes is checked on its own', async () => {
   const catalog = createCatalog(memoryChoices(), () => {})
   catalog.register({ ...named('relay'), relay: true })

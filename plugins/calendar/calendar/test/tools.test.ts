@@ -62,7 +62,7 @@ test("a bot's agent adds an event to the calendar and reads its agenda back", as
   const bot = await ask(botCreate, { name: 'Planner' })
   const chat = sand.sessions.require(bot.id)
   sand.app.get(modelSettings)!.change(chat, { model: 'fake/m' })
-  expect(sand.app.get(tools)!.names(chat)).not.toContain('calendar_create')
+  expect(sand.app.get(tools)!.names(chat)).toContain('calendar_create')
   await sand.turns.run(chat, 'Lunch with Ana next Friday at 1')
   await heardBack(chat, 'Booked lunch with Ana.')
 

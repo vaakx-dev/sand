@@ -8,7 +8,6 @@ import { findTool } from './find'
 import { foundIn } from './found'
 import { callerSite, checkName } from './names'
 import { inScope } from './scope'
-import type { Candidate } from './search'
 import { spec } from './spec'
 
 const secretNote = `Some tools take secrets, like passwords, keys and one-time codes. Once such a call runs, sand replaces those inputs in the chat with ${secretMark}. The tool got the real values you passed, so a call that shows ${secretMark} was not a mistake.`
@@ -20,6 +19,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const groups = new Map<string, ToolGroup>()
   const offers = new Map<Owner, Offer>()
   const allows = new Set<Allow>()
+  const loadedIn = new Map<string, ReadonlySet<string>>()
   let gated: Gate | undefined
 
   const chosen = (group: ToolGroup) => choices.get(group.name) ?? group.load
@@ -43,14 +43,20 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
         tools: [...new Set(tools().filter(tool => tool.group === group.name).map(tool => tool.name))].sort(),
       }))
 
-  const find = (deferred: Tool[]) => {
-    const open = states().filter(group => group.chosen === 'on-demand')
-    const candidates: Candidate[] = open.flatMap(group => deferred.filter(tool => tool.group === group.name).map(tool => ({ tool, group })))
-    const used = new Set(candidates.map(({ group }) => group.name))
-    return findTool(
-      open.filter(group => used.has(group.name)),
-      candidates,
-    )
+  const blockedIn = (scoped: Tool[]) => {
+    const usableNames = new Set(scoped.map(tool => tool.name))
+    const usableGroups = new Set(scoped.map(tool => tool.group))
+    const closedTools = tools().filter(tool => !usableNames.has(tool.name)).map(tool => [tool.name, tool.name] as const)
+    const closedGroups = [...groups.keys()].filter(name => !usableGroups.has(name)).map(name => [name, `The ${name} group`] as const)
+    return new Map([...closedTools, ...closedGroups])
+  }
+
+  const find = (scoped: Tool[], conversation: Conversation) => {
+    const candidates = listed(scoped, 'on-demand', conversation).flatMap(tool => {
+      const group = groupOf(tool)
+      return group ? [{ tool, group }] : []
+    })
+    return findTool({ candidates, loaded: loadedIn.get(conversation.id) ?? new Set(), blocked: blockedIn(scoped) })
   }
 
   const changes = (apply: () => void) => {
@@ -91,16 +97,17 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     const scoped = usable(conversation)
     const deferred = listed(scoped, 'on-demand', conversation)
     const found = foundIn(messages)
+    loadedIn.set(conversation.id, found)
     return [
       ...listed(scoped, 'always', conversation).map(spec),
-      ...(deferred.length ? [spec(find(deferred))] : []),
+      ...(deferred.length ? [spec(find(scoped, conversation))] : []),
       ...deferred.map(tool => ({ ...spec(tool), deferred: { found: found.has(tool.name) } })),
     ]
   }
 
   const resolve = (name: string, conversation: Conversation) => {
     const scoped = usable(conversation)
-    return name === findName ? find(listed(scoped, 'on-demand', conversation)) : scoped.find(tool => tool.name === name)
+    return name === findName ? find(scoped, conversation) : scoped.find(tool => tool.name === name)
   }
 
   const secrets = (): Secrets =>

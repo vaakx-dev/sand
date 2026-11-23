@@ -17,7 +17,6 @@
     "@sand/project": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/provider-threads": "workspace:*",
-    "@sand/tools": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
@@ -29,6 +28,7 @@
     "@sand/ledger": "workspace:*",
     "@sand/memory": "workspace:*",
     "@sand/replay": "workspace:*",
+    "@sand/tools": "workspace:*",
     "zod": "^4.6.5"
   }
 }

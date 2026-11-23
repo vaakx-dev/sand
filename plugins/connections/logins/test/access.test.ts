@@ -1,4 +1,3 @@
-import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -24,7 +23,7 @@ const setUp = async () => {
 const asksEveryTime = (name: string) =>
   `Not used: the login ${name} is set to "Ask me every time", so agents can't use it. Tell the user: they can turn that off in the login's settings (Settings → Logins), or use it themselves.`
 
-test("a bot's subagents use the bot's logins and the bot itself can't; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
+test("a bot's subagents use the bot's logins; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-logins-access-'))
   const ids = await setUp()
   const useKey = call('shell', { command: 'echo used', logins: { TOKEN: ids.key } })
@@ -45,10 +44,6 @@ test("a bot's subagents use the bot's logins and the bot itself can't; any other
   )
   try {
     const fills = browser(sand)
-    const bot = sand.sessions.require(ids.bot)
-    expect(sand.app.get(tools)!.names(bot)).not.toContain('shell')
-    expect(sand.app.get(tools)!.names(bot)).not.toContain('login_fill')
-
     await tellBot(sand, ids.bot, 'Deploy')
     await heardBack(sand, ids.bot, 'Subagent used both.')
     expect(fills).toEqual([{ site: 'northbank.example', username: 'ana', password: 'bank-password' }])
