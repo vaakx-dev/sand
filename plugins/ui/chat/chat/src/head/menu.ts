@@ -1,11 +1,13 @@
 import { picker } from '@sand/picker/contract'
 import type { MenuAction, Shell } from '@sand/ui-shell/contract'
 import { oneLine } from '@sand/util'
-import type { Thread } from '@sand/web-client/contract'
 import type { ChatContext } from '../context'
-import { threadRoute } from '../contract'
+import { threadRoute, type ThreadView } from '../contract'
 
-export const threadTitle = (thread: Thread) => thread.info.title || 'Untitled thread'
+interface MenuParts {
+  shell: Shell
+  view: ThreadView
+}
 
 const renameThread = async (ctx: ChatContext, id: string) => {
   const thread = ctx.threads.get(id)
@@ -20,13 +22,13 @@ const removeThread = async (ctx: ChatContext, shell: Shell, id: string) => {
   shell.land({ forget: { kind: threadRoute, id } })
 }
 
-export const threadActions = (ctx: ChatContext, shell: Shell, id: string): MenuAction[] => {
+export const threadActions = (ctx: ChatContext, { shell, view }: MenuParts, id: string): MenuAction[] => {
   const thread = ctx.threads.get(id)
   if (!thread) return []
   const rename: MenuAction[] = ctx.get(picker) ? [{ id: 'rename', label: 'Rename…', icon: 'pencil', run: () => renameThread(ctx, id) }] : []
   const remove: MenuAction[] = thread.running
     ? []
-    : [{ id: 'delete', group: 'danger', label: 'Delete', icon: 'trash', danger: true, confirm: `Delete “${threadTitle(thread)}”? This can’t be undone.`, run: () => removeThread(ctx, shell, id) }]
+    : [{ id: 'delete', group: 'danger', label: 'Delete', icon: 'trash', danger: true, confirm: `Delete “${view.title(id)}”? This can’t be undone.`, run: () => removeThread(ctx, shell, id) }]
   const shared = ctx.shownChats.actions().map(({ id: action, label, icon, run }): MenuAction => ({ id: action, label, icon, run: () => run(id) }))
   return [...shared, ...rename, { id: 'copy-link', label: 'Copy link', icon: 'link', run: () => ctx.kit.copyText(shell.link({ kind: threadRoute, id })) }, ...remove]
 }

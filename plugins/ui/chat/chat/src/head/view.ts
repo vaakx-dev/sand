@@ -1,23 +1,28 @@
 import type { Pulse } from '@sand/reactive'
 import type { Shell } from '@sand/ui-shell/contract'
-import type { Thread } from '@sand/web-client/contract'
 import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { ChatContext } from '../context'
-import { threadRoute } from '../contract'
-import { threadActions, threadTitle } from './menu'
+import type { ThreadView } from '../contract'
+import { threadActions } from './menu'
 
 interface ParentLink {
   id: string
   title: string
 }
 
-const parentOf = (ctx: ChatContext, thread: Thread | undefined): ParentLink | undefined => {
-  const info = thread?.info
-  if (info?.kind !== 'agent' || !info.parent) return undefined
-  return { id: info.parent, title: ctx.threads.get(info.parent)?.info.title || 'Untitled thread' }
+interface HeadParts {
+  shell: Shell
+  view: ThreadView
+  changes: Pulse
 }
 
-const parentCrumb = (ctx: ChatContext, shell: Shell, parent: Sig<ParentLink | undefined>) =>
+const parentOf = (ctx: ChatContext, view: ThreadView, id: string): ParentLink | undefined => {
+  const info = ctx.threads.get(id)?.info
+  if (info?.kind !== 'agent' || !info.parent) return undefined
+  return { id: info.parent, title: view.title(info.parent) }
+}
+
+const parentCrumb = (ctx: ChatContext, view: ThreadView, parent: Sig<ParentLink | undefined>) =>
   span(
     { class: 'flex shrink-0 items-center gap-2' },
     ctx.kit.linkButton(
@@ -26,7 +31,7 @@ const parentCrumb = (ctx: ChatContext, shell: Shell, parent: Sig<ParentLink | un
         title: () => `Back to ${parent.get()?.title ?? 'the parent thread'}`,
         onClick: () => {
           const link = parent.get()
-          if (link) shell.open({ kind: threadRoute, id: link.id })
+          if (link) view.open(link.id)
         },
       },
       ctx.kit.rowTitle(() => parent.get()?.title ?? ''),
@@ -34,23 +39,20 @@ const parentCrumb = (ctx: ChatContext, shell: Shell, parent: Sig<ParentLink | un
     span({ class: 'shrink-0' }, '/'),
   )
 
-const titleMenu = (ctx: ChatContext, shell: Shell, id: string, title: Sig<string>) => {
+const titleMenu = (ctx: ChatContext, { shell, view }: HeadParts, id: string, title: Sig<string>) => {
   const { contextMenu, titleButton } = ctx.kit
   const menu = contextMenu()
-  const spec = () => ({ title: title.get(), actions: threadActions(ctx, shell, id) })
+  const spec = () => ({ title: title.get(), actions: threadActions(ctx, { shell, view }, id) })
   return [titleButton({ title, 'aria-haspopup': 'menu', ...menu.target(spec, event => menu.openBelow(event, spec)) }, title), menu.view()]
 }
 
-export const breadcrumb = (ctx: ChatContext, shell: Shell, changes: Pulse, id: string) => {
-  const thread = () => ctx.threads.get(id)
-  const parent = changes.read(() => parentOf(ctx, thread()))
-  const title = changes.read(() => {
-    const found = thread()
-    return found ? threadTitle(found) : ''
-  })
+export const breadcrumb = (ctx: ChatContext, parts: HeadParts, id: string) => {
+  const { view, changes } = parts
+  const parent = changes.read(() => parentOf(ctx, view, id))
+  const title = changes.read(() => (ctx.threads.get(id) ? view.title(id) : ''))
   return div(
     { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm text-neutral-500' },
-    show(parent.map(Boolean), () => parentCrumb(ctx, shell, parent)),
-    titleMenu(ctx, shell, id, title),
+    show(parent.map(Boolean), () => parentCrumb(ctx, view, parent)),
+    titleMenu(ctx, parts, id, title),
   )
 }
