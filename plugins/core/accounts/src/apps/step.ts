@@ -1,5 +1,5 @@
 import type { Block, StopReason } from '@sand/chats/contract'
-import type { LLMEvent, Usage } from '../contract'
+import type { ContextReport, LLMEvent, Usage } from '../contract'
 import type { Signal } from './signals'
 
 const emptyUsage = (): Usage => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 })
@@ -18,13 +18,21 @@ export async function* readStep(next: () => Promise<Signal>, model: string): Asy
   const usage = emptyUsage()
   let open: Block | undefined
   let cacheTtlMs: number | undefined
+  let context: ContextReport | undefined
 
   const close = function* (): Generator<LLMEvent> {
     if (open) yield { type: 'block', index: blocks.length - 1, block: open }
     open = undefined
   }
 
-  const done = (stopReason: StopReason): LLMEvent => ({ type: 'done', message: { role: 'assistant', content: blocks }, stopReason, usage, ...(cacheTtlMs && { cacheTtlMs }) })
+  const done = (stopReason: StopReason): LLMEvent => ({
+    type: 'done',
+    message: { role: 'assistant', content: blocks },
+    stopReason,
+    usage,
+    ...(cacheTtlMs && { cacheTtlMs }),
+    ...(context && { context }),
+  })
 
   yield { type: 'start', model }
   for (;;) {
@@ -60,6 +68,9 @@ export async function* readStep(next: () => Promise<Signal>, model: string): Asy
       case 'usage':
         add(usage, signal.usage)
         cacheTtlMs = signal.cacheTtlMs ?? cacheTtlMs
+        break
+      case 'context':
+        context = { ...context, ...signal.report }
         break
       case 'pause':
         if (!blocks.some(block => block.type === 'tool_call')) break

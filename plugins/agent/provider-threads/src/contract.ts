@@ -1,6 +1,6 @@
-import type { Effort, LLMRequest, NativeRef, Speed, ToolSpec, Usage } from '@sand/accounts/contract'
+import type { Effort, LLMRequest, NativeRef, Speed, ToolSpec } from '@sand/accounts/contract'
 import type { ChatKind, Message } from '@sand/chats/contract'
-import type { Conversation, ConversationRef, Owner, Step, TurnInfo } from '@sand/engine/contract'
+import type { Conversation, ConversationRef, Owner, Step, StepDone, TurnInfo } from '@sand/engine/contract'
 import { event, service, type Dispose } from 'drydock'
 
 export type Segment = { entries: [from: string, to: string] } | { summary: string } | { handoff: string; to: string }
@@ -21,6 +21,7 @@ export interface ProviderThreadInfo {
   effort?: Effort
   speed: Speed
   context: number
+  window?: number
   used: number
   created: number
 }
@@ -57,7 +58,7 @@ export const briefTools = event<(tools: ToolSpec[], conversation: Conversation) 
 export const stepPrepare = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, signal: AbortSignal) => Promise<boolean | undefined>>(
   'step.prepare',
 )
-export const stepSettle = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, usage: Usage, cacheTtlMs: number | undefined) => void>('step.settle')
+export const stepSettle = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, done: StepDone) => void>('step.settle')
 export const contextOverflow = event<(conversation: Conversation, turn: TurnInfo, error: unknown, signal: AbortSignal) => boolean | undefined>(
   'context.overflow',
 )

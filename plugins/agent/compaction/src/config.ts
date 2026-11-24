@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import { idleShare, type IdleShares } from './contract'
+
+const idleDefaults: IdleShares = { bot: 0.25, thread: 0.5 }
 
 export const config = z.object({
   ratio: z.number().gt(0).max(1).default(0.9),
@@ -6,6 +9,7 @@ export const config = z.object({
   background: z.number().int().min(0).default(30_000),
   keep: z.number().int().positive().default(20_000),
   max_context: z.number().int().positive().optional(),
+  idle: z.object({ bot: idleShare().default(idleDefaults.bot), thread: idleShare().default(idleDefaults.thread) }).default(idleDefaults),
   instructions: z.string().optional(),
 })
 

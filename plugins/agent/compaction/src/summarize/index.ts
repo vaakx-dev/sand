@@ -14,8 +14,10 @@ export interface SummaryInput {
   messages: Message[]
   previous?: string
   instructions?: string
-  limit: number
+  limit?: number
 }
+
+const chunkCharsOf = (limit: number | undefined) => (limit ? Math.floor(limit * chunkShare * charsPerToken) : Infinity)
 
 const chunks = (parts: string[], max: number) => {
   const groups: string[][] = []
@@ -45,7 +47,7 @@ export const summarize = async (llm: LLM, media: Media, { model, messages, previ
   let summary = previous
   let usage: Usage | undefined
   let source: SourceRef | undefined
-  for (const chunk of chunks(parts, Math.floor(limit * chunkShare * charsPerToken))) {
+  for (const chunk of chunks(parts, chunkCharsOf(limit))) {
     const reply = await ask(llm, transcriptRequest(promptText(chunk.join('\n\n'), summary, instructions), model))
     summary = reply.summary
     usage = usage ? sumUsage(usage, reply.usage) : reply.usage

@@ -7,11 +7,12 @@ import type { Dispose } from 'drydock'
 import { adoption, contextOf } from './adopt'
 import type { ThreadsContext } from './context'
 import { type Brief, briefTools, type HandoffStrategy, type ProviderThreadInfo, type ProviderThreads, stepPrepare, stepSettle } from './contract'
-import { budgetOf, currentOf, fits, nativeOf, windowOf } from './handoff/budget'
+import { budgetOf, currentOf, fits, nativeOf } from './handoff/budget'
 import { handOff } from './handoff/deliver'
+import { reportedWindow } from './overflow'
 import { decide } from './policy'
 import { currentPath, madeBy } from './current'
-import { type Built, buildRequest } from './request'
+import { type Built, buildRequest, windowOf } from './request'
 import type { HandoffStore } from './store/handoffs'
 import type { ThreadStore } from './store/threads'
 import { compactedSince, extended, onPath } from './view/basis'
@@ -53,8 +54,8 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     ctx.llm.release?.(thread)
   }
 
-  const create = async ({ conversation, brief }: Step, selection: Selection) =>
-    stores.threads.create({ conversation, selection, system: await brief.system(conversation, selection.model), seen: [], used: Date.now() })
+  const create = async ({ conversation, brief }: Step, selection: Selection, window?: number) =>
+    stores.threads.create({ conversation, selection, system: await brief.system(conversation, selection.model), seen: [], used: Date.now(), ...(window && { window }) })
 
   const rebrief = async ({ conversation, brief }: Step, thread: ProviderThreadInfo) => {
     const system = await brief.system(conversation, thread.model)
@@ -67,12 +68,15 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     return stores.threads.create({ conversation, ...found, system: system ?? (await brief.system(conversation, found.selection.model)) })
   }
 
-  const roomFor = (thread: ProviderThreadInfo, native: number, current: number, strategy: HandoffStrategy) => ({
-    cap: strategy === 'transcript' ? Infinity : cap,
-    window: windowOf(ctx.llm.find?.(thread.model)?.context, ctx.get(contextLimits)?.limit(thread.model)),
-    native,
-    current,
-  })
+  const usableOf = (thread: ProviderThreadInfo) => {
+    const window = windowOf(ctx, thread)
+    return window && (ctx.get(contextLimits)?.limit(window) ?? window)
+  }
+
+  const roomFor = (thread: ProviderThreadInfo, native: number, current: number, strategy: HandoffStrategy) => {
+    const window = usableOf(thread)
+    return { cap: strategy === 'transcript' ? Infinity : cap, ...(window && { window }), native, current }
+  }
 
   const nativeFor = async ({ conversation, brief }: Step, thread: ProviderThreadInfo, strategy: HandoffStrategy) => {
     if (strategy === 'delta') return thread.context
@@ -115,7 +119,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     }
     if (transition.strategy === 'delta' && target) return handOver(step, target, 'delta')
     if (target) retire(target.id)
-    return handOver(step, await create(step, selection), transition.strategy)
+    return handOver(step, await create(step, selection, target?.window), transition.strategy)
   }
 
   const stepOf = (conversation: Conversation, brief: Brief, turn: TurnInfo): Step => {
@@ -141,12 +145,20 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     return { ...built, thread, ...(built.request.handoff && { handoff: built.request.handoff.id }) }
   }
 
-  const settle = (plan: Plan, { reply, usage, native, delivered }: StepDone) => {
-    stores.threads.settle(plan.thread.id, { seen: extended(plan.seen, reply), context: contextOf(usage), ...(native && { native }) })
+  const settle = (plan: Plan, { reply, usage, context, native, delivered }: StepDone) => {
+    const window = context?.window
+    stores.threads.settle(plan.thread.id, { seen: extended(plan.seen, reply), context: context?.used ?? contextOf(usage), ...(window && { window }), ...(native && { native }) })
     if (plan.handoff) stores.handoffs.deliver(plan.handoff, delivered ?? 'inline')
   }
 
+  const settledRequest = ({ request }: Plan, { context }: StepDone) => {
+    const window = context?.window
+    return window && request.thread ? { ...request, thread: { ...request.thread, window } } : request
+  }
+
   const lost = (plan: Plan, error: unknown) => {
+    const window = reportedWindow(error)
+    if (window) stores.threads.size(plan.thread.id, window)
     if (!(error instanceof ThreadLost)) {
       stores.threads.doubt(plan.thread.id)
       return false
@@ -171,7 +183,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
         thread: plan.thread.id,
         settle(done) {
           settle(plan, done)
-          ctx.emit(stepSettle, plan.request, conversation, turn, done.usage, done.cacheTtlMs)
+          ctx.emit(stepSettle, settledRequest(plan, done), conversation, turn, done)
         },
         lost: error => lost(plan, error),
       }

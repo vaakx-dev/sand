@@ -134,6 +134,7 @@ test('a chat left with one open thread per plan account of a model keeps its new
   const db = sand.app.get(ledger)!.db
   db.run('drop index provider_threads_open')
   db.run("create unique index provider_threads_open on provider_threads (owner, conversation, source, model) where status != 'retired'")
+  db.run('alter table provider_threads drop column context_window')
   db.run("update schema set version = 3 where owner = 'provider-threads'")
   db.run(`insert into provider_threads (id, owner, conversation, source, model, generation, status, system, seen, speed, used, created)
     select 'newest', owner, conversation, 'n-2', model, 2, 'idle', system, seen, speed, used + 1000, created + 1000 from provider_threads`)

@@ -115,7 +115,7 @@ test('a native thread whose step failed is uncertain, so the next turn starts a 
 
 test('a native thread that sand compacts is replaced by a new session that gets the summary, not the turns it summarized', async () => {
   const [summarized, recent] = ['x', 'y'].map(letter => letter.repeat(100_000))
-  sand = await startSand([app([[said('n1')], [said('n2'), { type: 'usage', input: 10_000_000 }], [said('the summary')], [said('n3')], [said('n4')]])])
+  sand = await startSand([app([[said('n1')], [said('n2'), { type: 'usage', input: 10_000_000 }, { type: 'context', window: 200_000 }], [said('the summary')], [said('n3')], [said('n4')]])])
   const chat = sand.chat('n/m')
 
   for (const prompt of [summarized!, recent!, 'three', 'four']) await sand.turns.run(chat, prompt)

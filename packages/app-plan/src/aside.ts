@@ -21,6 +21,7 @@ const collector = () => {
     usage: more => {
       usage = added(usage, more)
     },
+    context: () => {},
     pause: () => reply.resolve({ text: '', usage }),
     finish: () => reply.resolve({ text, usage }),
     fail: error => reply.reject(error),

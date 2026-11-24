@@ -22,9 +22,17 @@ const looks: Record<ContextTone, Look> = {
   success: { swatch: 'bg-success-400', segment: 'group-hover:bg-success-400 group-aria-expanded:bg-success-400' },
 }
 
-const empty: ContextUsage = { used: 0, limit: 0, window: 0, parts: [] }
+const empty: ContextUsage = { used: 0, parts: [] }
 
-const percent = (size: number, window: number) => `${window ? (size / window) * 100 : 0}%`
+const percent = (size: number, whole: number) => `${whole ? (size / whole) * 100 : 0}%`
+
+const scaleOf = ({ window, used }: ContextUsage) => window ?? used
+
+const freeText = ({ window, used }: ContextUsage) => (window ? tokens(Math.max(0, window - used)) : 'Unknown')
+
+const limitText = ({ limit }: ContextUsage) => (limit ? `Compacts at ${tokens(limit)}` : 'Compacts when the model says it is full')
+
+const ofText = ({ window }: ContextUsage) => (window ? ` of ${tokens(window)}` : '')
 
 export default definePlugin({
   name: 'inspector-context',
@@ -46,7 +54,7 @@ export default definePlugin({
       const usage = () => usageOf(subject()) ?? empty
       const parts = derive(() => usage().parts)
       const segment = (part: Sig<ContextPart>) =>
-        span({ class: () => ['h-full shrink-0 bg-neutral-600 transition-colors', looks[part.get().tone].segment], style: () => `width:${percent(part.get().size, usage().window)}` })
+        span({ class: () => ['h-full shrink-0 bg-neutral-600 transition-colors', looks[part.get().tone].segment], style: () => `width:${percent(part.get().size, scaleOf(usage()))}` })
       const breakdown = () =>
         div(
           { class: 'flex flex-col px-2 pb-2 text-xs text-neutral-400' },
@@ -56,15 +64,19 @@ export default definePlugin({
             part => breakdownLine(looks[part.get().tone].swatch, part.get().name, () => tokens(part.get().size)),
             div({ class: 'flex flex-col' }),
           ),
-          breakdownLine('bg-neutral-800', 'Free', () => tokens(Math.max(0, usage().window - usage().used))),
-          div({ class: 'py-px text-neutral-500' }, () => `Compacts at ${tokens(usage().limit)}`),
+          breakdownLine('bg-neutral-800', 'Free', () => freeText(usage())),
+          div({ class: 'py-px text-neutral-500' }, () => limitText(usage())),
         )
       return ctx.kit.cardFold(
-        { open, label: 'Context', value: [span({ class: 'font-medium text-neutral-100' }, () => tokens(usage().used)), () => ` of ${tokens(usage().window)}`] },
+        { open, label: 'Context', value: [span({ class: 'font-medium text-neutral-100' }, () => tokens(usage().used)), () => ofText(usage())] },
         div(
           { class: 'relative h-1 w-full' },
           list(parts, part => part.name, segment, div({ class: 'flex h-full w-full gap-px overflow-hidden rounded-full bg-neutral-800' })),
-          span({ class: 'absolute -top-1 h-3 w-px bg-neutral-600', style: () => `left:${percent(usage().limit, usage().window)}`, title: () => `Compacts at ${tokens(usage().limit)}` }),
+          span({
+            class: () => ['absolute -top-1 h-3 w-px bg-neutral-600', !(usage().limit && usage().window) && 'hidden'],
+            style: () => `left:${percent(usage().limit ?? 0, scaleOf(usage()))}`,
+            title: () => limitText(usage()),
+          }),
         ),
         breakdown,
       )

@@ -1,51 +1,69 @@
+import type { LLMRequest } from '@sand/accounts/contract'
 import { type ChatKind, sessionArchive } from '@sand/chats/contract'
 import { type ConversationRef, engine } from '@sand/engine/contract'
 import { providerThreads, stepSettle } from '@sand/provider-threads/contract'
+import { turnEnd } from '@sand/turns-contract/contract'
 import type { CompactionContext, Compactor } from './compact'
+import type { IdleShares } from './contract'
 import type { Tracker } from './measure/tracker'
 
-const beforeExpiry = 0.9
-const worthCompacting = 128_000
-const shortLived = new Set<ChatKind | undefined>(['agent', 'quick'])
+const CACHE_MARGIN_MS = 30_000
 
-export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracker: Tracker) => {
+interface Cached {
+  model?: string
+  ttlMs: number
+  sentAt: number
+}
+
+export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracker: Tracker, shares: () => IdleShares) => {
   const timers = new Map<string, Timer>()
-  const lifetimes = new Map<string, { model?: string; ttl: number }>()
+  const caches = new Map<string, Cached>()
 
   const cancel = (id: string) => {
     clearTimeout(timers.get(id))
     timers.delete(id)
   }
 
-  const compact = async (ref: ConversationRef, turn: string) => {
+  const forget = (id: string) => {
+    cancel(id)
+    caches.delete(id)
+  }
+
+  const shareOf = (kind: ChatKind | undefined) => (kind === 'bot' || kind === 'thread' ? shares()[kind] : undefined)
+
+  const worthCompacting = (id: string, request: LLMRequest) => {
+    const share = shareOf(request.sessionKind)
+    const limit = compactor.budget(request).bounds?.limit
+    return !!share && !!limit && tracker.project(id, request) >= limit * share
+  }
+
+  const compact = async (ref: ConversationRef) => {
     timers.delete(ref.id)
-    const found = ctx.get(engine)
-    if (!found?.turn(ref.owner, turn)?.ended) return
-    const conversation = found.open(ref)
+    const conversation = ctx.get(engine)?.open(ref)
     const request = conversation && (await ctx.get(providerThreads)?.view(conversation))
-    if (!request || tracker.project(ref.id, request) < worthCompacting) return
+    if (!request || !worthCompacting(ref.id, request)) return
     void compactor.start(conversation, request, 'idle')
   }
 
   const lifetimeOf = (id: string, model: string | undefined, written: number | undefined) => {
     if (written) return written
-    const known = lifetimes.get(id)
-    return known?.model === model ? known?.ttl : undefined
+    const known = caches.get(id)
+    if (known && known.model === model) return known.ttlMs
+    return model ? ctx.llm.caps?.(model).cacheTtlMs : undefined
   }
 
-  ctx.on(stepSettle, (request, { owner, id }, turn, _usage, written) => {
+  const expiryDelayMs = ({ sentAt, ttlMs }: Cached) => Math.max(0, sentAt + ttlMs - CACHE_MARGIN_MS - Date.now())
+
+  ctx.on(stepSettle, (request, { id }, _turn, { cacheTtlMs, sentAt }) => {
     cancel(id)
-    const ttl = lifetimeOf(id, request.model, written)
-    if (!ttl || shortLived.has(request.sessionKind)) {
-      lifetimes.delete(id)
-      return
-    }
-    lifetimes.set(id, { model: request.model, ttl })
-    timers.set(id, setTimeout(() => void compact({ owner, id }, turn.id), ttl * beforeExpiry))
+    const ttlMs = lifetimeOf(id, request.model, cacheTtlMs)
+    if (!ttlMs || !shareOf(request.sessionKind)) return void caches.delete(id)
+    caches.set(id, { model: request.model, ttlMs, sentAt })
   })
-  ctx.on(sessionArchive, session => {
-    cancel(session.id)
-    lifetimes.delete(session.id)
+  ctx.on(turnEnd, ({ id, owner }) => {
+    const cached = caches.get(id)
+    if (cached) timers.set(id, setTimeout(() => void compact({ owner, id }), expiryDelayMs(cached)))
   })
+  ctx.on(sessionArchive, session => forget(session.id))
   ctx.effect(() => () => timers.forEach(clearTimeout))
 }

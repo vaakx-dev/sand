@@ -1,4 +1,6 @@
 import type { LLMRequest } from '@sand/accounts/contract'
+import type { StepDone } from '@sand/engine/contract'
+import { tokensOf } from '@sand/usage/contract'
 import { messagesTokens, requestTokens } from './estimate'
 
 interface Known {
@@ -7,6 +9,8 @@ interface Known {
   tokens: number
 }
 
+export const contextUsed = ({ usage, context }: StepDone) => context?.used ?? tokensOf(usage)
+
 export const createTracker = () => {
   const known = new Map<string, Known>()
 
@@ -14,6 +18,7 @@ export const createTracker = () => {
     done(session: string, request: LLMRequest, tokens: number) {
       known.set(session, { ...(request.thread && { thread: request.thread.id }), count: request.messages.length + 1, tokens })
     },
+    fitted: (session: string) => known.get(session)?.tokens,
     reset(session: string) {
       known.delete(session)
     },

@@ -65,7 +65,10 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
             break
           }
           case 'usage':
-            out.usage({ input: part.input, output: part.output })
+            out.usage({ input: part.input, output: part.output }, part.cacheTtlMs)
+            break
+          case 'context':
+            out.context({ ...(part.window && { window: part.window }), ...(part.used && { used: part.used }) })
             break
           case 'error':
             return out.fail(new Error(part.message))
