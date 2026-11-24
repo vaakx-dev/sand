@@ -1,13 +1,13 @@
-import { pushTargetSchema } from '@sand/devices-contract'
+import { pushTargetSchema, type Wire } from '@sand/devices-contract'
 import { decodeBase64url } from '@sand/devices-identity'
 import { isRecord } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
-import type { Notice } from '../contract'
+import { type Notice, notifySubscribe, notifyUnsubscribe } from '../contract'
 import type { PushChannel, Support } from './channel'
 
 const icon = '/icons/192x192.png'
 
-const support = (): Support => {
+export const support = (): Support => {
   if (!window.isSecureContext) return 'insecure'
   if ('PushManager' in window && 'serviceWorker' in navigator && 'Notification' in window) return 'ready'
   return /iPhone|iPad/.test(navigator.userAgent) ? 'install' : 'missing'
@@ -15,7 +15,7 @@ const support = (): Support => {
 
 export const permission = () => (support() === 'ready' ? Notification.permission : 'default')
 
-const subscribe = async (key: string) => {
+const target = async (key: string) => {
   if ((await Notification.requestPermission()) !== 'granted') return undefined
   const { pushManager } = await navigator.serviceWorker.ready
   await (await pushManager.getSubscription())?.unsubscribe()
@@ -23,12 +23,23 @@ const subscribe = async (key: string) => {
   return pushTargetSchema().parse(subscription.toJSON())
 }
 
-const unsubscribe = async () => {
+const forget = async () => {
   const { pushManager } = await navigator.serviceWorker.ready
   await (await pushManager.getSubscription())?.unsubscribe()
 }
 
-export const webPush: PushChannel = { support, blocked: () => permission() === 'denied', subscribe, unsubscribe }
+export const webPush = (wire: Wire): PushChannel => ({
+  support,
+  blocked: () => permission() === 'denied',
+  async subscribe(key) {
+    const found = await target(key)
+    if (found) await wire.call(notifySubscribe, found)
+  },
+  async unsubscribe() {
+    await forget()
+    await wire.call(notifyUnsubscribe, {})
+  },
+})
 
 export const showNotice = async (notice: Notice) => {
   const registration = await navigator.serviceWorker.ready

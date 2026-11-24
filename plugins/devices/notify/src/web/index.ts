@@ -8,7 +8,7 @@ import { threadRouteKind } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { helloMomentsOff, helloPushKey, notifyMomentsOff, notifyNotice } from '../contract'
-import { onNoticeOpen, permission, showNotice, webPush } from './browser'
+import { onNoticeOpen, permission, showNotice, support } from './browser'
 import { pushChannel } from './channel'
 import { notificationsPage, notifyItems } from './page'
 
@@ -32,11 +32,11 @@ export default definePlugin({
     ctx.effect(() => ctx.wire.on(notifyMomentsOff, kinds => off.set(kinds)))
 
     const app = ctx.get(androidApp)
-    const channel = pushChannel(app)
+    const channel = pushChannel(app, ctx.wire)
     const page = { kit: ctx.kit, wire: ctx.wire, toasts: toastsOf(ctx), on, key, off, channel, device: () => record()?.name ?? 'This device' }
     ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', icon: 'bell', group: 'everyday', order: 20, items: notifyItems, render: () => notificationsPage(page) }))
 
-    if (app || webPush.support() !== 'ready') return
+    if (app || support() !== 'ready') return
     const shows = () => on.get() && document.visibilityState === 'hidden' && permission() === 'granted'
     ctx.effect(() =>
       ctx.wire.on(

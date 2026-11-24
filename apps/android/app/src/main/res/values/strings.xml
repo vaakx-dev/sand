@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="notices">Threads</string>
-    <string name="pick_push_app">Pick a push app, such as ntfy, to get notifications.</string>
-    <string name="push_app_unencrypted">This push app can’t encrypt messages. Pick another one, such as ntfy.</string>
-    <string name="push_registration_failed">The push app couldn’t sign sand up (%1$s). Try again.</string>
+    <string name="connection">Connection to your PC</string>
+    <string name="listening">Listening for notifications</string>
+    <string name="reaching">Reaching your PC…</string>
     <string name="notifications_off">Notifications are off for sand. Turn them on in Android settings, then try again.</string>
     <string name="installs_off">sand can’t install its update yet. Allow it to install apps in Android settings, then try again.</string>
     <string name="update_damaged">The app update downloaded damaged. Try again.</string>

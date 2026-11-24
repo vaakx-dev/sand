@@ -107,7 +107,7 @@ self.addEventListener('push', event => {
 
 const addressOf = notice => {
   if (notice.thread) return '/?view=thread&id=' + encodeURIComponent(notice.thread)
-  return notice.bot ? '/?bot=' + encodeURIComponent(notice.bot) : '/'
+  return notice.bot ? '/?view=bot&id=' + encodeURIComponent(notice.bot) : '/'
 }
 
 const openNotice = async notice => {

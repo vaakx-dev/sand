@@ -1,29 +1,32 @@
-import type { AndroidApp, PushTarget } from '@sand/devices-contract'
+import type { AndroidApp, Wire } from '@sand/devices-contract'
+import { notifyListen, notifyUnsubscribe } from '../contract'
 import type { PushChannel } from './channel'
 
-const answer = (app: AndroidApp) =>
-  new Promise<PushTarget>((resolve, reject) => {
+const allowed = (app: AndroidApp) =>
+  new Promise<void>((resolve, reject) => {
     const stop = app.on(reply => {
       switch (reply.kind) {
-        case 'push':
+        case 'notices-allowed':
           stop()
-          return resolve(reply.target)
-        case 'push-failed':
+          return resolve()
+        case 'notices-refused':
           stop()
           return reject(new Error(reply.reason))
       }
     })
+    app.send({ kind: 'allow-notices' })
   })
 
-export const appPush = (app: AndroidApp): PushChannel => ({
-  support: () => (app.push ? 'ready' : 'distributor'),
+export const appPush = (app: AndroidApp, wire: Wire): PushChannel => ({
+  support: () => 'ready',
   blocked: () => false,
-  subscribe(key) {
-    const answered = answer(app)
-    app.send({ kind: 'subscribe', key })
-    return answered
+  async subscribe() {
+    await allowed(app)
+    const { token } = await wire.call(notifyListen, {})
+    app.send({ kind: 'listen', token })
   },
   async unsubscribe() {
-    app.send({ kind: 'unsubscribe' })
+    app.send({ kind: 'unlisten' })
+    await wire.call(notifyUnsubscribe, {})
   },
 })

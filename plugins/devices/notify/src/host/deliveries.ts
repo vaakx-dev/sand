@@ -1,6 +1,7 @@
-import type { DeviceRecord, DevicePush, Peers, Registry, ThisPc } from '@sand/devices-contract'
+import type { DevicePush, DeviceRecord, Peers, Registry, ThisPc, WebPush } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { type Notice, notifyDeliver } from '../contract'
+import type { Inbox } from './inbox'
 import { sendPush } from './push'
 import type { Vapid } from './vapid'
 
@@ -9,6 +10,7 @@ export interface DeliveryDeps {
   thisPc: ThisPc
   peers(): Peers | undefined
   vapid: Vapid
+  inbox: Inbox
   report(error: unknown): void
 }
 
@@ -17,18 +19,21 @@ interface Subscriber {
   push: DevicePush
 }
 
-export const createDeliveries = ({ registry, thisPc, peers, vapid, report }: DeliveryDeps) => {
+export const createDeliveries = ({ registry, thisPc, peers, vapid, inbox, report }: DeliveryDeps) => {
   const subscribers = () => registry.list().flatMap(device => (device.push?.pc === thisPc.id ? [{ device, push: device.push }] : []))
 
   const owners = () => new Set(registry.list().flatMap(({ push }) => (push ? [push.pc] : [])))
 
-  const forget = async ({ device, push }: Subscriber) => {
-    if (registry.get(device.id)?.push?.endpoint === push.endpoint) await registry.setPush(device.id, undefined)
+  const forget = async (device: DeviceRecord, push: WebPush) => {
+    const current = registry.get(device.id)?.push
+    if (current?.kind !== 'app' && current?.endpoint === push.endpoint) await registry.setPush(device.id, undefined)
   }
 
-  const send = async (subscriber: Subscriber, notice: Notice) => {
-    if ((await sendPush(vapid, subscriber.push, notice)) === 'gone') await forget(subscriber)
+  const sendWeb = async (device: DeviceRecord, push: WebPush, notice: Notice) => {
+    if ((await sendPush(vapid, push, notice)) === 'gone') await forget(device, push)
   }
+
+  const send = ({ device, push }: Subscriber, notice: Notice) => (push.kind === 'app' ? inbox.post(device.id, notice) : sendWeb(device, push, notice))
 
   const deliver = async (notice: Notice) => {
     const sends = subscribers().map(subscriber =>

@@ -3,7 +3,7 @@ import { deviceIdOf } from '@sand/devices-identity'
 import { hashSecret, randomSecret } from '@sand/util/fs'
 import type { Dispose } from 'drydock'
 import type { DeviceFile } from './store/file'
-import { isSound, mergeRecord, normalRecord } from './store/merge'
+import { isSound, mergeRecord, normalRecord, samePush } from './store/merge'
 import { deviceName } from './store/names'
 
 type Listener<T> = (value: T) => void
@@ -116,7 +116,7 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
 
   const setPush = async (id: string, push: DevicePush | undefined) => {
     const record = live(id)
-    if (record.push?.endpoint === push?.endpoint && record.push?.pc === push?.pc) return record
+    if (samePush(record.push, push)) return record
     return change(normalRecord({ ...record, push, updated: stamp(record) }))
   }
 

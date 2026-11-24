@@ -15,7 +15,7 @@ private const val ROUTES = "routes"
 private const val KEY = "key"
 private const val PROBE_TIMEOUT_MS = 2_500
 private const val NONCE_BYTES = 18
-private const val APP_PROTOCOL = 1
+private const val APP_PROTOCOL = 2
 
 private fun decode(text: String) = Base64.decode(text, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
 

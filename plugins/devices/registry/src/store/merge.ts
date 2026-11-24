@@ -3,7 +3,12 @@ import { deviceIdOf } from '@sand/devices-identity'
 
 const normalKey = ({ publicKey, added, origin }: DeviceKey): DeviceKey => ({ publicKey, added, ...(origin !== undefined && { origin }) })
 
-const normalPush = ({ pc, endpoint, keys }: DevicePush): DevicePush => ({ pc, endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } })
+const normalPush = (push: DevicePush): DevicePush =>
+  push.kind === 'app'
+    ? { kind: 'app', pc: push.pc, token: push.token }
+    : { kind: 'web', pc: push.pc, endpoint: push.endpoint, keys: { p256dh: push.keys.p256dh, auth: push.keys.auth } }
+
+export const samePush = (a: DevicePush | undefined, b: DevicePush | undefined) => JSON.stringify(a && normalPush(a)) === JSON.stringify(b && normalPush(b))
 
 export const normalRecord = (record: DeviceRecord): DeviceRecord => ({
   id: record.id,

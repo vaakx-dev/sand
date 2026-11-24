@@ -21,6 +21,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
     "@sand/host-daemon": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/settings": "workspace:*",

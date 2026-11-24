@@ -1,4 +1,8 @@
+const BEARER = /^Bearer\s+(\S+)\s*$/i
+
 export const bearer = (key: string) => ({ authorization: `Bearer ${key}` })
+
+export const bearerToken = (request: Request) => BEARER.exec(request.headers.get('authorization') ?? '')?.[1]
 
 export const textReply = (body: string, status: number, headers?: Record<string, string>) =>
   new Response(body, { status, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...headers } })
