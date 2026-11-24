@@ -1,5 +1,6 @@
 import { PcUnavailable, viaPath } from '@sand/devices-contract'
 import type { Fleet } from '../fleet/fleet'
+import { appProxyOrigin } from '../page/app'
 
 const routeTo = (fleet: Fleet, pc: string) => {
   const status = fleet.connection(pc).status()
@@ -7,15 +8,14 @@ const routeTo = (fleet: Fleet, pc: string) => {
   return status.route
 }
 
-const directBase = (fleet: Fleet, pc: string) => {
-  const { url } = routeTo(fleet, pc)
-  if (!url) throw new Error(`${fleet.nameOf(pc)} isn't connected to this page directly`)
-  return url
-}
+const directBase = (fleet: Fleet, pc: string) => (pc === fleet.home ? appProxyOrigin() : undefined) ?? routeTo(fleet, pc).url
 
 export const pcUrl = (fleet: Fleet, path: string, pc: string) => {
-  const route = routeTo(fleet, pc)
-  if (route.url) return new URL(path, route.url).href
-  if (!route.via) throw new Error(`${fleet.nameOf(pc)} has no route this page can link to`)
-  return new URL(viaPath(pc, path), directBase(fleet, route.via)).href
+  const direct = directBase(fleet, pc)
+  if (direct) return new URL(path, direct).href
+  const { via } = routeTo(fleet, pc)
+  if (!via) throw new Error(`${fleet.nameOf(pc)} has no route this page can link to`)
+  const relay = directBase(fleet, via)
+  if (!relay) throw new Error(`${fleet.nameOf(via)} isn't connected to this page directly`)
+  return new URL(viaPath(pc, path), relay).href
 }
