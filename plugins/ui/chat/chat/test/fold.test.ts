@@ -26,6 +26,27 @@ describe('foldTurns', () => {
     expect(headOf(false)).toMatchObject({ thought: undefined })
   })
 
+  describe('a reply followed by something that arrived mid-turn stays out of the fold', () => {
+    const steer: Item = { kind: 'user', key: 'steer', parts: [{ kind: 'text', text: 'steer' }], steer: true, at: 5_000 }
+    const ending: Item = { kind: 'notice', key: 'ending', text: 'Interrupted', tone: 'dim' }
+    const shownKeys = (items: Item[]) => foldTurns([{ ...custom('notified', 1_000), opens: 'notified' }, ...items], options).flatMap(shown => (shown.kind === 'item' ? [shown.key] : []))
+
+    test('a notification', () => {
+      const items = [thinking('t1', 2_000), text('first reply', 3_000), custom('notified again', 4_000), thinking('t2', 5_000), text('second reply', 6_000)]
+      expect(shownKeys(items)).toEqual(['notified', 'first reply', 'notified again', 'second reply'])
+    })
+
+    test('a steer, with a notice between them', () => {
+      const items = [thinking('t1', 2_000), text('first reply', 3_000), ending, steer, thinking('t2', 6_000), text('second reply', 7_000)]
+      expect(shownKeys(items)).toEqual(['notified', 'first reply', 'steer', 'second reply'])
+    })
+
+    test('while text followed by more work stays folded', () => {
+      const items = [text('narration', 2_000), thinking('t1', 3_000), steer, text('reply', 6_000)]
+      expect(shownKeys(items)).toEqual(['notified', 'steer', 'reply'])
+    })
+  })
+
   test('calls made inside a script count like top-level ones', () => {
     const nested = (id: string, name: string, path: string): ToolCallBlock => ({ type: 'tool_call', id, name, input: { path } })
     const script: ToolCallBlock = { type: 'tool_call', id: 's1', name: 'script', input: {} }

@@ -47,6 +47,11 @@ interface Turn {
   body: Item[]
 }
 
+interface Replies {
+  replies: Set<number>
+  next: Item | undefined
+}
+
 const opens = (item: Item) => item.opens !== undefined
 
 const timeOf = (item: Item) => {
@@ -75,10 +80,16 @@ const tail = (body: Item[]) => body.findLastIndex(item => !trailing(item)) + 1
 
 const answered = (body: Item[]) => body[tail(body) - 1]?.kind === 'text'
 
-const visibleFrom = (body: Item[]) => {
-  const from = tail(body)
-  return answered(body) ? from - 1 : from
-}
+const closes = (next: Item | undefined) => next === undefined || pinned(next)
+
+const repliesOf = (body: Item[]) =>
+  body.reduceRight<Replies>(
+    ({ replies, next }, item, index) => ({
+      replies: item.kind === 'text' && closes(next) ? replies.add(index) : replies,
+      next: item.kind === 'notice' ? next : item,
+    }),
+    { replies: new Set(), next: undefined },
+  ).replies
 
 const begun = (body: Item[]) => body.some(item => item.kind === 'text' || item.kind === 'tools')
 
@@ -127,8 +138,9 @@ const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions
 }
 
 const shownTurn = (turn: Turn, running: boolean, options: FoldOptions): Shown[] => {
-  const from = visibleFrom(turn.body)
-  const isWork = (item: Item, index: number) => index < from && !pinned(item)
+  const from = tail(turn.body)
+  const replies = repliesOf(turn.body)
+  const isWork = (item: Item, index: number) => index < from && !pinned(item) && !replies.has(index)
   const work = turn.body.filter(isWork)
   const cut = !turn.head && options.older
   const head = !cut && (running || work.length) ? headOf(turn, work, running, options) : undefined
