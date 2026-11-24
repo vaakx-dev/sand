@@ -16,7 +16,6 @@ import {
 } from '@sand/bots/contract'
 import { threadView } from '@sand/chat/contract'
 import { threadRows, wakeTimer } from '@sand/threads-home/contract'
-import { needs } from '@sand/needs-you/contract'
 import { palette, visitsOf, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { toastsOf } from '@sand/toasts/contract'
@@ -37,7 +36,6 @@ import { registry } from './registry'
 import { botScreen } from './screen/bot'
 import { botsGroups } from './sidebar'
 import { botStore } from './store'
-import { botNeeds } from './needs'
 
 const HOUR_MS = 3_600_000
 
@@ -47,7 +45,7 @@ const viewOf = (tab: string | undefined) => VIEWS.find(view => view === tab)
 
 export default definePlugin({
   name: 'bot-views',
-  description: "Bots in the sidebar grouped like threads: active, Working, Snoozed and Settled; each bot's screen with its jobs and its chat; its profile and New bot; bots waiting on you in Needs you",
+  description: "Bots in the sidebar grouped like threads: active, Working, Snoozed and Settled; each bot's screen with its jobs and its chat; its profile and New bot",
   inject,
   apply(ctx) {
     const sections = registry<BotProfileSection>()
@@ -99,7 +97,6 @@ export default definePlugin({
       }),
     )
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
-    ctx.watch(needs, found => found?.source(botNeeds(parts)))
     ctx.effect(() =>
       ctx.shell.subject(({ kind, id }) => {
         const bot = kind === botRoute && id ? parts.store.find(id) : undefined
