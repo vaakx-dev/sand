@@ -68,4 +68,6 @@ dependencies {
     implementation("org.unifiedpush.android:connector:3.3.6")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     implementation(tink)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16")
 }

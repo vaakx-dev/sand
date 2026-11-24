@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
     private var wantedVapid: String? = null
 
     private val pickFiles = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        chosen?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data))
+        chosen?.onReceiveValue(chosenFiles(result.resultCode, result.data))
         chosen = null
     }
 

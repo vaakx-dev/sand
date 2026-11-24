@@ -42,6 +42,6 @@ runs:
           export SAND_ANDROID_KEYSTORE="$RUNNER_TEMP/sand.jks"
         fi
         export SAND_ANDROID_VERSION_CODE="$(git log -1 --format=%ct HEAD)"
-        ./gradlew assembleRelease --no-daemon
+        ./gradlew testReleaseUnitTest assembleRelease --no-daemon
         mkdir -p "${{ inputs.assets }}"
         cp app/build/outputs/apk/release/app-release.apk "${{ inputs.assets }}/sand.apk"
