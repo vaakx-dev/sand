@@ -15,7 +15,7 @@ const CAPS: ProviderCapabilities = {
   steer: false,
   reconfigure: ['effort'],
   processScope: 'thread',
-  cacheTtlMs: 5 * 60_000,
+  cacheTtlMs: 60 * 60_000,
 }
 
 function antigravity(media: Media): Provider {
