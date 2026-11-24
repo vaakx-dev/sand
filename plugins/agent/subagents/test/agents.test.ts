@@ -166,7 +166,7 @@ test('a subagent runs on the subagent model from settings unless its caller name
 
   const childModels = sand.sessions.children(parent.id).map(child => sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model)
   expect(childModels.toSorted()).toEqual(['child/m', 'other/m'])
-  expect(results(parent).find(text => text.includes('nope/x'))).toContain('No model matches')
+  expect(results(parent).find(text => text.includes('nope/x'))).toContain('nope/x runs only on nope')
 })
 
 test('stopping an agent stops the subagents it started, all the way down, without waking it again', async () => {

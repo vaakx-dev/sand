@@ -19,4 +19,9 @@ describe('matchModel', () => {
   test('an exact id keeps its source', () => {
     expect(matchModel('anthropic/opus', models, { billing, prefer: 'claude' })).toBe('anthropic/opus')
   })
+
+  test('an id whose provider is not signed in matches no other provider, not even one that names its models the same way', () => {
+    const routed: ModelInfo = { id: 'openrouter/anthropic/opus', name: 'anthropic/opus', label: 'Opus', source: 'openrouter', efforts: [] }
+    expect(() => matchModel('anthropic/opus', [routed, model('claude')], { billing })).toThrow(/^anthropic\/opus runs only on anthropic/)
+  })
 })

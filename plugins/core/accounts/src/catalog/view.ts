@@ -1,11 +1,17 @@
-import { canonicalModel, type ModelInfo, rankSources } from '../contract'
-import { isKeyKind, keyLabels, signInError } from '../auth/kinds'
-import { split, unknownModel } from './build'
+import { canonicalModel, type ModelInfo, namedModel, providerMissing } from '../contract'
+import { signInError } from '../auth/kinds'
+import { qualify, split, unknownModel } from './build'
 import { cached } from './cached'
 import { sourceInfo } from './sources'
 import type { Entry } from './types'
 
 export type View = ReturnType<typeof viewOf>
+
+interface ViewOptions {
+  entries: () => Entry[]
+  accounts: () => Entry[]
+  label: (source: string) => string
+}
 
 const noModel = 'No model chosen. Pick one in the model picker next to send, or set a default in Settings › Models.'
 
@@ -17,37 +23,36 @@ const firstBy = <T>(items: T[], key: (item: T) => string) => {
   return map
 }
 
-const indexOf = (entries: Entry[]) => {
+const indexOf = (entries: Entry[], accounts: Entry[]) => {
   const all = entries.flatMap(entry => entry.models)
   const shown = all.filter(model => !model.hidden)
   const ids = firstBy(all, model => model.id)
   const sources = firstBy(entries, entry => entry.meta.id)
-  return { entries, all, shown, ids, sources }
+  const kinds = new Map(accounts.filter(account => account.meta.billing === 'plan').map(account => [account.meta.id, account.meta.kind]))
+  return { entries, all, shown, ids, sources, kinds }
 }
 
-export const viewOf = (entries: () => Entry[]) => {
-  const index = cached(() => indexOf(entries()))
+export const viewOf = ({ entries, accounts, label }: ViewOptions) => {
+  const index = cached(() => indexOf(entries(), accounts()))
   const models = () => [...index.get().shown]
   const entry = (source: string) => index.get().sources.get(source)
 
   const billing = (source: string) => entry(source)?.meta.billing
 
-  const named = (models: ModelInfo[], name: string) => rankSources(models.filter(model => model.name === name), { billing })[0]
+  const named = (models: ModelInfo[], name: string) => namedModel(models, name, { billing })
 
   const lookup = (id: string) => {
     const { ids, shown } = index.get()
     return ids.get(id) ?? named(shown, id)
   }
 
-  const onPlan = (model: ModelInfo) => !!model.source && billing(model.source) === 'plan'
-
-  const elsewhere = (id: string) => {
+  const pooled = (id: string) => {
     const parts = split(canonicalModel(id))
-    if (!parts || entry(parts.source)) return undefined
-    return index.get().shown.find(model => model.name === parts.name && onPlan(model))
+    const kind = parts && index.get().kinds.get(parts.source)
+    return kind && kind !== parts.source ? lookup(qualify(kind, parts.name)) : undefined
   }
 
-  const find = (id: string) => lookup(id) ?? lookup(canonicalModel(id)) ?? elsewhere(id)
+  const find = (id: string) => lookup(id) ?? lookup(canonicalModel(id)) ?? pooled(id)
 
   const resolve = (wanted?: string): ModelInfo | undefined => {
     if (!wanted) return undefined
@@ -62,7 +67,7 @@ export const viewOf = (entries: () => Entry[]) => {
 
   const missing = (id?: string) => {
     const source = id ? split(id)?.source : undefined
-    if (source && isKeyKind(source)) return signInError(keyLabels[source])
+    if (id && source && !entry(source)) return providerMissing(id, label(source))
     if (!index.get().entries.length) return signInError()
     return id ? new Error(`Unknown model "${id}"`) : new Error(noModel)
   }

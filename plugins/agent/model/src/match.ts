@@ -8,7 +8,7 @@ const preferred = (llm: LLM | undefined, near: string | undefined) => {
 }
 
 const modelNamed = (llm: LLM | undefined, query: string, near: string | undefined) =>
-  matchModel(query, llm?.models?.() ?? [], { find: llm?.find, prefer: preferred(llm, near), billing: sourceBilling(llm) })
+  matchModel(query, llm?.models?.() ?? [], { find: llm?.find, missing: llm?.missing, prefer: preferred(llm, near), billing: sourceBilling(llm) })
 
 const effortNamed = (llm: LLM | undefined, word: string) => {
   const level = asEffort(llm, word)

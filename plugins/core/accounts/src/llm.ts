@@ -41,7 +41,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
   const pooled = cached(() =>
     poolEntries([...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))], { label: accounts.planLabel, entry: catalog.entry }),
   )
-  const view = viewOf(() => pooled.get().entries)
+  const view = viewOf({ entries: () => pooled.get().entries, accounts: () => pooled.get().accounts, label: accounts.planLabel })
 
   const remote = async function* (asked: Remote, signal?: AbortSignal): AsyncIterable<LLMEvent> {
     const { model, request } = asked
@@ -82,6 +82,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
   const llm: Required<LLM> = {
     models: view.models,
     find: view.find,
+    missing: view.missing,
     sources: view.sources,
     accounts: () => pooled.get().accounts.map(sourceInfo),
     members,

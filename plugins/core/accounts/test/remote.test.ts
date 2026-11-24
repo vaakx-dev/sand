@@ -12,6 +12,7 @@ import { createAccounts } from '../src/auth/accounts'
 import { readPlaces } from '../src/auth/places'
 import { createPlans } from '../src/auth/plans'
 import { PriceList, type UserPrices } from '../src/catalog/prices'
+import type { Entry } from '../src/catalog/types'
 import { viewOf } from '../src/catalog/view'
 import { llm, type LLMEvent, type LLMRequest, type ModelPrice, modelsPrice, type NativeRef, type Plan, type ProviderCapabilities, statelessCaps, ThreadLost } from '../src/contract'
 import type { LocalLLM } from '../src/local'
@@ -74,13 +75,14 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[], userPrice
   plans.register(plan)
   const accounts = createAccounts(join(home, 'auth.json'), plans, () => {})
   await accounts.ready
-  const view = viewOf(() => [
+  const entries = (): Entry[] => [
     {
       meta: { id: 'remote', kind: 'remote', label: 'Remote', provider: 'remote', billing: 'plan', caps },
       models: [{ id: 'remote/m', label: 'm', source: 'remote', name: 'm', efforts: [] }],
       newModels: 'show',
     },
-  ])
+  ]
+  const view = viewOf({ entries, accounts: entries, label: accounts.planLabel })
   const asked: LLMRequest[] = []
   let stopped = false
   const local: LocalLLM = {

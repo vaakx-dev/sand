@@ -24,7 +24,6 @@ const thread: ProviderThreadInfo = {
 }
 
 const target = (patch: Partial<Target> = {}): Target => ({
-  available: true,
   caps: api,
   selection: { source: 'a', model: 'a/m', effort: 'high', speed: 'normal' },
   cwd: '/work',
@@ -46,7 +45,7 @@ const full: Transition = { type: 'handoff', strategy: 'full' }
 const reject = expect.objectContaining({ type: 'reject' })
 
 test.each([
-  ['an unavailable source', target({ available: false }), candidate(), reject],
+  ['an unavailable source', target({ missing: 'a/m is gone' }), candidate(), reject],
   ['a first model in an empty chat', target({ history: false }), undefined, { type: 'reuse' }],
   ['a first model in a chat with history', target(), undefined, full],
   ['the model used last', target(), candidate(), { type: 'reuse' }],
