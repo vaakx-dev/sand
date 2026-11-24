@@ -1,7 +1,7 @@
 {
   "name": "@sand/themes",
   "version": "0.0.0",
-  "description": "One theme for all of sand on every device: colours from a base and an accent, custom CSS and an animated background behind frosted panels",
+  "description": "One theme for all of sand on every device: light, dark or the system, custom CSS, and colours and an animated background an agent can set",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -12,12 +12,11 @@
     "cli": "./src/cli.ts",
     "web": "./src/web/index.ts",
     "label": "Themes",
-    "summary": "Restyle sand with your own colours, custom CSS and an animated background, on every device",
+    "summary": "Light, dark or follow the system, with your own CSS, the same on every device",
     "features": {
       "themes": {
         "label": "Themes",
-        "summary": "Your own colours, custom CSS and an animated background behind the chat, the same on every device",
-        "addon": true
+        "summary": "Light, dark or follow the system, with your own CSS, the same on every device"
       }
     }
   },

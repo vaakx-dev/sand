@@ -97,8 +97,9 @@ const withOverrides = (palette: ThemePalette, overrides: Record<string, string> 
 
 export const paletteOf = (theme: Theme, mode: Mode): ThemePalette => {
   const sand = mode === 'dark' ? sandPalette : sandLightPalette
-  const made = { ...sand, neutral: neutralScale(toLch(theme.base), mode), accent: accentScale(toLch(theme.accent), mode) }
-  return withOverrides(made, theme.colors?.[mode])
+  const neutral = theme.base ? neutralScale(toLch(theme.base), mode) : sand.neutral
+  const accent = theme.accent ? accentScale(toLch(theme.accent), mode) : sand.accent
+  return withOverrides({ ...sand, neutral, accent }, theme.colors?.[mode])
 }
 
 const luminance = (hex: string) => {
@@ -116,4 +117,3 @@ export const modeOf = (theme: Theme | null, systemLight: boolean): Mode => {
   return systemLight ? 'light' : 'dark'
 }
 
-export const designedMode = (theme: Theme): Mode => (theme.mode === 'light' || theme.mode === 'dark' ? theme.mode : toLch(theme.base).l >= 0.5 ? 'light' : 'dark')

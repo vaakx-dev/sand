@@ -1,15 +1,13 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { pageParts } from '@sand/ui-shell/contract'
 import { div, p, sig, span } from '@vaakx-dev/vrui'
-import { cssLimit, type Theme } from '../../contract'
+import { cssLimit } from '../../contract'
 import type { ThemeModel } from '../model'
-
-const sandLook: Theme = { name: 'Custom', base: '#0b0b0c', accent: '#e5e5e5' }
 
 export const cssPage = (kit: Kit, model: ThemeModel) => {
   const draft = sig(model.saved.get()?.css ?? '')
   const changed = () => draft.get() !== (model.saved.get()?.css ?? '')
-  const save = () => model.set({ ...(model.saved.get() ?? sandLook), css: draft.get() })
+  const save = () => model.set({ ...model.saved.get(), css: draft.get() })
 
   return div(
     { class: 'flex flex-col gap-8' },
