@@ -1,5 +1,6 @@
-import { div, section, show } from '@vaakx-dev/vrui'
+import { derive, div, section, show } from '@vaakx-dev/vrui'
 import { bar } from './bar'
+import type { Route } from './contract'
 import type { Model } from './model'
 import { asideCard, asideDrawer, asidePanel, asideToggles } from './aside'
 import type { Built } from './screens'
@@ -36,7 +37,7 @@ export const deskFrames = (model: Model, built: Built) =>
         ),
         backButton(model, built),
         built.column ? div({ class: 'flex min-w-0 flex-1' }, div({ class: [model.kit.bodyColumn, 'flex'] }, built.head)) : built.head,
-        asideToggles(model),
+        asideToggles(model, model.shownAsides),
       ),
       div({ class: () => [fill, model.roomy.get() ? 'pr-80' : ''] }, built.main),
       asideDrawer(model),
@@ -45,5 +46,9 @@ export const deskFrames = (model: Model, built: Built) =>
     asidePanel(model),
   )
 
-export const phoneFrame = (model: Model, built: Built | undefined) =>
-  section({ 'data-part': 'main', class: fill }, bar(leadButton(model, built), built?.head ?? div({ class: 'flex-1' }), asideToggles(model)), div({ class: fill }, built?.main ?? null))
+export const phoneFrame = (model: Model, built: Built | undefined, route: () => Route) =>
+  section(
+    { 'data-part': 'main', class: fill },
+    bar(leadButton(model, built), built?.head ?? div({ class: 'flex-1' }), asideToggles(model, derive(() => model.asidesOf(route())))),
+    div({ class: fill }, built?.main ?? null),
+  )

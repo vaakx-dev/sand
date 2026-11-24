@@ -12,7 +12,7 @@ export interface ScreenParts {
 }
 
 export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, route: () => Route): Screen => {
-  const id = route().id
+  const { kind, id } = route()
   const phone = derive(() => shell.state() === 'phone')
   const page = derive(() => (phone.get() && !id ? undefined : store.pick(id)))
   const parent = derive(() => store.pages.get().find(candidate => candidate.id === page.get()?.parent))
@@ -22,7 +22,7 @@ export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, 
     head: () => () => page.get()?.label ?? 'Settings',
     back: () => {
       const found = parent.get()
-      return page.get()?.back?.() ?? (found ? () => choose(found.id) : undefined)
+      return found && { kind, id: found.id }
     },
     nav: { label: 'Settings', render: () => list(false) },
     main: () =>

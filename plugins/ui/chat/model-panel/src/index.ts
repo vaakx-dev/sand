@@ -7,8 +7,7 @@ import { modelChanges } from './changes'
 import { inject } from './context'
 import { modelButton as modelButtonService, modelTargets as modelTargetsService } from './contract'
 import { modelSource } from './palette'
-import { modelItems, modelsPage } from './settings'
-import { createView } from './settings/page'
+import { modelsPages } from './settings'
 import { modelTargets } from './targets'
 
 export default definePlugin({
@@ -24,19 +23,6 @@ export default definePlugin({
     ctx.watch(paletteService, palette =>
       palette ? ctx.watch(composerService, composer => composer && palette.source(modelSource(ctx, composer, () => void button.open()))) : undefined,
     )
-    const view = createView()
-    const top = () => view.set({ kind: 'top' })
-    ctx.watch(settingsService, settings =>
-      settings?.page({
-        id: 'models',
-        label: 'Models',
-        icon: 'sparkles',
-        group: 'agents',
-        order: 20,
-        items: modelItems,
-        back: () => (view.get().kind === 'top' ? undefined : top),
-        render: () => modelsPage(ctx, changes, view),
-      }),
-    )
+    ctx.watch(settingsService, settings => settings && modelsPages(ctx, changes, settings))
   },
 })

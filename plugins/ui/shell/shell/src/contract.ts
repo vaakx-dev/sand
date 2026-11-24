@@ -142,7 +142,7 @@ export type BackTo = () => (() => void) | undefined
 
 export interface Screen {
   head(): Child
-  back?: BackTo
+  back?(): Route | undefined
   main(): HTMLElement
   nav?: ScreenNav
   split?: boolean

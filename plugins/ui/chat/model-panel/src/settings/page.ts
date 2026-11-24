@@ -1,14 +1,17 @@
 import type { SourceInfo } from '@sand/accounts/contract'
+import type { Settings } from '@sand/settings/contract'
 import { errorMessage } from '@sand/util'
 import type { Pulse } from '@sand/reactive'
-import { sig, type Sig } from '@vaakx-dev/vrui'
+import { sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 
-export type View = { kind: 'top' } | { kind: 'favourites' } | { kind: 'source'; id: string }
+export const LIST = 'models'
 
-export const createView = () => sig<View>({ kind: 'top' })
+export const FAVOURITES = 'models-favourites'
 
-export const createPage = (ctx: PanelContext, changes: Pulse, view: Sig<View>) => {
+export const sourcePageId = (id: string) => `models-source:${id}`
+
+export const createPage = (ctx: PanelContext, changes: Pulse, settings: Settings) => {
   const problem = sig('')
 
   const fail = (error: unknown) => problem.set(errorMessage(error))
@@ -22,7 +25,7 @@ export const createPage = (ctx: PanelContext, changes: Pulse, view: Sig<View>) =
 
   const source = (id: string): SourceInfo | undefined => ctx.models.sources().find(found => found.id === id)
 
-  return { ctx, catalog: ctx.modelPicker.catalog, changes, problem, view, fail, call, run, source, go: (next: View) => view.set(next) }
+  return { ctx, catalog: ctx.modelPicker.catalog, changes, problem, fail, call, run, source, go: (id: string) => settings.open(id) }
 }
 
 export type Page = ReturnType<typeof createPage>

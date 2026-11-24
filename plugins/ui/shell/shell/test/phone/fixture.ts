@@ -1,3 +1,4 @@
+import { settings, type Settings } from '@sand/settings/contract'
 import { shell, type Aside, type Route, type Screen } from '@sand/ui-shell/contract'
 import { div, h2, p, span, table, td, textarea, tr } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -57,6 +58,16 @@ const drawer: Aside = {
   render: () => div({ class: 'p-2' }, 'Terminal content'),
 }
 
+const settingsPages = (found: Settings) => {
+  const stops = [
+    found.page({ id: 'fixture-parent', label: 'Fixture parent', render: () => p('Parent page') }),
+    found.page({ id: 'fixture-child', label: 'Fixture child', parent: 'fixture-parent', render: () => p('Child page') }),
+  ]
+  return () => {
+    for (const stop of stops) void stop()
+  }
+}
+
 export default definePlugin({
   name: 'shell-fixture',
   description: 'Routes, rows and a sheet for testing the shell',
@@ -92,5 +103,6 @@ export default definePlugin({
     ctx.effect(() => frame.aside(aside))
     ctx.effect(() => frame.aside(panel))
     ctx.effect(() => frame.aside(drawer))
+    ctx.watch(settings, found => found && settingsPages(found))
   },
 })

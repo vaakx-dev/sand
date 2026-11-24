@@ -21,6 +21,7 @@
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
   "devDependencies": {
+    "@sand/settings": "workspace:*",
     "playwright": "^1.64.1"
   }
 }
