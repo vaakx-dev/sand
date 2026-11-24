@@ -1,5 +1,5 @@
 import type { Swipe, Way } from '@sand/ui-shell/contract'
-import { alongWay, canScrollToward, direction, type Drag, editing, follow, fromSystemEdge, selecting } from '@sand/ui-kit/contract'
+import { alongWay, canScrollToward, direction, type Drag, editing, follow, fromSystemEdge, onSelection } from '@sand/ui-kit/contract'
 import { listen } from '@vaakx-dev/vrui'
 import { swipeEnd, swipeMove, swipeStart } from '../protocol'
 import { post } from './post'
@@ -27,7 +27,7 @@ const pans = (target: EventTarget | null, way: Way) => {
 }
 
 const pageKeeps = (event: TouchEvent, { target, x, y }: Press, way: Way) =>
-  event.defaultPrevented || editing(target) || selecting() || fromSystemEdge(way, x, y) || !pans(target, way) || canScrollToward(target, way)
+  event.defaultPrevented || editing(target) || onSelection(x, y) || fromSystemEdge(way, x, y) || !pans(target, way) || canScrollToward(target, way)
 
 const startDrag = (event: TouchEvent, press: Press, way: Way, touch: Touch) => {
   if (pageKeeps(event, press, way)) return
