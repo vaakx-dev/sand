@@ -25,7 +25,6 @@ export interface ProviderCapabilities {
   native: boolean
   resume: boolean
   inject: boolean
-  steer: boolean
   reconfigure: ('effort' | 'speed')[]
   processScope: 'thread' | 'shared'
   cacheTtlMs: number

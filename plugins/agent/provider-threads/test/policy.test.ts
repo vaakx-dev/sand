@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test'
 import { type Candidate, decide, type Target } from '../src/policy'
 
 const api = statelessCaps(['effort', 'speed'], 300_000)
-const native: ProviderCapabilities = { ...api, native: true, resume: true, steer: true, reconfigure: [] }
+const native: ProviderCapabilities = { ...api, native: true, resume: true, reconfigure: [] }
 
 const thread: ProviderThreadInfo = {
   id: 't',

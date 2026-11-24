@@ -54,7 +54,7 @@ const note = (ctx: ChatContext, caption: string | (() => string), resume: MenuAc
   )
 }
 
-const queuedOf = (ctx: ChatContext, thread: Thread, pending: PendingItem): Shown => {
+const shownOf = (ctx: ChatContext, thread: Thread, pending: PendingItem): Shown => {
   const look = lookOf(pending)
   const resume = look === 'held' ? resumeAction(ctx, thread, pending) : undefined
   return { item: pending, caption: captions[look], resume, actions: [...(resume ? [resume] : []), removeAction(ctx, thread, pending)] }
@@ -80,6 +80,6 @@ export const sendingRows = (ctx: ChatContext, session: string, rows: Rows, sendi
   sending.filter(found => found.conversation === session).flatMap(found => rowsOf(ctx, session, sendingOf(found), rows))
 
 export const pendingRows = (ctx: ChatContext, thread: Thread, rows: Rows, sending?: Sending[]): Row[] => [
-  ...thread.pending.flatMap(pending => rowsOf(ctx, thread.id, queuedOf(ctx, thread, pending), rows)),
+  ...thread.pending.flatMap(pending => rowsOf(ctx, thread.id, shownOf(ctx, thread, pending), rows)),
   ...sendingRows(ctx, thread.id, rows, sending),
 ]

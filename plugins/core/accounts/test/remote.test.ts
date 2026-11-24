@@ -35,7 +35,7 @@ afterEach(async () => {
   for (const home of homes.splice(0)) rmSync(home, { recursive: true, force: true })
 })
 
-const nativeCaps: ProviderCapabilities = { ...statelessCaps([], 3_600_000), native: true, resume: true, steer: true }
+const nativeCaps: ProviderCapabilities = { ...statelessCaps([], 3_600_000), native: true, resume: true }
 
 const caller: RouteCaller = { device: 'chat-pc', name: 'Chat PC', kind: 'pc' }
 

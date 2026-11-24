@@ -1,7 +1,7 @@
 {
   "name": "@sand/chat",
   "version": "0.0.0",
-  "description": "The thread chat: a thread transcript with \"Worked for\" turns, branches, queued messages and scrolling that keeps your place",
+  "description": "The thread chat: a thread transcript with \"Worked for\" turns, branches, waiting messages and scrolling that keeps your place",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

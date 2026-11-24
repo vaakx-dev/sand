@@ -8,7 +8,6 @@ export const statelessCaps = (reconfigure: ProviderCapabilities['reconfigure'] =
   native: false,
   resume: false,
   inject: false,
-  steer: false,
   reconfigure,
   processScope: 'thread',
   cacheTtlMs,
