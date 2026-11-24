@@ -33,6 +33,8 @@ const scrollChat = (page: Page, to: 'end' | number) =>
     list?.scrollTo({ top: top === 'end' ? list.scrollHeight : top })
   }, to)
 
+const mainEdge = (page: Page) => page.evaluate(() => [...document.querySelectorAll('[data-part="main"]')].find(node => node.getBoundingClientRect().width > 0)!.getBoundingClientRect().left)
+
 const sidebarEdge = (page: Page) => page.evaluate(() => document.querySelector('nav[aria-label="Sidebar"]')!.getBoundingClientRect().right)
 
 describe.each(phones)('on a $name', size => {
@@ -292,13 +294,21 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
   })
 
-  test('a swipe right in Settings steps back to the Settings list, then out, and never opens the sidebar', async () => {
+  test('a swipe right in Settings steps back to the Settings list, then out, never opens the sidebar, and can be caught on the way out', async () => {
     const { page } = phone
     await openPlain()
     await tap(page, 'Show the sidebar')
     await tap(page, 'Settings')
     await page.getByRole('button', { name: 'Plugins', exact: true }).filter({ visible: true }).click()
     expect(await screen(page, 'settings/plugins')).toBe('settings/plugins')
+    await drag(phone, [60, mid()], [size.width - 60, mid()], flick)
+    const hand = finger(phone)
+    await hand.down(size.width / 2, mid())
+    await hand.move(size.width / 2 - 24, mid())
+    await hand.move(20, mid())
+    await hand.up()
+    expect(await until(() => mainEdge(page), edge => edge === 0)).toBe(0)
+    expect(await screen(page)).toBe('settings/plugins')
     await swipe(phone, [60, mid()], [size.width - 30, mid()])
     expect(await screen(page, 'settings')).toBe('settings')
     expect(await drawer(page)).toBe(false)

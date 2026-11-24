@@ -65,8 +65,11 @@ const openingSwipe = (model: Model, way: Way) => {
   }
 }
 
+const sideways = (way: Way) => way === 'left' || way === 'right'
+
 const phoneSwipe = (model: Model, way: Way) => {
   if (model.drawerOpen.get()) return way === 'left' ? drawerSwipe(model) : undefined
+  if (model.leaving.at() > 0) return sideways(way) ? backSwipe(model) : undefined
   const cover = model.coverAside.get()
   return cover ? coveredSwipe(model, cover, way) : openingSwipe(model, way)
 }
@@ -74,7 +77,7 @@ const phoneSwipe = (model: Model, way: Way) => {
 export const edgeSwipe = (model: Model, way: Way): Swipe | undefined => {
   if (model.sheetsShown.get().length) return undefined
   const state = model.state.get()
-  if (state === 'drawer') return way === 'left' || way === 'right' ? drawerSwipe(model) : undefined
+  if (state === 'drawer') return sideways(way) ? drawerSwipe(model) : undefined
   if (state !== 'phone') return undefined
   return phoneSwipe(model, way)
 }
