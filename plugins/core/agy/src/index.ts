@@ -5,6 +5,7 @@ import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { listModels, readStatus, signIn, signOut } from './account'
+import { startAcp } from './acp'
 import { agy } from './binary'
 import { agyHistory } from './history'
 import { readLimits } from './limits'
@@ -36,7 +37,7 @@ function antigravity(media: Media, asides: string): Provider {
         models: () => listModels(folder),
         usage: () => readLimits(folder),
         history: agyHistory(folder),
-        open: (setup, output, resume) => openSession(setup, output, { media, folder, asides, report }, resume),
+        open: (setup, output, resume) => openSession(setup, output, { media, folder, asides, report, connect: startAcp }, resume),
       }
     },
   }
