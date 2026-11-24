@@ -8,6 +8,7 @@ const appTopFiles = ['package.json', 'bun.lock', 'tsconfig.json']
 export const buildStamp = 'sand-build.json'
 export const bundleAsset = 'sand.tar.gz'
 export const stampAsset = 'sand-build.json'
+export const androidAsset = 'sand.apk'
 
 const skipped = (name: string) => !name || name.startsWith('.') || name === 'node_modules'
 

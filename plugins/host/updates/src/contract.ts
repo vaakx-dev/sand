@@ -8,6 +8,12 @@ export type UpdateChannel = 'release' | 'nightly' | 'dev'
 
 export const DEFAULT_UPDATE_CHANNEL: UpdateChannel = 'release'
 
+export interface AndroidRelease {
+  url: string
+  sha256?: string
+  versionCode: number
+}
+
 export interface ReleaseInfo {
   channel: UpdateChannel
   tag: string
@@ -16,6 +22,7 @@ export interface ReleaseInfo {
   notesUrl: string
   build: BuildInfo
   changes?: BuildChange[]
+  android?: AndroidRelease
 }
 
 export type UpdatePhase = 'idle' | 'downloading' | 'installing' | 'switching' | 'waiting' | 'restarting' | 'failed'
