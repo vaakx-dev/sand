@@ -25,7 +25,6 @@ import { createPlaceholders } from './placeholder'
 import { createPlus } from './plus/entries'
 import { createAsides } from './send/aside'
 import { createSendMenu } from './send/menu'
-import { sendingSettings } from './sending'
 import { sendsIn, type Send } from './send/outgoing'
 import { createSuggesters } from './suggest/sources'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
@@ -141,7 +140,6 @@ export default definePlugin({
     ctx.watch(fileIndex, found => found && triggers.add(fileTrigger(found, ctx.threads)))
     ctx.watch(skillIndex, found => found && triggers.add(skillTrigger(() => found.list())))
     ctx.effect(() => () => session.keep())
-    sendingSettings(ctx)
     ctx.provide(composerService, composer)
     ctx.provide(drafts, session.drafts)
     ctx.provide(typingService, typing)

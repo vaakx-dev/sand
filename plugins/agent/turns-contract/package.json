@@ -15,7 +15,6 @@
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

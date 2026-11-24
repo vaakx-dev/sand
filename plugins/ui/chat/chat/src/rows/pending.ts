@@ -8,7 +8,7 @@ import { div } from '@vaakx-dev/vrui'
 import type { Item, Row, Rows } from '@sand/transcript/contract'
 import type { ChatContext } from '../context'
 
-type Look = 'steer' | 'queued' | 'held'
+type Look = 'steer' | 'waiting' | 'held'
 
 interface Shown {
   item: Pick<PendingItem, 'id' | 'prompt' | 'at'>
@@ -20,13 +20,13 @@ interface Shown {
 
 const captions: Record<Look, string | undefined> = {
   steer: undefined,
-  queued: 'Queued for the next turn',
+  waiting: 'Starts as soon as this chat can run',
   held: 'Held — the turn stopped before this was sent',
 }
 
 const lookOf = ({ kind, held }: PendingItem): Look => {
   if (held) return 'held'
-  return kind === 'steer' ? 'steer' : 'queued'
+  return kind === 'steer' ? 'steer' : 'waiting'
 }
 
 const removeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): MenuAction => ({

@@ -1,5 +1,4 @@
 import { sessions } from '@sand/chats/contract'
-import { sandConfig } from '@sand/config/contract'
 import { engine } from '@sand/engine/contract'
 import { ledger } from '@sand/ledger/contract'
 import { modelSettings } from '@sand/model/contract'
@@ -8,6 +7,6 @@ import { providerThreads } from '@sand/provider-threads/contract'
 import { tools } from '@sand/tools/contract'
 import type { Context } from 'drydock'
 
-export const inject = { engine, providerThreads, sessions, modelSettings, context, tools, sandConfig, ledger }
+export const inject = { engine, providerThreads, sessions, modelSettings, context, tools, ledger }
 
 export type TurnsContext = Context<typeof inject>

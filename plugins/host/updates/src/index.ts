@@ -30,7 +30,7 @@ export default definePlugin({
   inject: { hostOptions, hostApp, runtimes, hub },
   async apply(ctx) {
     const { hostOptions, hostApp, runtimes, hub } = ctx
-    const { home, main, drainTimeout } = hostOptions
+    const { home, main } = hostOptions
     const readHealth = async () => {
       const health = ctx.get(hostHealth)
       if (!health) throw new Error('the host health check is not loaded')
@@ -44,7 +44,6 @@ export default definePlugin({
         hostRoot: appRoot(main),
         app: hostApp,
         runtimes,
-        drainTimeout,
         current: () => buildInfo(hostApp.root()),
         find: findRelease,
         download: downloadRelease,

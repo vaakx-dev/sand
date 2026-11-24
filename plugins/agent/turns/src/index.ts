@@ -1,9 +1,8 @@
 import { type Owner, type Session, sessionArchive, sessionBusy, sessionRemove } from '@sand/chats/contract'
 import type { TurnInfo as EngineTurn, Runner } from '@sand/engine/contract'
 import { needs } from '@sand/tools/contract'
-import { type Sending, turns, type Turns } from '@sand/turns-contract/contract'
+import { turns, type Turns } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
-import { z } from 'zod'
 import { sessionBrief } from './brief'
 import { inject, type TurnsContext } from './context'
 import { sessionConversations, turnOf } from './conversations'
@@ -13,10 +12,10 @@ import { talkedBackfill } from './talked'
 
 const found = (info: EngineTurn | undefined) => info && turnOf(info)
 
-const attach = (ctx: TurnsContext, owner: Owner, sending: () => Sending): Runner<Session> => {
+const attach = (ctx: TurnsContext, owner: Owner): Runner<Session> => {
   ctx.effect(() => ctx.providerThreads.brief(owner, sessionBrief(ctx)))
   ctx.effect(() => ctx.tools.offer(owner, () => needs))
-  const runner = ctx.engine.attach(sessionConversations(ctx, owner, () => sending().queue))
+  const runner = ctx.engine.attach(sessionConversations(ctx, owner))
   ctx.effect(() => runner.detach)
   ctx.on(sessionRemove, id => {
     runner.forget(id)
@@ -29,12 +28,9 @@ export default definePlugin({
   name: 'turns',
   description: "Runs the turns of each chat on the engine, a thread's or a bot's, and serves them to pages",
   inject,
-  config: z.object({ queue: z.boolean().default(false) }).default({ queue: false }),
-  apply(ctx, config) {
+  apply(ctx) {
     ctx.ledger.migrate('turns-talked', talkedBackfill)
-    let sending: Sending = config
-    const currentSending = () => sending
-    const runners: Record<Owner, Runner<Session>> = { thread: attach(ctx, 'thread', currentSending), bot: attach(ctx, 'bot', currentSending) }
+    const runners: Record<Owner, Runner<Session>> = { thread: attach(ctx, 'thread'), bot: attach(ctx, 'bot') }
     const all = Object.values(runners)
     const runnerOf = (session: Session) => runners[session.owner]
     const engineTurn = (turn: string) => all.map(runner => runner.get(turn)).find(info => info !== undefined)
@@ -63,13 +59,7 @@ export default definePlugin({
     }
 
     ctx.provide(turns, service)
-    const setSending = async (next: Sending) => {
-      await ctx.sandConfig.set(['plugins', 'turns'], { ...next })
-      sending = next
-      return sending
-    }
-
-    serveTurns(ctx, service, () => all.flatMap(runner => runner.live()).map(turnOf), { current: currentSending, set: setSending })
+    serveTurns(ctx, service, () => all.flatMap(runner => runner.live()).map(turnOf))
     ctx.on(sessionBusy, session => service.current(session) !== undefined)
     ctx.on(sessionArchive, session => ctx.providerThreads.release(session))
   },
