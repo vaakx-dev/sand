@@ -130,6 +130,27 @@ test('a native thread that sand compacts is replaced by a new session that gets 
   expect(generations()).toEqual(['1:retired', '2:idle'])
 })
 
+test('a native thread compacted in the middle of a turn hands the rest of the turn to a new session that gets the summary and the tool result', async () => {
+  const [summarized, recent] = ['x', 'y'].map(letter => letter.repeat(100_000))
+  const past = [{ type: 'call', id: 'c1', name: 'echo', input: { word: 'w' } }, { type: 'usage', input: 10_000_000 }, { type: 'context', window: 200_000 }] as const
+  sand = await startSand([app([[said('n1')], [said('n2')], [...past], [said('the summary')], [said('n3')]])])
+  sand.tool('echo', ({ word }) => String(word))
+  const chat = sand.chat('n/m')
+
+  await sand.turns.run(chat, summarized!)
+  await sand.turns.run(chat, recent!)
+  const result = await sand.turns.run(chat, 'three')
+
+  expect(result).toMatchObject({ text: 'n3', steps: 2 })
+  expect(sand.native('n').slice(-3, -1)).toEqual([{ type: 'close' }, { type: 'open', cwd: sand.home }])
+  const seeded = sent().at(-1)
+  expect(seeded).toContain('Summary of the earlier conversation:\n\nthe summary')
+  expect(seeded).not.toContain(summarized)
+  expect(seeded).toEndWith('three\n[You called echo({"word":"w"}) as call c1]\n[Result of call c1]\nw')
+  expect(kinds()).not.toContain('answer')
+  expect(generations()).toEqual(['1:retired', '2:idle'])
+})
+
 test('a chat moved to another folder starts a native thread there with a full handoff', async () => {
   sand = await startSand([app([[said('n1')], [said('n2')]])])
   const chat = sand.chat('n/m')
