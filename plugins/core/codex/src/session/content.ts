@@ -1,37 +1,31 @@
+import { type Part, parts, toolParts, unreadablePdf } from '@sand/app-plan'
+import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { fileText, type ImageBlock, type ModelContent, type ToolResultBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 
 const dataUrl = (mediaType: string, data: string) => `data:${mediaType};base64,${data}`
 
-const asText = (block: Exclude<ModelContent, ImageBlock>, media: Media) => {
-  switch (block.type) {
+const inputItem = (part: Part) => {
+  switch (part.type) {
     case 'text':
-      return block.text
-    case 'file':
-      return fileText(block)
-    case 'document': {
-      if (block.mediaType !== 'text/plain') return `(PDF ${block.name ?? ''} attached, which Codex can't read here)`
-      const data = media.data(block)
-      if (data === undefined) return unavailableText(block)
-      return block.name ? `${block.name}\n\n${data}` : data
-    }
+      return { type: 'text', text: part.text, text_elements: [] }
+    case 'image':
+      return { type: 'image', url: dataUrl(part.mediaType, part.data) }
+    case 'pdf':
+      return { type: 'text', text: unreadablePdf(part), text_elements: [] }
   }
 }
 
-export const inputItem = (media: Media) => (block: ModelContent) => {
-  if (block.type !== 'image') return { type: 'text', text: asText(block, media), text_elements: [] }
-  const data = media.data(block)
-  return data === undefined ? { type: 'text', text: unavailableText(block), text_elements: [] } : { type: 'image', url: dataUrl(block.mediaType, data) }
+const outputItem = (part: Part) => {
+  switch (part.type) {
+    case 'text':
+      return { type: 'inputText', text: part.text }
+    case 'image':
+      return { type: 'inputImage', imageUrl: dataUrl(part.mediaType, part.data) }
+    case 'pdf':
+      return { type: 'inputText', text: unreadablePdf(part) }
+  }
 }
 
-const outputItem = (media: Media) => (item: ToolResultContent) => {
-  if (item.type === 'tool_reference') return { type: 'inputText', text: `The ${item.name} tool is now available.` }
-  if (item.type !== 'image') return { type: 'inputText', text: asText(item, media) }
-  const data = media.data(item)
-  return data === undefined ? { type: 'inputText', text: unavailableText(item) } : { type: 'inputImage', imageUrl: dataUrl(item.mediaType, data) }
-}
+export const inputItems = (content: ModelContent[], media: Media) => parts(content, media).map(inputItem)
 
-export const toolOutput = (result: ToolResultBlock, media: Media) => ({
-  contentItems: result.content.length ? result.content.map(outputItem(media)) : [{ type: 'inputText', text: '(no output)' }],
-  success: !result.isError,
-})
+export const toolOutput = (result: ToolResultBlock, media: Media) => ({ contentItems: toolParts(result, media).map(outputItem), success: !result.isError })

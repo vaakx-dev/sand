@@ -1,4 +1,5 @@
-import { llmPlans, type AppPlace, type AppPlan, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
+import { llmPlans, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
+import { appPlan, type Place, type Provider } from '@sand/app-plan'
 import { cli } from '@sand/config/contract'
 import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
@@ -6,14 +7,14 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { codexAccount } from './account/account'
 import { limitsOf } from './account/limits'
-import { codexHome, installUrl } from './server/binary'
-import { type CodexPlace, createPool, type Pool } from './server/pool'
+import { codex, codexHome } from './server/binary'
+import { createPool, type Pool } from './server/pool'
 import { sessionFiles } from './session/files'
 import { rolloutHistory } from './session/history'
 import { openSession } from './session/session'
 import pkg from '../package.json'
 
-const caps: ProviderCapabilities = {
+const CAPS: ProviderCapabilities = {
   native: true,
   resume: true,
   inject: true,
@@ -23,11 +24,6 @@ const caps: ProviderCapabilities = {
   cacheTtlMs: 10 * 60_000,
 }
 
-interface Needs {
-  media: Media
-  report(account: string, limits: PlanLimits): void
-}
-
 const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>
   pool.listen((method, params) => {
     if (method !== 'account/rateLimits/updated') return
@@ -35,32 +31,30 @@ const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>
     if (limits) report(limits)
   })
 
-const codexAccountPlan = ({ media, report }: Needs, id: string, place: CodexPlace): AppPlan => {
-  const pool = createPool(place, pkg.version)
-  const reported = (limits: PlanLimits) => report(id, limits)
-  reportLimits(pool, reported)
-  return {
-    id,
-    label: 'Codex',
-    name: 'ChatGPT',
-    detail: 'Uses your sign-in from the Codex app on this PC',
-    logo: 'openai',
-    app: 'Codex',
-    install: installUrl,
-    family: 'openai',
-    caps,
-    fixedTools: true,
-    ...codexAccount(pool),
-    open: (setup, output, resume) => openSession({ pool, media, report: reported }, setup, output, resume),
-    sessionFiles: sessionFiles(place.home),
-    history: rolloutHistory(place.home),
-    close: () => pool.close(),
-  }
-}
+const placeOf = ({ folder }: Place, apps: string) => (folder ? { folder, home: folder } : { folder: apps, home: codexHome() })
 
-const codexPlan = (needs: Needs, folder: string): AppPlan => ({
-  ...codexAccountPlan(needs, 'codex', { folder, home: codexHome() }),
-  another: ({ id, folder }: AppPlace) => codexAccountPlan(needs, id, { folder, home: folder }),
+const codexProvider = (media: Media, apps: string): Provider => ({
+  id: 'codex',
+  label: 'Codex',
+  name: 'ChatGPT',
+  detail: 'Uses your sign-in from the Codex app on this PC',
+  logo: 'openai',
+  family: 'openai',
+  caps: CAPS,
+  fixedTools: true,
+  binary: codex,
+  account(place, report) {
+    const { folder, home } = placeOf(place, apps)
+    const pool = createPool({ folder, home }, pkg.version)
+    reportLimits(pool, report)
+    return {
+      ...codexAccount(pool),
+      open: (setup, output, resume) => openSession({ pool, media, report }, setup, output, resume),
+      sessionFiles: sessionFiles(home),
+      history: rolloutHistory(home),
+      close: () => pool.close(),
+    }
+  },
 })
 
 export default definePlugin({
@@ -68,8 +62,8 @@ export default definePlugin({
   description: 'Adds Codex to Settings → Accounts using the Codex app on this PC: sand runs codex app-server with sand’s own tools and prompt; the app keeps its own sign-in, and each ChatGPT account added beside it keeps its sign-in in its own folder',
   inject: { cli, media },
   async apply(ctx) {
-    const folder = join(ctx.cli.home, 'apps', 'codex')
-    await mkdir(folder, { recursive: true })
-    ctx.watch(llmPlans, plans => plans?.register(codexPlan({ media: ctx.media, report: (account, limits) => plans.limits(account, limits) }, folder)))
+    const apps = join(ctx.cli.home, 'apps', 'codex')
+    await mkdir(apps, { recursive: true })
+    ctx.watch(llmPlans, plans => plans?.register(appPlan(codexProvider(ctx.media, apps), plans)))
   },
 })

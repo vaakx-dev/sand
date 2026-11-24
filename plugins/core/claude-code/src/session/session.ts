@@ -1,13 +1,18 @@
 import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
-import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
+import { fieldsOf, forkedAside, type Json, mcpServer, SERVER_NAME, Turns } from '@sand/app-plan'
+import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { claudeArgs, claudeEnv, type Saved } from '../cli/args'
-import { connect, fieldsOf, type Json } from '../cli/connection'
+import { connect } from '../cli/connection'
 import { usageLimits } from '../account/usage'
-import { askAside } from './aside'
-import { messageBlock } from './content'
+import { messageBlocks } from './content'
 import { createReader, succeeded } from './stream'
-import { serverName, toolServer } from './tools'
+
+const TOOL_USE_KEY = 'claudecode/toolUseId'
+
+const TOOL_LOADING = { 'anthropic/alwaysLoad': true, 'anthropic/maxResultSizeChars': 500_000 }
+
+const NOTIFIED = { jsonrpc: '2.0', result: {}, id: 0 }
 
 const savedOf = (setup: AppSetup, given?: Saved): Saved | undefined => given ?? (setup.persist ? { id: crypto.randomUUID(), start: 'new' } : undefined)
 
@@ -21,30 +26,14 @@ export interface SessionNeeds {
 
 export const openSession = async (setup: AppSetup, output: AppOutput, needs: SessionNeeds, given?: Saved): Promise<AppSession> => {
   const { media, report } = needs
-  const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
-  const answerFor = (id: string) => {
-    const found = answers.get(id) ?? Promise.withResolvers<ToolResultBlock>()
-    answers.set(id, found)
-    return found
-  }
-  const serve = toolServer(setup.tools, id => answerFor(id).promise, media)
-  const toBlock = messageBlock(media)
-  const reader = createReader(output)
+  const turns = new Turns(output)
+  const serve = mcpServer({ tools: setup.tools, media, meta: TOOL_LOADING, call: ({ meta }) => turns.result(String(meta[TOOL_USE_KEY] ?? '')) })
+  const reader = createReader(output, turns)
   const saved = savedOf(setup, given)
   const resumed = resumable(saved)
-  let running = false
-  let stopped: PromiseWithResolvers<void> | undefined
-
-  const dropAnswers = () => {
-    answers.forEach(found => {
-      found.promise.catch(() => {})
-      found.reject(new Error('sand stopped this turn'))
-    })
-    answers.clear()
-  }
 
   const handle = async (subtype: unknown, request: Json) => {
-    if (subtype === 'mcp_message') return { mcp_response: await serve(fieldsOf(request.message)) }
+    if (subtype === 'mcp_message') return { mcp_response: (await serve(fieldsOf(request.message))) ?? NOTIFIED }
     if (subtype === 'can_use_tool') return { behavior: 'allow', updatedInput: fieldsOf(request.input) }
     return {}
   }
@@ -58,16 +47,9 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
       () => {},
     )
 
-  const interrupted = (waiting: PromiseWithResolvers<void>) => {
-    stopped = undefined
-    waiting.resolve()
-  }
-
   const onMessage = (message: Json) => {
     if (message.type !== 'result') return reader.read(message)
-    running = false
     const checked = checkUsage()
-    if (stopped) return interrupted(stopped)
     if (succeeded(message)) return reader.finish(message)
     void checked.then(() => reader.finish(message))
   }
@@ -80,30 +62,20 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
     onMessage,
     onExit: error => output.exit(error),
   })
-  await connection.request('initialize', { sdkMcpServers: [serverName], systemPrompt: [setup.system] })
+  await connection.request('initialize', { sdkMcpServers: [SERVER_NAME], systemPrompt: [setup.system] })
 
-  const send = (content: ModelContent[]) => {
-    running = true
-    connection.send({ type: 'user', message: { role: 'user', content: content.map(toBlock) }, parent_tool_use_id: null, client_composed: true })
-  }
+  const prompt = (content: ModelContent[]) =>
+    connection.send({ type: 'user', message: { role: 'user', content: messageBlocks(content, media) }, parent_tool_use_id: null, client_composed: true })
 
-  return {
-    ...(resumed && { id: resumed.id }),
+  return turns.session({
+    ...(resumed && {
+      id: resumed.id,
+      aside: (question: string, signal?: AbortSignal) => forkedAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), question, signal),
+    }),
     pid: connection.pid,
-    send,
-    ...(resumed && { aside: (prompt: string, signal?: AbortSignal) => askAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), prompt, signal) }),
-    steer: send,
-    answer: (id, result) => answerFor(id).resolve(result),
-    interrupt() {
-      dropAnswers()
-      if (!running) return Promise.resolve()
-      stopped ??= Promise.withResolvers<void>()
-      void connection.request('interrupt').catch(() => {})
-      return stopped.promise
-    },
-    close() {
-      dropAnswers()
-      return connection.close()
-    },
-  }
+    prompt,
+    steer: prompt,
+    stop: () => void connection.request('interrupt').catch(() => {}),
+    close: () => connection.close(),
+  })
 }

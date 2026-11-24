@@ -1,7 +1,9 @@
 import { type AppOutput, cacheLifetimes, type Usage, UsageLimited, writtenTtl } from '@sand/accounts/contract'
+import { fieldsOf, type Json } from '@sand/app-plan'
 import type { StopReason } from '@sand/chats/contract'
 import { type Resets, resetsOf } from '../account/usage'
-import { fieldsOf, type Json } from '../cli/connection'
+
+type Ending = Pick<AppOutput, 'finish' | 'fail'>
 
 interface Limit {
   rejected: boolean
@@ -50,7 +52,7 @@ const createLimit = () => {
   }
 }
 
-export const createReader = (output: AppOutput) => {
+export const createReader = (output: AppOutput, ending: Ending = output) => {
   let calls = 0
   let long = 0
   let stop: StopReason = 'end_turn'
@@ -99,8 +101,8 @@ export const createReader = (output: AppOutput) => {
     resets: () => resets,
     finish(result: Json) {
       const limited = limit.take()
-      if (succeeded(result)) return output.finish(stop)
-      output.fail(failureOf(result, limited))
+      if (succeeded(result)) return ending.finish(stop)
+      ending.fail(failureOf(result, limited))
     },
   }
 }

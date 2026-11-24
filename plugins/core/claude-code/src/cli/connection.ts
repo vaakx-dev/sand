@@ -1,10 +1,7 @@
-import { errorMessage, isRecord } from '@sand/util'
+import { fieldsOf, stoppedError, type Json } from '@sand/app-plan'
+import { errorMessage } from '@sand/util'
 import { spawnJsonLines } from '@sand/util/host'
-import { requireClaude } from './binary'
-
-export type Json = Record<string, unknown>
-
-export const fieldsOf = (value: unknown): Json => (isRecord(value) ? value : {})
+import { claude } from './binary'
 
 interface ConnectOptions {
   args: string[]
@@ -23,7 +20,7 @@ interface Waiting {
 export type Connection = Awaited<ReturnType<typeof connect>>
 
 export const connect = async ({ args, env, cwd, handle, onMessage, onExit }: ConnectOptions) => {
-  const binary = await requireClaude()
+  const binary = await claude.require()
   const waiting = new Map<string, Waiting>()
   let count = 0
   let closed = false
@@ -66,7 +63,7 @@ export const connect = async ({ args, env, cwd, handle, onMessage, onExit }: Con
     env,
     onMessage: receive,
     onExit(code, stderr) {
-      const error = new Error(`Claude Code stopped (exit ${code})${stderr ? `: ${stderr.split('\n').slice(-3).join(' ')}` : ''}`)
+      const error = stoppedError(claude.app, code, stderr)
       failAll(error)
       if (!closed) onExit(error)
     },

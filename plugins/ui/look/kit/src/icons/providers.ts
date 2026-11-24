@@ -41,8 +41,6 @@ const monograms: Record<string, Monogram> = {
 
 const serverColor = colorVar('neutral', 400)
 
-const aliases: Record<string, string> = { claude: 'anthropic', codex: 'openai' }
-
 const frame = (child: Child) => span({ class: 'inline-flex shrink-0', 'aria-hidden': 'true' }, child)
 
 const markIcon = (mark: Mark, size: number) =>
@@ -63,14 +61,13 @@ const knownColor = (provider: string) => (provider === 'server' ? serverColor : 
 
 export const providerIcon = (name: string | undefined, size = 16) => {
   if (!name) return null
-  const provider = aliases[name] ?? name
-  const mark = marks[provider]
+  const mark = marks[name]
   if (mark) return markIcon(mark, size)
-  const monogram = monograms[provider]
+  const monogram = monograms[name]
   if (monogram) return monogramIcon(monogram, size)
-  return provider === 'server' ? serverIcon(size) : null
+  return name === 'server' ? serverIcon(size) : null
 }
 
 export const modelLogo = (provider: string | undefined, size = 16) => providerIcon(provider, size) ?? icon(Sparkles, size, 1.8)
 
-export const providerColor = (name: string, order = 0) => knownColor(aliases[name] ?? name) ?? series[order % series.length]!
+export const providerColor = (name: string, order = 0) => knownColor(name) ?? series[order % series.length]!

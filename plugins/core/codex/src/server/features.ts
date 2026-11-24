@@ -1,4 +1,4 @@
-import { fieldsOf, type Json, type Rpc } from './rpc'
+import { fieldsOf, type Json, type Rpc } from '@sand/app-plan'
 
 const kept = new Set([
   'content_item_kinds',

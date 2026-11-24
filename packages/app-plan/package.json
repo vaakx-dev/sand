@@ -1,0 +1,15 @@
+{
+  "name": "@sand/app-plan",
+  "version": "0.0.0",
+  "description": "One way to bring an app's own plan into sand: finding the app, signing in, sessions, tools, limits and history, with each app adding only its wire protocol",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/media": "workspace:*",
+    "@sand/util": "workspace:*"
+  }
+}

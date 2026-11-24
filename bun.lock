@@ -43,6 +43,16 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "packages/app-plan": {
+      "name": "@sand/app-plan",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/media": "workspace:*",
+        "@sand/util": "workspace:*",
+      },
+    },
     "packages/boot": {
       "name": "@sand/boot",
       "version": "0.0.0",
@@ -1693,8 +1703,10 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/app-plan": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/media": "workspace:*",
+        "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
@@ -1721,6 +1733,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/app-plan": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/media": "workspace:*",
         "@sand/util": "workspace:*",
@@ -1732,6 +1745,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/app-plan": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/media": "workspace:*",
@@ -3589,6 +3603,8 @@
     "@sand/advanced": ["@sand/advanced@workspace:plugins/ui/shared/advanced"],
 
     "@sand/agy": ["@sand/agy@workspace:plugins/core/agy"],
+
+    "@sand/app-plan": ["@sand/app-plan@workspace:packages/app-plan"],
 
     "@sand/ask": ["@sand/ask@workspace:plugins/agent/ask"],
 

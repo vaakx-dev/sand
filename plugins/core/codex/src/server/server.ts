@@ -1,17 +1,10 @@
-import { startRpc, type Json } from './rpc'
+import { type Json, startRpc } from '@sand/app-plan'
+import { codex } from './binary'
 
 export interface ServerHandlers {
   notify(method: string, params: Json): void
   call(params: Json): Promise<unknown>
   exit(error: Error): void
-}
-
-const approvals = /requestApproval$|^execCommandApproval$|^applyPatchApproval$/
-
-const answer = (handlers: ServerHandlers) => async (method: string, params: Json) => {
-  if (method === 'item/tool/call') return handlers.call(params)
-  if (approvals.test(method)) return { decision: 'decline' }
-  throw new Error(`sand doesn't handle ${method}`)
 }
 
 export interface Launch {
@@ -20,8 +13,23 @@ export interface Launch {
   home: string
 }
 
+const APPROVALS = /requestApproval$|^execCommandApproval$|^applyPatchApproval$/
+
+const answer = (handlers: ServerHandlers) => async (method: string, params: Json) => {
+  if (method === 'item/tool/call') return handlers.call(params)
+  if (APPROVALS.test(method)) return { decision: 'decline' }
+  throw new Error(`sand doesn't handle ${method}`)
+}
+
 export const startServer = async ({ binary, args, home }: Launch, version: string, handlers: ServerHandlers) => {
-  const rpc = startRpc({ binary, args, home, onNotify: handlers.notify, onRequest: answer(handlers), onExit: handlers.exit })
+  const rpc = startRpc({
+    command: [binary, ...args],
+    app: codex.app,
+    env: { ...process.env, OPENAI_API_KEY: undefined, CODEX_HOME: home },
+    onNotify: handlers.notify,
+    onRequest: answer(handlers),
+    onExit: handlers.exit,
+  })
   try {
     await rpc.request('initialize', { clientInfo: { name: 'sand', title: 'sand', version }, capabilities: { experimentalApi: true } })
   } catch (error) {

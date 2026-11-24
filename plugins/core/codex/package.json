@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
+    "@sand/app-plan": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/media": "workspace:*",
