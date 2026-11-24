@@ -1,4 +1,4 @@
-import { llmPlans, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
+import { cacheLifetimes, llmPlans, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
 import { appPlan, type Place, type Provider } from '@sand/app-plan'
 import { cli } from '@sand/config/contract'
 import { media, type Media } from '@sand/media/contract'
@@ -21,7 +21,7 @@ const CAPS: ProviderCapabilities = {
   steer: true,
   reconfigure: ['effort'],
   processScope: 'thread',
-  cacheTtlMs: 10 * 60_000,
+  cacheTtlMs: cacheLifetimes.openai.short,
 }
 
 const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>

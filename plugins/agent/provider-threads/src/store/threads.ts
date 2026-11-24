@@ -19,6 +19,7 @@ interface Row {
   effort: Effort | null
   speed: Speed
   context: number
+  context_window: number | null
   used: number
   created: number
 }
@@ -29,12 +30,14 @@ export interface NewThread {
   system: string
   seen: Segment[]
   context?: number
+  window?: number
   used: number
 }
 
 export interface Settled {
   seen: Segment[]
   context: number
+  window?: number
   native?: NativeRef
 }
 
@@ -52,15 +55,16 @@ const infoOf = (row: Row): ProviderThreadInfo => ({
   ...(row.effort && { effort: row.effort }),
   speed: row.speed,
   context: row.context,
+  ...(row.context_window && { window: row.context_window }),
   used: row.used,
   created: row.created,
 })
 
-const insertSql = `insert into provider_threads (id, owner, conversation, source, model, generation, status, system, seen, effort, speed, context, used, created)
+const insertSql = `insert into provider_threads (id, owner, conversation, source, model, generation, status, system, seen, effort, speed, context, context_window, used, created)
   values ($id, $owner, $conversation, $source, $model,
     (select coalesce(max(generation), 0) + 1 from provider_threads
       where owner = $owner and conversation = $conversation and model = $model),
-    'idle', $system, $seen, $effort, $speed, $context, $used, $created)
+    'idle', $system, $seen, $effort, $speed, $context, $window, $used, $created)
   returning *`
 
 export const createThreadStore = (db: Database) => {
@@ -70,8 +74,9 @@ export const createThreadStore = (db: Database) => {
     "select * from provider_threads where owner = $owner and conversation = $conversation and status != 'retired' order by used desc",
   )
   const activated = db.query("update provider_threads set status = 'active', used = $used, source = $source, effort = $effort, speed = $speed where id = $id")
-  const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, native = coalesce($native, native) where id = $id")
+  const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, context_window = coalesce($window, context_window), native = coalesce($native, native) where id = $id")
   const saw = db.query('update provider_threads set seen = $seen where id = $id')
+  const sized = db.query('update provider_threads set context_window = $window where id = $id')
   const briefed = db.query('update provider_threads set system = $system where id = $id')
   const retired = db.query("update provider_threads set status = 'retired' where id = $id")
   const doubted = db.query("update provider_threads set status = 'uncertain' where id = $id and native is not null and status != 'retired'")
@@ -81,7 +86,7 @@ export const createThreadStore = (db: Database) => {
   return {
     open: (conversation: ConversationRef) => open.all(keyOf(conversation)).map(infoOf),
     known: (conversation: ConversationRef) => !!any.get(keyOf(conversation)),
-    create({ conversation, selection, system, seen, context = 0, used }: NewThread) {
+    create({ conversation, selection, system, seen, context = 0, window, used }: NewThread) {
       const row = insert.get({
         id: Bun.randomUUIDv7(),
         ...keyOf(conversation),
@@ -92,15 +97,17 @@ export const createThreadStore = (db: Database) => {
         effort: selection.effort ?? null,
         speed: selection.speed,
         context,
+        window: window ?? null,
         used,
         created: Date.now(),
       })
       return infoOf(row!)
     },
     activate: (id: string, { source, effort, speed }: Selection) => void activated.run({ id, used: Date.now(), source, effort: effort ?? null, speed }),
-    settle: (id: string, { seen, context, native }: Settled) =>
-      void settled.run({ id, seen: JSON.stringify(seen), context, native: native ? JSON.stringify(native) : null }),
+    settle: (id: string, { seen, context, window, native }: Settled) =>
+      void settled.run({ id, seen: JSON.stringify(seen), context, window: window ?? null, native: native ? JSON.stringify(native) : null }),
     see: (id: string, seen: Segment[]) => void saw.run({ id, seen: JSON.stringify(seen) }),
+    size: (id: string, window: number) => void sized.run({ id, window }),
     rebrief: (id: string, system: string) => void briefed.run({ id, system }),
     retire: (id: string) => void retired.run({ id }),
     doubt: (id: string) => void doubted.run({ id }),

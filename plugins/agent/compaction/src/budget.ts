@@ -1,19 +1,25 @@
-import type { LLM } from '@sand/accounts/contract'
+import type { LLMRequest } from '@sand/accounts/contract'
 import type { CompactionConfig } from './config'
 
-const fallbackWindow = 200_000
-
-export interface Budget {
-  window: number
+export interface Bounds {
   start: number
   limit: number
-  keep: number
 }
 
-export const budgetOf = (llm: LLM, config: CompactionConfig, model?: string): Budget => {
-  const window = llm.models?.().find(info => info.id === model)?.context ?? fallbackWindow
-  const reserve = Math.min(config.reserve, Math.floor(window / 2))
-  const limit = Math.min(Math.floor(window * config.ratio), window - reserve, config.max_context ?? Infinity)
+export interface Budget {
+  window?: number
+  keep: number
+  bounds?: Bounds
+}
+
+export const windowOf = (request: LLMRequest) => request.thread?.window
+
+export const limitOf = ({ ratio, reserve, max_context }: CompactionConfig, window: number) =>
+  Math.min(Math.floor(window * ratio), window - Math.min(reserve, Math.floor(window / 2)), max_context ?? Infinity)
+
+export const budgetOf = (config: CompactionConfig, window: number | undefined): Budget => {
+  const limit = window ? limitOf(config, window) : config.max_context
+  if (!limit) return { keep: config.keep }
   const quarter = Math.floor(limit / 4)
-  return { window, start: limit - Math.min(config.background, quarter), limit, keep: Math.min(config.keep, quarter) }
+  return { ...(window && { window }), keep: Math.min(config.keep, quarter), bounds: { start: limit - Math.min(config.background, quarter), limit } }
 }

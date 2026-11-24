@@ -1,4 +1,4 @@
-import type { Delivery, LLMEvent, LLMRequest, NativeRef, Usage } from '@sand/accounts/contract'
+import type { ContextReport, Delivery, LLMEvent, LLMRequest, NativeRef, Usage } from '@sand/accounts/contract'
 import type { AppendMeta, Entry, Message, Owner, Prompt, StopReason, ToolCallBlock, ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
 import { type Dispose, event, service } from 'drydock'
@@ -106,6 +106,8 @@ export interface StepDone {
   delivered?: Delivery
   usage: Usage
   cacheTtlMs?: number
+  context?: ContextReport
+  sentAt: number
   reply: string
 }
 

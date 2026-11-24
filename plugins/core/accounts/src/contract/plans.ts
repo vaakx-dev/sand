@@ -1,7 +1,7 @@
 import type { ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
 import type { HandoffBlock, ProviderCapabilities, ToolSpec } from './llm'
 import type { Effort, LimitWindow, ModelPrice } from './models'
-import type { Usage } from './usage'
+import type { ContextReport, Usage } from './usage'
 
 export interface PlanTokens {
   access: string
@@ -93,6 +93,7 @@ export interface AppOutput {
   thinking(text: string): void
   call(call: AppCall): void
   usage(usage: Partial<Usage>, cacheTtlMs?: number): void
+  context(report: ContextReport): void
   pause(): void
   finish(stopReason?: StopReason): void
   fail(error: unknown): void

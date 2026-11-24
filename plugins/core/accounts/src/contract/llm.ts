@@ -2,7 +2,7 @@ import type { Block, ChatKind, Message, StopReason } from '@sand/chats/contract'
 import type { LiveEvent } from './live'
 import type { AccountKind } from './login'
 import type { Billing, Effort, LimitWindow, ModelInfo, ModelPrice, ProviderInfo, SourceRef } from './models'
-import type { PastTurn, Usage } from './usage'
+import type { ContextReport, PastTurn, Usage } from './usage'
 
 export interface ToolSpec {
   name: string
@@ -45,6 +45,7 @@ export interface ThreadRef {
   seenHead: string | null
   cwd: string
   native?: NativeRef
+  window?: number
 }
 
 export interface HandoffItem {
@@ -107,7 +108,7 @@ export interface Finish {
 export type LLMEvent =
   | Exclude<LiveEvent, { type: 'block' | 'done' }>
   | { type: 'block'; index: number; block: Block }
-  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; cacheTtlMs?: number; source?: SourceRef; native?: NativeRef; delivered?: Delivery; finish?: Finish }
+  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; cacheTtlMs?: number; context?: ContextReport; source?: SourceRef; native?: NativeRef; delivered?: Delivery; finish?: Finish }
 
 export interface Limits {
   source: string

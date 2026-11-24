@@ -9,6 +9,7 @@ const recorder = () => {
     thinking() {},
     call() {},
     usage() {},
+    context() {},
     pause() {},
     finish: stopReason => void ended.push(`finish:${stopReason}`),
     fail: error => void ended.push(`fail:${String(error)}`),

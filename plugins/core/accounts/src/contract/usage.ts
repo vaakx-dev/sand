@@ -9,6 +9,11 @@ export interface Usage {
   cacheWriteLong?: number
 }
 
+export interface ContextReport {
+  window?: number
+  used?: number
+}
+
 export interface UsageRecord {
   id: string
   model?: string

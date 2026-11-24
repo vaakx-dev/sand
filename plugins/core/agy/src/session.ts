@@ -82,6 +82,12 @@ async function failureOf(needs: SessionNeeds, error: unknown) {
   return RATE_LIMITED.test(errorMessage(error)) ? limitFailure(needs, error) : error
 }
 
+function reportContext(raw: Json, output: AppOutput) {
+  const window = Number(raw.size ?? 0)
+  const used = Number(raw.used ?? 0)
+  if (window || used) output.context({ ...(window && { window }), ...(used && { used }) })
+}
+
 async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNeeds, resume?: string): Promise<AppSession> {
   const turns = new Turns(output)
   const sandTools = new Set(setup.tools.map(tool => toolNameOf(tool.name)))
@@ -106,7 +112,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
     const text = content.type === 'text' && typeof content.text === 'string' ? content.text : undefined
     if (update.sessionUpdate === 'agent_message_chunk' && text) output.text(text)
     if (update.sessionUpdate === 'agent_thought_chunk' && text) output.thinking(text)
-    if (update.sessionUpdate === 'usage_update') reportUsage(update, output)
+    if (update.sessionUpdate === 'usage_update') reportContext(update, output)
   }
 
   async function onRequest(method: string, params: Json): Promise<unknown> {

@@ -99,6 +99,12 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
     void failure(needs, turn).then(error => turns.fail(error))
   }
 
+  const measure = (tokenUsage: Json) => {
+    const window = Number(tokenUsage.modelContextWindow ?? 0)
+    if (window) output.context({ window })
+    meter(fieldsOf(tokenUsage.total), turnId !== undefined)
+  }
+
   const notify = (method: string, params: Json) => {
     if (method === 'turn/started') {
       turnId = String(fieldsOf(params.turn).id)
@@ -106,7 +112,7 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
     }
     if (method === 'item/agentMessage/delta') output.text(String(params.delta ?? ''))
     if (method === 'item/reasoning/summaryTextDelta' || method === 'item/reasoning/textDelta') output.thinking(String(params.delta ?? ''))
-    if (method === 'thread/tokenUsage/updated') meter(fieldsOf(fieldsOf(params.tokenUsage).total), turnId !== undefined)
+    if (method === 'thread/tokenUsage/updated') measure(fieldsOf(params.tokenUsage))
     if (method === 'turn/completed') end(fieldsOf(params.turn))
   }
 

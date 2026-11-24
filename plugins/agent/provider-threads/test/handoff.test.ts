@@ -13,6 +13,8 @@ test('a handoff gets what fits after the native context, the prompt and a quarte
   expect(budgetOf({ ...room, cap: Infinity })).toBe(200_000 - 10_000 - 1_000 - 50_000)
   expect(fits({ ...room, window: 128_000, native: 90_000 })).toBe(true)
   expect(fits({ ...room, native: 190_000 })).toBe(false)
+  expect(budgetOf({ cap: 16_000, native: 190_000, current: 1_000 })).toBe(16_000)
+  expect(fits({ cap: 16_000, native: 190_000, current: 1_000 })).toBe(true)
 })
 
 test('a prompt costs its text plus a fixed allowance per image and attachment', () => {

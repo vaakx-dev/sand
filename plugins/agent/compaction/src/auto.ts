@@ -1,10 +1,9 @@
 import type { LLMRequest } from '@sand/accounts/contract'
-import type { Conversation, TurnInfo } from '@sand/engine/contract'
+import type { Conversation, StepDone, TurnInfo } from '@sand/engine/contract'
 import { contextOverflow, stepPrepare, stepSettle } from '@sand/provider-threads/contract'
-import { tokensOf } from '@sand/usage/contract'
 import type { CompactionReason } from './contract'
 import type { CompactionContext, Compactor } from './compact'
-import type { Tracker } from './measure/tracker'
+import { contextUsed, type Tracker } from './measure/tracker'
 import { isOverflow } from './overflow'
 
 export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracker: Tracker) => {
@@ -24,8 +23,12 @@ export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracke
     return crossed
   }
 
-  ctx.on(stepSettle, (request, conversation, turn, usage) => {
-    if (failed.get(conversation.id) === turn.id || tokensOf(usage) < compactor.budget(request).start) return
+  const bounds = (request: LLMRequest) => compactor.budget(request).bounds
+  const pastStart = (request: LLMRequest, done: StepDone) => contextUsed(done) >= (bounds(request)?.start ?? Infinity)
+  const pastLimit = (conversation: Conversation, request: LLMRequest) => tracker.project(conversation.id, request) >= (bounds(request)?.limit ?? Infinity)
+
+  ctx.on(stepSettle, (request, conversation, turn, done) => {
+    if (failed.get(conversation.id) === turn.id || !pastStart(request, done)) return
     compactor.start(conversation, request, 'threshold').catch(() => failed.set(conversation.id, turn.id))
   })
 
@@ -35,7 +38,7 @@ export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracke
       overflowed.delete(conversation.id)
       return compact(conversation, turn, request, 'overflow', signal)
     }
-    if (failed.get(conversation.id) !== turn.id && tracker.project(conversation.id, request) >= compactor.budget(request).limit)
+    if (failed.get(conversation.id) !== turn.id && pastLimit(conversation, request))
       return compact(conversation, turn, request, 'threshold', signal)
     if (crossed && compactor.requested(conversation)) return compact(conversation, turn, request, 'manual', signal)
     return (crossed && compactor.take(conversation, request)) || undefined

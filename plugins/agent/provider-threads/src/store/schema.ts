@@ -57,4 +57,5 @@ export const schema = [
           and newer.status != 'retired' and (newer.used, newer.id) > (provider_threads.used, provider_threads.id))`,
     "create unique index provider_threads_open on provider_threads (owner, conversation, model) where status != 'retired'",
   ],
+  ['alter table provider_threads add column context_window integer'],
 ]

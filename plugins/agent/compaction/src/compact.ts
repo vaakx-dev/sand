@@ -60,10 +60,13 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
 
   const native = (model?: string) => !!model && !!ctx.llm.caps?.(model).native
 
+  const summaryLimit = (conversation: Conversation, request: LLMRequest, reason: CompactionReason) =>
+    budget(request).bounds?.limit ?? (reason === 'overflow' ? tracker.fitted(conversation.id) : undefined)
+
   const summarizeFrom = async (conversation: Conversation, request: LLMRequest, reason: CompactionReason): Promise<Summary> => {
     const path = conversation.path()
     const overflow = reason === 'overflow'
-    const { keep, limit } = budget(request)
+    const { keep } = budget(request)
     const cut = plan(path, keep) ?? (overflow || reason === 'manual' ? plan(path, 0) : undefined)
     if (!cut) throw new Error('Nothing to compact yet')
     const { summary, usage, source } =
@@ -73,7 +76,7 @@ export const createCompactor = (ctx: CompactionContext, { config, tracker, meter
             messages: cut.dropped,
             previous: cut.previous?.summary,
             instructions: config.instructions,
-            limit,
+            limit: summaryLimit(conversation, request, reason),
           })
         : await summarizeInContext(ctx.llm, request, config.instructions)
     if (usage) conversation.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, usage, source))

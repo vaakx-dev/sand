@@ -33,6 +33,8 @@ const resetOf = (info: Json) => {
 
 export const succeeded = (result: Json) => result.subtype === 'success' && !result.is_error
 
+const windowOf = (result: Json, model: string) => Number(fieldsOf(fieldsOf(result.modelUsage)[model]).contextWindow ?? 0)
+
 const failureOf = (result: Json, { rejected, resetsAt }: Limit) =>
   rejected || result.api_error_status === 429 ? new UsageLimited(resultText(result), resetsAt) : new Error(resultText(result))
 
@@ -55,14 +57,17 @@ const createLimit = () => {
 export const createReader = (output: AppOutput, ending: Ending = output) => {
   let calls = 0
   let long = 0
+  let model = ''
   let stop: StopReason = 'end_turn'
   const limit = createLimit()
   let resets: Resets = {}
 
   const streamEvent = (event: Json) => {
     if (event.type === 'message_start') {
+      const message = fieldsOf(event.message)
       calls = 0
-      long = longWrites(fieldsOf(fieldsOf(event.message).usage))
+      long = longWrites(fieldsOf(message.usage))
+      model = String(message.model ?? model)
     }
     if (event.type === 'content_block_delta') {
       const delta = fieldsOf(event.delta)
@@ -101,6 +106,8 @@ export const createReader = (output: AppOutput, ending: Ending = output) => {
     resets: () => resets,
     finish(result: Json) {
       const limited = limit.take()
+      const window = windowOf(result, model)
+      if (window) output.context({ window })
       if (succeeded(result)) return ending.finish(stop)
       ending.fail(failureOf(result, limited))
     },

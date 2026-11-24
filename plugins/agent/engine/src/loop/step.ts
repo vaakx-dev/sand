@@ -22,6 +22,7 @@ type Done = Extract<LLMEvent, { type: 'done' }>
 interface Sent {
   step: Step
   done: Done
+  sentAt: number
 }
 
 export const createHooks = <C extends Conversation>(ctx: EngineContext, { conversations, stores, leases, announce }: Owned<C>, run: TurnRun<C>): TurnHooks => {
@@ -57,8 +58,9 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
   const send = async (again = true, tries = 0, recover = true): Promise<Sent> => {
     const step = await conversations.step(conversation, info, signal)
     if (step.thread) stores.turns.thread(info.id, step.thread)
+    const sentAt = Date.now()
     try {
-      return { step, done: await streamStep(ctx, conversations, step.request, run) }
+      return { step, done: await streamStep(ctx, conversations, step.request, run), sentAt }
     } catch (error) {
       if (signal.aborted) throw error
       const lost = step.lost(error)
@@ -69,7 +71,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     }
   }
 
-  const record = ({ step, done: { message, usage, cacheTtlMs, source, native, delivered, finish } }: Sent) => {
+  const record = ({ step, sentAt, done: { message, usage, cacheTtlMs, context, source, native, delivered, finish } }: Sent) => {
     const { model } = step.request
     ctx.ledger.tx(() => {
       const reply = append(conceal(message, ctx.tools.secrets()))
@@ -77,7 +79,15 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
       if (tokensOf(usage)) conversation.append('usage', usageRecord(ctx.llm.provider?.(model), model, usage, source), turn)
       run.usage = sumUsage(run.usage, usage)
       stores.turns.usage(info.id, run.usage)
-      step.settle({ usage, reply: reply.id, ...(cacheTtlMs && { cacheTtlMs }), ...(native && { native }), ...(delivered && { delivered }) })
+      step.settle({
+        usage,
+        reply: reply.id,
+        sentAt,
+        ...(cacheTtlMs && { cacheTtlMs }),
+        ...(context && { context }),
+        ...(native && { native }),
+        ...(delivered && { delivered }),
+      })
     })
     announce.turn(info.id)
   }

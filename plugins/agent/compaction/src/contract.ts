@@ -1,5 +1,5 @@
 import type { Conversation } from '@sand/engine/contract'
-import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service, type Dispose } from 'drydock'
 import { z } from 'zod'
 
@@ -13,8 +13,8 @@ export interface ContextPart {
 
 export interface ContextUsage {
   used: number
-  limit: number
-  window: number
+  limit?: number
+  window?: number
   compacting?: boolean
   parts: ContextPart[]
 }
@@ -48,7 +48,7 @@ export interface CompactionRecord {
 }
 
 export interface ContextLimits {
-  limit(model: string): number
+  limit(window: number): number
 }
 
 export const contextLimits = service<ContextLimits>('contextLimits')
@@ -77,3 +77,20 @@ export const contextGet = request('context.get', { input: chat, output: type<Con
 export const compactTimeoutMs = 600_000
 
 export const contextCompact = request('context.compact', { input: chat, output: type<Compacted>(), callers: 'any', place: 'thread' })
+
+export interface IdleShares {
+  bot: number
+  thread: number
+}
+
+export const idleShare = () => z.number().gt(0).max(1)
+
+export const idleShareChoices = [0.1, 0.25, 0.5, 0.75] as const
+
+export const helloIdleShares = helloField<IdleShares>('idleCompaction')
+export const idleSharesChange = wireEvent<IdleShares>('compaction.idle')
+export const idleSharesSet = request('compaction.idle', {
+  input: () => z.object({ bot: idleShare(), thread: idleShare() }),
+  output: type<IdleShares>(),
+  callers: 'any',
+})

@@ -50,7 +50,7 @@ export const createPrinter = () => {
     done({ usage, limits, context }: Summary) {
       const input = usage.input + usage.cacheRead + usage.cacheWrite
       const left = limits?.windows.map(window => `${window.label.toLowerCase()} ${percent(leftOf(window))}`).join(', ')
-      const full = context && `context ${percent(context.used / context.window)}`
+      const full = context && `context ${context.window ? percent(context.used / context.window) : `${context.used} tokens`}`
       const worked = `worked for ${duration(Date.now() - started)}`
       err(dim([worked, `${input} in (${usage.cacheRead} cached) · ${usage.output} out`, full, left && `${left} left`].filter(Boolean).join(' · ')))
     },

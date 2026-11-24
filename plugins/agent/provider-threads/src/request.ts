@@ -16,8 +16,11 @@ export interface Built {
 
 const received = (seen: Segment[], handoff?: HandoffBlock) => (handoff ? seen.filter(segment => !('handoff' in segment && segment.handoff === handoff.id)) : seen)
 
-const refOf = (thread: ProviderThreadInfo, cwd: string, handoff?: HandoffBlock): ThreadRef => {
+export const windowOf = (ctx: ThreadsContext, thread: ProviderThreadInfo) => thread.window ?? ctx.llm.find?.(thread.model)?.context
+
+const refOf = (ctx: ThreadsContext, thread: ProviderThreadInfo, cwd: string, handoff?: HandoffBlock): ThreadRef => {
   const seen = received(thread.seen, handoff)
+  const window = windowOf(ctx, thread)
   return {
     id: thread.id,
     generation: thread.generation,
@@ -25,6 +28,7 @@ const refOf = (thread: ProviderThreadInfo, cwd: string, handoff?: HandoffBlock):
     seenHead: headOf(seen),
     cwd,
     ...(thread.native && { native: thread.native }),
+    ...(window && { window }),
   }
 }
 
@@ -58,7 +62,7 @@ export const buildRequest = async (
       speed,
       session: conversation.id,
       ...(kind && { sessionKind: kind }),
-      thread: refOf(thread, conversation.cwd, handoff),
+      thread: refOf(ctx, thread, conversation.cwd, handoff),
       delta,
       ...(handoff && { handoff }),
     },

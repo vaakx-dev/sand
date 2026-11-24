@@ -6,7 +6,8 @@ const part = z.discriminatedUnion('type', [
   z.object({ type: z.literal('text'), text: z.string() }),
   z.object({ type: z.literal('thinking'), text: z.string() }),
   z.object({ type: z.literal('call'), name: z.string(), id: z.string().optional(), input: z.record(z.string(), z.unknown()).default({}) }),
-  z.object({ type: z.literal('usage'), input: z.number().default(0), output: z.number().default(0) }),
+  z.object({ type: z.literal('usage'), input: z.number().default(0), output: z.number().default(0), cacheTtlMs: z.number().optional() }),
+  z.object({ type: z.literal('context'), window: z.number().optional(), used: z.number().optional() }),
   z.object({ type: z.literal('error'), message: z.string() }),
   z.object({ type: z.literal('limit'), resetInMs: z.number().optional() }),
   z.object({ type: z.literal('hold') }),
@@ -19,7 +20,7 @@ const part = z.discriminatedUnion('type', [
 
 const model = z.union([
   z.string(),
-  z.object({ name: z.string(), label: z.string().optional(), efforts: z.array(z.enum(efforts)).optional() }),
+  z.object({ name: z.string(), label: z.string().optional(), efforts: z.array(z.enum(efforts)).optional(), context: z.number().optional() }),
 ])
 
 const window = z.object({ id: z.string(), label: z.string(), used: z.number(), resetInMs: z.number().optional(), durationMs: z.number().optional() })

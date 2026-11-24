@@ -1,5 +1,5 @@
 import type { StopReason } from '@sand/chats/contract'
-import { type AppCall, type AppOutput, ThreadLost, type Usage } from '../contract'
+import { type AppCall, type AppOutput, type ContextReport, ThreadLost, type Usage } from '../contract'
 import { untilAborted } from '@sand/util'
 
 export type Signal =
@@ -7,6 +7,7 @@ export type Signal =
   | { type: 'thinking'; text: string }
   | { type: 'call'; call: AppCall }
   | { type: 'usage'; usage: Partial<Usage>; cacheTtlMs?: number }
+  | { type: 'context'; report: ContextReport }
   | { type: 'pause' }
   | { type: 'finish'; stopReason: StopReason }
   | { type: 'fail'; error: unknown }
@@ -31,6 +32,7 @@ export const createSignals = (onExit: () => void = () => {}) => {
     thinking: text => push({ type: 'thinking', text }),
     call: call => push({ type: 'call', call }),
     usage: (usage, cacheTtlMs) => push({ type: 'usage', usage, ...(cacheTtlMs && { cacheTtlMs }) }),
+    context: report => push({ type: 'context', report }),
     pause: () => push({ type: 'pause' }),
     finish: (stopReason = 'end_turn') => push({ type: 'finish', stopReason }),
     fail: error => push({ type: 'fail', error }),
