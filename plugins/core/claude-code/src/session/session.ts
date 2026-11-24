@@ -7,6 +7,7 @@ import { connect } from '../cli/connection'
 import { usageLimits } from '../account/usage'
 import { messageBlocks } from './content'
 import { createReader, succeeded } from './stream'
+import { reportWindow } from './window'
 
 const TOOL_USE_KEY = 'claudecode/toolUseId'
 
@@ -63,6 +64,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
     onExit: error => output.exit(error),
   })
   await connection.request('initialize', { sdkMcpServers: [SERVER_NAME], systemPrompt: [setup.system] })
+  void reportWindow(connection, output)
 
   const prompt = (content: ModelContent[]) =>
     connection.send({ type: 'user', message: { role: 'user', content: messageBlocks(content, media) }, parent_tool_use_id: null, client_composed: true })

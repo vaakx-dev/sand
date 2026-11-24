@@ -1,8 +1,11 @@
 import { contextGet } from '@sand/compaction/contract'
 import { startSand, type Sand } from '@sand/harness'
+import type { Reply } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
 let sand: Sand
+
+const STEP_MS = 600
 
 afterEach(() => sand.stop())
 
@@ -26,6 +29,28 @@ test('the window the provider reports outranks the catalog, so a chat well insid
   expect(second).toMatchObject({ text: 'two' })
   expect(summarized('wide')).toBe(0)
   expect(await sand.ask(contextGet, { session: chat.id, owner: 'thread' })).toMatchObject({ window: 1_000_000, limit: 900_000 })
+})
+
+test('a long first turn starts compacting at the threshold as soon as its first step reports the window, before the turn ends', async () => {
+  const longAnswer = said('Reading the logs. '.repeat(6_000))
+  const slowDone: Reply = [{ type: 'wait', ms: STEP_MS }, said('Done.')]
+  sand = await startSand([
+    {
+      id: 'long',
+      models: ['m'],
+      replies: [[{ type: 'context', window: 100_000, used: 70_000 }, longAnswer, { type: 'call', name: 'echo', input: { word: 'pong' } }], slowDone, slowDone],
+    },
+  ])
+  const chat = sand.chat('long/m')
+  const started = Date.now()
+
+  const reply = sand.turns.run(chat, 'first')
+  while (!summarized('long')) await Bun.sleep(10)
+  const compactingAfterMs = Date.now() - started
+
+  expect(compactingAfterMs).toBeLessThan(STEP_MS)
+  expect(await reply).toMatchObject({ text: 'Done.' })
+  expect(await sand.ask(contextGet, { session: chat.id, owner: 'thread' })).toMatchObject({ window: 100_000, limit: 80_000 })
 })
 
 test('with no window known, a huge chat is left alone until the provider says it is too long, then it compacts, retries and learns the window', async () => {
