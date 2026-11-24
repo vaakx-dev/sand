@@ -75,6 +75,7 @@ import { alongWay, direction } from './gesture/direction'
 import { fromSystemEdge } from './gesture/edge'
 import { follow } from './gesture/follow'
 import { canScrollToward } from './gesture/scroll'
+import { zoomGesture } from './gesture/zoom'
 import { onPressOutside, popupTrigger, pressOpens } from './layers/outside'
 import { dismissible, hasOpenLayer, modal, returnFocus } from './layers/stack'
 import { listbox } from './listbox/model'
@@ -89,7 +90,7 @@ import { topEdge } from './scroll/edge'
 import { firstRowBelow, keepAnchor, nearEnd, toEnd } from './scroll/end'
 import { followEnd } from './scroll/follow'
 
-const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, onSelection }
+const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, onSelection, zoomGesture }
 
 export const kit = {
   actionItem,
