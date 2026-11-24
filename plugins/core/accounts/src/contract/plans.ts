@@ -130,6 +130,8 @@ export interface AppTurn {
   cwd?: string
 }
 
+export type ToolLoading = 'reopen' | 'fixed' | 'search'
+
 export interface AppPlace {
   id: string
   folder: string
@@ -140,7 +142,7 @@ export interface AppPlan extends PlanInfo {
   install: string
   family?: PlanApi
   caps: ProviderCapabilities
-  fixedTools?: boolean
+  toolLoading: ToolLoading
   status(): Promise<AppStatus>
   signIn(signal: AbortSignal): Promise<SignInFlow<void>>
   signOut(): Promise<void>

@@ -2,6 +2,7 @@ import { type AppOutput, cacheLifetimes, type Usage, UsageLimited, writtenTtl } 
 import { fieldsOf, type Json } from '@sand/app-plan'
 import type { StopReason } from '@sand/chats/contract'
 import { type Resets, resetsOf } from '../account/usage'
+import { OWN_TOOLS } from '../cli/args'
 
 type Ending = Pick<AppOutput, 'finish' | 'fail'>
 
@@ -11,6 +12,10 @@ interface Limit {
 }
 
 const prefix = /^mcp__sand__/
+
+const ownTools = new Set(OWN_TOOLS)
+
+const sandCalls = (content: unknown) => (Array.isArray(content) ? content.map(fieldsOf) : []).filter(block => block.type === 'tool_use' && !ownTools.has(String(block.name)))
 
 const usageOf = (raw: Json, long: number): Usage => ({
   input: Number(raw.input_tokens ?? 0),
@@ -82,9 +87,7 @@ export const createReader = (output: AppOutput, ending: Ending = output) => {
 
   const assistant = (message: Json) => {
     limit.read(fieldsOf(fieldsOf(message.api_error_params).rate_limit_info))
-    const content = fieldsOf(message.message).content
-    for (const block of Array.isArray(content) ? content.map(fieldsOf) : []) {
-      if (block.type !== 'tool_use') continue
+    for (const block of sandCalls(fieldsOf(message.message).content)) {
       calls++
       output.call({ id: String(block.id), name: String(block.name).replace(prefix, ''), input: fieldsOf(block.input) })
     }

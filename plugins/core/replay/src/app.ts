@@ -141,6 +141,7 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
     app: label,
     install: '',
     caps,
+    toolLoading: 'reopen',
     status: async () => ({ installed: true, signedIn: true, ...(script.plan && { plan: script.plan }) }),
     ...(limits && { usage: async () => ({ windows: limits.map(windowOf) }) }),
     signIn: () => Promise.reject(new Error(`${label} needs no sign-in`)),

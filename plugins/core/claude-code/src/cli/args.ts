@@ -11,6 +11,8 @@ interface RunOptions {
   saved?: Saved
 }
 
+export const OWN_TOOLS = ['ToolSearch']
+
 const kept = (saved?: Saved) => {
   if (!saved) return ['--no-session-persistence']
   switch (saved.start) {
@@ -42,7 +44,7 @@ const locked = {
   DISABLE_TELEMETRY: '1',
   DISABLE_ERROR_REPORTING: '1',
   ENABLE_CLAUDEAI_MCP_SERVERS: 'false',
-  ENABLE_TOOL_SEARCH: 'false',
+  ENABLE_TOOL_SEARCH: 'true',
   MAX_MCP_OUTPUT_TOKENS: '200000',
 }
 
@@ -70,7 +72,7 @@ export const claudeArgs = ({ model, effort, saved }: RunOptions) => [
   '--verbose',
   '--include-partial-messages',
   '--tools',
-  '',
+  OWN_TOOLS.join(','),
   '--strict-mcp-config',
   '--setting-sources',
   '',
