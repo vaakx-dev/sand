@@ -63,7 +63,7 @@ const seededData = async <T>(box: string): Promise<T> => {
 export const startSandbox = async <T>(seed: Seed) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-bots-'))
   await writeSeed(home, seed)
-  await Bun.write(join(home, 'sandbox.toml'), '[features]\n')
+  await Bun.write(join(home, 'sandbox.toml'), '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n')
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
   const box = printed(out, /throwaway sand \(pid \d+\) in (.+)$/m).replace(/^~(?=[\\/])/, homedir())
