@@ -18,7 +18,7 @@ import { createWaitLines } from './wait'
 
 export default definePlugin({
   name: 'chat',
-  description: 'The thread chat: a thread transcript with "Worked for" turns, branches, queued messages and scrolling that keeps your place',
+  description: 'The thread chat: a thread transcript with "Worked for" turns, branches, waiting messages and scrolling that keeps your place',
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [threadsChange, threadSelect, projectsChange], [projects, threadOwners])

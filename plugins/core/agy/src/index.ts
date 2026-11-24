@@ -14,7 +14,6 @@ const CAPS: ProviderCapabilities = {
   native: true,
   resume: true,
   inject: false,
-  steer: false,
   reconfigure: ['effort'],
   processScope: 'thread',
   cacheTtlMs: 60 * 60_000,

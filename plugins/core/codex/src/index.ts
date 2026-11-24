@@ -18,7 +18,6 @@ const CAPS: ProviderCapabilities = {
   native: true,
   resume: true,
   inject: true,
-  steer: true,
   reconfigure: ['effort'],
   processScope: 'thread',
   cacheTtlMs: cacheLifetimes.openai.short,

@@ -32,7 +32,7 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
   const calls: NativeCall[] = []
   let made = 0
   let opened = 0
-  const caps: ProviderCapabilities = { native: true, resume, inject: inject.length > 0, steer: true, reconfigure: [], processScope: 'thread', cacheTtlMs: 5 * 60_000 }
+  const caps: ProviderCapabilities = { native: true, resume, inject: inject.length > 0, reconfigure: [], processScope: 'thread', cacheTtlMs: 5 * 60_000 }
 
   const fileOf = (native: string) => join(folder, `${native}.jsonl`)
 
