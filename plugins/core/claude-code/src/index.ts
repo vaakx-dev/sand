@@ -1,21 +1,16 @@
-import { llmPlans, type AppPlace, type AppPlan, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
+import { llmPlans, type ProviderCapabilities } from '@sand/accounts/contract'
+import { appPlan, type Provider } from '@sand/app-plan'
 import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { modelCatalog } from './account/models'
 import { readUsage } from './account/probe'
-import { signInClaude } from './account/sign-in'
-import { readStatus, signOutClaude } from './account/status'
-import { installUrl } from './cli/binary'
+import { readStatus, signIn, signOut } from './account/sign-in'
+import { claude } from './cli/binary'
 import { sessionFiles } from './session/files'
-import { readHistory } from './session/history'
+import { claudeHistory } from './session/history'
 import { openSession } from './session/session'
 
-interface Needs {
-  media: Media
-  report(account: string, limits: PlanLimits): void
-}
-
-const caps: ProviderCapabilities = {
+const CAPS: ProviderCapabilities = {
   native: true,
   resume: true,
   inject: false,
@@ -25,33 +20,29 @@ const caps: ProviderCapabilities = {
   cacheTtlMs: 5 * 60_000,
 }
 
-const claudeAccount = ({ media, report }: Needs, { id, folder }: { id: string; folder?: string }): AppPlan => {
-  const models = modelCatalog(folder)
-  const needs = { media, config: folder, report: (limits: PlanLimits) => report(id, limits) }
-  return {
-    id,
-    label: 'Claude Code',
-    name: 'Claude',
-    detail: 'Uses your sign-in from the Claude Code app on this PC',
-    logo: 'anthropic',
-    app: 'Claude Code',
-    install: installUrl,
-    family: 'anthropic',
-    caps,
-    status: () => readStatus(folder),
-    signIn: signal => signInClaude(signal, folder),
-    signOut: () => signOutClaude(folder),
-    models: models.list,
-    usage: () => readUsage(folder),
-    history: since => readHistory(since, folder),
-    open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume ? { id: resume, start: 'resume' } : undefined),
-    sessionFiles: session => sessionFiles(session, folder),
-  }
-}
-
-const claudePlan = (needs: Needs): AppPlan => ({
-  ...claudeAccount(needs, { id: 'claude' }),
-  another: (place: AppPlace) => claudeAccount(needs, place),
+const claudeCode = (media: Media): Provider => ({
+  id: 'claude',
+  label: 'Claude Code',
+  name: 'Claude',
+  detail: 'Uses your sign-in from the Claude Code app on this PC',
+  logo: 'anthropic',
+  family: 'anthropic',
+  caps: CAPS,
+  binary: claude,
+  account({ folder }, report) {
+    const models = modelCatalog(folder)
+    const needs = { media, config: folder, report }
+    return {
+      status: () => readStatus(folder),
+      signIn: signal => signIn(signal, folder),
+      signOut: () => signOut(folder),
+      models: models.list,
+      usage: () => readUsage(folder),
+      history: claudeHistory(folder),
+      open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume ? { id: resume, start: 'resume' } : undefined),
+      sessionFiles: session => sessionFiles(session, folder),
+    }
+  },
 })
 
 export default definePlugin({
@@ -59,6 +50,6 @@ export default definePlugin({
   description: 'Adds Claude Code to Settings → Accounts using the Claude Code app on this PC: sand runs the claude CLI with sand’s own tools and prompt; the app keeps its own sign-in, and each Claude account added beside it keeps its sign-in in its own folder',
   inject: { media },
   apply(ctx) {
-    ctx.watch(llmPlans, plans => plans?.register(claudePlan({ media: ctx.media, report: (account, limits) => plans.limits(account, limits) })))
+    ctx.watch(llmPlans, plans => plans?.register(appPlan(claudeCode(ctx.media), plans)))
   },
 })

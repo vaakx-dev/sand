@@ -1,39 +1,20 @@
+import { appBinary } from '@sand/app-plan'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-const INSTALL_URL = 'https://antigravity.google/docs/getting-started'
-
-function defaultBinaryPath(): string {
-  if (process.platform === 'win32') {
-    const localAppData = process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local')
-    return join(localAppData, 'agy', 'bin', 'agy.exe')
-  }
-  return join(homedir(), '.local', 'bin', 'agy')
+const installed = () => {
+  if (process.platform !== 'win32') return join(homedir(), '.local', 'bin', 'agy')
+  return join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'agy', 'bin', 'agy.exe')
 }
 
-async function findBinary(): Promise<string | undefined> {
-  const onPath = Bun.which('agy')
-  if (onPath) return onPath
-  const fallback = defaultBinaryPath()
-  return (await Bun.file(fallback).exists()) ? fallback : undefined
-}
+const folderArgs = (folder?: string) => (folder ? ['--gemini_dir', folder] : [])
 
-async function requireBinary(): Promise<string> {
-  const found = await findBinary()
-  if (!found) throw new Error(`Antigravity CLI (agy) isn't installed on this PC. Install it from ${INSTALL_URL}, sign in with \`agy\`, then try again.`)
-  return found
-}
+const agy = appBinary({ command: 'agy', app: 'Antigravity', install: 'https://antigravity.google/docs/getting-started', installed: [installed()] })
 
-function acpArgs(folder?: string): string[] {
-  return ['acp', '--disable-telemetry', '--include-default-customizations=false', ...(folder ? ['--gemini_dir', folder] : [])]
-}
+const acpArgs = (folder?: string) => ['acp', '--disable-telemetry', '--include-default-customizations=false', ...folderArgs(folder)]
 
-function loginArgs(folder?: string): string[] {
-  return ['acp', '--login', ...(folder ? ['--gemini_dir', folder] : [])]
-}
+const loginArgs = (folder?: string) => ['acp', '--login', ...folderArgs(folder)]
 
-function usageArgs(folder?: string): string[] {
-  return [...(folder ? ['--gemini_dir', folder] : []), '--print', '/usage']
-}
+const usageArgs = (folder?: string) => [...folderArgs(folder), '--print', '/usage']
 
-export { acpArgs, findBinary, INSTALL_URL, loginArgs, requireBinary, usageArgs }
+export { acpArgs, agy, loginArgs, usageArgs }

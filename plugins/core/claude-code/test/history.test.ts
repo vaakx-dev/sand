@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test'
 import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { readHistory } from '../src/session/history'
+import { claudeHistory } from '../src/session/history'
 
 const line = (id: string, at: string, output: number, extra: Record<string, unknown> = {}) =>
   JSON.stringify({
@@ -29,7 +29,8 @@ test('history counts each message once, skips synthetic turns, and picks up appe
   writeFileSync(join(project, 'subagents', 'agent-1.jsonl'), line('m2', '2026-03-01T11:00:00Z', 9))
 
   const since = Date.parse('2026-03-01T00:00:00Z')
-  const first = await readHistory(since, config)
+  const readHistory = claudeHistory(config)
+  const first = await readHistory(since)
   expect(first.map(turn => turn.at).sort()).toEqual([Date.parse('2026-03-01T10:00:00Z'), Date.parse('2026-03-01T11:00:00Z')])
   expect(first.find(turn => turn.usage.output === 50)).toEqual({
     session: 'session-1',
@@ -40,10 +41,10 @@ test('history counts each message once, skips synthetic turns, and picks up appe
   })
 
   appendFileSync(main, line('m3', '2026-03-01T12:00:00Z', 3))
-  const second = await readHistory(since, config)
+  const second = await readHistory(since)
   expect(second).toHaveLength(3)
 
   appendFileSync(main, line('m4', '2026-03-01T13:00:00Z', 3).slice(0, 40))
-  expect(await readHistory(since, config)).toHaveLength(3)
+  expect(await readHistory(since)).toHaveLength(3)
   rmSync(config, { recursive: true })
 })

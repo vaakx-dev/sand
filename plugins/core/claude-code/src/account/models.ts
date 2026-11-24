@@ -1,5 +1,5 @@
-import { efforts, type PlanModel } from '@sand/accounts/contract'
-import { fieldsOf, type Json } from '../cli/connection'
+import type { PlanModel } from '@sand/accounts/contract'
+import { fieldsOf, levelsOf, textOf, type Json } from '@sand/app-plan'
 import { probeCatalog } from './probe'
 
 const variant = /\[[^\]]*\]$/
@@ -10,13 +10,11 @@ interface Offered {
 }
 
 const offeredOf = (entry: Json): Offered[] => {
-  const cli = typeof entry.resolvedModel === 'string' && entry.resolvedModel ? entry.resolvedModel : entry.value
-  if (typeof cli !== 'string' || !cli || entry.value === 'default') return []
-  const levels = Array.isArray(entry.supportedEffortLevels) ? efforts.filter(effort => (entry.supportedEffortLevels as unknown[]).includes(effort)) : []
+  const cli = textOf(entry.resolvedModel) ?? textOf(entry.value)
+  if (!cli || entry.value === 'default') return []
   const name = cli.replace(variant, '')
-  const label = typeof entry.displayName === 'string' && entry.displayName ? entry.displayName : name
-  const model: PlanModel = { name, label, ...(levels.length && { efforts: levels }), images: true }
-  return [{ model, cli }]
+  const levels = levelsOf(Array.isArray(entry.supportedEffortLevels) ? entry.supportedEffortLevels : [])
+  return [{ model: { name, label: textOf(entry.displayName) ?? name, ...levels, images: true }, cli }]
 }
 
 const byVariantLast = (a: Offered, b: Offered) => Number(variant.test(a.cli)) - Number(variant.test(b.cli))

@@ -1,14 +1,22 @@
 import { type AppAside, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
-import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
+import { fieldsOf, type Json, missing, resetOf, Turns } from '@sand/app-plan'
+import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { limitsOf, resetOf } from '../account/limits'
+import { untilAborted } from '@sand/util'
+import { limitsOf } from '../account/limits'
 import { threadConfig } from '../server/args'
 import type { Pool, ThreadServer } from '../server/pool'
-import { fieldsOf, type Json, RpcError } from '../server/rpc'
-import { untilAborted } from '@sand/util'
-import { inputItem, toolOutput } from './content'
+import { inputItems, toolOutput } from './content'
 
-const methodMissing = -32601
+export interface SessionNeeds {
+  pool: Pool
+  media: Media
+  report(limits: PlanLimits): void
+}
+
+const ASIDE_EFFORT = 'low'
+
+const NO_ASIDE: AppAside = { text: '', usage: {} }
 
 const dynamicTool = ({ name, description, inputSchema }: AppSetup['tools'][number]) => ({ type: 'function', name, description, inputSchema })
 
@@ -32,10 +40,6 @@ const usageMeter = (output: AppOutput) => {
   }
 }
 
-const asideEffort = 'low'
-
-const noAside: AppAside = { text: '', usage: {} }
-
 const asideOf = (reply: Json): AppAside => {
   const input = Number(reply.inputTokens ?? 0)
   const cached = Number(reply.cachedInputTokens ?? 0)
@@ -43,12 +47,6 @@ const asideOf = (reply: Json): AppAside => {
 }
 
 const failureText = (turn: Json) => String(fieldsOf(turn.error).message ?? 'Codex stopped this turn')
-
-export interface SessionNeeds {
-  pool: Pool
-  media: Media
-  report(limits: PlanLimits): void
-}
 
 const usageLimited = (turn: Json) => fieldsOf(turn.error).codexErrorInfo === 'usageLimitExceeded'
 
@@ -85,47 +83,26 @@ const begin = async (server: ThreadServer, setup: AppSetup, resume?: string) => 
 
 export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession> => {
   const { pool, media } = needs
-  const toItem = inputItem(media)
-  const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
+  const turns = new Turns(output)
   const meter = usageMeter(output)
-  let running = false
   let turnId: string | undefined
   let lastTurn: string | undefined
-  let stopped: PromiseWithResolvers<void> | undefined
-
-  const answerFor = (id: string) => {
-    const found = answers.get(id) ?? Promise.withResolvers<ToolResultBlock>()
-    answers.set(id, found)
-    return found
-  }
-
-  const dropAnswers = () => {
-    answers.forEach(found => {
-      found.promise.catch(() => {})
-      found.reject(new Error('sand stopped this turn'))
-    })
-    answers.clear()
-  }
 
   const stop = () => {
     if (turnId) void server.request('turn/interrupt', { threadId, turnId }).catch(() => {})
   }
 
   const end = (turn: Json) => {
-    running = false
     lastTurn = turnId
     turnId = undefined
-    if (stopped) {
-      stopped.resolve()
-      stopped = undefined
-    } else if (turn.status === 'completed') output.finish()
-    else void failure(needs, turn).then(output.fail)
+    if (turn.status === 'completed') return turns.finish()
+    void failure(needs, turn).then(error => turns.fail(error))
   }
 
   const notify = (method: string, params: Json) => {
     if (method === 'turn/started') {
       turnId = String(fieldsOf(params.turn).id)
-      if (stopped) stop()
+      if (turns.stopping) stop()
     }
     if (method === 'item/agentMessage/delta') output.text(String(params.delta ?? ''))
     if (method === 'item/reasoning/summaryTextDelta' || method === 'item/reasoning/textDelta') output.thinking(String(params.delta ?? ''))
@@ -137,7 +114,7 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
     const id = String(params.callId)
     output.call({ id, name: String(params.tool), input: fieldsOf(params.arguments) })
     output.pause()
-    return toolOutput(await answerFor(id).promise, media)
+    return toolOutput(await turns.result(id), media)
   }
 
   const server = await pool.open({ notify, call, exit: error => output.exit(error) })
@@ -146,48 +123,39 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
     throw error
   })
 
-  const request = (method: string, params: Json) => void server.request(method, { threadId, ...params }).catch(error => output.fail(error))
+  const request = (method: string, params: Json) => void server.request(method, { threadId, ...params }).catch(error => turns.fail(error))
 
-  return {
+  const inject = async (handoff: HandoffBlock) => {
+    try {
+      await server.request('thread/inject_items', { threadId, items: historyItems(handoff) })
+      return true
+    } catch (error) {
+      if (missing(error)) return false
+      throw error
+    }
+  }
+
+  const aside = async (prompt: string, signal?: AbortSignal) => {
+    if (turnId || !lastTurn) return NO_ASIDE
+    const sampled = server.request('thread/sample', { threadId, expectedTurnId: lastTurn, prompt, effort: ASIDE_EFFORT })
+    try {
+      return asideOf(await (signal ? untilAborted(sampled, signal) : sampled))
+    } catch (error) {
+      if (missing(error)) return NO_ASIDE
+      throw error
+    }
+  }
+
+  return turns.session({
     id: threadId,
     pid: server.pid,
-    send(content: ModelContent[], effort) {
-      running = true
-      request('turn/start', { input: content.map(toItem), model: setup.model, ...(effort && { effort }), summary: 'auto' })
-    },
+    prompt: (content: ModelContent[], effort) => request('turn/start', { input: inputItems(content, media), model: setup.model, ...(effort && { effort }), summary: 'auto' }),
     steer(content: ModelContent[]) {
-      if (turnId) request('turn/steer', { expectedTurnId: turnId, input: content.map(toItem) })
+      if (turnId) request('turn/steer', { expectedTurnId: turnId, input: inputItems(content, media) })
     },
-    answer: (id, result) => answerFor(id).resolve(result),
-    async inject(handoff) {
-      try {
-        await server.request('thread/inject_items', { threadId, items: historyItems(handoff) })
-        return true
-      } catch (error) {
-        if (error instanceof RpcError && error.code === methodMissing) return false
-        throw error
-      }
-    },
-    async aside(prompt, signal) {
-      if (running || !lastTurn) return noAside
-      const sampled = server.request('thread/sample', { threadId, expectedTurnId: lastTurn, prompt, effort: asideEffort })
-      try {
-        return asideOf(await (signal ? untilAborted(sampled, signal) : sampled))
-      } catch (error) {
-        if (error instanceof RpcError && error.code === methodMissing) return noAside
-        throw error
-      }
-    },
-    interrupt() {
-      dropAnswers()
-      if (!running) return Promise.resolve()
-      stopped ??= Promise.withResolvers<void>()
-      stop()
-      return stopped.promise
-    },
-    close() {
-      dropAnswers()
-      return server.close()
-    },
-  }
+    stop,
+    close: () => server.close(),
+    inject,
+    aside,
+  })
 }

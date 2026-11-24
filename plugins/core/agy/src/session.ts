@@ -1,141 +1,118 @@
-import { type AppOutput, type AppSession, type AppSetup, type Effort, UsageLimited } from '@sand/accounts/contract'
-import type { ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
+import { type AppOutput, type AppSession, type AppSetup, type Effort, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
+import { fieldsOf, type Json, mcpBlock, mcpBridge, parts, resetOf, SERVER_NAME, Turns } from '@sand/app-plan'
+import type { ModelContent, StopReason } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { findEffortOption, findModelOption, parseConfigOptions } from './account'
-import { errorMessage, fieldsOf, startAcp, type Json } from './acp'
-import { promptBlocks } from './content'
-import { SERVER_NAME, startToolBridge } from './tools'
+import { errorMessage } from '@sand/util'
+import { configOptions, effortOption, modelOption } from './account'
+import { type AcpClient, startAcp } from './acp'
+import { readLimits } from './limits'
 
 interface SessionNeeds {
   media: Media
   folder?: string
+  report(limits: PlanLimits): void
 }
 
-interface SessionConfigIds {
-  modelConfigId?: string
-  effortConfigId?: string
-  legacyModels: boolean
+interface Choosing {
+  client: AcpClient
+  sessionId: string
+  created: Json
 }
 
-function isRateLimitError(error: unknown): boolean {
-  return /rate limit|quota|resource_exhausted|429/i.test(errorMessage(error))
+const RATE_LIMITED = /rate limit|quota|resource_exhausted|429/i
+const ALLOW = ['allow_always', 'allow_once']
+const REJECT = ['reject_once', 'reject_always']
+
+function stopReasonOf(raw: unknown): StopReason {
+  return raw === 'max_tokens' ? 'max_tokens' : 'end_turn'
 }
 
-function mapStopReason(raw: unknown): StopReason {
-  if (raw === 'max_tokens') return 'max_tokens'
-  return 'end_turn'
-}
-
-function configIdsFrom(session: Json): SessionConfigIds {
-  const options = parseConfigOptions(session.configOptions)
-  const modelOption = findModelOption(options)
-  const effortOption = findEffortOption(options)
-  const modelsField = fieldsOf(session.models)
-  const legacyModels = !modelOption && Array.isArray(modelsField.availableModels)
-  return {
-    modelConfigId: modelOption?.id,
-    effortConfigId: effortOption?.id,
-    legacyModels,
-  }
-}
-
-function systemPromptParams(init: Json, system: string): Json {
+function systemPrompt(init: Json, system: string): Json {
   if (!system) return {}
   const capabilities = fieldsOf(init.agentCapabilities)
-  const sessionCaps = fieldsOf(capabilities.sessionCapabilities)
-  if (sessionCaps.systemPrompt) {
-    return { systemPrompt: { mode: 'append', content: [{ type: 'text', text: system }] } }
-  }
-  const antigravityMeta = fieldsOf(fieldsOf(capabilities._meta).antigravity)
-  if (fieldsOf(antigravityMeta.systemPrompt).append) {
-    return { _meta: { antigravity: { systemPrompt: { append: system } } } }
-  }
+  if (fieldsOf(capabilities.sessionCapabilities).systemPrompt) return { systemPrompt: { mode: 'append', content: [{ type: 'text', text: system }] } }
+  if (fieldsOf(fieldsOf(fieldsOf(capabilities._meta).antigravity).systemPrompt).append) return { _meta: { antigravity: { systemPrompt: { append: system } } } }
   return {}
 }
 
-function agyToolName(name: string): string {
+function toolNameOf(name: string): string {
   return `mcp_${SERVER_NAME}_${name}`
 }
 
-function pickPermissionOption(options: unknown, allow: boolean): string | undefined {
-  if (!Array.isArray(options)) return undefined
-  const entries = options.map(fieldsOf)
-  const preferred = allow ? ['allow_always', 'allow_once'] : ['reject_once', 'reject_always']
-  for (const kind of preferred) {
-    const found = entries.find(option => option.kind === kind && typeof option.optionId === 'string')
-    if (found) return String(found.optionId)
+function permissionOption(options: unknown, allow: boolean): string | undefined {
+  const entries = Array.isArray(options) ? options.map(fieldsOf) : []
+  const kinds = allow ? ALLOW : REJECT
+  const found = kinds.flatMap(kind => entries.filter(option => option.kind === kind && typeof option.optionId === 'string'))[0]
+  return found && String(found.optionId)
+}
+
+function usageOf(raw: Json) {
+  return {
+    input: Number(raw.inputTokens ?? raw.input_tokens ?? 0),
+    output: Number(raw.outputTokens ?? raw.output_tokens ?? 0),
+    cacheRead: Number(raw.cachedReadTokens ?? raw.cache_read_tokens ?? 0),
+    cacheWrite: Number(raw.cachedWriteTokens ?? raw.cache_write_tokens ?? 0),
   }
-  return undefined
 }
 
 function reportUsage(raw: Json, output: AppOutput) {
-  const input = Number(raw.inputTokens ?? raw.input_tokens ?? 0)
-  const outputTokens = Number(raw.outputTokens ?? raw.output_tokens ?? 0)
-  const cacheRead = Number(raw.cachedReadTokens ?? raw.cache_read_tokens ?? 0)
-  const cacheWrite = Number(raw.cachedWriteTokens ?? raw.cache_write_tokens ?? 0)
-  if (input || outputTokens || cacheRead || cacheWrite) {
-    output.usage({ input, output: outputTokens, cacheRead, cacheWrite })
-  }
+  const usage = usageOf(raw)
+  if (usage.input || usage.output || usage.cacheRead || usage.cacheWrite) output.usage(usage)
+}
+
+function promptBlocks(content: ModelContent[], media: Media) {
+  const blocks = parts(content, media).map(mcpBlock)
+  return blocks.length ? blocks : [{ type: 'text', text: '' }]
+}
+
+async function chooseModel({ client, sessionId, created }: Choosing, model: string) {
+  const option = modelOption(configOptions(created.configOptions))
+  if (option) return client.request('session/set_config_option', { sessionId, configId: option.id, value: model })
+  if (Array.isArray(fieldsOf(created.models).availableModels)) return client.request('session/set_model', { sessionId, modelId: model })
+  return undefined
+}
+
+async function limitFailure({ folder, report }: SessionNeeds, error: unknown) {
+  const limits = await readLimits(folder).catch(() => undefined)
+  if (limits) report(limits)
+  return new UsageLimited(errorMessage(error), resetOf(limits))
+}
+
+async function failureOf(needs: SessionNeeds, error: unknown) {
+  return RATE_LIMITED.test(errorMessage(error)) ? limitFailure(needs, error) : error
 }
 
 async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNeeds, resume?: string): Promise<AppSession> {
-  const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
-  const sandTools = new Set(setup.tools.map(tool => agyToolName(tool.name)))
-  let running = false
-  let stopped: PromiseWithResolvers<void> | undefined
-  let currentEffort = setup.effort
+  const turns = new Turns(output)
+  const sandTools = new Set(setup.tools.map(tool => toolNameOf(tool.name)))
 
-  function answerFor(id: string): PromiseWithResolvers<ToolResultBlock> {
-    const existing = answers.get(id)
-    if (existing) return existing
-    const created = Promise.withResolvers<ToolResultBlock>()
-    answers.set(id, created)
-    return created
-  }
-
-  function dropAnswers() {
-    for (const entry of answers.values()) {
-      entry.promise.catch(() => {})
-      entry.reject(new Error('sand stopped this turn'))
-    }
-    answers.clear()
-  }
-
-  const bridge =
-    setup.tools.length > 0
-      ? startToolBridge(setup.tools, needs.media, async (name, input) => {
+  const bridge = setup.tools.length
+    ? mcpBridge({
+        tools: setup.tools,
+        media: needs.media,
+        async call({ name, input }) {
           const id = crypto.randomUUID()
           output.call({ id, name, input })
           output.pause()
-          return answerFor(id).promise
-        })
-      : undefined
+          return turns.result(id)
+        },
+      })
+    : undefined
 
   function onNotify(method: string, params: Json) {
     if (method !== 'session/update') return
     const update = fieldsOf(params.update)
-    const kind = update.sessionUpdate
-    if (kind === 'agent_message_chunk') {
-      const content = fieldsOf(update.content)
-      if (content.type === 'text' && typeof content.text === 'string') output.text(content.text)
-      return
-    }
-    if (kind === 'agent_thought_chunk') {
-      const content = fieldsOf(update.content)
-      if (content.type === 'text' && typeof content.text === 'string') output.thinking(content.text)
-      return
-    }
-    if (kind === 'usage_update') {
-      reportUsage(update, output)
-    }
+    const content = fieldsOf(update.content)
+    const text = content.type === 'text' && typeof content.text === 'string' ? content.text : undefined
+    if (update.sessionUpdate === 'agent_message_chunk' && text) output.text(text)
+    if (update.sessionUpdate === 'agent_thought_chunk' && text) output.thinking(text)
+    if (update.sessionUpdate === 'usage_update') reportUsage(update, output)
   }
 
   async function onRequest(method: string, params: Json): Promise<unknown> {
     if (method !== 'session/request_permission') return {}
-    const allow = sandTools.has(String(fieldsOf(params.toolCall).name))
-    const optionId = pickPermissionOption(params.options, allow)
-    if (!optionId) return { outcome: { outcome: 'cancelled' } }
-    return { outcome: { outcome: 'selected', optionId } }
+    const optionId = permissionOption(params.options, sandTools.has(String(fieldsOf(params.toolCall).name)))
+    return { outcome: optionId ? { outcome: 'selected', optionId } : { outcome: 'cancelled' } }
   }
 
   const client = await startAcp({
@@ -152,89 +129,51 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
     throw error
   })
 
-  let sessionId = ''
-  let configIds: SessionConfigIds = { legacyModels: false }
-
-  try {
-    const init = await client.request('initialize', { protocolVersion: 1, clientCapabilities: {} })
-    const commonParams: Json = {
-      cwd: setup.cwd,
-      mcpServers: bridge ? [bridge.mcpServer] : [],
-      ...systemPromptParams(init, setup.system),
-    }
-    const created = resume
-      ? await client.request('session/resume', { ...commonParams, sessionId: resume })
-      : await client.request('session/new', commonParams)
-    sessionId = resume ?? String(created.sessionId ?? '')
+  const start = async () => {
+    const common = { cwd: setup.cwd, mcpServers: bridge ? [bridge.server] : [], ...systemPrompt(client.init, setup.system) }
+    const created = resume ? await client.request('session/resume', { ...common, sessionId: resume }) : await client.request('session/new', common)
+    const sessionId = resume ?? String(created.sessionId ?? '')
     if (!sessionId) throw new Error('Antigravity did not return a session ID')
-    configIds = configIdsFrom(created)
+    await chooseModel({ client, sessionId, created }, setup.model)
+    return { sessionId, effortId: effortOption(configOptions(created.configOptions))?.id }
+  }
 
-    if (configIds.modelConfigId) {
-      await client.request('session/set_config_option', { sessionId, configId: configIds.modelConfigId, value: setup.model })
-    } else if (configIds.legacyModels) {
-      await client.request('session/set_model', { sessionId, modelId: setup.model })
-    }
-    if (setup.effort && configIds.effortConfigId) {
-      await client.request('session/set_config_option', { sessionId, configId: configIds.effortConfigId, value: setup.effort }).catch(() => {})
-    }
-  } catch (error) {
+  const { sessionId, effortId } = await start().catch(async error => {
     bridge?.close()
     await client.close()
     throw error
-  }
+  })
 
-  async function runTurn(content: ModelContent[], effort?: Effort) {
-    running = true
+  let effort: Effort | undefined
+  const chooseEffort = async (wanted?: Effort) => {
+    if (!wanted || wanted === effort || !effortId) return
+    effort = wanted
+    await client.request('session/set_config_option', { sessionId, configId: effortId, value: wanted }).catch(() => {})
+  }
+  await chooseEffort(setup.effort)
+
+  const runTurn = async (content: ModelContent[], wanted?: Effort) => {
     try {
-      if (effort && effort !== currentEffort && configIds.effortConfigId) {
-        currentEffort = effort
-        await client.request('session/set_config_option', { sessionId, configId: configIds.effortConfigId, value: effort }).catch(() => {})
-      }
+      await chooseEffort(wanted)
       const result = await client.request('session/prompt', { sessionId, prompt: promptBlocks(content, needs.media) })
-      running = false
       reportUsage(fieldsOf(result.usage), output)
-      if (stopped) {
-        const waiting = stopped
-        stopped = undefined
-        waiting.resolve()
-        return
-      }
-      output.finish(mapStopReason(result.stopReason))
+      turns.finish(stopReasonOf(result.stopReason))
     } catch (error) {
-      running = false
-      if (stopped) {
-        const waiting = stopped
-        stopped = undefined
-        waiting.resolve()
-        return
-      }
-      output.fail(isRateLimitError(error) ? new UsageLimited(errorMessage(error)) : error)
+      turns.fail(turns.stopping ? error : await failureOf(needs, error))
     }
   }
 
-  return {
+  return turns.session({
     id: sessionId,
     pid: client.pid,
-    send(content: ModelContent[], effort?: Effort) {
-      void runTurn(content, effort)
-    },
-    answer(id: string, result: ToolResultBlock) {
-      answerFor(id).resolve(result)
-    },
-    interrupt() {
-      dropAnswers()
-      if (!running) return Promise.resolve()
-      stopped ??= Promise.withResolvers<void>()
-      client.notify('session/cancel', { sessionId })
-      return stopped.promise
-    },
+    prompt: (content, wanted) => void runTurn(content, wanted),
+    stop: () => client.notify('session/cancel', { sessionId }),
     async close() {
-      dropAnswers()
       await client.request('session/close', { sessionId }).catch(() => {})
       bridge?.close()
       await client.close()
     },
-  }
+  })
 }
 
 export { openSession }

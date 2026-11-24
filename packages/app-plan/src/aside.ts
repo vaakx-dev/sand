@@ -1,19 +1,17 @@
 import type { AppAside, AppOutput, AppSession, Usage } from '@sand/accounts/contract'
 import { untilAborted } from '@sand/util'
 
-const noUsage = (): Usage => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 })
-
-const added = (total: Usage, more: Partial<Usage>): Usage => ({
-  input: total.input + (more.input ?? 0),
-  output: total.output + (more.output ?? 0),
-  cacheRead: total.cacheRead + (more.cacheRead ?? 0),
-  cacheWrite: total.cacheWrite + (more.cacheWrite ?? 0),
+const added = (total: Partial<Usage>, more: Partial<Usage>): Partial<Usage> => ({
+  input: (total.input ?? 0) + (more.input ?? 0),
+  output: (total.output ?? 0) + (more.output ?? 0),
+  cacheRead: (total.cacheRead ?? 0) + (more.cacheRead ?? 0),
+  cacheWrite: (total.cacheWrite ?? 0) + (more.cacheWrite ?? 0),
 })
 
 const collector = () => {
   const reply = Promise.withResolvers<AppAside>()
   let text = ''
-  let usage = noUsage()
+  let usage: Partial<Usage> = {}
   const output: AppOutput = {
     text: more => {
       text += more
@@ -31,13 +29,15 @@ const collector = () => {
   return { output, reply: reply.promise }
 }
 
-export const askAside = async (open: (output: AppOutput) => Promise<AppSession>, prompt: string, signal?: AbortSignal): Promise<AppAside> => {
+const forkedAside = async (fork: (output: AppOutput) => Promise<AppSession>, prompt: string, signal?: AbortSignal): Promise<AppAside> => {
   const { output, reply } = collector()
-  const session = await open(output)
+  const session = await fork(output)
   try {
     session.send([{ type: 'text', text: prompt }])
     return await (signal ? untilAborted(reply, signal) : reply)
   } finally {
-    session.close()
+    void session.close()
   }
 }
+
+export { forkedAside }

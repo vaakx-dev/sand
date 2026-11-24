@@ -1,29 +1,26 @@
-import { efforts, type AppStatus, type PlanModel, type SignInFlow } from '@sand/accounts/contract'
+import type { AppStatus, PlanModel, SignInFlow } from '@sand/accounts/contract'
+import { fieldsOf, levelsOf, textOf, type Json } from '@sand/app-plan'
 import { capital } from '@sand/util'
-import { findCodex } from '../server/binary'
-import { fieldsOf, type Json } from '../server/rpc'
 import type { Pool } from '../server/pool'
 import { limitsOf } from './limits'
 
-const deviceTimeout = 15 * 60_000
+const DEVICE_TIMEOUT_MS = 15 * 60_000
 
 const planOf = (account: Json) => {
   if (account.type === 'apiKey') return 'API'
-  return typeof account.planType === 'string' && account.planType ? capital(account.planType) : undefined
+  const plan = textOf(account.planType)
+  return plan && capital(plan)
 }
 
 const modelOf = (entry: Json): PlanModel[] => {
-  const name = entry.model ?? entry.id
-  if (typeof name !== 'string' || !name || entry.hidden === true) return []
-  const levels = Array.isArray(entry.supportedReasoningEfforts) ? entry.supportedReasoningEfforts.map(level => fieldsOf(level).reasoningEffort) : []
-  const supported = efforts.filter(effort => levels.includes(effort))
-  const defaultEffort = supported.find(effort => effort === entry.defaultReasoningEffort)
+  const name = textOf(entry.model) ?? textOf(entry.id)
+  if (!name || entry.hidden === true) return []
+  const offered = Array.isArray(entry.supportedReasoningEfforts) ? entry.supportedReasoningEfforts.map(level => fieldsOf(level).reasoningEffort) : []
   return [
     {
       name,
-      label: typeof entry.displayName === 'string' && entry.displayName ? entry.displayName : name,
-      ...(supported.length && { efforts: supported }),
-      ...(defaultEffort && { defaultEffort }),
+      label: textOf(entry.displayName) ?? name,
+      ...levelsOf(offered, entry.defaultReasoningEffort),
       images: Array.isArray(entry.inputModalities) && entry.inputModalities.includes('image'),
     },
   ]
@@ -31,7 +28,6 @@ const modelOf = (entry: Json): PlanModel[] => {
 
 export const codexAccount = (pool: Pool) => ({
   async status(): Promise<AppStatus> {
-    if (!(await findCodex())) return { installed: false, signedIn: false }
     const account = fieldsOf((await pool.request('account/read', {})).account)
     if (!account.type) return { installed: true, signedIn: false }
     const plan = planOf(account)
@@ -49,7 +45,7 @@ export const codexAccount = (pool: Pool) => ({
     })
     signal.addEventListener('abort', () => void pool.request('account/login/cancel', { loginId }).catch(() => {}), { once: true })
     const wait = () => done.promise.finally(stop)
-    return { kind: 'device', url: String(started.verificationUrl), code: String(started.userCode), expires: Date.now() + deviceTimeout, wait }
+    return { kind: 'device', url: String(started.verificationUrl), code: String(started.userCode), expires: Date.now() + DEVICE_TIMEOUT_MS, wait }
   },
 
   signOut: async () => {

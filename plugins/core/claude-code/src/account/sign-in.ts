@@ -1,71 +1,44 @@
-import type { SignInFlow } from '@sand/accounts/contract'
+import type { AppStatus } from '@sand/accounts/contract'
+import { fieldsOf, pasteSignIn } from '@sand/app-plan'
+import { capital } from '@sand/util'
 import { claudeEnv } from '../cli/args'
-import { requireClaude } from '../cli/binary'
-import { readStatus } from './status'
+import { claude } from '../cli/binary'
 
-const authorizeUrl = /https:\/\/[^\s\x07\x1b]+\/oauth\/authorize[^\s\x07\x1b]*/
-const badCode = /invalid code/i
-const startTimeout = 20_000
-const NO_BROWSER = 'none'
+const AUTHORIZE_URL = /https:\/\/[^\s\x07\x1b]+\/oauth\/authorize[^\s\x07\x1b]*/
 
-const refusal = () => {
-  const made = Promise.withResolvers<never>()
-  made.promise.catch(() => {})
-  return made
+const planOf = (subscription: unknown, method: unknown) => {
+  if (typeof subscription === 'string' && subscription) return capital(subscription.replace(/^claude\s+/i, ''))
+  return method === 'claude.ai' ? undefined : 'API'
 }
 
-const watch = (stream: ReadableStream<Uint8Array>, onText: (all: string) => void) =>
-  (async () => {
-    const decoder = new TextDecoder()
-    let all = ''
-    for await (const chunk of stream) {
-      all += decoder.decode(chunk, { stream: true })
-      onText(all)
-    }
-  })()
-
-export const signInClaude = async (signal: AbortSignal, config?: string): Promise<SignInFlow<void>> => {
-  const binary = await requireClaude()
-  const env = { ...claudeEnv(config), BROWSER: NO_BROWSER }
-  const child = Bun.spawn([binary, 'auth', 'login', '--claudeai'], { env, stdin: 'pipe', stdout: 'pipe', stderr: 'pipe', windowsHide: true })
-  signal.addEventListener('abort', () => child.kill(), { once: true })
-
-  const shown = Promise.withResolvers<string>()
-  let rejected = refusal()
-  void watch(child.stdout, all => {
-    const url = authorizeUrl.exec(all)?.[0]
-    if (url) shown.resolve(url)
-  })
-  let seen = 0
-  void watch(child.stderr, all => {
-    if (!badCode.test(all.slice(seen))) return
-    seen = all.length
-    rejected.reject(new Error("That code didn't work. Copy the whole code from the sign-in page and try again."))
-  })
-
-  const finished = child.exited.then(async code => {
-    if ((await readStatus(config)).signedIn) return
-    throw new Error(code ? `Claude Code sign-in stopped (exit ${code})` : "Claude Code didn't finish signing in")
-  })
-  finished.catch(() => {})
-
-  const timeout = setTimeout(() => shown.reject(new Error("Claude Code didn't show a sign-in link")), startTimeout)
-  const url = await shown.promise
-    .catch(error => {
-      child.kill()
-      throw error
-    })
-    .finally(() => clearTimeout(timeout))
-
-  return {
-    kind: 'paste',
-    url,
-    async finish(code: string) {
-      rejected = refusal()
-      child.stdin.write(`${code.trim()}\n`)
-      await child.stdin.flush()
-      await Promise.race([finished, rejected.promise])
-    },
-    wait: () => finished,
+const statusOf = (text: string): AppStatus => {
+  let status
+  try {
+    status = fieldsOf(JSON.parse(text))
+  } catch {
+    return { installed: true, signedIn: false, problem: 'Claude Code gave an unreadable sign-in status' }
   }
+  if (status.loggedIn !== true) return { installed: true, signedIn: false }
+  const plan = planOf(status.subscriptionType, status.authMethod)
+  return { installed: true, signedIn: true, ...(typeof status.email === 'string' && { email: status.email }), ...(plan && { plan }) }
+}
+
+export const readStatus = async (config?: string): Promise<AppStatus> => {
+  const child = Bun.spawn([await claude.require(), 'auth', 'status', '--json'], { env: claudeEnv(config), stdout: 'pipe', stderr: 'pipe', windowsHide: true })
+  const [text] = await Promise.all([new Response(child.stdout).text(), child.exited])
+  return statusOf(text)
+}
+
+export const signIn = async (signal: AbortSignal, config?: string) =>
+  pasteSignIn({
+    app: claude.app,
+    command: [await claude.require(), 'auth', 'login', '--claudeai'],
+    env: claudeEnv(config),
+    link: AUTHORIZE_URL,
+    signal,
+    signedIn: async () => (await readStatus(config)).signedIn,
+  })
+
+export const signOut = async (config?: string) => {
+  await Bun.spawn([await claude.require(), 'auth', 'logout'], { env: claudeEnv(config), stdout: 'ignore', stderr: 'ignore', windowsHide: true }).exited
 }

@@ -1,20 +1,11 @@
 import type { AppTurn } from '@sand/accounts/contract'
+import { fileHistory, type Listed } from '@sand/app-plan'
 import { Database } from 'bun:sqlite'
 import { readdir, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Message } from './wire'
-
-interface Snapshot {
-  key: string
-  modifiedMs: number
-}
-
-interface CachedConversation {
-  key: string
-  turns: AppTurn[]
-}
 
 interface Conversation {
   session: string
@@ -46,14 +37,17 @@ function conversationsFolder(folder?: string): string {
   return join(folder ?? join(homedir(), '.gemini'), 'antigravity-cli', 'conversations')
 }
 
-async function snapshotOf(path: string): Promise<Snapshot | undefined> {
+async function listedOf(path: string): Promise<Listed[]> {
   const file = await stat(path).catch(() => undefined)
-  if (!file) return undefined
+  if (!file) return []
   const wal = await stat(path + WAL_SUFFIX).catch(() => undefined)
-  return {
-    key: [file.mtimeMs, file.size, wal?.mtimeMs, wal?.size].join(':'),
-    modifiedMs: Math.max(file.mtimeMs, wal?.mtimeMs ?? 0),
-  }
+  return [{ path, size: file.size, mtimeMs: Math.max(file.mtimeMs, wal?.mtimeMs ?? 0), stamp: [file.mtimeMs, file.size, wal?.mtimeMs, wal?.size].join(':') }]
+}
+
+async function listConversations(folder?: string): Promise<Listed[]> {
+  const conversations = conversationsFolder(folder)
+  const names = (await readdir(conversations).catch((): string[] => [])).filter(name => name.endsWith(DATABASE_SUFFIX))
+  return (await Promise.all(names.map(name => listedOf(join(conversations, name))))).flat()
 }
 
 function millisecondsOf(time: Message): number | undefined {
@@ -111,48 +105,12 @@ function readTurns(path: string, modifiedMs: number): AppTurn[] {
   }
 }
 
-class History {
-  private readonly cache = new Map<string, CachedConversation>()
-  private scans: Promise<unknown> = Promise.resolve()
-
-  constructor(private readonly folder?: string) {}
-
-  turnsSince(since: number): Promise<AppTurn[]> {
-    const scan = this.scans.then(() => this.scan(since))
-    this.scans = scan.catch(() => {})
-    return scan
-  }
-
-  private async scan(since: number): Promise<AppTurn[]> {
-    const folder = conversationsFolder(this.folder)
-    const names = (await readdir(folder).catch(() => [])).filter(name => name.endsWith(DATABASE_SUFFIX))
-    this.forgetMissing(new Set(names.map(name => join(folder, name))))
-    const conversations = await Promise.all(names.map(name => this.turnsOf(join(folder, name), since)))
-    return conversations.flat().filter(turn => turn.at >= since)
-  }
-
-  private forgetMissing(present: Set<string>) {
-    for (const path of this.cache.keys()) if (!present.has(path)) this.cache.delete(path)
-  }
-
-  private async turnsOf(path: string, since: number): Promise<AppTurn[]> {
-    const snapshot = await snapshotOf(path)
-    if (!snapshot || snapshot.modifiedMs < since) return []
-    const cached = this.cache.get(path)
-    if (cached?.key === snapshot.key) return cached.turns
-    try {
-      const turns = readTurns(path, snapshot.modifiedMs)
-      this.cache.set(path, { key: snapshot.key, turns })
-      return turns
-    } catch {
-      return cached?.turns ?? []
-    }
-  }
-}
-
-function agyHistory(folder?: string): (since: number) => Promise<AppTurn[]> {
-  const history = new History(folder)
-  return since => history.turnsSince(since)
+function agyHistory(folder?: string) {
+  return fileHistory<AppTurn[]>({
+    list: () => listConversations(folder),
+    read: async ({ path, mtimeMs }) => readTurns(path, mtimeMs),
+    turns: conversations => conversations.flat(),
+  })
 }
 
 export { agyHistory }

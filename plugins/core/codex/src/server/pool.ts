@@ -1,8 +1,8 @@
+import type { Json, Rpc } from '@sand/app-plan'
 import { plainArgs, sandArgs } from './args'
-import { requireCodex } from './binary'
+import { codex } from './binary'
 import { writeCatalog } from './catalog'
 import { unwantedFeatures } from './features'
-import type { Json, Rpc } from './rpc'
 import { type Launch, type ServerHandlers, startServer } from './server'
 
 type Listener = (method: string, params: Json) => void
@@ -39,7 +39,7 @@ export const createPool = ({ folder, home }: CodexPlace, version: string) => {
   const broadcast: Listener = (method, params) => listeners.forEach(listen => listen(method, params))
 
   const survey = async () => {
-    const binary = await requireCodex()
+    const binary = await codex.require()
     const plain = await startServer({ binary, args: plainArgs, home }, version, { notify() {}, call: unhandled, exit() {} })
     const features = await plain
       .request('model/list', {})
