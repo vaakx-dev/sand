@@ -118,16 +118,24 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     return handOver(step, await create(step, selection), transition.strategy)
   }
 
+  const stepOf = (conversation: Conversation, brief: Brief, turn: TurnInfo): Step => {
+    const path = currentPath(ctx, conversation)
+    return { conversation, brief, turn, path, current: currentOf(promptOf(path, turn.prompt)) }
+  }
+
+  const rechoose = async (step: Step, before: ProviderThreadInfo) => {
+    const thread = await choose(step)
+    return thread.id === before.id ? rebrief(step, thread) : thread
+  }
+
   const prepare = async (conversation: Conversation, turn: TurnInfo, signal: AbortSignal): Promise<Plan> => {
     const brief = briefOf(conversation)
-    const path = currentPath(ctx, conversation)
-    const step = { conversation, brief, turn, path, current: currentOf(promptOf(path, turn.prompt)) }
-    let thread = await choose(step)
-    const build = () => buildRequest(ctx, stores.handoffs, brief, conversation, thread, turn.selection)
-    let built = await build()
+    const build = (thread: ProviderThreadInfo) => buildRequest(ctx, stores.handoffs, brief, conversation, thread, turn.selection)
+    let thread = await choose(stepOf(conversation, brief, turn))
+    let built = await build(thread)
     if (await ctx.bail(stepPrepare, built.request, conversation, turn, signal)) {
-      thread = await rebrief(step, thread)
-      built = await build()
+      thread = await rechoose(stepOf(conversation, brief, turn), thread)
+      built = await build(thread)
     }
     stores.threads.activate(thread.id, turn.selection)
     return { ...built, thread, ...(built.request.handoff && { handoff: built.request.handoff.id }) }

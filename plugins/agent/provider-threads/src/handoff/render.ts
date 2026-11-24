@@ -1,9 +1,10 @@
 import type { HandoffItem } from '@sand/accounts/contract'
 import { head } from '@sand/util'
-import type { Clips, Item } from './items'
+import type { Clips, Item, ItemKind } from './items'
 
 export interface Rendered extends HandoffItem {
   id: string
+  kind: ItemKind
 }
 
 export interface Coverage {
@@ -22,6 +23,7 @@ export const renderItem =
   (item: Item): Rendered => ({
     id: item.id,
     role: item.role,
+    kind: item.kind,
     text: [header(item), item.text, ...(item.output ? [clip(item.output, output, item.id)] : [])].join('\n'),
   })
 

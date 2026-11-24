@@ -20,20 +20,26 @@ export interface HandoffInput {
   budget: number
 }
 
-const coveredBy = (path: Path, thread: ProviderThreadInfo, strategy: HandoffStrategy, end: number): Entry[] => {
+interface Coverage {
+  covered: Entry[]
+  end: number
+}
+
+const coveredBy = (path: Path, thread: ProviderThreadInfo, strategy: HandoffStrategy, prompt: number): Coverage => {
   if (strategy === 'delta') {
     const head = headOf(thread.seen)
-    return path.entries.slice(head === null ? 0 : path.index.get(head)! + 1, end)
+    return { covered: path.entries.slice(head === null ? 0 : path.index.get(head)! + 1, prompt), end: prompt }
   }
   const { segments, from } = fullBasis(path)
   const summaries = segments.flatMap(segment => ('summary' in segment ? [path.entries[path.index.get(segment.summary)!]!] : []))
-  return [...summaries, ...path.entries.slice(from, end)]
+  const end = Math.max(prompt, from)
+  return { covered: [...summaries, ...path.entries.slice(from, end)], end }
 }
 
 export const handOff = (handoffs: HandoffStore, { conversation, turn, path, thread, strategy, made, budget }: HandoffInput): Segment[] | undefined => {
-  const end = path.index.get(turn.prompt) ?? path.entries.length
+  const prompt = path.index.get(turn.prompt) ?? path.entries.length
+  const { covered, end } = coveredBy(path, thread, strategy, prompt)
   const before = path.entries[end - 1]
-  const covered = coveredBy(path, thread, strategy, end)
   const clips = CLIPS[strategy]
   const items = itemsOf(path, covered, made, clips)
   if (!before || !items.length) return undefined
