@@ -20,7 +20,11 @@ export const pushTargetSchema = lazy(() => z.object({
   keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
 }))
 
-export const devicePushSchema = lazy(() => pushTargetSchema().extend({ pc: z.string().min(1) }))
+const webPushSchema = lazy(() => pushTargetSchema().extend({ kind: z.literal('web').optional(), pc: z.string().min(1) }))
+
+const appPushSchema = lazy(() => z.object({ kind: z.literal('app'), pc: z.string().min(1), token: z.string().min(1) }))
+
+export const devicePushSchema = lazy(() => z.union([webPushSchema(), appPushSchema()]))
 
 export const deviceRecordSchema = lazy(() => z.object({
   id: z.string().min(1),

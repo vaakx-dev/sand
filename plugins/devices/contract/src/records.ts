@@ -32,9 +32,18 @@ export interface PushTarget {
   keys: PushKeys
 }
 
-export interface DevicePush extends PushTarget {
+export interface WebPush extends PushTarget {
+  kind?: 'web'
   pc: string
 }
+
+export interface AppPush {
+  kind: 'app'
+  pc: string
+  token: string
+}
+
+export type DevicePush = WebPush | AppPush
 
 export interface DeviceRecord {
   id: string

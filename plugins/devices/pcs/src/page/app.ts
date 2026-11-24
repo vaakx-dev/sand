@@ -22,7 +22,7 @@ const replyOf = (data: unknown) => {
   }
 }
 
-const appOver = (port: AppPort, start: Pick<AndroidApp, 'routes' | 'push' | 'versionCode'>): AndroidApp => ({
+const appOver = (port: AppPort, start: Pick<AndroidApp, 'routes' | 'versionCode'>): AndroidApp => ({
   ...start,
   send: message => port.postMessage(JSON.stringify(message)),
   on: listener =>

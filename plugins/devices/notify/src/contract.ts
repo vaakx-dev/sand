@@ -49,7 +49,7 @@ const momentSchema = lazy(() => z.object({
   text: z.string(),
 }))
 
-const noticeSchema = lazy(() => z.object({
+export const noticeSchema = lazy(() => z.object({
   title: z.string(),
   body: z.string(),
   tag: z.string().min(1),
@@ -61,11 +61,14 @@ const noticeSchema = lazy(() => z.object({
 export const notifySend = request('notify.send', { input: momentSchema, output: type<void>(), callers: 'runtime' })
 export const notifyDeliver = request('notify.deliver', { input: noticeSchema, output: type<void>(), callers: 'pc' })
 export const notifySubscribe = request('notify.subscribe', { input: pushTargetSchema, output: type<void>() })
+export const notifyListen = request('notify.listen', { input: () => z.object({}), output: type<{ token: string }>() })
 export const notifyUnsubscribe = request('notify.unsubscribe', { input: () => z.object({}), output: type<void>() })
 export const notifyMoment = request('notify.moment', { input: () => z.object({ kind: momentKindSchema(), on: z.boolean() }), output: type<void>() })
 
 export const notifyNotice = wireEvent<Notice>('notify.notice')
 export const notifyMomentsOff = wireEvent<MomentKind[]>('notify.moments')
+
+export const inboxPath = '/notify/inbox'
 
 export const helloPushKey = helloField<string>('pushKey')
 export const helloMomentsOff = helloField<MomentKind[]>('momentsOff')

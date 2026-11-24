@@ -1,4 +1,4 @@
-export { bearer, readJson, readText, textReply } from './http'
+export { bearer, bearerToken, readJson, readText, textReply } from './http'
 export { libraryFiles, workerHeaders } from './library'
 export { spawnIn } from './process/folder'
 export { spawnJsonLines, type JsonLines, type JsonLinesOptions } from './process/json-lines'

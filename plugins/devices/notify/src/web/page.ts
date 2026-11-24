@@ -3,7 +3,7 @@ import { settingMark } from '@sand/settings/contract'
 import type { Toasts } from '@sand/toasts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, type Sig, sig } from '@vaakx-dev/vrui'
-import { type MomentKind, momentKinds, moments, notifyMoment, notifySubscribe, notifyUnsubscribe } from '../contract'
+import { type MomentKind, momentKinds, moments, notifyMoment } from '../contract'
 import type { PushChannel, Support } from './channel'
 
 export interface PageDeps {
@@ -23,7 +23,6 @@ const unavailable: Record<Exclude<Support, 'ready'>, string> = {
   insecure: 'Needs HTTPS, such as Tailscale HTTPS',
   install: 'Add sand to your Home Screen first',
   missing: 'This browser can’t show notifications',
-  distributor: 'Install a push app such as ntfy first',
 }
 
 const blockedText = 'Blocked. Allow them in site settings'
@@ -39,22 +38,12 @@ export const notificationsPage = ({ kit, wire, toasts, on, key, off, channel, de
   const blocked = sig(channel.blocked())
   const busy = sig(false)
 
-  const enable = async (pushKey: string) => {
-    const target = await channel.subscribe(pushKey)
-    if (target) await wire.call(notifySubscribe, target)
-  }
-
-  const disable = async () => {
-    await channel.unsubscribe()
-    await wire.call(notifyUnsubscribe, {})
-  }
-
   const toggle = async () => {
     const pushKey = key.get()
     if (!pushKey) return
     busy.set(true)
     const turningOn = !on.get()
-    await toasts.attempt(turningOn ? 'Couldn’t turn notifications on' : 'Couldn’t turn notifications off', () => (turningOn ? enable(pushKey) : disable()), { id: toastId })
+    await toasts.attempt(turningOn ? 'Couldn’t turn notifications on' : 'Couldn’t turn notifications off', () => (turningOn ? channel.subscribe(pushKey) : channel.unsubscribe()), { id: toastId })
     blocked.set(channel.blocked())
     busy.set(false)
   }

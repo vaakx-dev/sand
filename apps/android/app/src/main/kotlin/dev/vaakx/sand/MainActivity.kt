@@ -48,7 +48,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var web: WebView
     private var start: ScriptHandler? = null
     private var chosen: ValueCallback<Array<Uri>>? = null
-    private var wantedVapid: String? = null
     private var wantedApk: Apk? = null
 
     private val pickFiles = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -56,10 +55,7 @@ class MainActivity : ComponentActivity() {
         chosen = null
     }
 
-    private val askToNotify = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        val vapid = wantedVapid ?: return@registerForActivityResult
-        if (granted) Subscription.start(this, vapid) else Page.pushFailed(getString(R.string.notifications_off))
-    }
+    private val askToNotify = registerForActivityResult(ActivityResultContracts.RequestPermission()) { answerNotices() }
 
     private val allowInstalls = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         val apk = wantedApk ?: return@registerForActivityResult
@@ -84,7 +80,6 @@ class MainActivity : ComponentActivity() {
         })
         getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(network)
         onBackPressedDispatcher.addCallback(this) { if (web.canGoBack()) web.goBack() else finish() }
-        Subscription.renew(this)
         open(intent.getStringExtra(EXTRA_PATH) ?: "/")
     }
 
@@ -96,6 +91,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         Page.visible = true
+        Notices.resume(this)
     }
 
     override fun onPause() {
@@ -147,7 +143,7 @@ class MainActivity : ComponentActivity() {
     private fun describeApp() {
         start?.remove()
         val versionCode = PackageInfoCompat.getLongVersionCode(packageManager.getPackageInfo(packageName, 0))
-        val described = JSONObject().put("routes", JSONArray(pc.routes())).put("push", Subscription.available(this)).put("versionCode", versionCode)
+        val described = JSONObject().put("routes", JSONArray(pc.routes())).put("versionCode", versionCode)
         start = WebViewCompat.addDocumentStartJavaScript(web, "window.sandAppStart = $described", PAGE_ORIGINS)
     }
 
@@ -170,10 +166,13 @@ class MainActivity : ComponentActivity() {
         GmsBarcodeScanning.getClient(this).startScan().addOnSuccessListener { code -> code.rawValue?.let { pair(Uri.parse(it)) } }
     }
 
-    private fun subscribe(vapid: String) {
-        wantedVapid = vapid
+    private fun allowNotices() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) askToNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
-        else Subscription.start(this, vapid)
+        else answerNotices()
+    }
+
+    private fun answerNotices() {
+        if (noticesShown(this)) Page.noticesAllowed() else Page.noticesRefused(getString(R.string.notifications_off))
     }
 
     private fun install(apk: Apk) {
@@ -196,8 +195,9 @@ class MainActivity : ComponentActivity() {
                 pc.follow(stringsOf(body.getJSONArray("routes")))
                 describeApp()
             }
-            "subscribe" -> subscribe(body.getString("key"))
-            "unsubscribe" -> Subscription.stop(this)
+            "allow-notices" -> allowNotices()
+            "listen" -> Notices.start(this, body.getString("token"))
+            "unlisten" -> Notices.stop(this)
             "pair" -> pair(Uri.parse(body.getString("link")))
             "scan" -> scan()
             "install" -> install(Apk(body.getString("url"), body.optString("sha256").ifEmpty { null }))

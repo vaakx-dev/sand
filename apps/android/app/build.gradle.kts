@@ -53,25 +53,13 @@ kotlin {
     }
 }
 
-val tink = "com.google.crypto.tink:tink-android:1.20.0"
-
-configurations.configureEach {
-    resolutionStrategy {
-        force(tink)
-        dependencySubstitution {
-            substitute(module("com.google.crypto.tink:tink")).using(module(tink))
-        }
-    }
-}
-
 dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.fragment:fragment:1.8.9")
     implementation("androidx.webkit:webkit:1.13.0")
-    implementation("org.unifiedpush.android:connector:3.3.6")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
-    implementation(tink)
+    implementation("com.google.crypto.tink:tink-android:1.20.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16")
 }
