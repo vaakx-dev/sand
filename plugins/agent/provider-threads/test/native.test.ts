@@ -113,6 +113,23 @@ test('a native thread whose step failed is uncertain, so the next turn starts a 
   expect(generations()).toEqual(['1:retired', '2:idle'])
 })
 
+test('a native thread that sand compacts is replaced by a new session that gets the summary, not the turns it summarized', async () => {
+  const [summarized, recent] = ['x', 'y'].map(letter => letter.repeat(100_000))
+  sand = await startSand([app([[said('n1')], [said('n2'), { type: 'usage', input: 10_000_000 }], [said('the summary')], [said('n3')], [said('n4')]])])
+  const chat = sand.chat('n/m')
+
+  for (const prompt of [summarized!, recent!, 'three', 'four']) await sand.turns.run(chat, prompt)
+
+  expect(chat.latest('compaction')?.data).toMatchObject({ reason: 'threshold' })
+  expect(sand.native('n').filter(call => call.type === 'open').at(-1)).toEqual({ type: 'open', cwd: sand.home })
+  const [seeded, next] = sent().slice(-2)
+  expect(seeded).toContain('Summary of the earlier conversation:\n\nthe summary')
+  expect(seeded).not.toContain(summarized)
+  expect(seeded).toEndWith('three')
+  expect(next).toBe('four')
+  expect(generations()).toEqual(['1:retired', '2:idle'])
+})
+
 test('a chat moved to another folder starts a native thread there with a full handoff', async () => {
   sand = await startSand([app([[said('n1')], [said('n2')]])])
   const chat = sand.chat('n/m')

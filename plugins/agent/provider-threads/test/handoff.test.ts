@@ -21,7 +21,12 @@ test('a prompt costs its text plus a fixed allowance per image and attachment', 
   expect(currentOf([{ type: 'text', text: 'hi' }, image, file])).toBe(4 + 8_192 + 4_096)
 })
 
-const item = (id: string, role: Rendered['role'], size: number): Rendered => ({ id, role, text: `[Historical ${role}; item=${id}]\n${'x'.repeat(size)}` })
+const item = (id: string, role: Rendered['role'], size: number, kind: Rendered['kind'] = role === 'user' ? 'prompt' : 'reply'): Rendered => ({
+  id,
+  role,
+  kind,
+  text: `[Historical ${role}; item=${id}]\n${'x'.repeat(size)}`,
+})
 
 const coverage = coverageText({ models: ['a/m'], first: 1, last: 9 })
 
@@ -37,4 +42,12 @@ test('a handoff keeps whole items, newest and the first prompt first, skips what
   const none = select(items, coverage, 0)
   expect(none.items).toEqual([])
   expect(none.context).toContain(': 0 shown, 6 left out.')
+})
+
+test('a handoff always carries the compaction summary, even when nothing else fits', () => {
+  const items = [item('summary', 'user', 5_000, 'summary'), item('ask', 'user', 100), item('reply', 'assistant', 10)]
+
+  const tight = select(items, coverage, 0)
+  expect(tight.items.map(found => found.id)).toEqual(['summary'])
+  expect(tight.omitted).toEqual(['ask', 'reply'])
 })

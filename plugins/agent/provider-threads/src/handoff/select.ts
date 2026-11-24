@@ -24,14 +24,18 @@ const itemCost = (item: HandoffItem) => Math.max(bytes(responseItem(item)) + 1, 
 export const select = (items: Rendered[], coverage: (selected: number, omitted: number) => string, budget: number): Selected => {
   const chosen = new Set<number>()
   let remaining = budget - historyCost([], coverage(items.length, items.length))
+  const take = (index: number, item: Rendered) => {
+    chosen.add(index)
+    remaining -= itemCost(item)
+  }
   const add = (index: number) => {
     const item = items[index]
-    if (!item || chosen.has(index)) return
-    const cost = itemCost(item)
-    if (cost > remaining) return
-    chosen.add(index)
-    remaining -= cost
+    if (!item || chosen.has(index) || itemCost(item) > remaining) return
+    take(index, item)
   }
+  items.forEach((item, index) => {
+    if (item.kind === 'summary') take(index, item)
+  })
   add(items.findLastIndex(item => item.role === 'user'))
   add(items.findLastIndex(item => item.role === 'assistant'))
   add(items.findIndex(item => item.role === 'user'))
