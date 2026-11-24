@@ -16,7 +16,6 @@ export interface SettingsPage {
   order?: number
   parent?: string
   items?: SettingsItem[]
-  back?(): (() => void) | undefined
   dot?: () => boolean
   render?(): HTMLElement
 }

@@ -1,7 +1,7 @@
 import { collectScope, derive, disposeAll, span, untrack, type Child } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { screenKey } from './address'
-import type { BackTo, Route, RouteSpec, ScreenNav } from './contract'
+import type { Route, RouteSpec, Screen, ScreenNav } from './contract'
 
 type Title = (text: string | (() => string)) => HTMLElement
 
@@ -16,7 +16,7 @@ export interface Built {
   head: HTMLElement
   main: HTMLElement
   nav?: Nav
-  back?: BackTo
+  back?: Screen['back']
   split: boolean
   column: boolean
   scope: Dispose[]

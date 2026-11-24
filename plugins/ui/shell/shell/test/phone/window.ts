@@ -1,3 +1,4 @@
+import type { Settings } from '@sand/settings/contract'
 import type { Shell } from '@sand/ui-shell/contract'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { Browser, BrowserContext, Page } from 'playwright'
@@ -33,7 +34,15 @@ const scrollChat = (page: Page, to: 'end' | number) =>
     list?.scrollTo({ top: top === 'end' ? list.scrollHeight : top })
   }, to)
 
-const mainEdge = (page: Page) => page.evaluate(() => [...document.querySelectorAll('[data-part="main"]')].find(node => node.getBoundingClientRect().width > 0)!.getBoundingClientRect().left)
+const mainEdge = (page: Page) =>
+  page.evaluate(() => [...document.querySelectorAll('[data-part="main"]')].find(node => node.checkVisibility({ visibilityProperty: true }))!.getBoundingClientRect().left)
+
+const screensAt = (page: Page, x: number) =>
+  page.evaluate(x => {
+    const covers = (frame: HTMLElement) => frame.getBoundingClientRect().left <= x && x < frame.getBoundingClientRect().right
+    const frames = [...document.querySelectorAll<HTMLElement>('[data-screen]')]
+    return frames.filter(frame => frame.checkVisibility({ visibilityProperty: true }) && covers(frame)).map(frame => frame.dataset.screen)
+  }, x)
 
 const sidebarEdge = (page: Page) => page.evaluate(() => document.querySelector('nav[aria-label="Sidebar"]')!.getBoundingClientRect().right)
 
@@ -315,6 +324,34 @@ describe.each(phones)('on a $name', size => {
     await swipe(phone, [60, mid()], [size.width - 30, mid()])
     expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
     expect(await drawer(page)).toBe(false)
+  })
+
+  test('a swipe back in Settings shows the screen it goes back to under the finger, from the first move', async () => {
+    const { page } = phone
+    const y = mid()
+    const swipeBack = async (from: string, to: string) => {
+      expect(await screensAt(page, 20)).toEqual([from])
+      const hand = finger(phone)
+      await hand.down(60, y)
+      await hand.move(90, y)
+      await hand.move(100, y)
+      await hand.move(size.width - 60, y)
+      await Bun.sleep(50)
+      const shown = await screensAt(page, 20)
+      await hand.up()
+      expect(shown).toEqual([to])
+      expect(await screen(page, to.replace(/\/$/, ''))).toBe(to.replace(/\/$/, ''))
+      expect(await screensAt(page, 20)).toEqual([to])
+    }
+    await openPlain()
+    await tap(page, 'Show the sidebar')
+    await tap(page, 'Settings')
+    expect(await screen(page, 'settings')).toBe('settings')
+    await page.evaluate(() => window.sand.get<Settings>({ id: 'settings' })?.open('fixture-child'))
+    expect(await screen(page, 'settings/fixture-child')).toBe('settings/fixture-child')
+    await swipeBack('settings/fixture-child', 'settings/fixture-parent')
+    await swipeBack('settings/fixture-parent', 'settings/')
+    await swipeBack('settings/', 'fixture/plain')
   })
 
   test('browser back closes a sheet and keeps the window', async () => {

@@ -1,8 +1,7 @@
 import type { SourceInfo } from '@sand/accounts/contract'
-import { div, dynamicChild, untrack } from '@vaakx-dev/vrui'
+import { div, dynamicChild } from '@vaakx-dev/vrui'
 import { accountsAction } from '../accounts'
 import type { Page } from '../page'
-import { crumb, logo, sourceTitle } from '../parts'
 import { createCatalog } from './catalog'
 import { createFilter } from './filter'
 import { modelsSection } from './models'
@@ -17,20 +16,12 @@ const body = (page: Page, first: SourceInfo, latest: () => SourceInfo) => {
 const gone = (page: Page) => page.ctx.kit.emptyState({ text: 'This account is signed out.', action: accountsAction(page, 'Sign in again') })
 
 export const sourcePage = (page: Page, id: string) => {
-  const { kit } = page.ctx
   const info = page.changes.read(() => page.source(id))
-  return div(
-    { class: 'flex flex-col gap-6' },
-    crumb(page, logo(kit, untrack(() => info.get()?.provider)), () => {
-      const source = info.get()
-      return source ? sourceTitle(source) : id
-    }),
-    dynamicChild(
-      info.map(found => !!found),
-      () => {
-        const first = info.get()
-        return first ? body(page, first, () => info.get() ?? first) : gone(page)
-      },
-    ),
+  return dynamicChild(
+    info.map(found => !!found),
+    () => {
+      const first = info.get()
+      return first ? body(page, first, () => info.get() ?? first) : gone(page)
+    },
   )
 }

@@ -83,7 +83,7 @@ test('every stable page part custom CSS can target is on the page, on a desktop 
 
   const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, storageState: await desk.context().storageState() })).newPage()
   await phone.goto(settingsPage)
-  await phone.locator('[data-part="header"]').first().waitFor({ timeout: 10_000 })
+  await phone.locator('[data-part="header"]').filter({ visible: true }).first().waitFor({ timeout: 10_000 })
   const onPhone = await visible(phone)
 
   const missing = Object.keys(pageParts).filter(name => !seen.has(name)) as PagePart[]

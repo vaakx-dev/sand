@@ -2,7 +2,7 @@ import type { SourceInfo } from '@sand/accounts/contract'
 import { favouritesOf } from '@sand/model-picker/contract'
 import { settingMark, type SettingsItem } from '@sand/settings/contract'
 import { accountsAction } from './accounts'
-import type { Page } from './page'
+import { FAVOURITES, sourcePageId, type Page } from './page'
 import { logo, whereText } from './parts'
 
 const FAVOURITES_ITEM: SettingsItem = { id: 'favourites', label: 'Favourite models', keywords: ['star', 'starred', 'favorites'] }
@@ -22,7 +22,7 @@ const favouritesRow = (page: Page) => {
     lead: kit.starMark(true),
     title: 'Favourites',
     detail: names.length ? names.join(', ') : 'None',
-    onOpen: () => page.go({ kind: 'favourites' }),
+    onOpen: () => page.go(FAVOURITES),
   })
 }
 
@@ -34,7 +34,7 @@ const sourceRow = (page: Page, source: SourceInfo) => {
     lead: logo(kit, source.provider),
     title: source.label,
     detail: [whereText(source), countText(source)].filter(Boolean).join(' · '),
-    onOpen: () => page.go({ kind: 'source', id: source.id }),
+    onOpen: () => page.go(sourcePageId(source.id)),
   })
 }
 

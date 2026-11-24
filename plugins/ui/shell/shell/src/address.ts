@@ -1,12 +1,16 @@
+import { isRecord } from '@sand/util'
 import { addressParams, addressState, pushAddress, routeParams as params, updateAddress } from '@sand/web-client/contract'
 import type { Route } from './contract'
 
 export interface Place {
   route: Route
   depth: number
+  under?: Route
 }
 
 const depthKey = 'shellDepth'
+
+const underKey = 'shellUnder'
 
 export const sameScreen = (a: Route, b: Route) => a.kind === b.kind && a.id === b.id
 
@@ -24,8 +28,9 @@ export const nowhere: Route = { kind: '' }
 export const requestedPlace = (fallback: Route = nowhere): Place => {
   const { [params.kind]: kind, [params.id]: id, [params.tab]: tab } = addressParams()
   const [route = fallback] = routeOf({ kind, id, tab })
-  const depth = addressState()[depthKey]
-  return { route, depth: typeof depth === 'number' ? depth : 0 }
+  const { [depthKey]: depth, [underKey]: below } = addressState()
+  const [under] = isRecord(below) ? routeOf(below) : []
+  return { route, depth: typeof depth === 'number' ? depth : 0, ...(under && { under }) }
 }
 
 export const ownEntry = () => typeof addressState()[depthKey] === 'number'
@@ -41,7 +46,7 @@ export const routeLink = (route: Route) => {
   return url.href
 }
 
-const stateOf = ({ depth }: Place) => ({ [depthKey]: depth })
+const stateOf = ({ depth, under }: Place) => ({ [depthKey]: depth, [underKey]: under })
 
 export const recordPlace = (place: Place, replace: boolean) => {
   if (replace) updateAddress(urlOf(place.route), stateOf(place))

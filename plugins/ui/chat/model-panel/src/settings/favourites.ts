@@ -1,8 +1,8 @@
 import type { ModelInfo } from '@sand/accounts/contract'
 import { favouritesOf } from '@sand/model-picker/contract'
 import { derive, div, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
-import type { Page } from './page'
-import { crumb, logo } from './parts'
+import { LIST, type Page } from './page'
+import { logo } from './parts'
 import { starButton } from './star'
 
 const whereText = (model: ModelInfo) => (model.via ? `On ${model.via}` : '')
@@ -34,7 +34,7 @@ const favouriteRow = (page: Page, row: Sig<ModelInfo>, unstar: (model: ModelInfo
 }
 
 export const favouritesPage = (page: Page) => {
-  const { emptyState, rowList, settingsSection, starMark } = page.ctx.kit
+  const { emptyState, rowList, settingsSection } = page.ctx.kit
   const removed = sig(new Set<string>())
   const all = page.changes.read(() => page.ctx.models.list())
   const known = page.changes.read(() => page.ctx.models.known())
@@ -51,12 +51,11 @@ export const favouritesPage = (page: Page) => {
   }
   return div(
     { class: 'flex flex-col gap-6' },
-    crumb(page, starMark(true), 'Favourites'),
     settingsSection(
       {},
       show(
         () => known.get() && !models.get().length,
-        () => emptyState({ text: 'No favourites yet.', action: { label: 'Choose an account', run: () => page.go({ kind: 'top' }) } }),
+        () => emptyState({ text: 'No favourites yet.', action: { label: 'Choose an account', run: () => page.go(LIST) } }),
       ),
       rowList(models, model => model.id, row => favouriteRow(page, row, unstar)),
     ),

@@ -1,12 +1,12 @@
-import { div, dynamicChild, list, listen } from '@vaakx-dev/vrui'
+import { div, dynamicChild, list, listen, type Derive } from '@vaakx-dev/vrui'
 import { bar } from './bar'
 import type { Aside } from './contract'
 import { panelWidth, type Model } from './model'
 
-export const asideToggles = (model: Model) => {
+export const asideToggles = (model: Model, asides: Derive<Aside[]>) => {
   const { icon, iconButton } = model.kit
   return list(
-    model.shownAsides,
+    asides,
     spec => spec.id,
     spec => {
       const shown = () => model.asideShown(spec.get())

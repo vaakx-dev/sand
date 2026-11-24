@@ -16,6 +16,11 @@ export type Axis = 'x' | 'y'
 
 export const phoneWidth = 600
 
+export interface Frame {
+  route: Route
+  built: Built | undefined
+}
+
 export const deskWidth = 1000
 
 export const roomyMain = 912
@@ -64,10 +69,8 @@ export const shellModel = (kit: Kit) => {
   })
   const nav = navigation(kind => untrack(() => known(kind)), () => untrack(() => landing.get()))
 
-  const current = derive(() => {
-    const { route } = nav.place.get()
-    return known(route.kind) ? route : landing.get()
-  })
+  const shown = (route: Route) => (known(route.kind) ? route : landing.get())
+  const current = derive(() => shown(nav.place.get().route))
   const before = sig<Route>(nowhere)
   let last = nowhere
   effect(() => {
@@ -76,7 +79,8 @@ export const shellModel = (kit: Kit) => {
     last = now
   })
 
-  const shownAsides = derive(() => asides.items.get().filter(spec => spec.shows(current.get())))
+  const asidesOf = (route: Route) => asides.items.get().filter(spec => spec.shows(route))
+  const shownAsides = derive(() => asidesOf(current.get()))
   const openOf = (kind: AsideKind) =>
     derive(() => {
       if (phone.get()) return undefined
@@ -93,7 +97,6 @@ export const shellModel = (kit: Kit) => {
   const routeOf = (key: string) => (screenKey(current.get()) === key ? current.get() : undefined)
   const screens = screenCache(specFor, routeOf, text => kit.barTitle(text))
   const screen = () => screens.get(current.get())
-  const alive = derive(() => new Set([screenKey(current.get())]))
 
   const state = derive<ShellState>(() => {
     const size = width.get()
@@ -102,13 +105,38 @@ export const shellModel = (kit: Kit) => {
     return size < deskWidth && (openPanel.get() || built?.split) ? 'drawer' : 'wide'
   })
 
-  const backOf = (built: Built | undefined) => built?.back?.() ?? (built?.nav && state.get() === 'phone' ? nav.back : undefined)
+  const historyBack = (built: Built | undefined) => Boolean(built?.nav) && state.get() === 'phone'
+  const goBack = (route: Route) => {
+    const below = nav.under()
+    if (below && sameScreen(route, below)) nav.back()
+    else open(route, true)
+  }
+  const backOf = (built: Built | undefined) => {
+    const route = built?.back?.()
+    if (route) return () => goBack(route)
+    return historyBack(built) ? nav.back : undefined
+  }
+  const underOf = (built: Built | undefined) => {
+    const route = built?.back?.() ?? (historyBack(built) ? nav.under() : undefined)
+    return route && shown(route)
+  }
+
+  const under = derive(() => {
+    const route = phone.get() ? underOf(screen()) : undefined
+    return route && !sameScreen(route, current.get()) ? route : undefined
+  })
+  const frames = derive((): Frame[] => [under.get(), current.get()].flatMap(route => (route ? [{ route, built: screens.get(route) }] : [])))
+  const alive = derive(() => new Set(frames.get().map(({ route }) => screenKey(route))))
 
   const leaving = new Slide(0, at => {
     if (at < 1) return
     const back = backOf(screen())
-    leaving.place(0)
-    back?.()
+    if (back) back()
+    else leaving.place(0)
+  })
+  effect(() => {
+    current.get()
+    untrack(() => leaving.place(0))
   })
   const settleBack = (back: boolean) => leaving.aim(extent(back))
 
@@ -266,6 +294,7 @@ export const shellModel = (kit: Kit) => {
     current,
     screen,
     screens,
+    frames,
     alive,
     coverSlide,
     axisOf,
@@ -288,6 +317,7 @@ export const shellModel = (kit: Kit) => {
       if (closeSheet(spec)) spec.onClose?.()
     },
     shownAsides,
+    asidesOf,
     openCard,
     openPop,
     height,

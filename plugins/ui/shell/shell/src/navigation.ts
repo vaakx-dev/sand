@@ -9,16 +9,23 @@ export const navigation = (known: (kind: string) => boolean, landing: () => Rout
   if (fresh) recordPlace(place.get(), true)
 
   const go = (route: Route, replace: boolean) => {
-    const { depth } = place.get()
+    const now = place.get()
     const pushed = !replace || !ownEntry()
-    const next = { route: known(route.kind) ? route : landing(), depth: pushed ? depth + 1 : depth }
+    const under = pushed ? now.route : now.under
+    const next = { route: known(route.kind) ? route : landing(), depth: pushed ? now.depth + 1 : now.depth, ...(under && { under }) }
     recordPlace(next, replace)
     place.set(next)
+  }
+
+  const under = () => {
+    const { depth, under: below } = place.get()
+    return depth > 0 ? below : landing()
   }
 
   return {
     place,
     go,
+    under,
     back() {
       if (place.get().depth > 0) backAddress()
       else go(landing(), true)
