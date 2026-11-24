@@ -70,7 +70,7 @@ import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
 import { diffBlock } from './tools/diff-block'
 import { fold, toolBody, toolCard } from './tools/tool-card'
-import { editing, selecting } from './gesture/busy'
+import { editing, onSelection } from './gesture/busy'
 import { alongWay, direction } from './gesture/direction'
 import { fromSystemEdge } from './gesture/edge'
 import { follow } from './gesture/follow'
@@ -89,7 +89,7 @@ import { topEdge } from './scroll/edge'
 import { firstRowBelow, keepAnchor, nearEnd, toEnd } from './scroll/end'
 import { followEnd } from './scroll/follow'
 
-const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, selecting }
+const gesture = { alongWay, canScrollToward, direction, editing, follow, fromSystemEdge, onSelection }
 
 export const kit = {
   actionItem,

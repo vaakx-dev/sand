@@ -205,6 +205,25 @@ describe.each(phones)('on a $name', size => {
     expect(await cover(page, 'Fixture details')).toBe(false)
   })
 
+  test('selected text holds only the swipes that start on it', async () => {
+    const { page } = phone
+    await openPlain()
+    await scrollChat(page, 0)
+    const line = page.getByText('Line 2 of a long screen.').filter({ visible: true })
+    await line.evaluate(node => getSelection()?.selectAllChildren(node))
+    const box = (await line.boundingBox())!
+    const y = box.y + box.height / 2
+    const selected = () => page.evaluate(() => getSelection()?.toString())
+    await swipe(phone, [60, mid()], [size.width - 60, mid()])
+    expect(await drawer(page, true)).toBe(true)
+    await swipe(phone, [size.width - 40, mid()], [40, mid()], flick)
+    expect(await drawer(page, false)).toBe(false)
+    expect(await selected()).toBe('Line 2 of a long screen.')
+    await swipe(phone, [box.x + 40, y], [size.width - 30, y])
+    expect(await drawer(page)).toBe(false)
+    await page.evaluate(() => getSelection()?.removeAllRanges())
+  })
+
   test('the header button covers the chat with the details, and back or Close shows the same chat', async () => {
     const { page } = phone
     await openPlain()
