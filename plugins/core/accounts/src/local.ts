@@ -41,7 +41,7 @@ interface LocalOptions {
 export type LocalLLM = ReturnType<typeof createLocal>
 
 export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, bridges, limits }: LocalOptions) => {
-  const view = viewOf(catalog.entries)
+  const view = viewOf({ entries: catalog.entries, accounts: catalog.entries, label: accounts.planLabel })
   const signedInPlans = () => plans.list().filter(plan => accounts.signedIn(plan.id))
   const allLimits = () => Object.values(limits.all()).filter(found => accounts.signedIn(found.source))
   const firstLimits = () => signedInPlans().flatMap(plan => limits.all()[plan.id] ?? [])[0]

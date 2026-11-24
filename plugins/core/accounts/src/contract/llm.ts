@@ -122,6 +122,7 @@ export interface Limits {
 export interface LLM {
   models?(): ModelInfo[]
   find?(id: string): ModelInfo | undefined
+  missing?(id: string): Error
   sources?(): SourceInfo[]
   accounts?(): SourceInfo[]
   members?(model: string): ModelInfo[]

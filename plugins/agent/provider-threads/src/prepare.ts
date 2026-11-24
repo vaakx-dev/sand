@@ -49,6 +49,8 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
   }
   const capsOf = (model: string) => ctx.llm.caps?.(model) ?? statelessCaps()
 
+  const missing = (model: string) => (ctx.llm.find?.(model) ? undefined : (ctx.llm.missing?.(model).message ?? `${model} is not available; pick another model`))
+
   const retire = (thread: string) => {
     stores.threads.retire(thread)
     ctx.llm.release?.(thread)
@@ -110,8 +112,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
       fits: fits(roomFor(target, target.context, step.current, 'delta')),
       now: Date.now(),
     }
-    const available = !!ctx.llm.find?.(selection.model)
-    const transition = decide({ available, caps: capsOf(selection.model), selection, cwd: conversation.cwd, history }, candidate)
+    const transition = decide({ missing: missing(selection.model), caps: capsOf(selection.model), selection, cwd: conversation.cwd, history }, candidate)
     if (transition.type === 'reject') throw new Error(transition.reason)
     if (transition.type !== 'handoff') {
       if (!target) return create(step, selection)

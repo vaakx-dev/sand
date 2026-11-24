@@ -3,7 +3,7 @@ import type { Selection } from '@sand/model/contract'
 import type { ProviderThreadInfo, Transition } from './contract'
 
 export interface Target {
-  available: boolean
+  missing?: string
   caps: ProviderCapabilities
   selection: Selection
   cwd: string
@@ -43,7 +43,7 @@ const returning = ({ caps }: Target, { thread, onPath, fits, now }: Candidate) =
   onPath && thread.status !== 'uncertain' && now - thread.used < caps.cacheTtlMs && fits ? delta : full
 
 export const decide = (target: Target, candidate: Candidate | undefined): Transition => {
-  if (!target.available) return { type: 'reject', reason: `${target.selection.model} is not available; pick another model` }
+  if (target.missing) return { type: 'reject', reason: target.missing }
   if (!candidate) return target.history ? full : reuse
   if (stranded(target, candidate)) return transcript
   return candidate.last ? continuing(target, candidate) : returning(target, candidate)
