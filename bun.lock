@@ -629,6 +629,7 @@
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
         "@sand/replay": "workspace:*",
         "@sand/tools": "workspace:*",
       },

@@ -1,5 +1,6 @@
 import { startSand, type Sand } from '@sand/harness'
-import { historyRead, threadList, threadPending, threadSend, threadStart, threadUpdate, waitThread } from '@sand/orchestrator/contract'
+import { runtimeDrain } from '@sand/host-runtimes/contract'
+import { historyRead, threadList, threadPending, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -9,8 +10,8 @@ afterEach(() => sand.stop())
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
-const start = async (replies: Source['replies'], queue = false) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies }], { options: { turns: { queue } } })
+const start = async (replies: Source['replies']) => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies }])
   return { cwd: sand.home, model: 'fake/m', origin: 'cli', clientRequestId: 'first' } as const
 }
 
@@ -50,21 +51,25 @@ test('archiving a running thread stops its turn first', async () => {
   expect(sand.turns.get(sent.turn!)).toMatchObject({ status: 'interrupted' })
 })
 
-test('with queueing on, a message sent with a label waits as pending, and holding, releasing or withdrawing it is one call', async () => {
-  const base = await start([[{ type: 'hold' }]], true)
+test('a message sent to a busy thread steers it; once the turn stops before taking it, holding, releasing or withdrawing it is one call', async () => {
+  const base = await start([[{ type: 'hold' }]])
   const { thread } = await sand.ask(threadStart, { ...base, prompt: 'go' })
   const chat = sand.sessions.require(thread)
   const prompt = [{ type: 'text', text: 'and then this' }] as const
 
-  const queued = await sand.ask(threadSend, { session: thread, prompt: [...prompt], label: 'Next step', origin: 'user', clientRequestId: 'next' })
-  if (queued.disposition === 'started') throw new Error('a busy thread started a second turn')
-  const pending = queued.pending
-  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, kind: 'queue', label: 'Next step', origin: 'user', held: false })])
+  const steered = await sand.ask(threadSend, { session: thread, prompt: [...prompt], label: 'Next step', origin: 'user', clientRequestId: 'next' })
+  if (steered.disposition !== 'steered') throw new Error(`a message to a busy thread was ${steered.disposition}`)
+  const { pending } = steered
+  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, kind: 'steer', label: 'Next step', origin: 'user', held: false })])
 
-  expect(await sand.ask(threadPending, { session: thread, pending, action: 'hold' })).toBe(true)
+  sand.app.emit(runtimeDrain)
+  expect(await sand.ask(threadStop, { session: thread })).toBe(true)
+  await sand.turns.wait(steered.turn!, 'end')
   expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, held: true })])
   expect(await sand.ask(threadPending, { session: thread, pending, action: 'release' })).toBe(true)
   expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, held: false })])
+  expect(await sand.ask(threadPending, { session: thread, pending, action: 'hold' })).toBe(true)
+  expect(sand.turns.pending(chat)).toEqual([expect.objectContaining({ id: pending, held: true })])
   expect(await sand.ask(threadPending, { session: thread, pending, action: 'withdraw' })).toBe(true)
   expect(sand.turns.pending(chat)).toEqual([])
 })
