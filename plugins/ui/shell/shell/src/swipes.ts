@@ -1,92 +1,56 @@
+import type { Slide } from '@sand/ui-kit/contract'
 import type { Aside, Swipe, Way } from './contract'
 import type { Axis, Model } from './model'
 
-const projection = 180
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
-
-const passes = (px: number, velocity: number, reach: number) => px + velocity * projection > reach / 2
-
-const reachOf = (model: Model, axis: Axis) => (axis === 'y' ? model.height.get() : model.width.get())
-
-const pullSwipe = (model: Model, spec: Aside): Swipe => {
-  const reach = reachOf(model, model.axisOf(spec))
-  let px = 0
-  return {
-    move(delta) {
-      px = clamp(-delta, 0, reach)
-      model.pull.set({ id: spec.id, px, held: true })
-    },
-    end(velocity) {
-      model.pull.set(undefined)
-      if (px > 0 && passes(px, -velocity, reach)) model.showAside(spec.id, true)
-    },
-  }
+interface Track {
+  slide: Slide
+  reachPx: number
+  opening: 1 | -1
+  settle(open: boolean): void
 }
 
-const dismissSwipe = (model: Model, spec: Aside): Swipe => {
-  const reach = reachOf(model, model.axisOf(spec))
-  let px = reach
-  return {
-    move(delta) {
-      px = clamp(reach - delta, 0, reach)
-      model.pull.set({ id: spec.id, px, held: true })
-    },
-    end(velocity) {
-      model.pull.set(undefined)
-      if (px < reach && passes(reach - px, velocity, reach)) model.showAside(spec.id, false)
-    },
-  }
-}
-
-const drawerSwipe = (model: Model): Swipe => {
-  const reach = model.drawerReach.get()
-  const from = model.drawerOpen.get() ? reach : 0
-  let px = from
-  return {
-    move(delta) {
-      px = clamp(from + delta, 0, reach)
-      model.drawerDrag.set(px)
-    },
-    end(velocity) {
-      model.drawerDrag.set(undefined)
-      model.setDrawer(passes(px, velocity, reach))
-    },
-  }
-}
-
-const backSwipe = (model: Model, back: () => void): Swipe => {
-  const reach = model.width.get()
-  let px = 0
-  return {
-    move(delta) {
-      px = clamp(delta, 0, reach)
-      model.backDrag.set(px)
-    },
-    end(velocity) {
-      model.backDrag.set(undefined)
-      if (passes(px, velocity, reach)) back()
-    },
-  }
-}
-
-export const backOffset = (model: Model) => {
-  const px = model.backDrag.get()
-  return px === undefined ? null : { translate: `${px}px 0` }
-}
-
-const rightSwipe = (model: Model) => {
-  const back = model.backOf(model.screen())
-  return back ? backSwipe(model, back) : drawerSwipe(model)
-}
+const PROJECTION_MS = 180
 
 const dismissWay: Record<Axis, Way> = { x: 'right', y: 'down' }
 
-const pullTo = (model: Model, spec: Aside | undefined) => spec && pullSwipe(model, spec)
+const opens = (at: number, velocity: number) => at + velocity * PROJECTION_MS > 0.5
+
+const slideSwipe = ({ slide, reachPx, opening, settle }: Track): Swipe => {
+  const from = slide.at()
+  slide.hold(from)
+  return {
+    move: delta => slide.hold(from + (opening * delta) / reachPx),
+    end(velocity) {
+      const speed = (opening * velocity) / reachPx
+      slide.release(speed)
+      settle(opens(slide.at(), speed))
+    },
+  }
+}
+
+const drawerSwipe = (model: Model) => slideSwipe({ slide: model.drawer, reachPx: model.drawerReach.get(), opening: 1, settle: model.setDrawer })
+
+const backSwipe = (model: Model) => slideSwipe({ slide: model.leaving, reachPx: model.width.get(), opening: 1, settle: model.settleBack })
+
+const rightSwipe = (model: Model) => (model.backOf(model.screen()) ? backSwipe(model) : drawerSwipe(model))
+
+const reachOf = (model: Model, axis: Axis) => (axis === 'y' ? model.height.get() : model.width.get())
+
+const coverSwipe = (model: Model, spec: Aside) =>
+  slideSwipe({
+    slide: model.coverSlide(spec.id),
+    reachPx: reachOf(model, model.axisOf(spec)),
+    opening: -1,
+    settle: open => {
+      if (open !== model.asideShown(spec)) model.showAside(spec.id, open)
+    },
+  })
+
+const coverTo = (model: Model, spec: Aside | undefined) => spec && coverSwipe(model, spec)
 
 const coveredSwipe = (model: Model, cover: Aside, way: Way) => {
-  if (way === dismissWay[model.axisOf(cover)]) return dismissSwipe(model, cover)
-  return way === 'left' ? pullTo(model, model.nextRight()) : undefined
+  if (way === dismissWay[model.axisOf(cover)]) return coverSwipe(model, cover)
+  return way === 'left' ? coverTo(model, model.nextRight()) : undefined
 }
 
 const openingSwipe = (model: Model, way: Way) => {
@@ -94,15 +58,18 @@ const openingSwipe = (model: Model, way: Way) => {
     case 'right':
       return rightSwipe(model)
     case 'left':
-      return pullTo(model, model.nextRight())
+      return coverTo(model, model.nextRight())
     case 'up':
     case 'down':
       return undefined
   }
 }
 
+const sideways = (way: Way) => way === 'left' || way === 'right'
+
 const phoneSwipe = (model: Model, way: Way) => {
   if (model.drawerOpen.get()) return way === 'left' ? drawerSwipe(model) : undefined
+  if (model.leaving.at() > 0) return sideways(way) ? backSwipe(model) : undefined
   const cover = model.coverAside.get()
   return cover ? coveredSwipe(model, cover, way) : openingSwipe(model, way)
 }
@@ -110,7 +77,7 @@ const phoneSwipe = (model: Model, way: Way) => {
 export const edgeSwipe = (model: Model, way: Way): Swipe | undefined => {
   if (model.sheetsShown.get().length) return undefined
   const state = model.state.get()
-  if (state === 'drawer') return way === 'left' || way === 'right' ? drawerSwipe(model) : undefined
+  if (state === 'drawer') return sideways(way) ? drawerSwipe(model) : undefined
   if (state !== 'phone') return undefined
   return phoneSwipe(model, way)
 }

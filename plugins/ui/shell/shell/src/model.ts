@@ -1,4 +1,4 @@
-import type { Kit } from '@sand/ui-kit/contract'
+import { Slide, type Kit } from '@sand/ui-kit/contract'
 import { addressLayer, addressSettled, leaveLayer, pushLayer } from '@sand/web-client/contract'
 import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import { nowhere, sameScreen, screenKey } from './address'
@@ -13,12 +13,6 @@ export interface Placed {
 }
 
 export type Axis = 'x' | 'y'
-
-export interface Pull {
-  id: string
-  px: number
-  held: boolean
-}
 
 export const phoneWidth = 600
 
@@ -35,6 +29,8 @@ export const cardHeight = 360
 const layers = { drawer: 'drawer', sheet: 'sheet', aside: 'aside:' } as const
 
 const coverJoin = ' '
+
+const extent = (open: boolean) => (open ? 1 : 0)
 
 export const shellModel = (kit: Kit) => {
   const navs = registry<NavItem>()
@@ -55,9 +51,6 @@ export const shellModel = (kit: Kit) => {
     panel: stored<string | null>('sand.shell.panel', ''),
     drawer: stored<string | null>('sand.shell.drawer', ''),
   }
-  const drawerDrag = sig<number | undefined>(undefined)
-  const backDrag = sig<number | undefined>(undefined)
-  const pull = sig<Pull | undefined>(undefined)
   const lastChat = stored<Route | null>('sand.shell.last-chat', null)
 
   const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
@@ -110,6 +103,14 @@ export const shellModel = (kit: Kit) => {
   })
 
   const backOf = (built: Built | undefined) => built?.back?.() ?? (built?.nav && state.get() === 'phone' ? nav.back : undefined)
+
+  const leaving = new Slide(0, at => {
+    if (at < 1) return
+    const back = backOf(screen())
+    leaving.place(0)
+    back?.()
+  })
+  const settleBack = (back: boolean) => leaving.aim(extent(back))
 
   const dropSheets = () => {
     const dropped = sheets.get()
@@ -175,6 +176,34 @@ export const shellModel = (kit: Kit) => {
   const coverAside = derive(() => shownAsides.get().find(spec => spec.id === coverId.get()))
   const covered = derive(() => drawerOpen.get() || Boolean(coverAside.get()))
 
+  const drawer = new Slide(extent(untrack(() => drawerOpen.get())))
+  const drawerShown = derive(() => drawer.at() > 0)
+  effect(() => {
+    const target = extent(drawerOpen.get())
+    untrack(() => drawer.aim(target))
+  })
+
+  const coverSlides = new Map<string, Slide>()
+  const coverSlide = (id: string) => {
+    const found = coverSlides.get(id)
+    if (found) return found
+    const made = new Slide(0)
+    coverSlides.set(id, made)
+    return made
+  }
+  const sliding = (stack: Aside[]) => (spec: Aside) => !stack.includes(spec) && coverSlide(spec.id).at() > 0
+  const covers = derive(() => {
+    const stack = coverStack.get()
+    return [...stack, ...shownAsides.get().filter(sliding(stack))]
+  })
+  effect(() => {
+    const ids = coverIds.get()
+    untrack(() => {
+      for (const id of ids) coverSlide(id)
+      for (const [id, slide] of coverSlides) slide.aim(extent(ids.includes(id)))
+    })
+  })
+
   const asideShown = (spec: Aside) => {
     if (phone.get()) return coverId.get() === spec.id
     return (spec.kind === 'card' && !floats.get() ? openPop : opened[spec.kind]).get()?.id === spec.id
@@ -238,16 +267,18 @@ export const shellModel = (kit: Kit) => {
     screen,
     screens,
     alive,
-    pull,
+    coverSlide,
     axisOf,
     nextRight,
     coverAside,
-    coverStack,
+    covers,
     covered,
     drawerReach,
-    drawerDrag,
+    drawer,
+    drawerShown,
     drawerOpen,
-    backDrag,
+    leaving,
+    settleBack,
     backOf,
     setDrawer,
     sheetsShown,

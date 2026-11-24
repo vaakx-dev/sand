@@ -52,7 +52,6 @@ export const idleSettings = (ctx: SettingsContext) => {
     found?.page({
       id: 'compaction',
       label: 'Compaction',
-      intro: 'When chats summarize their history to free up context.',
       icon: 'archive',
       group: 'agents',
       order: 25,

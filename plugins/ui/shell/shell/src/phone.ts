@@ -4,14 +4,13 @@ import { dismissDrawer, scrim } from './drawer'
 import { phoneFrame } from './frames'
 import type { Model } from './model'
 import { phoneSidebar } from './sidebar'
-import { backOffset } from './swipes'
 
 export const phoneView = (model: Model) => {
   const screen = derive(model.screen)
   const view = div(
     { class: 'relative flex min-h-0 min-w-0 flex-1 flex-col', style: { overflow: 'clip' } },
     div(
-      { class: 'isolate flex min-h-0 min-w-0 flex-1 flex-col', inert: () => model.covered.get(), style: () => backOffset(model) },
+      { class: 'isolate flex min-h-0 min-w-0 flex-1 flex-col', inert: () => model.covered.get(), style: () => ({ translate: `${model.leaving.at() * 100}% 0` }) },
       dynamicChild(screen, built => phoneFrame(model, built)),
     ),
     asideCovers(model),
