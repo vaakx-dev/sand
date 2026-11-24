@@ -7,6 +7,7 @@ import { mergeSummaries } from './data/merge'
 import { mergeHistory } from './data/merge/groups'
 import { normaliseHistory } from './data/normalise'
 import { gaugesOf } from './data/gauges'
+import { limitsOutdated } from './data/outdated'
 import { plansOf } from './data/pool'
 import { priceLoader, unpricedModels } from './data/prices'
 import { repricedSummary } from './data/reprice'
@@ -27,9 +28,6 @@ export interface Notice {
   failure: string
 }
 
-const stale = 60_000
-
-const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export const usageModel = (deps: UsageDeps) => {
   const { range, origin, pc, forecast } = usagePrefs()
@@ -138,9 +136,13 @@ export const usageModel = (deps: UsageDeps) => {
     history.refresh()
   }
 
+  const checkOutdated = () => {
+    if (limitsOutdated({ limits: deps.limits(), sources: deps.sources(), now: Date.now() })) checkWith()
+  }
+
   const homeOnline = derive(() => !!home.get()?.online)
   effect(() => {
-    if (homeOnline.get() && outdated(untrack(deps.limits))) untrack(() => checkWith())
+    if (homeOnline.get()) untrack(checkOutdated)
   })
 
   return {

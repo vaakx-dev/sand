@@ -92,11 +92,9 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
     return found.flat()
   }
 
-  const checkUsage = async () => {
-    for (const plan of signedInPlans()) {
-      const found = await planUsage(plan.id)
-      if (found) limits.save(plan.id, found)
-    }
+  const checkUsage = async (id: string) => {
+    const found = await planUsage(id)
+    if (found) limits.save(id, found)
   }
 
   return {
@@ -125,7 +123,7 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),
     async refreshLimits() {
       await accounts.ready
-      await checkUsage()
+      await Promise.allSettled(signedInPlans().map(plan => checkUsage(plan.id)))
       return firstLimits()
     },
   }
