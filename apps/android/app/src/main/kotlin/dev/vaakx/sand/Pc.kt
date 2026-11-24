@@ -15,6 +15,7 @@ private const val ROUTES = "routes"
 private const val KEY = "key"
 private const val PROBE_TIMEOUT_MS = 2_500
 private const val NONCE_BYTES = 18
+private const val APP_PROTOCOL = 1
 
 private fun decode(text: String) = Base64.decode(text, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
 
@@ -45,6 +46,8 @@ private fun identity(route: String, clientNonce: String): JSONObject? = try {
 class Pc(context: Context) {
     private val prefs = context.getSharedPreferences("pc", Context.MODE_PRIVATE)
     @Volatile private var serving: String? = null
+    @Volatile var outdated = false
+        private set
 
     fun routes(): List<String> {
         val saved = JSONArray(prefs.getString(ROUTES, "[]"))
@@ -78,6 +81,7 @@ class Pc(context: Context) {
         if (pinned != null && pinned != key) return false
         if (!signed(reply, clientNonce)) return false
         if (pinned == null) prefs.edit { putString(KEY, key) }
+        outdated = reply.optInt("appProtocol") < APP_PROTOCOL
         return true
     }
 }

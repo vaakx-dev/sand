@@ -24,7 +24,7 @@
     [hidden] { display: none }
   </style>
 </head>
-<body>
+<body data-state="{{state}}">
   <main>
     <h1 id="title">Pair this phone</h1>
     <p id="intro">On your PC, open sand and go to Devices, then Add a phone or browser. Scan the code it shows.</p>
@@ -47,9 +47,14 @@
       }
     }
 
-    if (location.pathname !== '/~app/setup.html') {
-      document.getElementById('title').textContent = 'Can’t reach your PC'
-      document.getElementById('intro').textContent = 'Check that sand is running on your PC, and that this phone is on your home wifi or Tailscale. Or pair it again.'
+    const problems = {
+      unreachable: ['Can’t reach your PC', 'Check that sand is running on your PC, and that this phone is on your home wifi or Tailscale. Or pair it again.'],
+      outdated: ['Update sand on your PC', 'This app needs a newer sand on your PC. Update sand there, then try again.'],
+    }
+    const problem = problems[document.body.dataset.state]
+    if (problem) {
+      document.getElementById('title').textContent = problem[0]
+      document.getElementById('intro').textContent = problem[1]
       document.getElementById('retry').hidden = false
       document.getElementById('scan').className = 'quiet'
     }

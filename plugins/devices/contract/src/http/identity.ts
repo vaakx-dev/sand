@@ -4,6 +4,7 @@ export interface IdentityReply extends PcIdentity {
   nonce: string
   signature: string
   signedSocket?: boolean
+  appProtocol?: number
 }
 
 export interface Resume {

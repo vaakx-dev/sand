@@ -12,7 +12,7 @@ private const val CONNECT_TIMEOUT_MS = 4_000
 private const val READ_TIMEOUT_MS = 60_000
 private const val SETUP_FILE = "setup.html"
 private const val SETUP_PATH = "/~app/$SETUP_FILE"
-private const val UNREACHABLE = 503
+private const val STATE_SLOT = "{{state}}"
 private val DROPPED_HEADERS = setOf("content-encoding", "content-length", "transfer-encoding", "connection")
 private val CHARSET = Regex("charset=([^;\\s]+)", RegexOption.IGNORE_CASE)
 
@@ -38,15 +38,26 @@ private fun fetch(route: String, path: String, headers: Map<String, String>): We
     null
 }
 
+private enum class Setup(val status: Int) {
+    PAIR(200),
+    UNREACHABLE(503),
+    OUTDATED(426),
+}
+
 class Proxy(private val pc: Pc, private val assets: AssetManager) {
+    private val setupPage by lazy { assets.open(SETUP_FILE).bufferedReader().use { it.readText() } }
+
     fun response(request: WebResourceRequest): WebResourceResponse? {
         val url = request.url
         if (url.scheme != "https" || url.host != PAGE_HOST || request.method != "GET") return null
         val path = url.encodedPath ?: "/"
-        if (path == SETUP_PATH) return setup(200)
+        if (path == SETUP_PATH) return setup(Setup.PAIR)
+        if (outdatedPage(request)) return setup(Setup.OUTDATED)
         val target = path + (url.encodedQuery?.let { "?$it" } ?: "")
         return fromPc(target, request.requestHeaders) ?: unreachable(request)
     }
+
+    private fun outdatedPage(request: WebResourceRequest) = request.isForMainFrame && pc.serving() != null && pc.outdated
 
     private fun fromPc(path: String, headers: Map<String, String>): WebResourceResponse? {
         val first = pc.serving() ?: return null
@@ -56,10 +67,12 @@ class Proxy(private val pc: Pc, private val assets: AssetManager) {
     }
 
     private fun unreachable(request: WebResourceRequest) =
-        if (request.isForMainFrame) setup(UNREACHABLE) else WebResourceResponse("text/plain", "utf-8", UNREACHABLE, "Unreachable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+        if (request.isForMainFrame) setup(Setup.UNREACHABLE) else WebResourceResponse("text/plain", "utf-8", Setup.UNREACHABLE.status, "Unreachable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
 
-    private fun setup(status: Int) =
-        WebResourceResponse("text/html", "utf-8", status, reason(status, null), mapOf("cache-control" to "no-store"), assets.open(SETUP_FILE))
+    private fun setup(state: Setup): WebResourceResponse {
+        val page = setupPage.replace(STATE_SLOT, state.name.lowercase()).toByteArray()
+        return WebResourceResponse("text/html", "utf-8", state.status, reason(state.status, null), mapOf("cache-control" to "no-store"), ByteArrayInputStream(page))
+    }
 }
 
 const val PAGE_HOST = "sand.localhost"

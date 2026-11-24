@@ -15,6 +15,8 @@ interface AndroidApp {
   on(listener: (reply: AppReply) => void): Dispose
 }
 
+const appProtocol = 1
+
 const appStartSchema = lazy(() => z.object({ routes: z.array(z.url({ protocol: /^https?$/ })).min(1), push: z.boolean() }))
 
 const appReplySchema = lazy(() =>
@@ -27,4 +29,4 @@ const appReplySchema = lazy(() =>
 
 const androidApp = service<AndroidApp>('androidApp')
 
-export { androidApp, type AndroidApp, type AppMessage, type AppReply, appReplySchema, appStartSchema }
+export { androidApp, type AndroidApp, type AppMessage, appProtocol, type AppReply, appReplySchema, appStartSchema }
