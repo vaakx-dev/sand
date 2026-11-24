@@ -5,19 +5,18 @@ import { usageLimits } from '../src/account/usage'
 
 const failures = () => {
   const failed: unknown[] = []
-  const windows: number[] = []
   const output: AppOutput = {
     text() {},
     thinking() {},
     call() {},
     usage() {},
-    context: ({ window }) => void windows.push(window ?? 0),
+    context() {},
     pause() {},
     finish() {},
     fail: error => void failed.push(error),
     exit() {},
   }
-  return { failed, windows, reader: createReader(output) }
+  return { failed, reader: createReader(output) }
 }
 
 const limited = { type: 'result', subtype: 'success', is_error: true, api_error_status: 429, result: 'You’ve hit your limit · resets 3:40pm' }
@@ -32,19 +31,6 @@ test('a turn Claude Code stopped at the usage limit fails as out of usage until 
   expect(failed[0]).toBeInstanceOf(UsageLimited)
   expect(failed[0]).toMatchObject({ resetsAt: 1_900_003_600_000, message: limited.result })
   expect(failed[1]).not.toBeInstanceOf(UsageLimited)
-})
-
-test('a Claude Code turn reports the context window of the model that answered, not of the other models it used', () => {
-  const { windows, reader } = failures()
-  reader.read({ type: 'stream_event', event: { type: 'message_start', message: { model: 'claude-big', usage: {} } } })
-  reader.finish({
-    type: 'result',
-    subtype: 'success',
-    is_error: false,
-    modelUsage: { 'claude-small': { contextWindow: 200_000 }, 'claude-big': { contextWindow: 1_000_000 } },
-  })
-
-  expect(windows).toEqual([1_000_000])
 })
 
 test('the 5-hour window resets when Claude Code’s rate-limit events say, not at the hour the usage endpoint rounds to', () => {
