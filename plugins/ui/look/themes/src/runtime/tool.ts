@@ -25,6 +25,7 @@ const shown = ({ theme, trial }: ThemeState) => ({
   ...(trial && { trial: { goesBackTo: themeName(trial.previous), at: new Date(trial.until).toISOString() } }),
   scenes: scenesGuide,
   css: cssGuide,
+  ifThePageIsHidden: 'Open sand with ?theme=off at the end of its address, or run sand theme reset',
 })
 
 const readability = (theme: Theme) =>
