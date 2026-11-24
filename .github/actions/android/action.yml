@@ -23,6 +23,9 @@ runs:
         distribution: temurin
         java-version: 21
         cache: gradle
+        cache-dependency-path: |
+          apps/android/**/*.gradle*
+          apps/android/**/gradle-wrapper.properties
     - name: Build and sign the APK
       shell: bash
       working-directory: apps/android
