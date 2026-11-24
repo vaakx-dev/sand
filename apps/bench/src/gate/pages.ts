@@ -14,7 +14,7 @@ const SCREENS: Screen[] = [
   { name: 'Settings', route: { kind: 'settings' }, shows: 'Accounts and devices' },
   { name: 'Add-ons', route: { kind: 'settings', id: 'features' }, shows: 'Installed' },
   { name: 'Usage', route: { kind: 'usage' }, shows: 'Spend' },
-  { name: 'Search', shows: 'New bot…' },
+  { name: 'Search', shows: 'Tutor 1' },
   { name: 'Performance', route: { kind: 'usage', id: 'performance' }, shows: 'Memory used' },
 ]
 
