@@ -12,12 +12,6 @@ export interface Place {
 
 export const modeLabels: Record<Mode, string> = { off: 'Off', ask: 'Ask', auto: 'Auto' }
 
-export const modeDetails: Record<Mode, string> = {
-  off: 'Every call runs, as it does today',
-  ask: 'Asks you before commands, sends, spending, deleting and files outside the folder',
-  auto: 'A mid-size model decides what would have asked you; it asks you after 3 blocks in a row',
-}
-
 export const createModeState = (wire: Wire, place: () => Place | undefined, report: (error: unknown) => void) => {
   const state = sig<ModeState | undefined>(undefined)
   const load = () => {

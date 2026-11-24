@@ -6,7 +6,7 @@ import { kit } from '@sand/ui-kit/contract'
 import { definePlugin } from 'drydock'
 import { micButton } from './mic'
 import { voiceModel } from './model'
-import { voicePage } from './settings/page'
+import { voiceItems, voicePage } from './settings/page'
 
 const PAGE = 'voice'
 
@@ -23,10 +23,10 @@ export default definePlugin({
       found?.page({
         id: PAGE,
         label: 'Voice',
-        intro: 'Speak instead of typing. What you say lands in your message, ready to edit and send.',
         icon: 'mic',
-        group: 'app',
-        order: 15,
+        group: 'everyday',
+        order: 30,
+        items: voiceItems,
         render: () => voicePage(ctx.kit, model, () => ctx.get(settings)?.open('accounts')),
       }),
     )

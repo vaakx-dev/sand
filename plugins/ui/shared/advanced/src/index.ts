@@ -1,9 +1,11 @@
-import { settings } from '@sand/settings/contract'
+import { settingMark, settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { advanced } from './contract'
 import { readStored, writeStored } from './integrations/stored'
+
+const item = { id: 'advanced', label: 'Advanced controls', keywords: ['bot computer', 'monthly limit', 'expert'] }
 
 export default definePlugin({
   name: 'advanced',
@@ -20,12 +22,12 @@ export default definePlugin({
       return settingsSection(
         {},
         settingsRow(
-          { title: 'Advanced controls', detail: "Show a bot's computer and monthly limit in its profile" },
-          toggleSwitch({ on, 'aria-label': 'Advanced controls', onClick: () => set(!on.get()) }),
+          { ...settingMark(item.id), title: item.label },
+          toggleSwitch({ on, 'aria-label': item.label, onClick: () => set(!on.get()) }),
         ),
       )
     }
     ctx.provide(advanced, { on: () => on.get(), set })
-    ctx.watch(settings, found => found?.section({ page: 'features-core', id: 'advanced', order: 10, render: row }))
+    ctx.watch(settings, found => found?.section({ page: 'features-core', id: 'advanced', order: 10, items: [item], render: row }))
   },
 })

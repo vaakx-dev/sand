@@ -1,4 +1,5 @@
 import type { PcView } from '@sand/devices-contract'
+import { settingMark } from '@sand/settings/contract'
 import { derive, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { Ui } from '../../ui'
 import { installRow, waitingRow } from './install-row'
@@ -13,7 +14,7 @@ export const pcsSection = (ui: Ui) => {
   const running = derive(() => data.installs.running(data.now.get()))
   const waiting = derive(() => data.installs.waiting(data.now.get()))
   return settingsSection(
-    { title: 'PCs', action: show(ui.several, () => quietButton({ size: 'sm', 'aria-label': 'Add a PC', onClick: () => ui.open.add('list') }, icon('plus', 'sm'), 'Add')) },
+    { ...settingMark('pcs'), title: 'PCs', action: show(ui.several, () => quietButton({ size: 'sm', 'aria-label': 'Add a PC', onClick: () => ui.open.add('list') }, icon('plus', 'sm'), 'Add')) },
     rowList(pcs, pc => `${pc.id} ${whyLook(pc) ?? ''}`, view => pcRow(ui, view)),
     rowList(running, entry => entry.install, entry => installRow(ui, entry)),
     rowList(waiting, grant => grant.id, grant => waitingRow(ui, grant)),

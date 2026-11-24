@@ -1,4 +1,5 @@
 import type { DeviceRecord } from '@sand/devices-contract'
+import { settingMark } from '@sand/settings/contract'
 import { derive, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { Ui } from '../../ui'
 import { phoneRow } from './row'
@@ -15,7 +16,7 @@ export const phonesSection = (ui: Ui) => {
       .sort(selfFirst(ui.ctx.pcs.self())),
   )
   return settingsSection(
-    { title: 'Phones and browsers', action: quietButton({ size: 'sm', 'aria-label': 'Add a phone or browser', onClick: () => ui.open.add('phone') }, icon('plus', 'sm'), 'Add') },
+    { ...settingMark('phones'), title: 'Phones and browsers', action: quietButton({ size: 'sm', 'aria-label': 'Add a phone or browser', onClick: () => ui.open.add('phone') }, icon('plus', 'sm'), 'Add') },
     show(
       () => !devices.records.loaded.get() && !devices.records.error.get(),
       () => loadingState({ flush: true }),

@@ -10,7 +10,7 @@ import { definePlugin } from 'drydock'
 import { helloMomentsOff, helloPushKey, notifyMomentsOff, notifyNotice } from '../contract'
 import { onNoticeOpen, permission, showNotice, webPush } from './browser'
 import { pushChannel } from './channel'
-import { notificationsPage } from './page'
+import { notificationsPage, notifyItems } from './page'
 
 export default definePlugin({
   name: 'devices-notify',
@@ -34,7 +34,7 @@ export default definePlugin({
     const app = ctx.get(androidApp)
     const channel = pushChannel(app)
     const page = { kit: ctx.kit, wire: ctx.wire, toasts: toastsOf(ctx), on, key, off, channel, device: () => record()?.name ?? 'This device' }
-    ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', intro: 'When sand tells you that something needs you, and on which devices.', icon: 'bell', group: 'accounts', order: 26, render: () => notificationsPage(page) }))
+    ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', icon: 'bell', group: 'everyday', order: 20, items: notifyItems, render: () => notificationsPage(page) }))
 
     if (app || webPush.support() !== 'ready') return
     const shows = () => on.get() && document.visibilityState === 'hidden' && permission() === 'granted'

@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { dynamicChild, type Sig } from '@vaakx-dev/vrui'
 import { actionButton, fleetAction, pcActionKind } from '../actions'
@@ -5,6 +6,8 @@ import type { Fleet, PcView } from '../fleet/model'
 import { channelNames, versionText } from '../fleet/text'
 import { pcStatusLine } from '../pc-line'
 import { pcMenu } from './pc-menu'
+
+export const pcsItem = { id: 'pcs', label: 'PCs', keywords: ['devices', 'versions', 'update all'] }
 
 const channelButton = (kit: Kit, fleet: Fleet) => {
   const { secondaryAction } = kit
@@ -37,5 +40,5 @@ const pcRow = (kit: Kit, row: Sig<PcView>, fleet: Fleet) => {
 
 export const pcsSection = (kit: Kit, fleet: Fleet) => {
   const { rowList, settingsSection } = kit
-  return settingsSection({ title: 'PCs' }, rowList(fleet.pcs, pc => pc.key, row => pcRow(kit, row, fleet)))
+  return settingsSection({ ...settingMark(pcsItem.id), title: pcsItem.label }, rowList(fleet.pcs, pc => pc.key, row => pcRow(kit, row, fleet)))
 }

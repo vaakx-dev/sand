@@ -32,8 +32,7 @@ const cloudForm = (kit: Kit, model: VoiceModel, { saved, accounts }: CloudLinks)
   const noKey = () =>
     kit.banner({
       tone: 'warning',
-      title: 'Add an OpenAI API key in Settings › Accounts first',
-      detail: 'Voice uses the key and address you saved there. Give it the address of another OpenAI-style service, like Groq, to use that service instead.',
+      title: 'Add an OpenAI key in Accounts first',
       actions: [kit.secondaryAction({ onClick: accounts }, 'Open Accounts')],
     })
 
@@ -43,7 +42,7 @@ const cloudForm = (kit: Kit, model: VoiceModel, { saved, accounts }: CloudLinks)
       kit.field({ label: 'Model' }, kit.textInput({ bindValue: name, placeholder: 'gpt-4o-mini-transcribe', onKeyDown: keys({ Enter: () => void save() }) })),
       kit.errorText(() => error.get()),
       div({ class: 'flex' }, kit.primaryAction({ disabled: () => !ready(), onClick: () => void save() }, 'Save and use')),
-      kit.secondaryText(`Each recording goes to ${address} when you stop speaking, with the OpenAI key from Accounts, and is billed to that account.`),
+      kit.secondaryText(`Sends to ${address}`),
     )
 
   return kit.pageSection({ title: 'Cloud service' }, dynamicChild(url, address => (address ? form(address) : noKey())))

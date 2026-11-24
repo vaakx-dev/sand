@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Login, LoginsState } from '../../contract'
@@ -17,13 +18,6 @@ const summaryOf = (login: Login) => {
   return [login.site ?? 'Key', `in ${placeOf(login.source)}`, users || 'No one can use it yet', login.ask ? 'asks every time' : ''].filter(Boolean).join(' · ')
 }
 
-export const storageNote = ({ sheetText }: Kit, state: Sig<LoginsState | undefined>) =>
-  sheetText(() =>
-    state.get()?.keychain
-      ? 'Logins saved in sand are kept encrypted, with the key in the system keychain. Saved values are never shown again, only replaced.'
-      : 'Logins saved in sand are kept encrypted, with the key in a key file in the sand home. Saved values are never shown again, only replaced.',
-  )
-
 const loginRow = ({ icon, settingsRow }: Kit, login: Sig<Login>, open: (id: string) => void) =>
   settingsRow({
     lead: span({ class: 'inline-flex text-neutral-400' }, icon(kindIcons[login.get().kind], 'md')),
@@ -38,7 +32,7 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
   return div(
     { class: 'contents' },
     settingsSection(
-      { title: 'Saved' },
+      { ...settingMark('saved'), title: 'Saved' },
       rowList(
         logins,
         login => login.id,
@@ -51,7 +45,6 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
     ),
     addSection(kit, parts),
     managersSection(kit, parts.model),
-    storageNote(kit, state),
   )
 }
 

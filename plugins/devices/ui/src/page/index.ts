@@ -12,5 +12,13 @@ const devicesPage = (ui: Ui) => {
   return div({ class: 'flex flex-col gap-6' }, requestsSection(ui), pcsSection(ui), phonesSection(ui), agentsSection(ui), ...thisPcSections(ui))
 }
 
+const items = [
+  { id: 'pcs', label: 'PCs', keywords: ['computer', 'laptop', 'add a PC', 'install'] },
+  { id: 'phones', label: 'Phones and browsers', keywords: ['pair phone', 'add a phone', 'mobile', 'QR code', 'browser'] },
+  { id: 'agents', label: 'Agents', keywords: ['add an agent', 'outside agent', 'external agent'] },
+  { id: 'tailscale', label: 'Tailscale', keywords: ['reach from anywhere', 'remote access', 'HTTPS', 'address for phones'] },
+  { id: 'network', label: 'Open to your network', keywords: ['LAN', 'wifi', 'local network'] },
+]
+
 export const devicesSettings = (ui: Ui) =>
-  ui.ctx.watch(settings, found => found?.page({ id: 'devices', label: 'Devices', intro: 'Your PCs and phones, and how they reach each other.', icon: 'laptop', group: 'accounts', order: 27, dot: () => ui.data.requests.live(Date.now()).length > 0, render: () => devicesPage(ui) }))
+  ui.ctx.watch(settings, found => found?.page({ id: 'devices', label: 'Devices', icon: 'laptop', group: 'accounts', order: 27, items, dot: () => ui.data.requests.live(Date.now()).length > 0, render: () => devicesPage(ui) }))

@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, show, span } from '@vaakx-dev/vrui'
+import { show, span } from '@vaakx-dev/vrui'
 import type { Feature, FeatureChoice } from '../contract'
 import type { FeatureStore } from './store'
 
@@ -52,7 +52,6 @@ const status = (choice: FeatureChoice, feature: Feature) => {
   return feature.usedBy.length ? `Used by ${listed(labels(features, feature.usedBy))}` : 'Not used, so not loaded'
 }
 
-const detail = (summary: string, line: string) => (line ? [div(summary), div(line)] : summary)
 const busy = (store: FeatureStore) => Boolean(store.applying.get())
 
 const working = (kit: Kit, store: FeatureStore, id: string) => show(() => id in (store.applying.get() ?? {}), () => kit.spinner())
@@ -72,10 +71,9 @@ const featureSwitch = (kit: Kit, store: FeatureStore, { features }: FeatureChoic
 
 const row = (kit: Kit, store: FeatureStore, choice: FeatureChoice, { feature, depth }: Placed) =>
   kit.settingsRow(
-    { title: feature.label, detail: detail(feature.summary, status(choice, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
+    { title: feature.label, detail: status(choice, feature), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
     working(kit, store, feature.id),
     featureSwitch(kit, store, choice, feature),
   )
 
-
-export { busy, detail, featureSwitch, row, status, tree, working, type Placed }
+export { busy, featureSwitch, row, status, tree, working, type Placed }

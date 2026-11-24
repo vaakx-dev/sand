@@ -4,6 +4,7 @@ import { metaLook, rowNameLook } from '../heads/text'
 import { opensMark } from '../marks/marks'
 import { banner } from '../notes/banner'
 import { surfaceFill } from '../surface'
+import { resetButton, type Reset } from './reset'
 
 const rowShell = 'py-3'
 
@@ -11,13 +12,20 @@ export type SettingsRowProps = Omit<Props<HTMLDivElement>, 'title'> & {
   title: Child
   detail?: Child
   lead?: Child
+  reset?: Reset
   onOpen?: () => void
 }
 
-const rowLabel = (title: Child, detail?: Child) =>
+interface LabelParts {
+  title: Child
+  detail?: Child
+  reset?: Reset
+}
+
+const rowLabel = ({ title, detail, reset }: LabelParts) =>
   div(
     { class: 'flex min-w-24 flex-1 flex-col gap-px' },
-    div({ class: ['min-w-0', rowNameLook] }, title),
+    div({ class: 'flex min-w-0 items-center gap-1' }, div({ class: ['min-w-0', rowNameLook] }, title), reset ? resetButton(reset) : null),
     detail ? div({ class: metaLook }, detail) : null,
   )
 
@@ -26,9 +34,9 @@ const openerHover = surfaceFill('page').hover
 const opener = (onOpen: () => void, label: HTMLElement) =>
   rowButton({ class: ['-mx-2 -my-1.5 flex-1 gap-3 rounded-md px-2 py-1.5 transition-colors', openerHover], onClick: onOpen }, label, opensMark())
 
-export const settingsRow = ({ title, detail, lead, onOpen, class: extra, ...props }: SettingsRowProps, ...controls: Child[]) => {
+export const settingsRow = ({ title, detail, lead, reset, onOpen, class: extra, ...props }: SettingsRowProps, ...controls: Child[]) => {
   const shown = controls.filter(control => control !== null && control !== undefined)
-  const label = rowLabel(title, detail)
+  const label = rowLabel({ title, detail, reset })
   return div(
     { ...props, class: ['flex flex-wrap items-center gap-x-6 gap-y-2', rowShell, extra] },
     lead ?? null,

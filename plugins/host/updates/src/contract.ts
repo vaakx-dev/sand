@@ -6,6 +6,8 @@ import { z } from 'zod'
 
 export type UpdateChannel = 'release' | 'nightly' | 'dev'
 
+export const DEFAULT_UPDATE_CHANNEL: UpdateChannel = 'release'
+
 export interface ReleaseInfo {
   channel: UpdateChannel
   tag: string

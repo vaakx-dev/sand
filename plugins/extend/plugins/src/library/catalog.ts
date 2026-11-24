@@ -1,9 +1,12 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, list, show, type Sig } from '@vaakx-dev/vrui'
 import { type AreaGroup, pluginFilter, type PluginFilter } from './filter'
 import { pluginRow, type RowActions } from './row'
 import type { LibrarySource } from './source'
+
+export const catalogItem = { id: 'catalog', label: 'All plugins', keywords: ['built-in', 'customise', 'customised', 'load errors', 'history', 'versions'] }
 
 const rowKey = (plugin: PluginEntry) => JSON.stringify(plugin)
 
@@ -33,7 +36,7 @@ export const catalogSection = (kit: Kit, source: LibrarySource, actions: RowActi
   const { emptyState, loadingState } = kit
   const filter = pluginFilter(source, kit)
   return div(
-    { class: 'flex flex-col gap-4' },
+    { ...settingMark(catalogItem.id), class: 'flex flex-col gap-4' },
     toolbar(kit, filter),
     list(filter.groups, group => group.area, group => areaSection(kit, group, actions), div({ class: 'flex flex-col gap-6' })),
     show(filter.loading, () => loadingState()),

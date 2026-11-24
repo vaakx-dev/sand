@@ -4,7 +4,7 @@ import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import type { ThemeModel } from '../model'
 import { cssPage } from './css'
-import { themePage } from './page'
+import { themeItems, themePage } from './page'
 
 const page = 'theme'
 
@@ -20,12 +20,13 @@ export const themeSettings = (model: ThemeModel) =>
               found.page({
                 id: page,
                 label: 'Theme',
-                icon: 'palette',
-                group: 'app',
+                icon: 'monitor',
+                group: 'everyday',
                 order: 10,
+                items: themeItems,
                 render: () => themePage(ctx.kit, model, { css: () => found.open(`${page}-css`) }),
               }),
-              found.page({ id: `${page}-css`, label: 'Custom CSS', parent: page, group: 'app', render: () => cssPage(ctx.kit, model) }),
+              found.page({ id: `${page}-css`, label: 'Custom CSS', parent: page, group: 'everyday', render: () => cssPage(ctx.kit, model) }),
             )
           : undefined,
       )

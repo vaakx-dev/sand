@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Addon, Feature, FeatureChoice } from '../../contract'
-import { busy, detail, working } from '../rows'
+import { busy, working } from '../rows'
 import { addonControls, addonLine } from './controls'
 import type { FeatureStore } from '../store'
 
@@ -26,7 +26,7 @@ const extraControls = (kit: Kit, store: FeatureStore, choice: FeatureChoice, ext
 const extraRow = (kit: Kit, store: FeatureStore, choice: FeatureChoice, extra: Addon) => {
   const feature = choice.features.find(found => found.id === extra.id)
   return kit.settingsRow(
-    { title: extra.label, detail: detail(extra.summary, addonLine(choice, extra, feature)) },
+    { title: extra.label, detail: addonLine(choice, extra, feature) },
     working(kit, store, extra.id),
     ...extraControls(kit, store, choice, extra, feature),
   )
@@ -36,7 +36,7 @@ const extrasSection = (kit: Kit, store: FeatureStore, choice: FeatureChoice, add
   const extras = extrasOf(choice, addon.id)
   if (!extras.length) return null
   return kit.settingsSection(
-    { title: 'Extras', note: `Small add-ons for ${addon.label}. Each one turns on and off on its own.` },
+    { title: 'Extras' },
     ...extras.map(extra => extraRow(kit, store, choice, extra)),
   )
 }

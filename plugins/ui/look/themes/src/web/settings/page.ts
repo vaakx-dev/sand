@@ -1,3 +1,4 @@
+import { settingMark, type SettingsItem } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, span } from '@vaakx-dev/vrui'
 import type { Theme } from '../../contract'
@@ -14,6 +15,12 @@ const APPEARANCES: { value: Appearance; label: string }[] = [
   { value: 'dark', label: 'Dark' },
 ]
 
+const themeItems: SettingsItem[] = [
+  { id: 'theme-appearance', label: 'Appearance', keywords: ['dark', 'light', 'system', 'mode', 'colour scheme', 'color scheme'] },
+  { id: 'theme-css', label: 'Custom CSS', keywords: ['css', 'style', 'stylesheet'] },
+  { id: 'theme-reset', label: 'Reset theme', keywords: ['default', 'restore'] },
+]
+
 const lineCount = (css: string | undefined) => (css?.trim() ? css.trim().split('\n').length : 0)
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
@@ -24,7 +31,7 @@ const atDefault = (key: string, value: unknown) => value === undefined || (key =
 
 const customised = (theme: Theme | null) => Object.entries(theme ?? {}).some(([key, value]) => !atDefault(key, value))
 
-export const themePage = (kit: Kit, model: ThemeModel, links: PageLinks) => {
+const themePage = (kit: Kit, model: ThemeModel, links: PageLinks) => {
   const current = model.saved
   const appearance = derive(() => appearanceOf(current.get()))
   const choose = (mode: Appearance) => model.set({ ...current.get(), mode })
@@ -43,18 +50,17 @@ export const themePage = (kit: Kit, model: ThemeModel, links: PageLinks) => {
     )
   }
 
-  const undo = kit.iconButton(
-    { size: 'sm', 'aria-label': 'Use System', title: 'Use System', class: () => (appearance.get() === 'system' ? 'hidden' : ''), onClick: () => choose('system') },
-    kit.icon('retry', 'sm'),
-  )
+  const reset = { changed: () => appearance.get() !== 'system', run: () => choose('system') }
 
   return div(
     { class: 'flex flex-col gap-8' },
-    kit.pageSection({ title: 'Appearance', action: undo }, div({ class: 'grid grid-cols-3 gap-x-2 sm:gap-x-3', role: 'radiogroup', 'aria-label': 'Appearance' }, ...APPEARANCES.map(tile))),
-    kit.pageSection({}, kit.settingsRow({ title: 'Custom CSS', detail: () => (cssLines() ? plural(cssLines(), 'line', 'lines') : 'None'), onOpen: links.css })),
+    kit.pageSection({ ...settingMark('theme-appearance'), title: 'Appearance', reset }, div({ class: 'grid grid-cols-3 gap-x-2 sm:gap-x-3', role: 'radiogroup', 'aria-label': 'Appearance' }, ...APPEARANCES.map(tile))),
+    kit.pageSection({}, kit.settingsRow({ ...settingMark('theme-css'), title: 'Custom CSS', detail: () => (cssLines() ? plural(cssLines(), 'line', 'lines') : 'None'), onOpen: links.css })),
     div(
       { class: () => (customised(current.get()) ? '' : 'hidden') },
-      kit.pageSection({}, kit.settingsRow({ title: 'Reset theme' }, kit.secondaryAction({ onClick: () => model.reset() }, 'Reset'))),
+      kit.pageSection({}, kit.settingsRow({ ...settingMark('theme-reset'), title: 'Reset theme' }, kit.secondaryAction({ onClick: () => model.reset() }, 'Reset'))),
     ),
   )
 }
+
+export { themeItems, themePage }

@@ -1,10 +1,13 @@
+import { settingMark, type SettingsItem } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, p, show, sig } from '@vaakx-dev/vrui'
 import type { AddonSource } from '../contract'
 import { busy, working } from './rows'
 import type { FeatureStore } from './store'
 
-const TRUST = 'Add-ons from other people run on this PC with the same access as sand, like any plugin you add. Add sources you trust.'
+const TRUST = 'Add-ons run with full access to this PC. Add only sources you trust.'
+
+const sourcesItem: SettingsItem = { id: 'sources', label: 'Add-on sources', keywords: ['github', 'repository', 'server', 'catalog', 'add source'] }
 
 const sourceDetail = ({ removable, error }: AddonSource) => error ?? (removable ? 'Added by you' : "sand's own add-ons")
 
@@ -44,13 +47,13 @@ const addForm = (kit: Kit, store: FeatureStore) => {
     { class: 'contents' },
     show(
       () => !open.get(),
-      () => kit.settingsRow({ title: 'Add a source', detail: 'Another GitHub repository or server that publishes add-ons' }, kit.secondaryAction({ size: 'sm', onClick: () => open.set(true) }, 'Add')),
+      () => kit.settingsRow({ title: 'Add a source' }, kit.secondaryAction({ size: 'sm', onClick: () => open.set(true) }, 'Add')),
     ),
     show(() => open.get(), form),
   )
 }
 
 const sourcesSection = (kit: Kit, store: FeatureStore, sources: AddonSource[]) =>
-  kit.settingsSection({ title: 'Sources' }, ...sources.map(source => sourceRow(kit, store, source)), addForm(kit, store))
+  kit.settingsSection({ ...settingMark(sourcesItem.id), title: 'Sources' }, ...sources.map(source => sourceRow(kit, store, source)), addForm(kit, store))
 
-export { sourcesSection }
+export { sourcesItem, sourcesSection }

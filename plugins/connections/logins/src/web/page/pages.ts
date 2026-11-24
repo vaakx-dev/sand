@@ -45,10 +45,15 @@ export const loginsPages = (host: Settings, parts: PageParts) => {
   const list = host.page({
     id: listId,
     label: 'Logins',
-    intro: 'Passwords and keys agents can use without seeing them.',
     icon: 'key',
     group: 'accounts',
     order: 29,
+    items: [
+      { id: 'saved', label: 'Saved logins', keywords: ['password', 'API key', 'token', 'secret'] },
+      { id: 'add-website', label: 'Add a website login', keywords: ['password', 'username', 'authenticator', '2FA', 'TOTP'] },
+      { id: 'add-key', label: 'Add a key or token', keywords: ['API key', 'token', 'secret', 'environment variable'] },
+      { id: 'managers', label: 'Password managers', keywords: ['Bitwarden', '1Password', 'Secrets Manager', 'vault'] },
+    ],
     render: () => listPage(parts.kit, { model: parts.model, open, added: login => open(login.id) }),
   })
   const children = childPages(host, parts)

@@ -54,7 +54,7 @@ export const accessSections = (parts: PageParts, login: Derive<Login>) => {
     settingsSection(
       { title: 'Bots that can use it' },
       settingsRow(
-        { title: 'Ask me every time', detail: 'Agents can’t use it, not even the bots below; they tell you when they need it.' },
+        { title: 'Ask me every time' },
         toggleSwitch({ on: () => login.get().ask, 'aria-label': 'Ask me every time', disabled: work.busy, onClick: () => change({ ask: !login.get().ask }) }),
       ),
       botRows(parts, login, change),

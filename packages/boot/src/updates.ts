@@ -1,4 +1,4 @@
-import type { UpdateChannel } from '@sand/host-updates/contract'
+import { DEFAULT_UPDATE_CHANNEL, type UpdateChannel } from '@sand/host-updates/contract'
 import { serial } from '@sand/util'
 import { readState, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
@@ -25,7 +25,7 @@ const savedSchema = z.object({
 
 export const isChannel = (value: unknown): value is UpdateChannel => channels.safeParse(value).success
 
-const read = async (file: string) => (await readState(file, data => savedSchema.safeParse(data).data)) ?? { channel: 'release', dismissed: [] }
+const read = async (file: string) => (await readState(file, data => savedSchema.safeParse(data).data)) ?? { channel: DEFAULT_UPDATE_CHANNEL, dismissed: [] }
 
 export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')

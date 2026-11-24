@@ -13,7 +13,7 @@ import { createModeState, modeRow, type Place } from './mode'
 import { createModel } from './model'
 import { permissionLine } from './line'
 import { permissionNeeds } from './needs'
-import { permissionsPage } from './page'
+import { permissionItems, permissionsPage } from './page'
 
 export default definePlugin({
   name: 'permissions-web',
@@ -54,6 +54,6 @@ export default definePlugin({
       setDeadline: (minutes: number) => keep(ctx.wire.call(permissionDeadline, { minutes })),
       removeRule: (id: string) => keep(ctx.wire.call(permissionRuleRemove, { id })),
     }
-    ctx.watch(settings, found => found?.page({ id: 'permissions', label: 'Permissions', icon: 'shield', group: 'agents', order: 24, render: () => permissionsPage(page) }))
+    ctx.watch(settings, found => found?.page({ id: 'permissions', label: 'Permissions', icon: 'shield', group: 'agents', order: 24, items: permissionItems, render: () => permissionsPage(page) }))
   },
 })

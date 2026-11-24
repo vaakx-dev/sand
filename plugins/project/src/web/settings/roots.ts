@@ -1,9 +1,12 @@
 import type { PcView } from '@sand/devices-contract'
 import type { Pulse } from '@sand/reactive'
+import { settingMark } from '@sand/settings/contract'
 import { derive, dynamicChild, keys, sig, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import { tildeHome } from '@sand/util'
 import { absolute } from '../add/paths'
+
+export const rootItem = { id: 'project-root', label: 'Where new projects go', keywords: ['folder', 'location', 'path', 'root', 'default folder'] }
 
 const rootField = (ctx: ProjectsContext, pc: Sig<PcView>, failed: Sig<string | undefined>) => {
   const { textInput } = ctx.kit
@@ -19,7 +22,7 @@ const rootField = (ctx: ProjectsContext, pc: Sig<PcView>, failed: Sig<string | u
     ctx.projects.setRoot(absolute(value, ctx.projects.place(device)), device).catch(() => {
       saved = previous
       text.set(previous)
-      failed.set(`Couldn't use ${tildeHome(value)}. Check that the folder exists and try again.`)
+      failed.set(`Couldn't use ${tildeHome(value)}`)
     })
   }
   return textInput({
@@ -57,5 +60,5 @@ export const rootsSection = (ctx: ProjectsContext, changes: Pulse) => {
   const { rowList, settingsSection } = ctx.kit
   const pcs = changes.read(() => ctx.pcs.list())
   const several = () => pcs.get().length > 1
-  return settingsSection({ title: 'Where new projects go' }, rowList(pcs, pc => pc.id, pc => rootRow(ctx, pc, several)))
+  return settingsSection({ ...settingMark(rootItem.id), title: rootItem.label }, rowList(pcs, pc => pc.id, pc => rootRow(ctx, pc, several)))
 }

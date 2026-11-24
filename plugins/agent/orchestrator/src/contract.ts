@@ -287,6 +287,7 @@ export const threadUpdate = request('thread.update', {
 })
 
 export const settleChoices = [1, 3, 7, 14] as const
+export const settleDefault = 3
 
 export const helloSettleDays = helloField<number>('settleDays')
 export const settleDaysChange = wireEvent<number>('settle.days')

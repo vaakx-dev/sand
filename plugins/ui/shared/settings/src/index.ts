@@ -1,3 +1,4 @@
+import { keys } from '@sand/keys/contract'
 import { owned, pulse } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
 import { shell } from '@sand/ui-shell/contract'
@@ -5,6 +6,7 @@ import { derive, effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { settings, settingsChange, type Settings } from './contract'
 import { pageStore } from './pages'
+import { listLabel } from './list'
 import { settingsScreen } from './screen'
 
 const kind = 'settings'
@@ -33,8 +35,9 @@ export default definePlugin({
       page: page => store.add(page),
       section: section => store.addSection(section),
       pages: () => store.pages.get(),
-      open(id) {
+      open(id, item) {
         const page = id ? store.pick(id)?.id : undefined
+        if (page && item) store.target.set({ page, item })
         const replace = Boolean(at.get() && !at.get()?.phone)
         ctx.get(shell)?.open({ kind, ...(page && { id: page }) }, { replace })
       },
@@ -54,6 +57,9 @@ export default definePlugin({
       }),
     )
     ctx.provide(settings, host)
+
+    const searchField = () => [...document.querySelectorAll<HTMLInputElement>(`nav[aria-label="${listLabel}"] input`)].find(field => field.checkVisibility())
+    ctx.watch(keys, found => found?.bind({ key: '/', when: () => Boolean(searchField()), run: () => searchField()?.focus() }))
 
     const dot = () => store.pages.get().some(page => page.dot?.())
     ctx.watch(shell, frame => {

@@ -3390,6 +3390,7 @@
       "name": "@sand/settings",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/keys": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",

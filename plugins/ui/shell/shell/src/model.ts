@@ -5,7 +5,7 @@ import { nowhere, sameScreen, screenKey } from './address'
 import { type Aside, type AsideKind, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState, type SubjectSource } from './contract'
 import { navigation } from './navigation'
 import { registry } from './registry'
-import { screenCache } from './screens'
+import { screenCache, type Built } from './screens'
 
 export interface Placed {
   view: HTMLElement
@@ -56,6 +56,7 @@ export const shellModel = (kit: Kit) => {
     drawer: stored<string | null>('sand.shell.drawer', ''),
   }
   const drawerDrag = sig<number | undefined>(undefined)
+  const backDrag = sig<number | undefined>(undefined)
   const pull = sig<Pull | undefined>(undefined)
   const lastChat = stored<Route | null>('sand.shell.last-chat', null)
 
@@ -107,6 +108,8 @@ export const shellModel = (kit: Kit) => {
     const built = screen()
     return size < deskWidth && (openPanel.get() || built?.split) ? 'drawer' : 'wide'
   })
+
+  const backOf = (built: Built | undefined) => built?.back?.() ?? (built?.nav && state.get() === 'phone' ? nav.back : undefined)
 
   const dropSheets = () => {
     const dropped = sheets.get()
@@ -244,6 +247,8 @@ export const shellModel = (kit: Kit) => {
     drawerReach,
     drawerDrag,
     drawerOpen,
+    backDrag,
+    backOf,
     setDrawer,
     sheetsShown,
     showSheet,

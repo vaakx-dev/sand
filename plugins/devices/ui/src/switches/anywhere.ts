@@ -1,11 +1,10 @@
 import type { TailscaleState } from '@sand/devices-contract'
+import { settingMark } from '@sand/settings/contract'
 import type { Surface } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, sig } from '@vaakx-dev/vrui'
 import type { PcSettings } from '../data/pc-settings'
 import type { Ui } from '../ui'
 import { tailscaleProblem, type TailscaleProblem } from './problem'
-
-const blurb = 'Open sand on any network from phones and browsers signed in to your Tailscale.'
 
 const problemRow = (ui: Ui, problem: TailscaleProblem) => {
   const { errorText, icon, openTab, secondaryAction, sectionRow } = ui.kit
@@ -49,7 +48,7 @@ export const anywhereRows = (ui: Ui, settings: PcSettings, name: () => string, s
     ),
     show(tailscale.loaded, () =>
       settingsRow(
-        { title: 'Tailscale', detail: blurb },
+        { ...settingMark('tailscale'), title: 'Tailscale' },
         toggleSwitch({
           on: () => state.get()?.https ?? false,
           'aria-label': 'Reach from anywhere with Tailscale',

@@ -55,6 +55,31 @@ const drawerSwipe = (model: Model): Swipe => {
   }
 }
 
+const backSwipe = (model: Model, back: () => void): Swipe => {
+  const reach = model.width.get()
+  let px = 0
+  return {
+    move(delta) {
+      px = clamp(delta, 0, reach)
+      model.backDrag.set(px)
+    },
+    end(velocity) {
+      model.backDrag.set(undefined)
+      if (passes(px, velocity, reach)) back()
+    },
+  }
+}
+
+export const backOffset = (model: Model) => {
+  const px = model.backDrag.get()
+  return px === undefined ? null : { translate: `${px}px 0` }
+}
+
+const rightSwipe = (model: Model) => {
+  const back = model.backOf(model.screen())
+  return back ? backSwipe(model, back) : drawerSwipe(model)
+}
+
 const dismissWay: Record<Axis, Way> = { x: 'right', y: 'down' }
 
 const pullTo = (model: Model, spec: Aside | undefined) => spec && pullSwipe(model, spec)
@@ -67,7 +92,7 @@ const coveredSwipe = (model: Model, cover: Aside, way: Way) => {
 const openingSwipe = (model: Model, way: Way) => {
   switch (way) {
     case 'right':
-      return drawerSwipe(model)
+      return rightSwipe(model)
     case 'left':
       return pullTo(model, model.nextRight())
     case 'up':

@@ -9,7 +9,7 @@ import { editForm, formRow, rowProblem } from './parts'
 type Change = (patch: LoginPatch) => Promise<unknown>
 
 const credentialsRow = (kit: Kit, change: Change) =>
-  formRow(kit, { title: 'Username and password', detail: 'Saved in sand. Type new ones to replace them.', open: 'Replace' }, close => {
+  formRow(kit, { title: 'Username and password', open: 'Replace' }, close => {
     const username = sig('')
     const password = sig('')
     return editForm(
@@ -21,7 +21,7 @@ const credentialsRow = (kit: Kit, change: Change) =>
   })
 
 const valueRow = (kit: Kit, change: Change) =>
-  formRow(kit, { title: 'Value', detail: 'Saved in sand. Type a new one to replace it.', open: 'Replace' }, close => {
+  formRow(kit, { title: 'Value', open: 'Replace' }, close => {
     const value = sig('')
     return editForm(
       kit,
@@ -40,7 +40,7 @@ const totpRows = (kit: Kit, login: Derive<Login>, change: Change) => {
       kit,
       {
         title: 'Authenticator',
-        detail: () => (set() ? 'Set. Agents make the sign-in codes themselves.' : 'Not set. Add the setup key if the site asks for codes from an app.'),
+        detail: () => (set() ? 'Set' : 'Not set'),
         open: () => (set() ? 'Replace' : 'Add'),
         extra: () => show(set, remove),
       },
@@ -59,11 +59,11 @@ const totpRows = (kit: Kit, login: Derive<Login>, change: Change) => {
 
 const keptSection = ({ settingsRow, settingsSection }: Kit, { kind, totp }: Login, manager: string) =>
   kind === 'key'
-    ? settingsSection({ title: 'Key' }, settingsRow({ title: 'Value', detail: `Kept in ${manager} and fetched each time a command uses it. Change it in ${manager}.` }))
+    ? settingsSection({ title: 'Key' }, settingsRow({ title: 'Value', detail: `In ${manager}` }))
     : settingsSection(
         { title: 'Sign-in' },
-        settingsRow({ title: 'Username and password', detail: `Kept in ${manager} and fetched each time a bot signs in. Change them in ${manager}.` }),
-        totp ? settingsRow({ title: 'Authenticator', detail: `Kept in ${manager}. Agents get the sign-in codes from it.` }) : null,
+        settingsRow({ title: 'Username and password', detail: `In ${manager}` }),
+        totp ? settingsRow({ title: 'Authenticator', detail: `In ${manager}` }) : null,
       )
 
 export const valuesSection = (kit: Kit, model: LoginsModel, login: Derive<Login>) => {

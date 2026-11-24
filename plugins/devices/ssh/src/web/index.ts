@@ -31,7 +31,7 @@ export default definePlugin({
       ...attempts({ ctx, wire: ctx.wire, pcs: ctx.pcs, prompt: askSheet(ctx, ctx.kit) }),
     }
     ctx.provide(sshMachines, machines)
-    ctx.watch(settings, found => found?.section({ page: 'devices', id: 'ssh', order: 10, render: () => sshSection(ctx.kit, machines, state) }))
+    ctx.watch(settings, found => found?.section({ page: 'devices', id: 'ssh', order: 10, items: [{ id: 'ssh', label: 'SSH', keywords: ['ssh host', 'remote machine', 'server', 'user@host'] }], render: () => sshSection(ctx.kit, machines, state) }))
     ctx.watch(needs, found => found?.source(sshNeeds(ctx.kit, () => ctx.get(pcMarks), state, machines.reconnect)))
   },
 })

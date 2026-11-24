@@ -8,7 +8,7 @@ import type { PageStore } from './pages'
 export interface ScreenParts {
   store: PageStore
   shell: Shell
-  choose(id: string): void
+  choose(id: string, item?: string): void
 }
 
 export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, route: () => Route): Screen => {

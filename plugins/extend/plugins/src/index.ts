@@ -5,9 +5,11 @@ import { versionsSource } from './history/source'
 import { historyDetail, historyToggle } from './history/versions'
 import { reportSource } from './library/report'
 import type { RowActions } from './library/row'
+import { catalogItem } from './library/catalog'
 import { librarySource } from './library/source'
 import { pluginsPage } from './page'
 import { page } from './shown'
+import { sharingItem } from './sync/installed'
 import { syncSource } from './sync/source'
 
 export default definePlugin({
@@ -32,7 +34,7 @@ export default definePlugin({
       keep: plugin => library.keep(plugin.name),
     }
     ctx.watch(settings, found =>
-      found?.page({ id: page, label: 'Plugins', intro: 'What sand is built from, and the plugins you’ve customised or added.', icon: 'puzzle', group: 'app', order: 45, render: () => pluginsPage(ctx.kit, { sync, library, versions, actions }) }),
+      found?.page({ id: page, label: 'Plugins', icon: 'puzzle', group: 'app', order: 45, items: [catalogItem, sharingItem], render: () => pluginsPage(ctx.kit, { sync, library, versions, actions }) }),
     )
   },
 })
