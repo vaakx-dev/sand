@@ -7,9 +7,7 @@ const edge = (model: Model) => (model.phone.get() ? '' : 'shadow-xl dark:ring-1 
 
 export const drawerLook = (model: Model) => (slides(model) ? [model.kit.layer.drawer, 'absolute inset-y-0 left-0', edge(model)] : 'relative')
 
-const offset = (model: Model) => ({ translate: `${(model.drawer.at() - 1) * 100}% 0`, visibility: model.drawerShown.get() ? 'visible' : 'hidden' })
-
-export const drawerOffset = (model: Model) => (slides(model) ? offset(model) : null)
+export const drawerOffset = (model: Model) => (slides(model) ? { translate: `${(model.drawer.at() - 1) * 100}% 0` } : null)
 
 export const scrim = (model: Model) =>
   div({
