@@ -30,13 +30,17 @@ export const themeChat = (model: ThemeModel) =>
   definePlugin({
     name: 'themes-chat',
     description: 'Shows a theme an agent tried in its chat, with desktop and phone screenshots and Keep or Undo',
-    inject: { kit, toolViews },
+    inject: { kit },
     apply(ctx) {
-      ctx.watch(transcript, found =>
-        found
-          ? joinDisposers(
-              found.tool('theme', themeView(ctx.toolViews)),
-              found.entry(themeTrialEntry, (entry, thread) => trialCard(ctx.kit, ctx.toolViews, model, entry.data as ThemeTrialEntry, thread)),
+      ctx.watch(toolViews, views =>
+        views
+          ? ctx.watch(transcript, found =>
+              found
+                ? joinDisposers(
+                    found.tool('theme', themeView(views)),
+                    found.entry(themeTrialEntry, (entry, thread) => trialCard(ctx.kit, views, model, entry.data as ThemeTrialEntry, thread)),
+                  )
+                : undefined,
             )
           : undefined,
       )
