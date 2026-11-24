@@ -1,16 +1,13 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
-import { derive, div, dynamicChild, p, sig, span } from '@vaakx-dev/vrui'
-import { type Destination, localModel } from '../../contract'
+import { settingMark } from '@sand/settings/contract'
+import { derive, div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
+import type { Destination } from '../../contract'
 import type { VoiceModel } from '../model'
 import { cloudForm } from './cloud'
 import { localStatus } from './local'
 
-const NOTES: Record<Destination, string> = {
-  off: 'Nothing is recorded. The microphone in the message box brings you here.',
-  local: `${localModel.name} turns your speech into ${localModel.language} text on this PC, on its graphics card when it has one. Free, and your audio never leaves the PC.`,
-  cloud: 'Your recordings go to OpenAI, or the OpenAI-style service saved with your key in Accounts, and are billed there.',
-}
+const voiceItems = [{ id: 'voice-speech', label: 'Speech to text', keywords: ['microphone', 'mic', 'dictation', 'transcribe', 'whisper', 'openai'] }]
 
 const voicePage = (kit: Kit, model: VoiceModel, openAccounts: () => void) => {
   model.refresh()
@@ -40,22 +37,21 @@ const voicePage = (kit: Kit, model: VoiceModel, openAccounts: () => void) => {
   return div(
     { class: 'flex flex-col gap-8' },
     kit.pageSection(
-      { title: 'Turn speech into text', note: 'Where the words you say into the microphone become text. They land in your message for you to check, and are never sent on their own.' },
+      { title: 'Speech to text', reset: { changed: () => saved.get() !== 'off', run: () => void choose('off') }, ...settingMark('voice-speech') },
       kit.choiceList(
         [
-          { value: 'off' as const, label: 'Off' },
+          { value: 'off' as const, label: 'Off (default)' },
           { value: 'local' as const, label: 'This PC', mark: span({ class: 'text-xs text-neutral-500' }, 'Free · private') },
           { value: 'cloud' as const, label: 'A cloud service', mark: span({ class: 'text-xs text-neutral-500' }, 'OpenAI key') },
         ],
         active,
         destination => void choose(destination),
-        'Turn speech into text',
+        'Speech to text',
       ),
-      p({ class: 'mt-3 text-xs text-neutral-500' }, () => NOTES[active.get()]),
       kit.errorText(() => error.get()),
     ),
     dynamicChild(active, details),
   )
 }
 
-export { voicePage }
+export { voiceItems, voicePage }

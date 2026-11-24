@@ -1,12 +1,10 @@
 import type { ConversationRef } from '@sand/engine/contract'
 import type { Ledger } from '@sand/ledger/contract'
 import type { Database } from 'bun:sqlite'
-import type { Mode, ModeEntry } from '../contract'
+import { DEFAULT_DEADLINE_MINUTES, type Mode, type ModeEntry } from '../contract'
 import { createDecisions } from './decisions'
 import { createRules } from './rules'
 import { schema } from './schema'
-
-const DEFAULT_DEADLINE_MINUTES = 30
 
 const createModes = (db: Database) => {
   const one = db.query<{ mode: Mode }, ConversationRef>('select mode from permission_modes where owner = $owner and conversation = $id')

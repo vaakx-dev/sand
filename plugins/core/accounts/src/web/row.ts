@@ -28,7 +28,7 @@ const serverDetail = ({ dot }: Kit, account: LoginAccount) =>
   )
 
 const detail = (kit: Kit, account: LoginAccount) => {
-  if (account.env) return `API key from ${account.env} · stays on this PC`
+  if (account.env) return `API key from ${account.env}`
   if (account.kind === 'server') return serverDetail(kit, account)
   return [howText(account), account.email].filter(Boolean).join(' · ')
 }

@@ -6,7 +6,7 @@ import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { toolsChangeWire, toolsChoose, toolsGroups, type GroupState, type ToolLoad } from '../contract'
 import { foundRenderer } from './found'
-import { toolsPage } from './page'
+import { toolItems, toolsPage } from './page'
 
 export default definePlugin({
   name: 'tools-web',
@@ -25,7 +25,7 @@ export default definePlugin({
     ctx.on(wireHello, () => void load())
     if (ctx.wire.ready()) void load()
     ctx.effect(() => ctx.wire.on(toolsChangeWire, value => groups.set(value)))
-    ctx.watch(settings, found => found?.page({ id: 'tools', label: 'Tools', icon: 'wrench', group: 'agents', order: 22, render: () => toolsPage(ctx.kit, groups, choose) }))
+    ctx.watch(settings, found => found?.page({ id: 'tools', label: 'Tools', icon: 'wrench', group: 'agents', order: 22, items: toolItems, render: () => toolsPage(ctx.kit, groups, choose) }))
     ctx.watch(toolViews, views => views && ctx.watch(transcript, found => found?.tool('find_tools', foundRenderer(ctx.kit, views))))
   },
 })

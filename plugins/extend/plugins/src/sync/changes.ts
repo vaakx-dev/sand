@@ -38,7 +38,7 @@ const groupSection = (kit: Kit, source: SyncSource, group: Sig<OfferGroup>, busy
 }
 
 export const changesSection = (kit: Kit, source: SyncSource) => {
-  const { pageHead, rowList } = kit
+  const { rowList } = kit
   const busy = () => source.busy.get() !== undefined
   const groups = derive(() => groupOffers(source.state.get()?.offers ?? []))
   return show(
@@ -46,7 +46,6 @@ export const changesSection = (kit: Kit, source: SyncSource) => {
     () =>
       div(
         { class: 'flex flex-col gap-6' },
-        pageHead('Applying a change restarts the sand runtime. Running threads keep going.'),
         rowList(groups, group => group.peer, group => groupSection(kit, source, group, busy)),
       ),
   )

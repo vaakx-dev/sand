@@ -12,7 +12,9 @@ import { addSheet } from './add/sheet'
 import { newThreadSource, projectSource } from './add/source'
 import { inject } from './context'
 import { findSource } from './find/source'
+import { projectsItem } from './settings/groups'
 import { projectsPage } from './settings/page'
+import { rootItem } from './settings/roots'
 
 export default definePlugin({
   name: 'project',
@@ -20,7 +22,7 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [projectsChange, pcsChange, sshHostsChange], [shell, sshMachines])
-    ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', intro: 'Folders your threads work in, on each of your PCs.', icon: 'folder', group: 'workspace', order: 30, render: () => projectsPage(ctx, changes) }))
+    ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', icon: 'folder', group: 'workspace', order: 30, items: [projectsItem, rootItem], render: () => projectsPage(ctx, changes) }))
     ctx.watch(palette, found => found?.source(findSource(ctx)))
     ctx.watch(shell, frame => {
       if (!frame) return

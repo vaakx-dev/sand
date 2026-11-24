@@ -34,15 +34,12 @@ const serverRows = (kit: Kit, servers: Sig<ServerState[] | undefined>) =>
               server => serverRow(kit, server),
             ),
           )
-        : kit.emptyState({ text: 'No MCP servers yet.' }),
+        : kit.emptyState({ text: 'None. Add them under [plugins.mcp.servers.<name>] in sand.toml.' }),
   )
 
 export const serversPage = (kit: Kit, servers: Sig<ServerState[] | undefined>) =>
   div(
     { class: 'flex flex-col gap-6' },
-    kit.pageHead(
-      'Add servers under [plugins.mcp.servers.<name>] in sand.toml, with command, args, env and cwd, or with url and headers. ${NAME} in args, env and headers reads an environment variable. Each server is a tool group on the Tools page.',
-    ),
     dynamicChild(
       servers.map(value => value === undefined),
       loading => (loading ? kit.loadingState() : serverRows(kit, servers)),

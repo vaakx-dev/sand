@@ -34,10 +34,7 @@ export const optionsSection = (page: Page, source: () => SourceInfo) => {
     settingsSection(
       {},
       settingsRow(
-        {
-          title: 'Show new models automatically',
-          detail: 'When off, new models wait here, marked New',
-        },
+        { title: 'Show new models automatically' },
         toggleSwitch({
           on: show,
           'aria-label': 'Show new models automatically',

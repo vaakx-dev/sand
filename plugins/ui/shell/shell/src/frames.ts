@@ -9,7 +9,7 @@ const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 const sidebarButton = ({ kit, setDrawer }: Model) =>
   kit.iconButton({ title: 'Show the sidebar', 'aria-label': 'Show the sidebar', onClick: () => setDrawer(true) }, kit.icon('sidebar'))
 
-const backOf = (model: Model, built: Built | undefined) => () => built?.back?.() ?? (built?.nav && model.state.get() === 'phone' ? () => model.back() : undefined)
+const backOf = (model: Model, built: Built | undefined) => () => model.backOf(built)
 
 const backButton = (model: Model, built: Built | undefined) => {
   const back = backOf(model, built)

@@ -30,7 +30,6 @@ const localStatus = (kit: Kit, model: VoiceModel, retry: () => void) => {
         { class: 'h-1.5 overflow-hidden rounded-full bg-neutral-700', role: 'progressbar', 'aria-label': 'Download progress' },
         span({ class: 'block h-full bg-accent-500 transition-all', style: { width: () => `${(progress.get().done / progress.get().total) * 100}%` } }),
       ),
-      span({ class: 'text-xs text-neutral-500' }, 'Only this once. sand checks the download before it uses it.'),
     )
 
   const view = (shown: Status | undefined) => {

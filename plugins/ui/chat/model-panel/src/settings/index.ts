@@ -3,9 +3,9 @@ import { div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import { favouritesPage } from './favourites'
 import { createPage, type Page, type View } from './page'
-import { picksSection } from './picks'
+import { pickItems, picksSection } from './picks'
 import { sourcePage } from './source/page'
-import { sourcesKey, sourcesSection } from './sources'
+import { sourceItems, sourcesKey, sourcesSection } from './sources'
 
 const topPage = (page: Page) =>
   div(
@@ -22,6 +22,8 @@ const subpage = (page: Page) => {
   if (view.kind === 'favourites') return favouritesPage(page)
   return topPage(page)
 }
+
+export const modelItems = [...pickItems, ...sourceItems]
 
 export const modelsPage = (ctx: PanelContext, changes: Pulse, view: Sig<View>) => {
   const { errorText } = ctx.kit

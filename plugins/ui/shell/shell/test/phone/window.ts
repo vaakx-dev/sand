@@ -263,6 +263,21 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
   })
 
+  test('a swipe right in Settings steps back to the Settings list, then out, and never opens the sidebar', async () => {
+    const { page } = phone
+    await openPlain()
+    await tap(page, 'Show the sidebar')
+    await tap(page, 'Settings')
+    await page.getByRole('button', { name: 'Plugins', exact: true }).filter({ visible: true }).click()
+    expect(await screen(page, 'settings/plugins')).toBe('settings/plugins')
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
+    expect(await screen(page, 'settings')).toBe('settings')
+    expect(await drawer(page)).toBe(false)
+    await swipe(phone, [60, mid()], [size.width - 30, mid()])
+    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    expect(await drawer(page)).toBe(false)
+  })
+
   test('browser back closes a sheet and keeps the window', async () => {
     const { page } = phone
     await openPlain()

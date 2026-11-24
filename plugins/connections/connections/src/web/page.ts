@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Account, ConnectionState, KindInfo } from '../contract'
@@ -8,11 +9,6 @@ const detailOf = (account: Account, kinds: KindInfo[]) => {
   const kind = kinds.find(item => item.id === account.kind)?.label ?? account.kind
   if (account.problem) return `${kind} · ${account.problem}`
   return account.readOnly ? `${kind} · Read only` : kind
-}
-
-const methodDetails: Record<KindInfo['method'], string> = {
-  oauth: 'Sign in on its own page; sand never sees your password',
-  form: 'Enter the key or details the service gives you',
 }
 
 const accountRow = (kit: Kit, model: ConnectionsModel, account: Sig<Account>) => {
@@ -36,7 +32,7 @@ const kindRow = (kit: Kit, model: ConnectionsModel, kind: Sig<KindInfo>) => {
   return div(
     { class: 'contents' },
     settingsRow(
-      { title: kind.map(value => value.label), detail: kind.map(value => methodDetails[value.method]) },
+      { title: kind.map(value => value.label) },
       show(
         () => !opened(),
         () => secondaryAction({ size: 'sm', onClick: () => model.choose(kind.get().id) }, 'Connect'),
@@ -54,7 +50,7 @@ const kindRow = (kit: Kit, model: ConnectionsModel, kind: Sig<KindInfo>) => {
 }
 
 const content = (kit: Kit, model: ConnectionsModel, state: Sig<ConnectionState | undefined>) => {
-  const { emptyState, errorText, rowList, settingsSection, sheetText } = kit
+  const { emptyState, errorText, rowList, settingsSection } = kit
   const accounts = state.map(value => value?.accounts ?? [])
   const kinds = state.map(value => (value?.kinds ?? []).toSorted((a, b) => a.label.localeCompare(b.label)))
   return div(
@@ -71,11 +67,8 @@ const content = (kit: Kit, model: ConnectionsModel, state: Sig<ConnectionState |
       kinds.map(list => list.length > 0),
       any =>
         any
-          ? settingsSection({ title: 'Connect' }, rowList(kinds, kind => kind.id, kind => kindRow(kit, model, kind)))
+          ? settingsSection({ ...settingMark('connect'), title: 'Connect' }, rowList(kinds, kind => kind.id, kind => kindRow(kit, model, kind)))
           : emptyState({ text: 'Nothing to connect. Turn on Calendar in Settings → Add-ons.' }),
-    ),
-    sheetText(() =>
-      state.get()?.keychain ? 'Kept encrypted, with the key in the system keychain.' : 'Kept encrypted, with the key in connections.key in the sand home.',
     ),
   )
 }

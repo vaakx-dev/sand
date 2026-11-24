@@ -25,7 +25,7 @@ export interface Transcript {
   text: string
 }
 
-export const localModel = { name: 'Parakeet TDT 0.6B v2', language: 'English' }
+export const localModel = { name: 'Parakeet TDT 0.6B v2' }
 
 export const maxRecordingMs = 5 * 60_000
 

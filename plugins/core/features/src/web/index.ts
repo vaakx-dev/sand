@@ -7,7 +7,8 @@ import { featureState } from '../contract'
 import { addonPages } from './addon/pages'
 import { corePage } from './core'
 import { CORE, emptyHome } from './empty'
-import { featuresPage } from './page'
+import { availableItem, coreItem, featuresPage } from './page'
+import { sourcesItem } from './sources'
 import { featureStore } from './store'
 
 export default definePlugin({
@@ -25,10 +26,10 @@ export default definePlugin({
       const list = found.page({
         id: 'features',
         label: 'Add-ons',
-        intro: 'Install what else you want sand to do. Your bots can install add-ons for you too.',
         icon: 'sliders',
         group: 'app',
         order: 15,
+        items: [availableItem, sourcesItem, coreItem],
         render: () => featuresPage(ctx.kit, store, links),
       })
       return () => {

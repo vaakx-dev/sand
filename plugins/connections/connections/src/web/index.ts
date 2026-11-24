@@ -18,6 +18,6 @@ export default definePlugin({
     ctx.effect(() => ctx.wire.on(connectionsWire, value => model.state.set(value)))
     ctx.effect(() => ctx.wire.on(connectionFlowWire, model.ended))
     ctx.effect(() => model.cancel)
-    ctx.watch(settings, found => found?.page({ id: 'connections', label: 'Connections', intro: 'Accounts at other services that plugins like Calendar use.', icon: 'link', group: 'accounts', order: 28, render: () => connectionsPage(ctx.kit, model) }))
+    ctx.watch(settings, found => found?.page({ id: 'connections', label: 'Connections', icon: 'link', group: 'accounts', order: 28, items: [{ id: 'connect', label: 'Connect an account', keywords: ['calendar', 'Google', 'Outlook', 'iCloud', 'CalDAV', 'sign in'] }], render: () => connectionsPage(ctx.kit, model) }))
   },
 })

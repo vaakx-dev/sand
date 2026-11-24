@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { ago, exactTime, plural } from '@sand/util'
 import { clock, derive, dynamicChild, show } from '@vaakx-dev/vrui'
@@ -6,6 +7,8 @@ import type { Fleet } from '../fleet/model'
 import { changesFor } from '../fleet/status'
 
 const listedWhenCurrent = 10
+
+export const latestItem = { id: 'latest', label: 'Check for updates', keywords: ['latest', 'version', 'release notes', 'update now'] }
 
 const localState = (fleet: Fleet) => fleet.pcs.get().find(pc => pc.home)?.state
 
@@ -39,7 +42,7 @@ export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
     return [target ? `Published ${exactTime(target.publishedAt)}` : '', checkedText(fleet)].filter(Boolean).join(' · ')
   }
   return settingsSection(
-    { title: 'Latest', action: quietButton({ size: 'sm', disabled: fleet.busy, onClick: () => void fleet.check() }, 'Check now') },
+    { ...settingMark(latestItem.id), title: 'Latest', action: quietButton({ size: 'sm', disabled: fleet.busy, onClick: () => void fleet.check() }, 'Check now') },
     settingsRow(
       { title: () => latestLabel(fleet), detail: published },
       [

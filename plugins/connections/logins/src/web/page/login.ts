@@ -1,7 +1,6 @@
 import { derive, div, sig, type Derive } from '@vaakx-dev/vrui'
 import type { Login, Source } from '../../contract'
 import { accessSections } from './access'
-import { storageNote } from './list'
 import { managers } from './managers/catalog'
 import type { PageParts } from './model'
 import { editForm } from './parts'
@@ -31,20 +30,19 @@ const detailsSection = ({ kit, model }: PageParts, login: Derive<Login>) => {
 
 const deletes = (source: Source) =>
   source === 'sand'
-    ? { title: 'Delete login', detail: 'Bots and threads lose it right away.', label: 'Delete', confirm: 'Delete this login for good? Bots and threads lose it right away.' }
+    ? { title: 'Delete login', label: 'Delete', confirm: 'Delete this login for good? Bots and threads lose it right away.' }
     : {
         title: 'Remove from sand',
-        detail: `Removes only sand's pointer; the item stays in ${managers[source].name}. Bots and threads lose it right away.`,
         label: 'Remove',
         confirm: `Remove this login from sand? It stays in ${managers[source].name}.`,
       }
 
 const deleteSection = ({ kit, model }: PageParts, login: Derive<Login>) => {
-  const { title, detail, label, confirm } = deletes(login.get().source)
+  const { title, label, confirm } = deletes(login.get().source)
   return kit.settingsSection(
     {},
     kit.settingsRow(
-      { title, detail },
+      { title },
       kit.confirmButton({ action: { id: 'delete', label, icon: 'trash', danger: true, confirm, run: () => model.remove(login.get().id) } }),
     ),
   )
@@ -59,6 +57,5 @@ export const loginPage = (parts: PageParts, shown: Login) => {
     accessSections(parts, login),
     usesSection(parts.kit, parts.wire, shown.id),
     deleteSection(parts, login),
-    shown.source === 'sand' ? storageNote(parts.kit, parts.model.state) : null,
   )
 }

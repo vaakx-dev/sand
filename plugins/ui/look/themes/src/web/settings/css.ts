@@ -12,7 +12,7 @@ export const cssPage = (kit: Kit, model: ThemeModel) => {
   return div(
     { class: 'flex flex-col gap-8' },
     kit.pageSection(
-      { note: 'Styles the whole page on every device. CSS that would load anything from the internet is left out.' },
+      {},
       kit.textArea({
         rows: 14,
         bindValue: draft,
@@ -29,7 +29,7 @@ export const cssPage = (kit: Kit, model: ThemeModel) => {
       ),
     ),
     kit.pageSection(
-      { title: 'Parts you can style', note: 'These names stay the same across updates.' },
+      { title: 'Parts you can style' },
       ...Object.entries(pageParts).map(([name, about]) =>
         kit.settingsRow({ title: span({ class: 'font-mono text-xs' }, `[data-part="${name}"]`), detail: about }),
       ),

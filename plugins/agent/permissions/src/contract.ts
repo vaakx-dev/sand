@@ -109,6 +109,8 @@ export const strictness: Record<Mode, number> = { off: 0, auto: 1, ask: 2 }
 
 export const deadlineLimits = { min: 1, max: 24 * 60 } as const
 
+export const DEFAULT_DEADLINE_MINUTES = 30
+
 const ref = lazy(() => z.object({ owner: z.enum(['thread', 'bot']), id: z.string().min(1) }))
 
 export const helloQuestions = helloField<Decision[]>('permissions.questions')

@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, show, sig, type FlowNode } from '@vaakx-dev/vrui'
 import { externalSources, loginKinds, type External, type Login, type LoginKind } from '../../contract'
@@ -13,10 +14,7 @@ export interface AddParts {
 
 type Adding = LoginKind | External
 
-const kinds: Record<LoginKind, { title: string; detail: string }> = {
-  website: { title: 'Website login', detail: 'A username and password, and an authenticator key if the site asks for codes' },
-  key: { title: 'Key or token', detail: 'An API key, token or other secret that commands use' },
-}
+const kindTitles: Record<LoginKind, string> = { website: 'Website login', key: 'Key or token' }
 
 const websiteForm = (kit: Kit, save: (login: NewLogin) => Promise<unknown>, cancel: () => void) => {
   const name = sig('')
@@ -63,12 +61,12 @@ export const addSection = (kit: Kit, { model, added }: AddParts) => {
     added(made)
   }
   const save = async (login: NewLogin) => finish(await model.add(login))
-  const addRow = (adding: Adding, title: string, detail: string, body: () => FlowNode) => {
+  const addRow = (adding: Adding, title: string, body: () => FlowNode) => {
     const open = opened.map(chosen => chosen === adding)
     return div(
       { class: 'contents' },
       settingsRow(
-        { title, detail },
+        { ...settingMark(`add-${adding}`), title },
         show(
           () => !open.get(),
           () => secondaryAction({ size: 'sm', onClick: () => opened.set(adding) }, 'Add'),
@@ -80,11 +78,11 @@ export const addSection = (kit: Kit, { model, added }: AddParts) => {
   const ready = (source: External) => model.state.get()?.sources[source].status === 'ready'
   return settingsSection(
     { title: 'Add' },
-    ...loginKinds.map(kind => addRow(kind, kinds[kind].title, kinds[kind].detail, () => rowDetail(forms[kind](kit, save, close)))),
+    ...loginKinds.map(kind => addRow(kind, kindTitles[kind], () => rowDetail(forms[kind](kit, save, close)))),
     ...externalSources.map(source =>
       show(
         () => ready(source),
-        () => addRow(source, `From ${managers[source].name}`, `${managers[source].pick}. sand only points at it and fetches it when a bot uses it.`, () => pickRows(kit, model, source, finish, close)),
+        () => addRow(source, `From ${managers[source].name}`, () => pickRows(kit, model, source, finish, close)),
       ),
     ),
   )

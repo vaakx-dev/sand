@@ -1,8 +1,11 @@
 import type { InstalledPlugin } from '@sand/host-plugin-sync/contract'
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
 import { derive, show, type Sig } from '@vaakx-dev/vrui'
 import type { SyncSource } from './source'
+
+export const sharingItem = { id: 'sharing', label: 'Share plugins with other PCs', keywords: ['sync', 'other PCs', 'only on this PC'] }
 
 const pluginRow = ({ settingsRow, toggleSwitch }: Kit, source: SyncSource, plugin: Sig<InstalledPlugin>) => {
   const shared = () => !plugin.get().local
@@ -22,7 +25,7 @@ export const installedSection = (kit: Kit, source: SyncSource) => {
   const plugins = derive(() => source.state.get()?.plugins ?? [])
   return show(source.shared, () =>
     settingsSection(
-      { title: 'Sharing with your other PCs' },
+      { ...settingMark(sharingItem.id), title: 'Sharing with your other PCs' },
       rowList(plugins, plugin => plugin.name, plugin => pluginRow(kit, source, plugin)),
       show(
         () => source.state.get() === undefined,
@@ -30,7 +33,7 @@ export const installedSection = (kit: Kit, source: SyncSource) => {
       ),
       show(
         () => source.state.get()?.plugins.length === 0,
-        () => emptyState({ text: 'Plugins you customise or add are shared with your other PCs' }),
+        () => emptyState({ text: 'No customised or added plugins' }),
       ),
     ),
   )

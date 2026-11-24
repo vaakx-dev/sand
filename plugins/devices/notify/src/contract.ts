@@ -8,12 +8,12 @@ export const momentKinds = ['needs', 'finished', 'failed', 'routine', 'paused'] 
 
 export type MomentKind = (typeof momentKinds)[number]
 
-export const moments: Record<MomentKind, { label: string; detail: string }> = {
-  needs: { label: 'Needs you', detail: 'A question, a sign-in, a key, a password or a merge waits for you' },
-  finished: { label: 'Finished', detail: 'A turn in a thread finished' },
-  failed: { label: 'Failed', detail: 'A turn or a routine failed' },
-  routine: { label: 'Routine', detail: 'A bot ran one of its reminders or routines' },
-  paused: { label: 'Paused', detail: 'A bot reached its monthly spend limit and paused' },
+export const moments: Record<MomentKind, { label: string }> = {
+  needs: { label: 'Needs you' },
+  finished: { label: 'Finished' },
+  failed: { label: 'Failed' },
+  routine: { label: 'Routine' },
+  paused: { label: 'Paused' },
 }
 
 export interface Moment {

@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, show, sig, span } from '@vaakx-dev/vrui'
 import { externalSources, type External, type SourceStatus } from '../../../contract'
@@ -19,7 +20,7 @@ const removable = (status: SourceStatus) => (status.status === 'ready' || status
 const statusText = ({ command, install, signedOut, ready, app }: Manager, status: SourceStatus) => {
   switch (status.status) {
     case 'missing':
-      return `${command} CLI not found. Install it from ${install}. sand looks for ${command} on PATH, or at the path set as ${command} under [plugins.logins] in sand.toml.`
+      return `${command} CLI not found. Install it from ${install}.`
     case 'signed-out':
       return signedOut
     case 'locked':
@@ -73,4 +74,4 @@ const managerRow = (kit: Kit, model: LoginsModel, source: External) => {
 }
 
 export const managersSection = (kit: Kit, model: LoginsModel) =>
-  kit.settingsSection({ title: 'Password managers', note: 'Use items from a password manager without copying them into sand.' }, ...externalSources.map(source => managerRow(kit, model, source)))
+  kit.settingsSection({ ...settingMark('managers'), title: 'Password managers' }, ...externalSources.map(source => managerRow(kit, model, source)))

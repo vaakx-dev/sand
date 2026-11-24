@@ -27,14 +27,11 @@ const control = (kit: Kit, plugin: PluginEntry, actions: RowActions) => {
   return null
 }
 
-const detail = (plugin: PluginEntry) =>
-  plugin.origin === 'customised'
-    ? `Your copy in ${tildeHome(plugin.folder)} replaces the built-in. Press Reload plugins after editing it.`
-    : (plugin.description ?? '')
+const detail = (plugin: PluginEntry) => (plugin.origin === 'customised' ? tildeHome(plugin.folder) : '')
 
 const changedNote = (kit: Kit, plugin: PluginEntry, actions: RowActions) =>
   kit.rowWarning(
-    'The built-in changed since you customised it.',
+    'The built-in changed since you customised it',
     kit.quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.keep(plugin) }, 'Keep mine'),
     restoreButton(kit, plugin, actions),
   )
@@ -51,7 +48,7 @@ const offReason = (plugin: PluginEntry, actions: RowActions) => {
   const needs = () => actions.offNeeds(plugin.name) ?? []
   return show(
     () => needs().length > 0,
-    () => div(() => `Off because it needs ${needs().join(', ')}, which sand.toml turns off.`),
+    () => div(() => `Needs ${needs().join(', ')}, off in sand.toml`),
   )
 }
 

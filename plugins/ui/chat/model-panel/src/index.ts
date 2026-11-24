@@ -7,7 +7,7 @@ import { modelChanges } from './changes'
 import { inject } from './context'
 import { modelButton as modelButtonService, modelTargets as modelTargetsService } from './contract'
 import { modelSource } from './palette'
-import { modelsPage } from './settings'
+import { modelItems, modelsPage } from './settings'
 import { createView } from './settings/page'
 import { modelTargets } from './targets'
 
@@ -33,6 +33,7 @@ export default definePlugin({
         icon: 'sparkles',
         group: 'agents',
         order: 20,
+        items: modelItems,
         back: () => (view.get().kind === 'top' ? undefined : top),
         render: () => modelsPage(ctx, changes, view),
       }),

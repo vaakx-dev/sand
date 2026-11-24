@@ -2,8 +2,9 @@ import type { BotSummary } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { tildeHome } from '@sand/util'
 import { type Child, derive, div, dynamicChild, show, sig, span, type Sig } from '@vaakx-dev/vrui'
-import type { Decision, Mode, PermissionSettings, Rule } from '../contract'
-import { modeDetails, modeLabels } from './mode'
+import { settingMark } from '@sand/settings/contract'
+import { DEFAULT_DEADLINE_MINUTES, type Decision, type Mode, modes, type PermissionSettings, type Rule } from '../contract'
+import { modeLabels } from './mode'
 
 export interface PageParts {
   kit: Kit
@@ -15,6 +16,15 @@ export interface PageParts {
 }
 
 const DEADLINES = [5, 15, 30, 60, 120]
+
+const DEFAULT_BOT_MODE: Mode = 'off'
+
+const ITEMS = {
+  deadline: { id: 'question-deadline', label: 'Question deadline', keywords: ['timeout', 'deny', 'unanswered', 'minutes'] },
+  bots: { id: 'bot-permissions', label: 'Bot permissions', keywords: ['bots', 'mode', 'ask', 'auto'] },
+  rules: { id: 'saved-rules', label: 'Saved rules', keywords: ['always allow', 'rules'] },
+  decisions: { id: 'recent-decisions', label: 'Recent decisions', keywords: ['log', 'history', 'allowed', 'denied'] },
+}
 
 const outcomes: Record<Decision['outcome'], string> = {
   waiting: 'Waiting on you',
@@ -34,27 +44,39 @@ const deciders: Record<NonNullable<Decision['by']>, string> = {
 
 const decisionDetail = ({ outcome, by, title }: Decision) => `${outcomes[outcome]}${by ? ` ${deciders[by]}` : ''} · ${title}`
 
-const ruleWhere = ({ owner, title }: Rule) => (owner === 'bot' ? `For the bot ${title} and the threads it starts` : `In the thread “${title}” and its subagents`)
+const ruleWhere = ({ owner, title }: Rule) => (owner === 'bot' ? `Bot ${title}` : `Thread “${title}”`)
+
+const withDefault = (label: string, isDefault: boolean) => (isDefault ? `${label} (default)` : label)
 
 const oneLine = (text: Child) => span({ class: 'block truncate' }, text)
 
-const deadlineRow = ({ kit, setDeadline }: PageParts, settings: Sig<PermissionSettings | undefined>) =>
-  kit.settingsRow(
-    { title: 'Deny unanswered questions after', detail: 'The agent hears it was denied and carries on with other work' },
+const deadlineRow = ({ kit, setDeadline }: PageParts, settings: Sig<PermissionSettings | undefined>) => {
+  const minutes = () => settings.get()?.deadlineMinutes
+  return kit.settingsRow(
+    {
+      ...settingMark(ITEMS.deadline.id),
+      title: 'Deny unanswered questions after',
+      reset: { changed: () => minutes() !== DEFAULT_DEADLINE_MINUTES, run: () => setDeadline(DEFAULT_DEADLINE_MINUTES) },
+    },
     kit.segmented(
-      DEADLINES.map(minutes => ({ value: minutes, label: `${minutes} min` })),
-      () => settings.get()?.deadlineMinutes,
+      DEADLINES.map(value => ({ value, label: withDefault(`${value} min`, value === DEFAULT_DEADLINE_MINUTES) })),
+      minutes,
       setDeadline,
-      { label: 'Question deadline' },
+      { label: ITEMS.deadline.label },
     ),
   )
+}
 
 const botRow = ({ kit, setBot }: PageParts, settings: Sig<PermissionSettings | undefined>, bot: Sig<BotSummary>) => {
-  const mode = () => settings.get()?.modes.find(entry => entry.owner === 'bot' && entry.id === bot.get().id)?.mode ?? 'off'
+  const mode = () => settings.get()?.modes.find(entry => entry.owner === 'bot' && entry.id === bot.get().id)?.mode ?? DEFAULT_BOT_MODE
   return kit.settingsRow(
-    { lead: kit.botFace(bot.get().id, bot.get().color, 16), title: () => bot.get().name || 'New bot', detail: () => modeDetails[mode()] },
+    {
+      lead: kit.botFace(bot.get().id, bot.get().color, 16),
+      title: () => bot.get().name || 'New bot',
+      reset: { changed: () => mode() !== DEFAULT_BOT_MODE, run: () => setBot(bot.get().id, DEFAULT_BOT_MODE) },
+    },
     kit.segmented(
-      (['off', 'ask', 'auto'] as const).map(value => ({ value, label: modeLabels[value] })),
+      modes.map(value => ({ value, label: withDefault(modeLabels[value], value === DEFAULT_BOT_MODE) })),
       mode,
       value => setBot(bot.get().id, value),
       { label: 'Permissions' },
@@ -90,27 +112,28 @@ const loaded = (parts: PageParts, settings: Sig<PermissionSettings | undefined>)
     kit.settingsSection({}, deadlineRow(parts, settings)),
     show(
       () => bots.get().length > 0,
-      () => kit.settingsSection({ title: 'Bots', note: 'Threads a bot starts follow it, and ask you every time before using a saved login or starting agents' }, kit.rowList(bots, bot => bot.id, bot => botRow(parts, settings, bot))),
+      () => kit.settingsSection({ ...settingMark(ITEMS.bots.id), title: 'Bots' }, kit.rowList(bots, bot => bot.id, bot => botRow(parts, settings, bot))),
     ),
     kit.settingsSection(
-      { title: 'Saved rules' },
+      { ...settingMark(ITEMS.rules.id), title: ITEMS.rules.label },
       kit.rowList(rules, rule => rule.id, rule => ruleRow(parts, rule)),
       show(
         () => !rules.get().length,
-        () => kit.emptyState({ text: 'None yet. Always allow on a question saves one here.' }),
+        () => kit.emptyState({ text: 'None' }),
       ),
     ),
     show(
       () => decisions.get().length > 0,
-      () => kit.settingsSection({ title: 'Recent decisions' }, kit.rowList(decisions, decision => decision.id, decision => decisionRow(parts, decision))),
+      () => kit.settingsSection({ ...settingMark(ITEMS.decisions.id), title: ITEMS.decisions.label }, kit.rowList(decisions, decision => decision.id, decision => decisionRow(parts, decision))),
     ),
   )
 }
 
+export const permissionItems = Object.values(ITEMS)
+
 export const permissionsPage = (parts: PageParts) =>
   div(
     { class: 'flex flex-col gap-6' },
-    parts.kit.pageHead('Threads and bots run every call until you pick Ask or Auto, in a thread’s details or here for a bot.'),
     dynamicChild(
       parts.settings.map(value => value === undefined),
       loading => (loading ? parts.kit.loadingState() : loaded(parts, parts.settings)),

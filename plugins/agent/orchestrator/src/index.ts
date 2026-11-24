@@ -4,7 +4,7 @@ import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { createAnswer } from './answer'
 import { createAsk } from './ask'
-import { type Orchestrator, orchestrator, threadSend } from './contract'
+import { type Orchestrator, orchestrator, settleDefault, threadSend } from './contract'
 import { findThread } from './find'
 import { reportFinished } from './finished'
 import { createOwners } from './owners'
@@ -30,7 +30,7 @@ export default definePlugin({
   description:
     "Threads for the sand thread command, outside agents and sand's own agents: start threads and subagents, message, wait for, read, list and stop them on this PC or your other PCs, built on turns. A subagent tells whoever started it when it finishes and is archived with its parent; a thread stands on its own. settle_days sets when threads and bots the user hasn't talked to settle",
   inject,
-  config: z.object({ settle_days: z.number().int().min(1).max(365).default(3) }).default({ settle_days: 3 }),
+  config: z.object({ settle_days: z.number().int().min(1).max(365).default(settleDefault) }).default({ settle_days: settleDefault }),
   apply(ctx, { settle_days }) {
     ctx.ledger.migrate('orchestrator', schema)
     const starters = openStarters(ctx.ledger)

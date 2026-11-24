@@ -28,7 +28,7 @@ const addonControls = (kit: Kit, store: FeatureStore, choice: FeatureChoice, add
 
 const addonLine = (choice: FeatureChoice, addon: Addon, feature: Feature | undefined) => {
   if (addon.needsSand) return 'Needs a newer sand'
-  if (addon.fault) return `Turned off because it did not load with this sand: ${addon.fault}`
+  if (addon.fault) return `Off, didn't load: ${addon.fault}`
   return feature ? status(choice, feature) : ''
 }
 

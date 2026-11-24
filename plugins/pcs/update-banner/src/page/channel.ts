@@ -1,30 +1,28 @@
-import type { UpdateChannel } from '@sand/host-updates/contract'
+import { DEFAULT_UPDATE_CHANNEL, type UpdateChannel } from '@sand/host-updates/contract'
+import { settingMark, type SettingsItem } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Fleet } from '../fleet/model'
 import { isBusy } from '../fleet/status'
 
-const channels: { value: UpdateChannel; label: string; detail: string }[] = [
-  { value: 'release', label: 'Releases', detail: 'Tested releases only.' },
-  { value: 'nightly', label: 'Nightly', detail: 'The newest build once a day. Nightly builds may break.' },
-  { value: 'dev', label: 'Dev', detail: 'A build for every change pushed to sand. Dev builds break more often.' },
+const channels: { value: UpdateChannel; label: string }[] = [
+  { value: 'release', label: 'Releases (default)' },
+  { value: 'nightly', label: 'Nightly' },
+  { value: 'dev', label: 'Dev' },
 ]
 
-const channelDetail = (channel: UpdateChannel | undefined) => {
-  const detail = channels.find(choice => choice.value === channel)?.detail
-  return detail ? `${detail} Every PC uses this.` : 'Every PC uses this.'
-}
+const channelItem: SettingsItem = { id: 'channel', label: 'Release channel', keywords: ['updates from', 'stable', 'beta', 'nightly', 'dev', 'releases'] }
 
-export const channelSection = (kit: Kit, fleet: Fleet) => {
+const channelSection = (kit: Kit, fleet: Fleet) => {
   const { segmented, settingsRow, settingsSection } = kit
   const locked = () => fleet.busy.get() || !fleet.channel.get() || fleet.pcs.get().some(pc => isBusy(pc.state))
   const choose = (channel: UpdateChannel) => {
     if (!locked() && channel !== fleet.channel.get()) void fleet.setChannel(channel)
   }
+  const reset = { changed: () => !locked() && fleet.channel.get() !== DEFAULT_UPDATE_CHANNEL, run: () => choose(DEFAULT_UPDATE_CHANNEL) }
   return settingsSection(
     {},
-    settingsRow(
-      { title: 'Updates from', detail: () => channelDetail(fleet.channel.get()) },
-      segmented(channels, fleet.channel, choose, { label: 'Updates from' }),
-    ),
+    settingsRow({ ...settingMark(channelItem.id), title: 'Updates from', reset }, segmented(channels, fleet.channel, choose, { label: 'Updates from' })),
   )
 }
+
+export { channelItem, channelSection }

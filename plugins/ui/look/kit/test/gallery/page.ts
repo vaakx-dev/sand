@@ -146,7 +146,7 @@ const menuSample = () => {
 
 const gallery = () =>
   kit.pageBody(
-    { intro: 'Every piece the screens draw with, on the approved roles.' },
+    {},
     block('Type roles', roles()),
     block(
       'Buttons',

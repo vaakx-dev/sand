@@ -15,7 +15,7 @@ import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
 import { threadRows, type RowPart } from './contract'
 import { listGroups, pageSize } from './groups'
-import { settleDays, settleRow } from './settle'
+import { settleDays, settleItem, settleRow } from './settle'
 import { settings } from '@sand/settings/contract'
 import { threadEntries, threadRow } from './items/items'
 import { RowLooks } from './items/looks'
@@ -74,7 +74,7 @@ export default definePlugin({
         }),
       ),
     )
-    ctx.watch(settings, found => found?.section({ page: 'projects', id: 'settle', order: 5, render: () => settleRow(ctx, days) }))
+    ctx.watch(settings, found => found?.section({ page: 'projects', id: 'settle', order: 5, items: [settleItem], render: () => settleRow(ctx, days) }))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
     ctx.watch(markdownLinks, found => found?.scheme(threadLinks({ kit: ctx.kit, shell: ctx.shell, row, open: thread => openThread(ctx, ctx.shell, thread) })))
     ctx.watch(needs, found => {

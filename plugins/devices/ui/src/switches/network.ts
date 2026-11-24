@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import { derive, dynamicChild, show, sig } from '@vaakx-dev/vrui'
 import type { PcSettings } from '../data/pc-settings'
 import type { Ui } from '../ui'
@@ -35,7 +36,7 @@ export const networkRows = (ui: Ui, settings: PcSettings, name: () => string) =>
     ),
     show(network.loaded, () =>
       settingsRow(
-        { title: 'Open to your network', detail: () => `Phones and PCs on your wifi can reach ${name()}. When off, only ${name()} itself can.` },
+        { ...settingMark('network'), title: 'Open to your network' },
         toggleSwitch({ on: open, 'aria-label': 'Open to your network', disabled: busy, onClick: toggle }),
       ),
     ),

@@ -1,3 +1,4 @@
+import { settingMark } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, form, preventThen, type Sig, sig, span } from '@vaakx-dev/vrui'
 import type { SshConnectOptions, SshHost, SshLinkState, SshMachine, SshMachines, SshState } from '../contract'
@@ -91,7 +92,7 @@ export const sshSection = (kit: Kit, ssh: SshMachines, state: Sig<SshState>) => 
   }
 
   return settingsSection(
-    { title: 'SSH' },
+    { ...settingMark('ssh'), title: 'SSH' },
     rowList(
       derive(() => state.get().machines),
       machine => machine.pc,

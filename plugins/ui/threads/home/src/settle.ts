@@ -1,5 +1,6 @@
 import { wire, wireHello } from '@sand/devices-contract'
-import { helloSettleDays, settleChoices, settleDaysChange, settleDaysSet } from '@sand/orchestrator/contract'
+import { helloSettleDays, settleChoices, settleDaysChange, settleDaysSet, settleDefault } from '@sand/orchestrator/contract'
+import { settingMark } from '@sand/settings/contract'
 import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
@@ -7,6 +8,10 @@ import { sig, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 type SettleContext = Context<{ wire: typeof wire; kit: typeof kit }>
+
+export const settleItem = { id: 'settle', label: 'Settle after', keywords: ['settled', 'idle', 'inactive', 'days', 'old threads'] }
+
+const choiceLabel = (value: number) => (value === settleDefault ? `${plural(value, 'day')} (default)` : plural(value, 'day'))
 
 export const settleDays = (ctx: SettleContext) => {
   const days = sig<number | undefined>(undefined)
@@ -20,13 +25,14 @@ export const settleDays = (ctx: SettleContext) => {
 export const settleRow = (ctx: SettleContext, days: Sig<number | undefined>) => {
   const toasts = toastsOf(ctx)
   const choose = (next: number) => void toasts.attempt('Couldn’t change when chats settle', () => ctx.wire.call(settleDaysSet, { days: next }).then(found => days.set(found)))
+  const reset = { changed: () => days.get() !== undefined && days.get() !== settleDefault, run: () => choose(settleDefault) }
   return ctx.kit.settingsRow(
-    { title: 'Settle after', detail: 'Threads and bots you haven’t talked to for this long move to Settled at the back of the list. Talking to one brings it back.' },
+    { ...settingMark(settleItem.id), title: settleItem.label, reset },
     ctx.kit.segmented(
-      settleChoices.map(value => ({ value, label: plural(value, 'day') })),
+      settleChoices.map(value => ({ value, label: choiceLabel(value) })),
       () => days.get(),
       choose,
-      { label: 'Settle after' },
+      { label: settleItem.label },
     ),
   )
 }
