@@ -1,5 +1,5 @@
 import type { AppAsk, AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
-import { fieldsOf, forkedAside, type Json, mcpServer, SERVER_NAME, Turns } from '@sand/app-plan'
+import { fieldsOf, forkedAside, type Json, SERVER_NAME, Turns } from '@sand/app-plan'
 import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { claudeArgs, claudeEnv, type Saved } from '../cli/args'
@@ -7,11 +7,10 @@ import { connect } from '../cli/connection'
 import { usageLimits } from '../account/usage'
 import { messageBlocks } from './content'
 import { createReader, succeeded } from './stream'
+import { toolServer } from './tools'
 import { reportWindow } from './window'
 
 const TOOL_USE_KEY = 'claudecode/toolUseId'
-
-const TOOL_LOADING = { 'anthropic/alwaysLoad': true, 'anthropic/maxResultSizeChars': 500_000 }
 
 const NOTIFIED = { jsonrpc: '2.0', result: {}, id: 0 }
 
@@ -28,7 +27,7 @@ export interface SessionNeeds {
 export const openSession = async (setup: AppSetup, output: AppOutput, needs: SessionNeeds, given?: Saved): Promise<AppSession> => {
   const { media, report } = needs
   const turns = new Turns(output)
-  const serve = mcpServer({ tools: setup.tools, media, meta: TOOL_LOADING, call: ({ meta }) => turns.result(String(meta[TOOL_USE_KEY] ?? '')) })
+  const serve = toolServer({ tools: setup.tools, media, call: ({ meta }) => turns.result(String(meta[TOOL_USE_KEY] ?? '')) })
   const reader = createReader(output, turns)
   const saved = savedOf(setup, given)
   const resumed = resumable(saved)

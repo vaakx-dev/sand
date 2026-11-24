@@ -1,14 +1,15 @@
-import { type AppOutput, UsageLimited } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, UsageLimited } from '@sand/accounts/contract'
 import { expect, test } from 'bun:test'
 import { createReader } from '../src/session/stream'
 import { usageLimits } from '../src/account/usage'
 
-const failures = () => {
+const reading = () => {
   const failed: unknown[] = []
+  const calls: AppCall[] = []
   const output: AppOutput = {
     text() {},
     thinking() {},
-    call() {},
+    call: call => void calls.push(call),
     usage() {},
     context() {},
     pause() {},
@@ -16,13 +17,13 @@ const failures = () => {
     fail: error => void failed.push(error),
     exit() {},
   }
-  return { failed, reader: createReader(output) }
+  return { failed, calls, reader: createReader(output) }
 }
 
 const limited = { type: 'result', subtype: 'success', is_error: true, api_error_status: 429, result: 'You’ve hit your limit · resets 3:40pm' }
 
 test('a turn Claude Code stopped at the usage limit fails as out of usage until the latest reset it reported', () => {
-  const { failed, reader } = failures()
+  const { failed, reader } = reading()
   reader.read({ type: 'rate_limit_event', rate_limit_info: { status: 'rejected', rateLimitType: 'five_hour', resetsAt: 1_900_000_000 } })
   reader.read({ type: 'rate_limit_event', rate_limit_info: { status: 'rejected', rateLimitType: 'seven_day', resetsAt: 1_900_003_600 } })
   reader.finish(limited)
@@ -33,8 +34,19 @@ test('a turn Claude Code stopped at the usage limit fails as out of usage until 
   expect(failed[1]).not.toBeInstanceOf(UsageLimited)
 })
 
+test('sand runs the calls to its own tools, while Claude Code runs its tool search itself', () => {
+  const { calls, reader } = reading()
+  const search = { type: 'tool_use', id: 'toolu_search', name: 'ToolSearch', input: { query: 'select:calendar' } }
+  const calendar = { type: 'tool_use', id: 'toolu_calendar', name: 'mcp__sand__calendar', input: { day: 'monday' } }
+
+  reader.read({ type: 'assistant', message: { content: [search] } })
+  reader.read({ type: 'assistant', message: { content: [{ type: 'text', text: 'Checking.' }, calendar] } })
+
+  expect(calls).toEqual([{ id: 'toolu_calendar', name: 'calendar', input: { day: 'monday' } }])
+})
+
 test('the 5-hour window resets when Claude Code’s rate-limit events say, not at the hour the usage endpoint rounds to', () => {
-  const { reader } = failures()
+  const { reader } = reading()
   reader.read({ type: 'rate_limit_event', rate_limit_info: { status: 'allowed', unifiedWindows: { five_hour: { utilization: 0.4, resetsAt: 1_900_001_820 }, seven_day: { utilization: 0.2, resetsAt: 1_900_300_000 } } } })
   const usage = {
     rate_limits: {

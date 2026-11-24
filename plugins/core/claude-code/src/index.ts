@@ -27,6 +27,7 @@ const claudeCode = (media: Media): Provider => ({
   logo: 'anthropic',
   family: 'anthropic',
   caps: CAPS,
+  toolLoading: 'search',
   binary: claude,
   account({ folder }, report) {
     const models = modelCatalog(folder)

@@ -74,6 +74,9 @@ export type Bridge = ReturnType<typeof createBridge>
 export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const live = new Map<string, Live>()
   const effortFixed = !plan.caps.reconfigure.includes('effort')
+  const toolsFixed = plan.toolLoading === 'fixed'
+
+  const offered = (tools: ToolSpec[]) => (plan.toolLoading === 'search' ? tools : loadedTools(tools))
 
   const setupPrint = ({ model, effort, system, tools }: AppSetup) => JSON.stringify([model, system, toolsPrint(tools), effortFixed ? effort : undefined])
 
@@ -125,7 +128,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
     model: request.model,
     ...(request.effort && { effort: request.effort }),
     system: request.system,
-    tools: thread ? loadedTools(request.tools) : [],
+    tools: thread ? offered(request.tools) : [],
     cwd: thread && (await isFolder(thread.cwd)) ? thread.cwd : home,
     persist: !!thread,
   })
@@ -155,7 +158,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const ready = async (key: string, found: Live | undefined, setup: AppSetup, thread: ThreadRef): Promise<Opened> => {
     const tools = toolsPrint(setup.tools)
     const started = found?.tools ?? thread.native?.tools ?? tools
-    if (plan.fixedTools && started !== tools) throw new ThreadLost(`${plan.app} can't change the tools of a running thread`)
+    if (toolsFixed && started !== tools) throw new ThreadLost(`${plan.app} can't change the tools of a running thread`)
     if (found?.setup === setupPrint(setup)) return { entry: found, fresh: false }
     if (found) drop(key, found)
     const resume = found?.session.id ?? thread.native?.id
@@ -177,7 +180,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   }
 
   const nativeOf = (entry: Live, thread: ThreadRef): NativeRef | undefined =>
-    entry.session.id ? { id: entry.session.id, cwd: thread.cwd, ...(plan.fixedTools && { tools: entry.tools }) } : undefined
+    entry.session.id ? { id: entry.session.id, cwd: thread.cwd, ...(toolsFixed && { tools: entry.tools }) } : undefined
 
   const read = async function* (key: string, entry: Live, model: string, signal?: AbortSignal) {
     let ended = false

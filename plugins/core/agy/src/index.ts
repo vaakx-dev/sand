@@ -28,6 +28,7 @@ function antigravity(media: Media, asides: string): Provider {
     detail: 'Uses your sign-in from the Antigravity CLI (agy) on this PC',
     logo: 'antigravity',
     caps: CAPS,
+    toolLoading: 'reopen',
     binary: agy,
     account({ folder }, report) {
       return {

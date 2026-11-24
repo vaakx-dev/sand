@@ -40,7 +40,7 @@ const codexProvider = (media: Media, apps: string): Provider => ({
   logo: 'openai',
   family: 'openai',
   caps: CAPS,
-  fixedTools: true,
+  toolLoading: 'fixed',
   binary: codex,
   account(place, report) {
     const { folder, home } = placeOf(place, apps)

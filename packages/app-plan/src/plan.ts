@@ -1,4 +1,4 @@
-import type { AppPlan, AppStatus, PlanApi, PlanLimits, Plans, ProviderCapabilities } from '@sand/accounts/contract'
+import type { AppPlan, AppStatus, PlanApi, PlanLimits, Plans, ProviderCapabilities, ToolLoading } from '@sand/accounts/contract'
 import type { Binary } from './binary'
 
 interface Place {
@@ -6,7 +6,7 @@ interface Place {
   folder?: string
 }
 
-type Account = Omit<AppPlan, 'id' | 'label' | 'name' | 'detail' | 'logo' | 'app' | 'install' | 'family' | 'caps' | 'fixedTools' | 'another'>
+type Account = Omit<AppPlan, 'id' | 'label' | 'name' | 'detail' | 'logo' | 'app' | 'install' | 'family' | 'caps' | 'toolLoading' | 'another'>
 
 interface Provider {
   id: string
@@ -16,7 +16,7 @@ interface Provider {
   logo: string
   family?: PlanApi
   caps: ProviderCapabilities
-  fixedTools?: boolean
+  toolLoading: ToolLoading
   binary: Binary
   account(place: Place, report: (limits: PlanLimits) => void): Account
 }

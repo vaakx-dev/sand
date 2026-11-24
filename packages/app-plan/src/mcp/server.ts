@@ -15,7 +15,7 @@ interface McpTools {
   tools: ToolSpec[]
   media: Media
   call(call: ToolCall): Promise<ToolResultBlock>
-  meta?: Json
+  meta?(tool: ToolSpec): Json
 }
 
 type McpServer = (message: Json) => Promise<Json | undefined>
@@ -26,8 +26,8 @@ const DEFAULT_PROTOCOL = '2025-06-18'
 const METHOD_MISSING = -32601
 const HANDLER_FAILED = -32000
 
-const listed = (tools: ToolSpec[], meta?: Json) =>
-  tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema, annotations: { readOnlyHint: true }, ...(meta && { _meta: meta }) }))
+const listed = (tools: ToolSpec[], meta?: (tool: ToolSpec) => Json) =>
+  tools.map(tool => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema, annotations: { readOnlyHint: true }, ...(meta && { _meta: meta(tool) }) }))
 
 const mcpServer = ({ tools, media, call, meta }: McpTools): McpServer => {
   const result = async (method: unknown, params: Json): Promise<Json | undefined> => {
