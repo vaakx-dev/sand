@@ -1,18 +1,15 @@
 import { botRoster } from '@sand/bots/contract'
-import { chatFinder } from '@sand/chat-find/contract'
 import { threadView } from '@sand/chat/contract'
 import { pcs, wire } from '@sand/devices-contract'
 import { palette, type Palette, type PalettePage } from '@sand/palette/contract'
 import { shownChats } from '@sand/transcript/contract'
 import { searchWords } from '@sand/util'
 import { definePlugin } from 'drydock'
-import type { Fit, Indexing, MessageHit } from '../contract'
+import type { Indexing, MessageHit } from '../contract'
 import { chatMatchRows, messageRows, type RowParts } from './rows'
 import { MessageSearch, type PcChat } from './search'
 
 const TYPING_DELAY_MS = 150
-
-const findQuery = (fit: Fit, query: string, words: string[]) => (fit === 'phrase' ? query.trim() : words.reduce((longest, word) => (word.length > longest.length ? word : longest), ''))
 
 const indexingNote = ({ done, total }: Indexing) => `Indexing messages… ${Math.floor((done / total) * 100)}%`
 
@@ -23,16 +20,9 @@ export default definePlugin({
   apply(ctx) {
     const search = new MessageSearch(ctx)
 
-    const show = ({ chat }: PcChat, { entry, block, fit }: MessageHit, query: string) => {
-      const words = searchWords(query)
-      const finder = ctx.get(chatFinder)
-      if (finder) return finder.open(chat, { query: findQuery(fit, query, words), entry, block })
-      void ctx.shownChats.show({ conversation: chat, entry, block, words })
-    }
-
-    const open = (chat: PcChat, hit: MessageHit, query: string) => {
-      ctx.threadView.open(chat.chat)
-      show(chat, hit, query)
+    const open = ({ chat }: PcChat, { entry, block }: MessageHit, query: string) => {
+      ctx.threadView.open(chat)
+      void ctx.shownChats.show({ conversation: chat, entry, block, words: searchWords(query) })
     }
 
     const partsFor = (found: Palette, query: string): RowParts => ({

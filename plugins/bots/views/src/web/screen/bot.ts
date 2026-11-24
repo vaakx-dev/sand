@@ -4,7 +4,7 @@ import type { Route, Screen } from '@sand/ui-shell/contract'
 import { div, dynamicChild, onRaf, show, span, untrack } from '@vaakx-dev/vrui'
 import { chatView } from '../chat/view'
 import { jobsView } from '../jobs/view'
-import type { BotView, Parts } from '../parts'
+import { automationsOf, type BotView, type Parts } from '../parts'
 import { faceStateOf } from '../work'
 
 const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
@@ -15,6 +15,10 @@ const CHOICES: { value: BotView; label: string }[] = [
 ]
 
 const missing = ({ ctx: { kit } }: Parts) => kit.pageBody({}, kit.emptyState({ text: 'This bot is gone.' }))
+
+const hasJobs = (parts: Parts, id: string) => Boolean(parts.store.find(id)?.jobs.length)
+
+const automated = (parts: Parts, id: string) => hasJobs(parts, id) || automationsOf(parts, id).length > 0
 
 const headerOf = (parts: Parts, id: string, view: () => BotView) => {
   const { kit } = parts.ctx
@@ -34,7 +38,10 @@ const headerOf = (parts: Parts, id: string, view: () => BotView) => {
     kit.barTitle(title),
     span({ class: 'flex-1' }),
     dynamicChild(actions, shown => div({ class: 'flex md:hidden' }, shown.map(actionButton))),
-    kit.segmented(CHOICES, view, choose, { label: 'View', class: 'shrink-0' }),
+    show(
+      () => automated(parts, id),
+      () => kit.segmented(CHOICES, view, choose, { label: 'View', class: 'shrink-0' }),
+    ),
   )
 }
 
@@ -44,9 +51,10 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
   const gone = () => parts.store.bots.get() !== undefined && !known()
   const save = (patch: BotPatch) => void parts.toasts.attempt('Couldn’t save the bot', () => parts.store.update(id, patch))
   const view = (): BotView => {
+    if (!automated(parts, id)) return 'chat'
     const tab = route().tab
     if (tab === 'jobs' || tab === 'chat') return tab
-    return parts.store.find(id)?.jobs.length ? 'jobs' : 'chat'
+    return hasJobs(parts, id) ? 'jobs' : 'chat'
   }
 
   const screen = () => {
