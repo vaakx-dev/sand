@@ -24,6 +24,13 @@ jobs:
       - run: bun run check
       - name: Build the release assets
         run: bun apps/sand/src/main.ts release-assets "$RUNNER_TEMP/assets"
+      - uses: ./.github/actions/android
+        with:
+          keystore: ${{ secrets.ANDROID_KEYSTORE }}
+          keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          assets: ${{ runner.temp }}/assets
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}

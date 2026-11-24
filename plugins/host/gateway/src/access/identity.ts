@@ -1,4 +1,4 @@
-import { deviceParams, type IdentityReply, type ThisPc } from '@sand/devices-contract'
+import { appProtocol, deviceParams, type IdentityReply, type ThisPc } from '@sand/devices-contract'
 import { identityProof } from '@sand/devices-identity'
 import { textReply } from '@sand/util/host'
 import { json } from '../http/reply'
@@ -10,7 +10,7 @@ export const tooLong = (nonce: string) => nonce.length > nonceLimit
 
 export const identityReply = async (thisPc: ThisPc, clientNonce: string, nonce: string): Promise<IdentityReply> => {
   const identity = await thisPc.identity()
-  return { ...identity, nonce, signature: await thisPc.signer.sign(identityProof(clientNonce, nonce, identity.id)), signedSocket: true }
+  return { ...identity, nonce, signature: await thisPc.signer.sign(identityProof(clientNonce, nonce, identity.id)), signedSocket: true, appProtocol }
 }
 
 export const createIdentityRoute = (thisPc: ThisPc, nonces: Nonces) => async (request: Request) => {

@@ -1,7 +1,7 @@
 import { directRoute, type ViaRelay, viaRoute } from '@sand/devices-connect'
 import { type DeviceRecord, helloPc, PcUnavailable, type PcView, type Signer } from '@sand/devices-contract'
 import type { HelloField } from '@sand/host-hub/contract'
-import { servedFromThisPc } from '../page/home'
+import { pageRoutes, servedFromThisPc } from '../page/home'
 import { knownPcs } from './known'
 import { openPcLink, type PcLink } from './link'
 import { wireListeners } from './listeners'
@@ -15,7 +15,7 @@ export interface FleetOptions {
   changed(): void
 }
 
-const homeSeeds = () => [directRoute(location.origin, 'seed')].filter(route => route !== undefined)
+const homeSeeds = () => pageRoutes().map(url => directRoute(url, 'seed')).filter(route => route !== undefined)
 
 export const createFleet = (options: FleetOptions) => {
   const { home } = options

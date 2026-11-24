@@ -1,5 +1,5 @@
 import { botViews } from '@sand/bots/contract'
-import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
+import { androidApp, pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { settings } from '@sand/settings/contract'
 import { toastsOf } from '@sand/toasts/contract'
 import { kit } from '@sand/ui-kit/contract'
@@ -8,7 +8,8 @@ import { threadRouteKind } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { helloMomentsOff, helloPushKey, notifyMomentsOff, notifyNotice } from '../contract'
-import { onNoticeOpen, permission, showNotice, support } from './browser'
+import { onNoticeOpen, permission, showNotice, webPush } from './browser'
+import { pushChannel } from './channel'
 import { notificationsPage } from './page'
 
 export default definePlugin({
@@ -30,10 +31,12 @@ export default definePlugin({
     })
     ctx.effect(() => ctx.wire.on(notifyMomentsOff, kinds => off.set(kinds)))
 
-    const page = { kit: ctx.kit, wire: ctx.wire, toasts: toastsOf(ctx), on, key, off, device: () => record()?.name ?? 'This device' }
+    const app = ctx.get(androidApp)
+    const channel = pushChannel(app)
+    const page = { kit: ctx.kit, wire: ctx.wire, toasts: toastsOf(ctx), on, key, off, channel, device: () => record()?.name ?? 'This device' }
     ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', intro: 'When sand tells you that something needs you, and on which devices.', icon: 'bell', group: 'accounts', order: 26, render: () => notificationsPage(page) }))
 
-    if (support() !== 'ready') return
+    if (app || webPush.support() !== 'ready') return
     const shows = () => on.get() && document.visibilityState === 'hidden' && permission() === 'granted'
     ctx.effect(() =>
       ctx.wire.on(

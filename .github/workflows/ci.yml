@@ -45,3 +45,15 @@ jobs:
         run: bunx playwright install --only-shell chromium
       - name: Run every feature setup and the phone layouts in a browser
         run: bun run test:phone
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/android
+        with:
+          assets: ${{ runner.temp }}/assets
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sand-apk
+          path: ${{ runner.temp }}/assets/sand.apk
