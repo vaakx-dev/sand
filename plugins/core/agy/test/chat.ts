@@ -1,6 +1,7 @@
 import type { AppAsk, AppOutput } from '@sand/accounts/contract'
 import type { Media } from '@sand/media/contract'
 import { join } from 'node:path'
+import { startAcp } from '../src/acp'
 import { openSession } from '../src/session'
 
 const media: Media = { put: () => ({ hash: '', size: 0, mediaType: '' }), path: () => '', data: () => undefined, exclude: () => {}, include: () => {}, inUse: () => () => {} }
@@ -24,7 +25,7 @@ const turnOutput = () => {
 const chatThenAside = async (folder: string, said: string, ask: AppAsk) => {
   const { output, finished } = turnOutput()
   const setup = { model: 'gemini-test', system: 'Be brief.', tools: [], cwd: folder, persist: true }
-  const session = await openSession(setup, output, { media, asides: join(folder, 'asides'), report() {} })
+  const session = await openSession(setup, output, { media, asides: join(folder, 'asides'), report() {}, connect: startAcp })
   session.send([{ type: 'text', text: said }])
   await finished
   const reply = await session.aside!(ask)

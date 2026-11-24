@@ -4,7 +4,7 @@ import type { ModelContent, StopReason } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { errorMessage } from '@sand/util'
 import { configOptions, effortOption, modelOption } from './account'
-import { type AcpClient, startAcp } from './acp'
+import type { AcpClient, startAcp } from './acp'
 import { AGENT, asidePrompt, asideSetup } from './aside'
 import { readLimits } from './limits'
 
@@ -14,6 +14,7 @@ interface SessionNeeds {
   asides: string
   agent?: string
   report(limits: PlanLimits): void
+  connect: typeof startAcp
 }
 
 interface Choosing {
@@ -124,7 +125,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
     return { outcome: optionId ? { outcome: 'selected', optionId } : { outcome: 'cancelled' } }
   }
 
-  const client = await startAcp({
+  const client = await needs.connect({
     folder: needs.folder,
     agent: needs.agent,
     cwd: setup.cwd,
@@ -162,14 +163,17 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
   }
   await chooseEffort(setup.effort)
 
-  const runTurn = async (content: ModelContent[], wanted?: Effort) => {
+  let latestPrompt = 0
+  const runPrompt = async (content: ModelContent[], wanted?: Effort) => {
+    const prompt = ++latestPrompt
+    const superseded = () => prompt !== latestPrompt
     try {
       await chooseEffort(wanted)
       const result = await client.request('session/prompt', { sessionId, prompt: promptBlocks(content, needs.media) })
       reportUsage(fieldsOf(result.usage), output)
-      turns.finish(stopReasonOf(result.stopReason))
+      if (!superseded()) turns.finish(stopReasonOf(result.stopReason))
     } catch (error) {
-      turns.fail(turns.stopping ? error : await failureOf(needs, error))
+      if (!superseded()) turns.fail(turns.stopping ? error : await failureOf(needs, error))
     }
   }
 
@@ -182,7 +186,8 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
     id: sessionId,
     pid: client.pid,
     aside,
-    prompt: (content, wanted) => void runTurn(content, wanted),
+    prompt: (content, wanted) => void runPrompt(content, wanted),
+    steer: content => void runPrompt(content),
     stop: () => client.notify('session/cancel', { sessionId }),
     async close() {
       await client.request('session/close', { sessionId }).catch(() => {})
