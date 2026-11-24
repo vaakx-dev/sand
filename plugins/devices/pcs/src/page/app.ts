@@ -37,6 +37,8 @@ export const thisApp = lazy((): AndroidApp | undefined => {
   return window.sandApp && start ? appOver(window.sandApp, start) : undefined
 })
 
+export const appProxyOrigin = () => (thisApp() ? location.origin : undefined)
+
 const reachableUrls = (connection: PcConnection) => {
   const status = connection.status()
   const connected = status.phase === 'connected' ? [status.route.url] : []

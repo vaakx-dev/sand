@@ -31,7 +31,7 @@ export default definePlugin({
     const notices = toastsOf(ctx)
     const card = serversCard(ctx.kit, {
       servers: shownIn,
-      open: server => void notices.attempt(`Couldn't open localhost:${server.port}`, () => openServer(ctx.wire, server)),
+      open: server => void notices.attempt(`Couldn't open localhost:${server.port}`, () => openServer(ctx, server)),
       stop: server => void notices.attempt(`Couldn't stop localhost:${server.port}`, () => ctx.wire.call(devServerStop, { port: server.port, session: server.session }, server.device)),
     })
     ctx.effect(() => ctx.inspector.row({ id: 'dev-servers', group: 'helpers', order: 70, shows: subject => !subject.draft && shownIn(subject).length > 0, render: card }))
