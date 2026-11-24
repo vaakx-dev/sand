@@ -1,4 +1,5 @@
 import {
+  type AppAsk,
   type AppPlan,
   type AppSession,
   type AppSetup,
@@ -64,7 +65,7 @@ const noUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
 
 const keyOf = (caller: string, thread: ThreadRef) => `${caller}:${thread.id}:${thread.generation}`
 
-const askedOf = (request: Request) => textOf(request.messages.at(-1)?.content ?? [])
+const askOf = ({ messages }: Request): AppAsk => ({ question: textOf(messages.at(-1)?.content ?? []), messages: messages.slice(0, -1) })
 
 const callsOf = (message: Message) => message.content.flatMap(block => (block.type === 'tool_call' ? [block.id] : []))
 
@@ -224,7 +225,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
     const entry = live.get(keyOf(caller, thread))
     if (!entry?.done || !entry.session.aside) throw new Error(`${plan.app} can't answer beside this thread now`)
     yield { type: 'start', model: request.model }
-    const { text, usage } = await entry.session.aside(askedOf(request), signal)
+    const { text, usage } = await entry.session.aside(askOf(request), signal)
     yield { type: 'done', message: { role: 'assistant', content: text ? [{ type: 'text', text }] : [] }, stopReason: 'end_turn', usage: { ...noUsage, ...usage } }
   }
 

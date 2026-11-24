@@ -117,8 +117,8 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
         if (!waiting.size) next()
       },
       ...(caps.inject && { inject: injecting }),
-      async aside(prompt) {
-        calls.push({ type: 'aside', text: prompt })
+      async aside({ question }) {
+        calls.push({ type: 'aside', text: question })
         const reply = queue.shift()
         if (!reply) throw new Error(`${label} has no scripted reply left`)
         return { text: said(reply), usage: {} }

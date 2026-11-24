@@ -1,4 +1,4 @@
-import { type AppAside, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
+import { type AppAside, type AppAsk, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
 import { fieldsOf, type Json, missing, resetOf, Turns } from '@sand/app-plan'
 import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
@@ -141,9 +141,9 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
     }
   }
 
-  const aside = async (prompt: string, signal?: AbortSignal) => {
+  const aside = async ({ question }: AppAsk, signal?: AbortSignal) => {
     if (turnId || !lastTurn) return NO_ASIDE
-    const sampled = server.request('thread/sample', { threadId, expectedTurnId: lastTurn, prompt, effort: ASIDE_EFFORT })
+    const sampled = server.request('thread/sample', { threadId, expectedTurnId: lastTurn, prompt: question, effort: ASIDE_EFFORT })
     try {
       return asideOf(await (signal ? untilAborted(sampled, signal) : sampled))
     } catch (error) {

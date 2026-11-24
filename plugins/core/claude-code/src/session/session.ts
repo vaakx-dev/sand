@@ -1,4 +1,4 @@
-import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
+import type { AppAsk, AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
 import { fieldsOf, forkedAside, type Json, mcpServer, SERVER_NAME, Turns } from '@sand/app-plan'
 import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
@@ -70,7 +70,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
   return turns.session({
     ...(resumed && {
       id: resumed.id,
-      aside: (question: string, signal?: AbortSignal) => forkedAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), question, signal),
+      aside: ({ question }: AppAsk, signal?: AbortSignal) => forkedAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), question, signal),
     }),
     pid: connection.pid,
     prompt,
