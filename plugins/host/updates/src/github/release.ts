@@ -1,6 +1,6 @@
-import { addonCatalogAsset, type BuildStamp, bundleAsset, isStamp, stampAsset } from '@sand/util/release'
-import type { ReleaseInfo, UpdateChannel } from '../contract'
-import { repo, repoApi, type ApiRelease } from './api'
+import { addonCatalogAsset, androidAsset, type BuildStamp, bundleAsset, isStamp, stampAsset } from '@sand/util/release'
+import type { AndroidRelease, ReleaseInfo, UpdateChannel } from '../contract'
+import { repo, repoApi, type ApiAsset, type ApiRelease } from './api'
 import { GithubError, githubGet } from './request'
 
 export interface GithubRelease extends ReleaseInfo {
@@ -43,24 +43,31 @@ const fetchStamp = async (url: string, tag: string): Promise<BuildStamp> => {
 
 const sha256 = (digest?: string | null) => (digest?.startsWith('sha256:') ? digest.slice(7).toLowerCase() : undefined)
 
+const androidRelease = (apk: ApiAsset | undefined, { committedAt }: BuildStamp): AndroidRelease | undefined =>
+  apk && committedAt ? { url: apk.browser_download_url, sha256: sha256(apk.digest), versionCode: Math.floor(committedAt / 1000) } : undefined
+
 export const findRelease = async (channel: UpdateChannel): Promise<GithubRelease> => {
   const release = await pick(channel)
   const tag = release.tag_name
   const bundle = release.assets.find(asset => asset.name === bundleAsset)
   const stamp = release.assets.find(asset => asset.name === stampAsset)
   const catalog = release.assets.find(asset => asset.name === addonCatalogAsset)
+  const apk = release.assets.find(asset => asset.name === androidAsset)
   const missing = [bundle ? '' : bundleAsset, stamp ? '' : stampAsset].filter(Boolean)
   if (!bundle || !stamp) throw new GithubError(`${tag} on GitHub has no ${missing.join(' or ')} yet; it may still be uploading`)
+  const build = await fetchStamp(stamp.browser_download_url, tag)
+  const android = androidRelease(apk, build)
   return {
     channel,
     tag,
     name: release.name || tag,
     publishedAt: published(release),
     notesUrl: release.html_url,
-    build: await fetchStamp(stamp.browser_download_url, tag),
+    build,
     bundleUrl: bundle.browser_download_url,
     bundleSize: bundle.size,
     bundleSha256: sha256(bundle.digest),
     ...(catalog && { catalogUrl: catalog.browser_download_url }),
+    ...(android && { android }),
   }
 }

@@ -19,6 +19,7 @@ const stamp = info.extend({
   links: z.record(z.string(), z.string()),
   bun: z.string(),
   addons: z.record(z.string(), z.string()).optional(),
+  committedAt: z.number().optional(),
   changes: z.array(change).optional(),
 })
 

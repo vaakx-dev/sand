@@ -2,7 +2,7 @@ import { runtimeDeps, stampBuild, type Bundle } from '@sand/boot/build'
 import { type AppFile, type BuildInfo, type BuildStamp, buildStamp, hashFiles, moduleFiles, moduleHash, readStamp, workspaceLinks } from '@sand/util/release'
 import type { Workspace } from './split'
 
-type BuildHistory = Pick<BuildStamp, 'commit' | 'changes'>
+type BuildHistory = Pick<BuildStamp, 'commit' | 'committedAt' | 'changes'>
 
 interface CoreParts {
   files: AppFile[]
@@ -19,8 +19,8 @@ const sharedBun = () => {
 const readModules = async (root: string, packages: Workspace[]) => moduleFiles(await runtimeDeps(root, { packages }))
 
 const historyOf = (history: BuildHistory | undefined, saved: BuildStamp | undefined): BuildHistory => {
-  const { commit, changes } = history ?? saved ?? {}
-  return { ...(commit ? { commit } : {}), ...(changes?.length ? { changes } : {}) }
+  const { commit, committedAt, changes } = history ?? saved ?? {}
+  return { ...(commit ? { commit } : {}), ...(committedAt ? { committedAt } : {}), ...(changes?.length ? { changes } : {}) }
 }
 
 const packBundle = async (root: string, { files, latest, packages, addons }: CoreParts, history?: BuildHistory): Promise<Bundle> => {

@@ -22,6 +22,12 @@ object Page {
 
     fun pushFailed(reason: String) = send(JSONObject().put("kind", "push-failed").put("reason", reason))
 
+    fun installProgress(fraction: Float) = send(JSONObject().put("kind", "install-progress").put("fraction", fraction.toDouble()))
+
+    fun installFailed(reason: String) = send(JSONObject().put("kind", "install-failed").put("reason", reason))
+
+    fun installOpened() = send(JSONObject().put("kind", "install-opened"))
+
     fun pushTarget(endpoint: String, p256dh: String, auth: String) = send(
         JSONObject().put("kind", "push").put(
             "target",

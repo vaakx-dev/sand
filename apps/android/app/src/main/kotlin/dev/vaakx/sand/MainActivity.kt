@@ -20,6 +20,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.JavaScriptReplyProxy
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
     private var start: ScriptHandler? = null
     private var chosen: ValueCallback<Array<Uri>>? = null
     private var wantedVapid: String? = null
+    private var wantedApk: Apk? = null
 
     private val pickFiles = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         chosen?.onReceiveValue(chosenFiles(result.resultCode, result.data))
@@ -57,6 +59,11 @@ class MainActivity : ComponentActivity() {
     private val askToNotify = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         val vapid = wantedVapid ?: return@registerForActivityResult
         if (granted) Subscription.start(this, vapid) else Page.pushFailed(getString(R.string.notifications_off))
+    }
+
+    private val allowInstalls = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        val apk = wantedApk ?: return@registerForActivityResult
+        if (installPermission(this) == null) Update.start(this, apk) else Page.installFailed(getString(R.string.installs_off))
     }
 
     private val network = object : ConnectivityManager.NetworkCallback() {
@@ -139,7 +146,8 @@ class MainActivity : ComponentActivity() {
 
     private fun describeApp() {
         start?.remove()
-        val described = JSONObject().put("routes", JSONArray(pc.routes())).put("push", Subscription.available(this))
+        val versionCode = PackageInfoCompat.getLongVersionCode(packageManager.getPackageInfo(packageName, 0))
+        val described = JSONObject().put("routes", JSONArray(pc.routes())).put("push", Subscription.available(this)).put("versionCode", versionCode)
         start = WebViewCompat.addDocumentStartJavaScript(web, "window.sandAppStart = $described", PAGE_ORIGINS)
     }
 
@@ -168,6 +176,12 @@ class MainActivity : ComponentActivity() {
         else Subscription.start(this, vapid)
     }
 
+    private fun install(apk: Apk) {
+        wantedApk = apk
+        val permission = installPermission(this)
+        if (permission == null) Update.start(this, apk) else allowInstalls.launch(permission)
+    }
+
     private fun networkChanged() {
         pc.forget()
         Page.networkChanged()
@@ -186,6 +200,7 @@ class MainActivity : ComponentActivity() {
             "unsubscribe" -> Subscription.stop(this)
             "pair" -> pair(Uri.parse(body.getString("link")))
             "scan" -> scan()
+            "install" -> install(Apk(body.getString("url"), body.optString("sha256").ifEmpty { null }))
         }
     }
 }

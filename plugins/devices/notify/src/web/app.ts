@@ -4,10 +4,14 @@ import type { PushChannel } from './channel'
 const answer = (app: AndroidApp) =>
   new Promise<PushTarget>((resolve, reject) => {
     const stop = app.on(reply => {
-      if (reply.kind === 'network') return
-      stop()
-      if (reply.kind === 'push') resolve(reply.target)
-      else reject(new Error(reply.reason))
+      switch (reply.kind) {
+        case 'push':
+          stop()
+          return resolve(reply.target)
+        case 'push-failed':
+          stop()
+          return reject(new Error(reply.reason))
+      }
     })
   })
 

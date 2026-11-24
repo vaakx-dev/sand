@@ -5,7 +5,7 @@ const SEPARATOR = '\x1f'
 const CONVENTIONAL = /^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/
 
 const parseChange = (line: string): BuildChange | undefined => {
-  const [commit, subject] = line.split(SEPARATOR)
+  const [commit, , subject] = line.split(SEPARATOR)
   if (!commit || !subject) return
   const match = CONVENTIONAL.exec(subject.trim())
   if (!match) return { commit, type: 'other', summary: subject.trim() }
@@ -13,8 +13,10 @@ const parseChange = (line: string): BuildChange | undefined => {
   return { commit, type: type.toLowerCase(), ...(scope && { scope }), summary: summary.trim() }
 }
 
+const committedAt = (log: string) => Number(log.split(SEPARATOR, 2)[1]) * 1000
+
 const gitLog = async (root: string) => {
-  const result = await Bun.$`git -C ${root} log -n${DEPTH} --format=%H${SEPARATOR}%s`.quiet().nothrow()
+  const result = await Bun.$`git -C ${root} log -n${DEPTH} --format=%H${SEPARATOR}%ct${SEPARATOR}%s`.quiet().nothrow()
   return result.exitCode === 0 ? result.text() : undefined
 }
 
@@ -25,7 +27,7 @@ const buildHistory = async (root: string) => {
     return undefined
   }
   const changes = log.split('\n').flatMap(line => parseChange(line) ?? [])
-  return { commit: changes[0]?.commit, changes }
+  return { commit: changes[0]?.commit, committedAt: committedAt(log), changes }
 }
 
 export { buildHistory }
