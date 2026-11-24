@@ -1,6 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { colorVar, derive, div, dynamicChild, effect, untrack, type Derive } from '@vaakx-dev/vrui'
+import { colorVar, derive, div, dynamicChild, effect, onRaf, untrack, type Derive } from '@vaakx-dev/vrui'
 import { settingAttribute, type SettingsPage } from './contract'
+import { whenFound } from './integrations/appear'
 import type { PageStore } from './pages'
 
 export interface PageParts {
@@ -25,20 +26,7 @@ const flash = (row: Element) => {
   )
 }
 
-const reveal = (root: HTMLElement, item: string) => {
-  const selector = `[${settingAttribute}="${CSS.escape(item)}"]`
-  const row = () => root.querySelector(selector)
-  const found = row()
-  if (found) return flash(found)
-  const watcher = new MutationObserver(() => {
-    const appeared = row()
-    if (!appeared) return
-    watcher.disconnect()
-    flash(appeared)
-  })
-  watcher.observe(root, { childList: true, subtree: true })
-  setTimeout(() => watcher.disconnect(), waitMs)
-}
+const reveal = (root: HTMLElement, item: string) => whenFound(root, `[${settingAttribute}="${CSS.escape(item)}"]`, flash, waitMs)
 
 export const pageView = (kit: Kit, { store, page }: PageParts) => {
   const sections = (above: boolean) =>
@@ -52,7 +40,7 @@ export const pageView = (kit: Kit, { store, page }: PageParts) => {
     const wanted = store.target.get()
     if (!wanted || wanted.page !== page.get()?.id) return
     untrack(() => store.target.set(undefined))
-    requestAnimationFrame(() => reveal(root, wanted.item))
+    onRaf(() => reveal(root, wanted.item), root)
   })
   return root
 }
