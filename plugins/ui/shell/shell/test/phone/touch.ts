@@ -16,6 +16,12 @@ export interface Phone {
   cdp: CDPSession
 }
 
+interface Stroke {
+  steps?: number
+  gapMs?: number
+  holdMs?: number
+}
+
 interface Size {
   width: number
   height: number
@@ -52,15 +58,49 @@ export const until = async <T>(read: () => Promise<T>, done: (value: T) => boole
   return value
 }
 
-export const swipe = async ({ cdp }: Phone, from: [number, number], to: [number, number], { steps = 12, gapMs = 16 } = {}) => {
-  const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] })
-  await touch('touchStart', ...from)
+export const finger = ({ cdp }: Phone) => {
+  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd', touchPoints: { x: number; y: number }[]) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints })
+  return {
+    down: (x: number, y: number) => send('touchStart', [{ x, y }]),
+    move: (x: number, y: number) => send('touchMove', [{ x, y }]),
+    up: () => send('touchEnd', []),
+  }
+}
+
+export const drag = async (phone: Phone, from: [number, number], to: [number, number], { steps = 12, gapMs = 16, holdMs = 0 }: Stroke = {}) => {
+  const hand = finger(phone)
+  await hand.down(...from)
   for (let step = 1; step <= steps; step++) {
-    await touch('touchMove', from[0] + ((to[0] - from[0]) * step) / steps, from[1] + ((to[1] - from[1]) * step) / steps)
+    await hand.move(from[0] + ((to[0] - from[0]) * step) / steps, from[1] + ((to[1] - from[1]) * step) / steps)
     await Bun.sleep(gapMs)
   }
-  await touch('touchEnd', ...to)
+  await Bun.sleep(holdMs)
+  await hand.up()
+}
+
+export const swipe = async (phone: Phone, from: [number, number], to: [number, number], stroke?: Stroke) => {
+  await drag(phone, from, to, stroke)
   await Bun.sleep(settleMs)
+}
+
+const shadeNow = (page: Page) =>
+  page.evaluate(() => {
+    const sidebar = document.querySelector('nav[aria-label="Sidebar"]')!
+    const look = getComputedStyle(sidebar.previousElementSibling!)
+    return [sidebar.getBoundingClientRect().right / innerWidth, look.display === 'none' ? 0 : Number(look.opacity)] satisfies [number, number]
+  })
+
+export const watchShade = (page: Page) => {
+  const seen: [number, number][] = []
+  let watching = true
+  const watched = (async () => {
+    while (watching) seen.push(await shadeNow(page))
+  })()
+  return async () => {
+    watching = false
+    await watched
+    return seen
+  }
 }
 
 const routeNow = (page: Page) => page.evaluate(() => window.sand.get<Shell>({ id: 'shell' })?.current())

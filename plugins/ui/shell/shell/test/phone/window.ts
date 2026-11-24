@@ -2,7 +2,7 @@ import type { Shell } from '@sand/ui-shell/contract'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { startSandbox } from './sand'
-import { cover, drawer, openAt, phones, screen, state, swipe, tap, touchBrowser, until, type Phone } from './touch'
+import { cover, drag, drawer, finger, openAt, phones, screen, state, swipe, tap, touchBrowser, until, watchShade, type Phone } from './touch'
 
 const flick = { steps: 4, gapMs: 0 }
 
@@ -32,6 +32,8 @@ const scrollChat = (page: Page, to: 'end' | number) =>
     const list = [...document.querySelectorAll('div.overflow-y-auto')].find(node => node.textContent?.includes('Line 39'))
     list?.scrollTo({ top: top === 'end' ? list.scrollHeight : top })
   }, to)
+
+const sidebarEdge = (page: Page) => page.evaluate(() => document.querySelector('nav[aria-label="Sidebar"]')!.getBoundingClientRect().right)
 
 describe.each(phones)('on a $name', size => {
   let phone: Phone
@@ -112,6 +114,33 @@ describe.each(phones)('on a $name', size => {
     await page.goBack()
     expect(await drawer(page, false)).toBe(false)
     expect(await screen(page)).toBe('fixture/plain')
+  })
+
+  test('a sidebar caught mid-slide stays under the finger, quick reversals end where the last swipe pointed, and the shade never flashes', async () => {
+    const { page } = phone
+    const y = mid()
+    await openPlain()
+    await drag(phone, [40, y], [40 + size.width * 0.6, y], { holdMs: 120 })
+    const hand = finger(phone)
+    await hand.down(size.width / 2, y)
+    await hand.move(size.width / 2 - 24, y)
+    await Bun.sleep(50)
+    const caught = await sidebarEdge(page)
+    await Bun.sleep(200)
+    expect(await sidebarEdge(page)).toBe(caught)
+    expect(caught).toBeLessThan(size.width - 20)
+    await hand.up()
+    expect(await until(() => sidebarEdge(page), edge => edge === size.width)).toBe(size.width)
+
+    const shade = watchShade(page)
+    await drag(phone, [size.width - 30, y], [20, y], flick)
+    await drag(phone, [40, y], [size.width - 30, y], flick)
+    await drag(phone, [size.width - 30, y], [20, y], flick)
+    expect(await until(() => sidebarEdge(page), edge => edge === 0)).toBe(0)
+    const samples = await shade()
+    expect(samples.length).toBeGreaterThan(10)
+    expect(samples.filter(([drawn, shade]) => drawn > 0.01 && Math.abs(drawn - shade) > 0.05)).toEqual([])
+    expect(samples.at(-1)).toEqual([0, 0])
   })
 
   test('a swipe left covers the chat with the details, then the side panel, and each swipe right steps back to the same chat', async () => {

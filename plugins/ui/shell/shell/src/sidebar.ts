@@ -51,11 +51,10 @@ const phoneList = (model: Model) => {
 }
 
 export const phoneSidebar = (model: Model) => {
-  const closed = () => !model.drawerOpen.get() && model.drawerDrag.get() === undefined
   const built = sig(false)
   whenSettled(() => built.set(true))
   effect(() => {
-    if (!closed()) built.set(true)
+    if (model.drawerShown.get()) built.set(true)
   })
   return nav(
     {
@@ -63,16 +62,21 @@ export const phoneSidebar = (model: Model) => {
       'data-part': 'sidebar',
       class: () => ['flex h-full w-full flex-col', drawerLook(model)],
       style: () => drawerOffset(model),
-      inert: closed,
+      inert: () => !model.drawerOpen.get(),
     },
     dynamicChild(built, ready => (ready ? phoneList(model) : null)),
   )
 }
 
-export const sidebar = (model: Model, screen: Derive<Built | undefined>, { class: extra, ...props }: Props<HTMLElement>) => {
+export const sidebar = (model: Model, screen: Derive<Built | undefined>) => {
   const screenNav = derive(() => screen.get()?.nav)
   return nav(
-    { ...props, 'aria-label': 'Sidebar', 'data-part': 'sidebar', class: ['flex h-full shrink-0 flex-col bg-neutral-950 px-2 py-2', extra], style: { width: '18rem' } },
+    {
+      'aria-label': 'Sidebar',
+      'data-part': 'sidebar',
+      class: () => ['flex h-full shrink-0 flex-col bg-neutral-950 px-2 py-2', drawerLook(model)],
+      style: () => ({ width: '18rem', ...drawerOffset(model) }),
+    },
     appList(model, screenNav),
     dynamicChild(screenNav, shown => (shown ? screenList(model, shown) : null)),
   )
