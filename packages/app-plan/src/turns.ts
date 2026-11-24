@@ -1,4 +1,4 @@
-import type { AppAside, AppOutput, AppSession, Effort, HandoffBlock } from '@sand/accounts/contract'
+import type { AppAside, AppAsk, AppOutput, AppSession, Effort, HandoffBlock } from '@sand/accounts/contract'
 import type { ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
 
 interface Wire {
@@ -9,7 +9,7 @@ interface Wire {
   stop(): void
   close(): Promise<void>
   inject?(handoff: HandoffBlock): Promise<boolean>
-  aside?(prompt: string, signal?: AbortSignal): Promise<AppAside>
+  aside?(ask: AppAsk, signal?: AbortSignal): Promise<AppAside>
 }
 
 class Turns {

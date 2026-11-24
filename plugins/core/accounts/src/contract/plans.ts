@@ -1,4 +1,4 @@
-import type { ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
+import type { Message, ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
 import type { HandoffBlock, ProviderCapabilities, ToolSpec } from './llm'
 import type { Effort, LimitWindow, ModelPrice } from './models'
 import type { ContextReport, Usage } from './usage'
@@ -100,6 +100,11 @@ export interface AppOutput {
   exit(error: Error): void
 }
 
+export interface AppAsk {
+  question: string
+  messages: Message[]
+}
+
 export interface AppAside {
   text: string
   usage: Partial<Usage>
@@ -112,7 +117,7 @@ export interface AppSession {
   steer?(content: ModelContent[]): void
   answer(id: string, result: ToolResultBlock): void
   inject?(handoff: HandoffBlock): Promise<boolean>
-  aside?(prompt: string, signal?: AbortSignal): Promise<AppAside>
+  aside?(ask: AppAsk, signal?: AbortSignal): Promise<AppAside>
   interrupt(): Promise<void>
   close(): Promise<void>
 }

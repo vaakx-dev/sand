@@ -11,7 +11,9 @@ const folderArgs = (folder?: string) => (folder ? ['--gemini_dir', folder] : [])
 
 const agy = appBinary({ command: 'agy', app: 'Antigravity', install: 'https://antigravity.google/docs/getting-started', installed: [installed()] })
 
-const acpArgs = (folder?: string) => ['acp', '--disable-telemetry', '--include-default-customizations=false', ...folderArgs(folder)]
+const agentArgs = (agent?: string) => (agent ? ['--agent', agent] : [])
+
+const acpArgs = ({ folder, agent }: { folder?: string; agent?: string }) => ['acp', '--disable-telemetry', '--include-default-customizations=false', ...folderArgs(folder), ...agentArgs(agent)]
 
 const loginArgs = (folder?: string) => ['acp', '--login', ...folderArgs(folder)]
 

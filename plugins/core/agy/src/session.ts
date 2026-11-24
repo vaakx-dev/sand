@@ -1,15 +1,18 @@
-import { type AppOutput, type AppSession, type AppSetup, type Effort, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
-import { fieldsOf, type Json, mcpBlock, mcpBridge, parts, resetOf, SERVER_NAME, Turns } from '@sand/app-plan'
+import { type AppAsk, type AppOutput, type AppSession, type AppSetup, type Effort, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
+import { fieldsOf, forkedAside, type Json, mcpBlock, mcpBridge, parts, resetOf, SERVER_NAME, Turns } from '@sand/app-plan'
 import type { ModelContent, StopReason } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { errorMessage } from '@sand/util'
 import { configOptions, effortOption, modelOption } from './account'
 import { type AcpClient, startAcp } from './acp'
+import { AGENT, asidePrompt, asideSetup } from './aside'
 import { readLimits } from './limits'
 
 interface SessionNeeds {
   media: Media
   folder?: string
+  asides: string
+  agent?: string
   report(limits: PlanLimits): void
 }
 
@@ -123,6 +126,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
 
   const client = await startAcp({
     folder: needs.folder,
+    agent: needs.agent,
     cwd: setup.cwd,
     onNotify,
     onRequest,
@@ -169,9 +173,15 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
     }
   }
 
+  const aside = async (ask: AppAsk, signal?: AbortSignal) => {
+    const asking = await asideSetup(setup, needs.asides)
+    return forkedAside(output => openSession(asking, output, { ...needs, agent: AGENT }), asidePrompt(ask), signal)
+  }
+
   return turns.session({
     id: sessionId,
     pid: client.pid,
+    aside,
     prompt: (content, wanted) => void runTurn(content, wanted),
     stop: () => client.notify('session/cancel', { sessionId }),
     async close() {

@@ -3,6 +3,7 @@ import { acpArgs, agy } from './binary'
 
 interface AcpOptions {
   folder?: string
+  agent?: string
   cwd?: string
   onNotify?(method: string, params: Json): void
   onRequest?(method: string, params: Json): Promise<unknown>
@@ -17,9 +18,9 @@ const refused = async (method: string) => {
   throw new Error(`sand doesn't handle ${method}`)
 }
 
-async function startAcp({ folder, cwd, onNotify, onRequest, onExit }: AcpOptions) {
+async function startAcp({ folder, agent, cwd, onNotify, onRequest, onExit }: AcpOptions) {
   const client = startRpc({
-    command: [await agy.require(), ...acpArgs(folder)],
+    command: [await agy.require(), ...acpArgs({ folder, agent })],
     app: agy.app,
     cwd,
     onNotify: onNotify ?? (() => {}),
