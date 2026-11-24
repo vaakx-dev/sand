@@ -47,7 +47,7 @@ export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw): SheetSpe
       dynamicChild(model.current, index => {
         const shown = model.images[index]
         if (!shown) return null
-        return div({ class: 'flex min-h-0 flex-1 flex-col' }, viewerStage(shown, draw, zoom, by => go(() => model.step(by)), close))
+        return div({ class: 'flex min-h-0 flex-1 flex-col' }, viewerStage({ kit, shown, draw, zoom, flip: by => go(() => model.step(by)), close }))
       }),
       many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, back),
       many && flipButton(kit, 'right', 'Next (→)', model.atLast, next),

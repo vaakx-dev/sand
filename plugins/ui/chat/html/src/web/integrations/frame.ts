@@ -1,12 +1,40 @@
 import type { Swipe, Way } from '@sand/ui-shell/contract'
+import type { Point, ZoomTarget } from '@sand/ui-kit/contract'
 import { el, listen, type Props } from '@vaakx-dev/vrui'
-import { hostContext, openImage, openLink, pressKey, shortcutKeys, showPage, sizeChanged, swipeEnd, swipeMove, swipeStart } from '../../page/protocol'
+import {
+  hostContext,
+  openImage,
+  openLink,
+  pressKey,
+  shortcutKeys,
+  showPage,
+  sizeChanged,
+  swipeEnd,
+  swipeMove,
+  swipeStart,
+  zoomable,
+  zoomBy,
+  zoomToggle,
+} from '../../page/protocol'
 
 interface Message {
   jsonrpc?: unknown
   id?: unknown
   method?: unknown
-  params?: { height?: unknown; url?: unknown; delta?: unknown; way?: unknown; velocity?: unknown; src?: unknown; name?: unknown; key?: unknown }
+  params?: {
+    height?: unknown
+    url?: unknown
+    delta?: unknown
+    way?: unknown
+    velocity?: unknown
+    src?: unknown
+    name?: unknown
+    key?: unknown
+    factor?: unknown
+    from?: unknown
+    to?: unknown
+    at?: unknown
+  }
 }
 
 export interface FrameEvents {
@@ -15,7 +43,13 @@ export interface FrameEvents {
   image(src: string, name: string): void
   key(key: string): void
   swipe?(way: Way): Swipe | undefined
+  zoom?: ZoomTarget
 }
+
+const isPoint = (value: unknown): value is Point =>
+  typeof value === 'object' && value !== null && 'x' in value && 'y' in value && Number.isFinite(value.x) && Number.isFinite(value.y)
+
+const isFactor = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0
 
 const isWebUrl = (url: unknown): url is string => typeof url === 'string' && /^https?:\/\//i.test(url)
 
@@ -31,6 +65,8 @@ export const showPageIn = (frame: HTMLIFrameElement, html: string) => post(frame
 export const sendTheme = (frame: HTMLIFrameElement, css: string) => post(frame, { method: hostContext, params: { css } })
 
 export const sendKeys = (frame: HTMLIFrameElement, keys: string[]) => post(frame, { method: shortcutKeys, params: { keys } })
+
+export const sendZoomable = (frame: HTMLIFrameElement) => post(frame, { method: zoomable })
 
 const WAYS: readonly unknown[] = ['left', 'right', 'up', 'down'] satisfies Way[]
 
@@ -60,6 +96,14 @@ export const listenToFrame = (frame: HTMLIFrameElement, events: FrameEvents) => 
     }
     if (message.method === pressKey && typeof params.key === 'string') {
       events.key(params.key)
+      return
+    }
+    if (message.method === zoomBy && isFactor(params.factor) && isPoint(params.from) && isPoint(params.to)) {
+      events.zoom?.zoom({ factor: params.factor, from: params.from, to: params.to })
+      return
+    }
+    if (message.method === zoomToggle && isPoint(params.at)) {
+      events.zoom?.toggle(params.at)
       return
     }
     if (!clickedIn(frame)) return

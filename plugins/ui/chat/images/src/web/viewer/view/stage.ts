@@ -1,57 +1,85 @@
+import type { Kit, Point, ZoomChange } from '@sand/ui-kit/contract'
 import type { Draw, Picture } from '../gallery'
 import type { Zoom } from './zoom'
-import { div, event, preventThen } from '@vaakx-dev/vrui'
+import { div, event } from '@vaakx-dev/vrui'
 
 const swipeDistance = 60
 
 interface Drag {
-  image: HTMLElement
-  startX: number
-  startY: number
-  x: number
-  y: number
+  pointer: number
+  start: Point
+  last: Point
 }
 
-export const viewerStage = (shown: Picture, draw: Draw, zoom: Zoom, flip: (by: number) => void, close: () => void) => {
+interface StageParts {
+  kit: Kit
+  shown: Picture
+  draw: Draw
+  zoom: Zoom
+  flip(by: number): void
+  close(): void
+}
+
+const pointOf = ({ clientX, clientY }: MouseEvent): Point => ({ x: clientX, y: clientY })
+
+const swipedBy = ({ start }: Drag, end: Point) => {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  if (Math.abs(dx) <= swipeDistance || Math.abs(dx) <= Math.abs(dy)) return 0
+  return dx > 0 ? -1 : 1
+}
+
+export const viewerStage = ({ kit, shown, draw, zoom, flip, close }: StageParts) => {
+  let image: HTMLImageElement | undefined
   let drag: Drag | undefined
 
-  const release = (pointer: PointerEvent) => {
-    const dx = drag ? pointer.clientX - drag.startX : 0
-    const dy = drag ? pointer.clientY - drag.startY : 0
-    drag = undefined
-    if (!zoom.zoomed.get() && Math.abs(dx) > swipeDistance && Math.abs(dx) > Math.abs(dy)) flip(dx > 0 ? -1 : 1)
+  const zoomImage = (change: ZoomChange) => image && zoom.zoom(change, image)
+  const toggle = (at: Point) => image && zoom.toggle(at, image)
+
+  const press = (pointer: PointerEvent) => {
+    drag = pointer.isPrimary && pointer.button === 0 ? { pointer: pointer.pointerId, start: pointOf(pointer), last: pointOf(pointer) } : undefined
+    if (drag) image?.setPointerCapture(pointer.pointerId)
   }
 
-  const image = draw(shown, {
+  const pan = (pointer: PointerEvent) => {
+    if (drag?.pointer !== pointer.pointerId || !zoom.zoomed.get()) return
+    zoomImage({ factor: 1, from: drag.last, to: pointOf(pointer) })
+    drag = { ...drag, last: pointOf(pointer) }
+  }
+
+  const release = (pointer: PointerEvent) => {
+    if (drag?.pointer !== pointer.pointerId) return
+    const by = swipedBy(drag, pointOf(pointer))
+    drag = undefined
+    if (by && !zoom.zoomed.get()) flip(by)
+  }
+
+  const cancel = () => {
+    drag = undefined
+  }
+
+  const picture = draw(shown, {
     class: ['max-h-full max-w-full touch-none select-none rounded-md object-contain', () => (zoom.zoomed.get() ? 'cursor-grab' : null)],
     props: {
+      ref: (node: HTMLImageElement) => {
+        image = node
+      },
       draggable: false,
       style: { transform: zoom.transform },
-      onDblClick: zoom.toggle,
-      onPointerDown: pointer => {
-        const target = pointer.currentTarget
-        if (pointer.button !== 0 || !(target instanceof HTMLElement)) return
-        target.setPointerCapture(pointer.pointerId)
-        drag = { image: target, startX: pointer.clientX, startY: pointer.clientY, x: pointer.clientX, y: pointer.clientY }
-      },
-      onPointerMove: pointer => {
-        if (!drag || !zoom.zoomed.get()) return
-        zoom.pan(pointer.clientX - drag.x, pointer.clientY - drag.y, drag.image)
-        drag = { ...drag, x: pointer.clientX, y: pointer.clientY }
-      },
+      onDblClick: (click: MouseEvent) => toggle(pointOf(click)),
+      onPointerDown: press,
+      onPointerMove: pan,
       onPointerUp: release,
-      onPointerCancel: () => {
-        drag = undefined
-      },
+      onPointerCancel: cancel,
     },
   })
 
   return div(
     {
-      class: 'flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-2 md:px-16',
+      class: 'flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden px-4 pb-2 md:px-16',
       onMouseDown: event(close, { self: true }),
-      onWheel: preventThen((wheel: WheelEvent) => zoom.wheel(wheel.deltaY)),
+      onMount: node => kit.gesture.zoomGesture(node, { zoom: zoomImage, toggle }, { wheel: 'zooms', surface: 'fixed' }),
     },
-    image,
+    picture,
   )
 }

@@ -1,5 +1,7 @@
+import { joinDisposers } from '@sand/util'
 import { derive, div, keys, read, resizeObserver, sig, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton, quietButton } from '../buttons/button'
+import { zoomGesture, type Point, type ZoomChange } from '../gesture/zoom'
 import { icon } from '../icons/lucide'
 import { layer } from '../layer'
 import { modal } from '../layers/stack'
@@ -49,12 +51,27 @@ export interface FitZoomOptions {
 
 type Chosen = 'start' | 'fit' | number
 
+interface Stage {
+  scroller: HTMLElement
+  content: HTMLElement
+}
+
 const LEAST_ZOOM = 0.25
 const MOST_ZOOM = 4
 const ZOOM_STEP = 1.4
+const DOUBLE_TAP_ZOOM = 2
 const STAGE_MARGIN = 24
 
 const clampZoom = (level: number) => Math.min(MOST_ZOOM, Math.max(LEAST_ZOOM, level))
+
+const spotIn = (box: DOMRect, at: Point): Point => ({ x: (at.x - box.left) / box.width, y: (at.y - box.top) / box.height })
+
+const keepSpot = ({ scroller, content }: Stage, { from, to }: ZoomChange, rescale: () => void) => {
+  const spot = spotIn(content.getBoundingClientRect(), from)
+  rescale()
+  const box = content.getBoundingClientRect()
+  scroller.scrollBy(box.left + spot.x * box.width - to.x, box.top + spot.y * box.height - to.y)
+}
 
 export const fitZoom = (size: Size, { readableLevel = LEAST_ZOOM }: FitZoomOptions = {}) => {
   const room = sig<Size>({ width: 0, height: 0 })
@@ -78,6 +95,17 @@ export const fitZoom = (size: Size, { readableLevel = LEAST_ZOOM }: FitZoomOptio
   const zoomIn = () => chosen.set(clampZoom(level.get() * ZOOM_STEP))
   const zoomOut = () => chosen.set(clampZoom(level.get() / ZOOM_STEP))
   const fit = () => chosen.set('fit')
+  let stage: Stage | undefined
+  const zoom = (change: ZoomChange) => {
+    if (stage) keepSpot(stage, change, () => chosen.set(clampZoom(level.get() * change.factor)))
+  }
+  const toggle = (at: Point) => (level.get() > fitted.get() ? fit() : zoom({ factor: DOUBLE_TAP_ZOOM, from: at, to: at }))
+  const show = (shown: Stage) => {
+    stage = shown
+    return joinDisposers(zoomGesture(shown.scroller, { zoom, toggle }, { wheel: 'scrolls', surface: 'fixed' }), () => {
+      stage = undefined
+    })
+  }
   return {
     size,
     room,
@@ -87,22 +115,31 @@ export const fitZoom = (size: Size, { readableLevel = LEAST_ZOOM }: FitZoomOptio
     zoomIn,
     zoomOut,
     fit,
+    zoom,
+    toggle,
+    show,
     keys: keys({ '+': zoomIn, '=': zoomIn, '-': zoomOut, '0': fit }),
   }
 }
 
 export type FitZoom = ReturnType<typeof fitZoom>
 
-export const zoomStage = (zoom: FitZoom, props: Props<HTMLDivElement>, ...children: Child[]) =>
-  div(
+export const zoomStage = (zoom: FitZoom, props: Props<HTMLDivElement>, ...children: Child[]) => {
+  const content = div(
+    { ...props, class: 'm-auto shrink-0', style: { width: `${zoom.size.width}px`, height: `${zoom.size.height}px`, zoom: () => String(zoom.level.get()) } },
+    ...children,
+  )
+  return div(
     {
       class: 'flex min-h-0 flex-1 overflow-auto',
-      onMount: node => {
-        resizeObserver(node, () => zoom.room.set({ width: node.clientWidth, height: node.clientHeight }))
+      onMount: scroller => {
+        resizeObserver(scroller, () => zoom.room.set({ width: scroller.clientWidth, height: scroller.clientHeight }))
+        return zoom.show({ scroller, content })
       },
     },
-    div({ ...props, class: 'm-auto shrink-0', style: { width: `${zoom.size.width}px`, height: `${zoom.size.height}px`, zoom: () => String(zoom.level.get()) } }, ...children),
+    content,
   )
+}
 
 export const zoomControls = ({ surface, ...zoom }: ZoomView) =>
   div(

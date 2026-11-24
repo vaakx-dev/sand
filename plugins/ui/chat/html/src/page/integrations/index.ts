@@ -4,6 +4,7 @@ import { forwardLinks } from './links'
 import { reportSize } from './size'
 import { relaySwipes } from './swipe'
 import { followTheme } from './theme'
+import { relayZoom } from './zoom'
 
 if (window.parent !== window) {
   followTheme()
@@ -12,4 +13,5 @@ if (window.parent !== window) {
   forwardLinks()
   reportSize()
   relaySwipes()
+  relayZoom()
 }

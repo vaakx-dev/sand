@@ -3,10 +3,10 @@ import { keys } from '@sand/keys/contract'
 import { theme, type Theme } from '@sand/ui-theme/contract'
 import { joinDisposers } from '@sand/util'
 import type { FrameContext } from './context'
-import { listenToFrame, sendKeys, sendTheme, showPageIn, type FrameEvents } from './integrations/frame'
+import { listenToFrame, sendKeys, sendTheme, sendZoomable, showPageIn, type FrameEvents } from './integrations/frame'
 import { themeCss } from './theme'
 
-export const connectPage = (ctx: FrameContext, frame: HTMLIFrameElement, events: Pick<FrameEvents, 'resize' | 'swipe'>) => {
+export const connectPage = (ctx: FrameContext, frame: HTMLIFrameElement, events: Pick<FrameEvents, 'resize' | 'swipe' | 'zoom'>) => {
   const paint = (current: Theme | undefined) => {
     if (current) sendTheme(frame, themeCss(current))
   }
@@ -15,6 +15,7 @@ export const connectPage = (ctx: FrameContext, frame: HTMLIFrameElement, events:
       showPageIn(frame, html)
       paint(ctx.get(theme))
       sendKeys(frame, ctx.get(keys)?.passthroughKeys() ?? [])
+      if (events.zoom) sendZoomable(frame)
     },
     listen: () =>
       joinDisposers(
