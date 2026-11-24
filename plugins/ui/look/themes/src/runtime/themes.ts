@@ -4,10 +4,19 @@ import { z } from 'zod'
 import { type Theme, type ThemeAction, themeSchema, type ThemeState, trialMs } from '../contract'
 import { safeCss } from '../css'
 
+const RETIRED_PRESETS = new Set(['Blueprint', 'Riso', 'Night shift', 'Synthwave sunset'])
+
+const withoutPreset = (theme: Theme | null): Theme | null => {
+  if (!theme?.name || !RETIRED_PRESETS.has(theme.name)) return theme
+  return theme.css ? { css: theme.css } : null
+}
+
+const storedTheme = () => themeSchema().nullable().transform(withoutPreset)
+
 const saved = z.object({
-  theme: themeSchema().nullable(),
+  theme: storedTheme(),
   updated: z.number(),
-  trial: z.object({ id: z.string(), previous: themeSchema().nullable(), until: z.number() }).optional(),
+  trial: z.object({ id: z.string(), previous: storedTheme(), until: z.number() }).optional(),
 })
 
 const empty: ThemeState = { theme: null, updated: 0 }
@@ -78,7 +87,8 @@ export const createThemes = async (file: string, { changed, kept, trialMs: trial
 
   const take = async (incoming: Kept) => {
     if (incoming.updated <= state.updated) return keptOf(state)
-    await commit({ theme: incoming.theme && cleaned(incoming.theme), updated: incoming.updated }, false)
+    const theme = withoutPreset(incoming.theme)
+    await commit({ theme: theme && cleaned(theme), updated: incoming.updated }, false)
     return keptOf(state)
   }
 

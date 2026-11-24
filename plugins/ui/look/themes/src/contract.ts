@@ -33,9 +33,9 @@ const colorSet = () => z.record(colorKey(), hex())
 
 export const themeSchema = () =>
   z.object({
-    name: z.string().trim().min(1).max(60).describe('Theme name'),
-    base: hex().describe('Base colour for backgrounds and text'),
-    accent: hex().describe('Accent for buttons, links and your messages'),
+    name: z.string().trim().min(1).max(60).optional().describe('Theme name'),
+    base: hex().optional().describe("Base colour for backgrounds and text; sand's own when left out"),
+    accent: hex().optional().describe("Accent for buttons, links and your messages; sand's own when left out"),
     mode: z.enum(modes).optional().describe('Force light or dark; default follows the system'),
     colors: z
       .object({ light: colorSet().optional(), dark: colorSet().optional() })
@@ -89,19 +89,6 @@ export const trialMs = 30_000
 export const offParam = 'theme'
 
 export const offValue = 'off'
-
-export interface Starter {
-  key: string
-  theme: Theme | null
-}
-
-export const starters: Starter[] = [
-  { key: 'sand', theme: null },
-  { key: 'blueprint', theme: { name: 'Blueprint', base: '#0e2747', accent: '#5cc8ff', mode: 'dark', scene: 'blueprint' } },
-  { key: 'riso', theme: { name: 'Riso', base: '#dfe5f2', accent: '#2f4cff', scene: 'halftone' } },
-  { key: 'night-shift', theme: { name: 'Night shift', base: '#141838', accent: '#ffb547', mode: 'dark', scene: 'skyline' } },
-  { key: 'synthwave-sunset', theme: { name: 'Synthwave sunset', base: '#1a1033', accent: '#ff4fa3', mode: 'dark', scene: 'sunset' } },
-]
 
 export const themeTrialEntry = 'theme-trial'
 

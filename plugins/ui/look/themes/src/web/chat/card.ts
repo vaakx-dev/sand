@@ -4,9 +4,10 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { clock, derive, div, dynamicChild, media, span } from '@vaakx-dev/vrui'
 import { sceneNames, type Theme, themeName, type ThemeTrialEntry } from '../../contract'
 import type { ThemeModel } from '../model'
-import { swatchMark } from '../settings/swatch'
 
 const sameTheme = (one: Theme | null, two: Theme | null) => JSON.stringify(one) === JSON.stringify(two)
+
+const swatch = (hex: string) => span({ class: 'block h-3 w-3 shrink-0 rounded-sm ring-1 ring-inset ring-white/15', style: { background: hex } })
 
 const countdown = (ms: number) => {
   const seconds = Math.max(0, Math.ceil(ms / 1000))
@@ -48,8 +49,8 @@ export const trialCard = (kit: Kit, views: ToolViews, model: ThemeModel, entry: 
       { class: 'flex flex-wrap items-center gap-x-3 gap-y-2' },
       div(
         { class: 'flex min-w-0 flex-1 flex-col gap-1' },
-        kit.rowName(entry.theme.name),
-        div({ class: 'flex min-w-0 items-center gap-1.5' }, swatchMark(() => entry.theme.base, 'h-3 w-3'), swatchMark(() => entry.theme.accent, 'h-3 w-3'), kit.metaLine(status)),
+        kit.rowName(themeName(entry.theme)),
+        div({ class: 'flex min-w-0 items-center gap-1.5' }, ...[entry.theme.base, entry.theme.accent].filter(hex => hex !== undefined).map(swatch), kit.metaLine(status)),
       ),
       div(
         { class: () => (live.get() ? 'flex items-center gap-2' : 'hidden') },

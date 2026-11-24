@@ -1,25 +1,20 @@
 import { cliCommands } from '@sand/cli-commands/contract'
 import { daemon, type DaemonLink } from '@sand/host-daemon/contract'
 import { definePlugin } from 'drydock'
-import { starters, type Theme, themeAct, themeName, themeSchema, type ThemeState } from './contract'
+import { themeAct, themeName, themeSchema, type ThemeState } from './contract'
 
 const usage = [
   'sand theme                    show the theme sand uses on every device',
-  `sand theme set <starter>      use a starter: ${starters.map(starter => starter.key).join(', ')}`,
   'sand theme set <file.json>    use a theme saved as JSON',
   "sand theme reset              go back to sand's own look, even when a theme hides the page",
 ].join('\n')
 
 const described = ({ theme }: ThemeState) =>
-  theme ? [theme.name, `base ${theme.base}, accent ${theme.accent}`, theme.scene && `background ${theme.scene}`].filter(Boolean).join(' · ') : themeName(theme)
+  [themeName(theme), theme?.mode && `${theme.mode} mode`, theme?.base && `base ${theme.base}`, theme?.accent && `accent ${theme.accent}`, theme?.scene && `background ${theme.scene}`].filter(Boolean).join(' · ')
 
-const starterOf = (name: string) => starters.find(starter => starter.key === name.toLowerCase() || themeName(starter.theme).toLowerCase() === name.toLowerCase())
-
-const themeFrom = async (name: string): Promise<Theme | null> => {
-  const starter = starterOf(name)
-  if (starter) return starter.theme
-  const file = Bun.file(name)
-  if (!(await file.exists())) throw new Error(`${name} is neither a starter nor a JSON file`)
+const themeFrom = async (path: string) => {
+  const file = Bun.file(path)
+  if (!(await file.exists())) throw new Error(`${path} is not a JSON file`)
   return themeSchema().parse(await file.json())
 }
 
@@ -31,8 +26,7 @@ const actionOf = ([action = 'read', name, ...rest]: string[]): Action | undefine
   if (action === 'reset' && !name) return async link => (await link.call(themeAct, { action: 'reset' }), "Back to sand's own look on every device")
   if (action !== 'set' || !name) return undefined
   return async link => {
-    const theme = await themeFrom(name)
-    const state = await link.call(themeAct, theme ? { action: 'set', theme } : { action: 'reset' })
+    const state = await link.call(themeAct, { action: 'set', theme: await themeFrom(name) })
     return `Now ${described(state)}, on every device`
   }
 }

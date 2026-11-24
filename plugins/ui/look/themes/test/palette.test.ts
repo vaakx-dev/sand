@@ -1,8 +1,14 @@
+import { sandPalette } from '@sand/ui-theme/contract'
 import { expect, test } from 'bun:test'
-import { starters, type Theme } from '../src/contract'
+import type { Theme } from '../src/contract'
 import { contrast, paletteOf } from '../src/palette'
 
-const themes = starters.flatMap(starter => (starter.theme ? [starter.theme] : []))
+const themes: Theme[] = [
+  { name: 'Deep sea', base: '#0e2747', accent: '#5cc8ff' },
+  { name: 'Paper', base: '#dfe5f2', accent: '#2f4cff' },
+  { name: 'Ember', base: '#141838', accent: '#ffb547' },
+  { name: 'Orchid', base: '#1a1033', accent: '#ff4fa3' },
+]
 
 test.each(themes.flatMap(theme => (['light', 'dark'] as const).map(mode => [theme.name, mode, theme] as const)))('%s in %s keeps body text easy to read', (_name, mode, theme) => {
   const { neutral, accent } = paletteOf(theme, mode) as unknown as Record<'neutral' | 'accent', Record<string, string>>
@@ -20,4 +26,8 @@ test('base and accent colour the whole set, and a single colour can be overridde
   expect(light.accent!['500']).not.toBe('#00ff88')
   expect(Object.keys(dark.neutral!)).toHaveLength(11)
   expect(dark.success).toBeDefined()
+})
+
+test('a theme without a base or an accent keeps sand’s own colours', () => {
+  expect(paletteOf({ mode: 'dark', css: '[data-part="composer"] { border-radius: 4px; }' }, 'dark')).toEqual(sandPalette)
 })

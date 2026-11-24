@@ -4,7 +4,7 @@ import type { Media } from '@sand/media/contract'
 import { pageParts } from '@sand/ui-shell/contract'
 import type { Tool, ToolOutput } from '@sand/tools/contract'
 import { z } from 'zod'
-import { sceneIds, sceneNames, starters, type Theme, themeActions, themeName, themeSchema, type ThemeState, type ThemeTrialEntry } from '../contract'
+import { sceneIds, sceneNames, type Theme, themeActions, themeName, themeSchema, type ThemeState, type ThemeTrialEntry } from '../contract'
 import { contrast, modeOf, paletteOf } from '../palette'
 import { captureSand, type Shot } from './capture'
 import type { Themes } from './themes'
@@ -14,9 +14,7 @@ const input = z.object({
   theme: themeSchema().optional().describe('The whole theme, for set'),
 })
 
-const description = "Read, set or reset sand's one theme on every device. Read first for starters, scenes and CSS parts; set starts a trial the user keeps or undoes, with screenshots to check."
-
-const startersGuide = starters.map(starter => ({ name: themeName(starter.theme), ...starter.theme }))
+const description = "Read, set or reset sand's one theme on every device. Read first for scenes and CSS parts; set starts a trial the user keeps or undoes, with screenshots to check."
 
 const scenesGuide = Object.fromEntries(sceneIds.map(id => [id, sceneNames[id]]))
 
@@ -25,9 +23,9 @@ const cssGuide = { parts: Object.fromEntries(Object.entries(pageParts).map(([nam
 const shown = ({ theme, trial }: ThemeState) => ({
   theme: theme ?? "sand's own look",
   ...(trial && { trial: { goesBackTo: themeName(trial.previous), at: new Date(trial.until).toISOString() } }),
-  starters: startersGuide,
   scenes: scenesGuide,
   css: cssGuide,
+  ifThePageIsHidden: 'Open sand with ?theme=off at the end of its address, or run sand theme reset',
 })
 
 const readability = (theme: Theme) =>
@@ -71,7 +69,7 @@ export const themeTool = (themes: Themes, media: Media, home: string, showCard: 
     const [desktop, phone] = images
     showCard(conversation, { trial: trial.id, theme: state.theme!, previous: trial.previous, ...(desktop && { desktop }), ...(phone && { phone }) })
     const text = [
-      `${state.theme!.name} is on across sand now, phone included, as a trial. Under your reply the user gets a card with these screenshots and Keep or Undo; it goes back to ${themeName(trial.previous)} about 30 seconds after your reply unless they keep it.`,
+      `${themeName(state.theme)} is on across sand now, phone included, as a trial. Under your reply the user gets a card with these screenshots and Keep or Undo; it goes back to ${themeName(trial.previous)} about 30 seconds after your reply unless they keep it.`,
       `Readability: ${readability(state.theme!)}.`,
       images.length ? 'Here are a desktop and a phone screenshot of it. Check both before you reply.' : '',
       ...notes,
