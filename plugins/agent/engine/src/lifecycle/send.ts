@@ -19,14 +19,14 @@ export interface SendDeps<C extends Conversation> {
   ready(): boolean
 }
 
-export const createSend = <C extends Conversation>(ctx: EngineContext, { conversations, stores, announce }: Owned<C>, { opener, drive, dispatch, recover, ready }: SendDeps<C>) => {
+export const createSend = <C extends Conversation>(ctx: EngineContext, { stores, announce }: Owned<C>, { opener, drive, dispatch, recover, ready }: SendDeps<C>) => {
   const route = (conversation: C, input: SendInput, opening: Opening<C> | undefined, held: boolean): Routed<C> => {
     const running = stores.turns.current(conversation)
     if (!running && opening) {
       const started = opener.open(opening)
       return { kind: 'started', started, result: { disposition: 'started', turn: started.info.id } }
     }
-    const kind = running && !held && !conversations.queues?.() ? 'steer' : 'queue'
+    const kind = running && !held ? 'steer' : 'queue'
     const label = input.label ?? promptLabel(input.prompt)
     const item = stores.pending.add(conversation, { kind, prompt: input.prompt, label, origin: input.origin ?? 'user' })
     const disposition = kind === 'steer' ? 'steered' : 'queued'

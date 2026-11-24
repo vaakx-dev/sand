@@ -16,6 +16,8 @@ export interface InstallProgress {
 
 const restartDelay = 300
 
+const STEP_END_WAIT_MS = 2 * 60_000
+
 export const cancelled = new Error('cancelled')
 
 export const runningWork = (deps: Pick<UpdaterDeps, 'runtimes'>) =>
@@ -28,7 +30,7 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
     if (!progress.live(ticket)) throw cancelled
   }
 
-  const handOver = () => Promise.race([deps.runtimes.retire(), Bun.sleep(deps.drainTimeout)])
+  const handOver = () => Promise.race([deps.runtimes.retire(), Bun.sleep(STEP_END_WAIT_MS)])
 
   const cleanup = (keep: string[]) =>
     deps.cleanup(keep).catch(failure => console.error(`sand could not remove old builds: ${errorMessage(failure)}`))

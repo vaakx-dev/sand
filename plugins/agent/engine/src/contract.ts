@@ -130,7 +130,6 @@ export interface Conversations<C extends Conversation> {
   lost?(conversation: C, turn: TurnInfo): void
   changed?(turn: TurnInfo): void
   queued?(conversation: C): void
-  queues?(): boolean
   streamed?(event: LLMEvent, conversation: C): void
   toolStarted?(call: ToolCallBlock, conversation: C): void
   toolProgress?(call: ToolCallBlock, text: string, conversation: C): void

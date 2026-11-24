@@ -10,8 +10,8 @@ afterEach(() => sand.stop())
 
 const said = (text: string) => ({ type: 'text', text }) as const
 
-const start = async (replies: Source['replies'], queue = false) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies }], { options: { turns: { queue } } })
+const start = async (replies: Source['replies']) => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies }])
   const opened = Promise.withResolvers<void>()
   const released = Promise.withResolvers<string>()
   sand.tool('gate', () => {
@@ -58,28 +58,6 @@ test('a send starts an idle chat, and whatever is sent while it runs reaches tha
     { text: 'job finished', turn: turnOf(started) },
   ])
   expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Took both.')] })
-})
-
-test('with queueing on, what is sent while a turn runs waits, one turn each in order', async () => {
-  const { chat, opened, release } = await start([[{ type: 'call', name: 'gate' }], [said('Done.')], [said('First queued.')], [said('Second queued.')]], true)
-  const started = await sand.turns.send(chat, { prompt: 'go', clientRequestId: 'go' })
-  await opened
-
-  expect(await sand.turns.send(chat, { prompt: 'one', clientRequestId: 'one' })).toMatchObject({ disposition: 'queued' })
-  await sand.turns.send(chat, { prompt: 'two', clientRequestId: 'two' })
-  expect(sand.turns.pending(chat).map(item => [item.kind, item.label])).toEqual([
-    ['queue', 'one'],
-    ['queue', 'two'],
-  ])
-
-  release()
-  await idle(chat)
-
-  const [go, one, two] = asked(chat)
-  expect([go, one, two].map(message => message?.text)).toEqual(['go', 'one', 'two'])
-  expect(new Set([turnOf(started), one!.turn, two!.turn]).size).toBe(3)
-  expect(chat.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Second queued.')] })
-  expect(sand.turns.pending(chat)).toEqual([])
 })
 
 test('an interrupt holds the user steers the turn had not taken and runs the rest next, and resuming a held one starts it', async () => {
