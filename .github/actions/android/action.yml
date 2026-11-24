@@ -22,10 +22,12 @@ runs:
       with:
         distribution: temurin
         java-version: 21
-        cache: gradle
-        cache-dependency-path: |
-          apps/android/**/*.gradle*
-          apps/android/**/gradle-wrapper.properties
+    - uses: actions/cache@v6
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: gradle-${{ runner.os }}-${{ hashFiles('apps/android/build.gradle.kts', 'apps/android/app/build.gradle.kts', 'apps/android/settings.gradle.kts', 'apps/android/gradle.properties', 'apps/android/gradle/wrapper/gradle-wrapper.properties') }}
     - name: Build and sign the APK
       shell: bash
       working-directory: apps/android
