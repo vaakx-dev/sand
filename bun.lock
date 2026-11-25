@@ -27,7 +27,7 @@
     },
     "apps/sand": {
       "name": "sand",
-      "version": "0.1.0-beta.6",
+      "version": "0.1.0-beta.7",
       "bin": {
         "sand": "./src/main.ts",
       },
@@ -2567,7 +2567,6 @@
         "@sand/changes": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/composer": "workspace:*",
-        "@sand/markdown": "workspace:*",
         "@sand/model-panel": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/reactive": "workspace:*",

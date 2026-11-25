@@ -18,9 +18,16 @@ const printed = (out: string, pattern: RegExp) => {
   return found
 }
 
-export type Reply = { text: string; hold?: boolean }
+export type Reply = { text: string | string[]; hold?: boolean }
 
-const replyToml = ({ text, hold }: Reply) => `[{ type = "text", text = ${JSON.stringify(text)} }${hold ? ', { type = "hold" }' : ''}]`
+const CHUNK_GAP_MS = 300
+
+const textToml = (text: string) => `{ type = "text", text = ${JSON.stringify(text)} }`
+
+const replyToml = ({ text, hold }: Reply) => {
+  const chunks = [text].flat().map(textToml).join(`, { type = "wait", ms = ${CHUNK_GAP_MS} }, `)
+  return `[${chunks}${hold ? ', { type = "hold" }' : ''}]`
+}
 
 export const startSandbox = async (replies: Reply[]) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-chat-'))

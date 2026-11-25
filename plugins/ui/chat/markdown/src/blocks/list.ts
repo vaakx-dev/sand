@@ -41,10 +41,10 @@ const unwrap = (node: Node) => (node.nodeName === 'P' ? [...node.childNodes] : [
 const itemView = (body: string[], loose: boolean, scope: Scope, parse: Parse) => {
   const task = taskMark.exec(body[0]!)
   if (!task) {
-    const children = parse(body, { ...scope, tight: !loose })
+    const children = parse(body, scope)
     return listItem(loose ? children : children.flatMap(unwrap))
   }
-  const [first, ...rest] = parse([body[0]!.slice(task[0].length), ...body.slice(1)], { ...scope, tight: true })
+  const [first, ...rest] = parse([body[0]!.slice(task[0].length), ...body.slice(1)], scope)
   return taskItem(task[1] !== ' ', [...(first ? unwrap(first) : []), ...(loose ? rest : rest.flatMap(unwrap))])
 }
 

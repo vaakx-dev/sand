@@ -1,7 +1,7 @@
 import { tildeHome } from '@sand/util'
 import { inlineMath } from '../math/inline'
 import { inlineCode, lineBreak, type Inline } from '../nodes'
-import type { Scope } from '../scope'
+import type { InlineScope, Scope } from '../scope'
 import { delimiter, resolveEmphasis, type Item } from './emphasis'
 import { decodeEntity } from './entities'
 import { autolinkAt, bracketed } from './links'
@@ -12,7 +12,7 @@ interface Token {
   end: number
 }
 
-type Parser = (source: string, index: number, scope: Scope) => Token | undefined
+type Parser = (source: string, index: number, scope: InlineScope) => Token | undefined
 
 const lineEnd = / *\n */y
 
@@ -43,7 +43,7 @@ const emphasisRun: Parser = (source, index) => {
 }
 
 const bracket: Parser = (source, index, scope) =>
-  source[index] === '[' || source.startsWith('![', index) ? bracketed(source, index, scope, inline) : undefined
+  source[index] === '[' || source.startsWith('![', index) ? bracketed(source, index, scope, parseInline) : undefined
 
 const autolink: Parser = (source, index, scope) => (source[index] === '<' || source[index] === 'h' ? autolinkAt(source, index, scope) : undefined)
 
@@ -61,7 +61,7 @@ const lineBreakAt: Parser = (source, index) => {
 
 const parsers: Parser[] = [inlineMath, escapedBreak, escaped, codeSpan, emphasisRun, bracket, autolink, entity, lineBreakAt]
 
-const tokenAt = (source: string, index: number, scope: Scope): Token => {
+const tokenAt = (source: string, index: number, scope: InlineScope): Token => {
   for (const parser of parsers) {
     const token = parser(source, index, scope)
     if (token) return token
@@ -69,7 +69,7 @@ const tokenAt = (source: string, index: number, scope: Scope): Token => {
   return { item: source[index]!, end: index + 1 }
 }
 
-export const inline = (source: string, scope: Scope): Inline[] => {
+const parseInline = (source: string, scope: InlineScope): Inline[] => {
   const items: Item[] = []
   let pending = ''
   for (let index = 0; index < source.length; ) {
@@ -85,4 +85,9 @@ export const inline = (source: string, scope: Scope): Inline[] => {
   }
   if (pending) items.push(tildeHome(pending))
   return resolveEmphasis(items)
+}
+
+export const inline = (source: string, scope: Scope): Inline[] => {
+  const cards: Node[] = []
+  return [...parseInline(source, { ...scope, cards }), ...cards]
 }

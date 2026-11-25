@@ -6,16 +6,18 @@ const sameShell = (a: Node, b: Node) => {
 
 const leaf = (node: Node) => node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE
 
-export const morph = (parent: Node, next: Node[], offset = 0) => {
-  next.forEach((node, index) => {
+export const morph = (parent: Node, next: Node[], offset = 0): Node[] => {
+  const adopted = next.flatMap((node, index) => {
     const old = parent.childNodes[offset + index]
-    if (!old) return void parent.appendChild(node)
+    if (!old) return [parent.appendChild(node)]
     if (leaf(old) && old.nodeType === node.nodeType) {
       if (old.nodeValue !== node.nodeValue) old.nodeValue = node.nodeValue
-      return
+      return []
     }
     if (sameShell(old, node)) return morph(old, [...node.childNodes])
     parent.replaceChild(node, old)
+    return [node]
   })
   while (parent.childNodes.length > offset + next.length) parent.lastChild!.remove()
+  return adopted
 }
