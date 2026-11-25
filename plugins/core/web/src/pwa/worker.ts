@@ -46,15 +46,15 @@ const asset = async request => {
 const offlineResponse = () =>
   new Response(offline, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } })
 
+const isShell = (request, response) => response.ok && response.type === 'basic' && !response.redirected && new URL(request.url).pathname === '/'
+const isUnserved = response => !response || response.status >= 500
+
 const navigate = async request => {
   const cache = await caches.open(store)
-  try {
-    const response = await fetch(request)
-    if (response.ok && response.type === 'basic' && !response.redirected && new URL(request.url).pathname === '/') await cache.put('/', response.clone())
-    return response
-  } catch {
-    return (await cache.match('/', options)) || offlineResponse()
-  }
+  const response = await fetch(request).catch(() => undefined)
+  if (isUnserved(response)) return (await cache.match('/', options)) || response || offlineResponse()
+  if (isShell(request, response)) await cache.put('/', response.clone())
+  return response
 }
 
 const openShares = () =>

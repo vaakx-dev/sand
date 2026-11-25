@@ -191,6 +191,7 @@ class MainActivity : ComponentActivity() {
         Page.heard(reply)
         val body = JSONObject(message.data ?: return)
         when (body.optString("kind")) {
+            "ready" -> Unit
             "routes" -> {
                 pc.follow(stringsOf(body.getJSONArray("routes")))
                 describeApp()
