@@ -1,7 +1,7 @@
 import type { Composer } from '@sand/composer/contract'
 import { type Route, shell } from '@sand/ui-shell/contract'
 import { threadChange, type Thread } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, list, resizeObserver, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import { claims } from './claims'
 import type { ChatContext } from './context'
 import { threadRoute, type ChatLook } from './contract'
@@ -40,8 +40,10 @@ export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefin
       row => row.key,
       row => untrack(() => row.get()).view(row.map(value => value.data)),
     )
-    const scroller = div({ class: [kit.pageColumn, 'min-h-0 flex-1 overflow-auto px-3 pt-4 md:px-4'], hidden: () => !shown.get().length }, rowList)
-    resizeObserver(rowList, () => scroller.scrollTo({ top: scroller.scrollHeight }))
+    const onScroll = () => follow.scrolled()
+    const scroller = div({ class: [kit.pageColumn, 'min-h-0 flex-1 overflow-auto px-3 pt-4 md:px-4'], hidden: () => !shown.get().length, onScroll }, rowList)
+    const follow = kit.followEnd(scroller)
+    follow.watch(rowList)
     return scroller
   }
 

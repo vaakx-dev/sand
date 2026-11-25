@@ -1,5 +1,5 @@
 import { sig } from '@vaakx-dev/vrui'
-import { nearEnd, toEnd } from './end'
+import { atEnd, nearEnd, shiftBy, toEnd } from './end'
 import { rowSizes } from './sizes'
 
 export const followEnd = (scroller: HTMLElement) => {
@@ -13,16 +13,25 @@ export const followEnd = (scroller: HTMLElement) => {
     away.set(!value)
   }
 
+  const following = () => {
+    const now = scroller.scrollTop
+    if (atEnd(scroller)) return true
+    if (now < top) return false
+    return pinned || (now > top && nearEnd(scroller))
+  }
+
+  const resized = (shift: number) => {
+    if (pinned) toEnd(scroller)
+    else shiftBy(scroller, shift)
+    settle(pinned)
+  }
+
   return {
     away,
     pinned: () => pinned,
-    watch: rowSizes(scroller, () => pinned),
-    scrolled() {
-      const now = scroller.scrollTop
-      if (nearEnd(scroller)) settle(true)
-      else settle(pinned && now >= top)
-    },
-    measure: () => settle(nearEnd(scroller)),
+    watch: rowSizes(scroller, resized),
+    scrolled: () => settle(following()),
+    moved: () => settle(pinned),
     restore() {
       if (!pinned) scroller.scrollTop = top
     },

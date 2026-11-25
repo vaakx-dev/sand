@@ -33,7 +33,7 @@ const blank = (thread: Thread) => !thread.entries.size && !(thread.loaded && thr
 
 export const chatController = (ctx: ChatContext, id: string) => {
   const { kit, transcriptParts: parts } = ctx
-  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, toEnd, topEdge } = kit
+  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, topEdge } = kit
   const cache = itemCache(parts)
   const states = parts.openStates()
   const slot = slotHost()
@@ -44,6 +44,11 @@ export const chatController = (ctx: ChatContext, id: string) => {
     () => trim(),
   )
   const showing = () => untrack(() => view.visible.get())
+
+  const anchored = (change: () => void) => {
+    keepAnchor(scroller, view.rowList, change)
+    follow.moved()
+  }
 
   const onScroll = () => {
     if (!showing()) return
@@ -121,7 +126,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     if (!thread || !scroller.clientHeight) return false
     if (view.above < fetchWithin && ctx.threads.older(id)) void ctx.threads.page(id)
     if (!view.above) return false
-    keepAnchor(scroller, view.rowList, () => paint(thread, view, growStep))
+    anchored(() => paint(thread, view, growStep))
     return true
   }
 
@@ -132,7 +137,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     const first = view.rowEntries[index]
     if (index < fewestTrimmed || !first) return
     view.first = first
-    keepAnchor(scroller, view.rowList, () => paint(thread, view))
+    anchored(() => paint(thread, view))
   }
 
   const located = (entry: string, block?: number): Located | undefined => {
@@ -161,7 +166,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
   }
 
   const drawItem = (thread: Thread, key: string) =>
-    keepAnchor(scroller, view.rowList, () => {
+    anchored(() => {
       paint(thread, view)
       if (view.rowEntries.includes(key)) return
       view.first = key
@@ -216,9 +221,8 @@ export const chatController = (ctx: ChatContext, id: string) => {
     view.visible.set(true)
     if (tail && view.size > trimAt) resetToEnd(view)
     if (tail) paint(thread, view)
-    else keepAnchor(scroller, view.rowList, () => paint(thread, view))
-    if (tail) toEnd(scroller)
-    follow.measure()
+    else anchored(() => paint(thread, view))
+    if (tail) follow.toEnd()
     edge.pump()
   }
 
