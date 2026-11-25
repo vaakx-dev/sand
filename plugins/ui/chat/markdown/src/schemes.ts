@@ -9,13 +9,6 @@ export const linkSchemes = (): MarkdownLinks & { find: FindScheme } => {
       registered.add(entry)
       return () => void registered.delete(entry)
     },
-    find(name) {
-      let best: LinkScheme | undefined
-      for (const entry of registered) {
-        if (entry.scheme.toLowerCase() !== name || (best && (best.order ?? 0) <= (entry.order ?? 0))) continue
-        best = entry
-      }
-      return best
-    },
+    find: name => [...registered].find(entry => entry.scheme.toLowerCase() === name),
   }
 }

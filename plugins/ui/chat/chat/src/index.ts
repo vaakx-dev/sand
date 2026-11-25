@@ -1,5 +1,4 @@
 import { composer, type Composer } from '@sand/composer/contract'
-import { markdownLinks } from '@sand/markdown/contract'
 import { modelTargets } from '@sand/model-panel/contract'
 import { pulse } from '@sand/reactive'
 import { shell } from '@sand/ui-shell/contract'
@@ -8,7 +7,6 @@ import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { draftRoute, threadOwners, threadRoute, threadView, waitLines } from './contract'
-import { threadLinks } from './links'
 import { mergedCheck } from './live/merged'
 import { threadRoutes } from './route'
 import { followStart } from './route/select'
@@ -37,7 +35,6 @@ export default definePlugin({
     ctx.provide(waitLines, createWaitLines())
     const view = threadViewService(ctx, screens)
     ctx.provide(threadView, view)
-    ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view)))
     ctx.watch(shell, found => found && threadRoutes(ctx, found, { screens, view, changes }))
     ctx.watch(shell, found =>
       found?.subject(({ kind, id }) => {

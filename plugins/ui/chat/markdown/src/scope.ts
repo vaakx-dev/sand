@@ -18,6 +18,8 @@ export interface Scope extends Renderers {
   files?: MarkdownFiles
   size?: MarkdownSize
   streaming?: boolean
-  paragraph?: string
-  tight?: boolean
+}
+
+export interface InlineScope extends Scope {
+  cards: Node[]
 }

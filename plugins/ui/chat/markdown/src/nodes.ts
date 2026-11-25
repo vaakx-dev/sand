@@ -67,3 +67,5 @@ export const anchor = (href: string, title: string | undefined, children: Inline
   a({ class: 'underline hover:text-neutral-400', href, target: '_blank', rel: 'noopener noreferrer', referrerPolicy: 'no-referrer', ...(title && { title }) }, children)
 
 export const linkLabel = (href: string, children: Inline[]) => span({ title: href }, children)
+
+export const labelText = (children: Inline[]) => span(children)

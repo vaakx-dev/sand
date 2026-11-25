@@ -184,8 +184,10 @@ const offscreenRow = { contentVisibility: 'auto', containIntrinsicBlockSize: 'au
 const rowView = (model: Model, menu: ContextMenu, row: () => ShellRow, look: RowLook) => {
   const { workRow, rowBody } = model.kit
   const current = () => model.isCurrent(row().to)
-  return workRow({ current, large: look.phone, style: offscreenRow, ...rowMenu(menu, row, () => model.open(row().to)) }, rowBody(row, { large: look.phone }))
+  return workRow({ current, large: look.phone, ...rowMenu(menu, row, () => model.open(row().to)) }, rowBody(row, { large: look.phone }))
 }
+
+const listedRow = (model: Model, menu: ContextMenu, row: () => ShellRow, look: RowLook) => div({ style: offscreenRow }, rowView(model, menu, row, look))
 
 export const singleRow = (model: Model, row: () => ShellRow) => {
   const menu = model.kit.contextMenu()
@@ -230,7 +232,7 @@ const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, lo
     list(
       derive(() => (shown() ? listed.get().group.rows : [])),
       row => row.id,
-      row => rowView(model, menu, () => row.get(), look),
+      row => listedRow(model, menu, () => row.get(), look),
       div({ class: 'flex flex-col gap-px' }),
     ),
     show(

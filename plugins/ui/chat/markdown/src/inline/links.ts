@@ -1,16 +1,30 @@
 import { label } from '../blocks/refs'
-import type { LinkPlace } from '../contract'
-import { anchor, linkLabel, type Inline } from '../nodes'
-import type { Scope } from '../scope'
+import { anchor, labelText, linkLabel, type Inline } from '../nodes'
+import type { InlineScope, Scope } from '../scope'
 import { closingBracket, inlineDestination, matchAt } from './syntax'
 
-type Parse = (source: string, scope: Scope) => Inline[]
+type Parse = (source: string, scope: InlineScope) => Inline[]
+
+interface Link {
+  href: string
+  children: Inline[]
+  title?: string
+}
+
+interface Span {
+  source: string
+  start: number
+  end: number
+}
 
 const allowed = new Set(['http:', 'https:', 'mailto:'])
 const autolink = /<([a-zA-Z][a-zA-Z\d+.-]{1,31}:[^\s<>]*)>/y
 const emailAutolink = /<([\w.!#$%&'*+/=?^`{|}~-]+@[a-zA-Z\d](?:[a-zA-Z\d-]*[a-zA-Z\d])?(?:\.[a-zA-Z\d](?:[a-zA-Z\d-]*[a-zA-Z\d])?)*)>/y
 const bareUrl = /https?:\/\/[^\s<]+/y
 const reference = /\[([^\]]*)\]/y
+const schemed = /^([a-zA-Z][a-zA-Z\d+.-]*):(.*)$/s
+const lineStart = /(?:^|\n)[ \t]*$/
+const noteBreak = /[ \t]*(?:[:—–-]|$)[ \t]*/my
 
 const safeUrl = (raw: string) => {
   try {
@@ -21,32 +35,39 @@ const safeUrl = (raw: string) => {
   }
 }
 
-const schemed = /^([a-zA-Z][a-zA-Z\d+.-]*):(.*)$/s
-
-interface Link {
-  href: string
-  children: Inline[]
-  place: LinkPlace
-  title?: string
-}
-
-const placeOf = (source: string, start: number, end: number, scope: Scope): LinkPlace =>
-  scope.paragraph === source && start === 0 && end === source.length ? 'block' : 'inline'
-
-const link = ({ href, children, place, title }: Link, scope: Scope): Node => {
-  const url = safeUrl(href)
-  if (url) return anchor(url, title, children)
+const schemeCard = ({ href, children }: Link, scope: Scope) => {
   const [, name = '', target = ''] = schemed.exec(href.trim()) ?? []
   const found = name && scope.scheme(name.toLowerCase())
-  if (found) return found.render(target, children, place)
+  return found ? found.render(target, children) : undefined
+}
+
+const plainLink = ({ href, children, title }: Link, scope: Scope): Node => {
+  const url = safeUrl(href)
+  if (url) return anchor(url, title, children)
   return scope.files?.link(href.trim(), children) ?? linkLabel(href, children)
 }
 
-const imageLink = (src: string, alt: string, place: LinkPlace, scope: Scope, title?: string) =>
-  link({ href: src, children: [`▣ ${alt || 'image'}`], place, title: title ?? src }, scope)
+const standaloneEnd = ({ source, start, end }: Span) => {
+  if (!lineStart.test(source.slice(0, start))) return undefined
+  const found = matchAt(noteBreak, source, end)
+  return found ? end + found[0].length : undefined
+}
 
-const picture = (src: string, alt: string, place: LinkPlace, scope: Scope, title?: string) =>
-  scope.image?.(src, alt) ?? imageLink(src, alt, place, scope, title)
+const placeCard = (card: Node, children: Inline[], span: Span, scope: InlineScope) => {
+  const cardEnd = standaloneEnd(span)
+  if (cardEnd !== undefined) return { item: card, end: cardEnd }
+  scope.cards.push(card)
+  return { item: labelText(children), end: span.end }
+}
+
+const linkToken = (link: Link, span: Span, scope: InlineScope) => {
+  const card = schemeCard(link, scope)
+  return card ? placeCard(card, link.children, span, scope) : { item: plainLink(link, scope), end: span.end }
+}
+
+const imageLink = (src: string, alt: string, scope: Scope, title?: string) => plainLink({ href: src, children: [`▣ ${alt || 'image'}`], title: title ?? src }, scope)
+
+const picture = (src: string, alt: string, scope: Scope, title?: string) => scope.image?.(src, alt) ?? imageLink(src, alt, scope, title)
 
 const trimUrl = (url: string) => {
   let trimmed = url.replace(/[?!.,:;*_~'"]+$/, '')
@@ -54,17 +75,14 @@ const trimUrl = (url: string) => {
   return trimmed
 }
 
-export const bracketed = (source: string, start: number, scope: Scope, parse: Parse) => {
+export const bracketed = (source: string, start: number, scope: InlineScope, parse: Parse) => {
   const image = source[start] === '!'
   const open = image ? start + 1 : start
   const close = closingBracket(source, open, scope)
   if (close < 0) return undefined
   const inner = source.slice(open + 1, close)
-  const build = (url: string, end: number, title?: string) => {
-    const place = placeOf(source, start, end, scope)
-    const item = image ? picture(url, inner, place, scope, title) : link({ href: url, children: parse(inner, scope), place, title }, scope)
-    return { item, end }
-  }
+  const build = (url: string, end: number, title?: string) =>
+    image ? { item: picture(url, inner, scope, title), end } : linkToken({ href: url, children: parse(inner, scope), title }, { source, start, end }, scope)
   if (source[close + 1] === '(') {
     const target = inlineDestination(source, close + 1)
     if (target) return build(target.url, target.end, target.title)
@@ -74,11 +92,8 @@ export const bracketed = (source: string, start: number, scope: Scope, parse: Pa
   return found && build(found.url, close + 1 + (named?.[0].length ?? 0), found.title)
 }
 
-export const autolinkAt = (source: string, index: number, scope: Scope) => {
-  const token = (href: string, text: string, length: number) => {
-    const end = index + length
-    return { item: link({ href, children: [text], place: placeOf(source, index, end, scope) }, scope), end }
-  }
+export const autolinkAt = (source: string, index: number, scope: InlineScope) => {
+  const token = (href: string, text: string, length: number) => linkToken({ href, children: [text] }, { source, start: index, end: index + length }, scope)
   const auto = matchAt(autolink, source, index)
   if (auto) return token(auto[1]!, auto[1]!, auto[0].length)
   const email = matchAt(emailAutolink, source, index)
