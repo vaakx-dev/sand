@@ -1,11 +1,16 @@
 const pinDistance = 80
+const endSlack = 1
 
 export const nativeAnchoring = CSS.supports('overflow-anchor', 'auto')
 
-export const nearEnd = (scroller: HTMLElement) => scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < pinDistance
+const fromEnd = (scroller: HTMLElement) => scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop
+
+export const nearEnd = (scroller: HTMLElement) => fromEnd(scroller) < pinDistance
+
+export const atEnd = (scroller: HTMLElement) => fromEnd(scroller) <= endSlack
 
 export const toEnd = (scroller: HTMLElement) => {
-  if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop >= 1) scroller.scrollTop = scroller.scrollHeight
+  if (!atEnd(scroller)) scroller.scrollTop = scroller.scrollHeight
 }
 
 export const shiftBy = (scroller: HTMLElement, shift: number) => {

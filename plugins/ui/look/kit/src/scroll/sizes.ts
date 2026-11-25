@@ -1,9 +1,9 @@
 import { resizeObserver } from '@vaakx-dev/vrui'
-import { nativeAnchoring, shiftBy, toEnd } from './end'
+import { nativeAnchoring } from './end'
 
 const heightOf = (entry: ResizeObserverEntry) => entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height
 
-export const rowSizes = (scroller: HTMLElement, pinned: () => boolean) => {
+export const rowSizes = (scroller: HTMLElement, resized: (shift: number) => void) => {
   const heights = new WeakMap<Element, number>()
 
   const shiftAbove = (entries: ResizeObserverEntry[]) => {
@@ -21,13 +21,7 @@ export const rowSizes = (scroller: HTMLElement, pinned: () => boolean) => {
     return shift
   }
 
-  const resized = (entries: ResizeObserverEntry[]) => {
-    const shift = nativeAnchoring ? 0 : shiftAbove(entries)
-    if (pinned()) toEnd(scroller)
-    else shiftBy(scroller, shift)
-  }
-
-  const observer = resizeObserver(scroller, resized)
+  const observer = resizeObserver(scroller, entries => resized(nativeAnchoring ? 0 : shiftAbove(entries)))
   return (node: Element) => {
     observer.observe(node)
     return () => observer.unobserve(node)
