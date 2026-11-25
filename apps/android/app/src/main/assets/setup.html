@@ -59,6 +59,38 @@
       document.getElementById('scan').className = 'quiet'
     }
 
+    const RETRY_FIRST_MS = 2000
+    const RETRY_LONGEST_MS = 30000
+    let retryMs = RETRY_FIRST_MS
+    let retryTimer
+    let checking = false
+
+    const reachable = () => fetch(location.href, { cache: 'no-store' }).then(response => response.ok, () => false)
+    const retryLater = () => {
+      clearTimeout(retryTimer)
+      retryTimer = setTimeout(check, retryMs)
+      retryMs = Math.min(retryMs * 2, RETRY_LONGEST_MS)
+    }
+    const check = async () => {
+      if (checking) return
+      checking = true
+      if (await reachable()) return location.reload()
+      checking = false
+      retryLater()
+    }
+    const retrySoon = () => {
+      retryMs = RETRY_FIRST_MS
+      clearTimeout(retryTimer)
+      check()
+    }
+    const heard = event => JSON.parse(event.data).kind === 'network' && retrySoon()
+
+    if (document.body.dataset.state === 'unreachable') {
+      window.sandApp.addEventListener('message', heard)
+      send({ kind: 'ready' })
+      retryLater()
+    }
+
     document.getElementById('retry').onclick = () => location.reload()
     document.getElementById('scan').onclick = () => send({ kind: 'scan' })
     document.getElementById('link').oninput = () => { document.getElementById('wrong').hidden = true }

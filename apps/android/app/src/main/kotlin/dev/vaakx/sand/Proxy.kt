@@ -16,6 +16,11 @@ private const val STATE_SLOT = "{{state}}"
 private val DROPPED_HEADERS = setOf("content-encoding", "content-length", "transfer-encoding", "connection")
 private val CHARSET = Regex("charset=([^;\\s]+)", RegexOption.IGNORE_CASE)
 
+private fun header(request: WebResourceRequest, name: String) =
+    request.requestHeaders.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value
+
+private fun opensPage(request: WebResourceRequest) = request.isForMainFrame || header(request, "sec-fetch-dest") == "document"
+
 private fun reason(status: Int, message: String?) = message?.takeIf { it.isNotBlank() } ?: if (status < 400) "OK" else "Error"
 
 private fun responseOf(connection: HttpURLConnection): WebResourceResponse {
@@ -57,7 +62,7 @@ class Proxy(private val pc: Pc, private val assets: AssetManager) {
         return fromPc(target, request.requestHeaders) ?: unreachable(request)
     }
 
-    private fun outdatedPage(request: WebResourceRequest) = request.isForMainFrame && pc.serving() != null && pc.outdated
+    private fun outdatedPage(request: WebResourceRequest) = opensPage(request) && pc.serving() != null && pc.outdated
 
     private fun fromPc(path: String, headers: Map<String, String>): WebResourceResponse? {
         val first = pc.serving() ?: return null
@@ -67,7 +72,7 @@ class Proxy(private val pc: Pc, private val assets: AssetManager) {
     }
 
     private fun unreachable(request: WebResourceRequest) =
-        if (request.isForMainFrame) setup(Setup.UNREACHABLE) else WebResourceResponse("text/plain", "utf-8", Setup.UNREACHABLE.status, "Unreachable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+        if (opensPage(request)) setup(Setup.UNREACHABLE) else WebResourceResponse("text/plain", "utf-8", Setup.UNREACHABLE.status, "Unreachable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
 
     private fun setup(state: Setup): WebResourceResponse {
         val page = setupPage.replace(STATE_SLOT, state.name.lowercase()).toByteArray()

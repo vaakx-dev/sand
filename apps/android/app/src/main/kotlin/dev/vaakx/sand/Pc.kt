@@ -24,30 +24,37 @@ private fun newNonce(): String {
     return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
 }
 
-private fun identityProof(clientNonce: String, reply: JSONObject) =
-    listOf("sand-identity", clientNonce, reply.getString("nonce"), reply.getString("id")).joinToString("\n")
+private class Identity(val id: String, val nonce: String, val publicKey: String, val signature: String, val appProtocol: Int)
 
-private fun signed(reply: JSONObject, clientNonce: String) = try {
-    Ed25519Verify(decode(reply.getString("publicKey"))).verify(decode(reply.getString("signature")), identityProof(clientNonce, reply).toByteArray())
+private class Proof(val outdated: Boolean)
+
+private fun identityProof(clientNonce: String, identity: Identity) =
+    listOf("sand-identity", clientNonce, identity.nonce, identity.id).joinToString("\n")
+
+private fun signed(identity: Identity, clientNonce: String) = try {
+    Ed25519Verify(decode(identity.publicKey)).verify(decode(identity.signature), identityProof(clientNonce, identity).toByteArray())
     true
 } catch (error: GeneralSecurityException) {
     false
 }
 
-private fun identity(route: String, clientNonce: String): JSONObject? = try {
+private fun identityOf(reply: JSONObject) =
+    Identity(reply.getString("id"), reply.getString("nonce"), reply.getString("publicKey"), reply.getString("signature"), reply.optInt("appProtocol"))
+
+private fun identity(route: String, clientNonce: String): Identity? = try {
     val connection = URL("$route/identity?nonce=$clientNonce").openConnection() as HttpURLConnection
     connection.connectTimeout = PROBE_TIMEOUT_MS
     connection.readTimeout = PROBE_TIMEOUT_MS
-    if (connection.responseCode == HttpURLConnection.HTTP_OK) JSONObject(connection.inputStream.bufferedReader().readText()) else null
+    if (connection.responseCode == HttpURLConnection.HTTP_OK) identityOf(JSONObject(connection.inputStream.bufferedReader().readText())) else null
 } catch (error: Exception) {
     null
 }
 
 class Pc(context: Context) {
     private val prefs = context.getSharedPreferences("pc", Context.MODE_PRIVATE)
-    @Volatile private var serving: String? = null
-    @Volatile var outdated = false
-        private set
+    private val reach = Reach(::proof)
+
+    val outdated get() = reach.current()?.proof?.outdated == true
 
     fun routes(): List<String> {
         val saved = JSONArray(prefs.getString(ROUTES, "[]"))
@@ -58,30 +65,29 @@ class Pc(context: Context) {
 
     fun pair(route: String) {
         prefs.edit { putString(ROUTES, JSONArray(listOf(route)).toString()).remove(KEY) }
-        serving = null
+        reach.forget()
     }
 
     fun follow(routes: List<String>) {
         prefs.edit { putString(ROUTES, JSONArray(routes).toString()) }
-        if (serving != routes.first()) serving = null
+        if (reach.current()?.route != routes.first()) reach.forget()
     }
 
-    fun forget() {
-        serving = null
+    fun forget() = reach.forget()
+
+    fun serving(): String? = reach.found(routes())?.route
+
+    private fun proof(route: String): Proof? {
+        val clientNonce = newNonce()
+        val claimed = identity(route, clientNonce) ?: return null
+        if (!signed(claimed, clientNonce) || !trusts(claimed.publicKey)) return null
+        return Proof(outdated = claimed.appProtocol < APP_PROTOCOL)
     }
 
     @Synchronized
-    fun serving(): String? = serving ?: routes().firstOrNull(::proves)?.also { serving = it }
-
-    private fun proves(route: String): Boolean {
-        val clientNonce = newNonce()
-        val reply = identity(route, clientNonce) ?: return false
-        val key = reply.optString("publicKey")
+    private fun trusts(key: String): Boolean {
         val pinned = prefs.getString(KEY, null)
-        if (pinned != null && pinned != key) return false
-        if (!signed(reply, clientNonce)) return false
         if (pinned == null) prefs.edit { putString(KEY, key) }
-        outdated = reply.optInt("appProtocol") < APP_PROTOCOL
-        return true
+        return pinned == null || pinned == key
     }
 }
