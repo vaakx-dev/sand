@@ -1,7 +1,7 @@
 import type { Page } from 'playwright'
 import { type LinkShape, slowLink } from '../link'
 import { type Cost, costOf, countAt, fresh, openRoute, seen, shownAt, tapped } from '../measure'
-import { startPhone } from '../phone'
+import { COMPOSER, startPhone } from '../phone'
 import { type Sandbox, startSandbox } from '../sandbox'
 import type { SeededChat } from '../seed/chat'
 import type { Tree } from './row'
@@ -121,7 +121,7 @@ class Visit {
   }
 
   async send(page: Page, text: string): Promise<Sent> {
-    await page.locator('[contenteditable=true],textarea').first().fill(text)
+    await page.locator(COMPOSER).first().fill(text)
     const [replies, ends] = await page.evaluate(() => [window.bench.count('Bench reply'), window.bench.count('ends reply')])
     await this.#quiet()
     const since = await seen(page, this.link.traffic)

@@ -4,7 +4,7 @@ import type { Page } from 'playwright'
 import { listMissing, missingFrom } from './complete'
 import { slowLink, type LinkShape } from './link'
 import { type Cost, costOf, countAt, fresh as untouched, openRoute, seen, shownAt, tapped } from './measure'
-import { startPhone } from './phone'
+import { COMPOSER, startPhone } from './phone'
 import { startSandbox } from './sandbox'
 import type { SeededChat } from './seed/chat'
 
@@ -139,7 +139,7 @@ const scrollUp = (page: Page, chat: SeededChat) =>
 
 const send = async (page: Page, run: number) => {
   const text = `Bench message ${run}`
-  await page.locator('[contenteditable=true],textarea').first().fill(text)
+  await page.locator(COMPOSER).first().fill(text)
   const [before, ended] = await page.evaluate(() => [window.bench.count('Bench reply'), window.bench.count('ends reply')])
   const since = await seen(page, link.traffic)
   const start = await tap(page, 'Send')

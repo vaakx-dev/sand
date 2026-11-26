@@ -35,13 +35,17 @@ declare global {
   }
 }
 
-const watch = () => {
+const EDITABLE = '[contenteditable]:not([contenteditable=false])'
+
+export const COMPOSER = `${EDITABLE},textarea`
+
+const watch = ({ editable, composer }: { editable: string; composer: string }) => {
   const shown = (element: Element | null) => {
     if (!element?.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true, visibilityProperty: true })) return false
     const box = element.getBoundingClientRect()
     return box.bottom > 0 && box.top < innerHeight && box.width > 0
   }
-  const read = (element: Element | null) => shown(element) && !element?.closest('[contenteditable=true]')
+  const read = (element: Element | null) => shown(element) && !element?.closest(editable)
   const tracked = new Map<string, Set<Text>>()
   const note = (node: Node) => {
     if (!tracked.size) return
@@ -81,7 +85,7 @@ const watch = () => {
     tap: 0,
     visible: text => texts(text).some(read),
     count: text => texts(text).filter(read).length,
-    composer: () => [...document.querySelectorAll('[contenteditable=true],textarea')].some(shown),
+    composer: () => [...document.querySelectorAll(composer)].some(shown),
     scroller: text => {
       if (scrolled?.text === text && scrolled.element.isConnected) return scrolled.element
       let element = texts(text).find(shown) ?? null
@@ -152,7 +156,7 @@ export interface PhoneOptions {
 export const startPhone = async ({ cpuSlowdown }: PhoneOptions) => {
   const profile = mkdtempSync(join(tmpdir(), 'sand-bench-chrome-'))
   const context: BrowserContext = await chromium.launchPersistentContext(profile, { ...devices['Pixel 7'], headless: true })
-  await context.addInitScript(watch)
+  await context.addInitScript(watch, { editable: EDITABLE, composer: COMPOSER })
   const sessions = new WeakMap<Page, CDPSession>()
   return {
     context,
