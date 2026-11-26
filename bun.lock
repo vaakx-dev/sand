@@ -313,6 +313,7 @@
       "dependencies": {
         "@sand/cli-commands": "workspace:*",
         "@sand/devices-contract": "workspace:*",
+        "@sand/engine": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
@@ -323,6 +324,7 @@
         "@sand/processes": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/toasts": "workspace:*",
+        "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
