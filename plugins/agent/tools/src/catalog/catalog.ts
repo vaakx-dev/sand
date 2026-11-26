@@ -6,6 +6,7 @@ import { actOf, run } from '../run'
 import type { Choices } from './choices'
 import { findTool } from './find'
 import { foundIn } from './found'
+import { hintText } from './hint'
 import { callerSite, checkName } from './names'
 import { inScope } from './scope'
 import { spec } from './spec'
@@ -18,6 +19,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const offers = new Map<Owner, Offer>()
   const allows = new Set<Allow>()
   const loadedIn = new Map<string, ReadonlySet<string>>()
+  const hintedIn = new Map<string, ReadonlySet<string>>()
   let gated: Gate | undefined
 
   const chosen = (group: ToolGroup) => choices.get(group.name) ?? group.load
@@ -114,6 +116,23 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return name === findName ? find(scoped, conversation) : scoped.find(tool => tool.name === name)
   }
 
+  const unloaded = (names: string[], conversation: Conversation) => {
+    const loaded = loadedIn.get(conversation.id) ?? new Set()
+    const hinted = hintedIn.get(conversation.id) ?? new Set()
+    return grouped(listed(usable(conversation), 'on-demand', conversation)).filter(
+      ({ tool, group }) => names.includes(tool.name) && !loaded.has(tool.name) && !hinted.has(group.name),
+    )
+  }
+
+  const hintFor = (conversation: Conversation) => (tool: Tool, input: unknown) => {
+    const hint = tool.hint?.(input, conversation)
+    const pending = hint ? unloaded(hint.tools, conversation) : []
+    if (!hint || !pending.length) return undefined
+    const groupNames = [...new Set(pending.map(({ group }) => group.name))]
+    hintedIn.set(conversation.id, new Set([...(hintedIn.get(conversation.id) ?? []), ...groupNames]))
+    return hintText({ tools: pending.map(({ tool }) => tool.name), groups: groupNames, purpose: hint.purpose })
+  }
+
   const secrets = (): Secrets =>
     tools().reduce((found, { name, secret }) => (secret?.length ? found.set(name, [...new Set([...(found.get(name) ?? []), ...secret])]) : found), new Map<string, string[]>())
 
@@ -161,7 +180,11 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     effect,
     run: (call, context) => {
       const tool = resolve(call.name, context.conversation)
-      return run(tool, call, context, tool?.relay ? undefined : gated, tool ? allowedAct(tool, context.conversation) : () => true)
+      return run(tool, call, context, {
+        gate: tool?.relay ? undefined : gated,
+        allowed: tool ? allowedAct(tool, context.conversation) : () => true,
+        hint: hintFor(context.conversation),
+      })
     },
   }
   return service

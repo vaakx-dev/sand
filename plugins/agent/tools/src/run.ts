@@ -1,15 +1,23 @@
-import { secretMark, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
+import { secretMark, type ToolCallBlock, type ToolResultBlock, type ToolResultContent } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
-import type { Act, Gate, Tool, ToolContext } from './contract'
+import type { Act, Gate, Tool, ToolContext, ToolOutput } from './contract'
 import { errorMessage, plural, untilAborted } from '@sand/util'
 import { z } from 'zod'
 
+interface Hooks {
+  gate: Gate | undefined
+  allowed(act: Act): boolean
+  hint(tool: Tool, input: unknown): string | undefined
+}
+
 const defaultTimeoutMs = 120_000
+
+const contentOf = (output: ToolOutput): ToolResultContent[] => (typeof output === 'string' ? [{ type: 'text', text: output || '(no output)' }] : output)
 
 const result = (call: ToolCallBlock, text: string, isError?: boolean): ToolResultBlock => ({
   type: 'tool_result',
   callId: call.id,
-  content: [{ type: 'text', text: text || '(no output)' }],
+  content: contentOf(text),
   ...(isError ? { isError } : {}),
 })
 
@@ -18,15 +26,11 @@ const stoppedText = (tool: Tool, timeoutMs: number) =>
 
 const timerFor = (timeoutMs: number, deadline: AbortController) => (Number.isFinite(timeoutMs) ? setTimeout(() => deadline.abort(), timeoutMs) : undefined)
 
+const withHint = (content: ToolResultContent[], hint: string | undefined): ToolResultContent[] => (hint ? [...content, { type: 'text', text: hint }] : content)
+
 export const actOf = (tool: Tool, input: unknown, conversation: Conversation): Act => tool.act?.(input, conversation) ?? { effect: tool.effect ?? 'run' }
 
-export const run = async (
-  tool: Tool | undefined,
-  call: ToolCallBlock,
-  context: Omit<ToolContext, 'call'>,
-  gate: Gate | undefined,
-  allowed: (act: Act) => boolean,
-): Promise<ToolResultBlock> => {
+export const run = async (tool: Tool | undefined, call: ToolCallBlock, context: Omit<ToolContext, 'call'>, { gate, allowed, hint }: Hooks): Promise<ToolResultBlock> => {
   if (!tool) return result(call, `Unknown tool: ${call.name}`, true)
   if (call.malformed !== undefined) return result(call, JSON.stringify({ INVALID_JSON: tool.secret?.length ? secretMark : call.malformed }), true)
   const parsed = tool.input.safeParse(call.input)
@@ -44,8 +48,7 @@ export const run = async (
       Promise.try(() => tool.run(parsed.data, { ...context, signal, call })),
       deadline.signal,
     )
-    if (typeof output === 'string') return result(call, output)
-    return { type: 'tool_result', callId: call.id, content: output }
+    return { type: 'tool_result', callId: call.id, content: withHint(contentOf(output), hint(tool, parsed.data)) }
   } catch (error) {
     if (deadline.signal.aborted) return result(call, stoppedText(tool, timeoutMs), true)
     return result(call, errorMessage(error), true)

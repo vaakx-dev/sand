@@ -1,6 +1,7 @@
 import { llm, type Effort } from '@sand/accounts/contract'
 import { threadLinkNote } from '@sand/chats/contract'
 import { features } from '@sand/config/contract'
+import type { Owner } from '@sand/engine/contract'
 import type { ThreadState } from '@sand/orchestrator/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
@@ -9,6 +10,10 @@ import type { AgentsContext } from './context'
 import { doings } from './does'
 import type { StartSubagent } from './start'
 import { agentTitle } from './title'
+
+const THREAD_HINT = { tools: ['thread_send', 'thread_stop', 'thread_wait'], purpose: 'to message, stop or wait for it' }
+
+const returnsAtOnce = (background: boolean | undefined, owner: Owner) => background === true || owner === 'bot'
 
 const effortInput = (ctx: AgentsContext) => {
   const [first, ...rest] = ctx.get(llm)?.levels?.().map(level => level.id) ?? []
@@ -63,6 +68,7 @@ export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<Return
   get input() {
     return inputSchema(ctx)
   },
+  hint: ({ background }, conversation) => (returnsAtOnce(background, conversation.owner) ? THREAD_HINT : undefined),
   async run({ effort, background, ...input }, { conversation, call, signal }) {
     const parent = ctx.sessions.require(conversation.id)
     const { thread } = await start({
@@ -71,7 +77,7 @@ export const agentTool = (ctx: AgentsContext, start: StartSubagent): Tool<Return
       parent,
       call: call.id,
     })
-    const result = background || parent.owner === 'bot' ? started(thread) : answered(await ctx.orchestrator.answer(thread, { owner: parent.owner, id: parent.id }, signal))
+    const result = returnsAtOnce(background, parent.owner) ? started(thread) : answered(await ctx.orchestrator.answer(thread, { owner: parent.owner, id: parent.id }, signal))
     return `${result}\n\n${threadLinkNote(thread, agentTitle(input.label, input.task))}`
   },
 })

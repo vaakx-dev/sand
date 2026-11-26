@@ -38,6 +38,11 @@ export interface Act {
   uses?: Use
 }
 
+export interface Hint {
+  tools: string[]
+  purpose: string
+}
+
 export interface Tool<S extends ZodType = ZodType> {
   name: string
   description: string
@@ -52,6 +57,7 @@ export interface Tool<S extends ZodType = ZodType> {
   effect?: Effect
   act?(input: output<S>, conversation: Conversation): Act
   active?(conversation: Conversation): boolean
+  hint?(input: output<S>, conversation: Conversation): Hint | undefined
   replaces?: string[]
   relay?: boolean
   run(input: output<S>, context: ToolContext): ToolOutput | Promise<ToolOutput>
