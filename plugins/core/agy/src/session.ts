@@ -1,5 +1,5 @@
-import { type AppAsk, type AppOutput, type AppSession, type AppSetup, type Effort, type PlanLimits, UsageLimited } from '@sand/accounts/contract'
-import { fieldsOf, forkedAside, type Json, mcpBlock, mcpBridge, parts, resetOf, SERVER_NAME, Turns } from '@sand/app-plan'
+import { type AppAsk, type AppOutput, type AppSession, type AppSetup, type Effort, type PlanLimits, RATE_LIMITED } from '@sand/accounts/contract'
+import { appFailure, fieldsOf, forkedAside, type Json, mcpBlock, mcpBridge, parts, SERVER_NAME, Turns } from '@sand/app-plan'
 import type { ModelContent, StopReason } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { errorMessage } from '@sand/util'
@@ -23,7 +23,9 @@ interface Choosing {
   created: Json
 }
 
-const RATE_LIMITED = /rate limit|quota|resource_exhausted|429/i
+const HTTP_STATUS = /\b(?:HTTP|code) (\d{3})\b/
+const RATE_LIMIT_TEXT = /rate limit|resource_exhausted/i
+const QUOTA_TEXT = /quota reached|quota will reset|exhausted your capacity/i
 const ALLOW = ['allow_always', 'allow_once']
 const REJECT = ['reject_once', 'reject_always']
 
@@ -76,14 +78,23 @@ async function chooseModel({ client, sessionId, created }: Choosing, model: stri
   return undefined
 }
 
-async function limitFailure({ folder, report }: SessionNeeds, error: unknown) {
+function statusOf(message: string): number | undefined {
+  const found = HTTP_STATUS.exec(message)?.[1]
+  if (found) return Number(found)
+  return RATE_LIMIT_TEXT.test(message) || QUOTA_TEXT.test(message) ? RATE_LIMITED : undefined
+}
+
+async function rateLimited({ folder, report }: SessionNeeds, message: string) {
   const limits = await readLimits(folder).catch(() => undefined)
   if (limits) report(limits)
-  return new UsageLimited(errorMessage(error), resetOf(limits))
+  return appFailure({ message, status: RATE_LIMITED, ...(QUOTA_TEXT.test(message) && { limited: {} }), limits })
 }
 
 async function failureOf(needs: SessionNeeds, error: unknown) {
-  return RATE_LIMITED.test(errorMessage(error)) ? limitFailure(needs, error) : error
+  const message = errorMessage(error)
+  const status = statusOf(message)
+  if (status === RATE_LIMITED) return rateLimited(needs, message)
+  return appFailure({ message, ...(status && { status }) })
 }
 
 function reportContext(raw: Json, output: AppOutput) {

@@ -50,6 +50,7 @@
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/media": "workspace:*",
+        "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
       },
     },
@@ -1740,7 +1741,6 @@
         "@sand/app-plan": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/media": "workspace:*",
-        "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -1864,6 +1864,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/app-plan": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/util": "workspace:*",

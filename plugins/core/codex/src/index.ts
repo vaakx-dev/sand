@@ -1,5 +1,5 @@
 import { cacheLifetimes, llmPlans, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
-import { appPlan, type Place, type Provider } from '@sand/app-plan'
+import { appPlan, blankFiles, type Place, type Provider } from '@sand/app-plan'
 import { cli } from '@sand/config/contract'
 import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
@@ -49,7 +49,7 @@ const codexProvider = (media: Media, apps: string): Provider => ({
     return {
       ...codexAccount(pool),
       open: (setup, output, resume) => openSession({ pool, media, report }, setup, output, resume),
-      sessionFiles: sessionFiles(home),
+      blank: async (session, values) => blankFiles(await sessionFiles(home, session), values),
       history: rolloutHistory(home),
       close: () => pool.close(),
     }

@@ -1,4 +1,4 @@
-import { type AppCall, type AppOutput, UsageLimited } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, ProviderTrouble, UsageLimited } from '@sand/accounts/contract'
 import { expect, test } from 'bun:test'
 import { createReader } from '../src/session/stream'
 import { usageLimits } from '../src/account/usage'
@@ -32,6 +32,18 @@ test('a turn Claude Code stopped at the usage limit fails as out of usage until 
   expect(failed[0]).toBeInstanceOf(UsageLimited)
   expect(failed[0]).toMatchObject({ resetsAt: 1_900_003_600_000, message: limited.result })
   expect(failed[1]).not.toBeInstanceOf(UsageLimited)
+})
+
+test('a 429 or overload Claude Code was not limited for is retried as provider trouble, unless its usage shows the plan spent', () => {
+  const { failed, reader } = reading()
+  const busy = { type: 'result', subtype: 'success', is_error: true, api_error_status: 429, result: 'API Error: 429 rate_limit_error' }
+  reader.finish(busy)
+  reader.finish(busy, { windows: [{ id: 'session', label: '5-hour', used: 1, resetsAt: 1_900_000_000_000 }] })
+  reader.finish({ type: 'result', subtype: 'success', is_error: true, api_error_status: 529, result: 'API Error: 529 Overloaded' })
+
+  expect(failed[0]).toBeInstanceOf(ProviderTrouble)
+  expect(failed[1]).toMatchObject({ name: 'UsageLimited', resetsAt: 1_900_000_000_000 })
+  expect(failed[2]).toBeInstanceOf(ProviderTrouble)
 })
 
 test('sand runs the calls to its own tools, while Claude Code runs its tool search itself', () => {

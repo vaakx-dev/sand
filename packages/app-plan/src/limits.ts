@@ -45,9 +45,13 @@ const limitWindow = ({ id, used, durationMs, resetsAt, scope, status }: WindowSp
 
 const exhausted = (window: LimitWindow) => window.used >= 1 || window.status === 'rejected'
 
+const spentWindows = (limits: PlanLimits | undefined) => (limits?.windows ?? []).filter(exhausted)
+
+const spent = (limits: PlanLimits | undefined) => spentWindows(limits).length > 0
+
 const resetOf = (limits: PlanLimits | undefined) => {
-  const resets = (limits?.windows ?? []).filter(exhausted).flatMap(window => window.resetsAt ?? [])
+  const resets = spentWindows(limits).flatMap(window => window.resetsAt ?? [])
   return resets.length ? Math.max(...resets) : undefined
 }
 
-export { HOUR_MS, limitWindow, MINUTE_MS, resetOf, WEEK_MS }
+export { HOUR_MS, limitWindow, MINUTE_MS, resetOf, spent, WEEK_MS }

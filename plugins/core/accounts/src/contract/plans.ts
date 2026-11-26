@@ -149,7 +149,7 @@ export interface AppPlan extends PlanInfo {
   models(): Promise<PlanModel[]>
   usage?(): Promise<PlanLimits | undefined>
   open(setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession>
-  sessionFiles?(id: string): Promise<string[]>
+  blank?(id: string, values: string[]): Promise<void>
   history?(since: number): Promise<AppTurn[]>
   another?(place: AppPlace): AppPlan
   close?(): void

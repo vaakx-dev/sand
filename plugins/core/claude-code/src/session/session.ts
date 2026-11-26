@@ -1,4 +1,4 @@
-import type { AppAsk, AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
+import type { AppAsk, AppOutput, AppSession, AppSetup, Effort, PlanLimits } from '@sand/accounts/contract'
 import { fieldsOf, forkedAside, type Json, SERVER_NAME, Turns } from '@sand/app-plan'
 import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
@@ -43,15 +43,16 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
       usage => {
         const limits = usageLimits(usage, reader.resets())
         if (limits) report(limits)
+        return limits
       },
-      () => {},
+      () => undefined,
     )
 
   const onMessage = (message: Json) => {
     if (message.type !== 'result') return reader.read(message)
     const checked = checkUsage()
     if (succeeded(message)) return reader.finish(message)
-    void checked.then(() => reader.finish(message))
+    void checked.then(limits => reader.finish(message, limits))
   }
 
   const connection = await connect({
@@ -65,8 +66,23 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
   await connection.request('initialize', { sdkMcpServers: [SERVER_NAME], systemPrompt: [setup.system] })
   void reportWindow(connection, output)
 
-  const prompt = (content: ModelContent[]) =>
+  const say = (content: ModelContent[]) =>
     connection.send({ type: 'user', message: { role: 'user', content: messageBlocks(content, media) }, parent_tool_use_id: null, client_composed: true })
+
+  let effort = setup.effort
+  const chooseEffort = async (wanted?: Effort) => {
+    if (!wanted || wanted === effort) return
+    const applied = await connection.request('apply_flag_settings', { settings: { effortLevel: wanted } }).then(
+      () => true,
+      () => false,
+    )
+    if (applied) effort = wanted
+  }
+
+  const prompt = async (content: ModelContent[], wanted?: Effort) => {
+    await chooseEffort(wanted)
+    say(content)
+  }
 
   return turns.session({
     ...(resumed && {
@@ -74,8 +90,8 @@ export const openSession = async (setup: AppSetup, output: AppOutput, needs: Ses
       aside: ({ question }: AppAsk, signal?: AbortSignal) => forkedAside(fork => openSession(setup, fork, needs, { id: resumed.id, start: 'fork' }), question, signal),
     }),
     pid: connection.pid,
-    prompt,
-    steer: prompt,
+    prompt: (content, wanted) => void prompt(content, wanted),
+    steer: say,
     stop: () => void connection.request('interrupt').catch(() => {}),
     close: () => connection.close(),
   })
