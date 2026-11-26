@@ -10,9 +10,21 @@ import { browserComputer } from '../src/computer'
 const page = `<!doctype html><body style="margin:0">
 <button id="add" style="position:fixed;left:0;top:0;width:50vw;height:50vh">Add one</button>
 <p id="count" style="position:fixed;top:60vh">Count: 0</p>
+<a href="/slow" style="position:fixed;left:0;top:80vh">Slow page</a>
 <script>let count = 0; add.onclick = () => (document.getElementById('count').textContent = 'Count: ' + ++count)</script>`
 
-const server = Bun.serve({ port: 0, fetch: () => new Response(page, { headers: { 'content-type': 'text/html' } }) })
+const slow = '<!doctype html><title>Slow page</title><p>Slow content</p>'
+
+const SLOW_MS = 1_000
+
+const server = Bun.serve({
+  port: 0,
+  fetch: async request => {
+    const slowly = new URL(request.url).pathname === '/slow'
+    if (slowly) await Bun.sleep(SLOW_MS)
+    return new Response(slowly ? slow : page, { headers: { 'content-type': 'text/html' } })
+  },
+})
 
 const call = (name: string, input: Record<string, unknown>) => ({ type: 'call', name, input }) as const
 
@@ -23,6 +35,8 @@ const script = [
   call('computer_elements', { computer: 'browser', find: 'count' }),
   call('computer_screenshot', { computer: 'browser' }),
   call('computer_act', { computer: 'browser', action: { type: 'click', at: { ref: 'nope' } } }),
+  call('computer_act', { computer: 'browser', action: { type: 'click', at: { x: 0.02, y: 0.81 } }, screenshot: false }),
+  call('computer_elements', { computer: 'browser' }),
 ]
 
 let sand: Sand
@@ -62,7 +76,7 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
   test('a thread lists computers, opens a page, clicks at fractions and reads the result', async () => {
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: `browser: Test browser (browser, ${osOf(process.platform)})` }] })
     expect(await turn()).toMatchObject({
-      content: [{ type: 'text', text: 'Done: open.' }, { type: 'text', text: expect.stringContaining('pixels') }, { type: 'image', mediaType: 'image/png' }],
+      content: [{ type: 'text', text: `Done: open. The URL changed from about:blank to ${server.url.href}.` }, { type: 'text', text: expect.stringContaining('pixels') }, { type: 'image', mediaType: 'image/png' }],
     })
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: 'Done: click.' }] })
     const elements = await turn()
@@ -72,5 +86,10 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
     expect(listed).toMatch(/^\d+ text "Count: 1" \[/m)
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: expect.stringMatching(/pixels\.\nTabs .*\n1\. \[active\] .* — http/) }, { type: 'image', mediaType: 'image/png' }] })
     expect(await turn()).toMatchObject({ isError: true, content: [{ type: 'text', text: expect.stringContaining('No element nope') }] })
+  })
+
+  test('a click that loads a slow page without a screenshot waits for it, and says where it went', async () => {
+    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: `Done: click. The URL changed from ${server.url.href} to ${server.url.href}slow.` }] })
+    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: expect.stringMatching(/^\d+ text "Slow content" \[/m) }] })
   })
 })

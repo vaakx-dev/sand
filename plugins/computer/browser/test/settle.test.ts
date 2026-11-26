@@ -10,6 +10,6 @@ const throttledPage: Call = async <T>(method: string) => {
 
 test('settles within its budget when the page never answers a paint probe', async () => {
   const started = performance.now()
-  await settle(throttledPage)
+  await settle({ current: async () => throttledPage, loaded: async () => {} })
   expect(performance.now() - started).toBeLessThan(4_000)
 })

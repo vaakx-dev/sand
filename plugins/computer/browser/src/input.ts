@@ -1,5 +1,4 @@
 import { heldKeys, typedKey, type Action, type ActionOf, type Key, type Point } from '@sand/computers/contract'
-import { evaluate } from './evaluate'
 import type { Call } from './tabs'
 
 export interface Viewport {
@@ -30,7 +29,6 @@ const keyMs: Span = [15, 45]
 const pressure = 0.5
 const dragging: MouseParams = { button: 'left', buttons: 1 }
 const dwellStep = 50
-const loadTimeout = 15_000
 const buttonBits: Record<Button, number> = { left: 1, right: 2 }
 const shift = 8
 
@@ -98,15 +96,6 @@ const pageInput = (call: Call, viewport: Viewport, modifiers: number) => {
 
 type PageInput = ReturnType<typeof pageInput>
 
-const loaded = async (call: Call) => {
-  const deadline = Date.now() + loadTimeout
-  while (Date.now() < deadline) {
-    const { result } = await evaluate<string>(call, { expression: 'document.readyState' })
-    if (result.value === 'complete') return
-    await Bun.sleep(100)
-  }
-}
-
 const dwell = async (input: PageInput, at: Point, ms: number) => {
   const moves = Math.ceil(ms / dwellStep)
   for (let left = moves; left > 0; left--) {
@@ -155,7 +144,6 @@ const type = async (input: PageInput, call: Call, text: string) => {
 const open = async (call: Call, url: string) => {
   const { errorText } = await call<{ errorText?: string }>('Page.navigate', { url })
   if (errorText) throw new Error(`Could not open ${url}: ${errorText}`)
-  await loaded(call)
 }
 
 const click = async (input: PageInput, at: Point, button: Button, clicks: number) => {

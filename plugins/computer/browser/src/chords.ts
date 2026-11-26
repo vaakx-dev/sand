@@ -1,7 +1,7 @@
 import { parseKeys, type Key } from '@sand/computers/contract'
 import type { Tab, Tabs } from './tabs'
 
-type Command = (tabs: Tabs) => unknown
+export type Command = (tabs: Tabs) => unknown
 
 const nameOf = (keys: Key[]) =>
   keys

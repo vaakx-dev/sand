@@ -5,7 +5,8 @@ import { removeFolder } from '@sand/util/fs'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { browserComputer, pngSize } from '../src/computer'
+import { browserComputer } from '../src/computer'
+import { pngSize } from '../src/screen'
 
 const page = `<!doctype html>
 <html>
@@ -119,6 +120,18 @@ const page = `<!doctype html>
 
 const other = '<!doctype html><title>Other page</title><p>Other content</p>'
 
+const plain = `<!doctype html>
+<body style="margin: 0; font: 16px sans-serif">
+  <button id="add">Plain add</button>
+  <p id="count">Plain: 0</p>
+  <a href="/slow">Slow page</a>
+  <script>document.getElementById('add').onclick = () => (document.getElementById('count').textContent = 'Plain: 1')</script>
+</body>`
+
+const slow = '<!doctype html><title>Slow page</title><p>Slow content</p>'
+
+const SLOW_MS = 1_000
+
 const counter = (label: string, child = '') => `<!doctype html>
 <body style="margin: 0; font: 16px sans-serif">
   <button id="add">${label} add</button>
@@ -132,7 +145,8 @@ const counter = (label: string, child = '') => `<!doctype html>
 
 const server = Bun.serve({
   port: 0,
-  fetch: request => {
+  fetch: async request => {
+    if (new URL(request.url).pathname === '/slow') await Bun.sleep(SLOW_MS)
     const pages: Record<string, string> = {
       '/': page.replace('REMOTE', `http://127.0.0.1:${server.port}/remote`),
       '/local': counter('Local', '/local-nested'),
@@ -140,6 +154,8 @@ const server = Bun.serve({
       '/remote': counter('Remote', `${url}remote-nested`),
       '/remote-nested': counter('Remote nested'),
       '/other': other,
+      '/plain': plain,
+      '/slow': slow,
     }
     return new Response(pages[new URL(request.url).pathname], { headers: { 'content-type': 'text/html' } })
   },
@@ -303,7 +319,6 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
 
   test('settles until a late update shows', async () => {
     await click(await find('button', 'Later'))
-    await computer.settle()
     expect(await texts()).toContain('Count: later')
   })
 
@@ -337,6 +352,14 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     await press('ctrl+shift+tab')
     await press('ctrl+w')
     await tabsShow('1. [active] about:blank — about:blank')
+  })
+
+  test('reports what an action changed, and waits for a page a click starts loading', async () => {
+    expect(await computer.act({ type: 'open', url: `${url}plain` })).toEqual({ type: 'navigated', from: 'about:blank', to: `${url}plain` })
+    expect(await computer.act({ type: 'click', at: { x: 0.9, y: 0.9 } })).toEqual({ type: 'unchanged' })
+    expect(await click(await find('button', 'Plain add'))).toEqual({ type: 'changed' })
+    expect(await click(await find('link', 'Slow page'))).toEqual({ type: 'navigated', from: `${url}plain`, to: `${url}slow` })
+    expect(await texts()).toContain('Slow content')
   })
 
   test('keeps cookies in its profile across restarts', async () => {

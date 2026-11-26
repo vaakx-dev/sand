@@ -102,12 +102,13 @@ export interface Fill {
 
 export type Filled = 'username' | 'password' | 'code'
 
+export type Outcome = { type: 'navigated'; from: string; to: string } | { type: 'changed' } | { type: 'unchanged' }
+
 export interface Computer {
   info: ComputerInfo
   screenshot(fit?: Size): Promise<Screenshot>
   elements(): Promise<UiElement[]>
-  act(action: Action): Promise<void>
-  settle(): Promise<void>
+  act(action: Action): Promise<Outcome | undefined>
   find?(text: string, match: number): Promise<Found>
   fill?(fill: Fill): Promise<Filled[]>
 }

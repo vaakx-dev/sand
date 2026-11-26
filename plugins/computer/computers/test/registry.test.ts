@@ -6,8 +6,7 @@ const fake = (id: string): Computer => ({
   info: { id, kind: 'desktop', label: `PC ${id}`, os: 'windows' },
   screenshot: async () => ({ png: new Uint8Array(), width: 1, height: 1 }),
   elements: async () => [],
-  act: async () => {},
-  settle: async () => {},
+  act: async () => undefined,
 })
 
 test('computers register, list and unregister', () => {

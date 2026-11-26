@@ -110,7 +110,6 @@ describe.skipIf(!(await findBrowser()))('browser login fill', () => {
 
   test('fills a listed element inside a nested cross-origin iframe', async () => {
     await open(`${local}/nested`)
-    await computer.settle()
     const other = (await computer.elements()).find(element => element.name === 'Other')
     if (!other) throw new Error('no Other field')
     expect(await computer.fill({ site: 'localhost', code: '246810', ref: other.ref })).toEqual(['code'])
