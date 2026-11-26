@@ -1,4 +1,5 @@
 import { lazy } from '@sand/util'
+import { a } from '@vaakx-dev/vrui'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 
@@ -45,22 +46,14 @@ const appReplySchema = lazy(() =>
 
 const androidApp = service<AndroidApp>('androidApp')
 
-const dataUrlOf = (blob: Blob) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(blob)
-  })
+const dataUrlOf = async (blob: Blob) => `data:${blob.type || 'application/octet-stream'};base64,${(await blob.bytes()).toBase64()}`
 
 const saveInApp = async (app: AndroidApp, name: string, blob: Blob) => app.send({ kind: 'save', name, data: await dataUrlOf(blob) })
 
 const saveInBrowser = (name: string, blob: Blob) => {
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = name
-  link.click()
-  URL.revokeObjectURL(link.href)
+  const href = URL.createObjectURL(blob)
+  a({ href, download: name }).click()
+  URL.revokeObjectURL(href)
 }
 
 const saveFile = async (app: AndroidApp | undefined, name: string, blob: Blob) => (app ? saveInApp(app, name, blob) : saveInBrowser(name, blob))
