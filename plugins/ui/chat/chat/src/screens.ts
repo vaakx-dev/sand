@@ -42,7 +42,7 @@ export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefin
     )
     const onScroll = () => follow.scrolled()
     const scroller = div({ class: [kit.pageColumn, 'min-h-0 flex-1 overflow-auto px-3 pt-4 md:px-4'], hidden: () => !shown.get().length, onScroll }, rowList)
-    const follow = kit.followEnd(scroller)
+    const follow = kit.followEnd(scroller, rowList)
     follow.watch(rowList)
     return scroller
   }

@@ -62,7 +62,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     slot.node,
     threadColumn(kit, view, node => follow.watch(node)),
   )
-  const follow = followEnd(scroller)
+  const follow = followEnd(scroller, view.rowList)
   edge.watch(scroller)
 
   const hideThread = () => {
@@ -177,6 +177,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     const found = await loadedSpot(entry, block)
     const thread = shownThread()
     if (!found || !thread) return undefined
+    follow.intend()
     unfold(found)
     const drawn = itemNode(view.rowList, found.spot.key)
     if (found.unfold.kind === 'shown' && drawn) return drawn
@@ -236,7 +237,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
   const show = (shown: ChatLook) => {
     look = shown
     if (stop) return
-    follow.restore()
+    follow.resume()
     stop = joinDisposers(
       ctx.threads.watch(id),
       ctx.on(threadChange, changed => {
@@ -269,6 +270,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
   }
 
   const hide = () => {
+    follow.pause()
     stop?.()
     stop = undefined
     unqueue()
