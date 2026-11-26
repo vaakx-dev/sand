@@ -30,7 +30,8 @@ test('a bot is created with defaults, listed, updated and deleted along with its
   const updated = await ask(botUpdate, { bot: bot.id, patch: { color: 'sky', computer: 'pc:laptop', projects: ['veld', 'orchard', 'veld'] } })
   expect(updated).toMatchObject({ color: 'sky', computer: 'pc:laptop', projects: ['veld', 'orchard'] })
   expect(updated.updated).toBeGreaterThanOrEqual(bot.updated)
-  await expect(ask(botUpdate, { bot: bot.id, patch: { computer: 'somewhere' as 'none' } })).rejects.toThrow('Invalid input')
+  await expect(ask(botUpdate, { bot: bot.id, patch: { computer: 'somewhere' as 'own' } })).rejects.toThrow('Invalid input')
+  await expect(ask(botUpdate, { bot: bot.id, patch: { computer: 'none' as 'own' } })).rejects.toThrow('Invalid input')
   await expect(ask(botUpdate, { bot: bot.id, patch: { projects: [''] } })).rejects.toThrow('Invalid input')
   expect(await ask(botUpdate, { bot: bot.id, patch: { projects: [] } })).toMatchObject({ projects: [] })
 
@@ -57,6 +58,21 @@ test("a bot's chat is a bot session in its folder, and its newest line shows on 
   const listed = await ask(botList, {})
   expect(listed.find(bot => bot.id === first.id)?.last).toMatchObject({ role: 'assistant', text: 'Noted, all three, see notes.' })
   expect(listed.find(bot => bot.id === second.id)?.last).toBeUndefined()
+})
+
+test('a bot without a computer takes this PC with its first message and keeps the one it has after that', async () => {
+  const { ask, sessions } = await start()
+  const unset = await ask(botCreate, { name: 'Errands' })
+  const placed = await ask(botCreate, { name: 'Shopper', computer: 'own' })
+  const computers = async () => Object.fromEntries((await ask(botList, {})).map(bot => [bot.name, bot.computer]))
+  expect(await computers()).toEqual({ Errands: 'none', Shopper: 'own' })
+
+  for (const bot of [unset, placed]) sessions.require(bot.id).append('message', said('user', 'Book a table for two'))
+  expect(await computers()).toEqual({ Errands: 'this-pc', Shopper: 'own' })
+
+  await ask(botUpdate, { bot: unset.id, patch: { computer: 'pc:laptop' } })
+  sessions.require(unset.id).append('message', said('user', 'Make it three'))
+  expect(await computers()).toEqual({ Errands: 'pc:laptop', Shopper: 'own' })
 })
 
 test('bots and their chats survive a restart', async () => {

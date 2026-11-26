@@ -1,11 +1,9 @@
-import type { Bots, Computer as BotComputer } from '@sand/bots/contract'
+import type { Bots, ChosenComputer } from '@sand/bots/contract'
 import type { Sessions } from '@sand/chats/contract'
 import type { Computer, Computers } from '@sand/computers/contract'
 import type { ToolContext } from '@sand/tools/contract'
 
 type Conversation = ToolContext['conversation']
-
-type Picked = Exclude<BotComputer, 'none'>
 
 interface Sources {
   computers: Computers
@@ -18,16 +16,13 @@ interface Target {
   computer: Computer
 }
 
-const ids: Record<Exclude<Picked, `pc:${string}`>, string> = { own: 'browser', 'this-pc': 'desktop' }
+const ids: Record<Exclude<ChosenComputer, `pc:${string}`>, string> = { own: 'browser', 'this-pc': 'desktop' }
 
 const unnamed = 'Name a computer from computer_list; this chat then keeps using it.'
 
-const unchosen =
-  'You have no computer chosen. The user picks one under Computer in your profile in the Bots space; until then, name a computer from computer_list and this chat keeps using it.'
+const isPc = (computer: ChosenComputer): computer is `pc:${string}` => computer.startsWith('pc:')
 
-const isPc = (computer: Picked): computer is `pc:${string}` => computer.startsWith('pc:')
-
-const idOf = (computer: Picked) => (isPc(computer) ? computer.slice('pc:'.length) : ids[computer])
+const idOf = (computer: ChosenComputer) => (isPc(computer) ? computer.slice('pc:'.length) : ids[computer])
 
 const botAbove = (sessions: Sessions, id: string) => {
   for (let session = sessions.open(id); session; session = session.parent ? sessions.open(session.parent) : undefined) {
@@ -54,7 +49,7 @@ class Chooser {
     if (choice !== 'none') return idOf(choice)
     const [browser, ...others] = this.sources.computers.list().filter(info => info.kind === 'browser')
     if (browser && !others.length) return browser.id
-    throw new Error(bot ? unchosen : unnamed)
+    throw new Error(unnamed)
   }
 }
 

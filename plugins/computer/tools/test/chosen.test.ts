@@ -1,4 +1,4 @@
-import { botCreate, type Computer as Choice } from '@sand/bots/contract'
+import { botCreate, type ChosenComputer } from '@sand/bots/contract'
 import { textOf } from '@sand/chats/contract'
 import { type Computer, type ComputerKind, computers } from '@sand/computers/contract'
 import { startSand, type Sand } from '@sand/harness'
@@ -28,7 +28,7 @@ const conversation = (owner: 'thread' | 'bot', id: string): ToolContext['convers
   entries: () => [],
 })
 
-test("a chat keeps the computer it last named, else uses its bot's choice, else the only browser, and is told how to choose when there is none", async () => {
+test("a chat keeps the computer it last named, else uses its bot's choice, else the only browser, and is told to name one when there are more", async () => {
   sand = await startSand([], { plugins: ['bots/bots', 'bots/turns', 'computer/computers', 'computer/tools'] })
   const acted: string[] = []
   const registry = sand.app.get(computers)!
@@ -42,7 +42,7 @@ test("a chat keeps the computer it last named, else uses its bot's choice, else 
     return textOf(result.content)
   }
   const agentOf = (parent: string) => sand.sessions.agent({ parent, cwd: sand.home, title: 'Agent' }).id
-  const botAgent = async (computer: Choice) => conversation('thread', agentOf((await sand.ask(botCreate, { name: computer, computer })).id))
+  const botAgent = async (computer: ChosenComputer) => conversation('thread', agentOf((await sand.ask(botCreate, { name: computer, computer })).id))
 
   expect(await act(await botAgent('this-pc'))).toBe('Done: wait.')
   expect(await act(await botAgent('own'))).toBe('Done: wait.')
@@ -60,12 +60,10 @@ test("a chat keeps the computer it last named, else uses its bot's choice, else 
   expect(acted.at(-1)).toBe('desktop')
 
   const plain = conversation('thread', agentOf(sand.sessions.thread(sand.home).id))
-  expect(await act(await botAgent('none'))).toBe('Done: wait.')
   expect(await act(plain)).toBe('Done: wait.')
-  expect(acted.slice(-2)).toEqual(['browser', 'browser'])
+  expect(acted.at(-1)).toBe('browser')
 
   registry.register(fake('second', 'browser', acted))
-  expect(await act(await botAgent('none'))).toContain('You have no computer chosen. The user picks one under Computer in your profile')
   expect(await act(conversation('thread', 'chat'))).toContain('Name a computer')
   expect(await act(plain)).toContain('Name a computer')
   expect(await act(plain, 'second')).toBe('Done: wait.')
