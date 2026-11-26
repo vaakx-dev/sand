@@ -4,7 +4,8 @@
   "description": "Runs sand in-process on a temp home, with scripted replay models for tests or the user's own models for benches",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./until": "./src/until.ts"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",

@@ -5,14 +5,16 @@ const HELD_MB = 64
 const MB = 1024 * 1024
 const BUSY_MS = 300
 
+const ready = (output: ReadableStream<Uint8Array>) => output.getReader().read()
+
 test("a child's tree holds it and its own child, with their names, the memory they use and the CPU time they spent", async () => {
   const child = Bun.spawn([
     process.execPath,
     '-e',
-    `const kept = Buffer.alloc(${HELD_MB} * ${MB}, 1); Bun.spawn([process.execPath, '-e', 'setInterval(() => {}, 1000)']); const end = Date.now() + ${BUSY_MS}; while (Date.now() < end); setInterval(() => kept.length, 1000)`,
-  ])
+    `const kept = Buffer.alloc(${HELD_MB} * ${MB}, 1); Bun.spawn([process.execPath, '-e', 'setInterval(() => {}, 1000)']); const end = Date.now() + ${BUSY_MS}; while (Date.now() < end); process.stdout.write('ready'); setInterval(() => kept.length, 1000)`,
+  ], { stdout: 'pipe' })
   try {
-    await Bun.sleep(1_500)
+    await ready(child.stdout)
     const tree = forestOf(await processes())([child.pid])
     const own = tree.find(entry => entry.pid === child.pid)
 

@@ -4,7 +4,7 @@ import { type Found, mergeFound } from './found'
 import { createLanFinds } from './lan'
 import { findOnTailnet } from './tailnet'
 
-const answerWait = 1_000
+const ANSWER_WAIT_MS = 1_000
 
 interface DiscoveryOptions {
   own: string
@@ -38,9 +38,14 @@ export const createDiscovery = async (options: DiscoveryOptions) => {
     update()
   }
 
+  const lanAnswers = () => {
+    if (!beacon) return
+    beacon.ask()
+    return Bun.sleep(ANSWER_WAIT_MS)
+  }
+
   const search = async () => {
-    beacon?.ask()
-    await Promise.all([searchTailnet(), Bun.sleep(answerWait)])
+    await Promise.all([searchTailnet(), lanAnswers()])
     update()
     return list
   }

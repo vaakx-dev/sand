@@ -1,5 +1,6 @@
 import { connectionPing, deviceParams, devicePaths, type DeviceRecord, type PcRoutes, peersAnnounce, type RouteStore } from '@sand/devices-contract'
 import { deviceIdOf, generateKeyPair, identityProof, newNonce, sign, signerOf } from '@sand/devices-identity'
+import { until } from '@sand/harness/until'
 import { type ClientMessage, hello } from '@sand/host-hub/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -67,12 +68,6 @@ const peerSet = (store: RouteStore = savingStore().store) => {
   return set
 }
 
-const waitFor = async (done: () => boolean, within = 3000) => {
-  const until = Date.now() + within
-  while (!done() && Date.now() < until) await Bun.sleep(10)
-  return done()
-}
-
 const connected = (set: PeerSet, pc: string) => set.peers.connected().includes(pc)
 
 const routeUrls = (set: PeerSet, pc: string) => set.peers.get(pc)?.routes.map(entry => entry.route.url) ?? []
@@ -86,13 +81,13 @@ test('an added route reaches a PC with no other route, stays out of the route st
   expect(connected(set, box.record.id)).toBe(false)
 
   const dispose = set.links.addRoute(box.record.id, `${box.url}/ignored/path`)
-  expect(await waitFor(() => connected(set, box.record.id))).toBe(true)
+  await until(() => connected(set, box.record.id))
   expect(set.peers.get(box.record.id)?.status).toMatchObject({ phase: 'connected', route: { url: box.url, kind: 'local' } })
   expect(saved.flatMap(routes => routes.routes).some(route => route.url === box.url)).toBe(false)
 
   dispose()
   box.stop()
-  expect(await waitFor(() => !connected(set, box.record.id) && !routeUrls(set, box.record.id).includes(box.url))).toBe(true)
+  await until(() => !connected(set, box.record.id) && !routeUrls(set, box.record.id).includes(box.url))
 })
 
 test('an advertised route is told to its PC alone, without the network plugin, when the link opens and as it changes', async () => {
@@ -105,11 +100,11 @@ test('an advertised route is told to its PC alone, without the network plugin, w
 
   const first = announcer.advertise(box.record.id, 'http://127.0.0.1:7001')
   cleanups.push(set.links.addRoute(box.record.id, box.url), set.links.addRoute(other.record.id, other.url))
-  expect(await waitFor(() => box.announced.length === 1 && connected(set, other.record.id))).toBe(true)
+  await until(() => box.announced.length === 1 && connected(set, other.record.id))
   expect(box.announced[0]).toEqual({ routes: [{ url: 'http://127.0.0.1:7001', kind: 'local' }] })
 
   const second = announcer.advertise(box.record.id, 'https://box.example:7002/')
-  expect(await waitFor(() => box.announced.length === 2)).toBe(true)
+  await until(() => box.announced.length === 2)
   expect(box.announced[1]).toEqual({
     routes: [
       { url: 'http://127.0.0.1:7001', kind: 'local' },
@@ -119,7 +114,7 @@ test('an advertised route is told to its PC alone, without the network plugin, w
 
   first()
   second()
-  expect(await waitFor(() => box.announced.length === 4)).toBe(true)
+  await until(() => box.announced.length === 4)
   expect(box.announced[3]).toEqual({ routes: [] })
   expect(other.announced).toEqual([])
 })
@@ -136,5 +131,5 @@ test('a loopback route another PC announces gets dialed', async () => {
 
   store.publish(box.record.id, [{ url: box.url, kind: 'local' }])
   set.links.renew(box.record.id)
-  expect(await waitFor(() => connected(set, box.record.id))).toBe(true)
+  await until(() => connected(set, box.record.id))
 })

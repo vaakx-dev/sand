@@ -174,10 +174,4 @@ export const connectTo = (pc: ReturnType<typeof fakePc>, urls = ['http://127.0.0
   return { connection, wake: () => wake('visible'), shown: () => shown }
 }
 
-export const waitFor = async (done: () => boolean, within: number) => {
-  const until = Date.now() + within
-  while (!done() && Date.now() < until) await Bun.sleep(10)
-  return done()
-}
-
 export const connected = (connection: PcConnection) => connection.status().phase === 'connected'

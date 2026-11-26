@@ -38,6 +38,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@sand/devices-identity": "workspace:*"
+    "@sand/devices-identity": "workspace:*",
+    "@sand/harness": "workspace:*"
   }
 }

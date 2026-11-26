@@ -17,6 +17,8 @@ const streamedParagraphs = 30
 const SLOW_STEP_PX = 5
 const SLOW_STEPS = 40
 const SLOW_STEP_GAP_MS = 30
+const STILL_FRAMES = 30
+const PAST_SCROLL_INTENT_MS = 600
 const sizes: { name: string; options: BrowserContextOptions }[] = [
   { name: 'desktop', options: { viewport: { width: 1440, height: 900 } } },
   { name: 'phone', options: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } },
@@ -45,16 +47,31 @@ const scroller = `(() => {
   return el
 })()`
 
-const place = (page: Page) =>
-  page.evaluate(`(() => {
+const placeNow = `(() => {
     const el = ${scroller}
     const top = el.getBoundingClientRect().top
     const first = [...el.querySelectorAll('p')].find(p => p.getBoundingClientRect().bottom > top + 1 && p.textContent.startsWith('Reply'))
     return { fromEnd: Math.round(el.scrollHeight - el.clientHeight - el.scrollTop), anchor: first.textContent.slice(0, 20), offset: Math.round(first.getBoundingClientRect().top - top) }
-  })()`) as Promise<Place>
+  })()`
+
+const place = (page: Page) => page.evaluate(placeNow) as Promise<Place>
+
+const stillFor = (frames: number) => `new Promise(done => {
+  let last = ''
+  let still = 0
+  const look = () => {
+    const { anchor, offset } = ${placeNow}
+    const now = anchor + offset + ':' + ${scroller}.scrollTop
+    still = now === last ? still + 1 : 0
+    last = now
+    if (still >= ${frames}) return done()
+    requestAnimationFrame(look)
+  }
+  look()
+})`
 
 const settled = async (page: Page) => {
-  await Bun.sleep(1500)
+  await page.evaluate(stillFor(STILL_FRAMES))
   return place(page)
 }
 
@@ -63,7 +80,7 @@ const overScroller = (page: Page) => page.locator('[data-part="transcript"]:visi
 const scrollTo = async (page: Page, fromEnd: number) => {
   await overScroller(page)
   await page.mouse.wheel(0, (await place(page)).fromEnd - fromEnd)
-  await Bun.sleep(600)
+  await Bun.sleep(PAST_SCROLL_INTENT_MS)
 }
 
 const layoutNudge = (page: Page) => page.evaluate(`${scroller}.scrollTop -= ${LAYOUT_NUDGE_PX}`)

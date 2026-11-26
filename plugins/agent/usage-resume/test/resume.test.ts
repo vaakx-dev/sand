@@ -1,6 +1,8 @@
 import { botCreate } from '@sand/bots/contract'
 import type { Session } from '@sand/chats/contract'
+import type { TurnEnding } from '@sand/engine/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { modelSettings } from '@sand/model/contract'
 import type { Reply } from '@sand/replay/contract'
@@ -32,19 +34,13 @@ const start = (replies: Reply[], options: SandOptions = {}) =>
 
 const sent = () => sand.native('fake').flatMap(call => (call.type === 'send' ? [call.text] : []))
 
-const until = async <T>(found: () => T | undefined | Promise<T | undefined>, wait = 10_000) => {
-  for (const end = Date.now() + wait; Date.now() < end; await Bun.sleep(20)) {
-    const value = await found()
-    if (value) return value
-  }
-  throw new Error('It never happened')
-}
-
 const ended = (chat: Session, count: number) =>
   until(() => {
     const turns = sand.turns.list(chat)
     return turns.length === count && !sand.turns.current(chat) ? turns : undefined
   })
+
+const resetOf = (chat: Session) => (chat.path().find(entry => entry.type === 'turn-ending')!.data as TurnEnding).resetsAt!
 
 test('a chat out of usage keeps what is sent meanwhile, continues at the reset, then sends it', async () => {
   sand = await start([[said('Half'), limit(1_500)], [said('Picked up.')], [said('Answered.')]])
@@ -69,10 +65,8 @@ test('cancelling a chat’s resume keeps what waits until the reset, then sends 
   await sand.turns.send(chat, { prompt: 'And this', clientRequestId: 'two' })
 
   await sand.ask(resumeCancel, { turn: stopped!.id })
-  await Bun.sleep(1_000)
-  expect(sent()).toEqual(['Start'])
-
-  await ended(chat, 2)
+  const [answered] = await ended(chat, 2)
+  expect(answered!.started).toBeGreaterThanOrEqual(resetOf(chat))
   expect(sent()).toEqual(['Start', then])
 })
 

@@ -83,7 +83,6 @@ afterAll(() => browser?.close())
 const settle = async (page: Page) => {
   await page.waitForFunction(() => window.sand?.get<FeatureState>({ id: 'featureState' })?.on('threads') !== undefined, undefined, { timeout: 30_000 })
   await page.evaluate(() => window.sand.settled())
-  await Bun.sleep(1000)
 }
 
 const stuck = (page: Page) =>
