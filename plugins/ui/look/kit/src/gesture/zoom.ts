@@ -75,6 +75,10 @@ const zoomGesture = (node: EventTarget, target: ZoomTarget, { wheel, surface }: 
     if (!pinch || !first || !second) return
     event.preventDefault()
     const next = pinchOf(first, second)
+    if (!pinch.spread) {
+      pinch = next
+      return
+    }
     target.zoom({ factor: next.spread / pinch.spread, from: pinch.center, to: next.center })
     if (surface === 'fixed') pinch = next
   }

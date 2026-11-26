@@ -109,8 +109,9 @@ beforeAll(async () => {
 }, 90_000)
 
 afterEach(async () => {
-  await page.keyboard.press('Escape')
-  await page.getByRole('dialog').waitFor({ state: 'detached' })
+  const dialog = page.getByRole('dialog')
+  if (await dialog.count()) await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+  await dialog.waitFor({ state: 'detached' })
 })
 
 afterAll(async () => {
@@ -145,8 +146,8 @@ test('a full-screen page pinches, pans and double-taps back to fit without the s
   expect(await drawerOpen()).toBe(false)
 
   await hand.doubleTap(await centerOf(sheet))
+  await sheet.getByTitle('Fit to screen').filter({ hasText: /^Fit$/ }).waitFor()
   expect(await stageOf(frame)).toMatchObject({ level: fitted.level })
-  expect(await sheet.getByTitle('Fit to screen').innerText()).toBe('Fit')
 }, 60_000)
 
 test('an image opened from a page pinches, pans and double-taps back to fit without flipping or closing', async () => {
