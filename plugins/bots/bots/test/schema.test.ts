@@ -7,7 +7,6 @@ import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createRecords } from '../src/records'
 import { schema } from '../src/schema'
 
 let sand: Sand | undefined
@@ -36,7 +35,8 @@ test("a bot's one project becomes its list of projects", () => {
 
   book.migrate('bots', schema('bots').slice(0, BEFORE_CHATS))
 
-  expect(createRecords(book.db).list().map(({ id, projects }) => ({ id, projects }))).toEqual([
+  const rows = book.db.query<{ id: string; projects: string }, []>('select id, projects from bots order by created, id').all()
+  expect(rows.map(({ id, projects }) => ({ id, projects: JSON.parse(projects) }))).toEqual([
     { id: 'with', projects: ['veld'] },
     { id: 'without', projects: [] },
   ])

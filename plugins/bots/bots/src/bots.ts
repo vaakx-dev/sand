@@ -2,7 +2,7 @@ import type { LLM, UsageRecord } from '@sand/accounts/contract'
 import { type Entry, type Session, sessionEntry, type Sessions } from '@sand/chats/contract'
 import { notify } from '@sand/devices-notify/contract'
 import type { Ledger } from '@sand/ledger/contract'
-import { type Orchestrator, subagentsChange } from '@sand/orchestrator/contract'
+import { type Orchestrator, workingChange } from '@sand/orchestrator/contract'
 import { turnChange, type Turns, type TurnStatus } from '@sand/turns-contract/contract'
 import { billedCost } from '@sand/usage/contract'
 import { dollars, uuid } from '@sand/util'
@@ -13,6 +13,8 @@ import { morningIn, recentMessages, runsIn, usageSince } from './chat'
 import {
   type Bot,
   botChange,
+  botFolderChange,
+  botFolderRemove,
   type BotHold,
   botName,
   type BotPatch,
@@ -30,6 +32,7 @@ import {
   type NewBot,
   runEntry,
 } from './contract'
+import { createFolders } from './folders'
 import { createJobs } from './jobs'
 import { lastLine } from './last'
 import { createRecords } from './records'
@@ -79,7 +82,8 @@ const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => 
   return undefined
 }
 
-export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessions, turns, working }: BotsOptions): Bots => {
+export const createBots = (ctx: Context, { ledger, root, llm, sessions, turns, working }: BotsOptions): Bots => {
+  const { db, tx } = ledger
   const records = createRecords(db)
   const chatOf = (bot: string) => sessions.require(bot)
   const append = (bot: string, type: string, data: unknown) => chatOf(known(bot).id).append(type, data)
@@ -89,6 +93,13 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     append,
     changed: bot => void changed(bot),
     removed: job => ctx.emit(jobRemove, job),
+  })
+  const folders = createFolders(ledger, {
+    changed: folder => ctx.emit(botFolderChange, folder),
+    removed(id, unfiled) {
+      for (const bot of unfiled) changed(bot)
+      ctx.emit(botFolderRemove, id)
+    },
   })
   const folderOf = (id: string) => join(root, id)
 
@@ -107,7 +118,7 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     return {
       ...bot,
       folder: folderOf(bot.id),
-      subagents: working(bot.id),
+      ...working(bot.id),
       talked: chat.talked,
       ...statusOf(chat),
       spent,
@@ -159,7 +170,7 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
   const changedIfBot = (id: string) => void (records.get(id) && changed(id))
 
   ctx.on(turnChange, info => changedIfBot(info.session))
-  ctx.on(subagentsChange, changedIfBot)
+  ctx.on(workingChange, changedIfBot)
 
   return {
     list: () => records.list().map(summary),
@@ -179,6 +190,7 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
         projects: [],
         paused: false,
         budget: null,
+        folderId: null,
         ...spec,
         created: now,
         updated: now,
@@ -197,6 +209,11 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
       if (keys.length) append(id, changeEntry, { by, before: pick(bot, keys), after: pick(patch, keys) } satisfies ChangeEntry)
       return changed(id)
     },
+    move(id, folder) {
+      const bot = known(id)
+      records.save({ ...bot, folderId: folder === null ? null : folders.known(folder) })
+      return changed(id)
+    },
     async remove(id) {
       if (!records.get(id)) return false
       const chat = chatOf(id)
@@ -212,5 +229,6 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     },
     folder: folderOf,
     jobs: jobs.service,
+    folders: folders.service,
   }
 }

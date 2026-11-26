@@ -27,8 +27,15 @@ export interface Bot {
   projects: string[]
   paused: boolean
   budget: number | null
+  folderId: string | null
   created: number
   updated: number
+}
+
+export interface BotFolder {
+  id: string
+  name: string
+  created: number
 }
 
 export type BotHold = 'paused' | 'limit'
@@ -129,6 +136,7 @@ export interface Morning extends MorningEntry {
 export interface BotSummary extends Bot {
   folder: string
   subagents: number[]
+  background: number[]
   talked: number
   status: BotStatus
   waiting?: WaitReason['kind']
@@ -206,14 +214,23 @@ export interface Jobs {
   report(id: string, report: RunReport): Job
 }
 
+export interface BotFolders {
+  list(): BotFolder[]
+  create(name: string): BotFolder
+  rename(id: string, name: string): BotFolder
+  remove(id: string): boolean
+}
+
 export interface Bots {
   list(): BotSummary[]
   get(id: string): BotSummary | undefined
   create(spec: NewBot): BotSummary
   update(id: string, patch: BotPatch, by: Changer): BotSummary
+  move(id: string, folder: string | null): BotSummary
   remove(id: string): Promise<boolean>
   folder(id: string): string
   jobs: Jobs
+  folders: BotFolders
 }
 
 export const bots = service<Bots>('bots')
@@ -278,12 +295,16 @@ export const botAutomations = service<BotAutomations>('botAutomations')
 export const botChange = event<(bot: BotSummary) => void>('bot.change')
 export const botRemove = event<(id: string) => void>('bot.remove')
 export const jobRemove = event<(job: Job) => void>('job.remove')
+export const botFolderChange = event<(folder: BotFolder) => void>('bot.folder.change')
+export const botFolderRemove = event<(id: string) => void>('bot.folder.remove')
 
 export const botChangeWire = wireEvent<BotSummary>('bot.change')
 export const botRemoveWire = wireEvent<string>('bot.remove')
+export const botFolderChangeWire = wireEvent<BotFolder>('bot.folder.change')
+export const botFolderRemoveWire = wireEvent<string>('bot.folder.remove')
 
 export const helloBots = helloField<BotSummary[]>('bots')
-
+export const helloBotFolders = helloField<BotFolder[]>('botFolders')
 
 const one = lazy(() => z.object({ bot: z.string() }))
 
@@ -291,6 +312,13 @@ export const botList = request('bot.list', { input: () => z.object({}), output: 
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>(), callers: 'any' })
 export const botUpdate = request('bot.update', { input: () => z.object({ bot: z.string().optional(), patch: botPatch() }), output: type<BotSummary>(), callers: 'any' })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>(), callers: 'any' })
+export const botMove = request('bot.move', { input: () => one().extend({ folder: z.string().nullable() }), output: type<BotSummary>(), callers: 'any' })
+
+const folderName = lazy(() => z.string().trim().min(1).max(60))
+
+export const botFolderCreate = request('bot.folder.create', { input: () => z.object({ name: folderName() }), output: type<BotFolder>(), callers: 'any' })
+export const botFolderRename = request('bot.folder.rename', { input: () => z.object({ folder: z.string(), name: folderName() }), output: type<BotFolder>(), callers: 'any' })
+export const botFolderDelete = request('bot.folder.delete', { input: () => z.object({ folder: z.string() }), output: type<boolean>(), callers: 'any' })
 
 const oneJob = lazy(() => z.object({ job: z.string().describe('The job id') }))
 

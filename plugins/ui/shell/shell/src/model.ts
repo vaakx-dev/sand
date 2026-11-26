@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, sig, stored } from '@vaakx-dev/vrui'
-import type { Aside, ChipSource, NavItem, Place, Route, RouteSpec, ShellSection } from './contract'
+import type { Aside, ChipSource, Fold, NavItem, Place, Route, RouteSpec, ShellSection } from './contract'
 import { routeHistory } from './history'
 import { layerStack } from './layer'
 import { shellLayout } from './layout'
@@ -21,7 +21,7 @@ const shellModel = (kit: Kit) => {
   const chips = registry<ChipSource>()
   const asides = registry<Aside>()
   const places: Record<Place, ReturnType<typeof registry<Placed>>> = { overlay: registry(), top: registry() }
-  const openFolds = stored<string[]>('sand.shell.open-groups', [])
+  const toggledFolds = stored<string[]>('sand.shell.toggled-groups', [])
 
   const width = sig(window.innerWidth)
   const height = sig(window.innerHeight)
@@ -64,8 +64,8 @@ const shellModel = (kit: Kit) => {
     asidesOf,
     asideShown,
     showAside,
-    foldOpen: (key: string) => openFolds.get().includes(key),
-    toggleFold: (key: string) => openFolds.update(keys => (keys.includes(key) ? keys.filter(other => other !== key) : [...keys, key])),
+    foldOpen: (key: string, fold: Fold) => toggledFolds.get().includes(key) !== (fold === 'open'),
+    toggleFold: (key: string) => toggledFolds.update(keys => (keys.includes(key) ? keys.filter(other => other !== key) : [...keys, key])),
   }
 }
 

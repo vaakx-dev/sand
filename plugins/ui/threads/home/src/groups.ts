@@ -29,13 +29,13 @@ const newest = (entries: ListEntry[]) => entries.toSorted((a, b) => Number(Boole
 const group = (id: string, label: string, entries: ListEntry[], extra?: Partial<ShellGroup>): ShellGroup[] =>
   entries.length ? [{ id, label, rows: entries.map(entry => entry.row), ...extra }] : []
 
-const settles = (entry: ListEntry, days: number | undefined, now: number) =>
+export const settles = (entry: Pick<ListEntry, 'row' | 'talked' | 'pinned'>, days: number | undefined, now: number) =>
   days !== undefined && !entry.pinned && !entry.row.status && now - entry.talked > days * DAY_MS
 
 const archivedGroup = (entries: ListEntry[], { limit, more }: NonNullable<ListGroupsInput['archived']>) => {
   const hidden = entries.length - limit
   return group('archived', 'Archived', entries.slice(0, limit), {
-    folded: true,
+    fold: 'closed',
     ...(hidden > 0 && { action: { label: `Show ${Math.min(hidden, pageSize)} more`, icon: 'down', run: more } }),
   })
 }
@@ -51,7 +51,7 @@ export const listGroups = ({ id, label, entries, settleDays, now, action, empty,
   return [
     { id, label, rows: active.map(entry => entry.row), ...(action && { action }), ...(!entries.length && empty !== undefined && { empty }) },
     ...group('working', 'Working', working),
-    ...group('snoozed', 'Snoozed', snoozed, { folded: true }),
+    ...group('snoozed', 'Snoozed', snoozed, { fold: 'closed' }),
     ...group('settled', 'Settled', settled.map(entry => ({ ...entry, row: { ...entry.row, quiet: true } })), { settled: true }),
     ...(archived ? archivedGroup(gone, archived) : []),
   ]

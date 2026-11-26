@@ -95,6 +95,17 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
   )
 }
 
+const folderBlock = (parts: Parts, id: string, bot: Bot) => {
+  const { kit } = parts.ctx
+  const folders = () => parts.store.folders.list.get() ?? []
+  const move = (folder: string | null) => void parts.toasts.attempt(`Couldn’t move ${nameOf(bot)}`, () => parts.store.move(id, folder))
+  const choices = () => [{ value: null, label: 'No folder' }, ...folders().map(folder => ({ value: folder.id, label: folder.name }))]
+  return show(
+    () => folders().length > 0,
+    () => kit.pageSection({ title: 'Folder' }, dynamicChild(choices, shown => kit.segmented<string | null>(shown, () => bot()?.folderId ?? null, move, { label: 'Folder' }))),
+  )
+}
+
 const foot = (parts: Parts, id: string, bot: Bot, close: () => void) => {
   const { kit } = parts.ctx
   const paused = () => bot()?.paused ?? false
@@ -132,6 +143,7 @@ export const openProfile = (parts: Parts, id: string) => {
       div(
         { class: 'flex flex-col gap-6 pt-2' },
         projectsBlock(parts, id, bot),
+        folderBlock(parts, id, bot),
         advancedBlock(parts, id, bot),
         list(parts.sections.items, section => section.id, section => section.get().render(id), div({ class: 'flex flex-col gap-6' })),
       ),
