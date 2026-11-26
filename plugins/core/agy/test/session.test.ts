@@ -3,7 +3,7 @@ import type { Json } from '@sand/app-plan'
 import type { StopReason } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { expect, test } from 'bun:test'
-import type { AcpClient } from '../src/acp'
+import type { AcpClient, startAcp } from '../src/acp'
 import { openSession } from '../src/session'
 
 interface Prompt {
@@ -36,9 +36,19 @@ const fakeAgy = () => {
   }
 
   const client: AcpClient = { pid: 1, init: {}, request, notify() {}, close: async () => {} }
+  let onRequest: (method: string, params: Json) => Promise<unknown> = async () => ({})
+  const connect: typeof startAcp = async options => {
+    onRequest = options.onRequest ?? onRequest
+    return client
+  }
+  const permissionOptions = [
+    { optionId: 'allow', name: 'Allow', kind: 'allow_once' },
+    { optionId: 'deny', name: 'Deny', kind: 'reject_once' },
+  ]
 
   return {
-    connect: async () => client,
+    connect,
+    askPermission: (name: string) => onRequest('session/request_permission', { toolCall: { name }, options: permissionOptions }),
     nextPrompt: () => new Promise<Prompt>(resolve => waiters.push(resolve)),
     callTool: (name: string, input: Json) =>
       fetch(mcpUrl, {
@@ -135,6 +145,24 @@ test('agy failing a prompt on a busy server is provider trouble that sand retrie
   expect(busy).toBeInstanceOf(ProviderTrouble)
   expect(refused).toBeInstanceOf(Error)
   expect(refused).not.toBeInstanceOf(ProviderTrouble)
+})
+
+test('agy may run sand’s tools, but its own built-in tools are refused and the turn fails naming the tool', async () => {
+  const agy = fakeAgy()
+  const seen = recorder()
+  const tools = [{ name: 'read', description: 'Read a file', inputSchema: { type: 'object' } }]
+  const session = await openSession({ model: 'gemini-test', system: '', tools, cwd: '/work', persist: false }, seen.output, { media, asides: '/asides', report() {}, connect: agy.connect })
+  const next = agy.nextPrompt()
+  session.send([{ type: 'text', text: 'Read the notes outside the workspace' }])
+  const prompt = await next
+
+  expect(await agy.askPermission('mcp_sand_read')).toEqual({ outcome: { outcome: 'selected', optionId: 'allow' } })
+  expect(await agy.askPermission('read_file')).toEqual({ outcome: { outcome: 'selected', optionId: 'deny' } })
+  prompt.reply.resolve({ stopReason: 'end_turn' })
+
+  expect(String(await seen.failed)).toContain('read_file')
+  expect(seen.finishes).toEqual([])
+  await session.close()
 })
 
 test('sand tool calls agy makes together reach sand as one batch, with one pause after the last', async () => {
