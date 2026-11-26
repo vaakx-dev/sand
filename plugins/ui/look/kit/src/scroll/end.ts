@@ -29,9 +29,22 @@ export const firstRowBelow = (rowList: HTMLElement, y: number) => {
   return low
 }
 
+export interface Anchor {
+  row: Element
+  offset: number
+}
+
+const offsetOf = (scroller: HTMLElement, row: Element) => row.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+
+export const anchorOf = (scroller: HTMLElement, rowList: HTMLElement): Anchor | undefined => {
+  const row = rowList.children[firstRowBelow(rowList, scroller.getBoundingClientRect().top)]
+  return row && { row, offset: offsetOf(scroller, row) }
+}
+
+export const toAnchor = (scroller: HTMLElement, { row, offset }: Anchor) => shiftBy(scroller, offsetOf(scroller, row) - offset)
+
 export const keepAnchor = (scroller: HTMLElement, rowList: HTMLElement, change: () => void) => {
-  const anchor = rowList.children[firstRowBelow(rowList, scroller.getBoundingClientRect().top)]
-  const before = anchor?.getBoundingClientRect().top ?? 0
+  const anchor = anchorOf(scroller, rowList)
   change()
-  if (anchor?.isConnected) shiftBy(scroller, anchor.getBoundingClientRect().top - before)
+  if (anchor?.row.isConnected) toAnchor(scroller, anchor)
 }

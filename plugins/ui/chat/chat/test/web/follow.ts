@@ -21,6 +21,8 @@ const sizes: { name: string; options: BrowserContextOptions }[] = [
   { name: 'desktop', options: { viewport: { width: 1440, height: 900 } } },
   { name: 'phone', options: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } },
 ]
+const LAYOUT_NUDGE_PX = 300
+const GROWN_ABOVE_PX = 400
 const perSize = follows + 2
 const held = sizes.map((_, at) => seeded + at * perSize + follows + 1)
 const streamed = sizes.map((_, at) => seeded + (at + 1) * perSize)
@@ -56,9 +58,30 @@ const settled = async (page: Page) => {
   return place(page)
 }
 
+const overScroller = (page: Page) => page.locator('[data-part="transcript"]:visible').hover({ force: true })
+
 const scrollTo = async (page: Page, fromEnd: number) => {
-  await page.evaluate(`(() => { const el = ${scroller}; el.scrollTop = el.scrollHeight - el.clientHeight - ${fromEnd} })()`)
+  await overScroller(page)
+  await page.mouse.wheel(0, (await place(page)).fromEnd - fromEnd)
   await Bun.sleep(600)
+}
+
+const layoutNudge = (page: Page) => page.evaluate(`${scroller}.scrollTop -= ${LAYOUT_NUDGE_PX}`)
+
+const growRowsAbove = (page: Page) =>
+  page.evaluate(`(() => {
+    const first = [...document.querySelectorAll('p')].find(p => p.textContent?.startsWith('Reply '))
+    const spacer = document.createElement('div')
+    spacer.style.height = '${GROWN_ABOVE_PX}px'
+    first.before(spacer)
+  })()`)
+
+const away = async (page: Page, meanwhile: () => Promise<unknown>) => {
+  await page.getByRole('button', { name: 'New thread' }).first().dispatchEvent('click')
+  await page.waitForURL(url => url.href !== thread)
+  await meanwhile()
+  await page.goBack()
+  await page.getByText(/^Reply \d+ paragraph/).first().waitFor()
 }
 
 const sent = async (text: string) => {
@@ -73,14 +96,13 @@ const replied = async (page: Page, text: string) => {
   await page.getByText(`Reply ${reply} paragraph 6`).waitFor({ state: 'attached' })
 }
 
-const slowlyUp = (page: Page) =>
-  page.evaluate(`(async () => {
-    const el = ${scroller}
-    for (let step = 0; step < ${SLOW_STEPS}; step++) {
-      el.scrollTop -= ${SLOW_STEP_PX}
-      await new Promise(done => setTimeout(done, ${SLOW_STEP_GAP_MS}))
-    }
-  })()`)
+const slowlyUp = async (page: Page) => {
+  await overScroller(page)
+  for (let step = 0; step < SLOW_STEPS; step++) {
+    await page.mouse.wheel(0, -SLOW_STEP_PX)
+    await Bun.sleep(SLOW_STEP_GAP_MS)
+  }
+}
 
 beforeAll(async () => {
   sand = await startSandbox(replies)
@@ -141,5 +163,20 @@ for (const { name, options } of sizes) {
       await expect(page.getByRole('button', { name: 'Jump to latest' }).isVisible()).resolves.toBe(true)
       await page.getByText(`Reply ${reply} paragraph ${streamedParagraphs}`).waitFor({ state: 'attached', timeout: 20_000 })
     }, 60_000)
+
+    test('a chat at the end stays there through layout shifts, leaving and coming back', async () => {
+      await page.getByRole('button', { name: 'Jump to latest' }).click()
+      await layoutNudge(page)
+      expect((await settled(page)).fromEnd).toBeLessThanOrEqual(2)
+      await away(page, () => growRowsAbove(page))
+      expect((await settled(page)).fromEnd).toBeLessThanOrEqual(2)
+    }, 30_000)
+
+    test('a chat read above comes back on the same message after leaving', async () => {
+      await scrollTo(page, 1500)
+      const before = await place(page)
+      await away(page, () => growRowsAbove(page))
+      expect(await settled(page)).toEqual({ ...before, fromEnd: expect.any(Number) })
+    }, 30_000)
   })
 }
