@@ -1,7 +1,7 @@
 import { findBrowser, launch, type Launch } from '@sand/cdp'
 import { osOf, type Action, type Computer, type Screenshot } from '@sand/computers/contract'
 import { tabCommand, tabsNote, type Command } from './chords'
-import { pageElements } from './elements'
+import { locateElement, pageElements, type Page } from './elements'
 import { findText } from './find'
 import { dispatch } from './input'
 import { fillLogin } from './login'
@@ -98,6 +98,12 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
 
   const page = async () => (await tabs()).current()
 
+  const currentPage = async (): Promise<Page> => {
+    const { current, framesIn, frameCall } = await tabs()
+    const call = await current()
+    return { call, framesIn, frameCall, viewport: await viewportOf(call) }
+  }
+
   const computer: Required<Computer> & { close(): Promise<void> } = {
     info: { id, kind: 'browser', label, os: osOf(process.platform) },
     async screenshot(fit): Promise<Screenshot> {
@@ -106,9 +112,10 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
       return { png, ...pngSize(png), note: tabsNote(await open.list()) }
     },
     async elements() {
-      const { current, framesIn } = await tabs()
-      const call = await current()
-      return pageElements(call, framesIn, await viewportOf(call))
+      return pageElements(await currentPage())
+    },
+    async locate(element) {
+      return locateElement(await currentPage(), element)
     },
     async act(action) {
       const open = await tabs()

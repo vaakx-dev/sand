@@ -89,6 +89,13 @@ interface Frame {
 
 export type FramesIn = (parent: string) => FrameSession[]
 
+export interface Page {
+  call: Call
+  framesIn: FramesIn
+  frameCall: (ref: string) => Call | undefined
+  viewport: Viewport
+}
+
 const pixelBox = (quads: number[][], origin: Point): Box | undefined => {
   const xs = quads.flatMap(quad => quad.filter((_, index) => index % 2 === 0))
   const ys = quads.flatMap(quad => quad.filter((_, index) => index % 2 === 1))
@@ -162,11 +169,48 @@ const frameElements = async (frame: Frame, viewport: Viewport): Promise<UiElemen
   return placed.flat()
 }
 
-export const pageElements = async (call: Call, framesIn: FramesIn, viewport: Viewport): Promise<UiElement[]> => {
+const visibleFrames = async ({ call, framesIn, viewport }: Page): Promise<Frame[]> => {
   const { frameTree } = await call<{ frameTree: FrameTree }>('Page.getFrameTree')
-  const walk = async (frame: Frame): Promise<UiElement[]> => {
-    const [own, inner] = await Promise.all([frameElements(frame, viewport), children(frame, framesIn)])
-    return [...own, ...(await Promise.all(inner.map(walk))).flat()]
-  }
+  const walk = async (frame: Frame): Promise<Frame[]> => [frame, ...(await Promise.all((await children(frame, framesIn)).map(walk))).flat()]
   return walk({ tree: frameTree, call, ref: '', origin: { x: 0, y: 0 }, clip: screen(viewport) })
+}
+
+export const pageElements = async (page: Page): Promise<UiElement[]> => {
+  const frames = await visibleFrames(page)
+  return (await Promise.all(frames.map(frame => frameElements(frame, page.viewport)))).flat()
+}
+
+const splitRef = (ref: string) => {
+  const frame = ref.slice(0, ref.lastIndexOf('.') + 1)
+  return { session: frame.slice(0, -1), frame, node: Number(ref.slice(frame.length)) }
+}
+
+const gone = (ref: string) => new Error(`Element ${ref} is no longer shown on the page. Call computer_elements again.`)
+
+const checkSame = async (call: Call, node: number, { ref, role, name }: UiElement) => {
+  const { nodes } = await call<{ nodes: AxNode[] }>('Accessibility.getPartialAXTree', { backendNodeId: node, fetchRelatives: false }).catch(() => {
+    throw gone(ref)
+  })
+  const now = nodes[0] && kept(nodes[0])
+  if (!now) throw gone(ref)
+  if (now.role !== role || now.name !== name) {
+    throw new Error(`Element ${ref} is now ${now.role} "${now.name}", not ${role} "${name}". Call computer_elements again.`)
+  }
+}
+
+const scrollIntoView = (call: Call, node: number, ref: string) =>
+  call('DOM.scrollIntoViewIfNeeded', { backendNodeId: node }).catch(() => {
+    throw gone(ref)
+  })
+
+export const locateElement = async (page: Page, element: UiElement): Promise<Box> => {
+  const { session, frame, node } = splitRef(element.ref)
+  const call = session ? page.frameCall(session) : page.call
+  if (!call) throw gone(element.ref)
+  await checkSame(call, node, element)
+  await scrollIntoView(call, node, element.ref)
+  const placed = (await visibleFrames(page)).find(each => each.ref === frame)
+  const box = placed && (await nodeBox(placed, node))
+  if (!box) throw new Error(`Element ${element.ref} is still off screen after scrolling to it. Take a screenshot to see where it is.`)
+  return fractions(box, page.viewport)
 }

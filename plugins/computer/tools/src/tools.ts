@@ -5,6 +5,7 @@ import type { Tool, ToolContext } from '@sand/tools/contract'
 import { z } from 'zod'
 import { actionInput, resolveAction } from './action'
 import type { Chooser } from './chosen'
+import { Listed, type Owner } from './listed'
 
 export const group = 'computer'
 
@@ -49,7 +50,14 @@ const outcomeText = (outcome: Outcome | undefined) => {
 }
 
 export const computerTools = (computers: Computers, media: Media, chooser: Chooser) => {
-  const listed = new Map<string, Map<string, UiElement>>()
+  const listed = new Listed()
+
+  const ownerOf = (computer: string, { conversation }: ToolContext): Owner => ({ computer, chat: conversation.id })
+
+  const locate = (computer: Computer, owner: Owner) => async (ref: string) => {
+    const element = listed.element(owner, ref)
+    return computer.locate ? computer.locate(element) : element.box
+  }
 
   const targetOf = (given: string | undefined, { conversation }: ToolContext) => chooser.target(given, conversation)
 
@@ -99,7 +107,7 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
     name: 'computer_elements',
     group,
     description:
-      'List the UI elements on screen with refs and boxes as fractions of the screenshot. On a browser, pass find instead of scrolling to reach off-screen text; a desktop has no find, so scroll there. Pass a ref to computer_act to act on its center.',
+      'List the UI elements on screen with refs and boxes as fractions of the screenshot. On a browser, pass find instead of scrolling to reach off-screen text; a desktop has no find, so scroll there. Pass a ref to computer_act to act on its center; in browsers a ref follows its element when the page moves or scrolls.',
     input: elementsInput,
     effect: 'read',
     needs: ['computer'],
@@ -107,7 +115,7 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
       const { id, computer: target } = targetOf(computer, context)
       const searched = find === undefined ? [] : [await search(target, find, match)]
       const found = await target.elements()
-      listed.set(id, new Map(found.map(element => [element.ref, element])))
+      listed.remember(ownerOf(id, context), found)
       const shown = found.length ? found.slice(0, maxElements).map(elementLine) : ['No elements found.']
       const more = found.length > maxElements ? [`…and ${found.length - maxElements} more.`] : []
       return [...searched, ...shown, ...more].join('\n')
@@ -128,7 +136,7 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
     needs: ['computer'],
     async run({ computer, action, screenshot }, context) {
       const { id, computer: target } = targetOf(computer, context)
-      const outcome = await target.act(resolveAction(action, ref => listed.get(id)?.get(ref)))
+      const outcome = await target.act(await resolveAction(action, locate(target, ownerOf(id, context))))
       const done = `Done: ${action.type}.${outcomeText(outcome)}`
       if (!screenshot) return done
       return [{ type: 'text' as const, text: done }, ...(await look(id, target))]

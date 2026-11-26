@@ -24,6 +24,8 @@ const page = `<!doctype html>
       button, input { font-size: 20px; margin: 4px; }
       #rows { position: fixed; left: 0; bottom: 0; width: 400px; height: 150px; overflow: auto; background: #fff; }
       #rows p { margin: 0; }
+      #draft { position: absolute; left: 420px; top: 1800px; width: 240px; background: #fff; }
+      #stamp { margin: 0; }
     </style>
   </head>
   <body>
@@ -61,6 +63,7 @@ const page = `<!doctype html>
         <iframe src="REMOTE"></iframe>
       </div>
     </div>
+    <div id="draft"><p id="stamp"></p><button id="save">Save draft</button><p id="drafts">Drafts: 0</p></div>
     <script>
       const show = (id, text) => (document.getElementById(id).textContent = text)
       for (let row = 1; row <= 400; row++) document.getElementById('rows').append(Object.assign(document.createElement('p'), { textContent: 'Row ' + row }))
@@ -106,6 +109,13 @@ const page = `<!doctype html>
         event.preventDefault()
         show('dropped', 'Dropped: ' + (performance.now() - entered >= 800 ? 'after a rest' : 'too soon'))
         entered = undefined
+      }
+      let drafts = 0
+      const save = document.getElementById('save')
+      save.onclick = () => {
+        show('drafts', 'Drafts: ' + ++drafts)
+        document.getElementById('stamp').style.height = drafts * 120 + 'px'
+        if (drafts === 3) save.remove()
       }
       document.getElementById('fruit').onchange = event => show('fruited', 'Fruit: ' + event.target.value)
       document.getElementById('area').oninput = event => show('wrote', 'Area: ' + JSON.stringify(event.target.value))
@@ -328,6 +338,23 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     expect(found.box?.top).toBeGreaterThan(0.8)
     expect((await find('text', 'Row 320')).box.top).toBeCloseTo(found.box?.top ?? 0, 2)
     expect(await computer.find('row 32', 12)).toEqual({ count: 11 })
+  })
+
+  test('clicks a listed element where it is now, after the layout shifts or the page scrolls, until it is gone', async () => {
+    const clickNow = async (element: UiElement) => computer.act({ type: 'click', at: center(await computer.locate(element)) })
+    await computer.find('Save draft', 1)
+    const save = await find('button', 'Save draft')
+    await clickNow(save)
+    await eventually('Drafts: 1')
+    await clickNow(save)
+    await eventually('Drafts: 2')
+    await computer.act({ type: 'scroll', at: { x: 0.5, y: 0.8 }, dx: 0, dy: -20 })
+    await eventually('Scrolled: 0')
+    await clickNow(save)
+    await eventually('Drafts: 3')
+    await clickNow(await find('button', 'Remote nested add'))
+    await eventually('Remote nested: 2')
+    await expect(computer.locate(save)).rejects.toThrow(`Element ${save.ref} is no longer shown`)
   })
 
   test('follows a link into a new tab, switches back and closes it', async () => {

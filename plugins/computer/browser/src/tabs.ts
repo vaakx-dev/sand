@@ -111,6 +111,7 @@ export const openTabs = async (browser: Browser) => {
   return {
     browser,
     framesIn: (parent: string) => [...frames.values()].filter(frame => frame.parent === parent),
+    frameCall: (ref: string) => [...frames.values()].find(frame => frame.ref === ref)?.call,
     async current(): Promise<Call> {
       const targetId = active ?? (await create())
       const call = attached.get(targetId) ?? attach(targetId)
