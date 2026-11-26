@@ -6,6 +6,6 @@ const group = 'github'
 
 export const registerChecks = (tools: Tools, deps: ChecksDeps) =>
   joinDisposers(
-    tools.group({ name: group, label: 'GitHub', summary: "wait for a pull request's CI checks to finish", load: 'on-demand' }),
+    tools.group({ name: group, label: 'GitHub', summary: 'wait for CI on a pull request, branch, tag, commit or workflow run', load: 'on-demand' }),
     tools.register({ ...checksTool(deps), group }),
   )
