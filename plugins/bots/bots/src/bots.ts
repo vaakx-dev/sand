@@ -22,6 +22,7 @@ import {
   type BotSummary,
   changeEntry,
   type ChangeEntry,
+  type ChosenComputer,
   freshColor,
   gistEntry,
   jobRemove,
@@ -43,6 +44,8 @@ export interface BotsOptions {
 }
 
 const SUMMARY_TYPES = new Set(['message', 'usage', gistEntry, runEntry, morningEntry])
+
+const HOME_COMPUTER: ChosenComputer = 'this-pc'
 
 const STATUSES: Record<TurnStatus, BotStatus> = {
   running: 'working',
@@ -145,8 +148,13 @@ export const createBots = (ctx: Context, { ledger: { db, tx }, root, llm, sessio
     if (turn && turns.interrupt(chat, turn.id)) await turns.wait(turn.id, 'end')
   }
 
+  const placeOnHome = (bot: Bot) => records.save({ ...bot, computer: HOME_COMPUTER, updated: Date.now() })
+
   ctx.on(sessionEntry, (session, entry) => {
-    if (session.owner === 'bot' && SUMMARY_TYPES.has(entry.type) && records.get(session.id)) entered(session.id, entry)
+    const bot = session.owner === 'bot' ? records.get(session.id) : undefined
+    if (!bot) return
+    if (entry.type === 'message' && bot.computer === 'none') placeOnHome(bot)
+    if (SUMMARY_TYPES.has(entry.type)) entered(bot.id, entry)
   })
   const changedIfBot = (id: string) => void (records.get(id) && changed(id))
 

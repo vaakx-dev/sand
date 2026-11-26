@@ -28,8 +28,10 @@ export const createRecords = (db: Database) => {
   const all = db.query<Row, []>('select * from bots order by created')
   const one = db.query<Row, { id: string }>('select * from bots where id = $id')
   const save = db.query<unknown, Row>(
-    `insert or replace into bots (id, name, initial, color, computer, projects, paused, budget, created, updated)
-     values ($id, $name, $initial, $color, $computer, $projects, $paused, $budget, $created, $updated)`,
+    `insert into bots (id, name, initial, color, computer, projects, paused, budget, created, updated)
+     values ($id, $name, $initial, $color, $computer, $projects, $paused, $budget, $created, $updated)
+     on conflict (id) do update set name = excluded.name, initial = excluded.initial, color = excluded.color, computer = excluded.computer,
+       projects = excluded.projects, paused = excluded.paused, budget = excluded.budget, updated = excluded.updated`,
   )
   const remove = db.query<unknown, { id: string }>('delete from bots where id = $id')
 

@@ -5,6 +5,7 @@ import { matching, named, type Candidate } from './search'
 
 interface Finding {
   candidates: Candidate[]
+  present: Candidate[]
   loaded: ReadonlySet<string>
   blocked: ReadonlyMap<string, string>
 }
@@ -26,21 +27,24 @@ const describe = (candidates: Candidate[]) => {
   return `Load tools that aren't loaded yet. The tools you find stay available for the rest of this chat.\n\nGroups:\n${lines.join('\n')}`
 }
 
-const listing = (found: Candidate[], loaded: ReadonlySet<string>): ToolResultContent[] => {
-  const fresh = found.filter(({ tool }) => !loaded.has(tool.name))
-  const again = found.filter(({ tool }) => loaded.has(tool.name))
+const listing = (found: Candidate[], { present, loaded }: Finding): ToolResultContent[] => {
+  const alwaysLoaded = new Set(present)
+  const deferred = found.filter(candidate => !alwaysLoaded.has(candidate))
+  const fresh = deferred.filter(({ tool }) => !loaded.has(tool.name))
+  const again = found.filter(candidate => !fresh.includes(candidate))
   const lines = [...(fresh.length ? [`Loaded: ${namesOf(fresh)}`] : []), ...(again.length ? [`Already loaded: ${namesOf(again)}`] : [])]
-  return [{ type: 'text', text: lines.join('\n') }, ...found.map(({ tool }): ToolResultContent => ({ type: 'tool_reference', name: tool.name }))]
+  return [{ type: 'text', text: lines.join('\n') }, ...deferred.map(({ tool }): ToolResultContent => ({ type: 'tool_reference', name: tool.name }))]
 }
 
-const answer = ({ candidates, loaded, blocked }: Finding, query: string) => {
+const answer = (finding: Finding, query: string) => {
+  const searchable = [...finding.candidates, ...finding.present]
   const name = query.trim().toLowerCase()
-  const whole = named(candidates, name)
-  if (whole.length) return listing(whole, loaded)
-  const unavailable = blocked.get(name)
+  const whole = named(searchable, name)
+  if (whole.length) return listing(whole, finding)
+  const unavailable = finding.blocked.get(name)
   if (unavailable) return `${unavailable} isn't available in this chat.`
-  const found = matching(candidates, query)
-  return found.length ? listing(found, loaded) : `No tools match "${query}". Try other words or a group name.`
+  const found = matching(searchable, query)
+  return found.length ? listing(found, finding) : `No tools match "${query}". Try other words or a group name.`
 }
 
 const findTool = (finding: Finding): Tool<typeof input> => ({

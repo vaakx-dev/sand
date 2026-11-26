@@ -14,7 +14,9 @@ export const freshColor = (taken: Pick<Bot, 'color'>[]): BotColor => {
   return botColors.reduce((best, color) => (uses(color) < uses(best) ? color : best))
 }
 
-export type Computer = 'none' | 'own' | 'this-pc' | `pc:${string}`
+export type Computer = 'none' | ChosenComputer
+
+export type ChosenComputer = 'own' | 'this-pc' | `pc:${string}`
 
 export interface Bot {
   id: string
@@ -56,7 +58,7 @@ export const changeEntry = 'bot-change'
 
 export interface ChangeEntry {
   by: Changer
-  before: BotPatch
+  before: Partial<Bot>
   after: BotPatch
 }
 
@@ -137,7 +139,7 @@ export interface BotSummary extends Bot {
   morning?: Morning
 }
 
-const computer = lazy(() => z.union([z.enum(['none', 'own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])]))
+const computer = lazy(() => z.union([z.enum(['own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])]))
 
 export const projectIds = lazy(() => z.array(z.string().min(1)).transform(ids => [...new Set(ids)]))
 

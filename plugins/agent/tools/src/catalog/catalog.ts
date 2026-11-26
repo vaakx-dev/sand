@@ -49,13 +49,19 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return new Map([...closedTools, ...closedGroups])
   }
 
-  const find = (scoped: Tool[], conversation: Conversation) => {
-    const candidates = listed(scoped, 'on-demand', conversation).flatMap(tool => {
+  const grouped = (listedTools: Tool[]) =>
+    listedTools.flatMap(tool => {
       const group = groupOf(tool)
       return group ? [{ tool, group }] : []
     })
-    return findTool({ candidates, loaded: loadedIn.get(conversation.id) ?? new Set(), blocked: blockedIn(scoped) })
-  }
+
+  const find = (scoped: Tool[], conversation: Conversation) =>
+    findTool({
+      candidates: grouped(listed(scoped, 'on-demand', conversation)),
+      present: grouped(listed(scoped, 'always', conversation)),
+      loaded: loadedIn.get(conversation.id) ?? new Set(),
+      blocked: blockedIn(scoped),
+    })
 
   const changes = (apply: () => void) => {
     apply()

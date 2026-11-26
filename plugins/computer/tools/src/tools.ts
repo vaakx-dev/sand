@@ -4,8 +4,7 @@ import type { Media } from '@sand/media/contract'
 import type { Tool, ToolContext } from '@sand/tools/contract'
 import { z } from 'zod'
 import { actionInput, resolveAction } from './action'
-
-export type Chosen = (conversation: ToolContext['conversation']) => string
+import type { Chooser } from './chosen'
 
 export const group = 'computer'
 
@@ -16,7 +15,10 @@ const screenshotFit = { width: 1568, height: 1568 }
 const nothing = z.object({})
 
 const which = z.object({
-  computer: z.string().optional().describe('A computer id from computer_list (default for a bot: the one chosen for it)'),
+  computer: z
+    .string()
+    .optional()
+    .describe("A computer id from computer_list. Default: the last one named in this chat, else a bot's chosen one, else the only browser"),
 })
 
 const round = (value: number) => value.toFixed(3)
@@ -34,16 +36,10 @@ const search = async (computer: Computer, text: string, match: number) => {
   return `Match ${match} of ${count} for "${text}", scrolled into view${box ? ` at ${boxText(box)}` : ''}.`
 }
 
-export const computerTools = (computers: Computers, media: Media, chosen: Chosen) => {
+export const computerTools = (computers: Computers, media: Media, chooser: Chooser) => {
   const listed = new Map<string, Map<string, UiElement>>()
 
-  const idOf = (given: string | undefined, { conversation }: ToolContext) => given ?? chosen(conversation)
-
-  const need = (id: string) => {
-    const computer = computers.get(id)
-    if (!computer) throw new Error(`No computer "${id}". Call computer_list for the ids.`)
-    return computer
-  }
+  const targetOf = (given: string | undefined, { conversation }: ToolContext) => chooser.target(given, conversation)
 
   const list: Tool<typeof nothing> = {
     name: 'computer_list',
@@ -73,8 +69,8 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
     effect: 'read',
     needs: ['computer'],
     run({ computer }, context) {
-      const id = idOf(computer, context)
-      return look(id, need(id))
+      const { id, computer: target } = targetOf(computer, context)
+      return look(id, target)
     },
   }
 
@@ -83,7 +79,7 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
       .string()
       .min(1)
       .optional()
-      .describe('Text to find on the page, even off screen, scrolled into view before listing'),
+      .describe('Browsers only: text to find on the page, even off screen, scrolled into view before listing'),
     match: z.number().int().min(1).default(1).describe('Which match of find: 1 is the first'),
   })
 
@@ -91,13 +87,12 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
     name: 'computer_elements',
     group,
     description:
-      'List the UI elements on screen with refs and boxes as fractions of the screenshot. To reach off-screen text, pass find instead of scrolling (browsers only). Pass a ref to computer_act to act on its center.',
+      'List the UI elements on screen with refs and boxes as fractions of the screenshot. On a browser, pass find instead of scrolling to reach off-screen text; a desktop has no find, so scroll there. Pass a ref to computer_act to act on its center.',
     input: elementsInput,
     effect: 'read',
     needs: ['computer'],
     async run({ computer, find, match }, context) {
-      const id = idOf(computer, context)
-      const target = need(id)
+      const { id, computer: target } = targetOf(computer, context)
       const searched = find === undefined ? [] : [await search(target, find, match)]
       const found = await target.elements()
       listed.set(id, new Map(found.map(element => [element.ref, element])))
@@ -116,12 +111,11 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
     name: 'computer_act',
     group,
     description:
-      'Act on a computer: click, hold, move, drag, scroll, type, key, wait or open a link, at x and y fractions 0..1 of the screenshot or an element ref. Returns a screenshot once the screen settles, so there is no need to take one.',
+      'Act on a computer: click, hold, move, drag, scroll, type, key, wait or open a link, at x and y fractions 0..1 of the screenshot or an element ref. open on a browser loads the link in its current tab; on a desktop it hands the link to the default browser, which usually opens a new tab. Returns a screenshot once the screen settles, so there is no need to take one.',
     input: actInput,
     needs: ['computer'],
     async run({ computer, action, screenshot }, context) {
-      const id = idOf(computer, context)
-      const target = need(id)
+      const { id, computer: target } = targetOf(computer, context)
       await target.act(resolveAction(action, ref => listed.get(id)?.get(ref)))
       const done = `Done: ${action.type}.`
       if (!screenshot) return done

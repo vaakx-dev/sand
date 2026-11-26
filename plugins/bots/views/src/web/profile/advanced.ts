@@ -1,4 +1,4 @@
-import { botPatch, type BotPatch, type BotSummary, type Computer } from '@sand/bots/contract'
+import { botPatch, type BotPatch, type BotSummary, type ChosenComputer, type Computer } from '@sand/bots/contract'
 import { pcs } from '@sand/devices-contract'
 import { dollars } from '@sand/util'
 import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
@@ -7,22 +7,26 @@ import type { Parts } from '../parts'
 type Bot = () => BotSummary | undefined
 
 interface ComputerChoice {
-  value: Computer
+  value: ChosenComputer
   label: string
 }
 
+const UNSET_LABEL = 'This PC, from its first message'
+
 const computerChoices = (parts: Parts): ComputerChoice[] => [
-  { value: 'none', label: 'None' },
   { value: 'own', label: 'Browser' },
   { value: 'this-pc', label: 'This PC' },
   ...(parts.ctx.get(pcs)?.list() ?? []).filter(pc => !pc.home).map(pc => ({ value: `pc:${pc.id}` as const, label: pc.name })),
 ]
 
-const computerLabel = (choices: ComputerChoice[], computer: Computer | undefined) => choices.find(choice => choice.value === computer)?.label ?? 'Unknown PC'
+const computerLabel = (choices: ComputerChoice[], computer: Computer | undefined) => {
+  if (computer === 'none') return UNSET_LABEL
+  return choices.find(choice => choice.value === computer)?.label ?? 'Unknown PC'
+}
 
 const computerRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void) => {
   const { kit } = parts.ctx
-  const pick = (close: () => void, computer: Computer) => () => {
+  const pick = (close: () => void, computer: ChosenComputer) => () => {
     close()
     if (computer !== bot()?.computer) save({ computer })
   }
