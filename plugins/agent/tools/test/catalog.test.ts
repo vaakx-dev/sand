@@ -142,6 +142,20 @@ test('the tool search offers only what the chat may use, says when a named tool 
   expect(await texts('notes')).toEqual(['Already loaded: note_read'])
 })
 
+test('the tool search reports matching tools that are always loaded as already loaded, without loading them again', async () => {
+  const catalog = createCatalog(memoryChoices(), () => {})
+  catalog.group({ name: 'web', label: 'Web', summary: 'fetch pages', load: 'on-demand' })
+  catalog.group({ name: 'screen', label: 'Screen', summary: 'see and use a browser', load: 'always' })
+  catalog.register({ ...named('web_fetch'), group: 'web', description: 'Fetch a page as text, no browser needed' })
+  catalog.register({ ...named('screen_click'), group: 'screen', description: 'Click in the browser' })
+  const search = { type: 'tool_call' as const, id: 's', name: findName, input: { query: 'browser' } }
+
+  expect((await catalog.run(search, context)).content).toEqual([
+    { type: 'text', text: 'Loaded: web_fetch\nAlready loaded: screen_click' },
+    { type: 'tool_reference', name: 'web_fetch' },
+  ])
+})
+
 test('a relay skips the gate, since each call it makes is checked on its own', async () => {
   const catalog = createCatalog(memoryChoices(), () => {})
   catalog.register({ ...named('relay'), relay: true })

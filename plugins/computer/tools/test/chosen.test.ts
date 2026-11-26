@@ -1,6 +1,6 @@
 import { botCreate, type Computer as Choice } from '@sand/bots/contract'
 import { textOf } from '@sand/chats/contract'
-import { type Computer, computers } from '@sand/computers/contract'
+import { type Computer, type ComputerKind, computers } from '@sand/computers/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { tools, type ToolContext } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -9,8 +9,8 @@ let sand: Sand
 
 afterEach(() => sand.stop())
 
-const fake = (id: string, acted: string[]): Computer => ({
-  info: { id, kind: 'desktop', label: id, os: 'windows' },
+const fake = (id: string, kind: ComputerKind, acted: string[]): Computer => ({
+  info: { id, kind, label: id, os: 'windows' },
   screenshot: async () => ({ width: 1, height: 1, png: new Uint8Array() }),
   elements: async () => [],
   act: async () => void acted.push(id),
@@ -28,15 +28,17 @@ const conversation = (owner: 'thread' | 'bot', id: string): ToolContext['convers
   entries: () => [],
 })
 
-test("an agent of a bot acts on the bot's chosen computer unless it names one, and with none chosen it is told how to choose", async () => {
+test("a chat keeps the computer it last named, else uses its bot's choice, else the only browser, and is told how to choose when there is none", async () => {
   sand = await startSand([], { plugins: ['bots/bots', 'bots/turns', 'computer/computers', 'computer/tools'] })
   const acted: string[] = []
-  for (const id of ['browser', 'desktop']) sand.app.get(computers)!.register(fake(id, acted))
-  const registry = sand.app.get(tools)!
-  await registry.choose('computer', 'always')
+  const registry = sand.app.get(computers)!
+  registry.register(fake('browser', 'browser', acted))
+  registry.register(fake('desktop', 'desktop', acted))
+  const toolbox = sand.app.get(tools)!
+  await toolbox.choose('computer', 'always')
   const act = async (on: ToolContext['conversation'], computer?: string) => {
     const call = { type: 'tool_call', id: Bun.randomUUIDv7(), name: 'computer_act', input: { action: { type: 'wait', ms: 0 }, screenshot: false, ...(computer && { computer }) } } as const
-    const result = await registry.run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: on, turn: 't', progress() {}, wait: () => () => {} })
+    const result = await toolbox.run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: on, turn: 't', progress() {}, wait: () => () => {} })
     return textOf(result.content)
   }
   const agentOf = (parent: string) => sand.sessions.agent({ parent, cwd: sand.home, title: 'Agent' }).id
@@ -51,8 +53,22 @@ test("an agent of a bot acts on the bot's chosen computer unless it names one, a
   expect(await act(conversation('thread', agentOf(agentOf(lead))))).toBe('Done: wait.')
   expect(acted.at(-1)).toBe('desktop')
 
+  const named = await botAgent('own')
+  expect(await act(named, 'desktop')).toBe('Done: wait.')
+  expect(await act(named, 'nowhere')).toContain('No computer "nowhere"')
+  expect(await act(named)).toBe('Done: wait.')
+  expect(acted.at(-1)).toBe('desktop')
+
+  const plain = conversation('thread', agentOf(sand.sessions.thread(sand.home).id))
+  expect(await act(await botAgent('none'))).toBe('Done: wait.')
+  expect(await act(plain)).toBe('Done: wait.')
+  expect(acted.slice(-2)).toEqual(['browser', 'browser'])
+
+  registry.register(fake('second', 'browser', acted))
   expect(await act(await botAgent('none'))).toContain('You have no computer chosen. The user picks one under Computer in your profile')
-  expect(await act(await botAgent('none'), 'browser')).toBe('Done: wait.')
-  expect(await act(conversation('thread', agentOf(sand.sessions.thread(sand.home).id)))).toContain('Name a computer')
   expect(await act(conversation('thread', 'chat'))).toContain('Name a computer')
+  expect(await act(plain)).toContain('Name a computer')
+  expect(await act(plain, 'second')).toBe('Done: wait.')
+  expect(await act(plain)).toBe('Done: wait.')
+  expect(acted.at(-1)).toBe('second')
 })
