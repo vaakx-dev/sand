@@ -30,18 +30,15 @@ import { inject } from './context'
 import { openNewBot } from './create/sheet'
 import { morningNote } from './jobs/morning'
 import { runNote } from './jobs/run'
-import { type BotView, projectNames, type Parts } from './parts'
+import { projectNames, type Parts } from './parts'
 import { openProfile } from './profile/sheet'
 import { registry } from './registry'
 import { botScreen } from './screen/bot'
 import { botsGroups } from './sidebar'
 import { botStore } from './store'
+import { shownView, viewOf } from './view'
 
 const HOUR_MS = 3_600_000
-
-const VIEWS: BotView[] = ['jobs', 'chat']
-
-const viewOf = (tab: string | undefined) => VIEWS.find(view => view === tab)
 
 export default definePlugin({
   name: 'bot-views',
@@ -98,9 +95,10 @@ export default definePlugin({
     )
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
     ctx.effect(() =>
-      ctx.shell.subject(({ kind, id }) => {
+      ctx.shell.subject(({ kind, id, tab }) => {
         const bot = kind === botRoute && id ? parts.store.find(id) : undefined
         if (!bot) return undefined
+        if (shownView(parts, bot.id, tab) === 'jobs') return undefined
         const chat = chats.thread(bot.id)
         return { session: bot.id, owner: 'bot', device: chat?.device ?? ctx.threads.device(), cwd: chat?.info.cwd ?? bot.folder }
       }),
