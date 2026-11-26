@@ -10,6 +10,12 @@ const stack: OpenLayer[] = []
 
 export const hasOpenLayer = (overlaysOnly = false) => stack.some(open => open.overlay || !overlaysOnly)
 
+export const closeTopLayer = () => {
+  const top = stack.at(-1)
+  top?.close()
+  return top !== undefined
+}
+
 export const dismissible = (owner: Node, close: () => void, { overlay = true } = {}) => {
   const entry: OpenLayer = { close, overlay }
   stack.push(entry)

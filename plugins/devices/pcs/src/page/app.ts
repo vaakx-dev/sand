@@ -10,6 +10,7 @@ declare global {
   interface Window {
     sandApp?: AppPort
     sandAppStart?: unknown
+    sandAppBack?: () => boolean
   }
 }
 
@@ -30,6 +31,12 @@ const appOver = (port: AppPort, start: Pick<AndroidApp, 'routes' | 'versionCode'
       const reply = replyOf(event.data)
       if (reply) listener(reply)
     }),
+  onBack: close => {
+    window.sandAppBack = close
+    return () => {
+      if (window.sandAppBack === close) delete window.sandAppBack
+    }
+  },
 })
 
 export const thisApp = lazy((): AndroidApp | undefined => {

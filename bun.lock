@@ -1993,6 +1993,7 @@
         "@sand/host-health": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -3416,6 +3417,7 @@
       "name": "@sand/ui-shell",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/devices-contract": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",

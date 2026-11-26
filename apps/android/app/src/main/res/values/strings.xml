@@ -8,4 +8,6 @@
     <string name="installs_off">sand can’t install its update yet. Allow it to install apps in Android settings, then try again.</string>
     <string name="update_damaged">The app update downloaded damaged. Try again.</string>
     <string name="update_download_failed">Couldn’t download the app update (%1$s). Try again.</string>
+    <string name="reply">Reply</string>
+    <string name="save_failed">Couldn’t save the file. Try again.</string>
 </resources>

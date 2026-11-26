@@ -9,6 +9,7 @@ import android.net.Network
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -34,6 +35,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 private const val BRIDGE = "sandApp"
+private const val PAGE_BACK = "window.sandAppBack?.() === true"
 private val PAGE_ORIGINS = setOf(PAGE_ORIGIN)
 
 private fun routeOf(link: Uri) = "${link.scheme}://${link.encodedAuthority}"
@@ -47,13 +49,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var proxy: Proxy
     private lateinit var web: WebView
     private var start: ScriptHandler? = null
-    private var chosen: ValueCallback<Array<Uri>>? = null
     private var wantedApk: Apk? = null
-
-    private val pickFiles = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        chosen?.onReceiveValue(chosenFiles(result.resultCode, result.data))
-        chosen = null
-    }
+    private val chooser = Chooser(this)
+    private val microphone = Microphone(this)
+    private val saver = Saver(this)
 
     private val askToNotify = registerForActivityResult(ActivityResultContracts.RequestPermission()) { answerNotices() }
 
@@ -79,7 +78,7 @@ class MainActivity : ComponentActivity() {
             override fun shouldInterceptRequest(request: WebResourceRequest) = proxy.response(request)
         })
         getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(network)
-        onBackPressedDispatcher.addCallback(this) { if (web.canGoBack()) web.goBack() else finish() }
+        onBackPressedDispatcher.addCallback(this) { back() }
         open(intent.getStringExtra(EXTRA_PATH) ?: "/")
     }
 
@@ -116,12 +115,9 @@ class MainActivity : ComponentActivity() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) = leave(request.url)
         }
         webChromeClient = object : WebChromeClient() {
-            override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
-                chosen?.onReceiveValue(null)
-                chosen = callback
-                pickFiles.launch(params.createIntent())
-                return true
-            }
+            override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams) = chooser.show(callback, params)
+            override fun onPermissionRequest(request: PermissionRequest) = microphone.request(request)
+            override fun onPermissionRequestCanceled(request: PermissionRequest) = microphone.cancelled(request)
         }
     }
 
@@ -133,6 +129,10 @@ class MainActivity : ComponentActivity() {
             WindowInsetsCompat.CONSUMED
         }
     }
+
+    private fun back() = web.evaluateJavascript(PAGE_BACK) { closed -> if (closed != "true") leavePage() }
+
+    private fun leavePage() = if (web.canGoBack()) web.goBack() else finish()
 
     private fun open(path: String) {
         if (!pc.paired()) return web.loadUrl(SETUP_URL)
@@ -202,6 +202,7 @@ class MainActivity : ComponentActivity() {
             "pair" -> pair(Uri.parse(body.getString("link")))
             "scan" -> scan()
             "install" -> install(Apk(body.getString("url"), body.optString("sha256").ifEmpty { null }))
+            "save" -> saver.save(body.getString("name"), body.getString("data"))
         }
     }
 }

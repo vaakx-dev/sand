@@ -3,7 +3,6 @@ package dev.vaakx.sand
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import java.io.File
 import java.io.IOException
@@ -68,8 +67,7 @@ fun installPermission(context: Context): Intent? {
 }
 
 fun installer(context: Context, apk: File): Intent {
-    val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", apk)
-    return Intent(Intent.ACTION_VIEW).setDataAndType(uri, APK_TYPE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    return Intent(Intent.ACTION_VIEW).setDataAndType(sharedUri(context, apk), APK_TYPE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
 }
 
 object Update {

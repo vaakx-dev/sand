@@ -79,7 +79,7 @@ import { follow } from './gesture/follow'
 import { canScrollToward } from './gesture/scroll'
 import { zoomGesture } from './gesture/zoom'
 import { onPressOutside, popupTrigger, pressOpens } from './layers/outside'
-import { dismissible, hasOpenLayer, modal, returnFocus } from './layers/stack'
+import { closeTopLayer, dismissible, hasOpenLayer, modal, returnFocus } from './layers/stack'
 import { listbox } from './listbox/model'
 import { optionProps } from './listbox/option'
 import { copyText } from './page/clipboard'
@@ -115,6 +115,7 @@ export const kit = {
   choiceList,
   backButton,
   closeButton,
+  closeTopLayer,
   roundButton,
   codeBlock,
   colorLabel,

@@ -28,6 +28,7 @@ import { createSendMenu } from './send/menu'
 import { sendsIn, type Send } from './send/outgoing'
 import { createSuggesters } from './suggest/sources'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
+import { takeReply } from './reply'
 import { takeShared } from './share'
 import { createTyping } from './typing'
 
@@ -57,6 +58,7 @@ export default definePlugin({
     const track = (built: Field) =>
       onMount(built.node, () => {
         mounted.push(built)
+        if (takeReply()) built.editor.focusEnd()
         return () => {
           mounted.splice(mounted.indexOf(built), 1)
         }

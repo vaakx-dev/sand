@@ -9,11 +9,13 @@ const LAN_ORIGIN = 'https://pc.test'
 let sand: Awaited<ReturnType<typeof startSandbox>>
 let pc: URL
 let browser: Browser
+let app: BrowserContext
 
 beforeAll(async () => {
   sand = await startSandbox([])
   pc = new URL(sand.url)
   browser = await chromium.launch()
+  app = await pairedApp()
 }, 60_000)
 
 afterAll(async () => {
@@ -47,7 +49,7 @@ const pipeToPc = (page: WebSocketRoute) => {
   })
 }
 
-const androidApp = async (): Promise<BrowserContext> => {
+const androidApp = async () => {
   const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
   await context.addInitScript(routes => {
     Object.assign(window, { sandApp: Object.assign(new EventTarget(), { postMessage: () => {} }), sandAppStart: { routes, push: false, versionCode: 1 } })
@@ -55,6 +57,15 @@ const androidApp = async (): Promise<BrowserContext> => {
   await context.route(`${APP_ORIGIN}/**`, proxyToPc)
   await context.route(`${LAN_ORIGIN}/**`, refuseImages)
   await context.routeWebSocket(`${LAN_ORIGIN.replace(/^https/, 'wss')}/**`, pipeToPc)
+  return context
+}
+
+const pairedApp = async () => {
+  const context = await androidApp()
+  const page = await context.newPage()
+  await page.goto(`${APP_ORIGIN}/${pc.hash}`)
+  await page.waitForFunction(() => !location.hash.includes('pair='))
+  await page.close()
   return context
 }
 
@@ -67,10 +78,31 @@ const pictureOutcome = async (page: Page, name: string) => {
   return outcome.jsonValue()
 }
 
+test('in the Android app, Back closes the open menu first and only then lets the app leave the page', async () => {
+  const page = await app.newPage()
+  await page.goto(`${APP_ORIGIN}/`)
+  await page.getByRole('textbox').first().waitFor()
+  await page.locator('[aria-haspopup=menu]').first().click()
+  const menu = page.getByRole('menu')
+  await menu.waitFor()
+  expect(await page.evaluate(() => window.sandAppBack?.())).toBe(true)
+  await menu.waitFor({ state: 'detached' })
+  expect(await page.evaluate(() => window.sandAppBack?.())).toBe(false)
+  await page.close()
+}, 60_000)
+
+test('opening the page from a notification\'s Reply puts the cursor in the composer and drops the flag from the address', async () => {
+  const page = await app.newPage()
+  await page.goto(`${APP_ORIGIN}/?reply`)
+  await page.getByRole('textbox').first().waitFor()
+  await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'textbox')
+  expect(new URL(page.url()).searchParams.has('reply')).toBe(false)
+  await page.close()
+}, 60_000)
+
 test('in the Android app, a chat picture loads through the page the app serves, since the WebView loads no pictures straight from the PC', async () => {
-  const context = await androidApp()
-  const page = await context.newPage()
-  await page.goto(`${APP_ORIGIN}/${pc.hash}`)
+  const page = await app.newPage()
+  await page.goto(`${APP_ORIGIN}/`)
   const box = page.getByRole('textbox').first()
   await box.waitFor()
   await page.locator('input[type=file]').first().setInputFiles({ name: 'tide.png', mimeType: 'image/png', buffer: await page.screenshot() })
@@ -79,5 +111,5 @@ test('in the Android app, a chat picture loads through the page the app serves, 
   await page.waitForURL(/view=thread/)
   await page.reload()
   expect(await pictureOutcome(page, 'tide.png')).toBe('shown')
-  await context.close()
+  await page.close()
 }, 60_000)
