@@ -1,6 +1,7 @@
 import { botMemorySpace } from '@sand/bot-memory/contract'
 import { botCreate, botDelete, botList, type BotStatus, type BotSummary, jobCreate } from '@sand/bots/contract'
 import { startSand, type Sand, type SandOptions } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import { memoryWrite } from '@sand/memory/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
@@ -19,14 +20,8 @@ const start = async (replies: Source['replies'], projects: SandOptions['projects
 
 const send = (bot: string, prompt: string) => sand.turns.send(sand.sessions.require(bot), { prompt, clientRequestId: prompt })
 
-const until = async (bot: string, done: (found: BotSummary) => boolean) => {
-  for (let tries = 0; tries < 300; tries++) {
-    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
-    if (found && done(found)) return found
-    await Bun.sleep(10)
-  }
-  throw new Error(`Bot ${bot} never got there`)
-}
+const reached = (bot: string, done: (found: BotSummary) => boolean) =>
+  until(async () => (await sand.ask(botList, {})).find(listed => listed.id === bot && done(listed)))
 
 const statusIs = (status: BotStatus) => (found: BotSummary) => found.status === status
 
@@ -37,7 +32,7 @@ test('a message to a bot runs a turn in its chat with its name, jobs, projects a
   await ask(memoryWrite, { space: botMemorySpace, id: bot.id, text: 'Gym on Mondays.' })
 
   await send(bot.id, 'Lunch with Ana is every Friday')
-  expect(await until(bot.id, found => found.status === 'idle' && found.last?.role === 'assistant')).toMatchObject({ last: { text: 'Noted.' } })
+  expect(await reached(bot.id, found => found.status === 'idle' && found.last?.role === 'assistant')).toMatchObject({ last: { text: 'Noted.' } })
 
   const [first] = requests('fake').map(body => JSON.parse(body))
   const system = first.system[0].text
@@ -58,11 +53,11 @@ test('a bot given a job between turns is briefed with it on its next turn', asyn
   const { ask, requests } = await start([[said('Hi.')], [said('Hi again.')]])
   const bot = await ask(botCreate, { name: 'Calendar' })
   await send(bot.id, 'Hello')
-  await until(bot.id, found => found.last?.text === 'Hi.' && found.status === 'idle')
+  await reached(bot.id, found => found.last?.text === 'Hi.' && found.status === 'idle')
 
   await ask(jobCreate, { bot: bot.id, title: 'Diary', goal: 'Keep my calendar.', done: 'No two events clash.' })
   await send(bot.id, 'Hello again')
-  await until(bot.id, found => found.last?.text === 'Hi again.')
+  await reached(bot.id, found => found.last?.text === 'Hi again.')
 
   const systems = requests('fake').map(body => JSON.parse(body).system[0].text as string)
   expect(systems.map(system => system.includes('Keep my calendar.'))).toEqual([false, true])
@@ -73,7 +68,7 @@ test('a failed turn marks the bot failed, and deleting a bot removes its chat', 
   const bot = await ask(botCreate, { name: 'Errands' })
   await send(bot.id, 'Buy milk')
 
-  expect(await until(bot.id, statusIs('failed'))).toMatchObject({ last: { role: 'user', text: 'Buy milk' } })
+  expect(await reached(bot.id, statusIs('failed'))).toMatchObject({ last: { role: 'user', text: 'Buy milk' } })
   expect(sand.sessions.require(bot.id).latest('turn-ending')?.data).toMatchObject({ stopReason: 'error' })
 
   expect(await ask(botDelete, { bot: bot.id })).toBe(true)
@@ -90,7 +85,7 @@ test('a bot whose tool waits on the user is waiting until it answers', async () 
   const bot = await ask(botCreate, { name: 'Planner' })
   await send(bot.id, 'Plan lunch')
 
-  expect(await until(bot.id, statusIs('waiting'))).toMatchObject({ waiting: 'question' })
+  expect(await reached(bot.id, statusIs('waiting'))).toMatchObject({ waiting: 'question' })
   answered.resolve('Friday')
-  expect(await until(bot.id, found => found.status === 'idle' && found.last?.text === 'Thanks.')).toBeDefined()
+  expect(await reached(bot.id, found => found.status === 'idle' && found.last?.text === 'Thanks.')).toBeDefined()
 })

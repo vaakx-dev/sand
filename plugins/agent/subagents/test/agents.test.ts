@@ -1,6 +1,7 @@
 import { botChangeWire, botCreate, botList } from '@sand/bots/contract'
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { pairPcs, startSand, type Sand } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import { modelSettings } from '@sand/model/contract'
 import { threadList, threadRemove, threadSend, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import type { Reply } from '@sand/replay/contract'
@@ -42,14 +43,9 @@ const git = (cwd: string, ...args: string[]) => {
   return result.stdout.toString().trim()
 }
 
-const until = async <T>(find: () => T | undefined | false, most = 300) => {
-  for (let tries = 0; tries < most; tries++) {
-    const found = find()
-    if (found) return found
-    await Bun.sleep(10)
-  }
-  throw new Error('It never happened')
-}
+const LATE_ARRIVAL_MS = 200
+
+const lateArrivals = () => Bun.sleep(LATE_ARRIVAL_MS)
 
 const prompts = (session: Session) =>
   session.path().flatMap(entry => (entry.type === 'message' && (entry.data as Message).role === 'user' ? [textOf((entry.data as Message).content)].filter(Boolean) : []))
@@ -100,7 +96,7 @@ test("a subagent's answer is the result of the call that asked it, with no notic
   expect(results(parent)[0]).toStartWith(`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`)
   const [task] = prompts(sand.sessions.require(child.id))
   expect(task).toContain('Dig into it\n\n<background>\nThe agent asking is working on this request:\nFix the login bug\n</background>')
-  await Bun.sleep(200)
+  await lateArrivals()
   expect(notices(parent)).toEqual([])
   expect(sand.turns.list(parent)).toHaveLength(1)
 })
@@ -117,7 +113,7 @@ test('a thread waiting on a subagent stops waiting when a message comes in, and 
   expect(running(child.id)).toBeTruthy()
   expect(results(chat)[0]).toStartWith(`A new message came in, so this call stopped waiting. Subagent ${child.id} keeps working`)
   await until(() => prompts(chat).includes('Are you there?'))
-  const [notice] = await until(() => notices(chat).length === 1 && notices(chat), 1000)
+  const [notice] = await until(() => notices(chat).length === 1 && notices(chat))
   expect(notice).toContain('Found it.')
 })
 
@@ -135,7 +131,7 @@ test('a bot never waits on a subagent, and its subagent runs on the subagent mod
   expect(running(child.id)).toBeTruthy()
   expect(results(chat)[0]).toStartWith(`Started subagent ${child.id}.`)
   expect(sand.app.get(modelSettings)?.effective(sand.sessions.require(child.id)).model).toBe('child/m')
-  const [notice] = await until(() => notices(chat).length === 1 && notices(chat), 1000)
+  const [notice] = await until(() => notices(chat).length === 1 && notices(chat))
   expect(notice).toContain('Found it.')
 })
 
@@ -148,7 +144,7 @@ test('subagents asked in one step all answer in that step', async () => {
   expect(sand.requests('parent')).toHaveLength(2)
   const answers = results(parent).map(text => text.split('\n')[0])
   expect(answers.toSorted()).toEqual(['Answer A.', 'Answer B.'])
-  await Bun.sleep(200)
+  await lateArrivals()
   expect(notices(parent)).toEqual([])
 })
 
@@ -189,7 +185,7 @@ test('stopping an agent stops the subagents it started, all the way down, withou
   await turn
 
   await until(() => !running(child.id) && !running(grandchild.id))
-  await Bun.sleep(200)
+  await lateArrivals()
   expect(running(parent.id)).toBeFalsy()
   expect(sand.turns.list(parent)).toHaveLength(1)
 })
@@ -217,7 +213,7 @@ test('a subagent on another PC answers in the call that asked it', async () => {
   const child = await onBox(there, parent)
   expect(results(parent)).toHaveLength(1)
   expect(results(parent)[0]).toStartWith(`Found it.\n\n(Subagent ${child.id}; thread_send asks it more.)`)
-  await Bun.sleep(200)
+  await lateArrivals()
   expect(notices(parent)).toEqual([])
 })
 
@@ -311,7 +307,8 @@ test("a subagent's report reaches its parent once the parent's PC can reach the 
 
   link.drop()
   await there.ask(threadStop, { session: child.id })
-  await Bun.sleep(100)
+  await until(() => !there.turns.current(there.sessions.require(child.id)))
+  await lateArrivals()
   expect(notices(parent)).toEqual([])
 
   link.open()
@@ -329,7 +326,7 @@ test('archiving an agent archives its subagent on another PC, once that PC can b
 
   link.drop()
   await sand.ask(threadUpdate, { session: parent.id, archived: true })
-  await Bun.sleep(100)
+  await lateArrivals()
   expect(session.archived).toBeNull()
 
   link.open()
@@ -371,7 +368,7 @@ test('a subagent given a worktree works in its own checkout, which goes once its
   await until(() => !running(parent.id))
 
   await sand.ask(threadUpdate, { session: parent.id, archived: true })
-  await until(() => !existsSync(child.cwd) && git(repo, 'branch', '--list', 'sand/*') === '', 2000)
+  await until(() => !existsSync(child.cwd) && git(repo, 'branch', '--list', 'sand/*') === '')
 })
 
 test('only agents defined in the home folder can be named, and they run with their role and tools', async () => {
@@ -467,7 +464,7 @@ test('deleting an agent deletes its subagent on another PC, once that PC can be 
 
   link.drop()
   await sand.sessions.remove(parent.id)
-  await Bun.sleep(100)
+  await lateArrivals()
   expect(there.sessions.open(child.id)).toBeDefined()
 
   link.open()

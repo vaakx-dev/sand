@@ -3,6 +3,7 @@ import { botCreate, botDelete, botList } from '@sand/bots/contract'
 import { type Message, textOf } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import type { Reply } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { type Change, watches } from '@sand/watches/contract'
@@ -34,11 +35,6 @@ const start = async (replies: Reply[]) => {
     },
   })
   return sand
-}
-
-const until = async (done: () => Promise<boolean>) => {
-  for (let tries = 0; tries < 1000 && !(await done()); tries++) await Bun.sleep(10)
-  expect(await done()).toBe(true)
 }
 
 const asBot = (bot: string): Conversation => ({

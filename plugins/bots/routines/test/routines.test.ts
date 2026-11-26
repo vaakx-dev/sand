@@ -4,6 +4,7 @@ import { type Entry, type Message, textOf } from '@sand/chats/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { engine } from '@sand/engine/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { timestamp } from '@sand/util'
@@ -24,11 +25,6 @@ const start = async (replies: Source['replies']) => {
     plugins: ['automation/schedules', 'agent/mcp-server', 'bots/bots', 'bots/turns', 'bots/routines'],
   })
   return sand
-}
-
-const until = async (done: () => Promise<boolean>) => {
-  for (let tries = 0; tries < 500 && !(await done()); tries++) await Bun.sleep(10)
-  expect(await done()).toBe(true)
 }
 
 const answered = async (bot: string, text: string) => {
@@ -52,6 +48,8 @@ const runTool = async (name: string, input: Record<string, unknown>, conversatio
   const result = await sand.app.get(tools)!.run({ type: 'tool_call', id: name, name, input }, context)
   return result.content.map(block => (block.type === 'text' ? block.text : '')).join('')
 }
+
+const routineWaiting = (bot: string) => sand.turns.pending(sand.sessions.require(bot)).some(item => item.origin === 'routine')
 
 const userMessages = (entries: Entry[]) => entries.filter(entry => entry.type === 'message' && (entry.data as Message).role === 'user')
 
@@ -123,7 +121,7 @@ test('a routine that fires while its bot is busy joins the running turn, and whe
   await sand.turns.send(sand.sessions.require(bot.id), { prompt: 'Do the long thing', clientRequestId: 'one' })
 
   setSystemTime(at('2026-11-04T18:00:00Z'))
-  await Bun.sleep(1_500)
+  await until(() => routineWaiting(bot.id))
   expect(await ask(routineList, { bot: bot.id })).toMatchObject([{ name: 'Call Ana' }])
 
   const told: Moment[] = []

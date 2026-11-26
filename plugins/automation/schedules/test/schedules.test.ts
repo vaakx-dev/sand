@@ -1,4 +1,5 @@
 import { startSand, type Sand } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import { type Fire, type Schedule, schedules, type When } from '@sand/schedules/contract'
 import { afterEach, expect, setSystemTime, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -22,11 +23,6 @@ const daily: When = { kind: 'cron', cron: '0 9 * * *', zone: 'UTC' }
 const start = async () => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: [] }], { ...(home && { home }), plugins: ['automation/schedules'] })
   return sand.app.get(schedules)!
-}
-
-const until = async (done: () => boolean) => {
-  for (let tries = 0; tries < 500 && !done(); tries++) await Bun.sleep(10)
-  expect(done()).toBe(true)
 }
 
 const handled = (service: Awaited<ReturnType<typeof start>>, run: (fire: Fire, schedule: Schedule) => void = () => {}) => {

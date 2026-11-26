@@ -1,4 +1,3 @@
-import { rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 export interface CdpEvent {
@@ -27,14 +26,42 @@ export interface Launch {
   deadline: number
 }
 
+const LISTENING = /DevTools listening on (ws:\/\/\S+)\r?\n/
+const POLL_MS = 50
+
+const notStarted = () => new Error('The browser did not start. Check that Chrome or Edge runs and that no other Chrome uses the same profile, or set CHROME_PATH.')
+
 const endpointOf = async (profile: string, deadline: number) => {
   while (Date.now() < deadline) {
     const file = Bun.file(join(profile, 'DevToolsActivePort'))
     const [port, path] = (await file.exists()) ? (await file.text()).split('\n') : []
     if (port && path) return `ws://127.0.0.1:${port}${path}`
-    await Bun.sleep(50)
+    await Bun.sleep(POLL_MS)
   }
-  throw new Error('The browser did not start. Check that Chrome or Edge runs and that no other Chrome uses the same profile, or set CHROME_PATH.')
+  throw notStarted()
+}
+
+const drain = async (output: ReadableStreamDefaultReader<string>) => {
+  while (!(await output.read()).done);
+}
+
+const announcedEndpoint = async (output: ReadableStreamDefaultReader<string>) => {
+  let printed = ''
+  while (true) {
+    const { done, value } = await output.read()
+    if (done) throw notStarted()
+    printed += value
+    const endpoint = LISTENING.exec(printed)?.[1]
+    if (endpoint) return endpoint
+  }
+}
+
+const listeningOn = async (browser: Bun.Subprocess<'ignore', 'ignore', 'pipe'>, deadline: number) => {
+  const output = browser.stderr.pipeThrough(new TextDecoderStream()).getReader()
+  const late = setTimeout(() => browser.kill(), deadline - Date.now())
+  const endpoint = await announcedEndpoint(output).finally(() => clearTimeout(late))
+  void drain(output)
+  return endpoint
 }
 
 const connect = (endpoint: string) =>
@@ -115,10 +142,9 @@ const session = (socket: WebSocket, process?: Bun.Subprocess) => {
 export type Browser = ReturnType<typeof session>
 
 export const launch = async ({ executable, profile, args, deadline }: Launch): Promise<Browser> => {
-  await rm(join(profile, 'DevToolsActivePort'), { force: true })
-  const browser = Bun.spawn([executable, ...args, '--remote-debugging-port=0', `--user-data-dir=${profile}`], { stdout: 'ignore', stderr: 'ignore' })
+  const browser = Bun.spawn([executable, ...args, '--remote-debugging-port=0', `--user-data-dir=${profile}`], { stdin: 'ignore', stdout: 'ignore', stderr: 'pipe' })
   try {
-    return session(await connect(await endpointOf(profile, deadline)), browser)
+    return session(await connect(await listeningOn(browser, deadline)), browser)
   } catch (error) {
     browser.kill()
     await browser.exited

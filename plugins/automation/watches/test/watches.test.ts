@@ -1,3 +1,4 @@
+import { until } from '@sand/harness/until'
 import { createLedger, ledger } from '@sand/ledger/contract'
 import { type ShellRunner, shellRunner } from '@sand/shell/contract'
 import { type Change, type Kind, type KindContext, type Watches, watches } from '@sand/watches/contract'
@@ -35,10 +36,7 @@ const start = async (runner?: ShellRunner) => {
   return app.get(watches)!
 }
 
-const until = async (done: () => boolean) => {
-  for (let tries = 0; tries < 500 && !done(); tries++) await Bun.sleep(10)
-  expect(done()).toBe(true)
-}
+const pastDebounce = () => Bun.sleep(timings.debounce_ms * 2)
 
 const input = z.object({ name: z.string() })
 
@@ -98,9 +96,9 @@ test('changes that come while the owner handles a batch go out together once it 
   emit(watch.id, 'a')
   await until(() => batches.length === 1)
   emit(watch.id, 'b')
-  await Bun.sleep(100)
+  await pastDebounce()
   emit(watch.id, 'c')
-  await Bun.sleep(100)
+  await pastDebounce()
   expect(batches).toEqual([['a']])
 
   resolve()
@@ -169,7 +167,7 @@ test('removing a watch stops it and forgets its pending changes, and unknown kin
   expect(live.size).toBe(0)
   context.emit({ at: Date.now(), from: 'fake', summary: 'late' })
   const batches = handled(service)
-  await Bun.sleep(100)
+  await pastDebounce()
   expect(batches).toEqual([])
   expect(service.list('test')).toEqual([])
 
@@ -193,21 +191,26 @@ test('a watch that finishes delivers its last changes, then stops and is gone', 
   expect(service.list('test')).toEqual([])
 })
 
-const bunShell: ShellRunner = {
-  name: 'bun',
-  async run(command, { cwd }) {
-    const child = Bun.spawn([process.execPath, '-e', command], { cwd, stdout: 'pipe', stderr: 'pipe' })
-    const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
-    return { code, timedOut: false, stdout, stderr }
-  },
-  start() {
-    throw new Error('Not used')
-  },
-  attach() {
-    throw new Error('Not used')
-  },
-  follow: () => () => {},
-  outlives: () => false,
+const bunShell = () => {
+  let runs = 0
+  const runner: ShellRunner = {
+    name: 'bun',
+    async run(command, { cwd }) {
+      const child = Bun.spawn([process.execPath, '-e', command], { cwd, stdout: 'pipe', stderr: 'pipe' })
+      const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+      runs++
+      return { code, timedOut: false, stdout, stderr }
+    },
+    start() {
+      throw new Error('Not used')
+    },
+    attach() {
+      throw new Error('Not used')
+    },
+    follow: () => () => {},
+    outlives: () => false,
+  }
+  return { runner, runs: () => runs }
 }
 
 test('a command watch stays quiet on its first run and passes the new output once it changes', async () => {
@@ -216,15 +219,17 @@ test('a command watch stays quiet on its first run and passes the new output onc
   writeFileSync(file, 'one\nsame\n')
   const command = `process.stdout.write(require('fs').readFileSync(${JSON.stringify(file)}, 'utf8'))`
 
-  const before = await start(bunShell)
+  const shell = bunShell()
+  const before = await start(shell.runner)
   const quiet = handled(before)
   const watch = await before.create({ owner: 'test', subject: 'a', kind: 'command', input: { command, cwd: dir }, label: 'Status' })
   expect(watch).toMatchObject({ target: command, input: { every_minutes: 5 } })
-  await Bun.sleep(1000)
+  await until(() => shell.runs() === 1)
+  await pastDebounce()
   expect(quiet).toEqual([])
 
   writeFileSync(file, 'two\nsame\n')
-  const after = await start(bunShell)
+  const after = await start(shell.runner)
   const changes: Change[] = []
   handled(after, batch => void changes.push(...batch))
   await until(() => changes.length === 1)

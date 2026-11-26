@@ -2,6 +2,7 @@ import { llmEvent, type UsageRecord } from '@sand/accounts/contract'
 import { botCreate, botList, type BotSummary, botUpdate } from '@sand/bots/contract'
 import { type Moment, notify } from '@sand/devices-notify/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import type { Reply } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -20,14 +21,8 @@ const start = async (replies: Reply[]) => {
   return sand
 }
 
-const until = async (bot: string, done: (found: BotSummary) => boolean) => {
-  for (let tries = 0; tries < 500; tries++) {
-    const found = (await sand.ask(botList, {})).find(listed => listed.id === bot)
-    if (found && done(found)) return found
-    await Bun.sleep(10)
-  }
-  throw new Error(`${bot} never got there`)
-}
+const reached = (bot: string, done: (found: BotSummary) => boolean) =>
+  until(async () => (await sand.ask(botList, {})).find(listed => listed.id === bot && done(listed)))
 
 const answered = (text: string) => (found: BotSummary) => found.status === 'idle' && found.last?.text === text
 
@@ -55,14 +50,14 @@ test('pausing a bot stops its turn, and what is sent to it meanwhile waits until
   await streamed
 
   expect(await sand.ask(botUpdate, { bot: bot.id, patch: { paused: true } })).toMatchObject({ paused: true, hold: 'paused' })
-  await until(bot.id, found => found.status === 'idle')
+  await reached(bot.id, found => found.status === 'idle')
   expect(await send(bot.id, 'Then this')).toMatchObject({ disposition: 'queued' })
   await Bun.sleep(sweep)
   expect(sand.requests('fake')).toHaveLength(1)
   expect(sand.turns.pending(chatOf(bot.id))).toEqual([expect.objectContaining({ kind: 'queue', prompt: 'Then this' })])
 
   await sand.ask(botUpdate, { bot: bot.id, patch: { paused: false } })
-  await until(bot.id, answered('Done.'))
+  await reached(bot.id, answered('Done.'))
   expect(sand.requests('fake')).toHaveLength(2)
   expect(sand.turns.pending(chatOf(bot.id))).toEqual([])
 })
@@ -74,7 +69,7 @@ test('a bot that spends its monthly limit in API money holds new work and says s
   const bot = await sand.ask(botCreate, { name: 'Travel', budget: 2 })
 
   await send(bot.id, 'Plan a trip')
-  const planned = await until(bot.id, answered('Planned.'))
+  const planned = await reached(bot.id, answered('Planned.'))
   expect(planned.spent).toBe(0)
   expect(planned.hold).toBeUndefined()
 
@@ -89,6 +84,6 @@ test('a bot that spends its monthly limit in API money holds new work and says s
   expect(sand.requests('fake')).toHaveLength(1)
 
   await sand.ask(botUpdate, { bot: bot.id, patch: { budget: 5 } })
-  expect(await until(bot.id, answered('Booked.'))).toMatchObject({ spent: 3 })
+  expect(await reached(bot.id, answered('Booked.'))).toMatchObject({ spent: 3 })
   expect(told).toHaveLength(1)
 })

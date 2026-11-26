@@ -1,16 +1,18 @@
+import { until } from '@sand/harness/until'
 import { expect, test } from 'bun:test'
-import { connected, connectTo, fakePc, waitFor } from './pc'
+import { wakeGrace } from '../src/timing'
+import { connected, connectTo, fakePc } from './pc'
 
 const tailnet = 'https://desk.example.ts.net'
 
 test('waking keeps a socket that still answers, and tells listeners once it does', async () => {
   const pc = fakePc()
   const { connection, wake, shown } = connectTo(pc)
-  expect(await waitFor(() => connected(connection), 2000)).toBe(true)
+  await until(() => connected(connection))
 
   wake()
   expect(connection.freshness().state).toBe('checking')
-  await Bun.sleep(800)
+  await until(() => connection.freshness().state === 'live')
 
   expect(shown()).toBe('live')
   expect(pc.sockets).toHaveLength(1)
@@ -20,13 +22,13 @@ test('waking keeps a socket that still answers, and tells listeners once it does
 test('waking replaces a socket that went quiet within a moment, without backing off', async () => {
   const pc = fakePc()
   const { connection, wake } = connectTo(pc, [tailnet], false)
-  expect(await waitFor(() => connected(connection), 2000)).toBe(true)
+  await until(() => connected(connection))
 
   pc.sockets[0]!.silent = true
   const woke = Date.now()
   wake()
 
-  expect(await waitFor(() => pc.sockets.length === 2 && connection.freshness().state === 'live', 2000)).toBe(true)
+  await until(() => pc.sockets.length === 2 && connection.freshness().state === 'live')
   expect(Date.now() - woke).toBeLessThan(900)
   expect(connected(connection)).toBe(true)
 })
@@ -34,16 +36,17 @@ test('waking replaces a socket that went quiet within a moment, without backing 
 test('waking while a dial hangs dials again at once instead of waiting it out', async () => {
   const pc = fakePc()
   const { connection, wake } = connectTo(pc, [tailnet], false)
-  expect(await waitFor(() => connected(connection), 2000)).toBe(true)
+  await until(() => connected(connection))
 
   pc.answers.set(tailnet, 'hang')
   pc.sockets[0]!.drop('the phone slept')
-  await Bun.sleep(1200)
+  await until(() => connection.status().phase === 'connecting')
+  await Bun.sleep(wakeGrace + 1)
   pc.answers.set(tailnet, 'up')
   const woke = Date.now()
   wake()
 
-  expect(await waitFor(() => connected(connection), 2000)).toBe(true)
+  await until(() => connected(connection))
   expect(Date.now() - woke).toBeLessThan(300)
 })
 
@@ -55,11 +58,11 @@ test('waking after failed tries starts over from the first attempt', async () =>
     const status = connection.status()
     return status.phase === 'reconnecting' && status.attempt >= 2
   }
-  expect(await waitFor(failedTwice, 4000)).toBe(true)
+  await until(failedTwice)
 
   pc.answers.set(tailnet, 'up')
   wake()
 
   expect(connection.status()).toMatchObject({ phase: 'connecting', attempt: 1 })
-  expect(await waitFor(() => connected(connection), 300)).toBe(true)
+  await until(() => connected(connection), { timeoutMs: 300 })
 })

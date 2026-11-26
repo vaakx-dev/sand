@@ -1,6 +1,7 @@
 import { calendarAgenda, calendarCreate, calendarList, type Occurrence } from '@sand/calendar/contract'
 import { connections, type Account, type Connections, type Kind } from '@sand/connections/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { until } from '@sand/harness/until'
 import { afterEach, expect, test } from 'bun:test'
 import { googleCalendar } from '../src/index'
 import { events, fakeGoogle, primary } from './fake'
@@ -27,13 +28,6 @@ const fakeConnections = (kinds: Kind[]): Connections => ({
   values: () => ({}),
   async disconnect() {},
 })
-
-const until = async (ready: () => Promise<boolean>) => {
-  for (let tries = 0; !(await ready()); tries++) {
-    if (tries > 100) throw new Error('timed out')
-    await Bun.sleep(20)
-  }
-}
 
 test("Google calendars show up next to sand's own in the agenda", async () => {
   google = fakeGoogle(seen => {
