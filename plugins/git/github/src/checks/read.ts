@@ -21,6 +21,14 @@ interface Run {
   details_url: string | null
 }
 
+interface Job {
+  id: number
+  name: string
+  status: string
+  conclusion: string | null
+  html_url: string | null
+}
+
 interface Status {
   context: string
   state: string
@@ -33,9 +41,9 @@ const passing = new Set(['success', 'neutral', 'skipped'])
 
 const statusStates: Record<string, CheckState> = { pending: 'running', success: 'passed', failure: 'failed', error: 'failed' }
 
-const runState = (run: Run): CheckState => {
-  if (run.status !== 'completed') return 'running'
-  return passed(run.conclusion) ? 'passed' : 'failed'
+const stateOf = ({ status, conclusion }: Pick<Run, 'status' | 'conclusion'>): CheckState => {
+  if (status !== 'completed') return 'running'
+  return passed(conclusion) ? 'passed' : 'failed'
 }
 
 export const passed = (conclusion: string | null) => passing.has(conclusion ?? '')
@@ -49,9 +57,14 @@ export const readChecks = async (client: Rest, repo: string, sha: string): Promi
     ...runs.check_runs.map(run => ({
       name: run.name,
       url: run.html_url ?? run.details_url ?? '',
-      state: runState(run),
+      state: stateOf(run),
       ...(run.app?.slug === actionsApp ? { job: run.id } : {}),
     })),
     ...combined.statuses.map(status => ({ name: status.context, url: status.target_url ?? '', state: statusStates[status.state] ?? 'running' })),
   ]
+}
+
+export const readJobs = async (client: Rest, repo: string, run: number): Promise<Check[]> => {
+  const { jobs } = await client.rest<{ jobs: Job[] }>('GET', `${repo}/actions/runs/${run}/jobs?per_page=100`)
+  return jobs.map(job => ({ name: job.name, url: job.html_url ?? '', state: stateOf(job), job: job.id }))
 }

@@ -1,12 +1,15 @@
 import type { ToolContext } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
 import { restError } from '../src/api/errors'
-import { checksTool, type ChecksGit } from '../src/checks/tool'
+import { checksTool } from '../src/checks/tool'
+import type { TargetGit } from '../src/checks/target'
 import type { Logs } from '../src/checks/why'
 
 const sha = 'abc1234def5678'
 
-const git: ChecksGit = {
+const knownRefs = ['main', 'release/1.2', 'v1.2.0', 'abc1234']
+
+const git: TargetGit = {
   remoteUrl: async () => 'git@github.com:acme/tiles.git',
   maybe: async () => sha,
 }
@@ -41,6 +44,11 @@ const github = (first: Poll, ...later: Poll[]) => {
     rest: async <T>(_method: string, path: string) => {
       paths.push(path)
       if (path.endsWith('/pulls/7')) return { head: { sha } } as T
+      if (path.includes('/commits?sha=')) {
+        if (!knownRefs.some(ref => path.includes(`sha=${encodeURIComponent(ref)}&`))) throw restError(404, undefined)
+        return [{ sha }] as T
+      }
+      if (path.endsWith('/actions/runs/99')) return { name: 'CI', head_sha: sha } as T
       const job = jobs.get(path)
       if (job) return { steps: job.steps } as T
       const answer = poll
@@ -50,6 +58,7 @@ const github = (first: Poll, ...later: Poll[]) => {
       }
       poll = later[at++] ?? poll
       if (answer instanceof Error) throw answer
+      if (path.includes('/actions/runs/99/jobs')) return { jobs: answer.runs } as T
       return { statuses: answer.statuses } as T
     },
     text: async path => {
@@ -69,7 +78,7 @@ const github = (first: Poll, ...later: Poll[]) => {
   return { client, paths, polls: () => at, failedJob }
 }
 
-const waitFor = async (client: Logs, input: { pr?: number | string }, folder: ChecksGit = git) => {
+const waitFor = async (client: Logs, input: { target?: number | string }, folder: TargetGit = git) => {
   const progress: string[] = []
   const settled: string[] = []
   const tool = checksTool({
@@ -100,7 +109,7 @@ test('returns the failed check with its link as soon as one fails, while others 
     { runs: [run('check', 'completed', 'failure'), run('browser', 'in_progress')], statuses: [status('deploy', 'success')] },
   )
 
-  const { result, progress, settled } = await waitFor(client, { pr: 7 })
+  const { result, progress, settled } = await waitFor(client, { target: 7 })
 
   expect(paths[0]).toBe('/repos/acme/tiles/pulls/7')
   expect(paths).toContain(`/repos/acme/tiles/commits/${sha}/check-runs?per_page=100`)
@@ -141,7 +150,7 @@ test('a failed job reports its failing tests with their errors, leaving out pass
     '##[error]Process completed with exit code 1.',
   ])
 
-  const { result } = await waitFor(client, { pr: 7 })
+  const { result } = await waitFor(client, { target: 7 })
 
   expect(result).toBe(
     [
@@ -172,7 +181,7 @@ test('a job that fails outside its tests reports the failed step and its last li
     'Post job cleanup.',
   ])
 
-  const { result } = await waitFor(client, { pr: 7 })
+  const { result } = await waitFor(client, { target: 7 })
 
   expect(result).toBe(
     [
@@ -186,30 +195,76 @@ test('a job that fails outside its tests reports the failed step and its last li
   )
 })
 
-const notARepo: ChecksGit = { remoteUrl: async () => undefined, maybe: async () => undefined }
+const notARepo: TargetGit = { remoteUrl: async () => undefined, maybe: async () => undefined }
 
 test.each(['acme/tiles#7', 'https://github.com/acme/tiles/pull/7', 'https://github.com/acme/tiles/pull/7/checks?check_run_id=1'])(
-  'waits on %s from a folder outside any repo',
+  'waits on pull request %s from a folder outside any repo',
   async reference => {
     const { client, paths } = github({ runs: [run('check', 'completed', 'success')], statuses: [] })
 
-    const { result } = await waitFor(client, { pr: reference }, notARepo)
+    const { result } = await waitFor(client, { target: reference }, notARepo)
 
     expect(paths[0]).toBe('/repos/acme/tiles/pulls/7')
     expect(result).toBe('Checks on abc1234: all 1 passed: check.')
   },
 )
 
-test('asks for a URL or owner/name#number when a bare number has no repo to belong to', async () => {
-  const { client } = github({ runs: [], statuses: [] })
+test.each([7, '7', '#7'])('waits on pull request %p in this folder\'s repo', async reference => {
+  const { client, paths } = github({ runs: [run('check', 'completed', 'success')], statuses: [] })
 
-  await expect(waitFor(client, { pr: 7 }, notARepo)).rejects.toThrow("This folder isn't in a GitHub repo; pass the pull request as a URL or owner/name#number.")
+  await waitFor(client, { target: reference })
+
+  expect(paths[0]).toBe('/repos/acme/tiles/pulls/7')
 })
 
-test('rejects text that is not a pull request', async () => {
+test.each(['main', 'release/1.2', 'v1.2.0', 'abc1234'])('waits on the commit that branch, tag or SHA %s names in this folder\'s repo', async ref => {
+  const { client, paths } = github({ runs: [run('check', 'completed', 'success')], statuses: [status('deploy', 'success')] })
+
+  const { result, settled } = await waitFor(client, { target: ref })
+
+  expect(paths[0]).toBe(`/repos/acme/tiles/commits?sha=${encodeURIComponent(ref)}&per_page=1`)
+  expect(result).toBe('Checks on abc1234: all 2 passed: check, deploy.')
+  expect(settled).toEqual([`t1 ${sha} passed`])
+})
+
+test('says which name GitHub has no branch, tag or commit for', async () => {
   const { client } = github({ runs: [], statuses: [] })
 
-  await expect(waitFor(client, { pr: 'tiles' }, notARepo)).rejects.toThrow('pass a GitHub pull request URL or owner/name#number')
+  await expect(waitFor(client, { target: 'tiles' })).rejects.toThrow('GitHub has no branch, tag or commit "tiles" in acme/tiles; push it, or check the name.')
+})
+
+test.each([
+  ['https://github.com/acme/tiles/actions/runs/99', notARepo],
+  ['https://github.com/acme/tiles/actions/runs/99/job/5?pr=7', notARepo],
+  ['run:99', git],
+] as const)('waits on only the jobs of workflow run %s, without settling the whole commit', async (reference, folder) => {
+  const { client, paths } = github(
+    { runs: [run('test', 'in_progress')], statuses: [status('deploy', 'pending')] },
+    { runs: [run('test', 'completed', 'success'), run('lint', 'completed', 'skipped')], statuses: [status('deploy', 'pending')] },
+  )
+
+  const { result, settled } = await waitFor(client, { target: reference }, folder)
+
+  expect(paths.filter(path => path.includes('/status'))).toEqual([])
+  expect(result).toBe('CI run 99 on abc1234: all 2 passed: test, lint.')
+  expect(settled).toEqual([])
+})
+
+test('a failed job in a workflow run reports why it failed', async () => {
+  const { client, failedJob } = github({ runs: [actionsRun('test', 43, 'failure')], statuses: [] })
+  failedJob(43, 'Install', ['##[group]Run bun install', '##[endgroup]', 'error: lockfile is frozen', '##[error]Process completed with exit code 1.'])
+
+  const { result } = await waitFor(client, { target: 'run:99' })
+
+  expect(result).toBe(
+    ['CI run 99 on abc1234: 1 failed (1 of 1 done):', '- test: https://github.com/acme/tiles/runs/test', '  Install failed:', '    error: lockfile is frozen', '    Process completed with exit code 1.'].join('\n'),
+  )
+})
+
+test('asks for a URL when a target needs this folder\'s repo and it has none', async () => {
+  const { client } = github({ runs: [], statuses: [] })
+
+  await expect(waitFor(client, { target: 7 }, notARepo)).rejects.toThrow("This folder isn't in a GitHub repo; pass a pull request or Actions run URL.")
 })
 
 test('keeps waiting while no checks are reported right after a push, then reports them passed', async () => {
