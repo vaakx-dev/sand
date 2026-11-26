@@ -23,7 +23,7 @@ const groups = (entries: ListEntry[], { limit = 50, start = () => {}, known = tr
     archived: { limit, more: () => {} },
   })
 
-const shape = (found: ReturnType<typeof listGroups>) => found.map(group => [group.id, Boolean(group.folded), group.rows.map(row => row.id)])
+const shape = (found: ReturnType<typeof listGroups>) => found.map(group => [group.id, Boolean(group.fold), group.rows.map(row => row.id)])
 
 test('entries group by state, newest first, with empty groups skipped', () => {
   const entries = [entry('old', 1), entry('new', 3), entry('busy', 2, { running: true }), entry('done', 5, { archived: true }), entry('later', 4, { snoozed: 9 })]
@@ -53,7 +53,8 @@ test('the new-thread action stays reachable with no threads at all', () => {
   let ran = 0
   const [group] = groups([], { start: () => ran++ })
   expect(group?.id).toBe('active')
-  group?.action?.run()
+  const action = group?.action
+  if (action && 'run' in action) action.run()
   expect(ran).toBe(1)
 })
 

@@ -84,4 +84,12 @@ export const schema = (root: string) => [
     'create index bot_jobs_bot on bot_jobs (bot, created)',
   ],
   chatsOf(root),
+  [
+    `create table bot_folders (
+      id text primary key,
+      name text not null,
+      created integer not null
+    )`,
+    'alter table bots add column folder_id text',
+  ],
 ]

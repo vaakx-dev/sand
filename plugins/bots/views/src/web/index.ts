@@ -43,7 +43,7 @@ const HOUR_MS = 3_600_000
 
 export default definePlugin({
   name: 'bot-views',
-  description: "Bots in the sidebar grouped like threads: active, Working, Snoozed and Settled; each bot's screen with its jobs and its chat; its profile and New bot",
+  description: "Bots in the sidebar, loose or in folders that fold, each staying in place while it works and showing its subagents and jobs; Snoozed bots fold away; each bot's screen with its jobs and its chat; its profile and New bot",
   inject,
   apply(ctx) {
     const sections = registry<BotProfileSection>()

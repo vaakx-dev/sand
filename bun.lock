@@ -1323,6 +1323,7 @@
         "@sand/chats": "workspace:*",
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/reactive": "workspace:*",

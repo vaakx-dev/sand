@@ -37,7 +37,7 @@ const LISTED_KINDS = new Set<Thread['info']['kind']>(['thread', 'quick'])
 
 export const listedThread = (thread: Thread) => LISTED_KINDS.has(thread.info.kind)
 
-export { listGroups, type ListEntry } from './groups'
+export { listGroups, settles, type ListEntry } from './groups'
 export { snoozeAction, snoozedUntil, isBack } from './snooze/actions'
 export { wakeTimer } from './snooze/wake'
 

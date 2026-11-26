@@ -5,7 +5,7 @@ import { icon, type IconName } from '../icons/lucide'
 export interface HeadingAction {
   icon: IconName
   label: string
-  onClick(): void
+  onClick(event: MouseEvent): void
 }
 
 export const groupLabelLook = 'text-xs font-medium text-neutral-500'
@@ -16,5 +16,5 @@ export const sectionHeading = (...children: Child[]) =>
 export const groupHeading = (label: Child, action?: HeadingAction) =>
   sectionHeading(
     span({ class: 'min-w-0 flex-1 truncate' }, label),
-    action ? iconButton({ size: 'sm', title: action.label, 'aria-label': action.label, class: '-my-1 -mr-1', onClick: () => action.onClick() }, icon(action.icon, 'sm')) : null,
+    action ? iconButton({ size: 'sm', title: action.label, 'aria-label': action.label, class: '-my-1 -mr-1', onClick: action.onClick }, icon(action.icon, 'sm')) : null,
   )

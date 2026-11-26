@@ -1,4 +1,17 @@
-import { botColors, botCreate, botDelete, botList, botUpdate, freshColor } from '@sand/bots/contract'
+import {
+  botColors,
+  botCreate,
+  botDelete,
+  botFolderCreate,
+  botFolderDelete,
+  botFolderRemoveWire,
+  botFolderRename,
+  botList,
+  botMove,
+  botUpdate,
+  freshColor,
+  helloBotFolders,
+} from '@sand/bots/contract'
 import type { Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterEach, expect, test } from 'bun:test'
@@ -85,6 +98,36 @@ test('bots and their chats survive a restart', async () => {
   const after = await start(shared)
   expect(await after.ask(botList, {})).toEqual([expect.objectContaining({ id: bot.id, color: 'green', last: expect.objectContaining({ text: 'Lunch with Ana on Friday' }) })])
   expect(after.sessions.require(bot.id).messages()).toEqual([said('user', 'Lunch with Ana on Friday')])
+})
+
+test('bots move into folders and out again, and deleting a folder puts its bots back at the top level', async () => {
+  shared = mkdtempSync(join(tmpdir(), 'sand-bots-'))
+  const before = await start(shared)
+  const [scout, ledger, admin] = [await before.ask(botCreate, { name: 'Scout' }), await before.ask(botCreate, { name: 'Ledger' }), await before.ask(botCreate, { name: 'Admin' })]
+  expect(scout.folderId).toBeNull()
+  const projects = await before.ask(botFolderCreate, { name: '  Projects ' })
+  const life = await before.ask(botFolderCreate, { name: 'Life' })
+  expect(projects.name).toBe('Projects')
+
+  await before.ask(botMove, { bot: scout.id, folder: projects.id })
+  await before.ask(botMove, { bot: ledger.id, folder: projects.id })
+  await before.ask(botMove, { bot: admin.id, folder: life.id })
+  expect((await before.ask(botMove, { bot: scout.id, folder: null })).folderId).toBeNull()
+  await before.ask(botMove, { bot: scout.id, folder: projects.id })
+  await expect(before.ask(botMove, { bot: scout.id, folder: 'nowhere' })).rejects.toThrow('No bot folder nowhere')
+  expect(await before.ask(botFolderRename, { folder: life.id, name: 'Home' })).toMatchObject({ id: life.id, name: 'Home' })
+  await before.stop()
+
+  const after = await start(shared)
+  expect(after.hello(helloBotFolders)?.map(folder => folder.name)).toEqual(['Projects', 'Home'])
+  const removed: string[] = []
+  after.hear(botFolderRemoveWire, id => void removed.push(id))
+  expect(await after.ask(botFolderDelete, { folder: projects.id })).toBe(true)
+  expect(await after.ask(botFolderDelete, { folder: projects.id })).toBe(false)
+
+  const placed = Object.fromEntries((await after.ask(botList, {})).map(bot => [bot.name, bot.folderId]))
+  expect(placed).toEqual({ Scout: null, Ledger: null, Admin: life.id })
+  expect(removed).toEqual([projects.id])
 })
 
 test('a new bot takes a colour no other bot uses, then the least used, and can bring its own id', async () => {

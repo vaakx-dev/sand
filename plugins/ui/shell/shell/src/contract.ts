@@ -65,11 +65,9 @@ interface NavBase {
 
 export type NavItem = NavBase & ({ to: Route; run?: never } | { run(): void; to?: never })
 
-export interface GroupAction {
-  label: string
-  icon: string
-  run(): void
-}
+export type GroupAction = { label: string; icon: string } & ({ run(): void } | { menu(): MenuAction[] })
+
+export type Fold = 'open' | 'closed'
 
 export interface RowPlace {
   label: string
@@ -98,7 +96,9 @@ export interface ShellGroup {
   id: string
   label: string
   action?: GroupAction
-  folded?: boolean
+  fold?: Fold
+  icon?(open: boolean): string
+  menu?(): MenuAction[]
   settled?: boolean
   rows: ShellRow[]
   empty?: string
