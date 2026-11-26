@@ -1,7 +1,7 @@
 import type { SheetSpec } from '@sand/ui-shell/contract'
 import type { Theme } from '@sand/ui-theme/contract'
 import type { Choice, Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, effect, intersectionObserver, show, sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, intersectionObserver, keys, show, sig } from '@vaakx-dev/vrui'
 import type { Diagrams } from './diagrams'
 import { type Drawn, placeDiagram } from './integrations/mermaid'
 
@@ -65,8 +65,8 @@ const fullScreenDiagram = (kit: Kit, title: string, picture: Picture): SheetSpec
     label: `Full screen ${title}`,
     look: 'viewer',
     title,
-    onKeyDown: zoom.keys,
-    head: () => kit.zoomControls(zoom),
+    onKeyDown: keys(zoom.control.shortcuts),
+    head: () => kit.zoomControls(zoom.control),
     body: () => kit.zoomStage(zoom, {}, diagram.node),
   }
 }

@@ -3,6 +3,7 @@ import { service } from 'drydock'
 import type { kit as kitImpl } from './kit'
 
 export * from './gesture'
+export { ZoomControl, type ZoomRange, type ZoomStage } from './zoom/control'
 
 export type Kit = typeof kitImpl
 
