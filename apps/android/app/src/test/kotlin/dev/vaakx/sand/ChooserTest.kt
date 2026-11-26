@@ -19,7 +19,7 @@ private fun picked(vararg uris: Uri) = Intent().apply {
     clipData = ClipData.newRawUri(null, uris.first()).also { clip -> uris.drop(1).forEach { clip.addItem(ClipData.Item(it)) } }
 }
 
-private class Asked(private val accept: String, private val capture: Boolean, private val multiple: Boolean) : FileChooserParams() {
+private class Picking(private val accept: String, private val capture: Boolean, private val multiple: Boolean) : FileChooserParams() {
     override fun getMode() = if (multiple) FileChooserParams.MODE_OPEN_MULTIPLE else FileChooserParams.MODE_OPEN
     override fun getAcceptTypes() = accept.split(',').toTypedArray()
     override fun isCaptureEnabled() = capture
@@ -32,16 +32,16 @@ private class Asked(private val accept: String, private val capture: Boolean, pr
 class ChooserTest {
     @Test
     fun opensTheCameraOnlyWhenThePageAsksToCaptureAnImage() {
-        assertEquals(true, wantsPhoto(Asked("image/*", capture = true, multiple = false)))
-        assertEquals(false, wantsPhoto(Asked("image/*", capture = false, multiple = false)))
-        assertEquals(false, wantsPhoto(Asked("image/*,video/*", capture = true, multiple = false)))
-        assertEquals(false, wantsPhoto(Asked("", capture = true, multiple = false)))
+        assertEquals(true, wantsPhoto(Picking("image/*", capture = true, multiple = false)))
+        assertEquals(false, wantsPhoto(Picking("image/*", capture = false, multiple = false)))
+        assertEquals(false, wantsPhoto(Picking("image/*,video/*", capture = true, multiple = false)))
+        assertEquals(false, wantsPhoto(Picking("", capture = true, multiple = false)))
     }
 
     @Test
     fun letsThePickerTakeSeveralFilesOnlyWhenThePageAllowsIt() {
-        assertEquals(true, pickerIntent(Asked("", capture = false, multiple = true)).getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, false))
-        assertEquals(false, pickerIntent(Asked("", capture = false, multiple = false)).getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, true))
+        assertEquals(true, pickerIntent(Picking("", capture = false, multiple = true)).getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, false))
+        assertEquals(false, pickerIntent(Picking("", capture = false, multiple = false)).getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE, true))
     }
 
     @Test
