@@ -1,4 +1,4 @@
-import { planChangeWire, planLimit, planRead, planWrite } from '@sand/bot-plan/contract'
+import { planChangeWire, planEdit, planLimit, planRead } from '@sand/bot-plan/contract'
 import { wire } from '@sand/devices-contract'
 import { markdown } from '@sand/markdown/contract'
 import { panel } from '@sand/panel/contract'
@@ -27,7 +27,7 @@ export default definePlugin({
           text: () => plans(bot),
           view: plan => div(...ctx.markdown.nodes(plan, { size: 'compact' })),
           empty: 'No plan yet.',
-          save: plan => ctx.wire.call(planWrite, { bot, text: plan }),
+          save: plan => ctx.wire.call(planEdit, { bot, text: plan }),
           rows: 16,
           maxLength: planLimit,
           placeholder: 'What the bot is working on and what comes next',

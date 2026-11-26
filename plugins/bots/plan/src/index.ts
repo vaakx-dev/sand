@@ -6,13 +6,14 @@ import { failure } from '@sand/orchestrator/contract'
 import { promptSections } from '@sand/prompt/contract'
 import { stepPrepare } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
-import { joinDisposers } from '@sand/util'
+import { joinDisposers, keyedSerial } from '@sand/util'
 import { writeAtomic } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { planChangeWire, planRead, planWrite } from './contract'
+import { planChangeWire, planEdit, planLimit, planRead, type PlanChange } from './contract'
 import { planSection, planSectionLength } from './prompt'
+import { replaced } from './replace'
 import { offerPlanTools } from './tools'
 
 export default definePlugin({
@@ -22,6 +23,7 @@ export default definePlugin({
   inject: { bots },
   apply(ctx) {
     const seen = new Map<string, string>()
+    const oneAtATime = keyedSerial()
 
     const botOf = (bot: string | undefined, actor: Actor | undefined) => {
       const id = bot ?? (actor?.owner === 'bot' ? actor.id : undefined)
@@ -49,6 +51,26 @@ export default definePlugin({
 
     const changedElsewhere = async (bot: string) => seen.get(bot) !== (await read(bot))
 
+    const nextPlan = (before: string, change: PlanChange) => {
+      const next = 'text' in change ? change.text : replaced(before, change.edits)
+      if (next.length > planLimit) throw failure('invalid_request', `The plan would be ${next.length.toLocaleString('en')} characters; the limit is ${planLimit.toLocaleString('en')}`)
+      return next
+    }
+
+    const knowsResult = (bot: string, before: string, change: PlanChange, actor: Actor | undefined) =>
+      actor?.owner === 'bot' && actor.id === bot && ('text' in change || seen.get(bot) === before)
+
+    const edit = (change: PlanChange, actor: Actor | undefined) => {
+      const id = botOf(change.bot, actor)
+      return oneAtATime(id, async () => {
+        const before = await read(id)
+        const next = nextPlan(before, change)
+        await write(id, next)
+        if (knowsResult(id, before, change, actor)) seen.set(id, next)
+        return { id, next }
+      })
+    }
+
     ctx.on(promptSections, async (sections, conversation) =>
       conversation.owner === 'bot' && ctx.bots.get(conversation.id) ? [...sections, await brief(conversation.id)] : sections,
     )
@@ -60,11 +82,9 @@ export default definePlugin({
       if (!found) return
       return joinDisposers(
         found.handle(planRead, ({ bot }, { actor }) => read(botOf(bot, actor))),
-        found.handle(planWrite, async ({ bot, text }, { actor }) => {
-          const id = botOf(bot, actor)
-          await write(id, text)
-          if (actor?.owner === 'bot' && actor.id === id) seen.set(id, text)
-          found.broadcast(planChangeWire, [id, text])
+        found.handle(planEdit, async (change, { actor }) => {
+          const { id, next } = await edit(change, actor)
+          found.broadcast(planChangeWire, [id, next])
         }),
       )
     })
