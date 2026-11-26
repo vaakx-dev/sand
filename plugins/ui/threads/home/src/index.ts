@@ -12,13 +12,13 @@ import { projects, projectsChange, threadSelect, threads, threadsChange, type Th
 import { clock, derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { changesModel } from './changes'
-import { threadRows, type RowPart } from './contract'
+import { newThreads, threadRows, type RowPart } from './contract'
 import { listGroups, pageSize } from './groups'
 import { settleDays, settleItem, settleRow } from './settle'
 import { settings } from '@sand/settings/contract'
 import { threadEntries, threadRow } from './items/items'
 import { RowLooks } from './items/looks'
-import { chooseDraftPlace, newThread } from './launch/launch'
+import { chooseDraftPlace, lastPlace, newThread } from './launch/launch'
 import { threadLinks } from './links'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
@@ -56,6 +56,7 @@ export default definePlugin({
       settleDays: () => days.get(),
     })
     ctx.provide(draftPlaces, { choose: draft => chooseDraftPlace(parts, draft) })
+    ctx.provide(newThreads, { place: () => lastPlace(parts), open: () => newThread(parts) })
     const hour = owned(ctx, () => clock(HOUR_MS))
     const groups = owned(ctx, () =>
       derive(() =>
@@ -65,7 +66,7 @@ export default definePlugin({
           entries: entries.get(),
           settleDays: days.get(),
           now: hour.get(),
-          action: { label: 'New thread', icon: 'plus', run: () => newThread(parts) },
+          action: { label: 'New thread', icon: 'plus', run: () => void newThread(parts) },
           ...(ctx.threads.known() && { empty: 'No threads yet.' }),
           archived: { limit: limit.get(), more },
         }),

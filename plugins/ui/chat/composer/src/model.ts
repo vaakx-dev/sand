@@ -4,7 +4,7 @@ import { errorMessage } from '@sand/util'
 import { derive, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { commandChar } from './complete/detect'
 import { boundTriggers, type Triggers } from './complete/registry'
-import type { Command, ComposerContent } from './contract'
+import type { Command, ComposerContent, Destination, Message } from './contract'
 import type { Saved } from './drafts/store'
 import { contextOf, createRecords } from './records'
 import { createHolds } from './send/holds'
@@ -132,6 +132,8 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     if (to) sendPrompt({ ...send, to, at: Date.now(), failed: undefined })
   }
 
+  const sendTo = (to: Destination, message: Message) => outgoing.add({ id: crypto.randomUUID(), to, draft: message, at: Date.now() })
+
   const send = async () => {
     if (blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
@@ -164,6 +166,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     blocked,
     holds,
     send,
+    sendTo,
     resend,
     sending: outgoing.sending,
     waiting: () => outgoing.sending().some(send => send.conversation === target.conversation()),

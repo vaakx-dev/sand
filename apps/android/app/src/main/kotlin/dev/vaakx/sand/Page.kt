@@ -29,4 +29,6 @@ object Page {
     fun installFailed(reason: String) = send(JSONObject().put("kind", "install-failed").put("reason", reason))
 
     fun installOpened() = send(JSONObject().put("kind", "install-opened"))
+
+    fun shareWaiting() = send(JSONObject().put("kind", "share-waiting"))
 }

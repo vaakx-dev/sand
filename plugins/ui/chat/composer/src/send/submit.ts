@@ -5,7 +5,8 @@ import type { SessionSettings } from '@sand/model/contract'
 import { models, threadsChange, type Thread } from '@sand/web-client/contract'
 import { onTimeout } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
-import type { Destination, Outbound } from '../target'
+import type { Destination } from '../contract'
+import type { Outbound } from '../target'
 
 export const modelMissing = (ctx: ComposerContext, settings: SessionSettings) => {
   if (!ctx.threads.current()) return !settings.model

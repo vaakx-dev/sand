@@ -4,10 +4,10 @@ import type { UserContent } from '@sand/chats/contract'
 import type { KeyVal } from '@sand/keyval'
 import { bytes, errorMessage } from '@sand/util'
 import { derive, effect, onTimeout, sig, untrack, type Sig } from '@vaakx-dev/vrui'
-import type { Sending } from '../contract'
+import type { Destination, Sending } from '../contract'
 import type { Saved } from '../drafts/store'
 import { contextOf } from '../records'
-import type { Destination, Target } from '../target'
+import type { Target } from '../target'
 
 export interface Send {
   id: string

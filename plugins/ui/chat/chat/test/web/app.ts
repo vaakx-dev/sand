@@ -49,11 +49,29 @@ const pipeToPc = (page: WebSocketRoute) => {
   })
 }
 
-const androidApp = async () => {
+interface SharedFromApp {
+  kind: 'share'
+  text: string
+  files: { url: string; name: string; type: string }[]
+}
+
+const androidApp = async (shared?: SharedFromApp): Promise<BrowserContext> => {
   const context = await browser.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
-  await context.addInitScript(routes => {
-    Object.assign(window, { sandApp: Object.assign(new EventTarget(), { postMessage: () => {} }), sandAppStart: { routes, push: false, versionCode: 1 } })
-  }, [LAN_ORIGIN])
+  await context.addInitScript(
+    ({ routes, shared }) => {
+      let waiting = shared
+      const app: EventTarget & { postMessage(message: string): void } = Object.assign(new EventTarget(), {
+        postMessage(message: string) {
+          if (!waiting || JSON.parse(message).kind !== 'take-share') return
+          const reply = new MessageEvent('message', { data: JSON.stringify(waiting) })
+          waiting = undefined
+          app.dispatchEvent(reply)
+        },
+      })
+      Object.assign(window, { sandApp: app, sandAppStart: { routes, push: false, versionCode: 1 } })
+    },
+    { routes: [LAN_ORIGIN], shared },
+  )
   await context.route(`${APP_ORIGIN}/**`, proxyToPc)
   await context.route(`${LAN_ORIGIN}/**`, refuseImages)
   await context.routeWebSocket(`${LAN_ORIGIN.replace(/^https/, 'wss')}/**`, pipeToPc)
@@ -112,4 +130,24 @@ test('in the Android app, a chat picture loads through the page the app serves, 
   await page.reload()
   expect(await pictureOutcome(page, 'tide.png')).toBe('shown')
   await page.close()
+}, 60_000)
+
+test('in the Android app, a picture shared from another app goes to a new thread with a note in one tap', async () => {
+  const picture = { url: '/~app/shared/first', name: 'reef.png', type: 'image/png' }
+  const context = await androidApp({ kind: 'share', text: '', files: [picture] })
+  const blank = await context.newPage()
+  const shot = await blank.screenshot()
+  await blank.close()
+  await context.route(`${APP_ORIGIN}${picture.url}`, route => route.fulfill({ contentType: picture.type, body: shot }))
+  const page = await context.newPage()
+  await page.goto(`${APP_ORIGIN}/${new URL(await sand.pairedUrl()).hash}`)
+  const sheet = page.getByLabel('Send to sand', { exact: true })
+  await sheet.getByText('reef.png').waitFor()
+  await sheet.getByLabel('Add a message').fill('what lives here?')
+  await sheet.getByRole('button', { name: /New thread/ }).click()
+  await page.waitForURL(/view=thread/)
+  await page.reload()
+  expect(await pictureOutcome(page, 'reef.png')).toBe('shown')
+  await page.getByText('what lives here?').first().waitFor()
+  await context.close()
 }, 60_000)

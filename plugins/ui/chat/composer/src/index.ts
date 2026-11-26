@@ -29,7 +29,6 @@ import { sendsIn, type Send } from './send/outgoing'
 import { createSuggesters } from './suggest/sources'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
 import { takeReply } from './reply'
-import { takeShared } from './share'
 import { createTyping } from './typing'
 
 export default definePlugin({
@@ -130,9 +129,10 @@ export default definePlugin({
       settings,
       choose,
       sending: model.sending,
+      send: model.sendTo,
     }
 
-    void session.start().then(takeShared).then(shared => shared && model.merge({ text: shared.text, items: shared.files }))
+    void session.start()
     void model.resume()
     ctx.watch(draftStore, found => {
       store.set(found)

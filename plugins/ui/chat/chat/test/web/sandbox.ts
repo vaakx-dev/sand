@@ -40,6 +40,7 @@ export const startSandbox = async (replies: Reply[]) => {
   const box = printed(out, /throwaway sand \(pid \d+\) in (.+)$/m)
   return {
     url: printed(out, /open it paired: (\S+)/),
+    pairedUrl: async () => printed(await sand(box, 'serve'), /open it paired: (\S+)/),
     async stop() {
       await sand(box, 'stop')
       rmSync(box, { recursive: true, force: true })
