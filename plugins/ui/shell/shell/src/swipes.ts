@@ -1,6 +1,7 @@
 import type { Slide } from '@sand/ui-kit/contract'
 import type { Aside, Swipe, Way } from './contract'
-import type { Axis, Model } from './model'
+import type { Model } from './model'
+import type { Axis } from './slides'
 
 interface Track {
   slide: Slide
