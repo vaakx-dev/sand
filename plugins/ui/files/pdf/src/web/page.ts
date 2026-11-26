@@ -21,7 +21,7 @@ const MAX_CANVAS_PIXELS = 8 * 1024 * 1024
 const pixelRatio = ({ width, height }: PageViewport) => Math.min(window.devicePixelRatio || 1, Math.sqrt(MAX_CANVAS_PIXELS / (width * height)))
 
 const sheet = (viewport: PageViewport, ratio: number) =>
-  canvas({ width: Math.floor(viewport.width * ratio), height: Math.floor(viewport.height * ratio), class: 'absolute inset-0 h-full w-full' }) as HTMLCanvasElement
+  canvas({ width: Math.floor(viewport.width * ratio), height: Math.floor(viewport.height * ratio), class: 'pointer-events-none absolute inset-0 h-full w-full' }) as HTMLCanvasElement
 
 const pageView = ({ kit, document, number, width, shape: firstShape }: PageParts) => {
   const near = sig(false)
