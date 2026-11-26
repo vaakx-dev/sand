@@ -7,6 +7,7 @@ const sourceCopy = 0x00cc0020
 const halftone = 4
 const headerSize = 40
 const colorTableSize = 4
+const frameSize = { width: 480, height: 480 }
 
 const bitmapInfo = ({ width, height }: Size) => {
   const info = new Uint8Array(headerSize + colorTableSize)
@@ -46,6 +47,8 @@ const grab = ({ user32, gdi32 }: Win32, screen: Screen, size: Size) => {
   if (rows !== size.height) throw new Error('Windows did not let sand capture the screen. It may be locked or showing a secure desktop.')
   return bgra
 }
+
+export const frameHash = (api: Win32, screen: Screen) => Bun.hash.wyhash(dpiAware(api, () => grab(api, screen, fitInside(screen, frameSize))))
 
 export const captureScreen = async (api: Win32, screen: Screen, fit: Size | undefined): Promise<Screenshot> => {
   const size = fitInside(screen, fit)
