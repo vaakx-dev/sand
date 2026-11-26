@@ -52,6 +52,10 @@ const rules = ({ silence_ms, limit_ms }: Limits) =>
 
 const SAMPLE_CHARS = 200
 
+const WAITS_ON_CI = /\bgit\s+push\b|\bgh\s+(pr|run)\s|\bsleep\s|\bstart-sleep\b/i
+
+const CI_HINT = { tools: ['pr_checks'], purpose: 'to wait on CI instead of polling' }
+
 interface Stopped {
   timeouts: Timeouts
   repeated: string | undefined
@@ -87,6 +91,7 @@ export const shellTool = (ctx: Context, { spec, shell, limits, logins, trackFor 
     needs: ['pc'],
     act: ({ command, logins: wanted }) => (logins && wanted ? loginsAct(wanted, command) : { effect: 'run', summary: command }),
     timeoutMs: limits.limit_ms + stopGrace,
+    hint: ({ command }) => (WAITS_ON_CI.test(command) ? CI_HINT : undefined),
     async run({ command, silence_ms: silence = limits.silence_ms, logins: wanted }, context) {
       await ctx.waterfall(shellReady, context.cwd, context.signal, context.progress)
       context.signal.throwIfAborted()

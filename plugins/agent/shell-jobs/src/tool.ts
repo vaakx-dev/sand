@@ -22,6 +22,7 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
   input,
   needs: ['thread', 'pc'],
   act: ({ command }) => ({ effect: 'run', summary: command }),
+  hint: () => ({ tools: ['job_wait', 'job_read', 'job_stop'], purpose: 'to wait for, read or stop it' }),
   run({ command, label }, { conversation, cwd, call }) {
     const output = outputTail()
     const job = jobs.start({

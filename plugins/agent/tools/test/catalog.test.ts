@@ -156,6 +156,24 @@ test('the tool search reports matching tools that are always loaded as already l
   ])
 })
 
+test('a result hints once per chat how to load the on-demand tools it points to, unless they are loaded, and the tool list stays the same', async () => {
+  const catalog = createCatalog(memoryChoices(), () => {})
+  catalog.group({ name: 'notes', label: 'Notes', summary: 'note tools', load: 'on-demand' })
+  for (const name of ['note_read', 'note_write']) catalog.register({ ...named(name), group: 'notes' })
+  catalog.register({ ...named('jot'), hint: () => ({ tools: ['note_read', 'note_write'], purpose: 'to read it back' }) })
+  const texts = async (chat: Conversation) => (await catalog.run(call('jot'), { ...context, conversation: chat })).content.flatMap(item => (item.type === 'text' ? [item.text] : []))
+  const references = ['note_read', 'note_write'].map(name => ({ type: 'tool_reference' as const, name }))
+  const loaded = { role: 'user' as const, content: [{ type: 'tool_result' as const, callId: 'x', content: references }] }
+  const other = { ...conversation, id: 'other' }
+  const listed = catalog.specs([], conversation)
+
+  expect(await texts(conversation)).toEqual(['jot', 'Load note_read and note_write with find_tools("notes") to read it back.'])
+  expect(await texts(conversation)).toEqual(['jot'])
+  expect(catalog.specs([], conversation)).toEqual(listed)
+  catalog.specs([loaded], other)
+  expect(await texts(other)).toEqual(['jot'])
+})
+
 test('a relay skips the gate, since each call it makes is checked on its own', async () => {
   const catalog = createCatalog(memoryChoices(), () => {})
   catalog.register({ ...named('relay'), relay: true })
