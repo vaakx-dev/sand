@@ -21,7 +21,17 @@ const noBrowser = 'No Chrome, Edge or Chromium was found on this machine. Instal
 
 type Start = Omit<Launch, 'args'>
 
-const flags = ['--no-first-run', '--no-default-browser-check', '--disable-smooth-scrolling', '--disable-blink-features=AutomationControlled', '--test-type']
+const flags = [
+  '--no-first-run',
+  '--no-default-browser-check',
+  '--disable-smooth-scrolling',
+  '--disable-blink-features=AutomationControlled',
+  '--test-type',
+  '--disable-backgrounding-occluded-windows',
+  '--disable-renderer-backgrounding',
+  '--disable-background-timer-throttling',
+  '--disable-features=CalculateNativeWinOcclusion,IntensiveWakeUpThrottling',
+]
 
 const headlessFlags = [...flags, '--headless=new', '--window-size=1280,800', '--screen-info={0,0 1920x1080 workAreaBottom=48}']
 
@@ -50,26 +60,21 @@ export const pngSize = (png: Uint8Array) => {
   return { width: view.getUint32(16), height: view.getUint32(20) }
 }
 
-interface ViewportMetrics {
-  clientWidth: number
-  clientHeight: number
-  pageX: number
-  pageY: number
-}
-
-const metricsOf = (call: Call) => call<{ cssVisualViewport: ViewportMetrics; visualViewport: ViewportMetrics }>('Page.getLayoutMetrics')
-
 const viewportOf = async (call: Call): Promise<Viewport> => {
-  const { cssVisualViewport } = await metricsOf(call)
+  const { cssVisualViewport } = await call<{ cssVisualViewport: { clientWidth: number; clientHeight: number } }>('Page.getLayoutMetrics')
   return { width: cssVisualViewport.clientWidth, height: cssVisualViewport.clientHeight }
 }
 
+const shrink = async (png: Uint8Array, fit: Size | undefined) => {
+  const size = pngSize(png)
+  const fitted = fitInside(size, fit)
+  if (fitted.width === size.width) return png
+  return new Bun.Image(png).resize(fitted.width, fitted.height).png().bytes()
+}
+
 const capture = async (call: Call, fit: Size | undefined) => {
-  const { cssVisualViewport: css, visualViewport: device } = await metricsOf(call)
-  const scale = fitInside({ width: device.clientWidth, height: device.clientHeight }, fit).width / device.clientWidth
-  const clip = { x: css.pageX, y: css.pageY, width: css.clientWidth, height: css.clientHeight, scale }
-  const { data } = await call<{ data: string }>('Page.captureScreenshot', { format: 'png', ...(scale < 1 && { clip }) })
-  return Buffer.from(data, 'base64')
+  const { data } = await call<{ data: string }>('Page.captureScreenshot', { format: 'png' })
+  return shrink(Buffer.from(data, 'base64'), fit)
 }
 
 export const browserComputer = ({ id, label, profile, headless }: BrowserOptions) => {

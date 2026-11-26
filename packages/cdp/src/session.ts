@@ -17,6 +17,7 @@ interface Waiting {
   method: string
   resolve(result: unknown): void
   reject(error: Error): void
+  timer: Timer
 }
 
 export interface Launch {
@@ -44,6 +45,9 @@ const connect = (endpoint: string) =>
   })
 
 const graceMs = 5_000
+const callTimeoutMs = 30_000
+
+class Unanswered extends Error {}
 
 const session = (socket: WebSocket, process?: Bun.Subprocess) => {
   let last = 0
@@ -51,22 +55,33 @@ const session = (socket: WebSocket, process?: Bun.Subprocess) => {
   const listeners = new Set<(event: CdpEvent) => void>()
   const closed = Promise.withResolvers<void>()
 
+  const take = (id: number) => {
+    const call = waiting.get(id)
+    waiting.delete(id)
+    clearTimeout(call?.timer)
+    return call
+  }
+
+  const unanswered = (id: number, method: string) => () =>
+    take(id)?.reject(new Unanswered(`The browser did not answer ${method} within ${callTimeoutMs / 1000} seconds. The page may be stuck or throttled.`))
+
   socket.onmessage = ({ data }) => {
     const message: Incoming = JSON.parse(String(data))
     if (message.id === undefined) {
       for (const listener of listeners) listener(message)
       return
     }
-    const call = waiting.get(message.id)
-    waiting.delete(message.id)
+    const call = take(message.id)
     if (!call) return
     if (message.error) call.reject(new Error(`The browser could not run ${call.method}: ${message.error.message}`))
     else call.resolve(message.result)
   }
 
   socket.onclose = () => {
-    for (const call of waiting.values()) call.reject(new Error(`The browser closed during ${call.method}.`))
-    waiting.clear()
+    for (const id of waiting.keys()) {
+      const call = take(id)
+      call?.reject(new Error(`The browser closed during ${call.method}.`))
+    }
     closed.resolve()
   }
 
@@ -76,7 +91,7 @@ const session = (socket: WebSocket, process?: Bun.Subprocess) => {
       if (socket.readyState !== WebSocket.OPEN) return Promise.reject(new Error(`The browser closed before ${method}.`))
       return new Promise<T>((resolve, reject) => {
         const id = ++last
-        waiting.set(id, { method, resolve: result => resolve(result as T), reject })
+        waiting.set(id, { method, resolve: result => resolve(result as T), reject, timer: setTimeout(unanswered(id, method), callTimeoutMs) })
         socket.send(JSON.stringify({ id, method, params, sessionId }))
       })
     },
@@ -112,3 +127,5 @@ export const launch = async ({ executable, profile, args, deadline }: Launch): P
 }
 
 export const attach = async (profile: string, deadline: number): Promise<Browser> => session(await connect(await endpointOf(profile, deadline)))
+
+export { Unanswered }

@@ -189,6 +189,12 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     expect(shot.height).toBeGreaterThan(600)
   })
 
+  test('shrinks a screenshot to fit inside the asked size', async () => {
+    const shot = await computer.screenshot({ width: 640, height: 640 })
+    expect(shot.width).toBe(640)
+    expect(shot.height).toBeLessThan(640)
+  })
+
   test('lists elements with fractional boxes inside the screenshot', async () => {
     const button = await find('button', 'Add one')
     expect(button.box.left).toBeGreaterThanOrEqual(0)

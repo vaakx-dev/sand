@@ -1,3 +1,4 @@
+import { Unanswered } from '@sand/cdp'
 import type { Call } from './tabs'
 
 interface Evaluated<T> {
@@ -28,5 +29,9 @@ const worldOf = (call: Call, fresh: boolean) => {
 
 export const evaluate = <T>(call: Call, script: Script) => {
   const run = async (fresh: boolean) => call<Evaluated<T>>('Runtime.evaluate', { ...script, contextId: await worldOf(call, fresh), returnByValue: true })
-  return run(false).catch(() => run(true))
+  const retryUnlessStuck = (error: unknown) => {
+    if (error instanceof Unanswered) throw error
+    return run(true)
+  }
+  return run(false).catch(retryUnlessStuck)
 }

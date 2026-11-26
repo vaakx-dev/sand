@@ -17,8 +17,10 @@ const isPainted = (call: Call) =>
     () => false,
   )
 
+const paintedBefore = (call: Call, deadline: number) => Promise.race([isPainted(call), Bun.sleep(deadline - Date.now()).then(() => false)])
+
 export const settle = async (call: Call) => {
   await Bun.sleep(quiet)
   const deadline = Date.now() + longest
-  while (Date.now() < deadline && !(await isPainted(call))) await Bun.sleep(retry)
+  while (Date.now() < deadline && !(await paintedBefore(call, deadline))) await Bun.sleep(retry)
 }
