@@ -1,4 +1,4 @@
-import { div, dynamicChild, list, listen, type Derive } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, listen, type Derive } from '@vaakx-dev/vrui'
 import { bar } from './bar'
 import type { Aside } from './contract'
 import { PANEL_WIDTH } from './layout'
@@ -31,11 +31,38 @@ export const asideToggles = (model: Model, asides: Derive<Aside[]>) => {
 
 const beside = (model: Model) => () => model.current.get()
 
-const asideHead = (model: Model, spec: Aside) =>
+const projectsOf = (model: Model) => model.subjectOf(model.current.get())?.projects
+
+const projectsKey = (model: Model) => {
+  const list = projectsOf(model)?.list
+  return list ? JSON.stringify(list) : ''
+}
+
+const projectStrip = (model: Model) =>
+  dynamicChild(
+    derive(() => projectsKey(model)),
+    key => {
+      const list = key ? projectsOf(model)?.list : undefined
+      if (!list) return null
+      return div(
+        { class: 'shrink-0 px-2 pb-2' },
+        model.kit.segmented(
+          list.map(project => ({ value: project.id, label: project.name })),
+          () => projectsOf(model)?.picked,
+          project => projectsOf(model)?.pick(project),
+          { label: 'Project', fill: true },
+        ),
+      )
+    },
+  )
+
+const asideHead = (model: Model, spec: Aside) => [
   bar(
     div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, spec.head ? spec.head(beside(model)) : model.kit.sheetTitle(spec.label)),
     model.kit.closeButton({ title: `Close ${spec.label}`, onClick: () => model.showAside(spec.id, false) }),
-  )
+  ),
+  projectStrip(model),
+]
 
 const popover = (model: Model, anchor: () => HTMLElement) =>
   dynamicChild(model.openPop, spec => {
@@ -49,6 +76,7 @@ const popover = (model: Model, anchor: () => HTMLElement) =>
         class: [model.kit.layer.sticky, 'absolute top-full right-0 mt-1 flex flex-col overflow-auto rounded-2xl bg-neutral-800 p-1.5 shadow-xl'],
         style: () => ({ width: '18rem', maxHeight: `${Math.max(model.height.get() - 64, 160)}px` }),
       },
+      projectStrip(model),
       spec.render(beside(model)),
     )
   })
