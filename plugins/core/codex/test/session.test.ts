@@ -1,4 +1,4 @@
-import { type AppOutput, ProviderTrouble, type ToolSpec, type Usage, UsageLimited } from '@sand/accounts/contract'
+import { type AppOutput, type ContextReport, ProviderTrouble, type ToolSpec, type Usage, UsageLimited } from '@sand/accounts/contract'
 import type { Media } from '@sand/media/contract'
 import { expect, test } from 'bun:test'
 import type { Json } from '@sand/app-plan'
@@ -39,13 +39,13 @@ const fakePool = () => {
 }
 
 const recorder = () => {
-  const seen = { windows: [] as number[], usage: [] as Partial<Usage>[], failed: [] as unknown[] }
+  const seen = { contexts: [] as ContextReport[], usage: [] as Partial<Usage>[], failed: [] as unknown[] }
   const output: AppOutput = {
     text() {},
     thinking() {},
     call() {},
     usage: usage => void seen.usage.push(usage),
-    context: ({ window }) => void seen.windows.push(window ?? 0),
+    context: report => void seen.contexts.push(report),
     pause() {},
     finish() {},
     fail: error => void seen.failed.push(error),
@@ -68,10 +68,25 @@ test('a Codex turn reports the context window and the tokens Codex counted for i
 
   session.send([{ type: 'text', text: 'Hi' }])
   notify('turn/started', { turn: { id: 'turn-1' } })
-  notify('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 1_200, cachedInputTokens: 200, outputTokens: 30 }, modelContextWindow: 258_400 } })
+  const tokens = { inputTokens: 1_200, cachedInputTokens: 200, outputTokens: 30 }
+  notify('thread/tokenUsage/updated', { tokenUsage: { total: tokens, last: tokens, modelContextWindow: 258_400 } })
 
-  expect(seen.windows).toEqual([258_400])
+  expect(seen.contexts).toEqual([{ window: 258_400, used: 1_230 }])
   expect(seen.usage).toEqual([{ input: 1_000, cacheRead: 200, cacheWrite: 0, output: 30 }])
+})
+
+test('a Codex turn that makes several model requests bills them all, while its context is the last request’s', async () => {
+  const { session, notify, seen } = await opened()
+  const request = (inputTokens: number) => ({ inputTokens, cachedInputTokens: inputTokens - 2_000, outputTokens: 1_000 })
+
+  session.send([{ type: 'text', text: 'Hi' }])
+  notify('turn/started', { turn: { id: 'turn-1' } })
+  notify('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 133_000, cachedInputTokens: 131_000, outputTokens: 1_000 }, last: request(133_000), modelContextWindow: 258_400 } })
+  notify('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 267_000, cachedInputTokens: 263_000, outputTokens: 2_000 }, last: request(134_000), modelContextWindow: 258_400 } })
+  notify('thread/tokenUsage/updated', { tokenUsage: { total: { inputTokens: 402_000, cachedInputTokens: 396_000, outputTokens: 3_000 }, last: request(135_000), modelContextWindow: 258_400 } })
+
+  expect(seen.contexts.at(-1)?.used).toBe(136_000)
+  expect(seen.usage.reduce((total, spent) => total + (spent.input ?? 0) + (spent.cacheRead ?? 0) + (spent.output ?? 0), 0)).toBe(405_000)
 })
 
 test('a steer that comes before Codex has started the turn reaches the turn once it starts', async () => {

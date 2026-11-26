@@ -1,7 +1,8 @@
-import { type AppAside, type AppAsk, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, type PlanLimits, RATE_LIMITED, type ToolSpec } from '@sand/accounts/contract'
+import { type AppAside, type AppAsk, type AppOutput, type AppSession, type AppSetup, type HandoffBlock, type PlanLimits, RATE_LIMITED, type ToolSpec, type Usage } from '@sand/accounts/contract'
 import { appFailure, type Failure, fieldsOf, type Json, missing, Turns, withoutFindTools } from '@sand/app-plan'
 import type { ModelContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
+import { tokensOf } from '@sand/usage/contract'
 import { untilAborted } from '@sand/util'
 import { limitsOf } from '../account/limits'
 import { threadConfig } from '../server/args'
@@ -40,17 +41,23 @@ const historyItems = ({ context, items }: HandoffBlock) => [
   ...items.map(({ role, text }) => ({ type: 'message', role, content: [{ type: role === 'user' ? 'input_text' : 'output_text', text }] })),
 ]
 
+const usageOf = (tokens: Json): Usage => {
+  const cached = Number(tokens.cachedInputTokens ?? 0)
+  return { input: Number(tokens.inputTokens ?? 0) - cached, cacheRead: cached, cacheWrite: Number(tokens.cacheWriteInputTokens ?? 0), output: Number(tokens.outputTokens ?? 0) }
+}
+
+const spentSince = (now: Usage, before: Usage): Usage => ({
+  input: now.input - before.input,
+  cacheRead: now.cacheRead - before.cacheRead,
+  cacheWrite: now.cacheWrite - before.cacheWrite,
+  output: now.output - before.output,
+})
+
 const usageMeter = (output: AppOutput) => {
-  let before = { input: 0, cached: 0, written: 0, output: 0 }
+  let before = usageOf({})
   return (total: Json, counted: boolean) => {
-    const now = { input: Number(total.inputTokens ?? 0), cached: Number(total.cachedInputTokens ?? 0), written: Number(total.cacheWriteInputTokens ?? 0), output: Number(total.outputTokens ?? 0) }
-    if (counted)
-      output.usage({
-        input: now.input - now.cached - (before.input - before.cached),
-        cacheRead: now.cached - before.cached,
-        cacheWrite: now.written - before.written,
-        output: now.output - before.output,
-      })
+    const now = usageOf(total)
+    if (counted) output.usage(spentSince(now, before))
     before = now
   }
 }
@@ -130,7 +137,8 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
 
   const measure = (tokenUsage: Json) => {
     const window = Number(tokenUsage.modelContextWindow ?? 0)
-    if (window) output.context({ window })
+    const used = tokensOf(usageOf(fieldsOf(tokenUsage.last)))
+    if (window || used) output.context({ ...(window && { window }), ...(used && { used }) })
     meter(fieldsOf(tokenUsage.total), turnId !== undefined)
   }
 

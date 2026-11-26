@@ -1,6 +1,7 @@
 import { type AppOutput, cacheLifetimes, type PlanLimits, type Usage, writtenTtl } from '@sand/accounts/contract'
 import { appFailure, fieldsOf, type Json } from '@sand/app-plan'
 import type { StopReason } from '@sand/chats/contract'
+import { tokensOf } from '@sand/usage/contract'
 import { type Resets, resetsOf } from '../account/usage'
 import { OWN_TOOLS } from '../cli/args'
 
@@ -83,6 +84,7 @@ export const createReader = (output: AppOutput, ending: Ending = output) => {
       const raw = fieldsOf(event.usage)
       const usage = usageOf(raw, longWrites(raw) || long)
       output.usage(usage, writtenTtl(usage, cacheLifetimes.anthropic))
+      output.context({ used: tokensOf(usage) })
     }
     if (event.type === 'message_stop' && calls) output.pause()
   }
