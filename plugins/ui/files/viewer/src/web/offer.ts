@@ -1,8 +1,8 @@
-import type { wire } from '@sand/devices-contract'
+import { androidApp, saveFile, type wire } from '@sand/devices-contract'
 import { type Addon, addonsInstall, featuresList, featuresSet } from '@sand/features/contract'
 import type { Kit, kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
-import { a, div, dynamicChild, sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { extensionOf, type FormatAddon, formatAddons, type OpenFile } from '../contract'
 
@@ -16,13 +16,9 @@ const addonFor = (file: OpenFile) => Object.entries(formatAddons).find(([, addon
 
 const verb = (addon: Addon | undefined) => (addon?.status === 'available' ? 'Get' : 'Turn on')
 
-const download = (kit: Kit, file: OpenFile) => kit.secondaryAction({ size: 'sm', onClick: () => void saveAs(file) }, 'Download')
+const saveAs = async (ctx: Ctx, file: OpenFile) => saveFile(ctx.get(androidApp), file.name, await file.blob())
 
-const saveAs = async (file: OpenFile) => {
-  const href = URL.createObjectURL(await file.blob())
-  a({ href, download: file.name }).click()
-  URL.revokeObjectURL(href)
-}
+const download = (ctx: Ctx, file: OpenFile) => ctx.kit.secondaryAction({ size: 'sm', onClick: () => void saveAs(ctx, file) }, 'Download')
 
 const frame = (kit: Kit, title: string, text: string, ...actions: (Node | null)[]) =>
   kit.emptyPage({ title, text: [text, div({ class: 'mt-4 flex flex-col items-center gap-3' }, ...actions)] })
@@ -53,7 +49,7 @@ const offerCard = (ctx: Ctx, file: OpenFile, [id, format]: [string, FormatAddon]
     div(
       { class: 'flex flex-wrap justify-center gap-2' },
       kit.primaryAction({ size: 'sm', disabled: () => step.get().kind === 'working', onClick: () => void get() }, () => `${verb(addon.get())} ${format.label}`),
-      download(kit, file),
+      download(ctx, file),
     ),
     dynamicChild(step, value => stepNote(kit, value)),
   )
@@ -62,7 +58,7 @@ const offerCard = (ctx: Ctx, file: OpenFile, [id, format]: [string, FormatAddon]
 const unshown = (ctx: Ctx, file: OpenFile) => {
   const addon = addonFor(file)
   if (addon) return offerCard(ctx, file, addon)
-  return frame(ctx.kit, "sand can't show this file", `${file.name} isn't a kind of file the viewer reads.`, download(ctx.kit, file))
+  return frame(ctx.kit, "sand can't show this file", `${file.name} isn't a kind of file the viewer reads.`, download(ctx, file))
 }
 
-export { saveAs, unshown, type Ctx }
+export { unshown, type Ctx }

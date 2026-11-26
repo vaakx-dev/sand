@@ -16,10 +16,10 @@ import {
   type Target,
 } from '@sand/calendar/contract'
 import { calendarExport, calendarFeed, calendarImport } from '@sand/calendar-local/contract'
-import { wireHello } from '@sand/devices-contract'
+import { androidApp, saveFile, wireHello } from '@sand/devices-contract'
 import { owned } from '@sand/reactive'
 import { errorMessage, joinDisposers } from '@sand/util'
-import { a, derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
+import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import type { CalendarContext } from './context'
 import { addDays, browserZone, startOfDay, startOfWeek } from './days'
 
@@ -45,12 +45,6 @@ interface Span {
 const spanOf = (mode: Mode, narrow: boolean): Span => {
   if (mode === 'agenda') return { first: startOfDay, days: 28, step: 7 }
   return narrow ? { first: startOfDay, days: 3, step: 3 } : { first: startOfWeek, days: 7, step: 7 }
-}
-
-const download = (name: string, text: string) => {
-  const href = URL.createObjectURL(new Blob([text], { type: 'text/calendar' }))
-  a({ href, download: name }).click()
-  URL.revokeObjectURL(href)
 }
 
 export const calendarModel = (ctx: CalendarContext) => {
@@ -128,7 +122,10 @@ export const calendarModel = (ctx: CalendarContext) => {
     remove: (target: Target, scope: Scope) => ctx.wire.call(calendarRemove, { target, scope }),
     respond: (target: Target, response: Answer) => ctx.wire.call(calendarRespond, { target, response }),
     importFile: async (file: File) => ctx.wire.call(calendarImport, { ics: await file.text() }),
-    exportFile: async (calendar: Calendar) => download(`${calendar.name}.ics`, await ctx.wire.call(calendarExport, { calendar: calendar.id })),
+    exportFile: async (calendar: Calendar) => {
+      const ics = await ctx.wire.call(calendarExport, { calendar: calendar.id })
+      await saveFile(ctx.get(androidApp), `${calendar.name}.ics`, new Blob([ics], { type: 'text/calendar' }))
+    },
     feed: async (calendar: Calendar) => new URL(await ctx.wire.call(calendarFeed, { calendar: calendar.id }), location.origin).href,
   }
 }

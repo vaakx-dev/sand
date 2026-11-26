@@ -12,6 +12,7 @@
     "summary": "The sidebar, the screens features open in it, and on phones the sidebar and side views as covers you swipe over the chat"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",

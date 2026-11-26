@@ -27,7 +27,7 @@
     },
     "apps/sand": {
       "name": "sand",
-      "version": "0.1.0-beta.7",
+      "version": "0.1.0-beta.8",
       "bin": {
         "sand": "./src/main.ts",
       },
@@ -3413,6 +3413,7 @@
       "name": "@sand/ui-shell",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/devices-contract": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",

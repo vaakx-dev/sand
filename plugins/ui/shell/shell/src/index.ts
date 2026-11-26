@@ -1,3 +1,4 @@
+import { androidApp } from '@sand/devices-contract'
 import { owned } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
 import { onAddressChange } from '@sand/web-client/contract'
@@ -66,6 +67,7 @@ export default definePlugin({
       swipeGesture(ctx.kit, way => edgeSwipe(model, way))
     })
     ctx.effect(() => onAddressChange(() => model.follow()))
+    ctx.watch(androidApp, app => app?.onBack(ctx.kit.closeTopLayer))
     ctx.effect(() => mount(byId('stage'), owned(ctx, () => shellView(model))))
     ctx.effect(() => () => model.screens.clear())
 
