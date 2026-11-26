@@ -13,6 +13,7 @@ import {
   terminalInput,
   terminalOpen,
   terminalResize,
+  type TerminalInfo,
 } from '@sand/devices-terminal/contract'
 import type { Request } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
@@ -35,7 +36,7 @@ export interface TabOptions {
   createScreen: CreateScreen
   colors: ITheme
   closed(): void
-  known?: { id: string; exit?: Exit }
+  known?: TerminalInfo
 }
 
 type Link = 'idle' | 'joining' | 'joined'
@@ -47,6 +48,7 @@ const sameSize = (a: Size, b: Size) => a.cols === b.cols && a.rows === b.rows
 const focusReport = /^\x1b\[[IO]$/
 
 export const createTab = ({ place, wire, createScreen, colors, closed, known }: TabOptions) => {
+  const folder = known?.cwd ?? place.cwd()
   let id = known?.id
   let exit = known?.exit
   let viewer = crypto.randomUUID()
@@ -108,7 +110,7 @@ export const createTab = ({ place, wire, createScreen, colors, closed, known }: 
 
   const connect = async () => {
     if (!id) {
-      const opened = await call(terminalOpen, { session: place.session, cwd: place.cwd(), viewer, ...proposal })
+      const opened = await call(terminalOpen, { session: place.session, cwd: folder, viewer, ...proposal })
       id = opened.id
       return joined(proposal, undefined)
     }
@@ -166,6 +168,7 @@ export const createTab = ({ place, wire, createScreen, colors, closed, known }: 
   return {
     id: () => id,
     device: place.device,
+    folder,
     modifier,
     mount(node: HTMLElement) {
       const detach = screen.attach(node)

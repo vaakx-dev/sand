@@ -39,11 +39,16 @@ export const createShelf = (place: Place, wire: Wire, colors: () => ITheme) => {
     return tab
   }
 
-  const add = () =>
-    void screens().then(
-      createScreen => pick(make(createScreen)),
-      error => failure.set(errorMessage(error)),
-    )
+  const withScreens = (use: (createScreen: CreateScreen) => void) => void screens().then(use, error => failure.set(errorMessage(error)))
+
+  const add = () => withScreens(createScreen => pick(make(createScreen)))
+
+  const pickHere = (createScreen: CreateScreen) => pick(tabs().find(tab => tab.folder === place.cwd()) ?? make(createScreen))
+
+  const settle = () =>
+    withScreens(createScreen => {
+      if (selected.get()?.folder !== place.cwd()) pickHere(createScreen)
+    })
 
   const reconcile = (listed: TerminalInfo[], asked: number, createScreen: CreateScreen) => {
     const ids = new Set(listed.map(info => info.id))
@@ -54,8 +59,7 @@ export const createShelf = (place: Place, wire: Wire, colors: () => ITheme) => {
     const kept = new Set(tabs().map(tab => tab.id()))
     for (const info of listed) if (!kept.has(info.id)) make(createScreen, info)
     const current = selected.get()
-    if (!current || !tabs().includes(current)) pick(tabs()[0])
-    if (!tabs().length) pick(make(createScreen))
+    if (!current || !tabs().includes(current)) pickHere(createScreen)
   }
 
   const load = async () => {
@@ -78,7 +82,8 @@ export const createShelf = (place: Place, wire: Wire, colors: () => ITheme) => {
     pick,
     add,
     show() {
-      if (!loaded) void load()
+      if (loaded) settle()
+      else void load()
     },
     refresh() {
       if (loaded) void load()

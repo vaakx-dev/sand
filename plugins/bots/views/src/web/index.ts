@@ -36,6 +36,7 @@ import { registry } from './registry'
 import { botScreen } from './screen/bot'
 import { botsGroups } from './sidebar'
 import { botStore } from './store'
+import { botSubject } from './subject'
 import { shownView, viewOf } from './view'
 
 const HOUR_MS = 3_600_000
@@ -94,13 +95,13 @@ export default definePlugin({
       }),
     )
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
+    const subjectOf = botSubject(parts)
     ctx.effect(() =>
       ctx.shell.subject(({ kind, id, tab }) => {
         const bot = kind === botRoute && id ? parts.store.find(id) : undefined
         if (!bot) return undefined
         if (shownView(parts, bot.id, tab) === 'jobs') return undefined
-        const chat = chats.thread(bot.id)
-        return { session: bot.id, owner: 'bot', device: chat?.device ?? ctx.threads.device(), cwd: chat?.info.cwd ?? bot.folder }
+        return subjectOf(bot)
       }),
     )
     ctx.watch(threadView, found =>

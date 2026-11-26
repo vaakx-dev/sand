@@ -123,12 +123,24 @@ export interface Aside {
   render(route: () => Route): HTMLElement
 }
 
+export interface SubjectProject {
+  id: string
+  name: string
+}
+
+export interface SubjectProjects {
+  list: SubjectProject[]
+  picked: string
+  pick(project: string): void
+}
+
 export interface Subject {
   session: string
   owner: Owner
   device: string
   cwd?: string
   draft?: boolean
+  projects?: SubjectProjects
 }
 
 export type SubjectSource = (route: Route) => Subject | undefined

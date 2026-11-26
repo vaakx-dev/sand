@@ -30,16 +30,16 @@ const printed = (out: string, pattern: RegExp) => {
 const seedPlugin = ({ imports, inject, body }: Seed) => `${imports}
 import { paths } from '@sand/paths/contract'
 import { definePlugin } from 'drydock'
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 export default definePlugin({
   name: 'seed',
   inject: { paths, ${inject} },
-  apply(ctx) {
+  async apply(ctx) {
     const marker = join(ctx.paths.home, '${SEED_MARKER}')
     if (existsSync(marker)) return
-    const seeded = (() => {
+    const seeded = await (async () => {
 ${body}
     })()
     writeFileSync(marker, JSON.stringify(seeded))
@@ -60,21 +60,24 @@ const seededData = async <T>(box: string): Promise<T> => {
   return marker.json()
 }
 
-export const startSandbox = async <T>(seed: Seed) => {
+const featuresOn = (features: string[]) => features.map(feature => `${feature} = true\n`).join('')
+
+export const startSandbox = async <T>(seed: Seed, features: string[] = []) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-bots-'))
   await writeSeed(home, seed)
-  await Bun.write(join(home, 'sandbox.toml'), '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n')
+  await Bun.write(join(home, 'sandbox.toml'), `[features]\n${featuresOn(features)}\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n`)
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })
   const box = printed(out, /throwaway sand \(pid \d+\) in (.+)$/m).replace(/^~(?=[\\/])/, homedir())
-  return {
-    url: printed(out, /open it paired: (\S+)/),
-    seeded: await seededData<T>(box),
-    async stop() {
-      await sand(box, 'stop')
-      rmSync(box, { recursive: true, force: true })
-    },
+  const stop = async () => {
+    await sand(box, 'stop')
+    rmSync(box, { recursive: true, force: true })
   }
+  const seeded = await seededData<T>(box).catch(async error => {
+    await stop()
+    throw error
+  })
+  return { url: printed(out, /open it paired: (\S+)/), seeded, stop }
 }
 
 export const openBot = (page: Page, id: string) =>
