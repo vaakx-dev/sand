@@ -1,4 +1,4 @@
-import { center, parseKeys, type Action, type Key, type Point, type UiElement } from '@sand/computers/contract'
+import { center, parseKeys, type Action, type Box, type Key, type Point } from '@sand/computers/contract'
 import { z } from 'zod'
 
 const fraction = z.number().min(0).max(1)
@@ -42,14 +42,9 @@ export const actionInput = z.discriminatedUnion('type', [
 type ActionInput = z.output<typeof actionInput>
 type Target = z.output<typeof target>
 
-export type FindElement = (ref: string) => UiElement | undefined
+export type Locate = (ref: string) => Promise<Box>
 
-const pointOf = (at: Target, find: FindElement): Point => {
-  if (!('ref' in at)) return at
-  const element = find(at.ref)
-  if (!element) throw new Error(`No element ${at.ref} in the last list. Call computer_elements again.`)
-  return center(element.box)
-}
+const pointOf = async (at: Target, locate: Locate): Promise<Point> => ('ref' in at ? center(await locate(at.ref)) : at)
 
 const modifiersOf = (combo: string | undefined): Key[] => {
   if (!combo) return []
@@ -59,14 +54,14 @@ const modifiersOf = (combo: string | undefined): Key[] => {
   return keys
 }
 
-export const resolveAction = (input: ActionInput, find: FindElement): Action => {
+export const resolveAction = async (input: ActionInput, locate: Locate): Promise<Action> => {
   switch (input.type) {
     case 'move':
-      return { type: 'move', at: pointOf(input.at, find) }
+      return { type: 'move', at: await pointOf(input.at, locate) }
     case 'drag':
-      return { ...input, from: pointOf(input.from, find), to: pointOf(input.to, find), keys: modifiersOf(input.keys) }
+      return { ...input, keys: modifiersOf(input.keys), from: await pointOf(input.from, locate), to: await pointOf(input.to, locate) }
     case 'scroll':
-      return { ...input, at: pointOf(input.at, find) }
+      return { ...input, at: await pointOf(input.at, locate) }
     case 'key':
       return { type: 'key', keys: parseKeys(input.keys) }
     case 'type':
@@ -74,6 +69,6 @@ export const resolveAction = (input: ActionInput, find: FindElement): Action => 
     case 'open':
       return input
     default:
-      return { ...input, at: pointOf(input.at, find), keys: modifiersOf(input.keys) }
+      return { ...input, keys: modifiersOf(input.keys), at: await pointOf(input.at, locate) }
   }
 }

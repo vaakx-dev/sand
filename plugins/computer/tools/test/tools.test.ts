@@ -1,25 +1,33 @@
 import { textOf } from '@sand/chats/contract'
-import { computers, type Computer } from '@sand/computers/contract'
+import { computers, type Action, type Box, type Computer } from '@sand/computers/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { tools, type ToolContext } from '@sand/tools/contract'
 import { afterAll, beforeAll, expect, test } from 'bun:test'
 
 let sand: Sand
 
+const acted: Action[] = []
+
+let shown: Box = { left: 0, top: 0, right: 0.5, bottom: 0.5 }
+
 const desktop = () => {
   let clicks = 0
   const computer: Computer = {
     info: { id: 'desktop', kind: 'desktop', label: 'Desktop', os: 'windows' },
     screenshot: async () => ({ width: clicks + 1, height: 1, png: new Uint8Array() }),
-    elements: async () => [{ ref: 'e1', role: 'button', name: 'Save', box: { left: 0, top: 0, right: 0.5, bottom: 0.5 } }],
-    act: async () => void clicks++,
+    elements: async () => [{ ref: 'e1', role: 'button', name: 'Save', box: shown }],
+    act: async action => {
+      acted.push(action)
+      clicks++
+      return undefined
+    },
   }
   return computer
 }
 
-const run = async (name: string, input: Record<string, unknown>) => {
+const run = async (name: string, input: Record<string, unknown>, chat = 'chat') => {
   const conversation: ToolContext['conversation'] = {
-    id: 'chat',
+    id: chat,
     owner: 'thread',
     cwd: sand.home,
     append() {
@@ -52,4 +60,19 @@ test('a computer that cannot find text says so and still lists its elements', as
   const listed = await run('computer_elements', { find: 'Total' })
   expect(listed).toContain('cannot find text')
   expect(listed).toEndWith('\ne1 button "Save" [0.000, 0.000, 0.500, 0.500]')
+})
+
+test('each chat acts on the refs from its own last list, even when another chat lists the same computer since', async () => {
+  const click = { type: 'click', at: { ref: 'e1' } }
+  shown = { left: 0, top: 0, right: 0.5, bottom: 0.5 }
+  await run('computer_elements', {}, 'first')
+  shown = { left: 0.5, top: 0.5, right: 1, bottom: 1 }
+  await run('computer_elements', {}, 'second')
+  await run('computer_act', { action: click, screenshot: false }, 'first')
+  await run('computer_act', { action: click, screenshot: false }, 'second')
+  expect(acted.slice(-2).map(action => 'at' in action && action.at)).toEqual([
+    { x: 0.25, y: 0.25 },
+    { x: 0.75, y: 0.75 },
+  ])
+  expect(await run('computer_act', { action: click }, 'third')).toContain('No element e1')
 })

@@ -109,6 +109,7 @@ export interface Computer {
   screenshot(fit?: Size): Promise<Screenshot>
   elements(): Promise<UiElement[]>
   act(action: Action): Promise<Outcome | undefined>
+  locate?(element: UiElement): Promise<Box>
   find?(text: string, match: number): Promise<Found>
   fill?(fill: Fill): Promise<Filled[]>
 }
