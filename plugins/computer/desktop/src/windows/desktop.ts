@@ -1,12 +1,13 @@
 import type { Action, Computer, Size } from '@sand/computers/contract'
 import { win32, type Win32 } from './api'
-import { captureScreen } from './capture'
+import { untilStill } from '../still'
+import { captureScreen, frameHash } from './capture'
 import { uiAutomation } from './elements'
 import { foreground, refusal, windowAt, type WindowFacts } from './guard'
 import { encode, inputSize, pack, pauseAfter, pointsOf, type Input, type InputAction } from './input'
 import { pixelOf, virtualScreen } from './screen'
 
-const settlePause = 400
+const STILLNESS = { stillMs: 300, pollMs: 50, longestMs: 4_000 }
 const vkToScanCode = 0
 
 const blocked = 'Windows blocked the input. An app running as administrator may have focus, or the screen is locked.'
@@ -70,7 +71,7 @@ export const windowsDesktop = () => {
       if (action.type === 'open') return openUrl(action.url)
       await press(action)
     },
-    settle: () => Bun.sleep(settlePause),
+    settle: () => untilStill({ frame: () => frameHash(api, virtualScreen(api)), ...STILLNESS }),
     close: uia.close,
   } satisfies Computer & { close(): void }
 }

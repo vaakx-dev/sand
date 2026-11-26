@@ -2,6 +2,7 @@ import { parseKeys } from '@sand/computers/contract'
 import { describe, expect, test } from 'bun:test'
 import { inflateSync } from 'node:zlib'
 import { encodePng } from '../src/png'
+import { untilStill } from '../src/still'
 import { bgraToRgb } from '../src/windows/capture'
 import { parseLine, toElements } from '../src/windows/elements'
 import { refusal, type WindowFacts } from '../src/windows/guard'
@@ -155,14 +156,54 @@ describe('screenshots', () => {
 })
 
 describe('UI Automation elements', () => {
+  const elementsOf = (lines: string[]) => toElements(lines.flatMap(line => parseLine(line) ?? []), screen)
+
   test('helper lines parse into elements with ARIA roles, dropping unnamed structure', () => {
-    const lines = ['Button\tSave\t-1920\t0\t-1820\t40', 'Pane\t\t0\t0\t100\t100', 'Edit\t\t0\t0\t960\t540', 'broken line']
-    const raw = lines.flatMap(line => parseLine(line) ?? [])
-    expect(raw).toHaveLength(3)
-    expect(toElements(raw, screen)).toEqual([
+    const lines = ['0\tshown\tButton\tSave\t-1920\t0\t-1820\t40', '0\tshown\tPane\t\t0\t0\t100\t100', '0\tshown\tEdit\t\t0\t0\t960\t540', 'broken line', '0\tvisible\tButton\tOk\t0\t0\t10\t10']
+    expect(elementsOf(lines)).toEqual([
       { ref: 'e0', role: 'button', name: 'Save', box: { left: 0, top: 0, right: 100 / 3840, bottom: 40 / 1080 } },
       { ref: 'e2', role: 'textbox', name: '', box: { left: 0.5, top: 0, right: 0.75, bottom: 0.5 } },
     ])
+  })
+
+  test('closed menus and hidden windows hide everything inside them, other offscreen elements only themselves', () => {
+    const lines = [
+      '0\tshown\tWindow\tPage - Browser\t0\t0\t960\t540',
+      '1\toffscreen\tMenu\t\t100\t100\t200\t160',
+      '2\tshown\tMenuItem\tReload\t100\t100\t200\t130',
+      '3\tshown\tMenu\tMore\t100\t100\t200\t130',
+      '2\tshown\tMenuItem\tInspect\t100\t130\t200\t160',
+      '1\tclosed\tPane\tPopup\t300\t300\t400\t400',
+      '2\tshown\tButton\tDismiss\t300\t300\t400\t340',
+      '1\toffscreen\tGroup\tSettings\t0\t100\t960\t600',
+      '2\tshown\tButton\tClear data\t0\t100\t100\t140',
+      '2\toffscreen\tButton\tBelow the fold\t0\t600\t100\t640',
+      '1\tshown\tButton\tHome\t40\t0\t80\t40',
+    ]
+    expect(elementsOf(lines).map(element => element.name)).toEqual(['Page - Browser', 'Clear data', 'Home'])
+  })
+})
+
+describe('settling', () => {
+  const timings = { stillMs: 60, pollMs: 10, longestMs: 2_000 }
+
+  test('waits until the screen stops changing for the still time', async () => {
+    const frames = ['blank', 'loading', 'loading', 'page']
+    const seen: number[] = []
+    const frame = () => frames[Math.min(seen.push(Date.now()) - 1, frames.length - 1)]
+    const started = Date.now()
+    await untilStill({ frame, ...timings })
+    const lastChange = seen[frames.length - 1] ?? Infinity
+    expect(Date.now() - lastChange).toBeGreaterThanOrEqual(timings.stillMs)
+    expect(Date.now() - started).toBeLessThan(timings.longestMs)
+  })
+
+  test('gives up at the longest time on a screen that never stops changing', async () => {
+    let count = 0
+    const started = Date.now()
+    await untilStill({ frame: () => count++, ...timings, longestMs: 200 })
+    expect(Date.now() - started).toBeGreaterThanOrEqual(200)
+    expect(Date.now() - started).toBeLessThan(200 + 10 * timings.pollMs)
   })
 })
 

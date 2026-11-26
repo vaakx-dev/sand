@@ -3,7 +3,11 @@ import { serial } from '@sand/util'
 import { join } from 'node:path'
 import { fractionBox, type Screen } from './screen'
 
+type Visibility = 'shown' | 'offscreen' | 'closed'
+
 export interface RawElement {
+  depth: number
+  visibility: Visibility
   type: string
   name: string
   rect: Box
@@ -23,18 +27,33 @@ const roles: Record<string, string> = {
   tabitem: 'tab',
 }
 
+const visibilities = new Set<string>(['shown', 'offscreen', 'closed'])
+
 const interactive = new Set(['button', 'checkbox', 'combobox', 'textbox', 'link', 'radio', 'slider', 'spinbutton', 'tab', 'treeitem', 'menuitem', 'listitem'])
 
+const isVisibility = (value: string | undefined): value is Visibility => visibilities.has(value ?? '')
+
 export const parseLine = (line: string): RawElement | undefined => {
-  const [type, name, ...fields] = line.split('\t')
-  const numbers = fields.map(Number)
-  if (!type || name === undefined || numbers.length !== 4 || numbers.some(Number.isNaN)) return undefined
-  const [left = 0, top = 0, right = 0, bottom = 0] = numbers
-  return { type, name, rect: { left, top, right, bottom } }
+  const [depth, visibility, type, name, ...fields] = line.split('\t')
+  const numbers = [depth, ...fields].map(Number)
+  if (!type || name === undefined || !isVisibility(visibility) || numbers.length !== 5 || numbers.some(Number.isNaN)) return undefined
+  const [level = 0, left = 0, top = 0, right = 0, bottom = 0] = numbers
+  return { depth: level, visibility, type, name, rect: { left, top, right, bottom } }
+}
+
+const hidesInside = ({ visibility, type }: RawElement) => visibility === 'closed' || (visibility === 'offscreen' && type === 'Menu')
+
+const onScreen = (raw: RawElement[]) => {
+  let hiddenBelow = Infinity
+  return raw.filter(element => {
+    if (element.depth > hiddenBelow) return false
+    hiddenBelow = hidesInside(element) ? element.depth : Infinity
+    return element.visibility === 'shown'
+  })
 }
 
 export const toElements = (raw: RawElement[], screen: Screen): UiElement[] =>
-  raw.flatMap(({ type, name, rect }, index) => {
+  onScreen(raw).flatMap(({ type, name, rect }, index) => {
     const lower = type.toLowerCase()
     const role = roles[lower] ?? lower
     const box = fractionBox(rect, screen)
