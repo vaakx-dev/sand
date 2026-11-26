@@ -51,6 +51,8 @@ const fakeAgy = () => {
 
 const recorder = () => {
   const calls: AppCall[] = []
+  const callsAtPause: number[] = []
+  const paused = Promise.withResolvers<void>()
   const usage: Partial<Usage>[] = []
   const finishes: (StopReason | undefined)[] = []
   const called = Promise.withResolvers<AppCall>()
@@ -65,7 +67,10 @@ const recorder = () => {
     },
     usage: reported => void usage.push(reported),
     context() {},
-    pause() {},
+    pause: () => {
+      callsAtPause.push(calls.length)
+      paused.resolve()
+    },
     finish: stopReason => {
       finishes.push(stopReason)
       finished.resolve()
@@ -73,7 +78,7 @@ const recorder = () => {
     fail: error => failed.resolve(error),
     exit() {},
   }
-  return { output, usage, finishes, called: called.promise, finished: finished.promise, failed: failed.promise }
+  return { output, calls, callsAtPause, usage, finishes, called: called.promise, paused: paused.promise, finished: finished.promise, failed: failed.promise }
 }
 
 test('a steer during a sand tool call goes to agy as another prompt; the tool still gets its answer and only the newest prompt’s reply ends the step', async () => {
@@ -130,4 +135,23 @@ test('agy failing a prompt on a busy server is provider trouble that sand retrie
   expect(busy).toBeInstanceOf(ProviderTrouble)
   expect(refused).toBeInstanceOf(Error)
   expect(refused).not.toBeInstanceOf(ProviderTrouble)
+})
+
+test('sand tool calls agy makes together reach sand as one batch, with one pause after the last', async () => {
+  const agy = fakeAgy()
+  const seen = recorder()
+  const tools = [{ name: 'look', description: 'Look at something', inputSchema: { type: 'object' } }]
+  const session = await openSession({ model: 'gemini-test', system: '', tools, cwd: '/work', persist: false }, seen.output, { media, asides: '/asides', report() {}, connect: agy.connect })
+
+  const opening = agy.nextPrompt()
+  session.send([{ type: 'text', text: 'Look everywhere' }])
+  await opening
+  const places = ['sky', 'sea', 'hills']
+  const replies = places.map(at => agy.callTool('mcp_sand_look', { at }))
+  await seen.paused
+
+  expect(seen.callsAtPause).toEqual([places.length])
+  seen.calls.forEach(call => session.answer(call.id, { type: 'tool_result', callId: call.id, content: [{ type: 'text', text: `Saw ${String(call.input.at)}` }] }))
+  expect((await Promise.all(replies)).map(reply => reply.result.content[0].text).sort()).toEqual(['Saw hills', 'Saw sea', 'Saw sky'])
+  await session.close()
 })

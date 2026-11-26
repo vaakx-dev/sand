@@ -1,4 +1,4 @@
-import type { AppAside, AppAsk, AppOutput, AppSession, Effort, HandoffBlock } from '@sand/accounts/contract'
+import type { AppAside, AppAsk, AppCall, AppOutput, AppSession, Effort, HandoffBlock } from '@sand/accounts/contract'
 import type { ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
 
 interface Wire {
@@ -12,10 +12,14 @@ interface Wire {
   aside?(ask: AppAsk, signal?: AbortSignal): Promise<AppAside>
 }
 
+const BATCH_SETTLE_MS = 50
+const STOPPED = 'sand stopped this turn'
+
 class Turns {
   private readonly answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
   private running = false
   private stopped: PromiseWithResolvers<void> | undefined
+  private batch: ReturnType<typeof setTimeout> | undefined
 
   constructor(private readonly output: AppOutput) {}
 
@@ -25,6 +29,13 @@ class Turns {
 
   result(id: string) {
     return this.answerFor(id).promise
+  }
+
+  call(call: AppCall) {
+    if (!this.running || this.stopped) return Promise.reject(new Error(STOPPED))
+    this.output.call(call)
+    this.pauseWhenSettled()
+    return this.result(call.id)
   }
 
   finish(stopReason?: StopReason) {
@@ -58,7 +69,13 @@ class Turns {
     return found
   }
 
+  private pauseWhenSettled() {
+    clearTimeout(this.batch)
+    this.batch = setTimeout(() => this.output.pause(), BATCH_SETTLE_MS)
+  }
+
   private ended() {
+    clearTimeout(this.batch)
     this.running = false
     const waiting = this.stopped
     this.stopped = undefined
@@ -75,9 +92,10 @@ class Turns {
   }
 
   private drop() {
+    clearTimeout(this.batch)
     this.answers.forEach(found => {
       found.promise.catch(() => {})
-      found.reject(new Error('sand stopped this turn'))
+      found.reject(new Error(STOPPED))
     })
     this.answers.clear()
   }

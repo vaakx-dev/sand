@@ -111,12 +111,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
     ? mcpBridge({
         tools: setup.tools,
         media: needs.media,
-        async call({ name, input }) {
-          const id = crypto.randomUUID()
-          output.call({ id, name, input })
-          output.pause()
-          return turns.result(id)
-        },
+        call: ({ name, input }) => turns.call({ id: crypto.randomUUID(), name, input }),
       })
     : undefined
 

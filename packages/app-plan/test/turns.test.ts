@@ -4,10 +4,11 @@ import { Turns } from '../src'
 
 const recorder = () => {
   const ended: string[] = []
+  const called: string[] = []
   const output: AppOutput = {
     text() {},
     thinking() {},
-    call() {},
+    call: ({ id }) => void called.push(id),
     usage() {},
     context() {},
     pause() {},
@@ -15,13 +16,13 @@ const recorder = () => {
     fail: error => void ended.push(`fail:${String(error)}`),
     exit() {},
   }
-  return { ended, turns: new Turns(output) }
+  return { ended, called, turns: new Turns(output) }
 }
 
 const wire = (stops: string[]) => ({ prompt() {}, stop: () => void stops.push('stop'), close: async () => {} })
 
-test('a stopped turn ends quietly once the app confirms, and a waiting tool call is turned down', async () => {
-  const { ended, turns } = recorder()
+test('a stopped turn ends quietly once the app confirms, and its waiting and late tool calls are turned down', async () => {
+  const { ended, called, turns } = recorder()
   const stops: string[] = []
   const session = turns.session(wire(stops))
   session.send([{ type: 'text', text: 'hello' }])
@@ -30,6 +31,8 @@ test('a stopped turn ends quietly once the app confirms, and a waiting tool call
   const stopped = session.interrupt()
   expect(stops).toEqual(['stop'])
   await expect(call).rejects.toThrow('sand stopped this turn')
+  await expect(turns.call({ id: 'late', name: 'look', input: {} })).rejects.toThrow('sand stopped this turn')
+  expect(called).toEqual([])
 
   turns.fail(new Error('interrupted'))
   await stopped
