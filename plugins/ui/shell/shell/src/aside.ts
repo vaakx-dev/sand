@@ -1,8 +1,10 @@
-import { derive, div, dynamicChild, list, listen, type Derive } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, listen, span, type Derive } from '@vaakx-dev/vrui'
 import { bar } from './bar'
-import type { Aside } from './contract'
+import type { Aside, SubjectProjects } from './contract'
 import { PANEL_WIDTH } from './layout'
 import type { Model } from './model'
+
+type Surface = 'card' | 'panel'
 
 export const asideToggles = (model: Model, asides: Derive<Aside[]>) => {
   const { icon, iconButton } = model.kit
@@ -34,34 +36,61 @@ const beside = (model: Model) => () => model.current.get()
 const projectsOf = (model: Model) => model.subjectOf(model.current.get())?.projects
 
 const projectsKey = (model: Model) => {
-  const list = projectsOf(model)?.list
-  return list ? JSON.stringify(list) : ''
+  const projects = projectsOf(model)
+  return projects ? JSON.stringify([projects.list, projects.picked]) : ''
 }
 
-const projectStrip = (model: Model) =>
+const projectPicker = ({ kit }: Model, { list, picked, pick }: SubjectProjects) => {
+  const { cardItem, choiceItem, dropdown, projectIcon } = kit
+  const position = list.findIndex(project => project.id === picked.id) + 1
+  return dropdown({
+    width: '100%',
+    trigger: press =>
+      cardItem(
+        { ...press, 'aria-label': 'Project', lead: projectIcon(picked.name, picked.icon), end: `${position} of ${list.length}`, menu: true },
+        picked.name,
+      ),
+    items: close =>
+      list.map(project =>
+        choiceItem(
+          {
+            selected: project.id === picked.id,
+            onClick: () => {
+              close()
+              pick(project.id)
+            },
+          },
+          projectIcon(project.name, project.icon),
+          span({ class: 'flex-1 truncate' }, project.name),
+        ),
+      ),
+  })
+}
+
+const placed = (model: Model, surface: Surface, picker: HTMLElement) => {
+  switch (surface) {
+    case 'card':
+      return div({ class: 'flex shrink-0 flex-col' }, picker, model.kit.cardRule())
+    case 'panel':
+      return div({ class: 'flex shrink-0 flex-col px-1.5 pb-1' }, picker)
+  }
+}
+
+const projectRow = (model: Model, surface: Surface) =>
   dynamicChild(
     derive(() => projectsKey(model)),
     key => {
-      const list = key ? projectsOf(model)?.list : undefined
-      if (!list) return null
-      return div(
-        { class: 'shrink-0 px-2 pb-2' },
-        model.kit.segmented(
-          list.map(project => ({ value: project.id, label: project.name })),
-          () => projectsOf(model)?.picked,
-          project => projectsOf(model)?.pick(project),
-          { label: 'Project', fill: true },
-        ),
-      )
+      const projects = key ? projectsOf(model) : undefined
+      return projects ? placed(model, surface, projectPicker(model, projects)) : null
     },
   )
 
-const asideHead = (model: Model, spec: Aside) => [
+const asideHead = (model: Model, spec: Aside, surface: Surface) => [
   bar(
     div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, spec.head ? spec.head(beside(model)) : model.kit.sheetTitle(spec.label)),
     model.kit.closeButton({ title: `Close ${spec.label}`, onClick: () => model.showAside(spec.id, false) }),
   ),
-  projectStrip(model),
+  projectRow(model, surface),
 ]
 
 const popover = (model: Model, anchor: () => HTMLElement) =>
@@ -76,7 +105,7 @@ const popover = (model: Model, anchor: () => HTMLElement) =>
         class: [model.kit.layer.sticky, 'absolute top-full right-0 mt-1 flex flex-col overflow-auto rounded-2xl bg-neutral-800 p-1.5 shadow-xl'],
         style: () => ({ width: '18rem', maxHeight: `${Math.max(model.height.get() - 64, 160)}px` }),
       },
-      projectStrip(model),
+      projectRow(model, 'card'),
       spec.render(beside(model)),
     )
   })
@@ -88,7 +117,7 @@ export const asideCard = (model: Model) =>
           { class: [model.kit.layer.sticky, 'pointer-events-none absolute inset-x-0 top-12 bottom-3 flex justify-end pr-3'] },
           div(
             { 'aria-label': spec.label, 'data-part': 'aside', class: 'pointer-events-auto flex max-h-full flex-col self-start rounded-2xl bg-neutral-800 p-1.5 shadow-xl', style: { width: '18rem' } },
-            asideHead(model, spec),
+            asideHead(model, spec, 'card'),
             spec.render(beside(model)),
           ),
         )
@@ -100,7 +129,7 @@ const docked = (model: Model, open: Model['openPanel'], look: { class: string; s
     spec
       ? div(
           { 'aria-label': spec.label, 'data-part': 'aside', class: ['flex min-h-0 min-w-0 shrink-0 flex-col bg-neutral-950', look.class], style: look.style ?? null },
-          asideHead(model, spec),
+          asideHead(model, spec, 'panel'),
           spec.render(beside(model)),
         )
       : null,
@@ -111,4 +140,4 @@ export const asidePanel = (model: Model) => docked(model, model.openPanel, { cla
 export const asideDrawer = (model: Model) => docked(model, model.openDrawer, { class: 'h-64' })
 
 export const asideScreen = (model: Model, spec: Aside) =>
-  div({ 'aria-label': spec.label, 'data-part': 'aside', class: 'flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-950' }, asideHead(model, spec), spec.render(beside(model)))
+  div({ 'aria-label': spec.label, 'data-part': 'aside', class: 'flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-950' }, asideHead(model, spec, 'panel'), spec.render(beside(model)))

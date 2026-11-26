@@ -1,8 +1,8 @@
 import type { BotSummary } from '@sand/bots/contract'
-import type { Subject } from '@sand/ui-shell/contract'
+import type { Subject, SubjectProject } from '@sand/ui-shell/contract'
 import type { ProjectEntry } from '@sand/web-client/contract'
 import { stored } from '@vaakx-dev/vrui'
-import { projectName, type Parts } from './parts'
+import type { Parts } from './parts'
 
 interface Place {
   project: string
@@ -14,6 +14,11 @@ const MIN_SWITCHABLE = 2
 const locationOf = (parts: Parts, project: string, device: string) => {
   const usable = parts.projects.get().find(group => group.id === project)?.locations.filter(location => !location.missing) ?? []
   return usable.find(location => location.device === device) ?? usable[0]
+}
+
+const subjectProject = (parts: Parts, project: string): SubjectProject => {
+  const { name, icon } = parts.shown(project)
+  return { id: project, name, icon }
 }
 
 const placesOf = (parts: Parts, bot: BotSummary, device: string) =>
@@ -38,8 +43,8 @@ const botSubject = (parts: Parts) => {
       device: chosen.location.device,
       cwd: chosen.location.path,
       projects: {
-        list: places.map(place => ({ id: place.project, name: projectName(parts, place.project) })),
-        picked: chosen.project,
+        list: places.map(place => subjectProject(parts, place.project)),
+        picked: subjectProject(parts, chosen.project),
         pick: project => pick(bot.id, project),
       },
     }

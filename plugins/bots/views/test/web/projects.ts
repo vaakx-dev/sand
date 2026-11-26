@@ -33,7 +33,10 @@ const open = async (label: string) => {
   if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
 }
 
-const switchTo = (where: Locator, project: string) => where.getByRole('radiogroup', { name: 'Project' }).getByRole('radio', { name: project }).click()
+const switchTo = async (where: Locator, project: string) => {
+  await where.getByRole('button', { name: 'Project' }).click()
+  await where.getByRole('menuitemradio', { name: project }).click()
+}
 
 const folderLine = (project: string) => aside('Terminal').locator('.xterm-rows').getByText(new RegExp(`code[\\\\/]${project}`))
 
