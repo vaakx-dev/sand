@@ -55,7 +55,14 @@ export interface UiElement {
   ref: string
   role: string
   name: string
+  value?: string
+  href?: string
   box: Box
+}
+
+export const matchesText = ({ name, value }: Pick<UiElement, 'name' | 'value'>, text: string) => {
+  const query = text.toLowerCase()
+  return [name, value].some(field => field?.toLowerCase().includes(query))
 }
 
 interface At<T extends string> {
@@ -89,7 +96,7 @@ export const heldKeys = (action: Action): Key[] => {
 
 export interface Found {
   count: number
-  box?: Box
+  ref?: string
 }
 
 export interface Fill {
@@ -111,6 +118,7 @@ export interface Computer {
   act(action: Action): Promise<Outcome | undefined>
   locate?(element: UiElement): Promise<Box>
   find?(text: string, match: number): Promise<Found>
+  read?(ref: string | undefined): Promise<string>
   fill?(fill: Fill): Promise<Filled[]>
 }
 

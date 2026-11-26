@@ -15,12 +15,17 @@ const desktop = () => {
   const computer: Computer = {
     info: { id: 'desktop', kind: 'desktop', label: 'Desktop', os: 'windows' },
     screenshot: async () => ({ width: clicks + 1, height: 1, png: new Uint8Array() }),
-    elements: async () => [{ ref: 'e1', role: 'button', name: 'Save', box: shown }],
+    elements: async () => [
+      { ref: 'e1', role: 'button', name: 'Save', box: shown },
+      { ref: 'e2', role: 'textbox', name: 'Notes', value: 'Saved drafts', box: { left: 0, top: 0.6, right: 0.5, bottom: 0.7 } },
+      { ref: 'e3', role: 'link', name: 'Help', href: 'https://example.com/help', box: { left: 0, top: 0.8, right: 0.5, bottom: 0.9 } },
+    ],
     act: async action => {
       acted.push(action)
       clicks++
       return undefined
     },
+    read: async () => 'Lorem ipsum. '.repeat(2000),
   }
   return computer
 }
@@ -56,10 +61,27 @@ test('an action shows the screen after it unless told not to', async () => {
   expect(await run('computer_act', { action: click })).toBe('Done: click.\n4×1 pixels.')
 })
 
-test('a computer that cannot find text says so and still lists its elements', async () => {
-  const listed = await run('computer_elements', { find: 'Total' })
-  expect(listed).toContain('cannot find text')
-  expect(listed).toEndWith('\ne1 button "Save" [0.000, 0.000, 0.500, 0.500]')
+test('elements show field values and link URLs', async () => {
+  const listed = await run('computer_elements', {})
+  expect(listed.split('\n')).toEqual([
+    'e1 button "Save" [0.000, 0.000, 0.500, 0.500]',
+    'e2 textbox "Notes" = "Saved drafts" [0.000, 0.600, 0.500, 0.700]',
+    'e3 link "Help" → https://example.com/help [0.000, 0.800, 0.500, 0.900]',
+  ])
+})
+
+test('a computer that cannot find text says so and lists only the elements whose name or value match', async () => {
+  const lines = (await run('computer_elements', { find: 'save' })).split('\n')
+  expect(lines[0]).toContain('cannot find text')
+  expect(lines.slice(2).map(line => line.split(' ')[0])).toEqual(['e1', 'e2'])
+})
+
+test('reading long text comes in pages that pick up where the last stopped', async () => {
+  const first = await run('computer_read', {})
+  expect(first).toEndWith('\n\n[Characters 0–20000 of 26000. Pass offset 20000 for more.]')
+  const rest = await run('computer_read', { offset: 20_000 })
+  expect(rest).toEndWith('\n\n[Characters 20000–26000 of 26000.]')
+  expect(first.split('\n\n[')[0]! + rest.split('\n\n[')[0]!).toBe('Lorem ipsum. '.repeat(2000))
 })
 
 test('each chat acts on the refs from its own last list, even when another chat lists the same computer since', async () => {

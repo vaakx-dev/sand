@@ -2,10 +2,11 @@ import { findBrowser, launch, type Launch } from '@sand/cdp'
 import { osOf, type Action, type Computer, type Screenshot } from '@sand/computers/contract'
 import { tabCommand, tabsNote, type Command } from './chords'
 import { locateElement, pageElements, type Page } from './elements'
-import { findText } from './find'
+import { findNode } from './find'
 import { dispatch } from './input'
 import { fillLogin } from './login'
 import { outcomeOf, watchPage } from './outcome'
+import { readText } from './read'
 import { capture, pngSize, viewportOf } from './screen'
 import { settle } from './settle'
 import { openTabs, type Tabs } from './tabs'
@@ -96,8 +97,6 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
     return started
   }
 
-  const page = async () => (await tabs()).current()
-
   const currentPage = async (): Promise<Page> => {
     const { current, framesIn, frameCall } = await tabs()
     const call = await current()
@@ -123,8 +122,12 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
       return command ? runTabCommand(open, command) : actOnPage(open, action)
     },
     async find(text, match) {
-      const call = await page()
-      return findText(call, await viewportOf(call), text, match)
+      const { current, framesIn } = await tabs()
+      return findNode(await current(), framesIn, text, match)
+    },
+    async read(ref) {
+      const { current, frameCall } = await tabs()
+      return readText({ call: await current(), frameCall }, ref)
     },
     async fill(fill) {
       const { current, framesIn } = await tabs()
