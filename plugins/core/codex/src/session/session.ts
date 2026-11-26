@@ -153,12 +153,7 @@ export const openSession = async (needs: SessionNeeds, setup: AppSetup, output: 
     if (method === 'turn/completed') end(fieldsOf(params.turn))
   }
 
-  const call = async (params: Json) => {
-    const id = String(params.callId)
-    output.call({ id, name: String(params.tool), input: fieldsOf(params.arguments) })
-    output.pause()
-    return toolOutput(await turns.result(id), media)
-  }
+  const call = async (params: Json) => toolOutput(await turns.call({ id: String(params.callId), name: String(params.tool), input: fieldsOf(params.arguments) }), media)
 
   const server = await pool.open({ notify, call, exit: error => output.exit(error) })
   const threadId = await begin(server, setup, resume).catch((error: unknown) => {

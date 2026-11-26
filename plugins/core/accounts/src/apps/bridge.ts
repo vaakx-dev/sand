@@ -36,7 +36,7 @@ interface Live {
   waiting: string[]
   handoff?: { id: string; delivered: Delivery }
   calming?: Promise<void>
-  timer?: ReturnType<typeof setTimeout>
+  wake?: Dispose
   untrack?: Dispose
 }
 
@@ -82,7 +82,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
 
   const forget = (key: string, entry: Live) => {
     if (live.get(key) === entry) live.delete(key)
-    clearTimeout(entry.timer)
+    entry.wake?.()
     entry.untrack?.()
   }
 
@@ -103,11 +103,6 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
     if (entry.session.id) await plan.blank?.(entry.session.id, values)
   }
 
-  const rest = (key: string, entry: Live) => {
-    entry.timer = setTimeout(() => drop(key, entry), entry.waiting.length ? toolsRunFor : idleFor)
-    entry.timer.unref?.()
-  }
-
   const calm = async (key: string, entry: Live) => {
     const acked = await untilAborted(entry.session.interrupt(), AbortSignal.timeout(interruptFor)).then(
       () => true,
@@ -116,7 +111,22 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
     entry.calming = undefined
     if (!acked) return drop(key, entry)
     entry.signals.clear()
+    entry.waiting = []
     rest(key, entry)
+  }
+
+  const rest = (key: string, entry: Live, turn?: AbortSignal) => {
+    entry.wake?.()
+    const timer = setTimeout(() => drop(key, entry), entry.waiting.length ? toolsRunFor : idleFor)
+    timer.unref?.()
+    const interrupted = () => {
+      entry.calming = calm(key, entry)
+    }
+    turn?.addEventListener('abort', interrupted, { once: true })
+    entry.wake = () => {
+      clearTimeout(timer)
+      turn?.removeEventListener('abort', interrupted)
+    }
   }
 
   const halt = (key: string, entry: Live, signal?: AbortSignal) => {
@@ -148,7 +158,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const held = (key: string, thread: ThreadRef, delta: Message[]) => {
     const found = live.get(key)
     if (!found) return undefined
-    clearTimeout(found.timer)
+    found.wake?.()
     if (found.done && thread.seenHead !== found.base) return { found, messages: delta }
     if (!found.done && thread.seenHead === found.base && startsWith(delta, found.sent)) return { found, messages: delta.slice(found.sent.length) }
     drop(key, found)
@@ -218,7 +228,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
       entry.waiting = event.stopReason === 'tool_use' ? callsOf(event.message) : []
       const secrets = secretValues(event.message, request.tools)
       if (secrets.length) await blankCopy(key, entry, secrets)
-      else rest(key, entry)
+      else rest(key, entry, signal)
       const native = nativeOf(entry, thread)
       yield { ...event, ...(native && { native }), ...(delivered && { delivered }) }
     }

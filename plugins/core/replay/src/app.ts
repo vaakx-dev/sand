@@ -125,6 +125,7 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
         return { text: said(reply), usage: {} }
       },
       async interrupt() {
+        waiting.clear()
         calls.push({ type: 'interrupt' })
       },
       async close() {
