@@ -1,7 +1,7 @@
 import { pcHello } from '@sand/devices-contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { MenuAction, ShellRow } from '@sand/ui-shell/contract'
-import { threadChange, type Thread, type Threads } from '@sand/web-client/contract'
+import { threadChange, type DraftTarget, type Thread, type Threads } from '@sand/web-client/contract'
 import { sig, untrack, type Child } from '@vaakx-dev/vrui'
 import { service, type Context, type Dispose } from 'drydock'
 
@@ -23,11 +23,26 @@ export interface ThreadRows {
   settleDays(): number | undefined
 }
 
+export interface Place {
+  path: string
+  device: string
+}
+
+export interface NewThreads {
+  place(): Place
+  open(): DraftTarget
+}
+
+const LISTED_KINDS = new Set<Thread['info']['kind']>(['thread', 'quick'])
+
+export const listedThread = (thread: Thread) => LISTED_KINDS.has(thread.info.kind)
+
 export { listGroups, type ListEntry } from './groups'
 export { snoozeAction, snoozedUntil, isBack } from './snooze/actions'
 export { wakeTimer } from './snooze/wake'
 
 export const threadRows = service<ThreadRows>('threadRows')
+export const newThreads = service<NewThreads>('newThreads')
 
 export const copyPathAction = (kit: Kit, path: string): MenuAction => ({ id: 'copy-path', group: 'copy', label: 'Copy path', icon: 'folder', run: () => kit.copyText(path) })
 

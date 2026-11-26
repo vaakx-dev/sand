@@ -4,6 +4,7 @@ import android.content.res.AssetManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import java.io.ByteArrayInputStream
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -14,6 +15,7 @@ private const val SETUP_FILE = "setup.html"
 private const val SETUP_PATH = "/~app/$SETUP_FILE"
 private const val STATE_SLOT = "{{state}}"
 private val DROPPED_HEADERS = setOf("content-encoding", "content-length", "transfer-encoding", "connection")
+private val NO_STORE = mapOf("cache-control" to "no-store")
 private val CHARSET = Regex("charset=([^;\\s]+)", RegexOption.IGNORE_CASE)
 
 private fun header(request: WebResourceRequest, name: String) =
@@ -57,6 +59,7 @@ class Proxy(private val pc: Pc, private val assets: AssetManager) {
         if (url.scheme != "https" || url.host != PAGE_HOST || request.method != "GET") return null
         val path = url.encodedPath ?: "/"
         if (path == SETUP_PATH) return setup(Setup.PAIR)
+        if (path.startsWith(SHARED_PATH)) return sharedFile(path.removePrefix(SHARED_PATH))
         if (outdatedPage(request)) return setup(Setup.OUTDATED)
         val target = path + (url.encodedQuery?.let { "?$it" } ?: "")
         return fromPc(target, request.requestHeaders) ?: unreachable(request)
@@ -74,9 +77,20 @@ class Proxy(private val pc: Pc, private val assets: AssetManager) {
     private fun unreachable(request: WebResourceRequest) =
         if (opensPage(request)) setup(Setup.UNREACHABLE) else WebResourceResponse("text/plain", "utf-8", Setup.UNREACHABLE.status, "Unreachable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
 
+    private fun sharedFile(id: String): WebResourceResponse {
+        val staged = Shares.file(id) ?: return missing()
+        return try {
+            WebResourceResponse(staged.type, null, 200, "OK", NO_STORE, staged.file.inputStream())
+        } catch (error: FileNotFoundException) {
+            missing()
+        }
+    }
+
+    private fun missing() = WebResourceResponse("text/plain", "utf-8", 404, "Not Found", NO_STORE, ByteArrayInputStream(ByteArray(0)))
+
     private fun setup(state: Setup): WebResourceResponse {
         val page = setupPage.replace(STATE_SLOT, state.name.lowercase()).toByteArray()
-        return WebResourceResponse("text/html", "utf-8", state.status, reason(state.status, null), mapOf("cache-control" to "no-store"), ByteArrayInputStream(page))
+        return WebResourceResponse("text/html", "utf-8", state.status, reason(state.status, null), NO_STORE, ByteArrayInputStream(page))
     }
 }
 

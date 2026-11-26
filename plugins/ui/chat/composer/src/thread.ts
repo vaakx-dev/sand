@@ -8,10 +8,10 @@ import { errorMessage } from '@sand/util'
 import { draftStarted, models, modelsChange, outbox, outboxChange, threadChange, threadSelect } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from './context'
-import type { ChatRef } from './contract'
+import type { ChatRef, Destination } from './contract'
 import type { Model } from './model'
 import { destination, interrupt, modelMissing, sendDevice, stoppable, submit } from './send/submit'
-import type { Delivery, Destination, Target } from './target'
+import type { Delivery, Target } from './target'
 
 const deliveryOf = (ctx: ComposerContext): Delivery => {
   const pc = sendDevice(ctx)

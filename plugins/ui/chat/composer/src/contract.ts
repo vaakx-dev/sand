@@ -2,6 +2,7 @@ import type { ContextRecord, Owner, Prompt, UserContent } from '@sand/chats/cont
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName } from '@sand/ui-kit/contract'
+import type { Held } from '@sand/attachments/web/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
 import { event, service, type Context, type Dispose } from 'drydock'
@@ -96,6 +97,17 @@ export interface Sending {
   actions: MenuAction[]
 }
 
+export interface Destination {
+  conversation: string
+  device?: string
+  draft?: DraftTarget
+}
+
+export interface Message {
+  text: string
+  items: Held[]
+}
+
 export interface Composer {
   view(): HTMLElement
   focus(): void
@@ -121,6 +133,7 @@ export interface Composer {
   settings(): SessionSettings
   choose(patch: SettingsPatch): void
   sending(): Sending[]
+  send(to: Destination, message: Message): void
 }
 
 export interface Typing {

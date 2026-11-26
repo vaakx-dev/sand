@@ -10,6 +10,13 @@ type AppMessage =
   | { kind: 'unlisten' }
   | { kind: 'install'; url: string; sha256?: string }
   | { kind: 'save'; name: string; data: string }
+  | { kind: 'take-share' }
+
+interface AppFile {
+  url: string
+  name: string
+  type: string
+}
 
 type AppReply =
   | { kind: 'notices-allowed' }
@@ -18,6 +25,8 @@ type AppReply =
   | { kind: 'install-progress'; fraction: number }
   | { kind: 'install-failed'; reason: string }
   | { kind: 'install-opened' }
+  | { kind: 'share-waiting' }
+  | { kind: 'share'; text: string; files: AppFile[] }
 
 interface AndroidApp {
   routes: string[]
@@ -41,6 +50,12 @@ const appReplySchema = lazy(() =>
     z.object({ kind: z.literal('install-progress'), fraction: z.number().min(0).max(1) }),
     z.object({ kind: z.literal('install-failed'), reason: z.string() }),
     z.object({ kind: z.literal('install-opened') }),
+    z.object({ kind: z.literal('share-waiting') }),
+    z.object({
+      kind: z.literal('share'),
+      text: z.string(),
+      files: z.array(z.object({ url: z.string().startsWith('/'), name: z.string().min(1), type: z.string().min(1) })),
+    }),
   ]),
 )
 
@@ -58,4 +73,4 @@ const saveInBrowser = (name: string, blob: Blob) => {
 
 const saveFile = async (app: AndroidApp | undefined, name: string, blob: Blob) => (app ? saveInApp(app, name, blob) : saveInBrowser(name, blob))
 
-export { androidApp, type AndroidApp, type AppMessage, appProtocol, type AppReply, appReplySchema, appStartSchema, saveFile }
+export { androidApp, type AndroidApp, type AppFile, type AppMessage, appProtocol, type AppReply, appReplySchema, appStartSchema, saveFile }

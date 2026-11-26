@@ -1,6 +1,6 @@
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { listedThread } from '../items/items'
+import { listedThread } from '../contract'
 import { newThread } from '../launch/launch'
 import { startChat, type StartParts } from '../launch/start'
 import { archivedItems, projectItems } from './projects'
@@ -13,7 +13,7 @@ const newChatItem = (parts: StartParts, group: string): PaletteItem => ({
   icon: 'compose',
   label: 'New thread',
   search: 'new thread chat start project',
-  run: () => newThread(parts),
+  run: () => void newThread(parts),
 })
 
 export const sessionSource = (parts: SessionParts, kit: Kit): PaletteSource => ({

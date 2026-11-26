@@ -1,0 +1,28 @@
+{
+  "name": "@sand/share",
+  "version": "0.0.0",
+  "description": "Send to sand: what you share from another app, a picture, a file or a link, goes to a new thread, a thread or a bot in one tap",
+  "type": "module",
+  "sand": {
+    "feature": "composer",
+    "web": "./src/index.ts",
+    "label": "Send to sand",
+    "summary": "Share pictures, files and links from other apps into a thread or a bot"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/keyval": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/threads-home": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

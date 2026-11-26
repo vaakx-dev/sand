@@ -5,7 +5,7 @@ import type { Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { ProjectShown, Thread } from '@sand/web-client/contract'
 import { changeStatus, type Changes } from '../changes'
-import type { RowPart } from '../contract'
+import { listedThread, type RowPart } from '../contract'
 import type { ListEntry } from '../groups'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
@@ -16,11 +16,7 @@ import { draftMenu, threadMenu, type MenuParts } from './menu'
 
 export type Entry = ListEntry
 
-const LISTED_KINDS = new Set<Thread['info']['kind']>(['thread', 'quick'])
-
 const positionOf = (thread: Thread) => thread.info.position ?? thread.info.created
-
-export const listedThread = (thread: Thread) => LISTED_KINDS.has(thread.info.kind)
 
 export const visibleThreads = (threads: Thread[]) => threads.filter(listedThread).sort((a, b) => positionOf(b) - positionOf(a))
 

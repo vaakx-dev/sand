@@ -2609,7 +2609,6 @@
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
-        "@sand/web": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -2757,6 +2756,26 @@
         "@sand/composer": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/ui/chat/share": {
+      "name": "@sand/share",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/keyval": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/threads-home": "workspace:*",
+        "@sand/toasts": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web": "workspace:*",
+        "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.11",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -3905,6 +3924,8 @@
     "@sand/server": ["@sand/server@workspace:plugins/core/server"],
 
     "@sand/settings": ["@sand/settings@workspace:plugins/ui/shared/settings"],
+
+    "@sand/share": ["@sand/share@workspace:plugins/ui/chat/share"],
 
     "@sand/shell": ["@sand/shell@workspace:plugins/agent/shell"],
 

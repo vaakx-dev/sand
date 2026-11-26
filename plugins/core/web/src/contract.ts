@@ -52,7 +52,7 @@ export interface Shared {
 
 export const SHARE_PATH = '/share'
 export const SHARED_PARAM = 'shared'
-export const SHARE_LANDING = `/?view=draft&${SHARED_PARAM}`
+export const SHARE_LANDING = `/?${SHARED_PARAM}`
 export const SHARED_DATABASE = 'sand-shared'
 export const SHARED_STORE = 'shares'
 export const SHARED_KEY = 'latest'

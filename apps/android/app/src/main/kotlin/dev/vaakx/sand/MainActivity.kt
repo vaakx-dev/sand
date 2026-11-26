@@ -80,11 +80,13 @@ class MainActivity : ComponentActivity() {
         getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(network)
         onBackPressedDispatcher.addCallback(this) { back() }
         open(intent.getStringExtra(EXTRA_PATH) ?: "/")
+        if (savedInstanceState == null) receive(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getStringExtra(EXTRA_PATH)?.let(::open)
+        receive(intent)
     }
 
     override fun onResume() {
@@ -181,6 +183,10 @@ class MainActivity : ComponentActivity() {
         if (permission == null) Update.start(this, apk) else allowInstalls.launch(permission)
     }
 
+    private fun receive(intent: Intent) {
+        incomingOf(intent)?.let { Shares.receive(this, it) }
+    }
+
     private fun networkChanged() {
         pc.forget()
         Page.networkChanged()
@@ -203,6 +209,7 @@ class MainActivity : ComponentActivity() {
             "scan" -> scan()
             "install" -> install(Apk(body.getString("url"), body.optString("sha256").ifEmpty { null }))
             "save" -> saver.save(body.getString("name"), body.getString("data"))
+            "take-share" -> Shares.take()?.let(Page::send)
         }
     }
 }
