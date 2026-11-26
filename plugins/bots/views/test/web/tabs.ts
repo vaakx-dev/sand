@@ -51,6 +51,15 @@ test('a bot with a job opens on its jobs, with a tab to its chat', async () => {
   await tabs().getByRole('radio', { name: 'Chat' }).waitFor()
 }, 30_000)
 
+test('a bot’s jobs hide the chat’s Details until its Chat tab opens', async () => {
+  const details = page.getByRole('button', { name: 'Details' })
+  await openBot(page, sand.seeded.worker)
+  await page.getByText('Morning CI triage').first().waitFor()
+  expect(await details.count()).toBe(0)
+  await tabs().getByRole('radio', { name: 'Chat' }).click()
+  await details.first().waitFor()
+}, 30_000)
+
 test('a bot with only a routine has a Jobs tab that lists it', async () => {
   await openBot(page, sand.seeded.reminder)
   await tabs().getByRole('radio', { name: 'Jobs' }).click()

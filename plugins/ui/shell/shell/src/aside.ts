@@ -1,7 +1,8 @@
 import { div, dynamicChild, list, listen, type Derive } from '@vaakx-dev/vrui'
 import { bar } from './bar'
 import type { Aside } from './contract'
-import { panelWidth, type Model } from './model'
+import { PANEL_WIDTH } from './layout'
+import type { Model } from './model'
 
 export const asideToggles = (model: Model, asides: Derive<Aside[]>) => {
   const { icon, iconButton } = model.kit
@@ -77,7 +78,7 @@ const docked = (model: Model, open: Model['openPanel'], look: { class: string; s
       : null,
   )
 
-export const asidePanel = (model: Model) => docked(model, model.openPanel, { class: '', style: { width: `${panelWidth}px` } })
+export const asidePanel = (model: Model) => docked(model, model.openPanel, { class: '', style: { width: `${PANEL_WIDTH}px` } })
 
 export const asideDrawer = (model: Model) => docked(model, model.openDrawer, { class: 'h-64' })
 

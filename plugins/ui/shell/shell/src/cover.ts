@@ -1,7 +1,8 @@
 import { div, list, type Sig } from '@vaakx-dev/vrui'
 import { asideScreen } from './aside'
 import type { Aside } from './contract'
-import type { Axis, Model } from './model'
+import type { Model } from './model'
+import type { Axis } from './slides'
 
 const along = (axis: Axis, length: string) => (axis === 'y' ? `0 ${length}` : `${length} 0`)
 

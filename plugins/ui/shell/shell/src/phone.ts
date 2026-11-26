@@ -3,7 +3,8 @@ import { screenKey } from './address'
 import { asideCovers } from './cover'
 import { dismissDrawer, scrim } from './drawer'
 import { phoneFrame } from './frames'
-import type { Frame, Model } from './model'
+import type { Frame } from './history'
+import type { Model } from './model'
 import { phoneSidebar } from './sidebar'
 
 const keyOf = ({ route }: Frame) => screenKey(route)
