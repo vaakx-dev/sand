@@ -1,5 +1,5 @@
 import type { ImageBlock } from '@sand/chats/contract'
-import type { Box, Computer, Computers, UiElement } from '@sand/computers/contract'
+import type { Box, Computer, Computers, Outcome, UiElement } from '@sand/computers/contract'
 import type { Media } from '@sand/media/contract'
 import type { Tool, ToolContext } from '@sand/tools/contract'
 import { z } from 'zod'
@@ -34,6 +34,18 @@ const search = async (computer: Computer, text: string, match: number) => {
   const { count, box } = await computer.find(text, match)
   if (match > count) return `${matches(count)} for "${text}"${count ? `; there is no match ${match}` : ''}.`
   return `Match ${match} of ${count} for "${text}", scrolled into view${box ? ` at ${boxText(box)}` : ''}.`
+}
+
+const outcomeText = (outcome: Outcome | undefined) => {
+  switch (outcome?.type) {
+    case 'navigated':
+      return ` The URL changed from ${outcome.from} to ${outcome.to}.`
+    case 'unchanged':
+      return ' Nothing changed: the URL, the page and the screen are as before.'
+    case 'changed':
+    case undefined:
+      return ''
+  }
 }
 
 export const computerTools = (computers: Computers, media: Media, chooser: Chooser) => {
@@ -116,10 +128,9 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
     needs: ['computer'],
     async run({ computer, action, screenshot }, context) {
       const { id, computer: target } = targetOf(computer, context)
-      await target.act(resolveAction(action, ref => listed.get(id)?.get(ref)))
-      const done = `Done: ${action.type}.`
+      const outcome = await target.act(resolveAction(action, ref => listed.get(id)?.get(ref)))
+      const done = `Done: ${action.type}.${outcomeText(outcome)}`
       if (!screenshot) return done
-      await target.settle()
       return [{ type: 'text' as const, text: done }, ...(await look(id, target))]
     },
   }

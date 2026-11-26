@@ -49,8 +49,7 @@ export const browser = (sand: Sand) => {
     info: { id: 'browser', kind: 'browser', label: 'Browser', os: 'windows' },
     screenshot: () => Promise.reject(new Error('No screen in tests')),
     elements: async () => [],
-    act: async () => {},
-    settle: async () => {},
+    act: async () => undefined,
     async fill(fill) {
       fills.push(fill)
       return (['username', 'password', 'code'] as const).filter((field): field is Filled => fill[field] !== undefined)

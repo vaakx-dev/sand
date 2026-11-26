@@ -8,13 +8,11 @@ let sand: Sand
 
 const desktop = () => {
   let clicks = 0
-  let drawn = 0
   const computer: Computer = {
     info: { id: 'desktop', kind: 'desktop', label: 'Desktop', os: 'windows' },
-    screenshot: async () => ({ width: drawn + 1, height: 1, png: new Uint8Array() }),
+    screenshot: async () => ({ width: clicks + 1, height: 1, png: new Uint8Array() }),
     elements: async () => [{ ref: 'e1', role: 'button', name: 'Save', box: { left: 0, top: 0, right: 0.5, bottom: 0.5 } }],
     act: async () => void clicks++,
-    settle: async () => void (drawn = clicks),
   }
   return computer
 }
@@ -43,7 +41,7 @@ beforeAll(async () => {
 
 afterAll(() => sand.stop())
 
-test('an action shows the settled screen unless told not to', async () => {
+test('an action shows the screen after it unless told not to', async () => {
   const click = { type: 'click', at: { x: 0.5, y: 0.5 } }
   expect(await run('computer_act', { action: click })).toBe('Done: click.\n2×1 pixels.')
   expect(await run('computer_act', { action: click, screenshot: false })).toBe('Done: click.')

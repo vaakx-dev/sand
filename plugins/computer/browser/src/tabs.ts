@@ -17,11 +17,13 @@ export interface FrameSession {
   ref: string
 }
 
-type TargetEvent =
+type TabEvent =
   | { method: 'Target.targetCreated'; params: { targetInfo: TargetInfo } }
   | { method: 'Target.targetDestroyed'; params: { targetId: string } }
   | { method: 'Target.attachedToTarget'; params: { sessionId: string; targetInfo: TargetInfo } }
   | { method: 'Target.detachedFromTarget'; params: { sessionId: string } }
+  | { method: 'Page.frameStartedLoading'; params: { frameId: string } }
+  | { method: 'Page.frameStoppedLoading'; params: { frameId: string } }
 
 export interface Tab {
   title: string
@@ -33,6 +35,7 @@ export const openTabs = async (browser: Browser) => {
   const pages: string[] = []
   const attached = new Map<string, Promise<Call>>()
   const frames = new Map<string, FrameSession>()
+  const loads = new Map<string, PromiseWithResolvers<void>>()
   let active: string | undefined
   let front: string | undefined
   let framesSeen = 0
@@ -43,11 +46,21 @@ export const openTabs = async (browser: Browser) => {
     active = targetId
   }
 
+  const startLoading = (frameId: string) => {
+    if (pages.includes(frameId) && !loads.has(frameId)) loads.set(frameId, Promise.withResolvers())
+  }
+
+  const stopLoading = (frameId: string) => {
+    loads.get(frameId)?.resolve()
+    loads.delete(frameId)
+  }
+
   const remove = (targetId: string) => {
     const index = pages.indexOf(targetId)
     if (index < 0) return
     pages.splice(index, 1)
     attached.delete(targetId)
+    stopLoading(targetId)
     if (active === targetId) active = pages[Math.max(0, index - 1)]
   }
 
@@ -66,11 +79,13 @@ export const openTabs = async (browser: Browser) => {
   }
 
   browser.on((event: CdpEvent) => {
-    const target = event as TargetEvent
-    if (target.method === 'Target.targetCreated') add(target.params.targetInfo)
-    if (target.method === 'Target.targetDestroyed') remove(target.params.targetId)
-    if (target.method === 'Target.attachedToTarget') addFrame(target.params.sessionId, target.params.targetInfo)
-    if (target.method === 'Target.detachedFromTarget') frames.delete(target.params.sessionId)
+    const tab = event as TabEvent
+    if (tab.method === 'Target.targetCreated') add(tab.params.targetInfo)
+    if (tab.method === 'Target.targetDestroyed') remove(tab.params.targetId)
+    if (tab.method === 'Target.attachedToTarget') addFrame(tab.params.sessionId, tab.params.targetInfo)
+    if (tab.method === 'Target.detachedFromTarget') frames.delete(tab.params.sessionId)
+    if (tab.method === 'Page.frameStartedLoading') startLoading(tab.params.frameId)
+    if (tab.method === 'Page.frameStoppedLoading') stopLoading(tab.params.frameId)
   })
   await browser.call('Target.setDiscoverTargets', { discover: true })
   const { targetInfos } = await browser.call<{ targetInfos: TargetInfo[] }>('Target.getTargets')
@@ -113,6 +128,9 @@ export const openTabs = async (browser: Browser) => {
         const info = infos.get(targetId)
         return info ? [{ title: info.title, url: info.url, active: targetId === active }] : []
       })
+    },
+    loaded: async () => {
+      if (active) await loads.get(active)?.promise
     },
     select,
     step(by: number) {

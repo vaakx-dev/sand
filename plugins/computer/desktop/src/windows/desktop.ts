@@ -56,6 +56,12 @@ export const windowsDesktop = () => {
     look()
   }
 
+  const perform = async (action: Action) => {
+    if (action.type === 'wait') return Bun.sleep(action.ms)
+    if (action.type === 'open') return openUrl(action.url)
+    await press(action)
+  }
+
   return {
     info: { id: 'desktop', kind: 'desktop', label: 'This PC', os: 'windows' },
     async screenshot(fit?: Size) {
@@ -67,11 +73,10 @@ export const windowsDesktop = () => {
       return uia.elements(virtualScreen(api))
     },
     async act(action: Action) {
-      if (action.type === 'wait') return Bun.sleep(action.ms)
-      if (action.type === 'open') return openUrl(action.url)
-      await press(action)
+      await perform(action)
+      await untilStill({ frame: () => frameHash(api, virtualScreen(api)), ...STILLNESS })
+      return undefined
     },
-    settle: () => untilStill({ frame: () => frameHash(api, virtualScreen(api)), ...STILLNESS }),
     close: uia.close,
   } satisfies Computer & { close(): void }
 }

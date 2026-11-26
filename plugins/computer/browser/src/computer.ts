@@ -1,12 +1,14 @@
 import { findBrowser, launch, type Launch } from '@sand/cdp'
-import { fitInside, osOf, type Computer, type Screenshot, type Size } from '@sand/computers/contract'
-import { tabCommand, tabsNote } from './chords'
+import { osOf, type Action, type Computer, type Screenshot } from '@sand/computers/contract'
+import { tabCommand, tabsNote, type Command } from './chords'
 import { pageElements } from './elements'
 import { findText } from './find'
-import { dispatch, type Viewport } from './input'
+import { dispatch } from './input'
 import { fillLogin } from './login'
+import { outcomeOf, watchPage } from './outcome'
+import { capture, pngSize, viewportOf } from './screen'
 import { settle } from './settle'
-import { openTabs, type Call, type Tabs } from './tabs'
+import { openTabs, type Tabs } from './tabs'
 
 export interface BrowserOptions {
   id: string
@@ -55,26 +57,18 @@ const headlessAgent = (start: Start) => {
 
 const flagsFor = async (start: Start, headless: boolean) => (headless ? [...headlessFlags, `--user-agent=${await headlessAgent(start)}`] : flags)
 
-export const pngSize = (png: Uint8Array) => {
-  const view = new DataView(png.buffer, png.byteOffset, png.byteLength)
-  return { width: view.getUint32(16), height: view.getUint32(20) }
+const actOnPage = async (open: Tabs, action: Action) => {
+  const call = await open.current()
+  const before = await watchPage(call)
+  await dispatch(call, await viewportOf(call), action)
+  await settle(open)
+  return outcomeOf(before, await open.current())
 }
 
-const viewportOf = async (call: Call): Promise<Viewport> => {
-  const { cssVisualViewport } = await call<{ cssVisualViewport: { clientWidth: number; clientHeight: number } }>('Page.getLayoutMetrics')
-  return { width: cssVisualViewport.clientWidth, height: cssVisualViewport.clientHeight }
-}
-
-const shrink = async (png: Uint8Array, fit: Size | undefined) => {
-  const size = pngSize(png)
-  const fitted = fitInside(size, fit)
-  if (fitted.width === size.width) return png
-  return new Bun.Image(png).resize(fitted.width, fitted.height).png().bytes()
-}
-
-const capture = async (call: Call, fit: Size | undefined) => {
-  const { data } = await call<{ data: string }>('Page.captureScreenshot', { format: 'png' })
-  return shrink(Buffer.from(data, 'base64'), fit)
+const runTabCommand = async (open: Tabs, command: Command) => {
+  await command(open)
+  await settle(open)
+  return undefined
 }
 
 export const browserComputer = ({ id, label, profile, headless }: BrowserOptions) => {
@@ -119,15 +113,7 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
     async act(action) {
       const open = await tabs()
       const command = action.type === 'key' ? tabCommand(action.keys) : undefined
-      if (command) {
-        await command(open)
-        return
-      }
-      const call = await open.current()
-      await dispatch(call, await viewportOf(call), action)
-    },
-    async settle() {
-      await settle(await page())
+      return command ? runTabCommand(open, command) : actOnPage(open, action)
     },
     async find(text, match) {
       const call = await page()
