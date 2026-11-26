@@ -142,6 +142,25 @@ const slow = '<!doctype html><title>Slow page</title><p>Slow content</p>'
 
 const SLOW_MS = 1_000
 
+const draft = 'Draft line\n'.repeat(40)
+
+const findable = `<!doctype html>
+<body style="margin: 0; font: 16px sans-serif">
+  <nav style="height: 1500px"><a href="/archive">Archive</a><p>Sidebar note</p></nav>
+  <main>
+    <input type="submit" value="Archive" />
+    <button aria-label="Close panel">×</button>
+    <div id="host"></div>
+    <textarea aria-label="Draft" rows="2">${draft}</textarea>
+    <input type="password" aria-label="Secret" value="hunter2" />
+    <iframe title="Rich Text Area" srcdoc="<body contenteditable><p>Editor body text</p></body>"></iframe>
+    <p>Main body text</p>
+  </main>
+  <script>
+    document.getElementById('host').attachShadow({ mode: 'open' }).innerHTML = '<button>Shadow archive</button>'
+  </script>
+</body>`
+
 const counter = (label: string, child = '') => `<!doctype html>
 <body style="margin: 0; font: 16px sans-serif">
   <button id="add">${label} add</button>
@@ -166,6 +185,7 @@ const server = Bun.serve({
       '/other': other,
       '/plain': plain,
       '/slow': slow,
+      '/find': findable,
     }
     return new Response(pages[new URL(request.url).pathname], { headers: { 'content-type': 'text/html' } })
   },
@@ -187,6 +207,13 @@ const texts = async () => (await computer.elements()).filter(element => element.
 const eventually = async (text: string) => {
   for (let tries = 0; tries < 20 && !(await texts()).includes(text); tries++) await Bun.sleep(50)
   expect(await texts()).toContain(text)
+}
+
+const found = async (text: string, match = 1) => {
+  const { ref } = await computer.find(text, match)
+  const element = (await computer.elements()).find(element => element.ref === ref)
+  if (!element) throw new Error(`match ${match} for "${text}" is not on screen`)
+  return element
 }
 
 const click = async (element: UiElement) => computer.act({ type: 'click', at: center(element.box) })
@@ -333,10 +360,10 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
   })
 
   test('finds visible text inside a scrolling panel and scrolls the chosen match into view', async () => {
-    const found = await computer.find('row 32', 2)
-    expect(found.count).toBe(11)
-    expect(found.box?.top).toBeGreaterThan(0.8)
-    expect((await find('text', 'Row 320')).box.top).toBeCloseTo(found.box?.top ?? 0, 2)
+    expect((await computer.find('row 32', 2)).count).toBe(11)
+    const row = await found('row 32', 2)
+    expect(row).toMatchObject({ role: 'text', name: 'Row 320' })
+    expect(row.box.top).toBeGreaterThan(0.8)
     expect(await computer.find('row 32', 12)).toEqual({ count: 11 })
   })
 
@@ -387,6 +414,27 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     expect(await click(await find('button', 'Plain add'))).toEqual({ type: 'changed' })
     expect(await click(await find('link', 'Slow page'))).toEqual({ type: 'navigated', from: `${url}plain`, to: `${url}slow` })
     expect(await texts()).toContain('Slow content')
+  })
+
+  test('finds labels, values, shadow DOM and frames, main content before the sidebar', async () => {
+    await computer.act({ type: 'open', url: `${url}find` })
+    expect((await computer.find('archive', 1)).count).toBe(3)
+    expect(await found('archive', 1)).toMatchObject({ role: 'button', name: 'Archive' })
+    expect(await found('archive', 2)).toMatchObject({ role: 'button', name: 'Shadow archive' })
+    expect(await found('archive', 3)).toMatchObject({ role: 'link', name: 'Archive', href: `${url}archive` })
+    expect(await found('close panel')).toMatchObject({ role: 'button', name: 'Close panel' })
+    expect(await found('editor body')).toMatchObject({ role: 'text', name: 'Editor body text' })
+  })
+
+  test('reads the main text of the page or the full text of one element, but no password', async () => {
+    const field = await found('draft')
+    expect(field.value).toStartWith('Draft line\n')
+    expect(await computer.read(field.ref)).toBe(draft)
+    expect(await computer.read((await found('rich text area')).ref)).toBe('Editor body text')
+    const page = await computer.read(undefined)
+    expect(page).toContain('Main body text')
+    expect(page).not.toContain('Sidebar note')
+    await expect(computer.read((await found('secret')).ref)).rejects.toThrow('password field')
   })
 
   test('keeps cookies in its profile across restarts', async () => {

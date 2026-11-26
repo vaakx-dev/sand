@@ -1,5 +1,5 @@
 import type { Fill, Filled } from '@sand/computers/contract'
-import type { FramesIn } from './elements'
+import { refParts, type FramesIn } from './elements'
 import type { Call } from './tabs'
 
 interface FrameTree {
@@ -101,16 +101,14 @@ const fillWorlds = async (worlds: World[], values: Values) => {
   return fields.filter(field => values[field] && !pending.includes(field))
 }
 
-const nodeIn = ({ call, context }: World, node: string) =>
-  call<{ object: { objectId?: string } }>('DOM.resolveNode', { backendNodeId: Number(node), executionContextId: context }).then(
+const nodeIn = ({ call, context }: World, node: number) =>
+  call<{ object: { objectId?: string } }>('DOM.resolveNode', { backendNodeId: node, executionContextId: context }).then(
     ({ object }) => object.objectId,
     () => undefined,
   )
 
 const fillRef = async (worlds: World[], ref: string, code: string, site: string) => {
-  const dot = ref.lastIndexOf('.')
-  const session = dot < 0 ? '' : ref.slice(0, dot)
-  const node = ref.slice(dot + 1)
+  const { session, node } = refParts(ref)
   for (const world of worlds.filter(world => world.session === session)) {
     const objectId = await nodeIn(world, node)
     if (objectId && (await run<boolean>(world.call, { objectId, functionDeclaration: fillNode, arguments: [{ value: code }] }))) return

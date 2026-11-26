@@ -6,20 +6,36 @@ interface AxValue {
   value?: unknown
 }
 
-export interface AxNode {
+interface AxProperty {
+  name: string
+  value: AxValue
+}
+
+interface AxNode {
   nodeId: string
   parentId?: string
+  childIds?: string[]
   ignored: boolean
   role?: AxValue
   name?: AxValue
+  value?: AxValue
+  properties?: AxProperty[]
   backendDOMNodeId?: number
 }
 
-interface Named {
+type Shown = Omit<UiElement, 'ref' | 'box'>
+
+interface Named extends Shown {
   node: AxNode
   id: number
-  role: string
-  name: string
+  rank: number
+}
+
+export interface PageNode extends Shown {
+  ref: string
+  id: number
+  rank: number
+  call: Call
 }
 
 const interactive = new Set([
@@ -46,31 +62,59 @@ const structural = new Set(['RootWebArea', 'InlineTextBox', 'generic', 'none', '
 
 const roles: Record<string, string> = { StaticText: 'text' }
 
+const AREA_RANKS: Partial<Record<string, number>> = { main: 0, navigation: 2, complementary: 2, banner: 2, contentinfo: 2 }
+
+const OUTSIDE_LANDMARKS_RANK = 1
+
 const text = (value: AxValue | undefined) => (typeof value?.value === 'string' ? value.value.trim() : '')
 
-const kept = (node: AxNode): Named | undefined => {
+const valueText = (value: AxValue | undefined) => (typeof value?.value === 'string' || typeof value?.value === 'number' ? String(value.value) : '')
+
+const fieldsOf = (node: AxNode, name: string) => {
+  const value = valueText(node.value)
+  const href = text(node.properties?.find(property => property.name === 'url')?.value)
+  return { ...(value && value !== name && { value }), ...(href && { href }) }
+}
+
+const rankOf = (node: AxNode, byId: Map<string, AxNode>) => {
+  for (let id = node.parentId; id; id = byId.get(id)?.parentId) {
+    const rank = AREA_RANKS[text(byId.get(id)?.role)]
+    if (rank !== undefined) return rank
+  }
+  return OUTSIDE_LANDMARKS_RANK
+}
+
+const kept = (node: AxNode, byId: Map<string, AxNode>): Named | undefined => {
   const role = text(node.role)
   const name = text(node.name)
   const id = node.backendDOMNodeId
-  if (node.ignored || id === undefined) return undefined
-  if (interactive.has(role) || (name && !structural.has(role))) return { node, id, role: roles[role] ?? role, name }
-  return undefined
+  const listable = interactive.has(role) || (name && !structural.has(role))
+  if (node.ignored || id === undefined || !listable) return undefined
+  return { node, id, rank: rankOf(node, byId), role: roles[role] ?? role, name, ...fieldsOf(node, name) }
 }
 
 const repeatsAncestor = (named: Named, byId: Map<string, AxNode>, keptIds: Map<string, Named>) => {
   for (let id = named.node.parentId; id; id = byId.get(id)?.parentId) {
     const ancestor = keptIds.get(id)
-    if (ancestor) return ancestor.name.includes(named.name)
+    if (ancestor) return ancestor.name.includes(named.name) || Boolean(ancestor.value?.includes(named.name))
   }
   return false
 }
 
-export const pickNodes = (nodes: AxNode[]): Named[] => {
+const documentOrder = (nodes: AxNode[], byId: Map<string, AxNode>) => {
+  const visit = (node: AxNode): AxNode[] => [node, ...(node.childIds ?? []).flatMap(id => byId.get(id) ?? []).flatMap(visit)]
+  const root = nodes.find(node => !node.parentId)
+  return root ? visit(root) : []
+}
+
+const pickNodes = (nodes: AxNode[]): Named[] => {
   const byId = new Map(nodes.map(node => [node.nodeId, node]))
-  const keptIds = new Map(nodes.flatMap(node => {
-    const named = kept(node)
-    return named ? [[node.nodeId, named] as const] : []
-  }))
+  const keptIds = new Map(
+    documentOrder(nodes, byId).flatMap(node => {
+      const named = kept(node, byId)
+      return named ? [[node.nodeId, named] as const] : []
+    }),
+  )
   return [...keptIds.values()].filter(named => !(named.role === 'text' && repeatsAncestor(named, byId, keptIds)))
 }
 
@@ -96,6 +140,8 @@ export interface Page {
   viewport: Viewport
 }
 
+const EVERYWHERE: Box = { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity }
+
 const pixelBox = (quads: number[][], origin: Point): Box | undefined => {
   const xs = quads.flatMap(quad => quad.filter((_, index) => index % 2 === 0))
   const ys = quads.flatMap(quad => quad.filter((_, index) => index % 2 === 1))
@@ -117,11 +163,6 @@ const fractions = (box: Box, viewport: Viewport): Box => ({
 })
 
 const screen = (viewport: Viewport): Box => ({ left: 0, top: 0, right: viewport.width, bottom: viewport.height })
-
-export const quadsBox = (quads: number[][], viewport: Viewport): Box | undefined => {
-  const box = clipped(pixelBox(quads, { x: 0, y: 0 }), screen(viewport))
-  return box && fractions(box, viewport)
-}
 
 const nodeBox = async ({ call, origin, clip }: Frame, backendNodeId: number) => {
   const quads = await call<{ quads: number[][] }>('DOM.getContentQuads', { backendNodeId }).then(
@@ -158,29 +199,40 @@ const children = async (frame: Frame, framesIn: FramesIn) => {
   return (await Promise.all([...local, ...remote])).filter(child => child !== undefined)
 }
 
-const frameElements = async (frame: Frame, viewport: Viewport): Promise<UiElement[]> => {
+const frameNodes = async (frame: Frame) => {
   const { nodes } = await frame.call<{ nodes: AxNode[] }>('Accessibility.getFullAXTree', { frameId: frame.tree.frame.id })
+  return pickNodes(nodes)
+}
+
+const eachFrame = async <T>(call: Call, framesIn: FramesIn, clip: Box, visit: (frame: Frame) => Promise<T[]>): Promise<T[]> => {
+  const { frameTree } = await call<{ frameTree: FrameTree }>('Page.getFrameTree')
+  const walk = async (frame: Frame): Promise<T[]> => {
+    const [own, inner] = await Promise.all([visit(frame), children(frame, framesIn)])
+    return [...own, ...(await Promise.all(inner.map(walk))).flat()]
+  }
+  return walk({ tree: frameTree, call, ref: '', origin: { x: 0, y: 0 }, clip })
+}
+
+const placedElements = async (frame: Frame, viewport: Viewport): Promise<UiElement[]> => {
   const placed = await Promise.all(
-    pickNodes(nodes).map(async ({ id, role, name }) => {
+    (await frameNodes(frame)).map(async ({ node, id, rank, ...shown }) => {
       const box = await nodeBox(frame, id)
-      return box ? [{ ref: `${frame.ref}${id}`, role, name, box: fractions(box, viewport) }] : []
+      return box ? [{ ref: `${frame.ref}${id}`, ...shown, box: fractions(box, viewport) }] : []
     }),
   )
   return placed.flat()
 }
 
-const visibleFrames = async ({ call, framesIn, viewport }: Page): Promise<Frame[]> => {
-  const { frameTree } = await call<{ frameTree: FrameTree }>('Page.getFrameTree')
-  const walk = async (frame: Frame): Promise<Frame[]> => [frame, ...(await Promise.all((await children(frame, framesIn)).map(walk))).flat()]
-  return walk({ tree: frameTree, call, ref: '', origin: { x: 0, y: 0 }, clip: screen(viewport) })
-}
+const listedNodes = async (frame: Frame): Promise<PageNode[]> =>
+  (await frameNodes(frame)).map(({ node, ...named }) => ({ ...named, ref: `${frame.ref}${named.id}`, call: frame.call }))
 
-export const pageElements = async (page: Page): Promise<UiElement[]> => {
-  const frames = await visibleFrames(page)
-  return (await Promise.all(frames.map(frame => frameElements(frame, page.viewport)))).flat()
-}
+const visibleFrames = ({ call, framesIn, viewport }: Page) => eachFrame(call, framesIn, screen(viewport), async frame => [frame])
 
-const splitRef = (ref: string) => {
+export const pageElements = ({ call, framesIn, viewport }: Page) => eachFrame(call, framesIn, screen(viewport), frame => placedElements(frame, viewport))
+
+export const pageNodes = (call: Call, framesIn: FramesIn) => eachFrame(call, framesIn, EVERYWHERE, listedNodes)
+
+export const refParts = (ref: string) => {
   const frame = ref.slice(0, ref.lastIndexOf('.') + 1)
   return { session: frame.slice(0, -1), frame, node: Number(ref.slice(frame.length)) }
 }
@@ -191,7 +243,7 @@ const checkSame = async (call: Call, node: number, { ref, role, name }: UiElemen
   const { nodes } = await call<{ nodes: AxNode[] }>('Accessibility.getPartialAXTree', { backendNodeId: node, fetchRelatives: false }).catch(() => {
     throw gone(ref)
   })
-  const now = nodes[0] && kept(nodes[0])
+  const now = nodes[0] && kept(nodes[0], new Map())
   if (!now) throw gone(ref)
   if (now.role !== role || now.name !== name) {
     throw new Error(`Element ${ref} is now ${now.role} "${now.name}", not ${role} "${name}". Call computer_elements again.`)
@@ -204,7 +256,7 @@ const scrollIntoView = (call: Call, node: number, ref: string) =>
   })
 
 export const locateElement = async (page: Page, element: UiElement): Promise<Box> => {
-  const { session, frame, node } = splitRef(element.ref)
+  const { session, frame, node } = refParts(element.ref)
   const call = session ? page.frameCall(session) : page.call
   if (!call) throw gone(element.ref)
   await checkSame(call, node, element)

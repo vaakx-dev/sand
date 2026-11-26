@@ -68,7 +68,7 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
     const registry = sand.app.get(tools)
     expect(registry?.groups().find(group => group.name === 'computer')).toMatchObject({
       chosen: 'off',
-      tools: ['computer_act', 'computer_elements', 'computer_list', 'computer_screenshot'],
+      tools: ['computer_act', 'computer_elements', 'computer_list', 'computer_read', 'computer_screenshot'],
     })
     await registry?.choose('computer', 'always')
   })
@@ -81,9 +81,9 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: 'Done: click.' }] })
     const elements = await turn()
     const listed = elements?.type === 'tool_result' && elements.content[0]?.type === 'text' ? elements.content[0].text : ''
-    expect(listed).toStartWith('Match 1 of 1 for "count", scrolled into view at [0.000, 0.6')
-    expect(listed).toMatch(/^\d+ button "Add one" \[0\.000, 0\.000, 0\.500, 0\.500\]$/m)
-    expect(listed).toMatch(/^\d+ text "Count: 1" \[/m)
+    expect(listed).toMatch(/^Match 1 of 1 for "count", scrolled into view as \d+\.\n1 of \d+ elements on screen match/)
+    expect(listed).toMatch(/^\d+ text "Count: 1" \[0\.000, 0\.6/m)
+    expect(listed).not.toContain('Add one')
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: expect.stringMatching(/pixels\.\nTabs .*\n1\. \[active\] .* — http/) }, { type: 'image', mediaType: 'image/png' }] })
     expect(await turn()).toMatchObject({ isError: true, content: [{ type: 'text', text: expect.stringContaining('No element nope') }] })
   })

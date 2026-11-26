@@ -10,7 +10,7 @@ import { computerTools, group } from './tools'
 export default definePlugin({
   name: 'computer-tools',
   description:
-    "computer_list, computer_screenshot, computer_elements and computer_act: the agent sees and uses computers, by default the last one named in the chat, a bot's chosen one or the only browser; off until the user turns them on",
+    "computer_list, computer_screenshot, computer_elements, computer_read and computer_act: the agent sees and uses computers, by default the last one named in the chat, a bot's chosen one or the only browser; off until the user turns them on",
   inject: { computers, tools, media, sessions },
   apply(ctx) {
     ctx.effect(() =>

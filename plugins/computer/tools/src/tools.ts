@@ -1,5 +1,5 @@
 import type { ImageBlock } from '@sand/chats/contract'
-import type { Box, Computer, Computers, Outcome, UiElement } from '@sand/computers/contract'
+import { matchesText, type Box, type Computer, type Computers, type Found, type Outcome, type UiElement } from '@sand/computers/contract'
 import type { Media } from '@sand/media/contract'
 import type { Tool, ToolContext } from '@sand/tools/contract'
 import { z } from 'zod'
@@ -9,7 +9,11 @@ import { Listed, type Owner } from './listed'
 
 export const group = 'computer'
 
-const maxElements = 400
+const MAX_ELEMENTS = 400
+
+const VALUE_PREVIEW_CHARS = 120
+
+const READ_CHARS = 20_000
 
 const screenshotFit = { width: 1568, height: 1568 }
 
@@ -26,15 +30,44 @@ const round = (value: number) => value.toFixed(3)
 
 const boxText = (box: Box) => `[${round(box.left)}, ${round(box.top)}, ${round(box.right)}, ${round(box.bottom)}]`
 
-const elementLine = ({ ref, role, name, box }: UiElement) => `${ref} ${role}${name ? ` "${name}"` : ''} ${boxText(box)}`
+const preview = (value: string) => (value.length > VALUE_PREVIEW_CHARS ? `${value.slice(0, VALUE_PREVIEW_CHARS)}…` : value)
+
+const elementLine = ({ ref, role, name, value, href, box }: UiElement) =>
+  [ref, role, name && `"${name}"`, value && `= ${JSON.stringify(preview(value))}`, href && `→ ${href}`, boxText(box)].filter(Boolean).join(' ')
+
+const elementLines = (elements: UiElement[]) => {
+  const more = elements.length > MAX_ELEMENTS ? [`…and ${elements.length - MAX_ELEMENTS} more.`] : []
+  return [...elements.slice(0, MAX_ELEMENTS).map(elementLine), ...more]
+}
 
 const matches = (count: number) => `${count} match${count === 1 ? '' : 'es'}`
 
-const search = async (computer: Computer, text: string, match: number) => {
-  if (!computer.find) return `This ${computer.info.kind} cannot find text, so nothing was scrolled. Scroll to look for "${text}".`
-  const { count, box } = await computer.find(text, match)
-  if (match > count) return `${matches(count)} for "${text}"${count ? `; there is no match ${match}` : ''}.`
-  return `Match ${match} of ${count} for "${text}", scrolled into view${box ? ` at ${boxText(box)}` : ''}.`
+interface Search {
+  text: string
+  match: number
+}
+
+const searchNote = (computer: Computer, { text, match }: Search, found: Found | undefined, hit: UiElement | undefined) => {
+  if (!found) return `This ${computer.info.kind} cannot find text, so nothing was scrolled. Scroll to look for "${text}".`
+  if (match > found.count) return `${matches(found.count)} for "${text}"${found.count ? `; there is no match ${match}` : ''}.`
+  return `Match ${match} of ${found.count} for "${text}", scrolled into view${hit ? ` as ${hit.ref}` : ''}.`
+}
+
+const sameRow = (box: Box, other: Box) => box.top < other.bottom && box.bottom > other.top
+
+const searchLines = (computer: Computer, search: Search, found: Found | undefined, elements: UiElement[]) => {
+  const hit = elements.find(element => element.ref === found?.ref)
+  const shown = elements.filter(element => matchesText(element, search.text) || (hit && sameRow(element.box, hit.box)))
+  const summary = `${shown.length} of ${elements.length} elements on screen match "${search.text}" or share a row with the match; leave out find to list them all.`
+  return [searchNote(computer, search, found, hit), summary, ...elementLines(shown)]
+}
+
+const textPage = (text: string, offset: number) => {
+  if (!text) return 'No text.'
+  const end = Math.min(text.length, offset + READ_CHARS)
+  if (offset === 0 && end === text.length) return text
+  const more = end < text.length ? ` Pass offset ${end} for more.` : ''
+  return `${text.slice(offset, end)}\n\n[Characters ${offset}–${end} of ${text.length}.${more}]`
 }
 
 const outcomeText = (outcome: Outcome | undefined) => {
@@ -99,7 +132,9 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
       .string()
       .min(1)
       .optional()
-      .describe('Browsers only: text to find on the page, even off screen, scrolled into view before listing'),
+      .describe(
+        'Browsers only: text to find in element names, labels, values and page text, even off screen or in frames; the best match, main content first, is scrolled into view and only elements that match or share its row are listed',
+      ),
     match: z.number().int().min(1).default(1).describe('Which match of find: 1 is the first'),
   })
 
@@ -107,18 +142,43 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
     name: 'computer_elements',
     group,
     description:
-      'List the UI elements on screen with refs and boxes as fractions of the screenshot. On a browser, pass find instead of scrolling to reach off-screen text; a desktop has no find, so scroll there. Pass a ref to computer_act to act on its center; in browsers a ref follows its element when the page moves or scrolls.',
+      'List the UI elements on screen with refs, field values, link URLs and boxes as fractions of the screenshot. On a browser, pass find instead of scrolling to reach an element or off-screen text; a desktop has no find, so scroll there. Pass a ref to computer_act to act on its center, or to computer_read for its full text; in browsers a ref follows its element when the page moves or scrolls.',
     input: elementsInput,
     effect: 'read',
     needs: ['computer'],
     async run({ computer, find, match }, context) {
       const { id, computer: target } = targetOf(computer, context)
-      const searched = find === undefined ? [] : [await search(target, find, match)]
-      const found = await target.elements()
-      listed.remember(ownerOf(id, context), found)
-      const shown = found.length ? found.slice(0, maxElements).map(elementLine) : ['No elements found.']
-      const more = found.length > maxElements ? [`…and ${found.length - maxElements} more.`] : []
-      return [...searched, ...shown, ...more].join('\n')
+      const list = async () => {
+        const found = await target.elements()
+        listed.remember(ownerOf(id, context), found)
+        return found
+      }
+      if (find === undefined) {
+        const found = await list()
+        return found.length ? elementLines(found).join('\n') : 'No elements found.'
+      }
+      const found = await target.find?.(find, match)
+      return searchLines(target, { text: find, match }, found, await list()).join('\n')
+    },
+  }
+
+  const readInput = which.extend({
+    ref: z.string().optional().describe('An element ref from computer_elements, like a long text field or a rich-text editor or its frame (default: the main text of the page)'),
+    offset: z.number().int().min(0).default(0).describe('Characters to skip, to read on where the last read stopped'),
+  })
+
+  const read: Tool<typeof readInput> = {
+    name: 'computer_read',
+    group,
+    description:
+      'Read text without screenshots: the main text of the page, or the full value or text of one element by ref, like a long field, a rich-text editor or its frame. Long text comes in pages.',
+    input: readInput,
+    effect: 'read',
+    needs: ['computer'],
+    async run({ computer, ref, offset }, context) {
+      const { computer: target } = targetOf(computer, context)
+      if (!target.read) return `This ${target.info.kind} cannot read text. Take a screenshot instead.`
+      return textPage(await target.read(ref), offset)
     },
   }
 
@@ -143,5 +203,5 @@ export const computerTools = (computers: Computers, media: Media, chooser: Choos
     },
   }
 
-  return [list, screenshot, elements, act]
+  return [list, screenshot, elements, read, act]
 }
