@@ -1,2 +1,2 @@
 export { findBrowser } from './find'
-export { attach, launch, type Browser, type CdpEvent, type Launch } from './session'
+export { attach, launch, Unanswered, type Browser, type CdpEvent, type Launch } from './session'
