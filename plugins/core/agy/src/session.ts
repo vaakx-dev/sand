@@ -28,6 +28,7 @@ const RATE_LIMIT_TEXT = /rate limit|resource_exhausted/i
 const QUOTA_TEXT = /quota reached|quota will reset|exhausted your capacity/i
 const ALLOW = ['allow_always', 'allow_once']
 const REJECT = ['reject_once', 'reject_always']
+const SAND_TOOLS_ONLY = `Your built-in tools, such as read_file, write_file, edit_file and run_command, are turned off here, and calling one ends your turn. Use the tools whose names start with mcp_${SERVER_NAME}_ instead.`
 
 function stopReasonOf(raw: unknown): StopReason {
   return raw === 'max_tokens' ? 'max_tokens' : 'end_turn'
@@ -39,6 +40,15 @@ function systemPrompt(init: Json, system: string): Json {
   if (fieldsOf(capabilities.sessionCapabilities).systemPrompt) return { systemPrompt: { mode: 'append', content: [{ type: 'text', text: system }] } }
   if (fieldsOf(fieldsOf(fieldsOf(capabilities._meta).antigravity).systemPrompt).append) return { _meta: { antigravity: { systemPrompt: { append: system } } } }
   return {}
+}
+
+function instructions({ system, tools }: AppSetup): string {
+  if (!tools.length) return system
+  return system ? `${system}\n\n${SAND_TOOLS_ONLY}` : SAND_TOOLS_ONLY
+}
+
+function refusal(tool: string): Error {
+  return new Error(`Antigravity stopped because it called its built-in ${tool} tool, which sand turns off. Ask again and it can use sand's tools.`)
 }
 
 function toolNameOf(name: string): string {
@@ -106,6 +116,7 @@ function reportContext(raw: Json, output: AppOutput) {
 async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNeeds, resume?: string): Promise<AppSession> {
   const turns = new Turns(output)
   const sandTools = new Set(setup.tools.map(tool => toolNameOf(tool.name)))
+  let refused: string | undefined
 
   const bridge = setup.tools.length
     ? mcpBridge({
@@ -127,7 +138,10 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
 
   async function onRequest(method: string, params: Json): Promise<unknown> {
     if (method !== 'session/request_permission') return {}
-    const optionId = permissionOption(params.options, sandTools.has(String(fieldsOf(params.toolCall).name)))
+    const tool = String(fieldsOf(params.toolCall).name)
+    const allowed = sandTools.has(tool)
+    if (!allowed) refused = tool
+    const optionId = permissionOption(params.options, allowed)
     return { outcome: optionId ? { outcome: 'selected', optionId } : { outcome: 'cancelled' } }
   }
 
@@ -147,7 +161,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
   })
 
   const start = async () => {
-    const common = { cwd: setup.cwd, mcpServers: bridge ? [bridge.server] : [], ...systemPrompt(client.init, setup.system) }
+    const common = { cwd: setup.cwd, mcpServers: bridge ? [bridge.server] : [], ...systemPrompt(client.init, instructions(setup)) }
     const created = resume ? await client.request('session/resume', { ...common, sessionId: resume }) : await client.request('session/new', common)
     const sessionId = resume ?? String(created.sessionId ?? '')
     if (!sessionId) throw new Error('Antigravity did not return a session ID')
@@ -169,6 +183,13 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
   }
   await chooseEffort(setup.effort)
 
+  const end = (result: Json) => {
+    const tool = refused
+    refused = undefined
+    if (!tool) return turns.finish(stopReasonOf(result.stopReason))
+    turns.fail(refusal(tool))
+  }
+
   let latestPrompt = 0
   const runPrompt = async (content: ModelContent[], wanted?: Effort) => {
     const prompt = ++latestPrompt
@@ -177,7 +198,7 @@ async function openSession(setup: AppSetup, output: AppOutput, needs: SessionNee
       await chooseEffort(wanted)
       const result = await client.request('session/prompt', { sessionId, prompt: promptBlocks(content, needs.media) })
       reportUsage(fieldsOf(result.usage), output)
-      if (!superseded()) turns.finish(stopReasonOf(result.stopReason))
+      if (!superseded()) end(result)
     } catch (error) {
       if (!superseded()) turns.fail(turns.stopping ? error : await failureOf(needs, error))
     }
