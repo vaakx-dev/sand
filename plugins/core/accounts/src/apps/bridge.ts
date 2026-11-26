@@ -17,7 +17,7 @@ import { errorMessage, untilAborted } from '@sand/util'
 import type { Tracked } from '@sand/processes/contract'
 import type { Dispose } from 'drydock'
 import { stat } from 'node:fs/promises'
-import { blankFiles, secretValues } from './blank'
+import { secretValues } from './blank'
 import { deliver } from './deliver'
 import { createSignals, type Signals } from './signals'
 import { readStep } from './step'
@@ -76,7 +76,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const effortFixed = !plan.caps.reconfigure.includes('effort')
   const toolsFixed = plan.toolLoading === 'fixed'
 
-  const offered = (tools: ToolSpec[]) => (plan.toolLoading === 'search' ? tools : loadedTools(tools))
+  const offered = (tools: ToolSpec[]) => (plan.toolLoading === 'reopen' ? loadedTools(tools) : tools)
 
   const setupPrint = ({ model, effort, system, tools }: AppSetup) => JSON.stringify([model, system, toolsPrint(tools), effortFixed ? effort : undefined])
 
@@ -100,7 +100,7 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
 
   const blankCopy = async (key: string, entry: Live, values: string[]) => {
     await drop(key, entry)
-    if (entry.session.id) await blankFiles((await plan.sessionFiles?.(entry.session.id)) ?? [], values)
+    if (entry.session.id) await plan.blank?.(entry.session.id, values)
   }
 
   const rest = (key: string, entry: Live) => {

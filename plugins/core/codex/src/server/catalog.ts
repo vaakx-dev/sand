@@ -6,7 +6,6 @@ const dropped = ['tool_mode', 'multi_agent_version', 'apply_patch_tool_type', 'w
 const sandOnly = {
   shell_type: 'disabled',
   experimental_supported_tools: [],
-  supports_search_tool: false,
   include_skills_usage_instructions: false,
   include_plugin_usage_instructions: false,
   include_apps_usage_instructions: false,

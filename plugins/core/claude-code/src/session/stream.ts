@@ -1,5 +1,5 @@
-import { type AppOutput, cacheLifetimes, type Usage, UsageLimited, writtenTtl } from '@sand/accounts/contract'
-import { fieldsOf, type Json } from '@sand/app-plan'
+import { type AppOutput, cacheLifetimes, type PlanLimits, type Usage, writtenTtl } from '@sand/accounts/contract'
+import { appFailure, fieldsOf, type Json } from '@sand/app-plan'
 import type { StopReason } from '@sand/chats/contract'
 import { type Resets, resetsOf } from '../account/usage'
 import { OWN_TOOLS } from '../cli/args'
@@ -38,8 +38,10 @@ const resetOf = (info: Json) => {
 
 export const succeeded = (result: Json) => result.subtype === 'success' && !result.is_error
 
-const failureOf = (result: Json, { rejected, resetsAt }: Limit) =>
-  rejected || result.api_error_status === 429 ? new UsageLimited(resultText(result), resetsAt) : new Error(resultText(result))
+const statusOf = (result: Json) => (typeof result.api_error_status === 'number' ? { status: result.api_error_status } : {})
+
+const failureOf = (result: Json, { rejected, resetsAt }: Limit, limits?: PlanLimits) =>
+  appFailure({ message: resultText(result), ...statusOf(result), ...(rejected && { limited: { resetsAt } }), limits })
 
 const createLimit = () => {
   let seen: Limit = { rejected: false }
@@ -103,10 +105,10 @@ export const createReader = (output: AppOutput, ending: Ending = output) => {
       resets = { ...resets, ...resetsOf(info) }
     },
     resets: () => resets,
-    finish(result: Json) {
+    finish(result: Json, limits?: PlanLimits) {
       const limited = limit.take()
       if (succeeded(result)) return ending.finish(stop)
-      ending.fail(failureOf(result, limited))
+      ending.fail(failureOf(result, limited, limits))
     },
   }
 }

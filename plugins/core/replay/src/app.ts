@@ -1,4 +1,5 @@
 import { type AppCall, type AppOutput, type AppPlace, type AppPlan, type AppSession, type AppSetup, type LimitWindow, type PlanLimits, type ProviderCapabilities, UsageLimited } from '@sand/accounts/contract'
+import { blankFiles } from '@sand/app-plan'
 import type { ToolResultContent } from '@sand/chats/contract'
 import { appendFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -147,7 +148,7 @@ export const replayApp = (script: Script, { folder, report, another }: AppOption
     signIn: () => Promise.reject(new Error(`${label} needs no sign-in`)),
     signOut: async () => {},
     models: async () => planModels(script),
-    sessionFiles: async native => (existsSync(fileOf(native)) ? [fileOf(native)] : []),
+    blank: (native, values) => blankFiles(existsSync(fileOf(native)) ? [fileOf(native)] : [], values),
     async open(setup, out, reopened) {
       calls.push({ type: 'open', cwd: setup.cwd, ...(reopened && { resume: reopened }) })
       return session(setup, out, reopened)

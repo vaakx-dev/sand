@@ -7,6 +7,8 @@ import { join } from 'node:path'
 import { listModels, readStatus, signIn, signOut } from './account'
 import { startAcp } from './acp'
 import { agy } from './binary'
+import { blankConversation } from './blank'
+import { conversationFile } from './conversation'
 import { agyHistory } from './history'
 import { readLimits } from './limits'
 import { openSession } from './session'
@@ -38,6 +40,7 @@ function antigravity(media: Media, asides: string): Provider {
         models: () => listModels(folder),
         usage: () => readLimits(folder),
         history: agyHistory(folder),
+        blank: (session, values) => blankConversation(conversationFile(folder, session), values),
         open: (setup, output, resume) => openSession(setup, output, { media, folder, asides, report, connect: startAcp }, resume),
       }
     },

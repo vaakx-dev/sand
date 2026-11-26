@@ -1,5 +1,5 @@
 import { llmPlans, type ProviderCapabilities } from '@sand/accounts/contract'
-import { appPlan, type Provider } from '@sand/app-plan'
+import { appPlan, blankFiles, type Provider } from '@sand/app-plan'
 import { media, type Media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { modelCatalog } from './account/models'
@@ -14,7 +14,7 @@ const CAPS: ProviderCapabilities = {
   native: true,
   resume: true,
   inject: false,
-  reconfigure: [],
+  reconfigure: ['effort'],
   processScope: 'thread',
   cacheTtlMs: 5 * 60_000,
 }
@@ -40,7 +40,7 @@ const claudeCode = (media: Media): Provider => ({
       usage: () => readUsage(folder),
       history: claudeHistory(folder),
       open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume ? { id: resume, start: 'resume' } : undefined),
-      sessionFiles: session => sessionFiles(session, folder),
+      blank: async (session, values) => blankFiles(await sessionFiles(session, folder), values),
     }
   },
 })

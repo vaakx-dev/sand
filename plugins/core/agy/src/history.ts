@@ -2,9 +2,9 @@ import type { AppTurn } from '@sand/accounts/contract'
 import { fileHistory, type Listed } from '@sand/app-plan'
 import { Database } from 'bun:sqlite'
 import { readdir, stat } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { conversationsFolder, DATABASE_SUFFIX } from './conversation'
 import { Message } from './wire'
 
 interface Conversation {
@@ -14,7 +14,6 @@ interface Conversation {
   database: Database
 }
 
-const DATABASE_SUFFIX = '.db'
 const WAL_SUFFIX = '-wal'
 const MS_PER_SECOND = 1000
 const NS_PER_MS = 1e6
@@ -32,10 +31,6 @@ const STEP_STARTED = 1
 const TIME_SECONDS = 1
 const TIME_NANOS = 2
 const TRAJECTORY_WORKSPACE = 7
-
-function conversationsFolder(folder?: string): string {
-  return join(folder ?? join(homedir(), '.gemini'), 'antigravity-cli', 'conversations')
-}
 
 async function listedOf(path: string): Promise<Listed[]> {
   const file = await stat(path).catch(() => undefined)

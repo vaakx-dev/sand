@@ -64,6 +64,10 @@ test('an app with its own tool search gets every tool once and keeps its session
   expect(await findingCalendar('search')).toEqual([['find_tools', 'calendar']])
 })
 
+test('an app that searches tools itself but fixes them at thread start gets every tool once and keeps its thread when one is found', async () => {
+  expect(await findingCalendar('fixed')).toEqual([['find_tools', 'calendar']])
+})
+
 test('an app without tool search is reopened with the tool once it is found', async () => {
   expect(await findingCalendar('reopen')).toEqual([['find_tools'], ['find_tools', 'calendar']])
 })

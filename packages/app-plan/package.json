@@ -10,6 +10,7 @@
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/media": "workspace:*",
+    "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*"
   }
 }
