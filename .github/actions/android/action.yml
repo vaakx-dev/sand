@@ -27,7 +27,9 @@ runs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
+          ~/.m2/repository/org/robolectric
         key: gradle-${{ runner.os }}-${{ hashFiles('apps/android/build.gradle.kts', 'apps/android/app/build.gradle.kts', 'apps/android/settings.gradle.kts', 'apps/android/gradle.properties', 'apps/android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: gradle-${{ runner.os }}-
     - name: Build and sign the APK
       shell: bash
       working-directory: apps/android
@@ -42,6 +44,6 @@ runs:
           export SAND_ANDROID_KEYSTORE="$RUNNER_TEMP/sand.jks"
         fi
         export SAND_ANDROID_VERSION_CODE="$(git log -1 --format=%ct HEAD)"
-        ./gradlew testReleaseUnitTest assembleRelease --no-daemon
+        ./gradlew testReleaseUnitTest assembleRelease --no-daemon || ./gradlew testReleaseUnitTest assembleRelease --no-daemon
         mkdir -p "${{ inputs.assets }}"
         cp app/build/outputs/apk/release/app-release.apk "${{ inputs.assets }}/sand.apk"

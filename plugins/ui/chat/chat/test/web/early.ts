@@ -1,8 +1,6 @@
-import { afterAll, beforeAll, test } from 'bun:test'
+import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { chromium, type Browser } from 'playwright'
 import { newChat, startSandbox } from './sandbox'
-
-const editorDelayMs = 1500
 
 let sand: Awaited<ReturnType<typeof startSandbox>>
 let browser: Browser
@@ -17,22 +15,30 @@ afterAll(async () => {
   await sand?.stop()
 })
 
-test('what is typed before the editor has loaded shows at once, stays and sends', async () => {
+test('what is typed and edited before the editor has loaded shows at once, stays and sends', async () => {
   const page = await (await browser.newContext({ serviceWorkers: 'block' })).newPage()
   await page.goto(sand.url)
   await newChat(page)
+  const editorLoads = Promise.withResolvers<void>()
   await page.route(
     url => url.pathname.startsWith('/assets/chunk-'),
     async route => {
-      await Bun.sleep(editorDelayMs)
+      await editorLoads.promise
       await route.continue()
     },
   )
   await page.reload()
   const box = page.getByRole('textbox').first()
   await box.click()
-  await page.keyboard.type('hello there')
-  await page.getByText('hello there').first().waitFor({ timeout: 500 })
+  await page.keyboard.type('hello wrld')
+  await page.keyboard.press('Control+Backspace')
+  await page.keyboard.type('world')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('again')
+  await page.getByText('again').first().waitFor()
+  editorLoads.resolve()
+  await page.locator('.cm-content').waitFor()
+  expect(await box.innerText()).toBe('hello world\nagain')
   const send = page.getByRole('button', { name: 'Send' })
   await page.waitForFunction(() => document.querySelector('[aria-label="Send"]')?.getAttribute('aria-disabled') === 'false', undefined, { timeout: 10_000 })
   await send.click()

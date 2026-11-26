@@ -42,6 +42,7 @@ const stillRunning = async (signal: AbortSignal) => {
 }
 
 const moveInlineMedia = async ({ ledger, media, signal }: Backfill): Promise<CompactFailure | undefined> => {
+  if (signal.aborted) return undefined
   const { db } = ledger
   const progress = db.query<{ next: number; last: number }, []>('select next, last from media_backfill')
   const advance = db.query('update media_backfill set next = $next')

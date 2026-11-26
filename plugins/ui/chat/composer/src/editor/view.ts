@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, effect, scoped, show, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, listen, scoped, show, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Completion } from '../complete/model'
 import type { Records } from '../records'
 import type { DrawChip } from './chips/widget'
@@ -34,7 +34,9 @@ export const loadEditor = () =>
     return module
   }))
 
-const insertedText = (event: InputEvent) => event.data ?? event.dataTransfer?.getData('text/plain') ?? ''
+const BROWSER_END_BREAK = /\n$/
+
+const heldText = (field: HTMLElement) => field.textContent.replace(BROWSER_END_BREAK, '')
 
 export const createEditor = (parts: EditorParts) => {
   const editorHint = parts.hint()
@@ -48,7 +50,6 @@ export const createEditor = (parts: EditorParts) => {
     if (existing) return existing
     const editor = untrack(() => module.mountEditor({ ...parts, hint: () => editorHint }, parts.text.get()))
     const typed = untrack(() => early.get())
-    early.set('')
     mounted.set(editor)
     if (typed) editor.insert(typed)
     if (focused) editor.focusEnd()
@@ -68,29 +69,22 @@ export const createEditor = (parts: EditorParts) => {
     run(editor => editor.focus())
   }
 
-  const hold = (event: InputEvent) => {
-    if (made()) return
-    event.preventDefault()
-    if (event.inputType.startsWith('delete')) early.update(text => text.slice(0, -1))
-    else early.update(text => text + insertedText(event))
-  }
-
   const standIn = div(
-    {
-      class: 'outline-none',
-      contentEditable: 'true',
+    { class: 'relative' },
+    show(
+      () => !early.get(),
+      () => span({ class: 'pointer-events-none absolute inset-0 text-neutral-500' }, parts.hint()),
+    ),
+    div({
+      class: 'whitespace-pre-wrap outline-none',
+      contentEditable: 'plaintext-only',
       role: 'textbox',
       'aria-label': 'Message',
       'aria-multiline': 'true',
       onFocus: wake,
       onBlur: () => (focused = false),
-      onBeforeInput: hold,
-    },
-    show(
-      () => !early.get(),
-      () => span({ class: 'contents text-neutral-500' }, parts.hint()),
-    ),
-    span({ class: 'whitespace-pre-wrap' }, () => early.get()),
+      onMount: (field: HTMLElement) => listen(field, 'input', () => early.set(heldText(field))),
+    }),
   )
   const node = div(
     { class: 'text-neutral-100 leading-relaxed' },

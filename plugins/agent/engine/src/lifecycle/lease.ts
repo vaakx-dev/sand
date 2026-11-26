@@ -12,6 +12,7 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   let leaving = false
   let watching = 0
   let staying: (() => void) | undefined
+  let emptied: (() => void) | undefined
 
   const until = () => Date.now() + leaseFor
 
@@ -38,7 +39,15 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
     timer = undefined
   }
 
-  ctx.effect(() => stop)
+  const interruptAll = () => {
+    stop()
+    if (!held.size) return
+    const ended = new Promise<void>(resolve => (emptied = resolve))
+    for (const controller of held.values()) controller.abort()
+    return ended
+  }
+
+  ctx.effect(() => interruptAll)
 
   return {
     holder,
@@ -58,7 +67,9 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
       timer ??= setInterval(beat, beatEvery)
       return () => {
         held.delete(turn)
-        if (!held.size) stop()
+        if (held.size) return
+        stop()
+        emptied?.()
       }
     },
     interrupt(turn: string, interruption?: Interruption) {

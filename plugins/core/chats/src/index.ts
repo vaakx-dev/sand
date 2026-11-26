@@ -22,9 +22,10 @@ export default definePlugin({
     ctx.effect(() => ctx.media.inUse(usedMedia(db)))
     ctx.effect(() => {
       const stop = new AbortController()
+      const backfill = { ledger: ctx.ledger, media: ctx.media, signal: stop.signal }
       void ctx
         .settled()
-        .then(() => moveInlineMedia({ ledger: ctx.ledger, media: ctx.media, signal: stop.signal }))
+        .then(() => moveInlineMedia(backfill))
         .then(failure => failure && ctx.report(new Error(failure.error)), (error: unknown) => ctx.report(error))
       return () => stop.abort()
     })
