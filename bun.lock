@@ -27,7 +27,7 @@
     },
     "apps/sand": {
       "name": "sand",
-      "version": "0.1.0-beta.8",
+      "version": "0.1.0-beta.9",
       "bin": {
         "sand": "./src/main.ts",
       },
@@ -1746,6 +1746,7 @@
         "@sand/app-plan": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/media": "workspace:*",
+        "@sand/usage": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -1759,6 +1760,7 @@
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/media": "workspace:*",
+        "@sand/usage": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },

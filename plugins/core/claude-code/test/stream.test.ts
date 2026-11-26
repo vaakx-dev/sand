@@ -1,4 +1,4 @@
-import { type AppCall, type AppOutput, ProviderTrouble, UsageLimited } from '@sand/accounts/contract'
+import { type AppCall, type AppOutput, ProviderTrouble, type Usage, UsageLimited } from '@sand/accounts/contract'
 import { expect, test } from 'bun:test'
 import { createReader } from '../src/session/stream'
 import { usageLimits } from '../src/account/usage'
@@ -17,7 +17,7 @@ const reading = () => {
     fail: error => void failed.push(error),
     exit() {},
   }
-  return { failed, calls, reader: createReader(output) }
+  return { failed, calls, output, reader: createReader(output) }
 }
 
 const limited = { type: 'result', subtype: 'success', is_error: true, api_error_status: 429, result: 'You’ve hit your limit · resets 3:40pm' }
@@ -70,4 +70,21 @@ test('the 5-hour window resets when Claude Code’s rate-limit events say, not a
   }
 
   expect(usageLimits(usage, reader.resets())?.windows.map(window => window.resetsAt)).toEqual([1_900_001_820_000, 1_900_300_000_000])
+})
+
+test('a step that makes several model requests bills them all, while its context is the last request’s', () => {
+  const usage: Partial<Usage>[] = []
+  const used: number[] = []
+  const reader = createReader({ ...reading().output, usage: spent => void usage.push(spent), context: ({ used: tokens }) => void used.push(tokens ?? 0) })
+  const request = (cacheRead: number) => {
+    reader.read({ type: 'stream_event', event: { type: 'message_start', message: { usage: { input_tokens: 2, cache_read_input_tokens: cacheRead } } } })
+    reader.read({ type: 'stream_event', event: { type: 'message_delta', delta: {}, usage: { input_tokens: 2, cache_read_input_tokens: cacheRead, cache_creation_input_tokens: 700, output_tokens: 298 } } })
+  }
+
+  request(133_000)
+  request(134_000)
+  request(135_000)
+
+  expect(used.at(-1)).toBe(136_000)
+  expect(usage.reduce((total, spent) => total + (spent.input ?? 0) + (spent.cacheRead ?? 0) + (spent.cacheWrite ?? 0) + (spent.output ?? 0), 0)).toBe(405_000)
 })
