@@ -91,6 +91,15 @@ test('in the Android app, Back closes the open menu first and only then lets the
   await page.close()
 }, 60_000)
 
+test('opening the page from a notification\'s Reply puts the cursor in the composer and drops the flag from the address', async () => {
+  const page = await app.newPage()
+  await page.goto(`${APP_ORIGIN}/?reply`)
+  await page.getByRole('textbox').first().waitFor()
+  await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'textbox')
+  expect(new URL(page.url()).searchParams.has('reply')).toBe(false)
+  await page.close()
+}, 60_000)
+
 test('in the Android app, a chat picture loads through the page the app serves, since the WebView loads no pictures straight from the PC', async () => {
   const page = await app.newPage()
   await page.goto(`${APP_ORIGIN}/`)

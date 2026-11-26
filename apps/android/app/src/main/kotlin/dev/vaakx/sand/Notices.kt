@@ -21,19 +21,23 @@ private const val PREFS = "notices"
 private const val TOKEN = "token"
 private const val SEEN = "seen"
 const val EXTRA_PATH = "path"
+private const val REPLY_PARAM = "reply"
 const val CONNECTION_NOTICE = 1
 
-private fun addressOf(notice: JSONObject): String {
+private fun conversationOf(notice: JSONObject): String? {
     val thread = notice.optString("thread")
     if (thread.isNotEmpty()) return "/?view=thread&id=${Uri.encode(thread)}"
     val bot = notice.optString("bot")
-    return if (bot.isNotEmpty()) "/?view=bot&id=${Uri.encode(bot)}" else "/"
+    return if (bot.isNotEmpty()) "/?view=bot&id=${Uri.encode(bot)}" else null
 }
 
-private fun opening(context: Context, path: String, code: Int): PendingIntent {
+private fun opening(context: Context, path: String): PendingIntent {
     val open = Intent(context, MainActivity::class.java).putExtra(EXTRA_PATH, path)
-    return PendingIntent.getActivity(context, code, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    return PendingIntent.getActivity(context, path.hashCode(), open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 }
+
+private fun replying(context: Context, conversation: String) =
+    NotificationCompat.Action(R.drawable.notice, context.getString(R.string.reply), opening(context, "$conversation&$REPLY_PARAM"))
 
 private fun ensureChannels(context: Context) {
     val notices = NotificationChannel(NOTICES_CHANNEL, context.getString(R.string.notices), NotificationManager.IMPORTANCE_HIGH)
@@ -55,13 +59,15 @@ fun show(context: Context, notice: JSONObject) {
     ensureChannels(context)
     val tag = notice.optString("tag")
     val body = notice.optString("body")
+    val conversation = conversationOf(notice)
     val notification = NotificationCompat.Builder(context, NOTICES_CHANNEL)
         .setSmallIcon(R.drawable.notice)
         .setContentTitle(notice.optString("title", "sand"))
         .setContentText(body)
         .setStyle(NotificationCompat.BigTextStyle().bigText(body))
         .setAutoCancel(true)
-        .setContentIntent(opening(context, addressOf(notice), tag.hashCode()))
+        .setContentIntent(opening(context, conversation ?: "/"))
+        .apply { conversation?.let { addAction(replying(context, it)) } }
         .build()
     post(context, tag, 0, notification)
 }
@@ -75,7 +81,7 @@ fun connectionNotice(context: Context, state: Int): Notification {
         .setSilent(true)
         .setShowWhen(false)
         .setPriority(NotificationCompat.PRIORITY_MIN)
-        .setContentIntent(opening(context, "/", CONNECTION_NOTICE))
+        .setContentIntent(opening(context, "/"))
         .build()
 }
 
