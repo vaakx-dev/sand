@@ -52,6 +52,8 @@ interface Replies {
   next: Item | undefined
 }
 
+const REPLY_LENGTH = 280
+
 const opens = (item: Item) => item.opens !== undefined
 
 const timeOf = (item: Item) => {
@@ -82,10 +84,17 @@ const answered = (body: Item[]) => body[tail(body) - 1]?.kind === 'text'
 
 const closes = (next: Item | undefined) => next === undefined || pinned(next)
 
+const substantial = (text: string) => {
+  const trimmed = text.trim()
+  return trimmed.includes('\n') || trimmed.length >= REPLY_LENGTH
+}
+
+const replying = (item: Item, next: Item | undefined) => item.kind === 'text' && (closes(next) || substantial(item.text))
+
 const repliesOf = (body: Item[]) =>
   body.reduceRight<Replies>(
     ({ replies, next }, item, index) => ({
-      replies: item.kind === 'text' && closes(next) ? replies.add(index) : replies,
+      replies: replying(item, next) ? replies.add(index) : replies,
       next: item.kind === 'notice' ? next : item,
     }),
     { replies: new Set(), next: undefined },

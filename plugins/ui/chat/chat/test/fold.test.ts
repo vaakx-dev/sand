@@ -45,6 +45,20 @@ describe('foldTurns', () => {
       const items = [text('narration', 2_000), thinking('t1', 3_000), steer, text('reply', 6_000)]
       expect(shownKeys(items)).toEqual(['notified', 'steer', 'reply'])
     })
+
+    test('a formatted reply sent with a tool call, but not a short narration', () => {
+      const said = (key: string, body: string, at: number): Item => ({ kind: 'text', key, text: body, streaming: false, at })
+      const call = (key: string, at: number): Item => ({ kind: 'tools', key, start: at, end: at, running: false, steps: [{ kind: 'tool', key: `${key}:0`, tool: { call: { type: 'tool_call', id: key, name: 'sleep', input: {} }, status: 'done', thread: 't' } }] })
+      const items = [
+        said('narration', 'Let me check that.', 2_000),
+        call('read', 2_500),
+        said('formatted reply', '## Fixed\n- The parser keeps the last line.', 3_000),
+        call('sleep', 3_500),
+        custom('notified again', 4_000),
+        text('second reply', 5_000),
+      ]
+      expect(shownKeys(items)).toEqual(['notified', 'formatted reply', 'notified again', 'second reply'])
+    })
   })
 
   test('calls made inside a script count like top-level ones', () => {
