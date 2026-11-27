@@ -1,7 +1,8 @@
 import type { SheetSpec } from '@sand/ui-shell/contract'
 import type { Theme } from '@sand/ui-theme/contract'
 import type { Choice, Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, effect, intersectionObserver, keys, show, sig } from '@vaakx-dev/vrui'
+import { onceNearView } from '@sand/reactive'
+import { derive, div, dynamicChild, effect, keys, show, sig } from '@vaakx-dev/vrui'
 import type { Diagrams } from './diagrams'
 import { type Drawn, placeDiagram } from './integrations/mermaid'
 
@@ -26,8 +27,6 @@ const WAITING: Face = { kind: 'waiting' }
 
 const SOURCE: Face = { kind: 'source' }
 
-const NEAR_SCREEN = '400px'
-
 const READABLE_TEXT_PX = 12
 
 let shown = 0
@@ -36,17 +35,6 @@ const CHOICES: Choice<Showing>[] = [
   { value: 'diagram', label: 'Diagram' },
   { value: 'source', label: 'Source' },
 ]
-
-const whenNear = (element: Element, reached: () => void) =>
-  void intersectionObserver(
-    element,
-    (entries, observer) => {
-      if (!entries.some(entry => entry.isIntersecting)) return
-      observer.disconnect()
-      reached()
-    },
-    { rootMargin: NEAR_SCREEN },
-  )
 
 const sourceBlock = (kit: Kit, source: string) => kit.codeBlock({ class: 'whitespace-pre' }, source)
 
@@ -115,7 +103,7 @@ const diagramView = ({ kit, diagrams, fullScreen }: Parts, source: string, title
     const readable = () => drawing.get().kind === 'drawn' || drawing.get().kind === 'waiting'
     const expandable = () => face.get().kind === 'drawn'
     return div(
-      { class: 'flex min-w-0 flex-col gap-1', 'data-diagram': String(++shown), onMount: element => whenNear(element, () => near.set(true)) },
+      { class: 'flex min-w-0 flex-col gap-1', 'data-diagram': String(++shown), onMount: element => onceNearView(element, () => near.set(true)) },
       dynamicChild(face, value => faceView(kit, source, value, { retry, expand })),
       div(
         { class: 'flex items-center gap-1' },

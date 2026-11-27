@@ -22,6 +22,7 @@
   "dependencies": {
     "@sand/file-viewer": "workspace:*",
     "@sand/markdown": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-shell": "workspace:*",
     "@sand/ui-theme": "workspace:*",

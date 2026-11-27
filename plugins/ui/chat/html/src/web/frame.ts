@@ -1,4 +1,5 @@
 import { pcHello } from '@sand/devices-contract'
+import { onceNearView } from '@sand/reactive'
 import { shell, type SheetHandle } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
@@ -9,7 +10,6 @@ import type { FrameContext } from './context'
 import { expandedPage } from './expand'
 import { frameHeight, type FrameHeights } from './heights'
 import { sandboxedFrame } from './integrations/frame'
-import { onceNearView } from './near'
 import { connectPage } from './page'
 
 const loadingNote = ({ loadingState }: Kit) => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center' }, loadingState())

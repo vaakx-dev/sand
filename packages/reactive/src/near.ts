@@ -1,6 +1,6 @@
 import { intersectionObserver } from '@vaakx-dev/vrui'
 
-const margin = '800px'
+const NEAR_MARGIN = '800px'
 
 export const onceNearView = (element: Element, run: () => void) => {
   const observer = intersectionObserver(
@@ -10,6 +10,6 @@ export const onceNearView = (element: Element, run: () => void) => {
       observer.disconnect()
       run()
     },
-    { rootMargin: margin, scrollMargin: margin },
+    { rootMargin: NEAR_MARGIN, scrollMargin: NEAR_MARGIN },
   )
 }

@@ -1,4 +1,5 @@
 export { floating } from './floating'
+export { onceNearView } from './near'
 export { owned } from './owned'
 export { pulse, type Pulse } from './pulse'
 export { running } from './running'
