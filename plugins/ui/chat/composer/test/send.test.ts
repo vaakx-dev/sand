@@ -1,4 +1,5 @@
-import type { Prompt } from '@sand/chats/contract'
+import type { Shelves } from '@sand/attachments/web/contract'
+import type { Prompt, UserContent } from '@sand/chats/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { expect, test } from 'bun:test'
 import { createModel, type Model } from '../src/model'
@@ -29,6 +30,39 @@ const targetIn = (conversation: () => string, deliver: (to: { conversation: stri
   deliver,
   interrupt: async () => {},
 })
+
+const tick = () => new Promise(resolve => setTimeout(resolve))
+
+const act = (model: Model, prompt: string, action: string) =>
+  model
+    .sending()
+    .find(send => send.prompt === prompt)
+    ?.actions.find(found => found.id === action)
+    ?.run()
+
+const actionsOn = (model: Model, prompt: string) => model.sending().find(send => send.prompt === prompt)?.actions.map(action => action.id)
+
+const slowUploads = () => {
+  const uploads: PromiseWithResolvers<UserContent[]>[] = []
+  const shelves: Shelves = {
+    create: () => ({ attachable: () => true, rejected: () => false, pick: () => {}, paste: () => false, view: () => document.createElement('div'), drops: () => document.createElement('div') }),
+    content: () => {
+      const upload = Promise.withResolvers<UserContent[]>()
+      uploads.push(upload)
+      return upload.promise
+    },
+    uploaded: () => [],
+    progress: () => undefined,
+    shown: () => [],
+  }
+  return { shelves, uploads }
+}
+
+const sendWithPhoto = (model: Model, text: string) => {
+  model.text.set(text)
+  model.attached.set([new File(['pixels'], `${text}.png`)])
+  return model.send()
+}
 
 const sandLosingFirstAnswer = () => {
   const delivered = new Map<string, Prompt>()
@@ -93,4 +127,59 @@ test('a message keeps going to the thread it was sent in after you open another,
   await delivered(model)
   expect(arrived).toEqual([{ thread: 'first', text: 'look at this' }])
   expect(model.sending()).toEqual([])
+})
+
+test('a message removed or edited while it waits behind another never reaches sand, and the one already on its way can no longer be taken back', async () => {
+  const answered = Promise.withResolvers<void>()
+  const arrived: string[] = []
+  const target = targetIn(
+    () => 'helper',
+    async (_to, { text }) => {
+      arrived.push(text)
+      await answered.promise
+    },
+  )
+  const model = createModel(target, [], sig(undefined), unsaved)
+  for (const text of ['first', 'second', 'third']) {
+    model.text.set(text)
+    await model.send()
+  }
+  await tick()
+
+  expect(actionsOn(model, 'first')).toEqual([])
+  await act(model, 'second', 'remove')
+  await act(model, 'third', 'edit')
+  expect(model.text.get()).toBe('third')
+  model.text.set('third, reworded')
+  await model.send()
+  answered.resolve()
+  await delivered(model)
+
+  expect(arrived).toEqual(['first', 'third, reworded'])
+})
+
+test('a message removed while its files upload is never sent, and its failed upload stays out of the composer', async () => {
+  const { shelves, uploads } = slowUploads()
+  const open = sig('photos')
+  const arrived: string[] = []
+  const target = targetIn(
+    () => open.get(),
+    async (_to, { text }) => void arrived.push(text),
+  )
+  const model = createModel(target, [], sig(shelves), unsaved)
+  await sendWithPhoto(model, 'scan')
+  open.set('notes')
+  await sendWithPhoto(model, 'photo')
+  await tick()
+
+  await act(model, 'scan', 'remove')
+  await act(model, 'photo', 'remove')
+  const [scan, photo] = uploads
+  photo?.reject(new Error('the upload was cut off'))
+  scan?.resolve([])
+  await tick()
+
+  expect(arrived).toEqual([])
+  expect(model.text.get()).toBe('')
+  expect(model.failure.get()).toBeUndefined()
 })
