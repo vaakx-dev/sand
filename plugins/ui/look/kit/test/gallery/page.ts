@@ -137,7 +137,13 @@ const menuSample = () => {
   const spec = () => ({
     title: 'Fix the flaky cache test',
     actions: [
+      { id: 'pin', label: 'Pin', icon: 'pin', quick: true, run: () => {} },
+      { id: 'rename', label: 'Rename', icon: 'pencil', quick: true, run: () => {} },
+      { id: 'share', label: 'Share', icon: 'link', quick: true, run: () => {} },
       { id: 'copy', label: 'Copy link', icon: 'copy', run: () => {} },
+      { id: 'fork', label: 'Fork thread', icon: 'branch', run: () => {} },
+      { id: 'move', label: 'Move to project', icon: 'folder', run: () => {} },
+      { id: 'archive', label: 'Archive', icon: 'archive', run: () => {} },
       { id: 'delete', label: 'Delete', icon: 'trash', group: 'danger', danger: true, confirm: 'Delete this thread?', run: () => {} },
     ],
   })
