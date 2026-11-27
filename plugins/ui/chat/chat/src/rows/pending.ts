@@ -70,7 +70,7 @@ const sendingOf = (sending: Sending): Shown => ({
 
 const rowsOf = (ctx: ChatContext, session: string, { item, caption, look, actions, resume }: Shown, rows: Rows): Row[] => {
   const entry: Entry = { id: item.id, session, parent: null, at: item.at, type: 'message', data: null, seq: 0 }
-  const key = [item.id, look ?? caption, resume?.label].filter(Boolean).join(':')
+  const key = [item.id, look ?? caption, ...actions.map(action => action.label)].filter(Boolean).join(':')
   const shown = (part: Item) =>
     part.kind === 'user' ? [rows.user({ ...part, key }, () => actions, caption ? note(ctx, caption, resume) : undefined)] : rows.item(part)
   return ctx.transcriptParts.prompt(entry, userParts({ role: 'user', content: promptContent(item.prompt) })).flatMap(shown)

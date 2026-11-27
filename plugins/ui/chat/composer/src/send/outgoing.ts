@@ -7,7 +7,7 @@ import { derive, effect, onTimeout, sig, untrack, type Sig } from '@vaakx-dev/vr
 import type { Destination, Sending } from '../contract'
 import type { Saved } from '../drafts/store'
 import { contextOf } from '../records'
-import type { Target } from '../target'
+import type { Outbound, Target } from '../target'
 
 export interface Send {
   id: string
@@ -45,9 +45,12 @@ export const sendsIn = (database: KeyVal<Send[]>, scope: string): SendsSaved => 
 
 export const createOutgoing = ({ target, shelves, saved, returned, edit }: OutgoingParts) => {
   const sends = sig<Send[]>([])
+  const handed = sig(new Set<string>())
   const chains = new Map<string, Promise<void>>()
 
   const persist = () => void saved.save(untrack(() => sends.get()))
+
+  const listed = (send: Send) => untrack(() => sends.get()).some(found => found.id === send.id)
 
   const replace = (id: string, change: (send: Send) => Send[]) => {
     sends.update(all => all.flatMap(send => (send.id === id ? change(send) : [send])))
@@ -57,6 +60,7 @@ export const createOutgoing = ({ target, shelves, saved, returned, edit }: Outgo
   const remove = (id: string) => replace(id, () => [])
 
   const fail = (send: Send, error: unknown) => {
+    if (!listed(send)) return
     const message = sendError(error)
     if (returned(send, message)) return remove(send.id)
     replace(send.id, found => [{ ...found, failed: message }])
@@ -82,11 +86,29 @@ export const createOutgoing = ({ target, shelves, saved, returned, edit }: Outgo
     return (shelves.get() ?? (await loadedShelves())).content(items, device)
   }
 
-  const deliver = async (send: Send) => {
-    const { draft, to } = send
+  const outboundOf = async ({ id, draft, to }: Send): Promise<Outbound> => {
     const items = await contentOf(draft.items, to.device)
-    const content = [...items, ...contextOf(draft.records)]
-    await target.deliver(to, { id: send.id, text: draft.text.trim(), content, settings: draft.settings ?? {} })
+    return { id, text: draft.text.trim(), content: [...items, ...contextOf(draft.records)], settings: draft.settings ?? {} }
+  }
+
+  const hand = (send: Send) => handed.update(ids => new Set(ids).add(send.id))
+
+  const handBack = (send: Send) => handed.update(ids => new Set([...ids].filter(id => id !== send.id)))
+
+  const handOver = async (send: Send, message: Outbound) => {
+    hand(send)
+    try {
+      await target.deliver(send.to, message)
+    } finally {
+      handBack(send)
+    }
+  }
+
+  const deliver = async (send: Send) => {
+    if (!listed(send)) return
+    const message = await outboundOf(send)
+    if (!listed(send)) return
+    await handOver(send, message)
   }
 
   const run = (send: Send) => {
@@ -136,7 +158,7 @@ export const createOutgoing = ({ target, shelves, saved, returned, edit }: Outgo
     return promptOf(send.draft.text.trim(), [...items, ...contextOf(send.draft.records)])
   }
 
-  const actionsOf = (send: Send) => [
+  const changes = (send: Send) => [
     ...(send.failed ? [{ id: 'retry', label: 'Retry', icon: 'retry' as const, run: () => retry(send.id) }] : []),
     {
       id: 'edit',
@@ -149,6 +171,8 @@ export const createOutgoing = ({ target, shelves, saved, returned, edit }: Outgo
     },
     { id: 'remove', label: 'Remove', icon: 'x' as const, group: 'remove', danger: true, run: () => remove(send.id) },
   ]
+
+  const actionsOf = (send: Send) => (handed.get().has(send.id) ? [] : changes(send))
 
   const shown = derive(() =>
     sends.get().map(
