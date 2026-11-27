@@ -10,6 +10,7 @@
     "feature": "location",
     "host": "./src/host/index.ts",
     "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
     "label": "Location",
     "summary": "Agents can ask where you are, from your phone or a browser running sand",
     "features": {
