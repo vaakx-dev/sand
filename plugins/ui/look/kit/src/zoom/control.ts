@@ -83,7 +83,7 @@ class ZoomControl {
 
   show = (stage: ZoomStage) => {
     this.#stage = stage
-    return joinDisposers(zoomGesture(stage.node, this, { wheel: stage.wheel, surface: 'fixed' }), () => {
+    return joinDisposers(zoomGesture(stage.node, this, { wheel: stage.wheel, points: 'client' }), () => {
       this.#stage = undefined
     })
   }

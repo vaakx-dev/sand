@@ -1,4 +1,4 @@
-import { derive, div, resizeObserver, sig, type Child, type Props } from '@vaakx-dev/vrui'
+import { derive, div, read, resizeObserver, sig, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { ZoomControl } from './control'
 
 interface Size {
@@ -12,11 +12,12 @@ interface FitZoomOptions {
 
 const STAGE_MARGIN = 24
 
-const fitZoom = (size: Size, { readableLevel = 0 }: FitZoomOptions = {}) => {
+const fitZoom = (size: MaybeReactive<Size>, { readableLevel = 0 }: FitZoomOptions = {}) => {
   const room = sig<Size>({ width: 0, height: 0 })
   const fitted = derive(() => {
     const { width, height } = room.get()
-    return width ? Math.min((width - 2 * STAGE_MARGIN) / size.width, (height - 2 * STAGE_MARGIN) / size.height) : 1
+    const content = read(size)
+    return width ? Math.min((width - 2 * STAGE_MARGIN) / content.width, (height - 2 * STAGE_MARGIN) / content.height) : 1
   })
   const control = new ZoomControl({ fitted, start: derive(() => Math.max(fitted.get(), readableLevel)) })
   return { size, room, control }
@@ -25,7 +26,7 @@ const fitZoom = (size: Size, { readableLevel = 0 }: FitZoomOptions = {}) => {
 type FitZoom = ReturnType<typeof fitZoom>
 
 const zoomStage = ({ size, room, control }: FitZoom, props: Props<HTMLDivElement>, ...children: Child[]) => {
-  const content = div({ ...props, class: 'm-auto shrink-0', style: { width: `${size.width}px`, height: `${size.height}px`, zoom: () => String(control.level.get()) } }, ...children)
+  const content = div({ ...props, class: 'm-auto shrink-0', style: { width: () => `${read(size).width}px`, height: () => `${read(size).height}px`, zoom: () => String(control.level.get()) } }, ...children)
   return div(
     {
       class: 'flex min-h-0 flex-1 overflow-auto',
