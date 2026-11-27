@@ -29,11 +29,11 @@ const replyToml = ({ text, hold }: Reply) => {
   return `[${chunks}${hold ? ', { type = "hold" }' : ''}]`
 }
 
-export const startSandbox = async (replies: Reply[]) => {
+export const startSandbox = async (replies: Reply[], features: string[] = []) => {
   const home = mkdtempSync(join(tmpdir(), 'sand-chat-'))
   await Bun.write(
     join(home, 'sandbox.toml'),
-    `[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [${replies.map(replyToml).join(', ')}]\n\n[plugins.thread-titles]\nenabled = false\n`,
+    `[features]\n${features.map(id => `${id} = true\n`).join('')}\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = [${replies.map(replyToml).join(', ')}]\n\n[plugins.thread-titles]\nenabled = false\n`,
   )
   const out = await sand(home, 'sandbox')
   rmSync(home, { recursive: true, force: true })

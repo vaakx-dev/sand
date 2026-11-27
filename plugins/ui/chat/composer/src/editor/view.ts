@@ -38,6 +38,8 @@ const BROWSER_END_BREAK = /\n$/
 
 const heldText = (field: HTMLElement) => field.textContent.replace(BROWSER_END_BREAK, '')
 
+const STACKED = { gridArea: '1 / 1' }
+
 export const createEditor = (parts: EditorParts) => {
   const editorHint = parts.hint()
   const mounted = sig<Mounted | undefined>(undefined)
@@ -70,13 +72,14 @@ export const createEditor = (parts: EditorParts) => {
   }
 
   const standIn = div(
-    { class: 'relative' },
+    { class: 'grid' },
     show(
       () => !early.get(),
-      () => span({ class: 'pointer-events-none absolute inset-0 text-neutral-500' }, parts.hint()),
+      () => span({ class: 'pointer-events-none text-neutral-500', style: STACKED }, parts.hint()),
     ),
     div({
       class: 'whitespace-pre-wrap outline-none',
+      style: STACKED,
       contentEditable: 'plaintext-only',
       role: 'textbox',
       'aria-label': 'Message',
