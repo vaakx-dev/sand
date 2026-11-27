@@ -73,10 +73,6 @@ export const createEditor = (parts: EditorParts) => {
 
   const standIn = div(
     { class: 'grid' },
-    show(
-      () => !early.get(),
-      () => span({ class: 'pointer-events-none text-neutral-500', style: STACKED }, parts.hint()),
-    ),
     div({
       class: 'whitespace-pre-wrap outline-none',
       style: STACKED,
@@ -88,6 +84,10 @@ export const createEditor = (parts: EditorParts) => {
       onBlur: () => (focused = false),
       onMount: (field: HTMLElement) => listen(field, 'input', () => early.set(heldText(field))),
     }),
+    show(
+      () => !early.get(),
+      () => span({ class: 'pointer-events-none text-neutral-500', style: STACKED }, parts.hint()),
+    ),
   )
   const node = div(
     { class: 'text-neutral-100 leading-relaxed' },
