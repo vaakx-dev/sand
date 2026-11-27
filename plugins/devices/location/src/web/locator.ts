@@ -2,6 +2,12 @@ import type { Fix } from '../contract'
 
 type Answer = (pc: string, id: string, fix: Fix) => void
 
+interface LocatorOptions {
+  geolocation: Geolocation
+  sharing: () => boolean
+  answer: Answer
+}
+
 const GIVE_UP_MS = 15_000
 
 const PRECISE: PositionOptions = { enableHighAccuracy: true, timeout: GIVE_UP_MS }
@@ -10,15 +16,18 @@ const fixOf = ({ coords }: GeolocationPosition): Fix => ({ latitude: coords.lati
 
 class Locator {
   readonly #geolocation: Geolocation
+  readonly #sharing: () => boolean
   readonly #answer: Answer
   readonly #watches = new Map<string, number>()
 
-  constructor(geolocation: Geolocation, answer: Answer) {
+  constructor({ geolocation, sharing, answer }: LocatorOptions) {
     this.#geolocation = geolocation
+    this.#sharing = sharing
     this.#answer = answer
   }
 
   ask(id: string, pc: string) {
+    if (!this.#sharing()) return
     if (this.#watches.has(id)) return
     const found = (position: GeolocationPosition) => {
       this.settle(id)
