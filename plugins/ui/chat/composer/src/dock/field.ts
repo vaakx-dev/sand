@@ -92,15 +92,23 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
     return true
   }
 
+  const sends = (event: KeyboardEvent) => event.key === 'Enter' && !event.shiftKey && !coarse.get()
+
+  const enter = (event: KeyboardEvent) => {
+    if (event.repeat) return true
+    if (asides.ready()) holding ??= onTimeout(aside, holdMs)
+    else void model.send()
+    return true
+  }
+
   const keydown = (event: KeyboardEvent) => {
     if (event.isComposing) return false
+    if (sends(event)) return enter(event)
+    if (event.repeat) return false
     if (event.key === 'Escape') return escape()
     if (event.key === 'Tab' && !modified(event)) return accept()
     if (event.key === 'ArrowUp') return recall(event)
-    if (event.key !== 'Enter' || event.shiftKey || coarse.get()) return false
-    if (!asides.ready()) void model.send()
-    else if (!event.repeat && !holding) holding = onTimeout(aside, holdMs)
-    return true
+    return false
   }
 
   const keyup = (event: KeyboardEvent) => {
