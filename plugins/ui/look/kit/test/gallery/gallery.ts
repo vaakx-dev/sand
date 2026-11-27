@@ -1,13 +1,9 @@
 import { type BunPlugin } from 'bun'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium, type Browser } from 'playwright'
 
 const widths = [360, 1280]
-
-const shots = mkdtempSync(join(tmpdir(), 'sand-kit-gallery-'))
 
 const html = `<!doctype html>
 <html lang="en">
@@ -51,7 +47,6 @@ beforeAll(async () => {
 afterAll(async () => {
   await browser?.close()
   server?.stop(true)
-  console.log(`gallery screenshots: ${shots}`)
 })
 
 describe.each(widths)('at %ipx wide', width => {
@@ -66,7 +61,6 @@ describe.each(widths)('at %ipx wide', width => {
     await page.getByRole('heading', { name: 'Kit' }).waitFor()
     const sections = await page.locator('section[aria-label]').evaluateAll(nodes => nodes.map(node => [node.getAttribute('aria-label'), node.getBoundingClientRect().height] as const))
     expect(sections.filter(([, height]) => height === 0)).toEqual([])
-    await page.screenshot({ path: join(shots, `gallery-${width}.png`), fullPage: true })
     const pageRightOf = (text: string) => page.locator('section[aria-label="Work row"]').getByText(text, { exact: true }).evaluate(node => Math.round(node.getBoundingClientRect().right))
     expect(await pageRightOf('#214')).toBe(await pageRightOf('12m'))
     await page.getByRole('button', { name: /Waiting/ }).click()
@@ -78,7 +72,6 @@ describe.each(widths)('at %ipx wide', width => {
     const rightOf = (text: string | RegExp) => menu.getByText(text, { exact: true }).evaluate(node => Math.round(node.getBoundingClientRect().right))
     expect(await rightOf('sand/ignore-landed-work-clashes-when-the-branch-was-merged')).toBe(await rightOf(/^1m \d+s$/))
     expect(await menu.getByText('harbor-tide-tables', { exact: true }).evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true)
-    await page.screenshot({ path: join(shots, `chip-${width}.png`) })
     expect(errors).toEqual([])
     await page.close()
   }, 30_000)
@@ -93,7 +86,6 @@ test('a touch menu taller than a landscape phone stays on screen and scrolls to 
   const menu = page.getByRole('menu')
   await menu.waitFor()
   await page.waitForTimeout(300)
-  await page.screenshot({ path: join(shots, 'menu-landscape.png') })
   const title = menu.getByText('Fix the flaky cache test', { exact: true })
   expect(await title.evaluate(node => node.getBoundingClientRect().top >= 0)).toBe(true)
   const last = menu.getByRole('menuitem', { name: 'Delete' })
@@ -109,7 +101,6 @@ test('pressing the more button again closes its menu', async () => {
   await more.click()
   await page.getByRole('menu').waitFor()
   await more.click()
-  await page.waitForTimeout(100)
-  expect(await page.getByRole('menu').count()).toBe(0)
+  await page.getByRole('menu').waitFor({ state: 'detached' })
   await page.close()
 }, 30_000)
