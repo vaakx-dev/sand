@@ -25,6 +25,10 @@ const toastBanner = (kit: Kit, { tone, title, detail, output, actions = [] }: To
     ...(output ? [outputBlock(kit, output)] : []),
   )
 
+const unlessTouch = (run: () => void) => (event: PointerEvent) => {
+  if (event.pointerType !== 'touch') run()
+}
+
 export const toastCard = (kit: Kit, entry: Entry, dismiss: () => void) => {
   const hovered = sig(false)
   const focused = sig(false)
@@ -32,8 +36,8 @@ export const toastCard = (kit: Kit, entry: Entry, dismiss: () => void) => {
   return div(
     {
       class: 'pointer-events-auto max-w-md animate-rise',
-      onMouseEnter: () => hovered.set(true),
-      onMouseLeave: () => hovered.set(false),
+      onPointerEnter: unlessTouch(() => hovered.set(true)),
+      onPointerLeave: unlessTouch(() => hovered.set(false)),
       onFocusIn: () => focused.set(true),
       onFocusOut: () => focused.set(false),
     },
