@@ -17,6 +17,16 @@ export interface RowContext extends Surface {
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row
 
+type Space = 'kept' | 'freed'
+
+interface ActionRowProps {
+  shownOnTouch(): boolean
+  space: Space
+  class?: string
+}
+
+const HIDDEN_ON_TOUCH: Record<Space, string> = { kept: 'touch:pointer-events-none', freed: 'touch:hidden' }
+
 export const row = <T>(key: string, data: T, view: Row<T>['view']): Row<T> => ({ key, data, view })
 
 export const pressable = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('a, button, input, textarea'))
@@ -31,12 +41,12 @@ export const tapReveal = () => {
   return { tapped, onClick }
 }
 
-export const actionRow = (onTouch: () => boolean, extra: string, ...children: Child[]) =>
+export const actionRow = ({ shownOnTouch, space, class: extra }: ActionRowProps, ...children: Child[]) =>
   div(
     {
       class: [
         'flex h-6 shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible-within:opacity-100',
-        () => (onTouch() ? 'touch:opacity-100' : 'touch:pointer-events-none'),
+        () => (shownOnTouch() ? 'touch:opacity-100' : HIDDEN_ON_TOUCH[space]),
         extra,
       ],
     },

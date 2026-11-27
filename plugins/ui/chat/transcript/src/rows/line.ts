@@ -42,7 +42,7 @@ export const stepLine = ({ rowButton }: Kit, { mark, label, title = '', meta, ac
         span({ class: 'flex min-w-0 items-baseline gap-2' }, label),
         meta,
       ),
-      actions && actionRow(() => read(expanded), '', actions),
+      actions && actionRow({ shownOnTouch: () => read(expanded), space: 'freed' }, actions),
     ),
     ...body,
   )

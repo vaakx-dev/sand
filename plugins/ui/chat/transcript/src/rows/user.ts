@@ -165,8 +165,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
         ? relayedQuote(relayed, spec, context)
         : shown && div({ class: 'min-w-0 max-w-full' }, bubble(shown, records, context.menu.target(spec, reveal.onClick, 'text'), context)),
       actionRow(
-        () => (relayed ? relayed.open.get() : reveal.tapped.get()),
-        '-mt-1',
+        { shownOnTouch: () => (relayed ? relayed.open.get() : reveal.tapped.get()), space: 'kept', class: '-mt-1' },
         shown && copyButton({ text: () => shown, formats: () => contextFormats(shown, records), size: 'sm' }),
         context.menu.button(spec, { size: 'sm' }),
       ),

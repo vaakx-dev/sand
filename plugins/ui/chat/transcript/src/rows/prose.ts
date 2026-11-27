@@ -22,8 +22,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
         () => !railed() && !streaming.get(),
         () =>
           actionRow(
-            () => (place?.get().last ?? false) || reveal.tapped.get(),
-            '-ml-1',
+            { shownOnTouch: () => (place?.get().last ?? false) || reveal.tapped.get(), space: 'kept', class: '-ml-1' },
             copyButton({ text: () => text.get(), size: 'sm' }),
             context.menu.button(spec, { size: 'sm' }),
           ),
