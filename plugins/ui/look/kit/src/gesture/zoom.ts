@@ -19,11 +19,11 @@ interface ZoomTarget {
 
 type WheelUse = 'zooms' | 'scrolls'
 
-type Surface = 'fixed' | 'scaled'
+type Points = 'client' | 'screen'
 
 interface ZoomOptions {
   wheel: WheelUse
-  surface: Surface
+  points: Points
 }
 
 interface Pinch {
@@ -42,13 +42,14 @@ const DOUBLE_TAP_REACH_PX = 32
 const WHEEL_SPEED = 300
 const CONTROLS = 'a[href], button, input, select, textarea, label, summary, [role=button], [contenteditable]'
 
-const pointOf = (touch: Touch): Point => ({ x: touch.clientX, y: touch.clientY })
+const pointOf = (spot: Touch | MouseEvent, points: Points): Point =>
+  points === 'client' ? { x: spot.clientX, y: spot.clientY } : { x: spot.screenX, y: spot.screenY }
 
 const distance = (from: Point, to: Point) => Math.hypot(to.x - from.x, to.y - from.y)
 
-const pinchOf = (first: Touch, second: Touch): Pinch => ({
-  spread: distance(pointOf(first), pointOf(second)),
-  center: { x: (first.clientX + second.clientX) / 2, y: (first.clientY + second.clientY) / 2 },
+const pinchOf = (first: Point, second: Point): Pinch => ({
+  spread: distance(first, second),
+  center: { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 },
 })
 
 const onControl = (target: EventTarget | null) => target instanceof Element && target.closest(CONTROLS) !== null
@@ -57,30 +58,27 @@ const followsTap = (last: Tap | undefined, tap: Tap) => last !== undefined && ta
 
 const wheelZooms = (event: WheelEvent, use: WheelUse) => use === 'zooms' || event.ctrlKey
 
-const zoomGesture = (node: EventTarget, target: ZoomTarget, { wheel, surface }: ZoomOptions) => {
+const zoomGesture = (node: EventTarget, target: ZoomTarget, { wheel, points }: ZoomOptions) => {
   let pinch: Pinch | undefined
   let press: Tap | undefined
   let lastTap: Tap | undefined
+  const at = (spot: Touch | MouseEvent) => pointOf(spot, points)
 
   const start = (event: TouchEvent) => {
     const [first, second] = event.touches
-    press = first && !second && !onControl(event.target) ? { at: pointOf(first), time: event.timeStamp } : undefined
-    pinch = first && second ? pinchOf(first, second) : undefined
+    press = first && !second && !onControl(event.target) ? { at: at(first), time: event.timeStamp } : undefined
+    pinch = first && second ? pinchOf(at(first), at(second)) : undefined
     if (pinch) lastTap = undefined
   }
 
   const move = (event: TouchEvent) => {
     const [first, second] = event.touches
-    if (press && first && distance(press.at, pointOf(first)) > TAP_SLOP_PX) press = undefined
+    if (press && first && distance(press.at, at(first)) > TAP_SLOP_PX) press = undefined
     if (!pinch || !first || !second) return
     event.preventDefault()
-    const next = pinchOf(first, second)
-    if (!pinch.spread) {
-      pinch = next
-      return
-    }
-    target.zoom({ factor: next.spread / pinch.spread, from: pinch.center, to: next.center })
-    if (surface === 'fixed') pinch = next
+    const next = pinchOf(at(first), at(second))
+    if (pinch.spread) target.zoom({ factor: next.spread / pinch.spread, from: pinch.center, to: next.center })
+    pinch = next
   }
 
   const end = (event: TouchEvent) => {
@@ -105,8 +103,8 @@ const zoomGesture = (node: EventTarget, target: ZoomTarget, { wheel, surface }: 
   const turn = (event: WheelEvent) => {
     if (!wheelZooms(event, wheel)) return
     event.preventDefault()
-    const at = { x: event.clientX, y: event.clientY }
-    target.zoom({ factor: Math.exp(-event.deltaY / WHEEL_SPEED), from: at, to: at })
+    const spot = at(event)
+    target.zoom({ factor: Math.exp(-event.deltaY / WHEEL_SPEED), from: spot, to: spot })
   }
 
   return joinDisposers(
@@ -118,4 +116,4 @@ const zoomGesture = (node: EventTarget, target: ZoomTarget, { wheel, surface }: 
   )
 }
 
-export { zoomGesture, type Point, type Surface, type WheelUse, type ZoomChange, type ZoomOptions, type ZoomTarget }
+export { zoomGesture, type Point, type Points, type WheelUse, type ZoomChange, type ZoomOptions, type ZoomTarget }

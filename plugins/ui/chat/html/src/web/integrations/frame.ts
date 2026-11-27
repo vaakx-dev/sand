@@ -13,6 +13,7 @@ import {
   swipeMove,
   swipeStart,
   zoomable,
+  zoomAnchor,
   zoomBy,
   zoomToggle,
 } from '../../page/protocol'
@@ -34,7 +35,13 @@ interface Message {
     from?: unknown
     to?: unknown
     at?: unknown
+    screen?: unknown
+    page?: unknown
   }
+}
+
+export interface FrameZoom extends ZoomTarget {
+  anchor(screen: Point, page: Point): void
 }
 
 export interface FrameEvents {
@@ -43,7 +50,7 @@ export interface FrameEvents {
   image(src: string, name: string): void
   key(key: string): void
   swipe?(way: Way): Swipe | undefined
-  zoom?: ZoomTarget
+  zoom?: FrameZoom
 }
 
 const isPoint = (value: unknown): value is Point =>
@@ -96,6 +103,10 @@ export const listenToFrame = (frame: HTMLIFrameElement, events: FrameEvents) => 
     }
     if (message.method === pressKey && typeof params.key === 'string') {
       events.key(params.key)
+      return
+    }
+    if (message.method === zoomAnchor && isPoint(params.screen) && isPoint(params.page)) {
+      events.zoom?.anchor(params.screen, params.page)
       return
     }
     if (message.method === zoomBy && isFactor(params.factor) && isPoint(params.from) && isPoint(params.to)) {

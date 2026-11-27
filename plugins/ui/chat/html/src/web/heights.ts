@@ -32,5 +32,7 @@ export const frameHeights = (): FrameHeights => {
   }
 }
 
+export const pageHeightWithin = (height: number) => Math.min(maxHeight, Math.max(minHeight, Math.ceil(height)))
+
 export const frameHeight = (data: HtmlRenderEntry, measured: number | undefined, remembered: number | undefined) =>
-  Math.min(maxHeight, Math.max(minHeight, Math.ceil(measured ?? remembered ?? data.height ?? startHeight)))
+  pageHeightWithin(measured ?? remembered ?? data.height ?? startHeight)
