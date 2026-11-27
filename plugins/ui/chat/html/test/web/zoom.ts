@@ -9,6 +9,8 @@ interface Point {
 
 const TITLE = 'Four cards'
 
+const DOUBLE_TAP_GAP_SECS = 0.08
+
 const CARDS = { 'Card A': '#3a6ea5', 'Card B': '#a5563a', 'Card C': '#3aa56e', 'Card D': '#a59a3a' }
 
 const card = (name: string, color: string) =>
@@ -24,8 +26,8 @@ let page: Page
 let hand: ReturnType<typeof fingers>
 
 const fingers = (cdp: CDPSession) => {
-  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd', points: Point[]) =>
-    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map((point, id) => ({ ...point, id })) })
+  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd', points: Point[], timestamp?: number) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map((point, id) => ({ ...point, id })), timestamp })
   const stroke = async (from: Point[], to: Point[], between: () => Promise<unknown>) => {
     const steps = 10
     await send('touchStart', from)
@@ -38,9 +40,9 @@ const fingers = (cdp: CDPSession) => {
     }
     await send('touchEnd', [])
   }
-  const tap = async (at: Point) => {
-    await send('touchStart', [at])
-    await send('touchEnd', [])
+  const tap = async (at: Point, timestamp?: number) => {
+    await send('touchStart', [at], timestamp)
+    await send('touchEnd', [], timestamp)
   }
   return {
     pinch: (center: Point, fromGap: number, toGap: number, between: () => Promise<unknown>) =>
@@ -58,9 +60,9 @@ const fingers = (cdp: CDPSession) => {
     drag: (from: Point, to: Point) => stroke([from], [to], () => Bun.sleep(16)),
     tap,
     doubleTap: async (at: Point) => {
-      await tap(at)
-      await Bun.sleep(80)
-      await tap(at)
+      const first = Date.now() / 1000
+      await tap(at, first)
+      await tap(at, first + DOUBLE_TAP_GAP_SECS)
     },
   }
 }
