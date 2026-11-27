@@ -9,6 +9,7 @@ import android.net.Network
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
     private var start: ScriptHandler? = null
     private var wantedApk: Apk? = null
     private val chooser = Chooser(this)
+    private val geolocation = Geolocation(this)
     private val microphone = Microphone(this)
     private val saver = Saver(this)
 
@@ -120,6 +122,8 @@ class MainActivity : ComponentActivity() {
             override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams) = chooser.show(callback, params)
             override fun onPermissionRequest(request: PermissionRequest) = microphone.request(request)
             override fun onPermissionRequestCanceled(request: PermissionRequest) = microphone.cancelled(request)
+            override fun onGeolocationPermissionsShowPrompt(origin: String, callback: GeolocationPermissions.Callback) = geolocation.request(origin, callback)
+            override fun onGeolocationPermissionsHidePrompt() = geolocation.cancelled()
         }
     }
 
