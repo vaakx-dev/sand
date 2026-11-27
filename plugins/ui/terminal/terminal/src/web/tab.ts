@@ -98,6 +98,10 @@ export const createTab = ({ place, wire, createScreen, colors, closed, known }: 
     if (wasLinked && id) void call(terminalDetach, { id, viewer }).catch(() => {})
   }
 
+  const hide = () => {
+    if (link !== 'joining') leave()
+  }
+
   const joined = (grid: Size, ended: Exit | undefined) => {
     link = 'joined'
     if (!shown()) return leave()
@@ -176,14 +180,14 @@ export const createTab = ({ place, wire, createScreen, colors, closed, known }: 
       void join()
       return () => {
         mounted = false
-        leave()
+        hide()
         detach()
       }
     },
     visible(yes: boolean) {
       visible = yes
       if (yes) void join()
-      else leave()
+      else hide()
     },
     frame(frame: Frame) {
       const applied = applyFrame(offset, frame)
