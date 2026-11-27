@@ -18,15 +18,21 @@ const printed = (out: string, pattern: RegExp) => {
   return found
 }
 
-export type Reply = { text: string | string[]; hold?: boolean }
+export type Reply = { text: string | string[]; hold?: boolean; call?: { name: string; input: Record<string, string> } }
 
 const CHUNK_GAP_MS = 300
 
 const textToml = (text: string) => `{ type = "text", text = ${JSON.stringify(text)} }`
 
-const replyToml = ({ text, hold }: Reply) => {
+const callToml = ({ name, input }: NonNullable<Reply['call']>) => {
+  const fields = Object.entries(input).map(([key, value]) => `${key} = ${JSON.stringify(value)}`)
+  return `{ type = "call", name = ${JSON.stringify(name)}, input = { ${fields.join(', ')} } }`
+}
+
+const replyToml = ({ text, hold, call }: Reply) => {
   const chunks = [text].flat().map(textToml).join(`, { type = "wait", ms = ${CHUNK_GAP_MS} }, `)
-  return `[${chunks}${hold ? ', { type = "hold" }' : ''}]`
+  const parts = [chunks, call && callToml(call), hold && '{ type = "hold" }'].filter(Boolean)
+  return `[${parts.join(', ')}]`
 }
 
 export const startSandbox = async (replies: Reply[], features: string[] = []) => {
