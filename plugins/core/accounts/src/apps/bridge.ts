@@ -3,6 +3,7 @@ import {
   type AppPlan,
   type AppSession,
   type AppSetup,
+  type ContextReport,
   type Delivery,
   type LLMEvent,
   type LLMRequest,
@@ -34,6 +35,7 @@ interface Live {
   sent: Message[]
   done: boolean
   waiting: string[]
+  context?: ContextReport
   handoff?: { id: string; delivered: Delivery }
   calming?: Promise<void>
   wake?: Dispose
@@ -195,8 +197,9 @@ export const createBridge = (plan: AppPlan, home: string, track: Track) => {
   const read = async function* (key: string, entry: Live, model: string, signal?: AbortSignal) {
     let ended = false
     try {
-      for await (const event of readStep(() => entry.signals.next(signal), model)) {
+      for await (const event of readStep(() => entry.signals.next(signal), model, entry.context)) {
         ended = event.type === 'done'
+        if (event.type === 'done') entry.context = event.context
         yield event
       }
     } finally {
