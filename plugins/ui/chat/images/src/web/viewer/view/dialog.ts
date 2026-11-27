@@ -1,13 +1,11 @@
 import type { SheetSpec } from '@sand/ui-shell/contract'
-import { ZoomControl, type Kit, type ZoomRange } from '@sand/ui-kit/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, keys, type Derive } from '@vaakx-dev/vrui'
 import type { Draw } from '../gallery'
 import { viewerTitle, viewerTools } from './head'
 import type { ViewerModel } from './model'
 import { viewerStage } from './stage'
 import { viewerStrip } from './strip'
-
-const IMAGE_ZOOM: ZoomRange = { least: 1, most: 8, step: 1.5, doubleTap: 2.5 }
 
 const flipButton = ({ floatButton, icon }: Kit, side: 'left' | 'right', title: string, disabled: Derive<boolean>, onClick: () => void) =>
   div(
@@ -17,18 +15,14 @@ const flipButton = ({ floatButton, icon }: Kit, side: 'left' | 'right', title: s
 
 export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw): SheetSpec => {
   const many = model.images.length > 1
-  const zoom = new ZoomControl({ range: IMAGE_ZOOM })
-  const go = (move: () => void) => {
-    move()
-    zoom.fit()
-  }
-  const back = () => go(() => model.step(-1))
-  const next = () => go(() => model.step(1))
+  const { zoom } = model
+  const back = () => model.step(-1)
+  const next = () => model.step(1)
   const shortcuts = keys({
     ArrowLeft: back,
     ArrowRight: next,
-    Home: () => go(model.first),
-    End: () => go(model.last),
+    Home: model.first,
+    End: model.last,
     ...zoom.shortcuts,
   })
 
@@ -45,7 +39,7 @@ export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw): SheetSpe
       dynamicChild(model.current, index => {
         const shown = model.images[index]
         if (!shown) return null
-        return div({ class: 'flex min-h-0 flex-1 flex-col' }, viewerStage({ shown, draw, zoom, flip: by => go(() => model.step(by)), close }))
+        return div({ class: 'flex min-h-0 flex-1 flex-col' }, viewerStage({ shown, draw, zoom, flip: model.step, close }))
       }),
       many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, back),
       many && flipButton(kit, 'right', 'Next (→)', model.atLast, next),
