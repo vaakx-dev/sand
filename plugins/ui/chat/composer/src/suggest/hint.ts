@@ -17,7 +17,7 @@ const pill = ({ kit, coarse, accept }: HintParts) =>
     {
       type: 'button',
       class:
-        'ml-1.5 inline-flex h-5 cursor-pointer items-center gap-1 rounded-md bg-neutral-900 px-2 text-xs font-medium text-neutral-400 ring-1 ring-neutral-700 hover:text-neutral-200',
+        'pointer-events-auto ml-1.5 inline-flex h-5 cursor-pointer items-center gap-1 rounded-md bg-neutral-900 px-2 text-xs font-medium text-neutral-400 ring-1 ring-neutral-700 hover:text-neutral-200',
       'aria-label': 'Use this message',
       onMouseDown: keepFocus,
       onClick: accept,
