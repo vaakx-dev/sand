@@ -25,6 +25,7 @@
     "@sand/keys": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/prompt": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/tools": "workspace:*",

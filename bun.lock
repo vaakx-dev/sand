@@ -2676,6 +2676,7 @@
         "@sand/keys": "workspace:*",
         "@sand/media": "workspace:*",
         "@sand/prompt": "workspace:*",
+        "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/skills": "workspace:*",
         "@sand/tools": "workspace:*",
@@ -2736,6 +2737,7 @@
       "dependencies": {
         "@sand/file-viewer": "workspace:*",
         "@sand/markdown": "workspace:*",
+        "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/ui-theme": "workspace:*",
