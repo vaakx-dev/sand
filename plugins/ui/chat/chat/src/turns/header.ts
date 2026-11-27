@@ -30,7 +30,7 @@ const stepTime = (started: number) => {
 const liveThought = (data: Sig<TurnHead>, open: Sig<boolean>) =>
   dynamicChild(
     () => (open.get() ? undefined : data.get().thought?.key),
-    key => (key === undefined ? undefined : span({ class: 'line-clamp-2 animate-fade wrap-anywhere sm:line-clamp-1' }, () => data.get().thought?.body)),
+    key => (key === undefined ? undefined : span({ class: 'line-clamp-2 animate-fade pl-5 wrap-anywhere sm:line-clamp-1' }, () => data.get().thought?.body)),
   )
 
 export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => ({
@@ -47,31 +47,31 @@ export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => 
           'aria-expanded': () => String(open.get()),
           title: label,
           class:
-            'flex min-w-0 max-w-full items-start gap-1.5 rounded-sm text-left text-xs text-neutral-500 transition-colors hover:text-neutral-400 aria-expanded:text-neutral-400',
+            'flex min-w-0 max-w-full flex-col rounded-sm text-left text-xs text-neutral-500 transition-colors hover:text-neutral-400 aria-expanded:text-neutral-400',
           onClick: () => {
             toggle()
             context.repaint()
           },
         },
         span(
-          { class: 'flex h-6 shrink-0 items-center touch:h-8' },
-          dynamicChild(
-            () => busy(data.get().phase),
-            live => (live ? spinner('xs') : chevron(() => open.get(), 'xs')),
-          ),
-        ),
-        span(
-          { class: 'flex min-w-0 flex-col' },
+          { class: 'flex min-w-0 items-center gap-2 leading-6 touch:leading-8' },
           span(
-            { class: 'flex min-w-0 leading-6 touch:leading-8' },
+            { class: 'inline-flex w-3 shrink-0 justify-center' },
+            dynamicChild(
+              () => busy(data.get().phase),
+              live => (live ? spinner('xs') : chevron(() => open.get(), 'xs')),
+            ),
+          ),
+          span(
+            { class: 'flex min-w-0' },
             span({ class: 'min-w-0 truncate' }, label),
             dynamicChild(
               () => data.get().stepStarted,
               started => (started ? stepTime(started) : undefined),
             ),
           ),
-          liveThought(data, open),
         ),
+        liveThought(data, open),
       ),
     )
   },
@@ -84,12 +84,12 @@ export const waitingRow = (head: TurnHead, context: TurnContext, wait: ShownWait
     const { chevron, plainButton } = context.kit
     const { open, toggle } = context.states.get(head.key)
     return div(
-      { class: 'chat-row mb-3 flex min-w-0 items-start gap-1.5' },
+      { class: 'chat-row mb-3 flex min-w-0 items-center gap-2' },
       plainButton(
         {
           'aria-expanded': () => String(open.get()),
           'aria-label': 'Show the steps',
-          class: 'flex min-h-6 shrink-0 items-center rounded-sm text-neutral-500 hover:text-neutral-400 touch:min-h-8',
+          class: 'flex min-h-6 w-3 shrink-0 items-center justify-center rounded-sm text-neutral-500 hover:text-neutral-400 touch:min-h-8',
           onClick: () => {
             toggle()
             context.repaint()
