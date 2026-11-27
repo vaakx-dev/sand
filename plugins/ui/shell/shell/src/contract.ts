@@ -1,5 +1,6 @@
 import type { Owner } from '@sand/engine/contract'
 import { running } from '@sand/reactive'
+import type { ProjectShown } from '@sand/web-client/contract'
 import { byId, collectScope, disposeAll, div, mount, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 import { event, service, type Context, type Dispose } from 'drydock'
 
@@ -123,14 +124,13 @@ export interface Aside {
   render(route: () => Route): HTMLElement
 }
 
-export interface SubjectProject {
+export interface SubjectProject extends Pick<ProjectShown, 'name' | 'icon'> {
   id: string
-  name: string
 }
 
 export interface SubjectProjects {
   list: SubjectProject[]
-  picked: string
+  picked: SubjectProject
   pick(project: string): void
 }
 
