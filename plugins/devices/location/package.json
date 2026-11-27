@@ -1,0 +1,41 @@
+{
+  "name": "@sand/location",
+  "version": "0.0.0",
+  "description": "Agents get the user's current location from their phone, or from a browser running sand when no phone answers",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "location",
+    "host": "./src/host/index.ts",
+    "runtime": "./src/runtime/index.ts",
+    "label": "Location",
+    "summary": "Agents can ask where you are, from your phone or a browser running sand",
+    "features": {
+      "location": {
+        "label": "Location",
+        "summary": "Agents can ask where you are, from your phone or a browser running sand",
+        "needs": [
+          "engine"
+        ],
+        "addon": true
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/host-daemon": "workspace:*"
+  }
+}

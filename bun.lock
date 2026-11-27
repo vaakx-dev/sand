@@ -2017,6 +2017,25 @@
         "@sand/util": "workspace:*",
       },
     },
+    "plugins/devices/location": {
+      "name": "@sand/location",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/harness": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+      },
+    },
     "plugins/devices/network": {
       "name": "@sand/devices-network",
       "version": "0.0.0",
@@ -3828,6 +3847,8 @@
     "@sand/keyval": ["@sand/keyval@workspace:packages/keyval"],
 
     "@sand/ledger": ["@sand/ledger@workspace:plugins/core/ledger"],
+
+    "@sand/location": ["@sand/location@workspace:plugins/devices/location"],
 
     "@sand/logbook": ["@sand/logbook@workspace:plugins/agent/logbook"],
 
