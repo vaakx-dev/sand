@@ -4,6 +4,7 @@ import { dynamicChild, portal, show, sig } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { icon } from '../icons/lucide'
 import { selectingIn } from '../gesture/busy'
+import { popupTrigger } from '../layers/outside'
 import { menuPopup } from './popup'
 import { menuSheet } from './sheet'
 
@@ -66,10 +67,21 @@ export const contextMenu = () => {
     if (at && found) open({ ...at, ...found })
   }
 
+  const moreButton = (spec: () => MenuSpec | undefined, { title, size }: Required<MoreButtonProps>) => {
+    let trigger: HTMLElement | undefined
+    const openedHere = () => {
+      const from = opened.get()?.from
+      return from !== undefined && from === trigger
+    }
+    const toggle = (event: MouseEvent) => (openedHere() ? close() : openBelow(event, spec))
+    trigger = iconButton({ size, title, 'aria-label': title, ...popupTrigger(openedHere), onClick: toggle }, icon('more', size))
+    return trigger
+  }
+
   const button = (spec: () => MenuSpec | undefined, { title = 'More actions', size = 'md' }: MoreButtonProps = {}) =>
     show(
       () => Boolean(spec()?.actions.length),
-      () => iconButton({ size, title, 'aria-label': title, 'aria-haspopup': 'menu', onClick: (event: MouseEvent) => openBelow(event, spec) }, icon('more', size)),
+      () => moreButton(spec, { title, size }),
     )
 
   const view = () => dynamicChild(opened, request => (request ? portal(document.body, menuLayer(request, close)) : null))

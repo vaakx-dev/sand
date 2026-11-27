@@ -101,3 +101,15 @@ test('a touch menu taller than a landscape phone stays on screen and scrolls to 
   expect(await last.evaluate(node => node.getBoundingClientRect().bottom <= innerHeight)).toBe(true)
   await page.close()
 }, 30_000)
+
+test('pressing the more button again closes its menu', async () => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+  await page.goto(server.url.href)
+  const more = page.locator('section[aria-label="Menus"]').getByRole('button', { name: 'More actions' })
+  await more.click()
+  await page.getByRole('menu').waitFor()
+  await more.click()
+  await page.waitForTimeout(100)
+  expect(await page.getByRole('menu').count()).toBe(0)
+  await page.close()
+}, 30_000)
