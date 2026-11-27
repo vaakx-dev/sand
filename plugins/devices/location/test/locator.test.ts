@@ -39,8 +39,9 @@ class FakeGeolocation implements Geolocation {
 const located = () => {
   const geolocation = new FakeGeolocation()
   const answers: { pc: string; id: string; fix: Fix }[] = []
-  const locator = new Locator(geolocation, (pc, id, fix) => answers.push({ pc, id, fix }))
-  return { geolocation, answers, locator }
+  const device = { sharing: true }
+  const locator = new Locator({ geolocation, sharing: () => device.sharing, answer: (pc, id, fix) => answers.push({ pc, id, fix }) })
+  return { geolocation, answers, device, locator }
 }
 
 test('each ask is answered once, to the PC that asked, and the position watch stops after the first fix', () => {
@@ -56,6 +57,19 @@ test('each ask is answered once, to the PC that asked, and the position watch st
     { pc: 'pc-work', id: 'ask-2', fix: { latitude: -33.8567844, longitude: 151.213108, accuracyMeters: 3.2 } },
   ])
   expect(geolocation.watches.size).toBe(0)
+})
+
+test('with sharing off the device never reads its position for an ask, and answers again once sharing is back on', () => {
+  const { geolocation, answers, device, locator } = located()
+  device.sharing = false
+  locator.ask('while-off', 'pc-home')
+  expect(geolocation.watches.size).toBe(0)
+
+  device.sharing = true
+  locator.ask('back-on', 'pc-home')
+  geolocation.move(-33.8567844, 151.213108, 3.2)
+
+  expect(answers).toEqual([{ pc: 'pc-home', id: 'back-on', fix: { latitude: -33.8567844, longitude: 151.213108, accuracyMeters: 3.2 } }])
 })
 
 test('an ask settled elsewhere, or one the system refuses, stops watching and is never answered', () => {

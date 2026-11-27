@@ -11,4 +11,6 @@ sand asks every phone and browser that has sand open. A phone's answer is used s
 
 ## Privacy
 
-Your phone or browser asks you once for location permission. After you allow it, agents get your precise location whenever they ask, without another prompt. Turn the add-on off, or take location permission away from sand in your phone's settings, to stop sharing it.
+Your phone or browser asks you once for location permission. After you allow it, agents get your precise location whenever they ask, without another prompt. Your location goes only to the agent that asked, as its answer.
+
+Each phone and browser shares its location until you turn off **Share location from this device** below, on that device. A desk browser you leave open, for example, can stay quiet while your phone keeps answering. Turn the add-on off, or take location permission away from sand in your phone's settings, to stop sharing everywhere.
