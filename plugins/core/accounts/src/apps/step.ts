@@ -13,12 +13,12 @@ const add = (total: Usage, more: Partial<Usage>) => {
   if (long) total.cacheWriteLong = long
 }
 
-export async function* readStep(next: () => Promise<Signal>, model: string): AsyncGenerator<LLMEvent> {
+export async function* readStep(next: () => Promise<Signal>, model: string, known?: ContextReport): AsyncGenerator<LLMEvent> {
   const blocks: Block[] = []
   const usage = emptyUsage()
   let open: Block | undefined
   let cacheTtlMs: number | undefined
-  let context: ContextReport | undefined
+  let context = known
 
   const close = function* (): Generator<LLMEvent> {
     if (open) yield { type: 'block', index: blocks.length - 1, block: open }
